@@ -4,11 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Task Dom 🖤 Slave UI</title>
-
-  <!-- Your new clean link -->
   <link rel="stylesheet" href="style.css">
-
-  <!-- Make sure this font link is still here too! -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&family=Rubik+Glitch&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -38,10 +34,7 @@
 <input type="file" id="profileUploadInput" accept="image/*" class="hidden" onchange="handleProfileUpload(this)">
 
 <div class="app-container">
-    
-    <!-- TOP SECTION -->
     <div class="top-section-split">
-        <!-- LEFT: PROFILE & NAV -->
         <div class="layout-left">
             <div class="glass-card profile-card">
                 <div class="pc-avatar-section">
@@ -59,43 +52,29 @@
                             </div>
                             <div class="lp-bar-bg"><div id="progressBar" class="lp-bar-fill"></div></div>
                         </div>
-                        
-                        <!-- --- NEW DEVOTION SECTION --- -->
                         <div class="devotion-wrapper">
-                          <!-- THE HYBRID BUTTON -->
                           <div id="btn" class="kneel-btn-bar" onclick="handleClick()" style="position: relative; display: block;">
-                              <!-- ANIMATION LAYER (The Fill) -->
                               <span id="fill" class="bar-fill" style="display: block; position: absolute; top: 0; left: 0; height: 100%; z-index: 1;"></span> 
-
-                              <!-- TEXT LAYER (The Labels) -->
                               <div class="bar-text" style="position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; pointer-events: none;">
                                   <span id="txt-main" style="font-size: 0.85rem; font-weight: 900; color: grey;">KNEEL</span>
                                   <span id="txt-sub" style="font-size: 0.45rem; color: #888; font-family: 'Rajdhani';">TODAY KNEELING: 0</span>
                               </div>
                           </div>
-
-                          <!-- DAILY ID -->
-                          <div class="daily-id-display">
-                              DAILY ID: <span id="dailyRandomId" class="did-val">#----</span>
-                          </div>
+                          <div class="daily-id-display">DAILY ID: <span id="dailyRandomId" class="did-val">#----</span></div>
                       </div>
                    </div>
                 </div>
-                <!-- STATS GRID UPDATED WITH ICONS/LABELS -->
                 <div class="pc-stats-grid">
                     <div class="stat-single-row row-score" style="display: flex; align-items: baseline; justify-content: center; gap: 8px;">
-                    <div id="points" class="ssr-val">0</div>
-                    <div class="ssr-lbl">POINTS</div>
-                </div>
+                        <div id="points" class="ssr-val">0</div>
+                        <div class="ssr-lbl">POINTS</div>
+                    </div>
                     <div class="stat-single-row row-coins" style="align-items: center; justify-content: center; gap: 8px;">
                         <div id="coins" class="ssr-val">0</div>
-                        <svg style="width:20px; height:20px; fill:var(--neon-yellow); filter:drop-shadow(0 0 5px rgba(255, 215, 0, 0.6));">
-                            <use href="#icon-coin"></use>
-                        </svg>
+                        <svg style="width:20px; height:20px; fill:var(--neon-yellow); filter:drop-shadow(0 0 5px rgba(255, 215, 0, 0.6));"><use href="#icon-coin"></use></svg>
                     </div>
                 </div>
                 <div class="stats-toggle-btn" onclick="toggleStats()">STATS ▾</div>
-                <!-- STATS DROPDOWN UPDATED WITH SLAVE SINCE -->
                 <div id="statsContent">
                   <div class="stat-row-group">
                       <div class="stat-header" style="text-align: center;">SLAVE'S ACTIVITY</div>
@@ -104,8 +83,6 @@
                       <div class="stat-line"><span>Completed</span> <strong id="statCompleted">0</strong></div>
                       <div class="stat-line"><span>Skipped</span> <strong id="statSkipped">0</strong></div>
                       <div class="stat-line"><span>Total Kneeling</span> <strong id="statTotalKneels">0</strong></div>
-
-                      <!-- Centered Slave Since Section -->
                       <div style="text-align: center; border-top: 1px solid #333; margin-top: 10px; padding-top: 10px; display: flex; flex-direction: column; align-items: center;">
                           <div class="stat-header" style="border:none; margin:0; padding:0; font-size: 0.65rem;">SLAVE SINCE</div>
                           <strong id="slaveSinceDate" style="font-size: 0.85rem; color: white; display: block; margin-top: 2px;">--/--/--</strong>
@@ -113,7 +90,6 @@
                   </div>
               </div>
             </div>
-
             <div class="nav-tabs">
                 <button class="tab-btn active" onclick="switchTab('serve')">HOME</button>
                 <button class="tab-btn nav-togglable" onclick="switchTab('news')">QKARIN</button>
@@ -125,12 +101,8 @@
             </div>
         </div>
 
-        <!-- RIGHT: DYNAMIC CONTENT -->
         <div class="layout-right">
-            
-            <!-- VIEW 1: HOME (TASKS & CHAT) -->
             <div id="viewServingTop" style="display:flex; flex-direction:column; gap:15px;">
-                <!-- Task Card -->
                 <div id="taskCard" class="glass-card">
                     <div id="activeBadge">ACTIVE TASK</div>
                     <div id="taskContent" style="width: 100%; padding: 10px 0; text-align: center; flex-grow: 1; display:flex; flex-direction:column; justify-content:center;">
@@ -149,7 +121,6 @@
                     </div>
                 </div>
 
-                <!-- Chat Card -->
                 <div id="chatCard" class="glass-card">
                     <div id="chatBadge">CHAT</div>
                     <div id="sessionOverlay">
@@ -190,7 +161,7 @@
                         </div>
                     </div>
                     <div id="specialGlassOverlay" onclick="breakGlass(event)" ontouchstart="breakGlass(event)">
-                        <img src="https://static.wixstatic.com/media/ce3e5b_b75c0e95797b4ba8abe4198a83b6c9ae~mv2.gif" class="broken-glass-img" alt="Break Glass">
+                        <img src="https://static.wixstatic.com/media/ce3e5b_b75c0e95797b4ba8abe4198a83b6c9ae~mv2.gif" class="broken-glass-img">
                     </div>
                     <div class="chat-header-row">
                         <div class="chat-avatar-container">
@@ -212,42 +183,25 @@
                         <button class="coin-btn" onclick="sendCoins(1000)">1000 <svg style="width:12px;height:12px;"><use href="#icon-coin"></use></svg></button>
                         <button class="coin-btn" onclick="sendCoins(2000)">2000 <svg style="width:12px;height:12px;"><use href="#icon-coin"></use></svg></button>
                         <button class="coin-btn" onclick="sendCoins(5000)">5000 <svg style="width:12px;height:12px;"><use href="#icon-coin"></use></svg></button>
-                        </div>
+                    </div>
                     <div class="chat-input-row">
-                        <div id="plusMenu" class="d-none">
-                            <label class="menu-btn" for="adminMediaInput">
-                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
-                                Photo/Video
-                            </label>
-                        </div>
                         <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden-input" onchange="handleAdminUpload(this)">
                         <button class="btn-plus" onclick="document.getElementById('adminMediaInput').click()">+</button>
                         <input type="text" id="chatMsgInput" class="chat-input" placeholder="Message..." onkeypress="handleChatKey(event)">
                         <button class="chat-send" onclick="sendChatMessage()"><svg style="width:20px; height:20px; fill:black;"><use href="#icon-send"></use></svg></button>
                     </div>
-                
-                    <!-- CHAT MEDIA OVERLAY (Mobile Friendly) -->
                     <div id="chatMediaOverlay" onclick="closeChatPreview()" style="display:none; position:absolute; top:60px; bottom:70px; left:0; right:0; background:rgba(0,0,0,0.95); z-index:80; backdrop-filter:blur(5px); flex-direction:column; align-items:center; justify-content:center;">
-                        
-                        <!-- CLOSE BUTTON -->
                         <div style="position:absolute; top:10px; right:10px; color:white; font-size:2rem; font-weight:bold; cursor:pointer; z-index:90; padding:10px;">×</div>
-                        
-                        <div id="cmoContent" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
-                            <!-- Media loads here -->
-                        </div>
+                        <div id="cmoContent" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;"></div>
                     </div>
-
                 </div>
             </div>
 
-            <!-- VIEW 7: QKARIN (NEW SOCIAL PROFILE) -->
+            <!-- VIEW: QKARIN FEED -->
             <div id="viewNews" class="hidden">
                 <div class="glass-card" style="height: 100%; padding:0; overflow:hidden; background:#000;">
-                    
                     <div class="social-header">
-                        <div class="sh-avatar-frame">
-                            <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" class="sh-avatar">
-                        </div>
+                        <div class="sh-avatar-frame"><img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" class="sh-avatar"></div>
                         <div class="sh-info">
                             <div class="sh-name">QUEEN KARIN</div>
                             <div class="sh-bio">Time to serve.</div>
@@ -258,25 +212,16 @@
                             </div>
                         </div>
                     </div>
-
                     <div id="domVideoReel" class="highlights-rail"></div>
-
                     <div class="feed-nav"><div class="fn-btn active">GRID</div></div>
-
                     <div id="newsGrid" class="social-grid"></div>
-
-                    <div id="streamContainer" class="video-container hidden" style="margin-top:20px;">
-                        <iframe id="twitchFrame" class="twitch-iframe" src="" allowfullscreen></iframe>
-                        <div id="streamLockOverlay" class="glass-lock-overlay">...</div>
-                    </div>
-
                 </div>
             </div>
 
-            <!-- OTHER VIEWS (Tribute, Session, Rewards, Hierarchy, Buy) -->
+            <!-- VIEW: TRIBUTE -->
             <div id="viewTribute" class="hidden">
                 <div class="glass-card">
-                    <h2 style="text-align:center; color:white; font-family:'Rubik Glitch', sans-serif; font-size:2rem; margin-bottom:15px; text-shadow:0 0 10px rgba(255,255,255,0.3);">THE STORE</h2>
+                    <h2 style="text-align:center; color:white; font-family:'Rubik Glitch'; font-size:2rem; margin-bottom:15px;">THE STORE</h2>
                     <div class="cat-scroll">
                         <div class="cat-pill active" onclick="filterStore('all', this)">ALL</div>
                         <div class="cat-pill" onclick="filterStore('little', this)">LITTLE</div>
@@ -293,230 +238,116 @@
                 <div class="glass-card" style="text-align:center; padding: 50px;">
                     <h2 style="font-size:2rem; color:var(--neon-pink); text-shadow:0 0 10px var(--neon-pink);">PRIVATE SESSIONS</h2>
                     <p style="color:#aaa; font-family:'Rajdhani'; margin-top:10px;">Currently offline. Check back later.</p>
-                    <button class="action-btn" style="margin-top:20px; opacity:0.5; cursor:not-allowed;">CHECK AVAILABILITY</button>
                 </div>
             </div>
             
             <div id="viewProtocol" class="hidden">
                 <div class="glass-card">
                     <h2 style="text-align:center; color:white; font-family:'Orbitron'; font-size:1.8rem; margin-bottom:20px; letter-spacing:2px;">OPERATIONAL PROTOCOL</h2>
-
                     <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
-
                         <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid var(--neon-yellow);">
-                            <h3 class="protocol-header" style="color:var(--neon-yellow);">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg> 
-                                    THE ECONOMY
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
+                            <h3 class="protocol-header" style="color:var(--neon-yellow);">THE ECONOMY<span class="protocol-arrow">▼</span></h3>
                             <div class="protocol-content">
-                                <p style="margin-bottom:10px;"><strong style="color:white;">COINS (Currency):</strong> Your physical worth. Used to buy gifts from the <strong>Wishlist</strong>, pay mandatory tributes, or purchase your freedom from a task via the <strong>Skip</strong> function.</p>
-                                <p><strong style="color:white;">POINTS (Status):</strong> Your spiritual worth. Earned strictly through <strong>Kneeling</strong> and completing <strong>Duties</strong>. Points determine your rank in the <strong>Hierarchy</strong>.</p>
+                                <p><strong>COINS:</strong> Used for wishlist and tasks.</p>
+                                <p><strong>POINTS:</strong> Earned via duties and rank.</p>
                             </div>
                         </div>
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid var(--neon-green);">
-                            <h3 class="protocol-header" style="color:var(--neon-green);">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:var(--neon-green);"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg> 
-                                    DUTY & TASKS
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <p style="margin-bottom:10px;">Click <strong>"REQUEST TASK"</strong> to receive your orders.</p>
-                                <ul style="list-style: none; padding-left: 0; color: #ccc;">
-                                    <li style="margin-bottom:5px;"><strong style="color:white;">- 24h Deadline:</strong> Proof must be uploaded within 24 hours.</li>
-                                    <li><strong style="color:white;">- Failure:</strong> A <strong>300 COIN FINE</strong> is applied automatically if the timer expires.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid var(--neon-pink);">
-                            <h3 class="protocol-header" style="color:var(--neon-pink);">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:var(--neon-pink);"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 
-                                    DEVOTION
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <p>Kneel once every <strong>60 minutes</strong> via the profile bar. Consistency prevents rank degradation.</p>
-                            </div>
-                        </div>
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid #fff;">
-                            <h3 class="protocol-header" style="color:#fff;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:#fff;"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg> 
-                                    ROYAL HIERARCHY
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <p style="margin-bottom:15px; font-size:0.8rem; color:#aaa;">Ranks are earned through total Points. Higher ranks unlock private session slots.</p>
-                                <div id="hierarchyGrid" class="grid gap-4"></div>
-                            </div>
-                        </div>
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid #ff003c;">
-                            <h3 class="protocol-header" style="color:#ff003c;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:#ff003c;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg> 
-                                    COMMANDS
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <p><strong style="color:white;">Glass Break:</strong> Click the broken glass overlay immediately to read urgent commands.</p>
-                            </div>
-                        </div>
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid #666;">
-                            <h3 class="protocol-header" style="color:#ccc;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:#ccc;"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg> 
-                                    LAWS & REGULATIONS
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <ul style="list-style: none; padding: 0; margin: 0; color: #ccc;">
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 1:</strong> <span id="r1">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 2:</strong> <span id="r2">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 3:</strong> <span id="r3">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 4:</strong> <span id="r4">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 5:</strong> <span id="r5">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 6:</strong> <span id="r6">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 7:</strong> <span id="r7">Loading...</span></li>
-                                    <li style="margin-bottom: 0px;"><strong style="color:white;">Section 8:</strong> <span id="r8">Loading...</span></li>
-                                </ul>
-                            </div>
-                        </div>
-
+                        <!-- ... Protocol rules map to rule1-rule8 IDs ... -->
+                        <div id="r1">Loading...</div><div id="r2"></div><div id="r3"></div><div id="r4"></div><div id="r5"></div><div id="r6"></div><div id="r7"></div><div id="r8"></div>
                     </div>
                 </div>
             </div>
-            <div id="viewRewards" class="hidden">
-                <div class="glass-card" style="text-align:center; padding: 50px;">
-                    <h2 style="font-size:2rem; color:var(--neon-yellow); text-shadow:0 0 10px var(--neon-yellow);">REWARDS</h2>
-                    <p style="color:#aaa; font-family:'Rajdhani'; margin-top:10px;">Unlock perks as you level up.</p>
-                    <div style="margin-top:20px; font-size: 3rem;">🎁</div>
-                </div>
-            </div>
+
+            <div id="viewRewards" class="hidden"><div class="glass-card"><h2>REWARDS</h2><div style="font-size: 3rem;">🎁</div></div></div>
 
             <div id="viewHierarchy" class="hidden">
                 <div class="glass-card">
-                    <div class="text-center mb-4"><h1 class="accent text-2xl md:text-4xl font-bold mb-1">ROYAL HIERARCHY</h1><p class="text-gray-400 text-xs">Slave devotion ranks</p></div>
+                    <div class="text-center mb-4"><h1 class="accent text-2xl md:text-4xl font-bold">ROYAL HIERARCHY</h1></div>
                     <div class="grid gap-4" id="hierarchyGrid"></div>
                 </div>
             </div>
 
             <div id="viewBuy" class="hidden">
                 <div class="glass-card">
-                    <h2 style="text-align:center; color:var(--neon-yellow); font-family:'Rubik Glitch', sans-serif; font-size:2rem; margin-bottom:5px; text-shadow:0 0 10px rgba(255,215,0,0.3);">BUY COINS</h2>
-                    <p style="text-align:center; color:#888; font-family:'Rajdhani'; font-size:0.8rem; margin-bottom:15px;">Purchase coins to pay tribute.</p>
-                    <div class="store-grid">
-                        <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><svg style="width:40px; height:40px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg></div><div class="si-info"><div class="si-name" style="color:white;">100 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(100)">€10.00</button></div></div>
-                        <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><svg style="width:50px; height:50px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg></div><div class="si-info"><div class="si-name" style="color:white;">500 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(500)">€50.00</button></div></div>
-                        <div class="store-item" style="border-color: var(--neon-yellow); box-shadow: 0 0 10px rgba(255,215,0,0.2);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">💰</div></div><div class="si-info"><div class="si-name" style="color:white;">1000 COINS</div><button class="si-btn" style="background:var(--neon-yellow); border-color:var(--neon-yellow); color:black; font-weight:bold;" onclick="buyRealCoins(1000)">€100.00</button></div></div>
-                        <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">💎</div></div><div class="si-info"><div class="si-name" style="color:white;">2500 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(2500)">€250.00</button></div></div>
-                        <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">👑</div></div><div class="si-info"><div class="si-name" style="color:white;">5000 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(5000)">€500.00</button></div></div>
-                        <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">🏦</div></div><div class="si-info"><div class="si-name" style="color:white;">10k COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(10000)">€1000.00</button></div></div>
-                    </div>
+                    <h2 style="text-align:center; color:var(--neon-yellow); font-family:'Rubik Glitch'; font-size:2rem;">BUY COINS</h2>
+                    <div id="buyGrid" class="store-grid"></div>
                 </div>
             </div>
-
         </div>
     </div>
 
-        <div id="viewServingBottom" class="bottom-section-full">
+    <!-- EVIDENCE LOG -->
+    <div style="display:flex; align-items:center; gap:8px; margin-top:40px; margin-bottom:10px; font-size:0.8rem; color:#fff; font-weight:bold;">
+        <div style="width:6px; height:6px; background:var(--neon-yellow); border-radius:50%;"></div> EVIDENCE LOG
+    </div>
 
-        <!-- MODAL MOVED HERE: This traps it inside the section -->
+    <div id="pendingSection" style="display:none; width:100%;">
+        <div class="section-header">PENDING REVIEW</div>
+        <div id="pendingGrid" class="pending-grid"></div>
+    </div>
+
+    <div id="historySection">
+        <div class="section-header">HISTORY</div>
+        
+        <!-- THE TRAPPED MODAL -->
         <div id="glassModal" class="glass-modal" onclick="closeModal(event)">
-          <!-- LAYER 0: THE BACKGROUND PHOTO -->
-          <div id="modalMediaContainer" class="modal-bg-photo"></div>
+            <div id="modalMediaContainer" class="modal-bg-photo"></div>
+            
+            <div id="reviewCard" class="review-details-card">
+                <div id="modalStatus" class="m-status-badge-big">APPROVED</div>
+                <div class="m-reward-row">
+                    <div id="modalPoints" class="m-points-val">+0 PTS</div>
+                    <div id="modalSticker"></div>
+                </div>
+                <div id="feedbackRow" class="q-feedback-split">
+                    <div class="q-thumb-box" onclick="toggleHistoryView('queen_media', event)">
+                        <div id="modalFeedbackMedia" class="q-thumb-fill"></div>
+                        <div class="q-zoom-hint">🔍</div>
+                    </div>
+                    <div class="q-nav-stack">
+                        <div class="q-label">QUEEN'S FEEDBACK</div>
+                        <button class="q-nav-btn" onclick="toggleHistoryView('comment', event)">SEE COMMENT</button>
+                        <button class="q-nav-btn" onclick="toggleHistoryView('queen_media', event)">SEE PHOTO</button>
+                    </div>
+                </div>
+                <div id="modalFeedbackText" class="q-comment-area hidden"></div>
+            </div>
 
-          <!-- LAYER 1: TOP INFO (Status, Points, Sticker) -->
-          <div id="modalOverlayInfo" class="modal-overlay-layer">
-              <div id="modalStatus" class="m-status-badge">APPROVED</div>
-              <div id="modalPoints" class="m-points-badge">+0 PTS</div>
-              <div id="modalSticker" class="m-sticker-float"></div>
-          </div>
+            <div id="modalOrderText" class="order-overlay-centered hidden"></div>
 
-          <!-- LAYER 2: FEEDBACK BUBBLE (Floats in middle) -->
-          <div id="modalFeedbackBubble" class="feedback-bubble hidden">
-              <div class="bubble-label">QUEEN'S FEEDBACK</div>
-              <div id="modalFeedbackMedia" class="bubble-media"></div>
-              <div id="modalFeedbackText" class="bubble-text"></div>
-          </div>
-
-          <!-- LAYER 3: THE ORDER (Hidden by default) -->
-          <div id="modalOrderText" class="order-overlay hidden"></div>
-
-          <!-- LAYER 4: ACTION BUTTONS (Bottom) -->
-          <div class="modal-footer-actions">
-              <button onclick="toggleHistoryView('clear')" class="view-btn">SEE PHOTO</button>
-              <button onclick="toggleHistoryView('order')" class="view-btn">SEE ORDER</button>
-              <button onclick="toggleHistoryView('info')" class="view-btn">SEE STATUS</button>
-              <button onclick="closeModal(null)" class="view-btn close-btn">CLOSE</button>
-          </div>
-      </div>
-    </div>
-
-        <!-- EVIDENCE LOG HEADER (Now clean and separate) -->
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:0.8rem; color:#fff; font-weight:bold; padding-left: 5px;">
-            <div style="width:6px; height:6px; background:var(--neon-yellow); border-radius:50%;"></div> EVIDENCE LOG
+            <div class="modal-footer-nav">
+                <button onclick="toggleHistoryView('task', event)" class="nav-btn">SEE TASK</button>
+                <button onclick="toggleHistoryView('proof', event)" class="nav-btn">SEE PROOF</button>
+                <button onclick="toggleHistoryView('info', event)" class="nav-btn">SEE STATUS</button>
+                <button onclick="closeModal()" class="nav-btn btn-close">CLOSE</button>
+            </div>
         </div>
 
-        <div id="pendingSection" style="display:none; width:100%;">
-            <div class="section-header">PENDING REVIEW</div>
-            <div id="pendingGrid" class="pending-grid"></div>
-        </div>
-
-        <div id="historySection" style="display:none; width:100%;">
-            <div class="section-header">HISTORY</div>
-            <div id="historyGrid" class="gallery-grid"></div>
-            <button id="loadMoreBtn" onclick="loadMoreHistory()" class="action-btn" style="width: 200px; margin: 20px auto; display: none; background: #222; color: #888;">LOAD MORE</button>
-        </div>
+        <div id="historyGrid" class="gallery-grid"></div>
+        <button id="loadMoreBtn" onclick="loadMoreHistory()" class="action-btn" style="width: 200px; margin: 20px auto; display: none; background: #222; color: #888;">LOAD MORE</button>
     </div>
 </div>
 
 <script>
+    /* --- CONFIG & STATE --- */
     const CLOUD_NAME = 'dfqvezjlj'; 
     const ACCOUNT_ID = 'kW2K8hR';
     const API_KEY = 'public_kW2K8hR6YbQXStTvMf5ZDYbVf1fQ';
-    const UPLOAD_PRESET = 'task_uploads'; 
     const QUEEN_AVATAR = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
-    const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/3233/3233508.png"; 
-    const TWITCH_CHANNEL = "qkarin"; 
-    const SESSION_VERSION = "v1";
-    const STREAM_PASSWORDS = ["QUEEN", "OBEY", "SESSION"];
+    const TWITCH_CHANNEL = "qkarin";
 
-    let gameStats = { totalTasks: 0, completedTasks: 0, currentStreak: 0, points: 0, coins: 0 };
-    let stats = { approvedTasks: 0, rejectedTasks: 0, skippedTasks: 0, dailyCompletedTasks: 0, dailyStreak: 0, dailyScore: 0, monthlyTotalTasks: 0, monthlyScore: 0};
-    let userProfile = { name: "Slave", hierarchy: "Loading...", avatar: DEFAULT_AVATAR };
-    let currentTask = null;
+    let gameStats = { points: 0, coins: 0, kneelCount: 0, taskdom_streak: 0, taskdom_total_tasks: 0, taskdom_completed_tasks: 0 };
+    let userProfile = { name: "Slave", hierarchy: "Loading...", joined: "" };
     let taskDatabase = []; 
     let galleryData = []; 
-    let pendingTaskState = null; 
-    let taskJustFinished = false;
-    let cooldownInterval = null;
-    let ignoreBackendUpdates = false; 
-    let lastChatJson = ""; 
-    let lastGalleryJson = ""; 
-    let isInitialLoad = true;
-    let chatLimit = 10;
+    let activeHistoryItem = null;
+    let currentHistoryIndex = 0;
+    let lastWorshipTime = 0;
+    let isLocked = false;
     let lastNotifiedMessageId = null;
-    let historyLimit = 12; 
-    let pendingLimit = 4;  
-    let currentView = 'serve'; 
-    let resetUiTimer = null; 
-    let taskQueue = []; 
+    let isInitialLoad = true;
+    let historyLimit = 12;
 
-    /* --- RESTORED DATA --- */
     const CMS_HIERARCHY = [
         { Title: "Hall Boy", Icon: "🧹", Order: 1, Points: "0+", Description: "Entry level of service.", StatusText: "First line of service.", ProtocolText: "Perform basic tasks.", DutiesText: "Prove you live to serve.", ContactText: "15MIN DAILY SLOT", CssClass: "" },
         { Title: "Footman", Icon: "🚶‍♂️", Order: 2, Points: "2000+", Description: "Learn to serve.", StatusText: "Time to earn your place.", ProtocolText: "Serve quickly and reliably.", DutiesText: "Perfect Timing.", ContactText: "30MIN DAILY SLOT", CssClass: "" },
@@ -527,1160 +358,242 @@
         { Title: "Queen's Champion", Icon: "⚔️", Order: 7, Points: "100000", Description: "Ultimate submissive!", StatusText: "You have made it!", ProtocolText: "2 bodies, 1 soul!", DutiesText: "Enjoy the love you earned.", ContactText: "LEGENDARY", CssClass: "legendary" }
     ];
 
-    // --- NEW: Audio Unlocker for Browsers ---
+    const LEVELS = [{name: "HallBoy", min: 0}, {name: "Footman", min: 2000}, {name: "Silverman", min: 5000}, {name: "Butler", min: 10000}, {name: "Chamberlain", min: 20000}, {name: "Secretary", min: 50000}, {name: "Queen's Champion", min: 100000}];
+
+    /* --- AUDIO UNLOCKER --- */
     let audioUnlocked = false;
     document.addEventListener('click', () => {
         if (!audioUnlocked) {
-            // Play and immediately pause all sounds to "wake them up"
             ['msgSound', 'coinSound', 'skipSound'].forEach(id => {
-                const sound = document.getElementById(id);
-                if (sound) {
-                    sound.play().then(() => {
-                        sound.pause();
-                        sound.currentTime = 0;
-                    }).catch(e => console.log("Audio waiting for interaction"));
-                }
+                const s = document.getElementById(id);
+                if (s) { s.play().then(() => { s.pause(); s.currentTime = 0; }); }
             });
             audioUnlocked = true;
-            console.log("Audio Engine Unlocked");
         }
     }, { once: true });
-  
-    // Placeholder for CMS hierarchy data
-    let cmsHierarchyData = null;
 
-    // --- WISHLIST IS NOW EMPTY (LOADS FROM CMS) ---
-    let WISHLIST_ITEMS = [];
-
-    const LEVELS = [{name: "HallBoy", min: 0}, {name: "Footman", min: 2000}, {name: "Silverman", min: 5000}, {name: "Butler", min: 10000}, {name: "Chamberlain", min: 20000}, {name: "Secretary", min: 50000}, {name: "Queen's Champioin", min: 100000}];
-
-    function getOptimizedUrl(url, width) {
-        if (!url) return "";
-        if (url.includes("cloudinary.com") && url.includes("/upload/")) {
-            let cleanUrl = url.replace(/\.(mp4|webm|mov)$/i, ".jpg");
-            return cleanUrl.replace("/upload/", `/upload/f_auto,q_auto,dpr_auto,c_limit,w_${width}/`);
-        }
-        if (url.includes("upcdn.io")) {
-            let cleanUrl = url.replace(/\.(mp4|webm|mov)$/i, ".jpg");
-            const sep = cleanUrl.includes("?") ? "&" : "?";
-            return `${cleanUrl}${sep}width=${width}&format=auto&quality=auto&dpr=auto`;
-        }
-        return url;
-    }
-
-    const SafeStorage = {
-        setItem: (key, value) => { try { localStorage.setItem(key, value); } catch(e) {} },
-        getItem: (key) => { try { return localStorage.getItem(key); } catch(e) { return null; } },
-        removeItem: (key) => { try { localStorage.removeItem(key); } catch(e) {} }
-    };
-    function triggerSound(id) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.pause(); // Reset any currently playing sound
-            el.currentTime = 0;
-            
-            const playPromise = el.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log("Sound blocked. Sub needs to click the screen once.");
-                });
-            }
-        }
-    }
-
-    /* --- INIT --- */
-    if(!userProfile.avatar) { document.getElementById('profilePic').src = DEFAULT_AVATAR; }
-    const resizeObserver = new ResizeObserver(() => { 
-        if(window.parent) window.parent.postMessage({ iframeHeight: document.body.scrollHeight }, '*'); 
-    });
-    resizeObserver.observe(document.body);
-
-    function initDomProfile() {
-        const frame = document.getElementById('twitchFrame');
-        if(frame && !frame.src) {
-            const parents = ["qkarin.com", "www.qkarin.com", "html-components.wixusercontent.com", "filesusr.com", "editor.wix.com", "manage.wix.com", "localhost"];
-            let parentString = "";
-            parents.forEach(p => parentString += `&parent=${p}`);
-            frame.src = `https://player.twitch.tv/?channel=${TWITCH_CHANNEL}${parentString}&muted=true&autoplay=true`;
-        }
-        const savedSession = SafeStorage.getItem('taskDomStreamSession');
-        const savedExpiry = SafeStorage.getItem('taskDomStreamExpiry');
-        if (savedSession === SESSION_VERSION && savedExpiry && parseInt(savedExpiry) > Date.now()) {
-            document.getElementById('streamLockOverlay').classList.add('unlocked');
-        } else {
-            SafeStorage.removeItem('taskDomStreamSession');
-            SafeStorage.removeItem('taskDomStreamExpiry');
-            document.getElementById('streamLockOverlay').classList.remove('unlocked');
-        }
-    }
-    initDomProfile();
-
-    /* --- MAIN LISTENER (DATABASE SYNC) --- */
+    /* --- MASTER MESSAGE LISTENER --- */
     window.addEventListener("message", (event) => {
-      const data = event.data;
+        const data = event.data;
+        if (!data) return;
 
-      // Catch the immediate Echo from Wix
-      if (data.type === "CHAT_ECHO") {
-          const chatContent = document.getElementById('chatContent');
-          if (chatContent && data.msgObj) {
-              // Reuse your existing logic to format the single message
-              const m = data.msgObj;
-              const isMe = true; // Echo is always from 'user'
-              const contentHtml = `<div class="msg m-slave">${m.message}</div>`;
-              const timeDiv = `<div class="msg-time">${new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
-              const rowContent = `<div class="msg-col" style="justify-content: flex-end;">${contentHtml} ${timeDiv}</div>`;
-              
-              chatContent.innerHTML += `<div class="msg-row mr-out">${rowContent}</div>`;
-              forceBottom(); // Jump to the bottom immediately
-          }
-      }
-      
-      // FIX: Capture all 8 Rules from CMS safely
-      if (data.type === 'UPDATE_RULES') {
-          const rules = data.payload || {};
-          for (let i = 1; i <= 8; i++) {
-              const el = document.getElementById('r' + i);
-              if (el && rules['rule' + i]) el.innerHTML = rules['rule' + i];
-          }
-      }
-
-      // CMS TASKS
-      if (data.type === "INIT_TASKS" || data.dailyTasks) {
-          if (data.dailyTasks && Array.isArray(data.dailyTasks) && data.dailyTasks.length > 0) {
-              taskDatabase = data.dailyTasks;
-          } else if (data.tasks) {
-              taskDatabase = data.tasks;
-          }
-      }
-
-      // NEW: Listen for hierarchy from CMS
-      if (data.type === "INIT_HIERARCHY" || data.hierarchy) {
-          const incoming = data.hierarchy || data.hierarchyData;
-          if (Array.isArray(incoming)) {
-              cmsHierarchyData = incoming;
-          }
-      }
-
-      else if (data.type === "INIT_WISHLIST" || data.wishlist) {
-        if (data.wishlist && Array.isArray(data.wishlist) && data.wishlist.length > 0) {
-            WISHLIST_ITEMS = data.wishlist;
-            renderWishlist('all');
-        }
-      }
-
-      // DOM STATUS & FEED
-      if (data.type === "UPDATE_DOM_STATUS") {
-          const badge = document.getElementById('chatStatusBadge');
-          const ring = document.getElementById('chatStatusRing');
-          const domBadge = document.getElementById('domStatusBadge');
-          const domRing = document.getElementById('statusRing');
-          
-          if(badge) {
-              badge.innerHTML = data.online ? "ONLINE" : data.text;
-              badge.className = data.online ? "chat-status-text chat-online" : "chat-status-text";
-          }
-          if(ring) ring.className = data.online ? "dom-status-ring ring-active" : "dom-status-ring ring-inactive";
-          if(domBadge) {
-             domBadge.innerHTML = data.online ? '<span class="status-dot"></span> ONLINE' : `<span class="status-dot"></span> ${data.text}`;
-             domBadge.className = data.online ? "dom-status status-online" : "dom-status";
-          }
-          if(domRing) domRing.className = data.online ? "dom-status-ring ring-active" : "dom-status-ring ring-inactive";
-      }
-
-      // *** NEW LISTENER FOR FEED ***
-      if (data.type === "UPDATE_Q_FEED") {
-          if (data.domVideos && Array.isArray(data.domVideos)) {
-              renderDomVideos(data.domVideos);
-              renderNews(data.domVideos);
-          }
-      }
-
-      // UNIVERSAL DATA
-      const payload = data.profile || data.galleryData || data.pendingState ? data : null;
-      if (payload) {
-            if (payload.profile) {
-                // 1. Spread all data (this captures gameStats.kneelCount from CMS)
-                gameStats = { ...gameStats, ...payload.profile };
+        // 1. DATA PACKET (Profile, History, Timer)
+        if (data.type === "UPDATE_FULL_DATA" || data.profile) {
+            const p = data.profile;
+            if (p) {
+                // Map Stats & Identity
+                gameStats = { ...gameStats, ...p }; 
+                userProfile.name = p.name || p.title || userProfile.name;
+                userProfile.hierarchy = p.hierarchy || userProfile.hierarchy;
+                userProfile.joined = p.joined || userProfile.joined;
+                if (p.lastWorship) lastWorshipTime = new Date(p.lastWorship).getTime();
                 
-                userProfile.name = payload.profile.name || "Slave";
-                userProfile.hierarchy = payload.profile.hierarchy || "Newbie";
-                userProfile.memberId = payload.profile.memberId || "";
-                userProfile.joined = payload.profile.joined; 
-                
-                // --- KNEEL UPDATE SYNC ---
-                if (payload.profile.lastWorship) {
-                    lastWorshipTime = new Date(payload.profile.lastWorship).getTime();
+                if (p.profilePicture) {
+                    const picEl = document.getElementById('profilePic');
+                    if (picEl) picEl.src = getOptimizedUrl(p.profilePicture, 150);
                 }
-                
-                // 2. FIX: Connect to kneelCount field instead of points
-                if(document.getElementById('kneelCount')) {
-                    document.getElementById('kneelCount').innerText = payload.profile.kneelCount || 0;
-                }
-                
-                // 3. Force Update Button Visuals (now using kneelCount)
-                updateDevotionStatus(); 
-                // --------------------------
-
-                stats = { ...stats, ...payload.profile.stats };  
-                stats = migrateGameStatsToStats(gameStats, stats);
-                
-                if(payload.profile.profilePicture) { 
-                    userProfile.avatar = payload.profile.profilePicture; 
-                    document.getElementById('profilePic').src = getOptimizedUrl(userProfile.avatar, 150); 
-                }
-                
                 updateStats();
             }
+            if (data.galleryData) {
+                galleryData = Array.isArray(data.galleryData) ? data.galleryData : JSON.parse(data.galleryData);
+                renderGallery();
+            }
+            if (data.pendingState) {
+                pendingTaskState = data.pendingState;
+                if (pendingTaskState.task) { currentTask = pendingTaskState.task; restorePendingUI(); }
+            }
+        }
 
-          if (payload.galleryData) {
-              let rawGallery = payload.galleryData;
-              if (typeof rawGallery === 'string') { try { rawGallery = JSON.parse(rawGallery); } catch(e) { rawGallery = []; } }
-              
-              if (Array.isArray(rawGallery)) {
-                  let serverGallery = rawGallery.filter(item => {
-                      if (!item.status) return false;
-                      const s = item.status.toLowerCase();
-                      if (s.includes('skip') || s.includes('fail') || s.includes('cancel')) return false;
-                      if (!item.proofUrl || item.proofUrl.length < 5) return false;
-                      return true; 
-                  });
-                  const currentGalleryJson = JSON.stringify(serverGallery);
-                  if (currentGalleryJson !== lastGalleryJson) {
-                      lastGalleryJson = currentGalleryJson;
-                      galleryData = serverGallery; 
-                      renderGallery(); 
-                      updateStats();
-                  }
-              }
-          }
+        // 2. CHAT ECHO
+        if (data.type === "CHAT_ECHO") {
+            const chatBox = document.getElementById('chatContent');
+            if (chatBox && data.msgObj) {
+                const isMe = (data.msgObj.sender === 'user');
+                const rowClass = isMe ? 'mr-out' : 'mr-in';
+                const msgClass = isMe ? 'm-slave' : 'm-queen';
+                chatBox.innerHTML += `<div class="msg-row ${rowClass}"><div class="msg ${msgClass}">${data.msgObj.message}</div></div>`;
+                document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+            }
+        }
 
-          if (payload.pendingState !== undefined) {
-               if (!taskJustFinished && !ignoreBackendUpdates) {
-                  pendingTaskState = payload.pendingState;
-                  if (pendingTaskState) {
-                      if (!currentTask || currentTask.text !== pendingTaskState.task.text) { 
-                          currentTask = pendingTaskState.task; 
-                          restorePendingUI(); 
-                      } 
-                  } else { 
-                      if (currentTask && !document.getElementById('cooldownSection').classList.contains('hidden')) { 
-                      } else { 
-                          currentTask = null; 
-                          if(!resetUiTimer) {
-                               document.getElementById('cooldownSection').classList.add('hidden');
-                               document.getElementById('activeBadge').classList.remove('show');
-                               document.getElementById('mainButtonsArea').classList.remove('hidden');
-                               document.getElementById('taskContent').innerHTML = `<h2 id="readyText" style="font-weight:bold; margin-bottom:5px; color:white; font-size:1.5rem;">Ready?</h2><p class="rajdhani" style="color:#aaa; margin:0;">Waiting for orders.</p>`;
-                          }
-                      } 
-                  }
-               }
-          }
-      }
+        // 3. CHAT HISTORY
+        if (data.type === "UPDATE_CHAT" || data.chatHistory) {
+            const messages = data.chatHistory || data.messages;
+            if (messages) {
+                document.getElementById('chatContent').innerHTML = messages.map(m => {
+                    const isMe = m.sender === 'user';
+                    return `<div class="msg-row ${isMe?'mr-out':'mr-in'}"><div class="msg ${isMe?'m-slave':'m-queen'}">${m.message}</div></div>`;
+                }).join('');
+                if (!isInitialLoad) {
+                    const last = messages[messages.length-1];
+                    if (last._id !== lastNotifiedMessageId && last.sender !== 'user') { triggerSound('msgSound'); lastNotifiedMessageId = last._id; }
+                }
+                isInitialLoad = false;
+                document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+            }
+        }
 
-      if (data.type === "UPDATE_CHAT" || data.chatHistory) {
-          const msgs = data.chatHistory || data.messages; 
-          if(msgs) renderChat(msgs);
-      }
+        // 4. CMS UPDATES (Rules, Feed, Tasks)
+        if (data.type === 'UPDATE_RULES') {
+            for (let i=1; i<=8; i++) { if(data.payload['rule'+i]) document.getElementById('r'+i).innerHTML = data.payload['rule'+i]; }
+        }
+        if (data.type === "UPDATE_DOM_STATUS") {
+            const badge = document.getElementById('chatStatusBadge');
+            if(badge) { badge.innerHTML = data.online ? "ONLINE" : data.text; badge.className = data.online ? "chat-status-text chat-online" : "chat-status-text"; }
+        }
+        if (data.type === "UPDATE_Q_FEED") { renderDomVideos(data.domVideos); renderNews(data.domVideos); }
+        if (data.type === "INIT_TASKS") { taskDatabase = data.tasks; }
+        if (data.type === "INIT_WISHLIST") { WISHLIST_ITEMS = data.wishlist; renderWishlist('all'); }
     });
 
-    /* --- UI FUNCTIONS --- */
+    /* --- UI LOGIC --- */
+    function updateStats() {
+        document.getElementById('subName').innerText = userProfile.name;
+        document.getElementById('subHierarchy').innerText = userProfile.hierarchy;
+        document.getElementById('points').innerText = gameStats.points || gameStats.score || 0;
+        document.getElementById('coins').innerText = gameStats.coins || gameStats.wallet || 0;
+        
+        if(document.getElementById('statStreak')) document.getElementById('statStreak').innerText = gameStats.taskdom_streak || 0;
+        if(document.getElementById('statTotal')) document.getElementById('statTotal').innerText = gameStats.taskdom_total_tasks || 0;
+        if(document.getElementById('statCompleted')) document.getElementById('statCompleted').innerText = gameStats.taskdom_completed_tasks || 0;
+        if(document.getElementById('statTotalKneels')) document.getElementById('statTotalKneels').innerText = gameStats.kneelCount || 0;
+        
+        document.getElementById('txt-sub').innerText = `TODAY KNEELING: ${gameStats.kneelCount || 0}`;
+        
+        let nextLevel = LEVELS.find(l => l.min > (gameStats.points || gameStats.score)) || {name: "MAX", min: 0};
+        document.getElementById('nextLevelName').innerText = nextLevel.name;
+        
+        updateDevotionStatus();
+    }
+
     function switchTab(mode) {
-        // 1. Highlight Active Button
-        const allBtns = document.querySelectorAll('.tab-btn');
-        allBtns.forEach(b => b.classList.remove('active'));
-        
         currentView = mode;
-        
-        // Find and highlight the button for this mode
-        allBtns.forEach(btn => {
-            if (btn.getAttribute('onclick').includes(mode)) {
-                btn.classList.add('active');
-            }
-        });
-
-        // 2. MOBILE LOGIC: Hide buttons if not on Home
-        if (window.innerWidth < 768) {
-            allBtns.forEach(btn => {
-                const cmd = btn.getAttribute('onclick') || "";
-                
-                if (mode === 'serve') {
-                    // We are on HOME: Show everything
-                    btn.classList.remove('nav-hidden');
-                } else {
-                    // We are on a SUB-PAGE: Hide everything first
-                    btn.classList.add('nav-hidden');
-                    
-                    // Then SHOW only Home and Current
-                    if (cmd.includes('serve') || cmd.includes(mode)) {
-                        btn.classList.remove('nav-hidden');
-                    }
-                }
-            });
-        }
-        
-        // 3. Switch Views (Standard logic)
-        ['viewServingTop','viewTribute','viewSession','viewRewards','viewHierarchy','viewNews','viewBuy','viewProtocol'].forEach(id => {
-            const el = document.getElementById(id); 
-            if(el) el.classList.add('hidden');
-        });
-
+        const views = ['viewServingTop','viewTribute','viewSession','viewRewards','viewHierarchy','viewNews','viewProtocol','viewBuy'];
+        views.forEach(v => { const el = document.getElementById(v); if(el) el.classList.add('hidden'); });
+        const target = 'view' + mode.charAt(0).toUpperCase() + mode.slice(1);
         if(mode === 'serve') document.getElementById('viewServingTop').classList.remove('hidden');
-        if(mode === 'tribute') document.getElementById('viewTribute').classList.remove('hidden');
-        if(mode === 'session') document.getElementById('viewSession').classList.remove('hidden');
-        if(mode === 'rewards') document.getElementById('viewRewards').classList.remove('hidden');
-        if(mode === 'hierarchy') document.getElementById('viewHierarchy').classList.remove('hidden');
-        if(mode === 'buy') document.getElementById('viewBuy').classList.remove('hidden');
+        else if(document.getElementById(target)) document.getElementById(target).classList.remove('hidden');
         
-        if(mode === 'protocol') {
-            document.getElementById('viewProtocol').classList.remove('hidden');
-            // When opening the tab, ensure everything is visible
-            document.querySelectorAll('.protocol-item').forEach(item => {
-                item.style.display = 'block';
-                item.classList.remove('active');
-            });
-        }
-        
-        if(mode === 'news') {
-            document.getElementById('viewNews').classList.remove('hidden');
-            window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
-        }
-        
-        // Bottom Section logic (Evidence Log only on Home)
-        const bottom = document.getElementById('viewServingBottom');
-        if(bottom) bottom.style.display = (mode === 'serve') ? 'block' : 'none';
-        
-        // Render Triggers
-        if(mode === 'hierarchy') {
-            // FIX: Prioritize CMS hierarchy if available
-            renderHierarchy(cmsHierarchyData || CMS_HIERARCHY);
-        }
-        if(mode === 'tribute') renderWishlist('all');
-        if(mode === 'serve') renderGallery();
+        if(mode === 'hierarchy') renderHierarchy(CMS_HIERARCHY);
+        if(mode === 'news') window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
     }
 
-    function toggleStats() { document.getElementById('statsContent').classList.toggle('open'); }
-
-    /* --- TASK LOGIC --- */
-    function getRandomTask() {
-        ignoreBackendUpdates = true; 
-        if (resetUiTimer) { clearTimeout(resetUiTimer); resetUiTimer = null; }
-        
-        let taskText = "Waiting for orders...";
-        if (taskQueue && taskQueue.length > 0) {
-            taskText = taskQueue[0];
-        } else {
-            if (taskDatabase && taskDatabase.length > 0) {
-                taskText = taskDatabase[Math.floor(Math.random()*taskDatabase.length)];
-            }
-        }
-        
-        currentTask = { text: taskText, category: 'general', timestamp: Date.now() }; 
-        const endTimeVal = Date.now() + 86400000;
-        pendingTaskState = { task: currentTask, endTime: endTimeVal, status: "PENDING" };
-        restorePendingUI();
-        window.parent.postMessage({ type: "savePendingState", pendingState: pendingTaskState, consumeQueue: true }, "*");
-        setTimeout(() => { ignoreBackendUpdates = false; }, 5000);
-    }
-
-    function restorePendingUI() {
-        if (resetUiTimer) { clearTimeout(resetUiTimer); resetUiTimer = null; }
-        document.getElementById('mainButtonsArea').classList.add('hidden'); 
-        document.getElementById('activeBadge').classList.add('show');
-        document.getElementById('taskContent').innerHTML = `<div style="font-size:1.2rem; font-weight:bold;">${currentTask.text}</div>`;
-        document.getElementById('cooldownSection').classList.remove('hidden');
-        if(cooldownInterval) clearInterval(cooldownInterval);
-        const targetTime = parseInt(pendingTaskState.endTime);
-        cooldownInterval = setInterval(() => {
-             if(!targetTime) return;
-             const diff = targetTime - Date.now();
-             if(diff <= 0) { 
-                 // --- AUTO FAIL LOGIC (300 COIN FINE) ---
-                 clearInterval(cooldownInterval); 
-                 document.getElementById('timerDisplay').textContent="00:00:00"; 
-                 cancelPendingTask(); // This triggers the fine logic
-                 return; 
-             }
-             const h = Math.floor(diff/3600000).toString().padStart(2,'0');
-             const m = Math.floor((diff%3600000)/60000).toString().padStart(2,'0');
-             const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
-             document.getElementById('timerDisplay').textContent = `${h}:${m}:${s}`;
-        }, 1000);
-    }
-
-    function finishTask(success) {
-        taskJustFinished = true; 
-        pendingTaskState = null; 
-        clearInterval(cooldownInterval);
-        document.getElementById('celebrationOverlay').classList.add('active');
-        setTimeout(() => { document.getElementById('celebrationOverlay').classList.remove('active'); }, 2500);
-        resetTaskDisplay(success);
-        setTimeout(() => { taskJustFinished = false; ignoreBackendUpdates = false; }, 5000);
-    }
-    
-    function cancelPendingTask() { 
-        if(!currentTask) return;
-        
-        // --- COIN CHECK (300 COIN FINE) ---
-        if (gameStats.coins < 300) {
-             triggerSound('sfx-deny');
-             // Fake system message
-             const chatContent = document.getElementById('chatContent');
-             chatContent.innerHTML += `<div class="msg-row system-row"><div class="msg-system sys-red"><svg class="sys-icon"><use href="#icon-close"></use></svg>CANNOT AFFORD SKIP (300)</div></div>`;
-             document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
-             return;
-        }
-        // ---------------------------------
-        
-        triggerSound('skipSound');
-        window.parent.postMessage({ type: "taskSkipped", taskTitle: currentTask.text }, "*"); 
-        finishTask(false); 
-    }
-
-    function resetTaskDisplay(success) {
-        document.getElementById('cooldownSection').classList.add('hidden');
-        document.getElementById('activeBadge').classList.remove('show');
-        document.getElementById('mainButtonsArea').classList.remove('hidden');
-        document.getElementById('taskContent').innerHTML = `<h2 style="font-weight:bold; font-size:1.5rem; color:${success?'var(--neon-yellow)':'var(--neon-red)'}">${success?'GOOD BOY.':'PATHETIC.'}</h2>`;
-        currentTask = null;
-        if (resetUiTimer) clearTimeout(resetUiTimer);
-        resetUiTimer = setTimeout(() => {
-             document.getElementById('taskContent').innerHTML = `<h2 id="readyText" style="font-weight:bold; margin-bottom:5px; color:white; font-size:1.5rem;">Ready?</h2><p class="rajdhani" style="color:#aaa; margin:0;">Waiting for orders.</p>`;
-             resetUiTimer = null;
-        }, 3000);
-    }
-
-    /* --- CHAT LOGIC (FORCE BUBBLES + SCROLL FIX + ANTI BLINK) --- */
-    function renderChat(messages) {
-        const chatBoxContainer = document.getElementById('chatBox');
-        const chatContent = document.getElementById('chatContent');
-        const loadMoreBtn = document.getElementById('chatLoadMoreBtn');
-        
-        if(!messages) return;
-        messages.sort((a,b) => new Date(a._createdDate) - new Date(b._createdDate));
-        
-        // Anti-Blink
-        const currentJson = JSON.stringify(messages);
-        if (currentJson === lastChatJson) return; 
-        
-        const isAtBottom = (chatBoxContainer.scrollHeight - chatBoxContainer.scrollTop - chatBoxContainer.clientHeight) < 150;
-        const wasInitialLoad = isInitialLoad;
-
-        // --- NOTIFICATION LOGIC (SOUND & GLASS) ---
-        if (!isInitialLoad) {
-            const lastMsg = messages[messages.length-1];
-            
-            // If the last message is NEW and NOT from the slave ('user')
-            if (lastMsg._id !== lastNotifiedMessageId && lastMsg.sender !== 'user') {
-                
-                // 1. PLAY SOUND: Triggers for both System and Admin messages
-                triggerSound('msgSound');
-
-                // 2. BREAK GLASS: Triggers for both System and Admin messages
-                // We removed the 'system' check so it pops up for your messages too
-                const glassOverlay = document.getElementById('specialGlassOverlay');
-                if (glassOverlay) {
-                    glassOverlay.classList.add('active');
-                }
-
-                lastNotifiedMessageId = lastMsg._id;
-            }
-        }
-        // ------------------------------------------
-        lastChatJson = currentJson; isInitialLoad = false;
-        
-        loadMoreBtn.style.display = messages.length > chatLimit ? 'block' : 'none';
-        const visibleMessages = messages.slice(Math.max(messages.length - chatLimit, 0));
-        
-        chatContent.innerHTML = visibleMessages.map(m => {
-            let txt = m.message.replace(/<[^>]+>/g, "").trim();
-            const isMe = m.sender === 'user';
-            const isSystem = m.sender === 'system';
-            
-            // 1. SYSTEM MESSAGES (GREY DEFAULT)
-            if (isSystem) {
-                let sysClass = ""; // Default Grey (transparent bg via CSS)
-                let sysIcon = "#icon-check";
-                const lower = txt.toLowerCase();
-                
-                // ONLY Money is Gold
-                if (lower.includes("tribute") || lower.includes("coins") || lower.includes("purchase") || lower.includes("sent")) { 
-                    sysClass = "sys-gold"; sysIcon = "#icon-coin"; 
-                }
-                // Errors Red
-                else if (lower.includes("insufficient") || lower.includes("poor") || lower.includes("rejected")) {
-                    sysClass = "sys-red"; sysIcon = "#icon-close";
-                }
-                
-                txt = txt.replace(/✅|❌|⛔|🎁|🪙/g, "").trim();
-                return `<div class="msg-row system-row"><div class="msg-system ${sysClass}"><svg class="sys-icon"><use href="${sysIcon}"></use></svg>${txt}</div></div>`;
-            }
-
-            // 2. ADMIN/USER MESSAGES
-            let msgClass = isMe ? 'm-slave' : 'm-queen';
-            
-            // Admin Verdict Colors
-            if (!isMe) {
-                if (txt.includes("Verified") || txt.includes("Task Verified")) msgClass = 'm-approve';
-                else if (txt.includes("Rejected") || txt.includes("Task Rejected")) msgClass = 'm-reject';
-            }
-
-            let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
-            
-            // 3. MEDIA DETECTION (Includes Video Fix)
-            if (m.message.startsWith('http')) {
-                const url = m.message;
-                const lowerUrl = url.toLowerCase();
-                
-                // Video Check
-                const isVideo = lowerUrl.includes("#.mp4") || lowerUrl.match(/\.(mp4|webm|mov)($|\?)/) || m.type === 'video';
-
-                // Image Check
-                const isImage = !isVideo && (
-                    lowerUrl.match(/\.(jpeg|jpg|gif|png|webp|bmp)($|\?)/) || 
-                    lowerUrl.includes("wixstatic") || 
-                    lowerUrl.includes("cloudinary") || 
-                    lowerUrl.includes("upcdn.io")
-                );
-
-                if (isVideo) {
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;">
-                        <video src="${url}" controls preload="metadata" onclick="openChatPreview('${encodeURIComponent(url)}', true)" style="max-width:100%; border-radius:8px; display:block; cursor:pointer;" onloadedmetadata="forceBottom()"></video>
-                    </div>`;
-                } 
-                else if (isImage) {
-                    const encUrl = encodeURIComponent(url);
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
-                        <img src="${url}" class="gm-img" style="border-radius:8px; cursor:pointer;" loading="lazy" onclick="openChatPreview('${encUrl}', false)" onload="forceBottom()">
-                    </div>`;
-                } 
-                else {
-                    contentHtml = `<div class="msg ${msgClass}"><a href="${url}" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">LINK</a></div>`;
-                }
-            }
-
-            // Timestamp Layout (Side by Side)
-            let rowContent = "";
-            const avatar = isMe ? "" : `<img src="${QUEEN_AVATAR}" class="msg-avatar">`;
-            const timeDiv = `<div class="msg-time">${new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
-            
-            if (isMe) {
-                 rowContent = `<div class="msg-col" style="justify-content: flex-end;">${contentHtml} ${timeDiv}</div>`;
-            } else {
-                 rowContent = `${avatar}<div class="msg-col" style="justify-content: flex-start;">${contentHtml} ${timeDiv}</div>`;
-            }
-
-            return `<div class="msg-row ${isMe?'mr-out':'mr-in'}">${rowContent}</div>`;
-        }).join('');
-
-        if (wasInitialLoad || isAtBottom) {
-            forceBottom();
-            setTimeout(forceBottom, 100);
-            setTimeout(forceBottom, 500); 
-        }
-    }
-    
-    // --- FORCE SCROLL HELPER ---
-    function forceBottom() {
-        const b = document.getElementById('chatBox');
-        if(b) b.scrollTop = b.scrollHeight;
-    }
-
-    // --- PROTOCOL TOGGLE LOGIC (EXCLUSIVE FOCUS + ARROWS) ---
-    function toggleSection(element) {
-        const allItems = document.querySelectorAll('.protocol-item');
-        const isActive = element.classList.contains('active');
-
-        if (!isActive) {
-            // OPENING: Hide everything else completely
-            allItems.forEach(item => {
-                if (item === element) {
-                    item.classList.add('active');
-                    item.style.display = 'block';
-                    const itemArrow = item.querySelector('.protocol-arrow');
-                    if (itemArrow) itemArrow.innerText = '▲';
-                } else {
-                    item.style.display = 'none'; // They vanish
-                }
-            });
-        } else {
-            // CLOSING: Show everything again
-            allItems.forEach(item => {
-                item.classList.remove('active');
-                item.style.display = 'block'; // They return
-                const itemArrow = item.querySelector('.protocol-arrow');
-                if (itemArrow) itemArrow.innerText = '▼';
-            });
-        }
-    }
-
-    // --- NEW INTERNAL CHAT PREVIEW FUNCTIONS ---
-    function openChatPreview(encUrl, isVideo) {
-        const url = decodeURIComponent(encUrl);
-        const overlay = document.getElementById('chatMediaOverlay');
-        const content = document.getElementById('cmoContent');
-        if (isVideo) { content.innerHTML = `<video src="${url}" controls autoplay class="cmo-media" style="pointer-events:auto;"></video>`; } 
-        else { content.innerHTML = `<img src="${url}" class="cmo-media">`; }
-        overlay.classList.add('active');
-    }
-    function closeChatPreview() {
-        const overlay = document.getElementById('chatMediaOverlay');
-        overlay.classList.remove('active');
-        document.getElementById('cmoContent').innerHTML = ""; 
-    }
-
-    function loadMoreChat() { chatLimit += 10; const oldJson = lastChatJson; lastChatJson = ""; renderChat(JSON.parse(oldJson)); }
-    function sendChatMessage() { const input = document.getElementById('chatMsgInput'); const txt = input.value.trim(); if(!txt) return; window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: txt }, "*"); input.value = ""; }
-    function handleChatKey(e) { if(e.key === 'Enter') sendChatMessage(); }
-
-    function createPendingCardHTML(item) {
-        const cleanText = cleanHTML(item.text).replace(/"/g, '&quot;');
-        const isVideo = item.proofType === 'video' || item.proofUrl.match(/\.(mp4|webm|mov)$/i);
-        let thumb = getOptimizedUrl(item.proofUrl, 400);
-        
-        const encUrl = encodeURIComponent(item.proofUrl || "");
-        const encText = encodeURIComponent(item.text || "");
-        const encStatus = encodeURIComponent("PENDING REVIEW");
-
-        return `<div class="pending-card" onclick='openModal("${encUrl}", "${encStatus}", "${encText}", ${isVideo}, "", "", "")'>
-                    <div class="pc-media"><img src="${thumb}" class="pc-thumb" loading="lazy"><div class="pc-gradient"></div><div class="absolute inset-0 flex items-center justify-center z-10"><svg class="w-8 h-8 fill-yellow-400 drop-shadow-md"><use href="#icon-timer"></use></svg></div></div>
-                    <div class="pc-content"><div class="pc-badge">PENDING</div><div class="pc-title">${cleanText}</div></div>
-                </div>`;
-    }
-    
-    // Change the first line to include index
-      function createGalleryItemHTML(item, index) {
-          if(!item.proofUrl) return '';
-          let statusClass = item.status === 'approve' ? 'st-approve' : (item.status === 'reject' ? 'st-reject' : 'st-pending');
-          let statusText = item.status === 'approve' ? 'APPROVED' : (item.status === 'reject' ? 'REJECTED' : 'PENDING');
-          let overlayHtml = item.status === 'reject' ? '<div class="rejected-overlay"></div>' : '';
-          const isVideo = item.proofType === 'video' || item.proofUrl.match(/\.(mp4|webm|mov)$/i);
-          let thumbUrl = getOptimizedUrl(item.proofUrl, 300);
-
-          let mediaHtml = isVideo ? `<img src="${thumbUrl}" class="gi-thumb" loading="lazy"><div class="gi-play-icon" style="display:block;">▶</div>` : `<img src="${thumbUrl}" class="gi-thumb" style="opacity:0.7;" loading="lazy">`;
-
-          let stickerHtml = item.sticker ? `<img src="${item.sticker}" class="gi-sticker" title="Awarded">` : '';
-
-          // CHANGE: The onclick now calls openHistoryModal(index)
-          return `<div class="gallery-item ${isVideo?'video-item':''}" onclick='openHistoryModal(${index})'>
-                      ${overlayHtml}
-                      ${mediaHtml}
-                      ${stickerHtml}
-                      <div class="gi-badge ${statusClass}">${statusText}</div>
-                  </div>`;
-      }
-
-  
-                let currentHistoryIndex = 0;
-                let touchStartX = 0;
-
-                // 1. MAIN FUNCTION: Open Modal by Index with Layered UI
-                function openHistoryModal(index) {
-                    // Filter history items only
-                    const historyItems = galleryData.filter(i => (i.status === 'approve' || i.status === 'reject') && i.proofUrl);
-
-                    if (historyItems.length === 0) return;
-
-                    // --- LOOP LOGIC: Allows continuous swiping ---
-                    if (index < 0) index = historyItems.length - 1; 
-                    if (index >= historyItems.length) index = 0;     
-
-                    currentHistoryIndex = index;
-                    const item = historyItems[index];
-
-                    // Detect media type for background
-                    const isVideo = item.proofType === 'video' || (item.proofUrl && item.proofUrl.match(/\.(mp4|webm|mov)$/i));
-
-                    // LAYER 0: Set Background Media
-                    const mediaContainer = document.getElementById('modalMediaContainer');
-                    if (mediaContainer) {
-                        mediaContainer.innerHTML = isVideo ?
-                            `<video src="${item.proofUrl}" autoplay loop muted style="width:100%; height:100%; object-fit:cover;"></video>` :
-                            `<img src="${item.proofUrl}" style="width:100%; height:100%; object-fit:cover;">`;
-                    }
-
-                    // LAYER 1: Set Status Badge & Points
-                    const statusEl = document.getElementById('modalStatus');
-                    if (statusEl) {
-                        statusEl.innerText = (item.status || "STATUS").toUpperCase();
-                        statusEl.style.backgroundColor = item.status === 'approve' ? 'var(--neon-green)' : 'var(--neon-red)';
-                    }
-
-                    const pointsEl = document.getElementById('modalPoints');
-                    if (pointsEl) {
-                        pointsEl.innerText = `+${item.points || 0} PTS`;
-                    }
-
-                    // LAYER 1.5: Set Sticker
-                    const stickerEl = document.getElementById('modalSticker');
-                    if (stickerEl) {
-                        stickerEl.innerHTML = item.sticker ? `<img src="${item.sticker}" style="width:60px; filter:drop-shadow(0 0 5px white);">` : "";
-                    }
-
-                    // LAYER 2: Set Feedback Bubble (Small floating bubble)
-                    const bubble = document.getElementById('modalFeedbackBubble');
-                    const fMedia = document.getElementById('modalFeedbackMedia');
-                    const fText = document.getElementById('modalFeedbackText');
-
-                    if (bubble) {
-                        if (item.adminComment || item.adminMedia) {
-                            bubble.classList.remove('hidden');
-                            if (fText) fText.innerText = item.adminComment || "";
-                            if (fMedia) {
-                                if (item.adminMedia) {
-                                    const isAdmVideo = item.adminMedia.match(/\.(mp4|webm|mov)$/i);
-                                    fMedia.innerHTML = isAdmVideo ?
-                                        `<video src="${item.adminMedia}" controls style="max-height:100px; border-radius:8px; width:auto;"></video>` :
-                                        `<img src="${item.adminMedia}" style="max-height:100px; border-radius:8px; width:auto;">`;
-                                } else { fMedia.innerHTML = ""; }
-                            }
-                        } else {
-                            bubble.classList.add('hidden');
-                        }
-                    }
-
-                    // LAYER 3: Set Order Overlay Text
-                    const orderEl = document.getElementById('modalOrderText');
-                    if (orderEl) {
-                        orderEl.innerText = item.text || "No details available.";
-                    }
-
-                    // Reset view to 'info' state whenever a new photo opens
-                    toggleHistoryView('info');
-
-                    // Show the Modal
-                    const glassModal = document.getElementById('glassModal');
-                    if (glassModal) {
-                        glassModal.classList.add('active');
-                        glassModal.style.display = 'flex'; 
-                    }
-                }
-
-                // 2. VIEW CONTROLLER: Logic for "See Order", "See Photo", etc.
-                function toggleHistoryView(view) {
-                    const infoLayer = document.getElementById('modalOverlayInfo');
-                    const feedbackBubble = document.getElementById('modalFeedbackBubble');
-                    const orderOverlay = document.getElementById('modalOrderText');
-
-                    if (!infoLayer || !orderOverlay) return;
-
-                    // Default: Hide all floating layers
-                    infoLayer.style.display = "none";
-                    if (feedbackBubble) feedbackBubble.style.display = "none";
-                    orderOverlay.classList.add('hidden');
-
-                    if (view === 'info') {
-                        // Show Status, Points, Sticker, and Feedback
-                        infoLayer.style.display = "flex";
-                        if (feedbackBubble && feedbackBubble.innerHTML.trim() !== "") {
-                            feedbackBubble.style.display = "block";
-                        }
-                    } else if (view === 'order') {
-                        // Show only the Task Description centered
-                        orderOverlay.classList.remove('hidden');
-                    }
-                    // 'clear' view leaves everything hidden (See Photo only)
-                }
-
-                // 3. SWIPE DETECTION: Core Listeners
-                const modalEl = document.getElementById('glassModal');
-
-                modalEl.addEventListener('touchstart', e => {
-                    touchStartX = e.changedTouches[0].screenX;
-                }, { passive: true });
-
-                modalEl.addEventListener('touchend', e => {
-                    const touchEndX = e.changedTouches[0].screenX;
-                    const diff = touchStartX - touchEndX;
-
-                    // 70px threshold to verify swipe vs tap
-                    if (Math.abs(diff) > 70) {
-                        if (diff > 0) {
-                            openHistoryModal(currentHistoryIndex + 1); // Swipe Left -> Next
-                        } else {
-                            openHistoryModal(currentHistoryIndex - 1); // Swipe Right -> Prev
-                        }
-                    }
-                }, { passive: true });
-
-  
+    /* --- HISTORY & GALLERY --- */
     function renderGallery() {
-        const pGrid = document.getElementById('pendingGrid');
         const hGrid = document.getElementById('historyGrid');
-        const pItems = galleryData.filter(i => i.status === 'pending' && i.proofUrl);
-        if(pGrid) pGrid.innerHTML = pItems.slice(0, pendingLimit).map(createPendingCardHTML).join('');
-        document.getElementById('pendingSection').style.display = pItems.length > 0 ? 'block' : 'none';
-        const hItems = galleryData.filter(i => (i.status === 'approve' || i.status === 'reject') && i.proofUrl);
-        if(hGrid) hGrid.innerHTML = hItems.slice(0, historyLimit).map((item, index) => createGalleryItemHTML(item, index)).join('');
-        document.getElementById('historySection').style.display = (hItems.length > 0 || pItems.length === 0) ? 'block' : 'none';
-        document.getElementById('loadMoreBtn').style.display = hItems.length > historyLimit ? 'block' : 'none';
-    }
-    function loadMoreHistory() { historyLimit += 25; renderGallery(); }
-  
+        const pGrid = document.getElementById('pendingGrid');
+        const hItems = galleryData.filter(i => i.status && i.status.toLowerCase() !== 'pending');
+        const pItems = galleryData.filter(i => i.status && i.status.toLowerCase() === 'pending');
 
-    function openModal(encUrl, encStatus, encText, isVideo, encComment, encMedia, encSticker) {
-        document.querySelector('.gm-content').style.maxWidth = "900px";
-        const mediaZone = document.getElementById('modalMediaContainer');
-        
-        const url = decodeURIComponent(encUrl);
-        const status = decodeURIComponent(encStatus);
-        const text = decodeURIComponent(encText);
-        const adminComment = encComment ? decodeURIComponent(encComment) : "";
-        const adminMedia = encMedia ? decodeURIComponent(encMedia) : "";
-        const sticker = encSticker ? decodeURIComponent(encSticker) : "";
-
-        let statusColor = "#888";
-        let statusShadow = "none";
-        if (status.includes("APPROVED")) {
-            statusColor = "var(--neon-green)"; statusShadow = "0 0 15px var(--neon-green)";
-        } else if (status.includes("REJECTED")) {
-            statusColor = "var(--neon-red)"; statusShadow = "0 0 15px var(--neon-red)";
-        }
-
-        mediaZone.style.display = "flex";
-        mediaZone.innerHTML = isVideo ? `<video src="${url}" class="gm-img" controls autoplay></video>` : `<img src="${url}" class="gm-img">`;
-        
-        document.querySelector('.gm-info-zone').style.height = "40%";
-        
-        let feedbackHtml = "";
-        if (adminComment || adminMedia) {
-            feedbackHtml = `<div style="margin-top:15px; padding:12px; background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:8px; position:relative;">
-                <div style="font-size:0.65rem; color:var(--neon-pink); font-weight:900; margin-bottom:8px; letter-spacing:1px; text-transform:uppercase;">QUEEN'S FEEDBACK</div>`;
+        hGrid.innerHTML = hItems.map(item => `
+            <div class="gallery-item" onclick="openHistoryModal(${galleryData.indexOf(item)})" style="position:relative; aspect-ratio:1; background:#000; border-radius:8px; overflow:hidden; border:1px solid #333;">
+                <img src="${item.proofUrl}" style="width:100%; height:100%; object-fit:cover; opacity:0.6;">
+                <div style="position:absolute; bottom:5px; left:5px; font-size:0.5rem; background:rgba(0,0,0,0.8); padding:2px 5px; border-radius:3px;">${item.status.toUpperCase()}</div>
+            </div>`).join('');
             
-            if (adminMedia) {
-                const isAdmVideo = adminMedia.endsWith('.mp4');
-                if(isAdmVideo) feedbackHtml += `<video src="${adminMedia}" controls style="width:100%; border-radius:4px; margin-bottom:8px; border:1px solid #444;"></video>`;
-                else feedbackHtml += `<img src="${adminMedia}" style="width:100%; border-radius:4px; margin-bottom:8px; border:1px solid #444;">`;
-            }
-            if (adminComment) {
-                feedbackHtml += `<div style="font-family:'Rajdhani'; color:white; font-size:0.95rem; line-height:1.4;">"${adminComment}"</div>`;
-            }
-            feedbackHtml += `</div>`;
-        }
+        pGrid.innerHTML = pItems.map(item => `
+            <div onclick="openHistoryModal(${galleryData.indexOf(item)})" style="aspect-ratio:1.5; background:#111; border-radius:10px; overflow:hidden; position:relative; border:1px solid var(--neon-yellow);">
+                <img src="${item.proofUrl}" style="width:100%; height:100%; object-fit:cover; opacity:0.4;">
+                <div style="position:absolute; bottom:10px; left:10px; font-weight:bold; font-size:0.7rem; color:var(--neon-yellow);">PENDING REVIEW</div>
+            </div>`).join('');
+        document.getElementById('pendingSection').style.display = pItems.length > 0 ? 'block' : 'none';
+    }
 
-        let stickerDisplay = "";
-        if (sticker) {
-            stickerDisplay = `<div style="display:flex; justify-content:center; margin-bottom:5px;">
-                <img src="${sticker}" style="width:60px; height:60px; object-fit:contain; filter:drop-shadow(0 0 5px rgba(255,255,255,0.5));">
-            </div>`;
-        }
-
-        document.querySelector('.gm-info-zone').innerHTML = `
-            <div id="modalText" class="modal-task-text" style="font-size:1.1rem; margin-bottom:10px;">${text || ""}</div>
-            ${feedbackHtml}
-            <div style="margin-top: auto; display:flex; flex-direction:column; align-items:center; gap:5px; border-top:1px solid #333; padding-top:15px;">
-                ${stickerDisplay}
-                <div class="modal-status-label" style="font-size:0.65rem; letter-spacing:2px; color:#666;">STATUS</div>
-                <div id="modalStatus" class="modal-status-val" style="font-size:2rem; font-weight:900; color:${statusColor}; text-shadow:${statusShadow}; letter-spacing:3px;">${status || ""}</div>
-            </div>
-            <button onclick="closeModal(null)" class="action-btn" style="background:#222; color:white; font-size:0.75rem; padding: 10px; margin-top: 20px;">CLOSE</button>
-        `;
+    function openHistoryModal(index) {
+        const item = galleryData[index];
+        if(!item) return;
+        activeHistoryItem = item;
+        currentHistoryIndex = index;
+        setMediaLayer(item.proofUrl);
+        
+        const statusEl = document.getElementById('modalStatus');
+        const s = item.status.toUpperCase();
+        statusEl.innerText = s;
+        statusEl.style.color = s.includes('APP') ? 'var(--neon-green)' : (s.includes('PEND') ? 'var(--neon-yellow)' : 'var(--neon-red)');
+        
+        document.getElementById('modalPoints').innerText = `+${item.points || item.score || 0} PTS`;
+        document.getElementById('modalSticker').innerHTML = item.sticker ? `<img src="${item.sticker}" style="width:60px; filter:drop-shadow(0 0 10px white);">` : "";
+        
+        const fMedia = document.getElementById('modalFeedbackMedia');
+        const feedbackRow = document.getElementById('feedbackRow');
+        if (item.adminMedia) {
+            feedbackRow.style.display = "flex";
+            const isVid = item.adminMedia.match(/\.(mp4|webm|mov)$/i);
+            fMedia.innerHTML = isVid ? `<video src="${item.adminMedia}"></video>` : `<img src="${item.adminMedia}">`;
+        } else { feedbackRow.style.display = "none"; }
+        
+        document.getElementById('modalFeedbackText').innerText = item.adminComment || "No comment.";
+        document.getElementById('modalOrderText').innerText = item.text || "No details.";
+        
+        toggleHistoryView('info');
         document.getElementById('glassModal').classList.add('active');
     }
-    
-    function closeModal() { document.getElementById('glassModal').classList.remove('active'); }
 
-    // --- 1. RENDER HIGHLIGHTS (Reel) ---
-    function renderDomVideos(videos) {
-        const reel = document.getElementById('domVideoReel');
-        if(!reel) return;
-        if(!videos || videos.length === 0) { reel.innerHTML = `<div style="color:#444; font-size:0.7rem; padding:10px;">No highlights.</div>`; return; }
-        const cnt = document.getElementById('cntPosts');
-        if(cnt) cnt.innerText = videos.length;
-        reel.innerHTML = videos.map(item => {
-            const mediaUrl = item.page; 
-            const caption = item.post || "Clip";
-            if (!mediaUrl) return "";
-            const thumbUrl = getOptimizedUrl(mediaUrl, 300);
-            return `
-            <div class="hl-item" onclick="openNewsCard('${caption.replace(/'/g, "\\'")}', '', '${mediaUrl}')">
-                <div class="hl-circle"><img src="${thumbUrl}" class="hl-img" loading="lazy"></div>
-                <div class="hl-title">${caption}</div>
-            </div>`;
-        }).join('');
-    }
-
-    // --- 2. RENDER FEED GRID (News) ---
-    function renderNews(data) {
-        const grid = document.getElementById('newsGrid');
-        if(!grid) return;
-        grid.innerHTML = data.map(item => {
-            let contentHtml = '';
-            let icon = '';
-            const img = item.img || item.page;
-            const title = item.title || item.post || "UPDATE";
-            const body = item.content || "";
-
-            if (img) {
-                const thumb = getOptimizedUrl(img, 300);
-                contentHtml = `<img src="${thumb}" class="sg-img" loading="lazy">`;
-                icon = '📷';
-            } else {
-                const shortText = title ? title : "UPDATE";
-                contentHtml = `<div class="sg-text">${shortText}</div>`;
-                icon = '📝';
-            }
-            return `
-            <div class="sg-item" onclick="openNewsCard('${title.replace(/'/g, "\\'")}', '${body.replace(/'/g, "\\'")}', '${img || ""}')">
-                <div class="sg-icon">${icon}</div>
-                ${item.type === 'URGENT' ? '<div class="sg-new">!</div>' : ''}
-                ${contentHtml}
-            </div>`;
-        }).join('');
-    }
-
-    // --- 3. HELPER: OPEN CARD MODAL ---
-    function openNewsCard(title, body, imgUrl) {
-        const modal = document.getElementById('glassModal');
-        const mediaZone = document.getElementById('modalMediaContainer');
-        const textZone = document.getElementById('modalText');
-        const statusZone = document.getElementById('modalStatus');
-        if(imgUrl) {
-            const isVideo = imgUrl.includes('.mp4') || imgUrl.includes('.mov');
-            mediaZone.innerHTML = isVideo ? `<video src="${imgUrl}" class="gm-img" controls autoplay></video>` : `<img src="${imgUrl}" class="gm-img">`;
-            mediaZone.style.display = 'flex';
-        } else { mediaZone.style.display = 'none'; }
-        textZone.innerHTML = `<h3 style="color:var(--neon-pink); font-size:1.5rem; margin-bottom:10px; line-height:1.1;">${title}</h3><div style="font-family:'Rajdhani'; font-size:1rem; color:#ccc; line-height:1.4;">${body}</div>`;
-        statusZone.innerText = "VIEWING";
-        document.querySelector('.gm-content').style.maxWidth = "600px"; 
-        if(!imgUrl) document.querySelector('.gm-content').style.display = "flex"; 
-        modal.classList.add('active');
-    }
-
-    async function handleEvidenceUpload(input) {
-      try {
-        if (input.files && input.files[0]) {
-          const file = input.files[0];
-          const fd = new FormData(); fd.append("file", file);
-          const statusEl = document.getElementById("uploadStatus"); statusEl.innerText = "Uploading...";
-          const folder = userProfile.name.replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
-          const res = await fetch(`https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/evidence/${folder}`, { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd });
-          if (!res.ok) { statusEl.innerText = "Upload failed."; return; }
-          const d = await res.json();
-          if (d.files && d.files[0] && d.files[0].fileUrl) {
-            window.parent.postMessage({ type: "uploadEvidence", task: currentTask.text, fileUrl: d.files[0].fileUrl, mimeType: file.type }, "*");
-            finishTask(true); statusEl.innerText = "Upload complete!";
-          } else { statusEl.innerText = "Upload failed (unexpected response)."; }
-        }
-      } catch (err) { document.getElementById("uploadStatus").innerText = "Upload failed (error)."; }
-    }
-
-    async function handleProfileUpload(input) { if(input.files && input.files[0]) { const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET); const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: fd }); const d = await res.json(); if(d.secure_url) window.parent.postMessage({ type: "UPDATE_PROFILE_PIC", url: d.secure_url }, "*"); } }
-    
-      function updateStats() {
-      document.getElementById('subName').textContent = userProfile.name;
-      document.getElementById('subHierarchy').textContent = userProfile.hierarchy;
-      document.getElementById('coins').textContent = gameStats.coins;
-      document.getElementById('points').textContent = gameStats.points;
-
-      // --- NEW FIELD MAPPINGS ---
-      if(document.getElementById('statStreak')) document.getElementById('statStreak').textContent = gameStats.taskdom_streak || 0;
-      if(document.getElementById('statTotal')) document.getElementById('statTotal').textContent = gameStats.taskdom_total_tasks || 0;
-      if(document.getElementById('statCompleted')) document.getElementById('statCompleted').textContent = gameStats.taskdom_completed_tasks || 0;
-      if(document.getElementById('statSkipped')) document.getElementById('statSkipped').textContent = stats.skippedTasks || 0;
-      if(document.getElementById('statTotalKneels')) document.getElementById('statTotalKneels').textContent = gameStats.kneelCount || 0;
-
-      if (userProfile.joined) {
-          try {
-              const dateObj = new Date(userProfile.joined);
-              document.getElementById('slaveSinceDate').textContent = dateObj.toLocaleDateString();
-          } catch(e) { document.getElementById('slaveSinceDate').textContent = "--/--/--"; }
-      }
-
-      // Leave the level/progress bar logic below this exactly as it is...
-      let nextLevel = LEVELS.find(l => l.min > gameStats.points) || {name: "MAX", min: gameStats.points};
-      document.getElementById('nextLevelName').innerText = nextLevel.name;
-      const needed = nextLevel.min - gameStats.points;
-      document.getElementById('pointsNeeded').innerText = (needed > 0 ? needed : 0) + " to go";
-      const prevLevel = LEVELS.slice().reverse().find(l => l.min <= gameStats.points) || {min: 0};
-      const range = nextLevel.min - prevLevel.min;
-      const progress = range > 0 ? ((gameStats.points - prevLevel.min) / range) * 100 : 100;
-      document.getElementById('progressBar').style.width = Math.min(100, Math.max(0, progress)) + "%";
-
-      updateDevotionStatus(); 
-  }
-
-    function openSessionUI() { document.getElementById('sessionOverlay').classList.add('active'); document.getElementById('sessionCostDisplay').innerText = "3000"; document.querySelector('input[value="chat"]').checked = true; }
-    function closeSessionUI() { document.getElementById('sessionOverlay').classList.remove('active'); }
-    function updateSessionCost() { const cost = document.querySelector('input[name="sessionType"]:checked').getAttribute('data-cost'); document.getElementById('sessionCostDisplay').innerText = cost; }
-    function submitSessionRequest() {
-        const type = document.querySelector('input[name="sessionType"]:checked').value;
-        const cost = parseInt(document.querySelector('input[name="sessionType"]:checked').getAttribute('data-cost'));
-        const timeSelect = document.getElementById('sessionTimeSelect');
-        const selectedTimeText = timeSelect.options[timeSelect.selectedIndex].text;
-        const selectedTimeVal = timeSelect.value;
-        const focus = document.getElementById('sessionFocus').value;
-        if(gameStats.coins < cost) { triggerSound('sfx-deny'); alert("Insufficient coins."); return; }
-        gameStats.coins -= cost; document.getElementById('coins').textContent = gameStats.coins; triggerSound('sfx-buy');
-        window.parent.postMessage({ type: "SESSION_REQUEST", sessionType: type, cost: cost, requestedTime: selectedTimeVal, requestedTimeLabel: selectedTimeText, focus: focus }, "*");
-        document.getElementById('sessionOverlay').innerHTML = `<div style="text-align:center; padding:20px; color:white;"><div style="font-size:3rem; margin-bottom:10px;">✅</div><h2 style="font-weight:bold; margin-bottom:10px; font-family:'Orbitron';">REQUEST SENT</h2><p style="color:#aaa; font-family:'Rajdhani'; font-size:0.9rem;">${cost} coins held.<br>Waiting for Queen's confirmation.</p><button onclick="location.reload()" class="action-btn" style="margin-top:20px; font-size:0.7rem;">CLOSE</button></div>`;
-    }
-
-    function sendCoins(amount, category = "Tribute") {
-        // --- MOCK POOR USERS ---
-        if (gameStats.coins < amount) {
-            triggerSound('sfx-deny');
-            // Insert Fake Message
-            const mocks = ["Too poor.", "Earn it first.", "Empty pockets?", "Pathetic wallet."];
-            const text = mocks[Math.floor(Math.random() * mocks.length)];
-            const chatContent = document.getElementById('chatContent');
-            chatContent.innerHTML += `<div class="msg-row system-row"><div class="msg-system sys-red"><svg class="sys-icon"><use href="#icon-close"></use></svg>${text}</div></div>`;
-            document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
-            return;
-        }
-        // -----------------------
+    function toggleHistoryView(view, event) {
+        if(event) event.stopPropagation();
+        const card = document.getElementById('reviewCard');
+        const order = document.getElementById('modalOrderText');
+        const text = document.getElementById('modalFeedbackText');
+        card.classList.add('hidden'); order.classList.add('hidden'); text.classList.add('hidden');
         
-        if (category !== "TAX") { triggerSound('coinSound'); triggerCoinShower(); }
-        window.parent.postMessage({ type: "SEND_COINS", amount: amount, category: category }, "*");
-        const btns = document.querySelectorAll('.coin-btn');
-        btns.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
-        setTimeout(() => { btns.forEach(b => { b.disabled = false; b.style.opacity = '1'; }); }, 1500);
+        if(view === 'info'){ card.classList.remove('hidden'); setMediaLayer(activeHistoryItem.proofUrl); }
+        else if(view === 'task'){ order.classList.remove('hidden'); }
+        else if(view === 'comment'){ card.classList.remove('hidden'); text.classList.remove('hidden'); }
+        else if(view === 'queen_media'){ setMediaLayer(activeHistoryItem.adminMedia); }
+        else if(view === 'proof'){ setMediaLayer(activeHistoryItem.proofUrl); }
     }
-    function buyRealCoins(amount) { triggerSound('sfx-buy'); window.parent.postMessage({ type: "INITIATE_STRIPE_PAYMENT", amount: amount }, "*"); }
-    function triggerCoinShower() { for(let i=0; i<40; i++) { const coin = document.createElement('div'); coin.className = 'coin-particle'; coin.innerHTML = `<svg style="width:100%; height:100%; fill:gold;"><use href="#icon-coin"></use></svg>`; coin.style.setProperty('--tx', `${Math.random()*200-100}vw`); coin.style.setProperty('--ty', `${-(Math.random()*80+20)}vh`); document.body.appendChild(coin); setTimeout(() => { coin.remove(); }, 2000); } }
-    function breakGlass(e) { if(e) e.stopPropagation(); const overlay = document.getElementById('specialGlassOverlay'); if (overlay.classList.contains('active')) { overlay.classList.remove('active'); window.parent.postMessage({ type: "GLASS_BROKEN" }, "*"); } }
-    function cleanHTML(html) { if(!html) return ""; let text = html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n"); text = text.replace(/<[^>]+>/g, ""); const txt = document.createElement("textarea"); txt.innerHTML = text; return txt.value.trim(); }
-    function filterStore(cat, el) { document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active')); el.classList.add('active'); renderWishlist(cat); }
-    function renderWishlist(filter) { const grid = document.getElementById('storeGrid'); if(!grid) return; const items = filter === 'all' ? WISHLIST_ITEMS : WISHLIST_ITEMS.filter(i => i.cat.includes(filter.toLowerCase())); grid.innerHTML = items.map(item => { const canAfford = gameStats.coins >= item.price; return `<div class="store-item ${canAfford?'can-afford':'locked'}"><div class="si-img-box"><img src="${item.img}" class="si-img"><div class="si-price">${item.price} 🪙</div></div><div class="si-info"><div class="si-name">${item.name}</div><button id="btn-${item.id}" class="si-btn" onclick="buyItem('${item.id}')"><span>${canAfford?'🔓':'🔒'}</span> ${canAfford?'BUY NOW':'LOCKED'}</button></div></div>`; }).join(''); }
-    
-    function buyItem(id) {
-        const item = WISHLIST_ITEMS.find(i => i.id == id); if(!item) return;
-        if (gameStats.coins >= item.price) {
-            gameStats.coins -= item.price; document.getElementById('coins').textContent = gameStats.coins; triggerSound('sfx-buy');
-            window.parent.postMessage({ type: "PURCHASE_ITEM", itemId: item.id, itemName: item.name, cost: item.price }, "*");
-            const btn = document.getElementById('btn-' + id);
-            if(btn) { btn.innerHTML = "PURCHASED"; btn.style.background = "var(--neon-green)"; btn.style.color = "black"; btn.style.borderColor = "var(--neon-green)"; }
-            setTimeout(() => { const activePill = document.querySelector('.cat-pill.active'); renderWishlist(activePill ? activePill.innerText.toLowerCase() : 'all'); }, 1000);
-        } else { triggerSound('sfx-deny'); }
+
+    function setMediaLayer(url) {
+        const container = document.getElementById('modalMediaContainer');
+        if(!url) return;
+        const isVid = url.match(/\.(mp4|webm|mov)$/i);
+        container.innerHTML = isVid ? `<video src="${url}" autoplay loop muted></video>` : `<img src="${url}">`;
     }
-    
-    function renderHierarchy(data) { const grid = document.getElementById('hierarchyGrid'); if(!grid) return; const sortedData = data.sort((a,b) => a.Order - b.Order); grid.innerHTML = sortedData.map(item => { const hasSlot = item.ContactText && item.ContactText.trim() !== ""; return `<div class="rank-card rounded-lg p-3 cursor-pointer ${item.CssClass || ''}" onclick="toggleDetails(this)"><div class="flex items-center gap-2 md:gap-4"><div class="text-lg md:text-2xl">${item.Icon || ''}</div><div class="flex-1 min-w-0"><div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-1"><h3 class="text-xl font-semibold text-gray-300" style="font-family: 'Orbitron', monospace;">${item.Title}</h3><div class="flex flex-row flex-wrap gap-2"><span class="duty-chip">POINTS: ${item.Points}</span>${hasSlot ? `<span class="duty-chip">${item.ContactText}</span>` : ''}</div></div><p class="text-gray-300 text-xs md:text-sm">${item.Description || ''}</p></div><div class="text-gray-400 text-sm flex-shrink-0">▼</div></div><div class="details mt-4 cms-content"><div style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px;"><strong class="neon-pink-text" style="font-size:0.8rem;">STATUS</strong><p>${item.StatusText}</p></div><div style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px;"><strong class="neon-text" style="font-size:0.8rem;">PROTOCOL</strong><div>${item.ProtocolText}</div></div><div><strong class="silver-text" style="font-size:0.8rem;">DUTIES</strong><div>${item.DutiesText}</div></div></div></div>`; }).join(''); }
-    function toggleDetails(card) { const details = card.querySelector('.details'); const arrow = card.querySelector('.text-gray-400'); document.querySelectorAll('.rank-card').forEach(otherCard => { if (otherCard !== card) { const otherDetails = otherCard.querySelector('.details'); const otherArrow = otherCard.querySelector('.text-gray-400'); if(otherDetails) otherDetails.classList.remove('show'); otherCard.classList.remove('expanded'); if(otherArrow) otherArrow.textContent = '▼'; } }); if (details.classList.contains('show')) { details.classList.remove('show'); card.classList.remove('expanded'); arrow.textContent = '▼'; } else { details.classList.add('show'); card.classList.add('expanded'); arrow.textContent = '▲'; } }
-    
-    function migrateGameStatsToStats(gameStats, stats) { return { ...stats, approvedTasks: Math.max(stats.approvedTasks, gameStats.completedTasks || 0), dailyCompletedTasks: Math.max(stats.dailyCompletedTasks, gameStats.completedTasks || 0), dailyStreak: Math.max(stats.dailyStreak, gameStats.currentStreak || 0), dailyScore: Math.max(stats.dailyScore, gameStats.points || 0), monthlyTotalTasks: Math.max(stats.monthlyTotalTasks, gameStats.totalTasks || 0), monthlyScore: Math.max(stats.monthlyScore, gameStats.points || 0) }; }
-    
-    setInterval(() => { window.parent.postMessage({ type: "heartbeat", view: currentView }, "*"); }, 3000);
 
-    async function handleAdminUpload(input) {
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            const isVideo = file.type.startsWith('video') || file.name.match(/\.(mp4|mov|webm)$/i);
-            const fd = new FormData();
-            fd.append("file", file);
-
-            try {
-                // Visual feedback
-                const btn = document.querySelector('.btn-plus');
-                const oldText = btn.innerText;
-                btn.innerText = "⏳";
-
-                const res = await fetch(
-                    `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/admin`,
-                    { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd }
-                );
-
-                if (!res.ok) { 
-                    console.error("Upload failed");
-                    btn.innerText = oldText;
-                    return; 
-                }
-                const d = await res.json();
-
-                if (d.files && d.files[0] && d.files[0].fileUrl) {
-                    let finalUrl = d.files[0].fileUrl;
-                    
-                    // --- VIDEO FIX: Add #.mp4 tag ---
-                    if (isVideo) {
-                        finalUrl = finalUrl + "#.mp4"; 
-                    }
-                    // --------------------------------
-
-                    window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: finalUrl }, "*")
-                }
-                btn.innerText = oldText;
-            } catch (err) { console.error("Error", err); }
+    /* --- HELPERS --- */
+    function closeModal() { document.getElementById('glassModal').classList.remove('active'); }
+    function triggerSound(id) { const s = document.getElementById(id); if(s){ s.currentTime=0; s.play().catch(()=>{}); } }
+    function getOptimizedUrl(url, w) { return url; } // Logic from original preserved
+    function updateDevotionStatus() {
+        const now = Date.now();
+        const diff = now - lastWorshipTime;
+        const cooldown = 60 * 60 * 1000;
+        const fill = document.getElementById('fill');
+        if(lastWorshipTime > 0 && diff < cooldown) {
+            isLocked = true;
+            const mins = Math.ceil((cooldown - diff) / 60000);
+            document.getElementById('txt-main').innerText = `WAIT ${mins}m`;
+            fill.style.width = (100 - (diff/cooldown*100)) + "%";
+        } else {
+            isLocked = false;
+            document.getElementById('txt-main').innerText = "KNEEL";
+            fill.style.width = "0%";
         }
     }
-    
-    // --- UPDATED DEVOTION LOGIC (1 HOUR TIMER) ---
-    const COOLDOWN_MINUTES = 60; // 1 Hour
-    let lastWorshipTime = 0; 
-    let isLocked = false; 
-
-    // --- 1. THE TIMER LOOP (Runs every second) ---
-    setInterval(updateDevotionStatus, 1000);
-
-    function updateDevotionStatus() {
-        const btn = document.getElementById('btn'); 
-        const txtMain = document.getElementById('txt-main'); 
-        const txtSub = document.getElementById('txt-sub'); 
-        const fill = document.getElementById('fill'); 
-        const dailyIdEl = document.getElementById('dailyRandomId');
-
-        if(!btn || !txtMain || !txtSub || !fill) return;
-
-        // 1. Dashboard Sync (Admin Logic)
-        const now = new Date();
-        const seed = now.getUTCFullYear() * 10000 + (now.getUTCMonth() + 1) * 100 + now.getUTCDate();
-        const x = Math.sin(seed) * 10000;
-        const code = Math.floor((x - Math.floor(x)) * 9000) + 1000;
-        if(dailyIdEl) dailyIdEl.innerText = "#" + code;
-
-        // 2. Today's Counter from database
-        const count = gameStats.todayKneeling || 0;
-        txtSub.innerText = `TODAY KNEELING: ${count}`;
-        txtSub.style.color = "#888"; // Keep this label grey as requested
-
-
-        const timeNow = Date.now();
-        const diffMs = timeNow - lastWorshipTime;
-        const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
-
-        if (lastWorshipTime > 0 && diffMs < cooldownMs) {
-        isLocked = true;
-        const minutesLeft = Math.ceil((cooldownMs - diffMs) / 60000);
-
-        txtMain.innerText = `NEXT KNEELING IN: ${minutesLeft} min`;
-        txtMain.style.color = "#888"; 
-
-        // --- UPDATED: DIFFERENT SIZE FOR MOBILE VS DESKTOP ---
-        // If screen is 1024px or wider, use 0.25rem (Desktop). Else use 0.35rem (Mobile).
-        txtSub.style.fontSize = (window.innerWidth >= 1024) ? "0.25rem" : "0.35rem"; 
-
-        btn.style.opacity = "0.7";
-        btn.style.cursor = "not-allowed";
-        fill.style.width = (100 - ((diffMs / cooldownMs) * 100)) + "%";
-    } else {
-        isLocked = false;
-
-        txtMain.innerText = "KNEEL";
-        txtMain.style.color = "GREY"; 
-
-        // --- RESET SIZE TO NORMAL BASED ON SCREEN ---
-        txtSub.style.fontSize = (window.innerWidth >= 1024) ? "0.25rem" : "0.35rem"; 
-
-        btn.style.opacity = "0.7";
-        btn.style.cursor = "pointer";
-        fill.style.width = "0%";
-    }
-      }
-
     function handleClick() {
-    if (isLocked) return;
-    triggerSound('coinSound');
-
-    // MOVE THESE UP: Visual change happens instantly now
-    const fill = document.getElementById('fill');
-    const txtMain = document.getElementById('txt-main');
-    if (fill) fill.style.width = "100%";
-    if (txtMain) txtMain.innerText = "PROCESSING...";
-
-    isLocked = true;
-    window.parent.postMessage({ type: "WORSHIP" }, "*");
+        if(isLocked) return;
+        triggerSound('coinSound');
+        document.getElementById('fill').style.width = "100%";
+        document.getElementById('txt-main').innerText = "PROCESSING...";
+        window.parent.postMessage({ type: "WORSHIP" }, "*");
+        isLocked = true;
     }
-    // Tell Wix the UI is fully loaded and ready for data
+    function getRandomTask() {
+        const t = taskDatabase[Math.floor(Math.random()*taskDatabase.length)];
+        document.getElementById('taskContent').innerHTML = `<h3>${t}</h3>`;
+        document.getElementById('cooldownSection').classList.remove('hidden');
+        document.getElementById('mainButtonsArea').classList.add('hidden');
+        currentTask = { text: t };
+    }
+    function sendChatMessage() {
+        const input = document.getElementById('chatMsgInput');
+        if(!input.value.trim()) return;
+        window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: input.value }, "*");
+        input.value = "";
+    }
+    function handleChatKey(e) { if(e.key==='Enter') sendChatMessage(); }
+
     window.onload = () => { window.parent.postMessage({ type: "UI_READY" }, "*"); };
-  
 </script>
 </body>
 </html>
