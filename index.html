@@ -447,34 +447,52 @@
         <div id="historySection" style="display:none; width:100%; position: relative; overflow: hidden; min-height: 450px;">
             <div class="section-header">HISTORY</div>
 
-            <!-- MODAL IS NOW INSIDE HISTORY -->
+            <!-- MODAL IS NOW TRAPPED INSIDE HISTORY -->
             <div id="glassModal" class="glass-modal" onclick="closeModal(event)">
-                <!-- LAYER 0: THE BACKGROUND PHOTO -->
+                
+                <!-- LAYER 0: THE BACKGROUND (Sub Proof OR Queen Media) -->
                 <div id="modalMediaContainer" class="modal-bg-photo"></div>
-
-                <!-- LAYER 1: TOP INFO (Status, Points, Sticker) -->
-                <div id="modalOverlayInfo" class="modal-overlay-layer">
-                    <div id="modalStatus" class="m-status-badge">APPROVED</div>
-                    <div id="modalPoints" class="m-points-badge">+0 PTS</div>
-                    <div id="modalSticker" class="m-sticker-float"></div>
+            
+                <!-- LAYER 1: THE REVIEW CARD (Frosted glass overlay) -->
+                <div id="reviewCard" class="review-details-card">
+                    
+                    <!-- Big Status -->
+                    <div id="modalStatus" class="m-status-badge-big">APPROVED</div>
+                    
+                    <!-- Points & Sticker -->
+                    <div class="m-reward-row">
+                        <div id="modalPoints" class="m-points-glow">+0 PTS</div>
+                        <div id="modalSticker" class="m-sticker-main"></div>
+                    </div>
+            
+                    <!-- Queen's Feedback Split Row -->
+                    <div id="feedbackRow" class="q-feedback-split">
+                        <!-- Left: Queen's Media Thumb -->
+                        <div class="q-media-box" onclick="setHistoryMode('queen_media', event)">
+                            <div id="modalFeedbackMedia" class="q-thumb-container"></div>
+                            <div class="q-zoom-icon">🔍</div>
+                        </div>
+                        
+                        <!-- Right: Secondary Nav -->
+                        <div class="q-nav-box">
+                            <div class="q-label">QUEEN'S FEEDBACK</div>
+                            <button class="q-nav-btn" onclick="setHistoryMode('comment', event)">SEE COMMENT</button>
+                            <button class="q-nav-btn" onclick="setHistoryMode('queen_media', event)">SEE PHOTO</button>
+                        </div>
+                    </div>
+            
+                    <!-- Queen's Comment Text (Hidden by default, shown in 'comment' mode) -->
+                    <div id="modalFeedbackText" class="q-comment-bubble hidden"></div>
                 </div>
-
-                <!-- LAYER 2: FEEDBACK BUBBLE (Floats in middle) -->
-                <div id="modalFeedbackBubble" class="feedback-bubble hidden">
-                    <div class="bubble-label">QUEEN'S FEEDBACK</div>
-                    <div id="modalFeedbackMedia" class="bubble-media"></div>
-                    <div id="modalFeedbackText" class="bubble-text"></div>
-                </div>
-
-                <!-- LAYER 3: THE ORDER (Hidden by default) -->
-                <div id="modalOrderText" class="order-overlay hidden"></div>
-
-                <!-- LAYER 4: ACTION BUTTONS (Bottom) -->
-                <div class="modal-footer-actions">
-                    <button onclick="toggleHistoryView('clear')" class="view-btn">SEE PHOTO</button>
-                    <button onclick="toggleHistoryView('order')" class="view-btn">SEE ORDER</button>
-                    <button onclick="toggleHistoryView('info')" class="view-btn">SEE STATUS</button>
-                    <button onclick="closeModal(null)" class="view-btn close-btn">CLOSE</button>
+            
+                <!-- LAYER 2: THE TASK ORDER (Hidden by default) -->
+                <div id="modalOrderText" class="order-overlay-centered hidden"></div>
+            
+                <!-- LAYER 3: MAIN NAVIGATION BUTTONS (Stays at the bottom) -->
+                <div class="modal-footer-nav">
+                    <button onclick="setHistoryMode('task', event)" class="nav-main-btn">SEE TASK</button>
+                    <button onclick="setHistoryMode('proof', event)" class="nav-main-btn">SEE PROOF</button>
+                    <button onclick="closeModal(null)" class="nav-main-btn close-red">CLOSE</button>
                 </div>
             </div>
 
