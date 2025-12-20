@@ -587,6 +587,22 @@
     /* --- MAIN LISTENER (DATABASE SYNC) --- */
     window.addEventListener("message", (event) => {
       const data = event.data;
+
+      // Catch the immediate Echo from Wix
+      if (data.type === "CHAT_ECHO") {
+          const chatContent = document.getElementById('chatContent');
+          if (chatContent && data.msgObj) {
+              // Reuse your existing logic to format the single message
+              const m = data.msgObj;
+              const isMe = true; // Echo is always from 'user'
+              const contentHtml = `<div class="msg m-slave">${m.message}</div>`;
+              const timeDiv = `<div class="msg-time">${new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
+              const rowContent = `<div class="msg-col" style="justify-content: flex-end;">${contentHtml} ${timeDiv}</div>`;
+              
+              chatContent.innerHTML += `<div class="msg-row mr-out">${rowContent}</div>`;
+              forceBottom(); // Jump to the bottom immediately
+          }
+      }
       
       // FIX: Capture all 8 Rules from CMS safely
       if (data.type === 'UPDATE_RULES') {
