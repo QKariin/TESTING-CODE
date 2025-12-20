@@ -935,16 +935,27 @@
         const isAtBottom = (chatBoxContainer.scrollHeight - chatBoxContainer.scrollTop - chatBoxContainer.clientHeight) < 150;
         const wasInitialLoad = isInitialLoad;
 
+        // --- NOTIFICATION LOGIC (SOUND & GLASS) ---
         if (!isInitialLoad) {
             const lastMsg = messages[messages.length-1];
-            if (lastMsg.sender !== 'user' && lastMsg._id !== lastNotifiedMessageId) {
+            
+            // If the last message is NEW and NOT from the slave ('user')
+            if (lastMsg._id !== lastNotifiedMessageId && lastMsg.sender !== 'user') {
+                
+                // 1. PLAY SOUND: Triggers for both System and Admin messages
                 triggerSound('msgSound');
-                if (lastMsg.sender === 'system' || document.activeElement !== document.getElementById('chatMsgInput')) {
-                    document.getElementById('specialGlassOverlay').classList.add('active'); 
+
+                // 2. BREAK GLASS: Triggers for both System and Admin messages
+                // We removed the 'system' check so it pops up for your messages too
+                const glassOverlay = document.getElementById('specialGlassOverlay');
+                if (glassOverlay) {
+                    glassOverlay.classList.add('active');
                 }
+
                 lastNotifiedMessageId = lastMsg._id;
             }
         }
+        // ------------------------------------------
         lastChatJson = currentJson; isInitialLoad = false;
         
         loadMoreBtn.style.display = messages.length > chatLimit ? 'block' : 'none';
