@@ -444,7 +444,7 @@
         </div>
 
         <!-- THE TRAP: Added position: relative here -->
-        <div id="historySection" style="display:none; width:100%; position: relative; min-height: 300px;">
+        <div id="historySection" style="display:none; width:100%; position: relative; overflow: hidden; min-height: 300px; border-radius: 12px;">
             <div class="section-header">HISTORY</div>
 
             <!-- MODAL IS NOW INSIDE HISTORY -->
@@ -480,6 +480,7 @@
 
             <div id="historyGrid" class="gallery-grid"></div>
             <button id="loadMoreBtn" onclick="loadMoreHistory()" class="action-btn" style="width: 200px; margin: 20px auto; display: none; background: #222; color: #888;">LOAD MORE</button>
+          </div>
   
         </div>
     </div> <!-- Closes app-container -->
