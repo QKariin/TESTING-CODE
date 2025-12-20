@@ -2554,10 +2554,21 @@ html, body {
 
   /* 3. Kill Background GIF */
 
-  #chatCard {
-    background-image: none !important;
-    background-color: #000 !important;
-  }
+  @media (max-width: 1023px) {
+  /* ... your existing blurs and shadow rules are up here ... */
+
+    #chatCard {
+      background-image: none !important;
+      background-color: #000 !important;
+      height: 480px !important; 
+    } /* This closes #chatCard */
+  
+    .chat-area {
+      height: auto; 
+      flex: 1;
+    } /* This closes .chat-area */
+  
+  } /* This closes the entire @media section. DO NOT ADD ANOTHER ONE AFTER THIS. */
 
   #taskContent div {
     font-size: 0.9rem !important;
