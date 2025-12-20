@@ -1845,6 +1845,11 @@ html, body {
     text-shadow: none !important;
   }
 
+  /* 3. Kill Background GIF */
+
+  @media (max-width: 1023px) {
+  /* ... your existing blurs and shadow rules are up here ... */
+
     #chatCard {
       background-image: none !important;
       background-color: #000 !important;
@@ -1854,6 +1859,8 @@ html, body {
     .chat-area {
       height: auto; 
       flex: 1;
+    } /* This closes .chat-area */
+  
   } /* This closes the entire @media section. DO NOT ADD ANOTHER ONE AFTER THIS. */
 
   #taskContent div {
@@ -1882,7 +1889,8 @@ html, body {
   
   /* 2. THE PRISONER: This forces the modal to strictly follow the History Section boundaries */
   #glassModal {
-    display: none !important; /* This is the fix */
+    display: none;
+    /* This is the secret: explicitly naming the boundaries */
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
@@ -1996,4 +2004,3 @@ html, body {
   }
 }
 </style>
-
