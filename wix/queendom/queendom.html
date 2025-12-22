@@ -1013,14 +1013,14 @@
         }
 
         //Play sound for new messages
-        if (!isInitialLoad) {
+        /*if (!isInitialLoad) {
             const lastMsg = msgs[msgs.length-1];
             if (lastMsg.sender === 'user' && lastMsg._id !== lastNotifiedMessageId) {
                 triggerSound('sfx-notify');
                 lastNotifiedMessageId = lastMsg._id;
             }
         }
-        isInitialLoad = false;
+        isInitialLoad = false;*/
     }
 
     async function handleAdminUpload(input) {
@@ -1824,6 +1824,16 @@
                 const lastRead = parseInt(localStorage.getItem('read_' + u.memberId) || 0);
                 const hasMsg = (u.lastMessageTime && new Date(u.lastMessageTime).getTime() > lastRead);
                 const mobileNotifClass = hasMsg ? "has-msg" : "";
+
+                // --- NEW MESSAGE SOUND LOGIC ---
+                const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
+                const lastSound = parseInt(localStorage.getItem('sound_' + u.memberId) || 0);
+                const isNewMessage = msgTime > lastSound;
+
+                if (isNewMessage) {
+                    triggerSound('sfx-notify');
+                    localStorage.setItem('sound_' + u.memberId, msgTime);
+                }
                 
                 // COLOR HIERARCHY
                 let itemStyle = "";       
