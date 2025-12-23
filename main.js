@@ -661,6 +661,9 @@ window.handleAdminUpload = handleAdminUpload;
 window.WISHLIST_ITEMS = WISHLIST_ITEMS;
 window.gameStats = gameStats;
 
+// --- 8. THE HANDSHAKE ---
+window.parent.postMessage({ type: "UI_READY" }, "*");
+
 // --- 7. STANDALONE TEST ---
 if (window.self === window.top) {
     setTimeout(() => {
