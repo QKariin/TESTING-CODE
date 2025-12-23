@@ -64,17 +64,16 @@ initDomProfile();
 window.addEventListener("message", (event) => {
     const data = event.data;
 
-    // YOUR CHAT ECHO LOGIC
-    if (data.type === "CHAT_ECHO") {
+       // A. CHAT ECHO
+    if (data.type === "CHAT_ECHO" && data.msgObj) {
         const chatContent = document.getElementById('chatContent');
-        if (chatContent && data.msgObj) {
+        if (chatContent) {
             const m = data.msgObj;
             const contentHtml = `<div class="msg m-slave">${m.message}</div>`;
             const timeDiv = `<div class="msg-time">${new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
             const rowContent = `<div class="msg-col" style="justify-content: flex-end;">${contentHtml} ${timeDiv}</div>`;
             chatContent.innerHTML += `<div class="msg-row mr-out">${rowContent}</div>`;
             forceBottom();
-            setTimeout(styleTributeMessages, 100);
         }
     }
 
@@ -124,19 +123,19 @@ window.addEventListener("message", (event) => {
     
     if (payload) {
         // 1. Profile Sync (Added the !ignoreBackendUpdates shield here)
-        if (payload.profile && !ignoreBackendUpdates) {
-            setGameStats(payload.profile);
-            setUserProfile({
-                name: payload.profile.name || "Slave",
-                hierarchy: payload.profile.hierarchy || "HallBoy",
-                memberId: payload.profile.memberId || "",
-                joined: payload.profile.joined
-            });
-            if (payload.profile.lastWorship) setLastWorshipTime(new Date(payload.profile.lastWorship).getTime());
-            setStats(migrateGameStatsToStats(payload.profile, stats));
-            if(payload.profile.profilePicture) document.getElementById('profilePic').src = getOptimizedUrl(payload.profile.profilePicture, 150);
-            updateStats();
-        }
+        if (data.profile && !ignoreBackendUpdates) {
+        setGameStats(data.profile);
+        setUserProfile({
+            name: data.profile.name || "Slave",
+            hierarchy: data.profile.hierarchy || "HallBoy",
+            memberId: data.profile.memberId || "",
+            joined: data.profile.joined
+        });
+        if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
+        setStats(migrateGameStatsToStats(data.profile, stats));
+        if(data.profile.profilePicture) document.getElementById('profilePic').src = getOptimizedUrl(data.profile.profilePicture, 150);
+        updateStats(); // RECONNECTS THE VISUALS
+    }
 
         // 2. Gallery Data Logic (Exactly as you sent it)
         if (payload.galleryData) {
@@ -528,25 +527,21 @@ function completeKneelAction() {
     if (holdTimer) clearTimeout(holdTimer);
     holdTimer = null; 
 
-    // STAGE 1: LOCK LOCALLY IMMEDIATELY
+    // 1. LOCK FIRST
     const now = Date.now();
     setLastWorshipTime(now); 
     setIsLocked(true); 
-    setIgnoreBackendUpdates(true); // START SHIELD
+    setIgnoreBackendUpdates(true); 
+    updateDevotionStatus(); // Changes UI text to "LOCKED: 60m" immediately
 
-    // TRIGGER VISUAL LOCK IMMEDIATELY
-    updateDevotionStatus();
-
-    // TELL WIX TO START THE 60m CLOCK
+    // 2. TELL WIX: START THE 1hr CLOCK
     window.parent.postMessage({ type: "FINISH_KNEELING" }, "*");
 
-    // STAGE 2: SHOW REWARD POPUP
+    // 3. SHOW REWARD (Cherry on top)
     const rewardMenu = document.getElementById('kneelRewardOverlay');
     if (rewardMenu) rewardMenu.classList.remove('hidden');
 
     triggerSound('msgSound');
-    
-    // Hold shield for 15s to let database finish
     setTimeout(() => { setIgnoreBackendUpdates(false); }, 15000);
 }
 
