@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Admin OS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    /* --- CORE THEME --- */
+    :root { --bg: #050505; --panel: #0a0a0a; --border: #333; --pink: #ff00de; --green: #39ff14; --red: #ff003c; --blue: #00f3ff; --yellow: #ffd700; --grey: #888888; }
+    body { background: var(--bg); font-family: 'Orbitron'; color: white; margin: 0; height: 100dvh; width: 100vw; overflow: hidden; position: fixed; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; scrollbar-width: none; } 
+    ::-webkit-scrollbar { display: none; }
+    .d-none { display: none !important; }
+    .hidden-input { display: none; }
+
+    /* LAYOUT */
+    .layout { display: grid; grid-template-columns: 320px 1fr; height: 100%; width: 100%; overflow: hidden; }
+    .sidebar { background: rgba(15,15,15,0.98); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; height: 100%; min-height: 0; min-width: 320px; }
+    .content { position: relative; height: 100%; overflow: hidden; display: flex; flex-direction: column; z-index: 5; background: radial-gradient(circle at center, #111 0%, #000 100%); }
+
+    /* SIDEBAR ELEMENTS */
+    .sb-dash-btn { padding: 15px; border-bottom: 1px solid #222; text-align: center; font-weight: 900; letter-spacing: 3px; color: white; cursor: pointer; background: #111; font-size: 1rem; flex-shrink: 0; transition: 0.2s; }
+    .sb-dash-btn:hover { background: #222; color: var(--pink); }
+    .sb-head { padding: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: center; background: transparent; font-weight: bold; letter-spacing: 1px; color: #666; font-size: 0.8rem; font-family: 'Rajdhani'; flex-shrink: 0; }
+    .user-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+    
+    /* --- FOCUS MODE STYLES --- */
+    /* This keeps everyone bright but shows who is selected */
+    .user-list.focus-mode .u-item.active { 
+        background: linear-gradient(90deg, #111 0%, #000 100%) !important; 
+        transform: scale(1.05) translateX(5px); 
+        z-index: 100; 
+        box-shadow: 0 5px 30px rgba(0,0,0,1); 
+        border-color: var(--pink); /* Optional: makes the selected one glow pink */
+    }
+    .u-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; background: rgba(0,0,0,0.6); border: 1px solid transparent; transition: all 0.2s; position: relative; flex-shrink: 0; }
+    .u-item:hover { background: rgba(30,30,30,0.8); border-color: #555; transform: translateX(2px); }
+    .u-item.active { background: rgba(255,0,222,0.1); border-color: var(--pink); }
+    .u-item.queen-item { border-left: 3px solid var(--yellow); background: rgba(255, 215, 0, 0.05); margin-bottom: 10px; }
+    .u-avatar-main { display: flex; width: 46px; height: 46px; border-radius: 50%; background: #111; border: 2px solid #333; margin-right: 12px; flex-shrink: 0; overflow: hidden; align-items: center; justify-content: center; position: relative; }
+    .u-avatar-main img { width: 100%; height: 100%; object-fit: cover; }
+    .notif-dot { position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: var(--pink); border-radius: 50%; border: 2px solid #000; z-index: 10; display: none; box-shadow: 0 0 5px var(--pink); }
+    .has-msg .notif-dot { display: block; }
+    .u-info { display: flex; flex-direction: column; justify-content: center; flex: 1; overflow: hidden; }
+    .u-name { font-size: 0.95rem; font-weight: bold; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .u-seen { font-size: 0.7rem; color: #777; font-family: 'Rajdhani'; margin-top: 3px; text-transform: uppercase; font-weight: bold; }
+    .online { color: var(--green); text-shadow: 0 0 5px rgba(57,255,20,0.5); }
+    .u-right-col { display: flex !important; flex-direction: row !important; align-items: center; justify-content: flex-end; gap: 6px; margin-left: 10px; min-width: fit-content; }
+    .icon-box { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+    .svg-icon { width: 100%; height: 100%; fill: #444; transition: 0.2s; }
+    .active-icon { fill: var(--pink); filter: drop-shadow(0 0 5px var(--pink)); opacity: 1 !important; }
+    .icon-dim { fill: #555; opacity: 0.2; }
+
+    /* DASHBOARD HOME */
+    #viewHome { display: grid; grid-template-rows: 90px auto 1fr; gap: 20px; padding: 20px; height: 100%; overflow: hidden; max-height: 100dvh; }
+    .stats-deck { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; flex-shrink: 0; }
+    .d-stat-card { background: rgba(20,20,20,0.8); border: 1px solid #333; padding: 10px; border-radius: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+    .dsc-val { font-size: 2rem; font-weight: 900; line-height: 1; }
+    .dsc-lbl { font-family: 'Rajdhani'; font-size: 0.7rem; color: #666; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; margin-top: 5px; }
+    .gold { color: var(--yellow); text-shadow: 0 0 10px rgba(255,215,0,0.3); }
+    .green { color: var(--green); text-shadow: 0 0 10px rgba(57,255,20,0.3); }
+    .blue { color: var(--blue); text-shadow: 0 0 10px rgba(0,243,255,0.3); }
+    .red { color: var(--red); text-shadow: 0 0 10px rgba(255,0,60,0.3); }
+
+    .protocol-deck { background: rgba(20,20,20,0.6); border: 1px solid #333; border-radius: 8px; padding: 15px; display: flex; flex-direction: row; gap: 20px; align-items: center; min-height: 80px; position: relative; overflow: hidden; flex-shrink: 0; }
+    .pd-label { width: 150px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid #333; padding-right: 15px; }
+    .pd-title { color: var(--pink); font-weight: 900; letter-spacing: 1px; font-size: 0.9rem; }
+    .pd-sub { color: #666; font-family: 'Rajdhani'; font-size: 0.7rem; text-transform: uppercase; }
+    .pd-controls { flex: 1; display: flex; align-items: center; gap: 15px; }
+    .pd-column-group { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; justify-content: center; }
+    .pd-row-subgroup { display: flex; flex-direction: row; gap: 10px; align-items: center; }
+    .pd-input-group { display: flex; align-items: center; gap: 10px; background: #000; padding: 2px 10px; border-radius: 4px; border: 1px solid #333; height: 30px; }
+    .pd-input { background: transparent; border: none; color: white; width: 60px; font-family: 'Orbitron'; font-weight: bold; text-align: right; outline: none; font-size: 0.9rem; }
+    .pd-switch { display: flex; align-items: center; gap: 8px; cursor: pointer; font-family: 'Rajdhani'; font-size: 0.7rem; color: #888; user-select: none; font-weight: bold; margin-left: 2px; }
+    .pd-checkbox { width: 14px; height: 14px; border: 1px solid #555; border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+    .pd-checkbox.checked { background: var(--green); border-color: var(--green); }
+    .pd-checkbox svg { width: 10px; height: 10px; fill: black; display: none; }
+    .pd-checkbox.checked svg { display: block; }
+    .pd-action-btn { padding: 12px 25px; border-radius: 4px; font-weight: 900; letter-spacing: 2px; cursor: pointer; border: none; background: #222; color: #666; transition: 0.2s; border: 1px solid #444; font-size: 1rem; }
+    .pd-action-btn.engage:hover { background: var(--pink); color: black; border-color: var(--pink); box-shadow: 0 0 10px var(--pink); }
+    .pd-action-btn.active-btn { background: var(--red); color: white; border-color: var(--red); box-shadow: 0 0 10px var(--red); animation: pulseBtn 2s infinite; }
+    .pd-ex-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: #111; border: 1px solid #333; color: var(--red); border-radius: 4px; cursor: pointer; transition: 0.2s; }
+    .pd-ex-btn svg { width: 16px; height: 16px; fill: var(--red); }
+    .pd-ex-btn:hover { border-color: var(--red); background: rgba(255,0,60,0.1); }
+    .pd-broadcast-btn { padding: 12px 25px; border-radius: 4px; font-weight: 900; letter-spacing: 2px; cursor: pointer; background: #111; color: var(--pink); border: 1px solid var(--pink); transition: 0.2s; font-size: 1rem; font-family: 'Rajdhani'; display: flex; align-items: center; gap: 8px; }
+    .pd-broadcast-btn:hover { background: var(--pink); color: black; box-shadow: 0 0 15px var(--pink); }
+    .ex-list { display: flex; flex-direction: column; gap: 5px; max-height: 300px; overflow-y: auto; padding: 10px; }
+    .ex-item { display: flex; align-items: center; gap: 10px; padding: 8px; background: #111; border: 1px solid #333; border-radius: 4px; cursor: pointer; }
+    .ex-item.selected { border-color: var(--red); background: rgba(255,0,60,0.1); }
+    .ex-check { width: 16px; height: 16px; border: 1px solid #555; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--red); }
+    @keyframes pulseBtn { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    .pd-progress-area { flex: 1; display: none; flex-direction: column; justify-content: center; padding: 0 20px; }
+    .pd-progress-bar { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; position: relative; }
+    .pd-progress-fill { height: 100%; width: 0%; background: var(--yellow); box-shadow: 0 0 10px var(--yellow); transition: width 0.5s; }
+    .pd-prog-txt { font-family: 'Share Tech Mono'; font-size: 0.7rem; color: var(--yellow); text-align: center; margin-top: 4px; }
+
+    .dash-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; min-height: 0; overflow: hidden; height: 100%; }
+    .dash-panel { background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; height: 100%; max-height: 100%; position: relative; }
+    .ops-review-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #080808; z-index: 50; display: none; flex-direction: row; padding: 10px; gap: 10px; border-radius: 12px; }
+    .oro-media { width: 120px; height: 100%; background: #000; border: 1px solid #333; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .oro-media img, .oro-media video { width: 100%; height: 100%; object-fit: cover; }
+    .oro-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+    .oro-text { font-family: 'Rajdhani'; font-size: 0.8rem; color: #ccc; overflow-y: auto; max-height: 60%; word-wrap: break-word; }
+    .oro-ctrls { display: flex; gap: 5px; height: 40px; margin-top: 5px; }
+    .oro-btn { flex: 1; border-radius: 4px; font-weight: 900; cursor: pointer; font-size: 0.7rem; border: none; }
+    .oro-app { background: var(--green); color: black; }
+    .oro-rej { background: #222; border: 1px solid var(--red); color: var(--red); }
+    .oro-close { position: absolute; top: 5px; right: 5px; color: white; background: rgba(0,0,0,0.5); border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 0.8rem; cursor: pointer; z-index: 10; }
+
+    .dp-head { padding: 12px; background: #111; border-bottom: 1px solid #333; font-family: 'Share Tech Mono'; color: #888; font-size: 0.8rem; display: flex; justify-content: space-between; flex-shrink: 0; }
+    .dp-body { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+    .ops-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; padding: 5px; }
+    .mon-card { background: rgba(10,10,10,0.95); border: 1px solid #333; border-radius: 10px; padding: 15px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; cursor: pointer; transition: all 0.2s; height: 160px; }
+    .mon-card:hover { transform: translateY(-3px); background: #222; }
+    .mon-card.red { border-color: var(--red); box-shadow: inset 0 0 20px rgba(255,0,60,0.1); }
+    .mon-card.blue { border-color: var(--blue); box-shadow: inset 0 0 20px rgba(0,243,255,0.1); }
+    .mon-badge { position: absolute; top: 8px; right: 8px; font-size: 0.55rem; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; }
+    .badge-r { background: var(--red); color: black; }
+    .badge-b { background: var(--blue); color: black; }
+    .mon-av-box { width: 50px; height: 50px; margin-bottom: 8px; position: relative; }
+    .mon-av { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #333; }
+    .mon-card.red .mon-av { border-color: var(--red); }
+    .mon-card.blue .mon-av { border-color: var(--blue); }
+    .mon-name { font-weight: 900; font-size: 0.9rem; color: white; line-height: 1.1; margin-bottom: 5px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mon-detail { font-family: 'Rajdhani'; font-size: 0.75rem; color: #aaa; line-height: 1.1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .mon-timer { margin-top: auto; font-family: 'Orbitron'; font-size: 0.8rem; font-weight: bold; color: white; }
+
+    .feed-log { padding: 15px; display: flex; flex-direction: column; gap: 8px; font-family: 'Share Tech Mono'; font-size: 0.8rem; }
+    .feed-trib-card { display: flex; flex-direction: row; align-items: center; gap: 10px; background: linear-gradient(90deg, rgba(255,215,0,0.05) 0%, rgba(0,0,0,0) 100%); border-left: 3px solid var(--yellow); padding: 10px 12px; margin-bottom: 5px; border-radius: 0 6px 6px 0; }
+    .feed-buy-card { display: flex; flex-direction: row; align-items: center; gap: 10px; background: linear-gradient(90deg, rgba(57,255,20,0.05) 0%, rgba(0,0,0,0) 100%); border-left: 3px solid var(--green); padding: 10px 12px; margin-bottom: 5px; border-radius: 0 6px 6px 0; }
+    .ft-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid #333; flex-shrink: 0; background: #000; }
+    .feed-trib-card .ft-avatar { border-color: var(--yellow); }
+    .feed-buy-card .ft-avatar { border-color: var(--green); }
+    .ft-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .ft-top { display: flex; justify-content: space-between; width: 100%; font-size: 0.7rem; color: #666; font-family: 'Rajdhani'; font-weight: bold; text-transform: uppercase; }
+    .ft-main { font-size: 1.2rem; font-weight: 900; color: var(--yellow); margin-top: 0; line-height: 1; }
+    .fb-main { font-size: 1.1rem; font-weight: 900; color: var(--green); margin-top: 0; line-height: 1; }
+    .ft-sub { font-family: 'Rajdhani'; font-size: 0.85rem; color: #ccc; margin-top: 2px; }
+    .feed-mini-card { display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 6px 10px; margin-bottom: 4px; border-radius: 0 4px 4px 0; border-left: 3px solid #333; }
+    .fmc-blue { border-color: var(--blue); background: linear-gradient(90deg, rgba(0,243,255,0.05) 0%, rgba(0,0,0,0) 100%); }
+    .fmc-red { border-color: var(--red); background: linear-gradient(90deg, rgba(255,0,60,0.05) 0%, rgba(0,0,0,0) 100%); }
+    .fmc-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #333; flex-shrink: 0; background: #000; }
+    .fmc-blue .fmc-avatar { border-color: var(--blue); }
+    .fmc-red .fmc-avatar { border-color: var(--red); }
+    .fmc-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .fmc-top { display: flex; justify-content: space-between; font-size: 0.6rem; color: #666; font-family: 'Rajdhani'; font-weight: bold; text-transform: uppercase; }
+    .fmc-main { font-family: 'Share Tech Mono'; font-size: 0.75rem; line-height: 1.1; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .txt-blue { color: var(--blue); } .txt-red { color: var(--red); }
+
+    /* SLAVE CARD */
+    #viewUser { display: none; flex-direction: column; height: 100%; width: 100%; overflow: hidden; background: rgba(5,5,5,0.95); z-index: 50; }
+    #viewUser.active { display: flex; }
+    .user-head { background: rgba(8,8,8,0.95); border-bottom: 1px solid var(--border); padding: 15px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; z-index: 10; position: relative; }
+    .mob-back-btn { display: none; position: absolute; left: 10px; top: 10px; background: transparent; border: 1px solid #444; color: #888; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; }
+    .uh-info-side { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; }
+    .uh-main { font-size: 2.2rem; font-weight: 900; color: white; line-height: 1; }
+    .uh-sub { color: var(--pink); font-size: 0.9rem; letter-spacing: 3px; margin-top: 2px; text-transform: uppercase; }
+    .uh-seen { color: #555; font-size: 0.7rem; margin-top: 2px; font-family: 'Rajdhani'; }
+    .uh-joined { position: absolute; top: 15px; right: 20px; font-size: 0.65rem; color: #444; font-family: 'Rajdhani'; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .app-icon-btn { position: absolute; top: 15px; left: 20px; width: 30px; height: 30px; cursor: pointer; display: none; transition: 0.2s; }
+    .app-icon-btn:hover { transform: scale(1.1); filter: drop-shadow(0 0 5px var(--blue)); }
+    .app-icon-btn img { width: 100%; height: 100%; }
+
+    .split { display: grid; grid-template-columns: 1fr 400px; flex: 1; min-height: 0; border-bottom: 1px solid #333; overflow: hidden; }
+    .chat-panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; background: #0a0a0a; min-height: 0; }
+    .cp-head { padding: 6px; text-align: center; font-size: 0.65rem; font-weight: 900; letter-spacing: 3px; color: #666; background: #111; border-bottom: 1px solid #222; }
+    .c-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; background: transparent; }
+    .msg-row { display: flex; flex-direction: row; gap: 10px; margin-bottom: 12px; max-width: 100%; align-items: flex-end; }
+    .mr-out { flex-direction: row-reverse; } .mr-in { flex-direction: row; } 
+    .chat-av { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid #333; }
+    .chat-av-placeholder { width: 30px; height: 30px; border-radius: 50%; background: #222; border: 1px solid #444; display:flex; align-items:center; justify-content:center; color: #666; font-weight:bold; font-size: 0.8rem; flex-shrink: 0; }
+    .msg { max-width: 80%; padding: 8px 12px; font-family: 'Rajdhani', sans-serif; font-size: 0.95rem; line-height: 1.35; position: relative; overflow-wrap: break-word; word-break: normal; white-space: pre-wrap; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+    .msg img, .msg video { max-width: 200px !important; max-height: 200px !important; width: auto; height: auto; border-radius: 8px; border: 1px solid #333; display: block; cursor: pointer; margin-top: 5px; }
+    .m-out { background: var(--pink); color: black !important; border-radius: 12px 12px 2px 12px; text-shadow: none; font-weight:600; border: 1px solid rgba(255,255,255,0.2); }
+    .m-in { background: #222; color: #e0e0e0; border-radius: 12px 12px 12px 2px; border: 1px solid #333; }
+    .msg-sys { width: 100%; align-self: center; text-align: center; margin: 6px 0; font-family: 'Rajdhani'; letter-spacing: 1px; text-transform: uppercase; padding: 4px 0; font-size: 0.75rem; font-weight: 700; color: #888; opacity: 0.9; text-shadow: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .sys-icon { width: 16px; height: 16px; fill: #666; }
+    .msg-gold { width: 90%; align-self: center; text-align: center; margin: 10px 0; padding: 10px; background: linear-gradient(90deg, rgba(255,215,0,0.1) 0%, rgba(0,0,0,0.5) 50%, rgba(255,215,0,0.1) 100%); border: 1px solid var(--yellow); border-radius: 6px; color: var(--yellow); font-family: 'Orbitron'; font-size: 0.9rem; font-weight: 900; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .gold-icon { width: 24px; height: 24px; fill: var(--yellow); }
+    .msg-green { width: 90%; align-self: center; text-align: center; margin: 10px 0; padding: 10px; background: linear-gradient(90deg, rgba(57,255,20,0.1) 0%, rgba(0,0,0,0.5) 50%, rgba(57,255,20,0.1) 100%); border: 1px solid var(--green); border-radius: 6px; color: var(--green); font-family: 'Orbitron'; font-size: 0.9rem; font-weight: 900; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .green-icon { width: 24px; height: 24px; fill: var(--green); }
+    .msg-meta { font-size: 0.6rem; color: #666; margin-top: 2px; font-family: 'Rajdhani'; font-weight: 600; display: flex; align-items: center; gap: 3px; padding: 0 4px; }
+    .m-out .msg-meta { color: rgba(0,0,0,0.6) !important; }
+    .c-foot { padding: 10px; border-top: 1px solid #333; display: flex; gap: 8px; background: #111; flex-shrink: 0; align-items: center; position: relative; }
+    .inp { flex: 1; background: black; border: 1px solid #333; color: white; padding: 10px; border-radius: 4px; font-family: 'Rajdhani'; font-size: 0.9rem; outline: none; height: 40px; }
+    .btn-send { height: 40px; width: 45px; display: flex; align-items: center; justify-content: center; background: #222; color: white; border: 1px solid #333; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+    .btn-plus { height: 40px; width: 40px; display: flex; align-items: center; justify-content: center; background: #222; color: var(--pink); border: 1px solid #333; border-radius: 50%; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition: 0.2s; }
+    .btn-plus:hover { border-color: var(--pink); background: rgba(255,0,222,0.1); }
+    #plusMenu { position: absolute; bottom: 60px; left: 10px; background: rgba(10,10,10,0.95); border: 1px solid #333; border-radius: 8px; padding: 5px; display: none; flex-direction: column; gap: 5px; backdrop-filter: blur(5px); z-index: 50; width: 140px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+    #plusMenu.show { display: flex; animation: popUp 0.2s ease-out; }
+    .menu-btn { display: flex; align-items: center; gap: 10px; padding: 10px; background: transparent; border: none; color: #ccc; font-family: 'Rajdhani'; font-weight: bold; font-size: 0.9rem; cursor: pointer; border-radius: 4px; text-align: left; width: 100%; }
+    .menu-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+    .menu-btn svg { width: 16px; height: 16px; fill: #ccc; }
+    .menu-btn:hover svg { fill: white; }
+
+    .action-panel { padding: 20px; overflow-y: auto; height: 100%; display: flex; flex-direction: column; gap: 15px; }
+    .wallet-panel-display { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #333; width: 100%; flex-shrink: 0; }
+    .wpd-label { font-family: 'Rajdhani'; font-size: 0.7rem; color: #666; letter-spacing: 2px; font-weight: bold; }
+    .wpd-val { font-size: 2.5rem; font-weight: 900; color: var(--yellow); line-height: 1; text-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
+
+    .stats-row { display: flex; gap: 5px; justify-content: space-between; }
+    .stat-box { flex: 1; background: #111; border: 1px solid #333; padding: 6px; border-radius: 4px; text-align: center; }
+    .stat-val { font-size: 1rem; font-weight: 900; color: white; line-height: 1; }
+    .stat-lbl { font-size: 0.5rem; color: #666; font-family: 'Rajdhani'; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+    
+    .pts-grid { display: flex; flex-direction: row; gap: 4px; overflow-x: auto; flex-wrap: nowrap; align-items: center; }
+    .pts-grid::-webkit-scrollbar { display: none; }
+    
+    .q-btn { padding: 6px 2px; font-weight: bold; border-radius: 3px; cursor: pointer; font-family: 'Rajdhani'; border: 1px solid #333; background: #161616; color: white; font-size: 0.7rem; text-align: center; flex: 1; min-width: 35px; height: 35px; }
+    .q-btn:hover { background: #222; }
+    .q-minus { border-color: var(--pink); color: var(--pink); } 
+    
+    .q-btn-img { aspect-ratio: 1/1; background: #000; border: 1px solid #333; border-radius: 6px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; transition: 0.2s; flex: 1; min-width: 35px; height: 35px; }
+    .q-btn-img:hover { border-color: var(--green); background: #111; }
+    .q-btn-img img { width: 70%; height: 70%; object-fit: contain; }
+    .q-btn-img span { position: absolute; bottom: 2px; right: 2px; font-size: 0.55rem; color: var(--green); font-weight: 900; line-height: 1; background: rgba(0,0,0,0.7); padding: 1px 2px; border-radius: 2px; }
+    .q-btn-img svg { width: 24px; height: 24px; fill: #444; }
+
+    .sec-title { font-size: 0.65rem; color: #666; margin-bottom: 5px; letter-spacing: 1px; font-weight: bold; text-transform: uppercase; }
+    .pend-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    .pend-card { display: flex; gap: 12px; background: rgba(255,0,60,0.05); border: 1px solid var(--red); padding: 8px; border-radius: 6px; cursor: pointer; align-items: center; box-shadow: 0 0 10px rgba(255,0,60,0.1); width: 100%; transition: 0.2s; height: 60px; }
+    .pend-card:hover { background: rgba(255,0,60,0.1); transform: translateX(2px); }
+    .pend-thumb { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #333; background: #000; flex-shrink: 0; }
+    .pend-info { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+    .pend-txt { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; font-weight: bold; width: 100%; }
+    .pend-act { font-size: 0.6rem; color: var(--red); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+    .mini-active { display: flex; align-items: center; gap: 8px; border: 1px solid #333; background: #080808; padding: 6px; border-radius: 4px; }
+    .ma-status { font-size: 0.55rem; color: var(--blue); font-weight: 900; writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 1px; }
+    .ma-mid { flex: 1; overflow: hidden; min-width: 0; }
+    .ma-txt { font-family: 'Rajdhani'; font-size: 0.75rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ma-timer { font-family: 'Orbitron'; font-size: 0.85rem; color: white; font-weight: bold; }
+    .ma-ctrl { display: flex; gap: 2px; }
+    .ma-btn { padding: 2px 5px; background: #222; border: 1px solid #444; color: #888; font-size: 0.6rem; cursor: pointer; border-radius: 2px; }
+    .ma-btn:hover { color: white; border-color: #666; }
+    .task-queue-box { border: 1px solid var(--blue); padding: 5px; border-radius: 6px; background: rgba(0, 243, 255, 0.02); display: flex; flex-direction: column; gap: 5px; }
+    .q-list-vertical { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+    .q-item-line { display: flex; align-items: center; padding: 4px 6px; background: #111; border: 1px solid #333; border-radius: 4px; cursor: pointer; width: 100%; overflow: hidden; }
+    .q-item-line:hover { background: #1a1a1a; border-color: #555; }
+    .q-idx { font-family: 'Rajdhani'; font-weight: bold; color: var(--blue); font-size: 0.75rem; margin-right: 6px; width: 18px; flex-shrink: 0; }
+    .q-txt-line { flex: 1; font-family: 'Rajdhani'; font-size: 0.8rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .q-item-line { cursor: grab; }
+    .q-item-line:active { cursor: grabbing; }
+    .q-handle { margin-right: 8px; cursor: grab; font-size: 1rem; color: #666; line-height: 1; }
+    .q-handle:hover { color: white; }
+    .q-del { color: var(--red); font-weight: bold; font-size: 0.8rem; padding: 0 5px; cursor: pointer; margin-left: 5px; }
+    .q-input-row { display: flex; gap: 5px; }
+    .q-input { flex: 1; background: #111; border: 1px solid #333; padding: 4px 8px; color: white; font-family: 'Rajdhani'; font-size: 0.8rem; border-radius: 4px; outline: none; }
+    .q-add-btn { background: var(--blue); color: black; font-weight: bold; border: none; padding: 0 8px; border-radius: 4px; cursor: pointer; font-size: 1rem; line-height: 1; }
+    .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 5px; }
+    .h-card-mini { height: 100px; background: #111; border: 1px solid #333; border-radius: 4px; overflow: hidden; position: relative; cursor: pointer; }
+    .h-card-mini img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: 0.2s; }
+    .h-card-mini:hover img { opacity: 1; }
+    .h-badge { position: absolute; bottom: 0; left: 0; width: 100%; padding: 2px; font-size: 0.5rem; text-align: center; font-weight: 900; text-transform: uppercase; background: rgba(0,0,0,0.8); }
+    .hb-app { color: var(--green); } .hb-rej { color: var(--red); } .hb-skip { color: var(--blue); }
+    .load-more-btn { width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #333; color: #666; font-size: 0.7rem; font-weight: bold; cursor: pointer; margin-top: 5px; }
+    .load-more-btn:hover { background: #222; color: #aaa; }
+    .app-toggle-container { margin-top: auto; padding-top: 15px; border-top: 1px solid #333; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+    .app-toggle-lbl { font-family: 'Rajdhani'; font-weight: bold; font-size: 0.8rem; color: #888; }
+
+    /* COMMON MODAL */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+    .modal.active { display: flex; }
+    .m-content { display: grid; grid-template-columns: 1fr 1fr; background: #111; width: 80%; max-width: 1100px; height: 70vh; border: 1px solid #444; border-radius: 20px; overflow: hidden; pointer-events: auto; }
+    .m-media-box { background:black; display:flex; justify-content:center; align-items:center; width:100%; height:100%; order: 1; }
+    .m-img { width: 100%; height: 100%; object-fit: contain; }
+    .m-info { padding: 40px; display: flex; flex-direction: column; height: 100%; overflow: hidden; border-left: 1px solid #333; order: 2; position: relative; }
+    #reviewNormalContent { display: flex; flex-direction: column; height: 100%; width: 100%; justify-content: center; }
+    #reviewRewardOverlay { display: none; position: absolute; inset: 0; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 10; flex-direction: column; padding: 40px; align-items: center; justify-content: center; }
+    .m-text-scroll { flex: 1; overflow-y: auto; margin-bottom: 20px; width: 100%; display: flex; flex-direction: column; justify-content: center; }
+    .btn-main { width: 100%; padding: 20px; font-weight: 900; text-transform: uppercase; margin-top: 0; cursor: pointer; border-radius: 8px; letter-spacing: 2px; }
+    .hist-status { font-size: 2rem; font-weight: 900; text-align: center; margin-top: 20px; letter-spacing: 4px; text-transform: uppercase; }
+    .st-app { color: var(--green); text-shadow: 0 0 20px var(--green); }
+    .st-rej { color: var(--red); text-shadow: 0 0 20px var(--red); }
+    .st-skip { color: var(--blue); text-shadow: 0 0 20px var(--blue); }
+    #modalActions { display:flex; gap:20px; flex-shrink: 0; width: 100%; flex-direction: column; }
+
+    .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 10px; overflow-y: auto; max-height: 300px; width: 100%; }
+    .sticker-card { background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+    .sticker-card:hover { border-color: var(--pink); box-shadow: 0 0 15px rgba(255,0,222,0.2); background: rgba(30,30,30,0.8); transform: translateY(-2px); }
+    .sticker-card.selected { border-color: var(--green); box-shadow: 0 0 15px rgba(57,255,20,0.3); background: rgba(57,255,20,0.1); }
+    .stk-img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
+    .stk-name { font-family: 'Rajdhani'; font-weight: bold; font-size: 0.8rem; color: white; text-align: center; line-height: 1; }
+    .stk-val { display: none; } 
+    .reward-inputs { display: flex; gap: 10px; margin-top: 15px; width: 100%; flex-direction: column; }
+    .rw-media-row { display: flex; gap: 15px; justify-content: center; align-items: center; margin-top: 10px; }
+    .rw-icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #444; background: #111; color: #888; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.2s; }
+    .rw-icon-btn svg { width: 20px; height: 20px; fill: #888; }
+    .rw-icon-btn:hover { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 10px var(--pink); }
+    .rw-icon-btn:hover svg { fill: var(--pink); }
+    .rw-icon-btn.recording { border-color: var(--red); color: var(--red); box-shadow: 0 0 15px var(--red); animation: pulseBtn 1s infinite; }
+    .rw-icon-btn.recording svg { fill: var(--red); }
+    .rw-preview-box { position: relative; width: 60px; height: 60px; border: 1px solid var(--green); border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; }
+    .rw-preview-box img, .rw-preview-box video { width: 100%; height: 100%; object-fit: cover; }
+    .rw-preview-box span { position: absolute; top: 0; right: 0; background: rgba(0,0,0,0.8); color: white; font-size: 0.8rem; padding: 0 4px; cursor: pointer; z-index: 10; }
+    .rw-group { flex: 1; }
+    .rw-label { font-size: 0.6rem; color: #888; font-family: 'Rajdhani'; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; }
+    .rw-inp { width: 100%; background: #000; border: 1px solid #444; color: var(--green); font-family: 'Orbitron'; padding: 8px; text-align: left; border-radius: 4px; font-weight: bold; outline: none; }
+    .rw-inp:focus { border-color: var(--green); }
+    .sticker-case { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px; }
+    .my-sticker { width: 40px; height: 40px; border-radius: 4px; border: 1px solid #333; background: #111; padding: 2px; }
+    .my-sticker img { width: 100%; height: 100%; object-fit: contain; }
+
+    #broadcastModal .m-content { display: flex; flex-direction: column; width: 500px; height: auto; max-height: 80vh; padding: 20px; border: 1px solid var(--pink); box-shadow: 0 0 20px rgba(255,0,222,0.1); }
+    .br-head { font-size: 1.5rem; color: var(--pink); font-weight: 900; text-align: center; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+    .br-inp { background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 4px; font-family: 'Rajdhani'; font-size: 1rem; margin-bottom: 15px; width: 100%; resize: vertical; min-height: 100px; }
+    .br-file-label { display: flex; align-items: center; justify-content: center; padding: 10px; border: 1px dashed #444; color: #888; cursor: pointer; margin-bottom: 15px; font-family: 'Rajdhani'; font-weight: bold; border-radius: 4px; }
+    .br-file-label svg { width: 20px; height: 20px; fill: #888; margin-right: 10px; }
+    .br-file-label:hover { border-color: var(--pink); color: var(--pink); background: rgba(255,0,222,0.05); }
+    .br-file-label:hover svg { fill: var(--pink); }
+    .br-prev { max-height: 150px; width: 100%; object-fit: contain; margin-bottom: 15px; display: none; border: 1px solid #333; }
+    .br-btn { width: 100%; padding: 15px; background: var(--pink); color: black; font-weight: 900; border: none; border-radius: 4px; cursor: pointer; letter-spacing: 2px; font-size: 1rem; }
+    .br-btn:hover { box-shadow: 0 0 15px var(--pink); }
+    .br-preset-row { display: flex; gap: 10px; margin-top: 10px; margin-bottom: 10px; }
+    .br-mini-btn { flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: #888; font-weight: bold; cursor: pointer; font-family: 'Rajdhani'; border-radius: 4px; font-size: 0.8rem; }
+    .br-mini-btn:hover { background: #333; color: white; border-color: #666; }
+    #presetList { display: none; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #333; padding: 5px; background: #080808; }
+    .preset-item { padding: 8px; background: #111; border: 1px solid #333; cursor: pointer; display: flex; gap: 10px; align-items: center; }
+    .preset-item:hover { border-color: var(--pink); }
+    .preset-img { width: 30px; height: 30px; object-fit: cover; background: black; }
+    .preset-txt { font-family: 'Rajdhani'; font-size: 0.8rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    #viewProfile { display: none; flex-direction: column; height: 100%; width: 100%; background: #000; overflow-y: auto; position: relative; }
+    .qp-header { background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%); padding: 40px 20px 20px 20px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid #222; position: relative; }
+    .qp-cover { position: absolute; top:0; left:0; width:100%; height:150px; background: url('https://static.wixstatic.com/media/ce3e5b_bd0ea2852b054a42bc963f1681f0d705~mv2.gif'); background-size: cover; opacity: 0.3; z-index:0; }
+    .qp-av-con { width: 120px; height: 120px; border-radius: 50%; padding: 4px; border: 2px solid var(--yellow); position: relative; z-index: 2; margin-top: 60px; background: #000; }
+    .qp-av { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .qp-name { font-size: 2rem; font-weight: 900; color: var(--yellow); margin-top: 15px; z-index: 2; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255,215,0,0.5); }
+    .qp-status { font-family: 'Rajdhani'; color: #888; letter-spacing: 4px; margin-top: 5px; font-weight: bold; z-index: 2; text-transform: uppercase; font-size: 0.9rem; }
+    .qp-stats-row { display: flex; gap: 30px; margin-top: 20px; z-index: 2; }
+    .qp-stat { text-align: center; }
+    .qp-s-val { font-weight: 900; font-size: 1.2rem; color: white; }
+    .qp-s-lbl { font-family: 'Rajdhani'; font-size: 0.7rem; color: #666; text-transform: uppercase; }
+    .story-rail { padding: 20px; display: flex; gap: 15px; overflow-x: auto; background: #050505; border-bottom: 1px solid #222; }
+    .story-ring { width: 70px; height: 70px; border-radius: 50%; padding: 3px; background: linear-gradient(45deg, var(--pink), var(--yellow)); flex-shrink: 0; cursor: pointer; transition: transform 0.2s; }
+    .story-ring:hover { transform: scale(1.05); }
+    .story-ring.seen { background: #333; }
+    .story-img { width: 100%; height: 100%; border-radius: 50%; border: 3px solid #000; object-fit: cover; }
+    .story-add { display: flex; align-items: center; justify-content: center; background: #111; border: 1px dashed #444; color: var(--pink); font-size: 1.5rem; font-weight: bold; }
+    .qp-tabs { display: flex; border-bottom: 1px solid #222; background: #080808; }
+    .qp-tab { flex: 1; padding: 15px; text-align: center; font-family: 'Rajdhani'; font-weight: bold; letter-spacing: 2px; color: #666; cursor: pointer; transition: 0.2s; border-bottom: 2px solid transparent; }
+    .qp-tab.active { color: white; border-bottom-color: var(--yellow); background: rgba(255,215,0,0.05); }
+    .qp-tab:hover { color: white; }
+    .media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; }
+    .mg-item { aspect-ratio: 1/1; position: relative; overflow: hidden; background: #111; cursor: pointer; }
+    .mg-item img, .mg-item video { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; opacity: 0.8; }
+    .mg-item:hover img, .mg-item:hover video { transform: scale(1.05); opacity: 1; }
+    .mg-type { position: absolute; top: 5px; right: 5px; color: white; background: rgba(0,0,0,0.6); padding: 2px 4px; border-radius: 3px; font-size: 0.8rem; }
+    .text-grid { display: flex; flex-direction: column; gap: 15px; padding: 20px; }
+    .tg-card { background: #111; border: 1px solid #333; padding: 20px; border-radius: 8px; border-left: 3px solid var(--pink); }
+    .tg-date { color: #666; font-size: 0.7rem; font-family: 'Rajdhani'; font-weight: bold; margin-bottom: 5px; }
+    .tg-body { font-family: 'Share Tech Mono'; font-size: 0.9rem; line-height: 1.4; color: #ddd; }
+    .upload-fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--pink); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: black; box-shadow: 0 0 20px var(--pink); cursor: pointer; z-index: 100; border: none; transition: 0.2s; }
+    .glass-panel { display: flex; flex-direction: column; gap: 2px; padding: 20px; overflow-y: auto; max-height: 60vh; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+    .gallery-row { display: flex; align-items: center; padding: 12px 15px; background: #111; border: 1px solid #333; border-radius: 4px; cursor: pointer; width: 100%; transition: 0.2s; margin-bottom: 4px; }
+    .gallery-row:hover { background: #1a1a1a; border-color: var(--blue); transform: translateX(5px); }
+    .gr-idx { font-family: 'Rajdhani'; font-weight: bold; color: var(--blue); font-size: 0.9rem; margin-right: 15px; width: 30px; flex-shrink: 0; }
+    .gr-text { flex: 1; font-family: 'Rajdhani'; font-size: 0.95rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gr-add { color: var(--green); font-weight: 900; font-size: 1.4rem; padding: 0 5px; margin-left: 10px; }
+
+    /* --- MOBILE OPTIMIZATION (COMPACT) --- */
+    .mobile-app-header { display: none; }
+
+    @media (max-width: 768px) {
+        html { font-size: 14px; }
+        .layout { display: flex; flex-direction: column; height: calc(100dvh - 30px); } 
+        
+        .mobile-app-header { display: flex; justify-content: center; align-items: center; height: 30px; background: #000; border-bottom: 1px solid #333; font-weight: 900; letter-spacing: 2px; color: var(--pink); font-size: 0.9rem; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; }
+        body { padding-top: 30px; } 
+
+        .sidebar { width: 100%; height: 85px; flex: none; flex-direction: row; overflow-x: auto; overflow-y: hidden; order: 1; padding: 5px 10px; gap: 10px; border-right: none; border-bottom: 1px solid var(--border); white-space: nowrap; scroll-snap-type: x mandatory; background: rgba(10,10,10,0.98); }
+        .sb-head { display: none; } 
+        .sb-dash-btn { display: none; } 
+        
+        .user-list { flex-direction: row; padding: 0; gap: 8px; overflow: visible; align-items: center; height: 100%; }
+        .u-item { flex-direction: column; padding: 0; background: transparent; border: none; width: 60px; margin: 0; scroll-snap-align: start; justify-content: center; }
+        .u-item:hover { transform: none; background: transparent; }
+        .u-item.queen-item { border-left: none; background: transparent; margin-bottom: 0; }
+        .u-info, .u-right-col { display: none; } 
+        .u-avatar-main { width: 50px; height: 50px; margin: 0; border-width: 2px; box-shadow: none; }
+        .u-name-mob { display:block; font-size:0.5rem; text-align:center; max-width:60px; overflow:hidden; text-overflow:ellipsis; }
+        .notif-dot { width: 10px; height: 10px; border-width: 1px; right: 0px; top: 0px; }
+        .content { height: calc(100dvh - 115px); order: 2; } 
+        
+        #viewHome { grid-template-rows: auto auto auto 1fr; padding: 10px; gap: 10px; overflow-y: auto; }
+        #mobDashHeader { display: block; font-weight: 900; color: #444; font-size: 1.2rem; text-align: center; letter-spacing: 2px; margin-bottom: 5px; }
+        
+        .stats-deck { grid-template-columns: 1fr 1fr; gap: 6px; display: none; } 
+        .stats-deck.show { display: grid; }
+        #mobStatsToggle { display: block; width: 100%; padding: 8px; background: #111; border: 1px solid #333; color: var(--pink); font-weight: 900; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 5px; cursor: pointer; }
+        
+        .d-stat-card { padding: 8px; }
+        .dsc-val { font-size: 1.5rem; }
+        .protocol-deck { flex-direction: column; padding: 10px; gap: 10px; }
+        .pd-label { width: 100%; border-right: none; border-bottom: 1px solid #333; padding: 0 0 8px 0; text-align: center; }
+        .pd-controls { flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .pd-action-btn { padding: 6px 12px; font-size: 0.8rem; }
+
+        .dash-split { grid-template-columns: 1fr; grid-template-rows: auto auto; gap: 10px; }
+        .dash-panel { max-height: 400px; overflow-y: auto; position: relative; } 
+        
+        .ops-grid { grid-template-columns: 1fr 1fr; gap: 4px; }
+        .mon-card { height: 60px; padding: 4px; flex-direction: row; align-items: center; text-align: left; }
+        .mon-av-box { width: 40px; height: 40px; margin-right: 8px; margin-bottom: 0; flex-shrink: 0; }
+        .mon-name { font-size: 0.7rem; margin-bottom: 0; }
+        .mon-detail { display: none; }
+        .mon-badge { font-size: 0.4rem; padding: 1px 3px; top: 2px; right: 2px; }
+        .mon-timer { display: none; }
+        
+        .mon-card.red { flex-direction: row; justify-content: flex-start; }
+        .mon-card.red .mon-av-box { order: -1; margin-right: 8px; }
+
+        #viewUser { position: fixed; top: 30px; left: 0; width: 100%; height: calc(100dvh - 30px); z-index: 999; }
+        .user-head { padding: 8px; border-bottom: 1px solid #333; flex-shrink: 0; }
+        .uh-main { font-size: 1.2rem; }
+        .uh-sub { font-size: 0.7rem; letter-spacing: 1px; }
+        .uh-seen { font-size: 0.6rem; }
+        .uh-joined { display: none; }
+        .mob-back-btn { display: block; padding: 4px 8px; font-size: 0.65rem; }
+        .app-icon-btn { left: 60px; top: 8px; width: 24px; height: 24px; }
+
+        .split { display: flex; flex-direction: column; height: calc(100% - 60px); overflow: hidden; }
+        
+        .chat-panel { flex: none; width: 100%; height: 400px !important; border-right: none; border-bottom: 1px solid #444; overflow: hidden; }
+        .c-body { padding: 10px; overflow-y: scroll !important; height: calc(100% - 30px); }
+        .msg { font-size: 0.85rem; padding: 6px 10px; max-width: 85%; }
+        .chat-av { width: 24px; height: 24px; }
+        .msg-row { gap: 6px; margin-bottom: 8px; }
+
+        .c-foot { padding: 6px; gap: 5px; }
+        .inp { height: 36px; padding: 5px 8px; font-size: 0.85rem; }
+        .btn-send, .btn-plus { height: 36px; width: 36px; font-size: 0.8rem; }
+        
+        .action-panel { flex: 1; padding: 10px; gap: 10px; background: rgba(0,0,0,0.3); overflow-y: auto; min-height: 0; }
+        
+        .wallet-panel-display { margin-bottom: 8px; padding-bottom: 8px; }
+        .wpd-val { font-size: 1.8rem; }
+        .stats-row { gap: 4px; }
+        .stat-box { padding: 4px; }
+        .stat-val { font-size: 0.9rem; }
+        
+        .pts-grid { display: flex; flex-direction: row; gap: 4px; overflow-x: auto; flex-wrap: nowrap; align-items: center; }
+        .pts-grid::-webkit-scrollbar { display: none; }
+        .q-btn { padding: 8px 0; font-size: 0.7rem; flex: 1; min-width: 40px; }
+        .q-btn-img { border-radius: 4px; flex: 1; min-width: 40px; }
+        .q-btn-img span { font-size: 0.5rem; }
+
+        .sec-title { font-size: 0.6rem; margin-bottom: 3px; }
+        .pend-card { height: 45px; padding: 4px; }
+        .pend-thumb { width: 30px; height: 30px; }
+        .mini-active { padding: 4px; }
+        .ma-status { font-size: 0.5rem; }
+        .ma-timer { font-size: 0.8rem; }
+        .ma-btn { padding: 4px 8px; font-size: 0.7rem; }
+        .q-item-line { padding: 4px; }
+        .q-input { padding: 4px; height: 30px; }
+        .q-add-btn { height: 30px; width: 30px; font-size: 1.2rem; }
+
+        .modal .m-content { width: 90%; height: 60vh; grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; max-width: none; border-radius: 12px; box-shadow: 0 0 50px rgba(0,0,0,1); margin: auto; }
+        .m-media-box { order: 1; height: 100%; border-bottom: 1px solid #333; }
+        .m-info { order: 2; padding: 15px; border-left: none; overflow-y: auto; }
+        .btn-main { padding: 12px; font-size: 0.9rem; margin-top: 10px; }
+        .m-text-scroll { margin-bottom: 10px; }
+        #mText { font-size: 1rem !important; }
+
+        .sticker-grid { grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .sticker-card { padding: 5px; }
+        .stk-img { width: 40px; height: 40px; }
+        
+        #broadcastModal .m-content { width: 95%; height: auto; max-height: 90vh; }
+        .br-inp { height: 60px; min-height: 60px; }
+    }
+    
+    #mobStatsToggle, #mobDashHeader { display: none; }
+
+    /* --- FOCUS MODE STYLES (NEW) --- */
+    .user-list.focus-mode .u-item:hover { 
+    opacity: 0.8; 
+    }
+    .user-list.focus-mode .u-item.active {
+        opacity: 1 !important;
+        filter: grayscale(0) !important; 
+        background: linear-gradient(90deg, #111 0%, #000 100%) !important;
+        transform: scale(1.05) translateX(5px);
+        z-index: 100;
+        box-shadow: 0 5px 30px rgba(0,0,0,1);
+    }
+    .user-list.focus-mode .u-item:hover { opacity: 0.8; filter: grayscale(0.5); }
+  </style>
+</head>
+<body>
+
+<!-- SOUNDS -->
+<audio id="sfx-notify" src="https://static.wixstatic.com/mp3/ce3e5b_31aab32ecdf542e6b6fd01ef272d75bc.mp3"></audio>
+
+<!-- CMS DATALIST FOR AUTOCOMPLETE -->
+<datalist id="cmsTasksList"></datalist>
+
+<!-- NEW HEADER BAR (MOBILE ONLY) -->
+<div class="mobile-app-header">DASHBOARD</div>
+
+<div class="layout">
+    <div class="sidebar">
+        <div class="sb-dash-btn" onclick="showHome()">DASHBOARD</div>
+        <div style="text-align:center; padding:5px; border-bottom:1px solid #333;">
+          <div style="font-size:0.5rem; color:#666;">TODAY'S CODE</div>
+          <div id="adminDailyCode" style="color:var(--blue); font-weight:900; font-family:'Share Tech Mono'; font-size:1.1rem;">----</div>
+      </div>
+        <div class="sb-head">SUB LIST</div>
+        <div id="userList" class="user-list"></div>
+    </div>
+
+    <div class="content">
+        <div id="viewHome">
+            <div id="mobDashHeader">OVERVIEW</div>
+            <button id="mobStatsToggle" onclick="toggleMobStats()">VIEW STATS</button>
+            
+            <div id="statsDeck" class="stats-deck">
+                <div class="d-stat-card"><div class="dsc-val gold" id="statTributes">0</div><div class="dsc-lbl">TRIBUTES</div></div>
+                <div class="d-stat-card"><div class="dsc-val blue" id="statActive">0</div><div class="dsc-lbl">ACTIVE TASKS</div></div>
+                <div class="d-stat-card"><div class="dsc-val green" id="statPending">0</div><div class="dsc-lbl">PENDING REVIEW</div></div>
+                <div class="d-stat-card"><div class="dsc-val red" id="statSkipped">0</div><div class="dsc-lbl">FAILURES</div></div>
+            </div>
+
+            <div class="protocol-deck">
+                <div class="pd-label">
+                    <div class="pd-title">SILENCE PROTOCOL</div>
+                    <div class="pd-sub">COMMUNITY TRIBUTE</div>
+                </div>
+                <div id="pdControls" class="pd-controls">
+                    <div class="pd-column-group">
+                        <div class="pd-input-group">
+                            <span style="color:#666; font-size:0.7rem; font-weight:bold;">GOAL</span>
+                            <input type="number" id="pdGoal" class="pd-input" value="1000">
+                        </div>
+                        <div class="pd-row-subgroup">
+                            <div class="pd-switch" onclick="toggleNewbieImmunity()">
+                                <div id="pdImmunity" class="pd-checkbox checked">
+                                     <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                </div>
+                                <span>NEWBIE SAFE</span>
+                            </div>
+                            <button class="pd-ex-btn" onclick="openExclusionModal()" title="Exclude Users">
+                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="pdBtn" onclick="toggleProtocol()" class="pd-action-btn engage">ENGAGE</button>
+                    <button class="pd-broadcast-btn" onclick="openBroadcastModal()">
+                        <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:var(--pink);"><path d="M21 11l-6-6v14l6-6v-2zm-8 0h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0h-2v2h2v-2z"/></svg>
+                        BROADCAST
+                    </button>
+                </div>
+                <div id="pdProgress" class="pd-progress-area">
+                    <div class="pd-progress-bar">
+                        <div id="pdFill" class="pd-progress-fill"></div>
+                    </div>
+                    <div id="pdText" class="pd-prog-txt">0 / 1000 COINS COLLECTED</div>
+                    <button onclick="toggleProtocol()" style="background:none; border:none; color:var(--red); font-size:0.6rem; cursor:pointer; margin-top:2px;">TERMINATE</button>
+                </div>
+            </div>
+
+            <div class="dash-split">
+                <div class="dash-panel">
+                    <div class="dp-head"><span>OPERATIONS MONITOR</span></div>
+                    <div id="opsList" class="dp-body"></div>
+                </div>
+                <div class="dash-panel">
+                    <div class="dp-head"><span>REVENUE & INTEL STREAM</span><span style="color:var(--pink)">LIVE</span></div>
+                    <div id="feedLog" class="dp-body feed-log"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="viewProfile">
+            <div class="qp-header">
+                <div class="qp-cover"></div>
+                <div class="qp-av-con"><img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" class="qp-av"></div>
+                <div class="qp-name">QUEEN KARIN</div>
+                <div class="qp-status">SYSTEM ADMINISTRATOR</div>
+                <div class="qp-stats-row">
+                    <div class="qp-stat"><div class="qp-s-val" id="cntPosts">0</div><div class="qp-s-lbl">POSTS</div></div>
+                    <div class="qp-stat"><div class="qp-s-val" id="cntSubs">0</div><div class="qp-s-lbl">SUBJECTS</div></div>
+                    <div class="qp-stat"><div class="qp-s-val" id="cntStories">0</div><div class="qp-s-lbl">STORIES</div></div>
+                </div>
+            </div>
+            <div class="story-rail" id="storyRail">
+                <div class="story-ring story-add" onclick="openProfileUpload(true)">+</div>
+            </div>
+            <div class="qp-tabs">
+                <div class="qp-tab active" onclick="switchProfileTab('media')">GRID</div>
+                <div class="qp-tab" onclick="switchProfileTab('text')">WRITINGS</div>
+            </div>
+            <div id="profileMediaGrid" class="media-grid"></div>
+            <div id="profileTextGrid" class="text-grid d-none"></div>
+            <button class="upload-fab" onclick="openProfileUpload(false)">+</button>
+        </div>
+
+        <div id="viewUser">
+             <div class="user-head">
+                <div id="btnAppView" class="app-icon-btn" title="View Application" onclick="openApplicationView()">
+                    <img src="https://static.wixstatic.com/shapes/ce3e5b_62b9d0e748d648fe888198c912e472cb.svg">
+                </div>
+                <button class="mob-back-btn" onclick="showHome()">&larr; BACK</button>
+                <div class="uh-info-side">
+                    <div id="dName" class="uh-main">SLAVE</div>
+                    <div id="dRank" class="uh-sub">RANK</div>
+                    <div id="lastSeen" class="uh-seen">Last seen...</div>
+                </div>
+                <div class="uh-right">
+                    <div id="dJoined" class="uh-joined">SLAVE SINCE: --/--/--</div>
+                </div>
+            </div>
+
+            <div class="split">
+                <div class="chat-panel">
+                    <div class="cp-head">ENCRYPTED FEED</div>
+                    <div class="c-body" id="adminChatBox"></div>
+                    <div class="c-foot">
+                        <div id="plusMenu" class="d-none">
+                            <label class="menu-btn" for="adminMediaInput">
+                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                                Photo/Video
+                            </label>
+                        </div>
+                        <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden-input" onchange="handleAdminUpload(this)">
+                        <button class="btn-plus" onclick="document.getElementById('adminMediaInput').click()">+</button>
+                        <input type="text" id="adminInp" class="inp" placeholder="Command..." onkeypress="if(event.key==='Enter') sendMsg()">
+                        <button onclick="sendMsg()" class="btn-send">></button>
+                    </div>
+                </div>
+
+                <div class="action-panel">
+                    <div class="wallet-panel-display">
+                        <div class="wpd-label">WALLET BALANCE</div>
+                        <div id="dWalletVal" class="wpd-val">0</div>
+                    </div>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="stat-val" id="dTasks">0</div><div class="stat-lbl">TASKS</div></div>
+                        <div class="stat-box"><div class="stat-val" id="dStreak">0</div><div class="stat-lbl">STREAK</div></div>
+                        <div class="stat-box" style="border-color:rgba(57,255,20,0.3)"><div class="stat-val" style="color:var(--green)" id="dPoints">0</div><div class="stat-lbl">POINTS</div></div>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <div class="sec-title">HONORS & STICKERS</div>
+                        <div id="userStickerCase" class="sticker-case" style="display:none;"></div>
+                    </div>
+                    <div id="pointsGrid" class="pts-grid"></div>
+                    <div id="userQueueSec" style="display:none; flex-direction:column; gap:8px;"></div>
+                    <div class="mini-active">
+                        <div class="ma-status">ACTIVE</div>
+                        <div class="ma-mid">
+                            <div id="dActiveText" class="ma-txt">None</div>
+                            <div id="dActiveTimer" class="ma-timer">--:--</div>
+                        </div>
+                        <div class="ma-ctrl">
+                            <button class="ma-btn" onclick="adminTask('cancel')">X</button>
+                            <button class="ma-btn" onclick="adminTask('random')">?</button>
+                            <button class="ma-btn" onclick="adminTask('skip')">></button>
+                        </div>
+                    </div>
+                    <div class="task-queue-box">
+                        <div class="sec-title" style="color:var(--blue);">UPCOMING TASKS</div>
+                        <div id="qListContainer" class="q-list-vertical"></div>
+                        <div class="q-input-row" style="margin-top:8px;">
+                            <input type="text" id="newQTask" class="q-input" placeholder="Add task..." list="cmsTasksList">
+                            <button onclick="openTaskGallery()" class="q-add-btn" title="Open Task Gallery">+</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="sec-title">HISTORY</div>
+                        <div id="userHistoryGrid" class="history-grid"></div>
+                        <button id="loadMoreHist" class="load-more-btn" style="display:none;" onclick="loadMoreHistory()">LOAD MORE</button>
+                    </div>
+                    <div class="app-toggle-container">
+                        <span class="app-toggle-lbl">APPLICATION</span>
+                        <div class="pd-switch" onclick="toggleUserApp()">
+                            <div id="appToggleBox" class="pd-checkbox">
+                                 <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="modal" class="modal" onclick="closeModal()">
+    <div class="m-content" onclick="event.stopPropagation()">
+        <button onclick="closeModal()" style="position:absolute; top:20px; right:20px; z-index:1001; background:none; border:none; color:white; font-size:2rem; cursor:pointer;">&times;</button>
+        <div class="m-media-box">
+            <img id="mImg" class="m-img">
+            <video id="mVid" class="m-img d-none" controls></video>
+        </div>
+        <div class="m-info">
+            <div id="reviewNormalContent">
+                <div class="m-text-scroll">
+                    <p id="mText" style="color:#ccc; font-family:'Rajdhani'; border-left:2px solid var(--pink); padding-left:10px; font-size:1.2rem;"></p>
+                </div>
+                <div id="modalActions">
+                    <button onclick="doReview('approve')" class="btn-main" style="background:var(--green); color:black; border:none;">APPROVE</button>
+                    <button onclick="doReview('reject')" class="btn-main" style="background:transparent; border:1px solid var(--red); color:var(--red);">REJECT</button>
+                </div>
+            </div>
+
+            <div id="reviewRewardOverlay">
+                <h3 style="color:var(--green); text-align:center; font-size:1.5rem; font-weight:900; letter-spacing:2px; margin-bottom:15px; text-shadow:0 0 10px var(--green);">REWARD PROTOCOL</h3>
+                <div id="stickerGrid" class="sticker-grid"></div>
+                <div class="reward-inputs">
+                    <div class="rw-group">
+                        <div class="rw-label">MESSAGE (OPTIONAL)</div>
+                        <input type="text" id="rewardComment" class="rw-inp" placeholder="Good girl..." style="color:white; text-align:left;">
+                    </div>
+                    <div class="rw-media-row">
+                        <label for="rewardFileUpload" class="rw-icon-btn">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                        </label>
+                        <input type="file" id="rewardFileUpload" hidden onchange="handleRewardFileUpload(this)">
+                        <button id="btnRecordReward" class="rw-icon-btn" onclick="toggleRewardRecord()">
+                            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                        </button>
+                        <div id="rewardMediaPreview" class="rw-preview-box d-none">
+                             <span onclick="clearRewardMedia()" style="position:absolute; top:0; right:0; background:black; color:white; cursor:pointer; padding:0 4px; font-size:10px;">X</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="rewardBonus" value="50">
+                </div>
+                <div style="display:flex; width:100%; gap:10px; margin-top:20px;">
+                    <button onclick="cancelReward()" class="btn-main" style="background:#222; border:1px solid #444; color:#888;">BACK</button>
+                    <button onclick="confirmReward()" class="btn-main" style="background:var(--green); color:black; box-shadow:0 0 15px var(--green);">SEND</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="taskGalleryModal" class="modal" onclick="closeTaskGallery()">
+    <div class="m-content" style="background:transparent; border:none; box-shadow:none; display:flex; flex-direction:column; width:600px; height:80vh;" onclick="event.stopPropagation()">
+        <button onclick="closeTaskGallery()" style="position:absolute; top:0px; right:-40px; background:none; border:none; color:white; font-size:2.5rem; cursor:pointer;">&times;</button>
+        <h2 style="color:var(--blue); font-size:1.5rem; font-weight:900; text-align:center; margin-bottom:20px; text-shadow:0 0 10px var(--blue);">TASK GALLERY</h2>
+        <div id="glassTaskGrid" class="glass-panel"></div>
+    </div>
+</div>
+
+<div id="exclusionModal" class="modal" onclick="closeExclusionModal()">
+    <div class="m-content" style="height:auto; max-height:80vh; width:400px; display:flex; flex-direction:column; padding:20px; background:#0a0a0a;" onclick="event.stopPropagation()">
+        <h3 style="color:var(--red); font-weight:900; margin-bottom:15px; font-size:1.5rem; text-align:center;">EXCLUDE FROM PROTOCOL</h3>
+        <div id="exclusionList" class="ex-list"></div>
+        <button onclick="closeExclusionModal()" class="btn-main" style="background:var(--red); color:black; margin-top:15px;">DONE</button>
+    </div>
+</div>
+
+<div id="broadcastModal" class="modal" onclick="closeBroadcastModal()">
+    <div class="m-content" onclick="event.stopPropagation()">
+        <button onclick="closeBroadcastModal()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
+        <div class="br-head">SYSTEM BROADCAST</div>
+        <div class="br-preset-row">
+            <button class="br-mini-btn" onclick="togglePresets()">LOAD PRESET</button>
+            <button class="br-mini-btn" onclick="saveBroadcastPreset()">SAVE AS PRESET</button>
+        </div>
+        <div id="presetList"></div>
+
+        <textarea id="brText" class="br-inp" placeholder="Enter message to all users..."></textarea>
+        <label class="br-file-label" for="brFile">
+             <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#888;margin-right:10px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+             ATTACH MEDIA
+        </label>
+        <input type="file" id="brFile" class="hidden-input" accept="image/*,video/*,audio/*" onchange="handleBroadcastFile(this)">
+        <img id="brPreviewImg" class="br-prev">
+        <video id="brPreviewVid" class="br-prev" controls></video>
+        <div style="font-family:'Rajdhani'; font-weight:bold; margin-bottom:5px; color:#666;">EXCLUDE RECIPIENTS:</div>
+        <div id="brUserList" class="ex-list" style="margin-bottom:15px; border:1px solid #333; max-height:150px;"></div>
+        <button onclick="sendBroadcast()" class="br-btn">SEND TO ALL</button>
+    </div>
+</div>
+
+<div id="profileUploadModal" class="modal" onclick="closeProfileUpload()">
+    <div class="m-content" onclick="event.stopPropagation()">
+        <button onclick="closeProfileUpload()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
+        <div class="br-head" style="color:var(--yellow)">ADD TO PROFILE</div>
+        <select id="puType" class="br-inp" style="height:40px; min-height:40px;" onchange="togglePuInputs()">
+            <option value="grid">Feed Post (Photo/Video)</option>
+            <option value="story">Story (Ephemeral)</option>
+            <option value="text">Writing (Text)</option>
+        </select>
+        <div id="puMediaSec">
+            <label class="br-file-label" for="puFile">
+                 <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#888;margin-right:10px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                 SELECT MEDIA
+            </label>
+            <input type="file" id="puFile" class="hidden-input" accept="image/*,video/*" onchange="handleProfileFile(this)">
+            <img id="puPreviewImg" class="br-prev">
+            <video id="puPreviewVid" class="br-prev" controls></video>
+        </div>
+        <textarea id="puText" class="br-inp" placeholder="Caption or Text Content..."></textarea>
+        <button onclick="postToProfile()" class="br-btn" style="background:var(--yellow)">POST</button>
+    </div>
+</div>
+
+<script>
+    let users = [], currId = null, currTask = null, globalTributes = [];
+    let timerInterval = null, cooldownInterval = null;
+    let availableDailyTasks = [];
+    let broadcastPresets = []; 
+    let eventState = { active: false, goal: 1000, startTributeCount: 0, immunity: true };
+    let excludedIds = []; 
+    let broadcastExclusions = []; 
+    let lastHistoryJson = ""; 
+    let histLimit = 10;
+    let pendingTasksMap = {};
+    let broadcastMedia = null; 
+    let profileMedia = null; 
+    let queenContent = []; 
+    let lastChatJson = ""; 
+
+    const adminAvatar = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
+    const CLOUD_NAME = 'dfqvezjlj'; 
+    const UPLOAD_PRESET = 'task_uploads'; 
+    const ACCOUNT_ID = 'kW2K8hR';
+    const API_KEY = 'public_kW2K8hR6YbQXStTvMf5ZDYbVf1fQ';
+    let dragSrcIndex = null; 
+
+    // --- DYNAMIC STICKER CONFIG ---
+    let stickerConfig = []; 
+    let messageImg = null;
+    let pendingRewardMedia = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+
+    let isInitialLoad = true;
+    let lastNotifiedMessageId = null;
+
+    const ICONS = {
+        check: `<svg viewBox="0 0 24 24" class="svg-icon active-icon" style="fill:var(--green)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`,
+        timer: `<svg viewBox="0 0 24 24" class="svg-icon active-icon" style="fill:var(--blue)"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0 0 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.48-1.01-4.73-2.67-6.39zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>`,
+        mail: `<svg viewBox="0 0 24 24" class="svg-icon"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`
+    };
+
+    function getOptimizedUrl(url, width) { 
+        if (!url) return "";
+        if (url.startsWith("wix:image://")) {
+            const uri = url.split('/')[3].split('#')[0];
+            return `https://static.wixstatic.com/media/${uri}`;
+        }
+        if (url.includes("cloudinary.com") && url.includes("/upload/")) {
+            let cleanUrl = url.replace(/\.(mp4|webm|mov)$/i, ".jpg");
+            return cleanUrl.replace("/upload/", `/upload/f_auto,q_auto,dpr_auto,c_limit,w_${width}/`);
+        }
+        if (url.includes("upcdn.io")) {
+            let cleanUrl = url.replace(/\.(mp4|webm|mov)$/i, ".jpg");
+            const sep = cleanUrl.includes("?") ? "&" : "?";
+            return `${cleanUrl}${sep}width=${width}&format=auto&quality=auto&dpr=auto`;
+        }
+        return url; 
+    }
+
+    function formatTimer(ms) {
+        if (ms <= 0) return "00:00";
+        const hrs = Math.floor(ms / 3600000);
+        if (hrs >= 1) return `${hrs} HOURS`;
+        const mins = Math.ceil(ms / 60000);
+        return `${mins} MIN`;
+    }
+
+    function raw(t) { return t ? t.replace(/'/g, "\\'") : ""; }
+    function clean(t) { return t ? t.replace(/<[^>]*>?/gm, '') : ""; }
+
+    document.addEventListener("visibilitychange", () => {
+        window.parent.postMessage({ type: "visibilitychange", status: document.hidden }, "*");
+    });
+
+    window.addEventListener("message", (e) => {
+        try {
+            const d = e.data;
+            if (d.type === 'updateDashboard') {
+                if(d.dailyTasks) {
+                    availableDailyTasks = d.dailyTasks;
+                    const dl = document.getElementById('cmsTasksList');
+                    if(dl) dl.innerHTML = availableDailyTasks.map(t => `<option value="${clean(t)}">`).join('');
+                }
+                if(d.broadcastPresets) broadcastPresets = d.broadcastPresets;
+                users = d.users || [];
+                if(d.queenCMS) {
+                    queenContent = d.queenCMS;
+                    const configItem = queenContent.find(i => i["10"] !== undefined && i["10"] !== "");
+                    if(configItem) {
+                        const tiers = ['10', '20', '30', '40', '50', '100'];
+                        stickerConfig = tiers.map(tier => {
+                            let url = configItem[tier];
+                            if(!url || url === "") url = `https://via.placeholder.com/50/000000/FFFFFF?text=${tier}`; 
+                            return { id: 's' + tier, name: tier + ' PTS', val: parseInt(tier), url: url };
+                        });
+                        if(configItem["message"]) messageImg = configItem["message"];
+                    }
+                    if(document.getElementById('viewProfile').style.display === 'flex') {
+                        renderProfile();
+                    }
+                }
+                users.forEach(u => {
+                    if ((!u.taskQueue || u.taskQueue.length === 0) && availableDailyTasks.length > 0) {
+                        u.taskQueue = [...availableDailyTasks];
+                    }
+                    if(u.reviewQueue) {
+                        u.reviewQueue.forEach(t => {
+                            if(t.id) pendingTasksMap[t.id] = { ...t, mid: u.memberId };
+                        });
+                    }
+                });
+                globalTributes = d.globalTributes || [];
+                renderMainDashboard();
+                renderSidebar();
+                if(currId) {
+                    const u = users.find(x => x.memberId === currId);
+                    if(u) updateDetail(u);
+                }
+            }
+            if (d.type === 'updateChat' && currId == d.memberId) {
+                renderChat(d.messages);
+            }
+        } catch(err) {
+            console.error("Dashboard Update Error:", err);
+        }
+    });
+
+    // --- FORCE SCROLL HELPER ---
+    function forceBottom() {
+        const b = document.getElementById('adminChatBox');
+        if(b) b.scrollTop = b.scrollHeight;
+    }
+
+    function renderChat(msgs) { 
+        const b = document.getElementById('adminChatBox'); 
+        if(!msgs) return; 
+        
+        msgs.sort((a,b) => new Date(a._createdDate) - new Date(b._createdDate)); 
+        
+        const currentJson = JSON.stringify(msgs);
+        if (currentJson === lastChatJson) return; 
+        
+        // Detect if we are already at the bottom (before adding new stuff)
+        const isAtBottom = (b.scrollHeight - b.scrollTop - b.clientHeight) < 200;
+        
+        // Detect if this is a fresh load (switching users)
+        const isFreshLoad = (lastChatJson === "");
+        lastChatJson = currentJson;
+
+        let html = ""; 
+        msgs.forEach(m => { 
+            let txt = m.message.replace(/<[^>]+>/g, "").trim(); 
+            const isMe = (m.sender === 'admin' || m.sender === 'agent'); 
+            const timeStr = new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); 
+            
+            if (m.sender === 'system') { 
+                let icon = "";
+                if (txt.toUpperCase().includes("TRIBUTE") || txt.toUpperCase().includes("SENT")) {
+                    icon = `<svg class="gold-icon" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm1 15h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>`;
+                    html += `<div class="msg-gold">${icon}<span>${txt}</span></div>`; return;
+                } else if (txt.toUpperCase().includes("PURCHASE") || txt.toUpperCase().includes("BOUGHT")) {
+                    icon = `<svg class="green-icon" viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h14v12zm-7-8c-1.66 0-3-1.34-3-3H9c0 1.66 1.34 3 3 3s3-1.34 3-3h-2c0 1.66-1.34 3-3 3z"/></svg>`; 
+                    html += `<div class="msg-green">${icon}<span>${txt}</span></div>`; return;
+                }
+                html += `<div class="msg-sys">${icon}<span>${txt}</span></div>`; return; 
+            } 
+
+            let contentHtml = `<div class="msg ${isMe?'m-out':'m-in'}">${txt}</div>`; 
+            
+            if (m.message.startsWith('http')) {
+                const url = m.message;
+                const lowerUrl = url.toLowerCase();
+                
+                const isVideo = lowerUrl.includes("#.mp4") || lowerUrl.match(/\.(mp4|webm|mov)($|\?)/) || m.type === 'video';
+                
+                const isImage = !isVideo && (
+                    lowerUrl.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/) || 
+                    lowerUrl.includes("cloudinary") || 
+                    lowerUrl.includes("upcdn.io") || 
+                    lowerUrl.includes("wix:image")
+                );
+
+                if (isVideo) {
+                    contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}" style="padding:0; background:black;">
+                        <video src="${url}" controls style="max-width:100%; border-radius:8px;"></video>
+                    </div>`;
+                }
+                else if (isImage) {
+                    // FIX IS HERE: Added onload="forceBottom()"
+                    contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}" style="padding:0; background:transparent;">
+                        <img src="${url}" onload="forceBottom()" onclick="openMod(null, null, '${url}', 'image', '', true, '')" style="max-width:100%; max-height:300px; border-radius:8px; cursor:pointer;" loading="lazy">
+                    </div>`;
+                } 
+                else {
+                    txt = `<a href="${url}" target="_blank" rel="noopener noreferrer" style="word-break:break-word; text-decoration:underline;">LINK</a>`;
+                    contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}">${txt}</div>`;
+                }
+            }
+
+            let avatarHtml = isMe ? `<img src="${adminAvatar}" class="chat-av">` : `<div class="chat-av-placeholder">U</div>`; 
+            html += `<div class="msg-row ${isMe?'mr-out':'mr-in'}">${!isMe ? avatarHtml : ''}${contentHtml}${isMe ? avatarHtml : ''}<div class="msg-meta ${isMe?'mm-out':'mm-in'}">${timeStr}</div></div>`; 
+        }); 
+        
+        // Add an invisible anchor at the end
+        html += '<div id="chat-anchor" style="height:1px;"></div>';
+        
+        b.innerHTML = html; 
+        
+        // Aggressive Scroll Logic
+        if (isFreshLoad || isAtBottom) {
+            forceBottom();
+            setTimeout(forceBottom, 100);
+            setTimeout(forceBottom, 500); // Wait for videos to init
+        }
+
+        //Play sound for new messages
+        /*if (!isInitialLoad) {
+            const lastMsg = msgs[msgs.length-1];
+            if (lastMsg.sender === 'user' && lastMsg._id !== lastNotifiedMessageId) {
+                triggerSound('sfx-notify');
+                lastNotifiedMessageId = lastMsg._id;
+            }
+        }
+        isInitialLoad = false;*/
+    }
+
+    async function handleAdminUpload(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const isVideo = file.type.startsWith('video') || file.name.match(/\.(mp4|mov|webm)$/i);
+            const fd = new FormData();
+            fd.append("file", file);
+
+            try {
+                const btn = document.querySelector('.btn-plus');
+                const originalText = btn.innerText;
+                btn.innerText = "⏳";
+
+                const res = await fetch(
+                    `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/admin`,
+                    { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd }
+                );
+
+                if (!res.ok) { 
+                    console.error("Upload failed"); 
+                    btn.innerText = originalText;
+                    return; 
+                }
+                
+                const d = await res.json();
+
+                if (d.files && d.files[0] && d.files[0].fileUrl) {
+                    let finalUrl = d.files[0].fileUrl;
+                    if (isVideo) {
+                        finalUrl = finalUrl + "#.mp4";
+                    }
+                    window.parent.postMessage({ type: "adminMessage", text: finalUrl }, "*")
+                }
+                btn.innerText = originalText;
+            } catch (err) { 
+                console.error("Error", err); 
+                document.querySelector('.btn-plus').innerText = "+";
+            }
+        }
+    }
+
+    function selUser(id) {
+        if(typeof window.parent !== 'undefined') {
+            window.parent.postMessage({ type: "selectUser", memberId: id }, "*");
+        }
+        document.getElementById('adminChatBox').innerHTML = ""; 
+        lastChatJson = ""; 
+        currId = id;
+        document.getElementById('viewHome').style.display = 'none';
+        document.getElementById('viewProfile').style.display = 'none';
+        document.getElementById('viewUser').classList.add('active');
+        localStorage.setItem('read_' + id, Date.now());
+        renderSidebar();
+        histLimit = 10;
+        lastHistoryJson = ""; 
+        const u = users.find(x => x.memberId === id);
+        if(u) updateDetail(u);
+    }
+    
+    function showHome() {
+        if(cooldownInterval) clearInterval(cooldownInterval);
+        currId = null;
+        document.getElementById('viewUser').classList.remove('active');
+        document.getElementById('viewProfile').style.display = 'none';
+        document.getElementById('viewHome').style.display = 'grid';
+        renderSidebar();
+    }
+    
+    function openRewardProtocol() {
+        pendingApproveTask = currTask; 
+        selectedStickerId = null;
+        pendingRewardMedia = null; 
+        clearRewardMedia(); 
+        document.getElementById('reviewNormalContent').style.display = 'none';
+        document.getElementById('reviewRewardOverlay').style.display = 'flex';
+        const grid = document.getElementById('stickerGrid');
+        const source = (stickerConfig.length > 0) ? stickerConfig : [
+             { id: 's10', name: '10 PTS', val: 10, url: '' }, 
+             { id: 's20', name: '20 PTS', val: 20, url: '' }
+        ];
+        let html = source.map(s => `
+            <div class="sticker-card" id="stk_${s.id}" onclick="selectSticker('${s.id}', ${s.val})">
+                ${s.url ? `<img src="${getOptimizedUrl(s.url, 100)}" class="stk-img">` : `<div style="font-size:1.5rem; color:#666; height:60px; display:flex; align-items:center;">IMG</div>`}
+                <div class="stk-name">${s.name}</div>
+                <div class="stk-val">+${s.val}</div>
+            </div>
+        `).join('');
+        grid.innerHTML = html;
+        document.getElementById('rewardBonus').value = 50; 
+        document.getElementById('rewardComment').value = "";
+    }
+
+    function cancelReward() {
+        document.getElementById('reviewNormalContent').style.display = 'flex';
+        document.getElementById('reviewRewardOverlay').style.display = 'none';
+    }
+
+    function selectSticker(id, val) {
+        selectedStickerId = id;
+        document.querySelectorAll('.sticker-card').forEach(el => el.classList.remove('selected'));
+        document.getElementById('stk_'+id).classList.add('selected');
+        document.getElementById('rewardBonus').value = 50 + val;
+    }
+    
+    async function handleRewardFileUpload(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const fd = new FormData();
+            fd.append("file", file);
+            try {
+                const res = await fetch(`https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/rewards`, { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd });
+                if (!res.ok) return;
+                const d = await res.json();
+                if (d.files && d.files[0]) {
+                    let optimizedUrl = d.files[0].fileUrl;
+                    if(file.type.startsWith('video') || file.name.match(/\.(mp4|mov)$/i)) {
+                         optimizedUrl += "#.mp4"; 
+                    }
+                    pendingRewardMedia = { url: optimizedUrl, type: file.type };
+                    showRewardPreview(optimizedUrl, file.type);
+                }
+            } catch (err) { console.error(err); }
+        }
+    }
+
+    function toggleRewardRecord() {
+        const btn = document.getElementById("btnRecordReward");
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+            btn.classList.remove("recording");
+        } else {
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                btn.classList.add("recording");
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(audioChunks, { type: "audio/mp3" });
+                    const fd = new FormData();
+                    fd.append("file", blob);
+                    try {
+                        const res = await fetch(`https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/rewards/audio`, { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd });
+                        if (!res.ok) return;
+                        const d = await res.json();
+                        if (d.files && d.files[0]) {
+                            const optimizedUrl = d.files[0].fileUrl + "#.mp3";
+                            pendingRewardMedia = { url: optimizedUrl, type: "audio" };
+                            showRewardPreview(optimizedUrl, "audio");
+                        }
+                    } catch (err) {}
+                };
+            }).catch(err => { console.error(err); });
+        }
+    }
+
+    function showRewardPreview(url, type) {
+        const box = document.getElementById('rewardMediaPreview');
+        box.classList.remove('d-none');
+        if (type === 'video' || url.includes('.mp4')) {
+            box.innerHTML = `<video src="${url}" muted autoplay loop></video><span onclick="clearRewardMedia()" style="position:absolute;top:0;right:0;background:black;color:white;cursor:pointer;padding:0 4px;font-size:10px;">X</span>`;
+        } else {
+            box.innerHTML = `<img src="${url}"><span onclick="clearRewardMedia()" style="position:absolute;top:0;right:0;background:black;color:white;cursor:pointer;padding:0 4px;font-size:10px;">X</span>`;
+        }
+    }
+
+    function clearRewardMedia() {
+        pendingRewardMedia = null;
+        document.getElementById('rewardMediaPreview').classList.add('d-none');
+        document.getElementById('rewardFileUpload').value = "";
+    }
+
+    function confirmReward() {
+        if(!pendingApproveTask) return;
+        let bonus = parseInt(document.getElementById('rewardBonus').value) || 50;
+        const comment = document.getElementById('rewardComment').value.trim();
+        let finalImage = null;
+        if (selectedStickerId && selectedStickerId !== 'none') {
+            const sObj = stickerConfig.find(s => s.id === selectedStickerId);
+            if(sObj) finalImage = sObj.url;
+        }
+        if (!finalImage && comment && messageImg) finalImage = messageImg;
+        
+        window.parent.postMessage({ 
+            type: "reviewDecision", 
+            memberId: pendingApproveTask.mid, 
+            taskId: pendingApproveTask.id, 
+            decision: 'approve',
+            bonusCoins: bonus,
+            sticker: finalImage,
+            comment: comment,
+            media: pendingRewardMedia ? pendingRewardMedia.url : null
+        }, "*");
+        
+        const u = users.find(x => x.memberId === pendingApproveTask.mid);
+        if(u) {
+            u.reviewQueue = u.reviewQueue.filter(x => x.id !== pendingApproveTask.id);
+            if(finalImage) {
+                if(!u.stickers) u.stickers = [];
+                u.stickers.push(finalImage);
+            }
+        }
+        renderMainDashboard();
+        if(document.getElementById('viewUser').classList.contains('active')) updateDetail(u);
+        closeModal(); 
+    }
+
+    function updateDetail(u) {
+        if(!u) return; 
+        const now = Date.now();
+        const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+        let diff = 999999;
+        if (ls > 0) diff = Math.floor((now - ls) / 60000);
+        let status = "OFFLINE"; 
+        let isOnline = false;
+        if (ls > 0 && !isNaN(diff)) {
+            if (diff < 2) { status = "ONLINE"; isOnline = true; } 
+            else if (diff < 60) { status = diff + " MIN AGO"; } 
+        }
+        const lsEl = document.getElementById('lastSeen');
+        if(lsEl) {
+            lsEl.innerText = status;
+            if (isOnline) { lsEl.classList.add('online'); lsEl.style.textShadow = "0 0 5px rgba(57,255,20,0.5)"; } 
+            else { lsEl.classList.remove('online'); lsEl.style.textShadow = "none"; }
+        }
+        const appBtn = document.getElementById('btnAppView');
+        if (appBtn) { if (u.application) { appBtn.style.display = 'block'; } else { appBtn.style.display = 'none'; } }
+        const appToggleBox = document.getElementById('appToggleBox');
+        if(u.application) { appToggleBox.classList.add('checked'); } else { appToggleBox.classList.remove('checked'); }
+        document.getElementById('dName').innerText = u.name; document.getElementById('dRank').innerText = u.hierarchy; document.getElementById('dPoints').innerText = u.points || 0; 
+        const walletVal = document.getElementById('dWalletVal');
+        if(walletVal) walletVal.innerText = u.coins || 0;
+        document.getElementById('dTasks').innerText = u.completed || 0; document.getElementById('dStreak').innerText = u.streak || 0;
+        const joined = u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "N/A";
+        const joinedEl = document.getElementById('dJoined');
+        if(joinedEl) joinedEl.innerText = `SLAVE SINCE: ${joined}`;
+        const ptsGrid = document.getElementById('pointsGrid');
+        let html = `<button class="q-btn q-minus" onclick="modPoints(-10)">-10</button><button class="q-btn q-minus" onclick="modPoints(-50)">-50</button>`;
+        const source = (stickerConfig.length > 0) ? stickerConfig : [{ val: 10, url: '' }, { val: 20, url: '' }];
+        source.forEach(s => {
+            html += `<div class="q-btn-img" onclick="modPoints(${s.val})">${s.url ? `<img src="${getOptimizedUrl(s.url, 50)}">` : `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#444;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`}<span>+${s.val}</span></div>`;
+        });
+        ptsGrid.innerHTML = html;
+        const stickerContainer = document.getElementById('userStickerCase');
+        if(u.stickers && u.stickers.length > 0) { stickerContainer.innerHTML = u.stickers.map(url => `<div class="my-sticker" title="Awarded"><img src="${getOptimizedUrl(url, 50)}"></div>`).join(''); stickerContainer.style.display = 'flex'; } else { stickerContainer.style.display = 'none'; }
+        const qSec = document.getElementById('userQueueSec');
+        if(u.reviewQueue && u.reviewQueue.length > 0) { qSec.style.display = 'flex'; qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` + u.reviewQueue.map(t => { return `<div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false)"><img src="${getOptimizedUrl(t.proofUrl, 150)}" class="pend-thumb"><div class="pend-info"><div class="pend-act">PENDING REVIEW</div><div class="pend-txt">${clean(t.text)}</div></div></div>`; }).join(''); } else { qSec.style.display = 'none'; }
+        if (cooldownInterval) clearInterval(cooldownInterval);
+        if (u.activeTask && u.endTime && u.endTime > Date.now()) { document.getElementById('dActiveText').innerText = clean(u.activeTask.text); const tick = () => { const diff = u.endTime - Date.now(); if (diff <= 0) { document.getElementById('dActiveTimer').innerText = "00:00"; clearInterval(cooldownInterval); return; } document.getElementById('dActiveTimer').innerText = formatTimer(diff); }; tick(); cooldownInterval = setInterval(tick, 1000); } else { document.getElementById('dActiveText').innerText = "No Active Task"; document.getElementById('dActiveTimer').innerText = "--:--"; }
+        const qList = u.taskQueue || []; const listContainer = document.getElementById('qListContainer');
+        if(qList.length === 0) { listContainer.innerHTML = `<div style="text-align:center;color:#666;font-size:0.7rem;">Empty</div>`; } else {
+            listContainer.innerHTML = qList.slice(0, 10).map((t, idx) => `
+                <div class="q-item-line" draggable="true" ondragstart="handleDragStart(event, ${idx})" ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${idx})" ondragend="handleDragEnd(event)" onclick="openQueueTask('${u.memberId}', ${idx})">
+                    <span class="q-handle" onmousedown="event.stopPropagation()">≡</span>
+                    <span class="q-idx">${idx+1}.</span>
+                    <span class="q-txt-line">${clean(t)}</span>
+                    <span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>
+                </div>
+            `).join('');
+        }
+        const currentJson = JSON.stringify(u.history || []);
+        if (currentJson !== lastHistoryJson || histLimit > 10) { lastHistoryJson = currentJson; const hGrid = document.getElementById('userHistoryGrid'); const cleanHist = (u.history || []).filter(h => h.status !== 'fail' && (!h.text || !h.text.toUpperCase().includes('SKIPPED'))); let historyToShow = cleanHist.slice(0, histLimit); document.getElementById('loadMoreHist').style.display = (cleanHist.length > histLimit) ? 'block' : 'none'; if(historyToShow.length > 0) { hGrid.innerHTML = historyToShow.map(h => { const cls = h.status === 'approve' ? 'hb-app' : 'hb-rej'; const statusTxt = h.status === 'approve' ? 'APPROVED' : 'REJECTED'; const thumb = h.proofUrl ? getOptimizedUrl(h.proofUrl, 150) : ''; const isVid = h.proofType === 'video' || (h.proofUrl && h.proofUrl.endsWith('.mp4')); return `<div class="h-card-mini" onclick='openMod(null, null, "${h.proofUrl||''}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>${thumb ? (isVid ? `<video src="${h.proofUrl}" class="hc-img" muted></video>` : `<img src="${thumb}" class="hc-img">`) : `<div style="width:100%;height:100%;background:#222;display:flex;align-items:center;justify-content:center;color:#666;font-size:0.5rem;">TEXT</div>`}<div class="h-badge ${cls}">${statusTxt}</div></div>`; }).join(''); } else { hGrid.innerHTML = '<div style="color:#444; font-size:0.8rem; grid-column:1/-1;">No history yet.</div>'; } }
+    }
+    
+    function startTimerLoop() { if(timerInterval) clearInterval(timerInterval); timerInterval = setInterval(() => { document.querySelectorAll('.ac-timer').forEach(el => { const end = parseInt(el.getAttribute('data-end')); el.innerText = formatTimer(end - Date.now()); }); }, 3600000); }
+
+    function openTaskGallery() {
+        const grid = document.getElementById('glassTaskGrid');
+        if(availableDailyTasks.length > 0) {
+            grid.innerHTML = availableDailyTasks.map((task, i) => 
+                `<div class="gallery-row" onclick="selectGalleryTaskByIndex(${i})">
+                    <span class="gr-idx">${(i + 1).toString().padStart(2, '0')}</span>
+                    <span class="gr-text">${clean(task)}</span>
+                    <span class="gr-add">+</span>
+                </div>`
+            ).join('');
+        } else {
+            grid.innerHTML = `<div style="color:#666; font-family:'Rajdhani'; text-align:center; padding:20px;">No tasks available from CMS.</div>`;
+        }
+        document.getElementById('taskGalleryModal').classList.add('active');
+    }
+
+    function closeTaskGallery() { document.getElementById('taskGalleryModal').classList.remove('active'); }
+
+    function selectGalleryTaskByIndex(idx) {
+        if(currId && availableDailyTasks[idx]) {
+            const taskTxt = availableDailyTasks[idx];
+            const u = users.find(x => x.memberId === currId);
+            if(u) {
+                if(!u.taskQueue) u.taskQueue=[];
+                u.taskQueue.unshift(taskTxt);
+                window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+                updateDetail(u);
+            }
+        }
+        closeTaskGallery();
+    }
+
+    function handleDragStart(e, idx) { dragSrcIndex = idx; e.dataTransfer.effectAllowed = 'move'; e.target.style.opacity = '0.4'; }
+    function handleDragOver(e) { if (e.preventDefault) { e.preventDefault(); } e.dataTransfer.dropEffect = 'move'; return false; }
+    function handleDragEnd(e) { e.target.style.opacity = '1'; document.querySelectorAll('.q-item-line').forEach(item => item.style.opacity = '1'); }
+    function handleDrop(e, dropIndex) {
+        if (e.stopPropagation) { e.stopPropagation(); }
+        if (dragSrcIndex === null || dragSrcIndex === dropIndex) return false;
+        const u = users.find(x => x.memberId === currId);
+        if(u && u.taskQueue) {
+            const item = u.taskQueue[dragSrcIndex];
+            u.taskQueue.splice(dragSrcIndex, 1);
+            u.taskQueue.splice(dropIndex, 0, item);
+            window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+            updateDetail(u);
+        }
+        return false;
+    }
+
+    function showProfile() {
+        if(cooldownInterval) clearInterval(cooldownInterval);
+        currId = null;
+        document.getElementById('viewUser').classList.remove('active');
+        document.getElementById('viewHome').style.display = 'none';
+        document.getElementById('viewProfile').style.display = 'flex';
+        renderProfile();
+    }
+
+    function renderProfile() {
+        const storiesList = queenContent.filter(item => item.stories);
+        const gridList = queenContent.filter(item => item.page);
+        const writingList = queenContent.filter(item => item.post);
+
+        document.getElementById('cntPosts').innerText = gridList.length;
+        document.getElementById('cntSubs').innerText = users.length;
+        document.getElementById('cntStories').innerText = storiesList.length;
+
+        const rail = document.getElementById('storyRail');
+        let html = `<div class="story-ring story-add" onclick="openProfileUpload(true)">+</div>`;
+        html += storiesList.map((s, i) => `<div class="story-ring" onclick="openMod(null,null,'${s.stories}','image','STORY VIEW',true,'STORY')"><img src="${getOptimizedUrl(s.stories, 100)}" class="story-img"></div>`).join('');
+        rail.innerHTML = html;
+
+        const grid = document.getElementById('profileMediaGrid');
+        grid.innerHTML = gridList.map((p, i) => {
+            let isVid = p.page && (p.page.endsWith('.mp4') || p.page.endsWith('.mov'));
+            return `
+            <div class="mg-item" onclick="openMod(null,null,'${p.page}','${isVid?'video':'image'}','${raw(p.post||'')}',true,'POST')">
+                ${isVid ? `<video src="${p.page}"></video>` : `<img src="${getOptimizedUrl(p.page, 400)}">`}
+                <div class="mg-type">${isVid ? 'VID' : 'IMG'}</div>
+            </div>`;
+        }).join('');
+
+        const txtGrid = document.getElementById('profileTextGrid');
+        txtGrid.innerHTML = writingList.map(p => `
+            <div class="tg-card">
+                <div class="tg-date">${p._createdDate ? new Date(p._createdDate).toLocaleString() : 'Just now'}</div>
+                <div class="tg-body">${p.post}</div>
+            </div>
+        `).join('');
+    }
+
+    function switchProfileTab(tab) {
+        document.querySelectorAll('.qp-tab').forEach(t => t.classList.remove('active'));
+        if(tab === 'media') {
+            document.querySelectorAll('.qp-tab')[0].classList.add('active');
+            document.getElementById('profileMediaGrid').classList.remove('d-none');
+            document.getElementById('profileTextGrid').classList.add('d-none');
+        } else {
+            document.querySelectorAll('.qp-tab')[1].classList.add('active');
+            document.getElementById('profileMediaGrid').classList.add('d-none');
+            document.getElementById('profileTextGrid').classList.remove('d-none');
+        }
+    }
+
+    function openProfileUpload(isStory = false) {
+        document.getElementById('profileUploadModal').classList.add('active');
+        const sel = document.getElementById('puType');
+        sel.value = isStory ? 'story' : 'grid';
+        togglePuInputs();
+    }
+    
+    function closeProfileUpload() {
+        document.getElementById('profileUploadModal').classList.remove('active');
+        document.getElementById('puFile').value = '';
+        document.getElementById('puText').value = '';
+        document.getElementById('puPreviewImg').style.display='none';
+        document.getElementById('puPreviewVid').style.display='none';
+        profileMedia = null;
+    }
+
+    function togglePuInputs() {
+        const t = document.getElementById('puType').value;
+        const mSec = document.getElementById('puMediaSec');
+        if(t === 'text') mSec.style.display = 'none';
+        else mSec.style.display = 'block';
+    }
+
+    async function handleProfileFile(input) {
+        if(input.files && input.files[0]) {
+            const file = input.files[0];
+            const fd = new FormData();
+            fd.append("file", file);
+            try {
+                const res = await fetch(`https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/profile`, { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd });
+                if (!res.ok) return;
+                const d = await res.json();
+                if (d.files && d.files[0]) {
+                    profileMedia = { url: d.files[0].fileUrl, type: file.type };
+                    if (file.type.startsWith("video")) {
+                        document.getElementById("puPreviewVid").src = d.files[0].fileUrl;
+                        document.getElementById("puPreviewVid").style.display = "block";
+                        document.getElementById("puPreviewImg").style.display = "none";
+                    } else {
+                        document.getElementById("puPreviewImg").src = d.files[0].fileUrl;
+                        document.getElementById("puPreviewImg").style.display = "block";
+                        document.getElementById("puPreviewVid").style.display = "none";
+                    }
+                }
+            } catch (err) {}
+        }
+    }
+
+    function postToProfile() {
+        const type = document.getElementById('puType').value;
+        const caption = document.getElementById('puText').value; 
+        
+        let payload = { collection: "QKarinonline", data: {} };
+
+        if (type === 'text') {
+            if(!caption) return;
+            payload.data = { post: caption, stories: null, page: null };
+        } else if (type === 'story') {
+            if(!profileMedia) return;
+            payload.data = { stories: profileMedia.url, post: null, page: null };
+        } else if (type === 'grid') {
+            if(!profileMedia) return;
+            payload.data = { page: profileMedia.url, post: caption || "", stories: null };
+        }
+
+        window.parent.postMessage({ type: "saveToCMS", collection: "QKarinonline", payload: payload.data }, "*");
+        queenContent.unshift({ ...payload.data, _createdDate: new Date().toISOString() });
+        renderProfile();
+        closeProfileUpload();
+    }
+
+    // --- PROTOCOL ---
+    function openExclusionModal() {
+        const list = document.getElementById('exclusionList');
+        list.innerHTML = users.map(u => {
+            const isEx = excludedIds.includes(u.memberId);
+            return `<div class="ex-item ${isEx?'selected':''}" onclick="toggleExclusion('${u.memberId}')">
+                <div class="ex-check">${isEx?'✕':''}</div>
+                <span style="font-family:'Rajdhani'; font-weight:bold; color:white;">${u.name}</span>
+            </div>`;
+        }).join('');
+        document.getElementById('exclusionModal').classList.add('active');
+    }
+    function closeExclusionModal() { document.getElementById('exclusionModal').classList.remove('active'); }
+    function toggleExclusion(id) {
+        if(excludedIds.includes(id)) excludedIds = excludedIds.filter(x => x !== id);
+        else excludedIds.push(id);
+        openExclusionModal();
+    }
+
+    // --- BROADCAST ---
+    function openBroadcastModal() { 
+        broadcastExclusions = []; 
+        renderBrUserList();
+        document.getElementById('broadcastModal').classList.add('active'); 
+    }
+    
+    function renderBrUserList() {
+        const list = document.getElementById('brUserList');
+        list.innerHTML = users.map(u => {
+            const isEx = broadcastExclusions.includes(u.memberId);
+            return `<div class="ex-item ${isEx?'selected':''}" onclick="toggleBrExclusion('${u.memberId}')">
+                <div class="ex-check">${isEx?'✕':''}</div>
+                <span style="font-family:'Rajdhani'; font-weight:bold; color:white;">${u.name}</span>
+            </div>`;
+        }).join('');
+    }
+
+    function toggleBrExclusion(id) {
+        if(broadcastExclusions.includes(id)) broadcastExclusions = broadcastExclusions.filter(x => x !== id);
+        else broadcastExclusions.push(id);
+        renderBrUserList();
+    }
+
+    function closeBroadcastModal() { 
+        document.getElementById('broadcastModal').classList.remove('active'); 
+        document.getElementById('brText').value = "";
+        document.getElementById('brFile').value = "";
+        document.getElementById('brPreviewImg').style.display='none';
+        document.getElementById('brPreviewVid').style.display='none';
+        broadcastMedia = null;
+        document.getElementById('presetList').style.display = 'none'; 
+    }
+
+    async function handleBroadcastFile(input) {
+        if(input.files[0]) {
+            const file = input.files[0];
+            const isVideo = file.type.startsWith('video') || file.name.match(/\.(mp4|mov)$/i);
+            const fd = new FormData();
+            fd.append("file", file);
+
+            try {
+                const res = await fetch(`https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/broadcasts`, { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd });
+                if(!res.ok) return;
+                const d = await res.json();
+                
+                if(d.files && d.files[0]) {
+                    broadcastMedia = d.files[0].fileUrl;
+                    if(isVideo) broadcastMedia += "#.mp4"; // Tag it!
+
+                    if(isVideo) {
+                        const v = document.getElementById('brPreviewVid');
+                        v.src = broadcastMedia; v.style.display='block';
+                        document.getElementById('brPreviewImg').style.display='none';
+                    } else {
+                        const i = document.getElementById('brPreviewImg');
+                        i.src = broadcastMedia; i.style.display='block';
+                        document.getElementById('brPreviewVid').style.display='none';
+                    }
+                }
+            } catch(e) {}
+        }
+    }
+
+    function saveBroadcastPreset() {
+        const txt = document.getElementById('brText').value;
+        if(!txt && !broadcastMedia) { alert("Nothing to save!"); return; }
+        window.parent.postMessage({ type: "saveToCMS", collection: "BROADCAST", payload: { planedt: txt, planedm: broadcastMedia } }, "*");
+        broadcastPresets.push({ planedt: txt, planedm: broadcastMedia });
+        alert("Saved to Presets!");
+    }
+
+    function togglePresets() {
+        const list = document.getElementById('presetList');
+        if(list.style.display === 'flex') { list.style.display = 'none'; } else {
+            if(broadcastPresets.length === 0) list.innerHTML = `<div style="color:#666; font-size:0.7rem; text-align:center;">No presets found.</div>`;
+            else {
+                list.innerHTML = broadcastPresets.map((p, i) => {
+                    const media = p.planedm || p.media;
+                    return `<div class="preset-item" onclick="loadPreset(${i})">
+                        ${media ? `<img src="${getOptimizedUrl(media, 50)}" class="preset-img">` : `<div class="preset-img"></div>`}
+                        <div class="preset-txt">${p.planedt || "Media Only"}</div>
+                    </div>`;
+                }).join('');
+            }
+            list.style.display = 'flex';
+        }
+    }
+
+    function loadPreset(idx) {
+        const p = broadcastPresets[idx];
+        if(!p) return;
+        document.getElementById('brText').value = p.planedt || "";
+        broadcastMedia = p.planedm;
+        if(broadcastMedia) {
+             if(broadcastMedia.includes('.mp4')) {
+                document.getElementById('brPreviewVid').src = broadcastMedia; 
+                document.getElementById('brPreviewVid').style.display='block';
+                document.getElementById('brPreviewImg').style.display='none';
+             } else {
+                document.getElementById('brPreviewImg').src = broadcastMedia;
+                document.getElementById('brPreviewImg').style.display='block';
+                document.getElementById('brPreviewVid').style.display='none';
+             }
+        }
+        document.getElementById('presetList').style.display = 'none';
+    }
+
+    function sendBroadcast() {
+        const txt = document.getElementById('brText').value;
+        if(!txt && !broadcastMedia) return;
+        window.parent.postMessage({ type: "broadcastMessage", text: txt, media: broadcastMedia, effect: "glass", excludedIds: broadcastExclusions }, "*");
+        window.parent.postMessage({ type: "saveToCMS", collection: "BROADCAST", payload: { message: txt, media: broadcastMedia } }, "*");
+        closeBroadcastModal();
+        alert("Broadcast Sent!");
+    }
+
+    function toggleNewbieImmunity() { if(!eventState.active) { eventState.immunity = !eventState.immunity; document.getElementById('pdImmunity').classList.toggle('checked'); } }
+    
+    function toggleProtocol() {
+        eventState.active = !eventState.active;
+        const ctrls = document.getElementById('pdControls');
+        const prog = document.getElementById('pdProgress');
+        if (eventState.active) {
+            eventState.goal = parseInt(document.getElementById('pdGoal').value) || 1000;
+            eventState.startTributeCount = globalTributes.reduce((acc, t) => acc + (parseInt(t.amount)||0), 0);
+            ctrls.style.display = 'none'; prog.style.display = 'flex';
+            window.parent.postMessage({ type: "updateGlobalEvent", event: { active: true, target: eventState.goal, current: 0, immunity: eventState.immunity, exclusions: excludedIds } }, "*");
+        } else {
+            ctrls.style.display = 'flex'; prog.style.display = 'none';
+            document.getElementById('pdBtn').classList.remove('active-btn');
+            document.getElementById('pdBtn').innerText = "ENGAGE";
+            window.parent.postMessage({ type: "updateGlobalEvent", event: { active: false } }, "*");
+        }
+        updateProtocolProgress();
+    }
+    
+    function updateProtocolProgress() {
+        if(!eventState.active) return;
+        const currentTotal = globalTributes.reduce((acc, t) => acc + (parseInt(t.amount)||0), 0);
+        let progress = currentTotal - eventState.startTributeCount;
+        if(progress < 0) progress = 0; if(progress > eventState.goal) progress = eventState.goal;
+        const pct = Math.min(100, (progress / eventState.goal) * 100);
+        document.getElementById('pdFill').style.width = pct + "%";
+        document.getElementById('pdText').innerText = `${progress} / ${eventState.goal} COINS COLLECTED`;
+        window.parent.postMessage({ type: "updateGlobalEvent", event: { active: true, target: eventState.goal, current: progress, immunity: eventState.immunity, exclusions: excludedIds } }, "*");
+    }
+
+    function toggleMobStats() {
+        document.getElementById('statsDeck').classList.toggle('show');
+        const btn = document.getElementById('mobStatsToggle');
+        if(btn.innerText === "VIEW STATS") btn.innerText = "HIDE STATS";
+        else btn.innerText = "VIEW STATS";
+    }
+
+    function renderMainDashboard() {
+        try {
+            const opsList = document.getElementById('opsList');
+            const feedLog = document.getElementById('feedLog');
+            let activeCnt = 0, pendingCnt = 0, skipCnt = 0;
+            let allEvents = [];
+            updateProtocolProgress();
+
+            let cards = "";
+            users.forEach(u => {
+                if (u.reviewQueue && u.reviewQueue.length > 0) {
+                    pendingCnt += u.reviewQueue.length;
+                    u.reviewQueue.forEach(t => {
+                        let av = u.avatar && u.avatar.length > 5 ? u.avatar : `https://api.dicebear.com/7.x/bottts/svg?seed=${u.memberId}&backgroundColor=1a1a1a`;
+                        cards += `
+                        <div class="mon-card red" onclick="openModById('${t.id}', '${u.memberId}')">
+                            <div class="mon-badge badge-r">PENDING</div>
+                            <div class="mon-av-box"><img src="${av}" class="mon-av"></div>
+                            <div class="mon-name">${u.name}</div>
+                            <div class="mon-detail">${clean(t.text)}</div>
+                        </div>`;
+                        allEvents.push({ type:'task', time: t.timestamp ? new Date(t.timestamp).getTime() : 0, text: `${u.name} submitted evidence.`, user: u.name });
+                    });
+                }
+                
+                if (u.activeTask && u.endTime > Date.now()) {
+                    activeCnt++;
+                    let av = u.avatar && u.avatar.length > 5 ? u.avatar : `https://api.dicebear.com/7.x/bottts/svg?seed=${u.memberId}&backgroundColor=1a1a1a`;
+                    const timeLeft = formatTimer(u.endTime - Date.now());
+                    cards += `
+                    <div class="mon-card blue" onclick="selUser('${u.memberId}')">
+                        <div class="mon-badge badge-b">WORKING</div>
+                        <div class="mon-av-box"><img src="${av}" class="mon-av"></div>
+                        <div class="mon-name">${u.name}</div>
+                        <div class="mon-detail">${clean(u.activeTask.text)}</div>
+                        <div class="mon-timer ac-timer" data-end="${u.endTime}">${timeLeft}</div>
+                    </div>`;
+                }
+                
+                if(u.history) {
+                    u.history.slice(0,5).forEach(h => {
+                        if(h.status === 'fail' || (h.text && h.text.toUpperCase().includes('SKIPPED'))) {
+                            skipCnt++;
+                            allEvents.push({ type: 'skip', time: h.timestamp ? new Date(h.timestamp).getTime() : 0, text: `${u.name} FAILED/SKIPPED task`, user: u.name });
+                        }
+                    });
+                }
+            });
+
+            opsList.innerHTML = `<div class="ops-grid">${cards}</div>`;
+            if(!document.getElementById('opsReviewOverlay')) {
+                 const ov = document.createElement('div');
+                 ov.id = 'opsReviewOverlay';
+                 ov.className = 'ops-review-overlay';
+                 ov.innerHTML = `<div class="oro-close" onclick="closeOpsOverlay()">X</div><div id="oroMedia" class="oro-media"></div><div class="oro-info"><div id="oroText" class="oro-text"></div><div class="oro-ctrls"><button class="oro-btn oro-app" onclick="doReview('approve')">APPROVE</button><button class="oro-btn oro-rej" onclick="doReview('reject')">REJECT</button></div></div>`;
+                 opsList.appendChild(ov);
+            }
+            if(!cards) {
+                opsList.innerHTML = `<div style="padding:20px; color:#444; text-align:center;">No active operations.</div>`;
+                const ov = document.createElement('div');
+                 ov.id = 'opsReviewOverlay';
+                 ov.className = 'ops-review-overlay';
+                 ov.innerHTML = `<div class="oro-close" onclick="closeOpsOverlay()">X</div><div id="oroMedia" class="oro-media"></div><div class="oro-info"><div id="oroText" class="oro-text"></div><div class="oro-ctrls"><button class="oro-btn oro-app" onclick="doReview('approve')">APPROVE</button><button class="oro-btn oro-rej" onclick="doReview('reject')">REJECT</button></div></div>`;
+                 opsList.appendChild(ov);
+            }
+
+            globalTributes.forEach(t => {
+                let isPurchase = t.message && (t.message.includes("Store") || t.message.includes("Purchase"));
+                const time = parseDate(t.date);
+                allEvents.push({ type: isPurchase ? 'buy' : 'trib', time: time, text: `${t.memberName} ${isPurchase ? 'bought item' : 'sent tribute'} (${t.amount})`, amount: t.amount, user: t.memberName, msg: t.message });
+            });
+            
+            const getT = (x) => typeof x.time === 'number' ? x.time : 0;
+            allEvents.sort((a,b) => getT(b) - getT(a));
+
+            feedLog.innerHTML = allEvents.slice(0, 50).map(l => {
+                //let timeStr = l.time > 0 ? new Date(l.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "";
+                let timeStr = l.time > 0 
+                    ? new Date(l.time).toLocaleString([], {
+                        month: 'short',   // or 'numeric'
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })
+                    : "";
+
+                const uObj = users.find(u => u.name === l.user);
+                const avUrl = uObj && uObj.avatar && uObj.avatar.length > 5 ? uObj.avatar : `https://api.dicebear.com/7.x/bottts/svg?seed=${l.user || 'sys'}&backgroundColor=1a1a1a`;
+
+                if (l.type === 'trib' || l.type === 'buy') {
+                    let cardClass = l.type === 'buy' ? 'feed-buy-card' : 'feed-trib-card';
+                    return `<div class="${cardClass}">
+                        <img src="${avUrl}" class="ft-avatar">
+                        <div class="ft-content">
+                            <div class="ft-top"><span>${l.user}</span><span>${timeStr}</span></div>
+                            <div class="ft-main">${l.amount} ${l.type === 'buy' ? 'STORE PURCHASE' : 'COINS'}</div>
+                            ${l.msg ? `<div class="ft-sub">"${l.msg}"</div>` : ''}
+                        </div>
+                    </div>`;
+                } else {
+                    let cls = l.type === 'skip' ? 'fmc-red' : 'fmc-blue';
+                    let txtCls = l.type === 'skip' ? 'txt-red' : 'txt-blue';
+                    return `<div class="feed-mini-card ${cls}">
+                        <img src="${avUrl}" class="fmc-avatar">
+                        <div class="fmc-content">
+                            <div class="fmc-top"><span>${l.user}</span><span>${timeStr}</span></div>
+                            <div class="fmc-main ${txtCls}">${l.text.replace(l.user, '').trim()}</div>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
+
+            document.getElementById('statTributes').innerText = globalTributes.length;
+            document.getElementById('statActive').innerText = activeCnt;
+            document.getElementById('statPending').innerText = pendingCnt;
+            document.getElementById('statSkipped').innerText = skipCnt;
+            startTimerLoop();
+        } catch(err) { console.error(err); }
+    }
+
+    function renderSidebar() {
+        try {
+            const list = document.getElementById('userList');
+            if(!list) return;
+
+            // --- FOCUS MODE TOGGLE ---
+            if (currId) { list.classList.add('focus-mode'); } 
+            else { list.classList.remove('focus-mode'); }
+            // -------------------------
+
+            users.sort((a, b) => {
+                const now = Date.now();
+                const FIVE_MIN = 5 * 60 * 1000;
+
+                // --- 1. ONLINE STATUS (5 min window) ---
+                const aOnline = (now - new Date(a.lastSeen || 0).getTime()) < FIVE_MIN;
+                const bOnline = (now - new Date(b.lastSeen || 0).getTime()) < FIVE_MIN;
+
+                if (aOnline && !bOnline) return -1;
+                if (!aOnline && bOnline) return 1;
+
+                // --- 2. LAST MESSAGE TIME (only if difference > 5 min) ---
+                const aMsg = new Date(a.lastMessageTime || 0).getTime();
+                const bMsg = new Date(b.lastMessageTime || 0).getTime();
+
+                if (Math.abs(aMsg - bMsg) > FIVE_MIN) {
+                    return bMsg - aMsg; // more recent first
+                }
+
+                // --- 3. LAST SEEN (only if difference > 5 min) ---
+                const aSeen = new Date(a.lastSeen || 0).getTime();
+                const bSeen = new Date(b.lastSeen || 0).getTime();
+
+                if (Math.abs(aSeen - bSeen) > FIVE_MIN) {
+                    return bSeen - aSeen; // more recent first
+                }
+
+                // --- 4. FALLBACK: KEEP ORIGINAL ORDER (joinedDate pre-sort) ---
+                return 0;
+            });
+
+            let html = `
+                <div class="u-item queen-item" onclick="showProfile()">
+                    <div class="u-avatar-main" style="border-color:var(--yellow);box-shadow:0 0 5px var(--yellow);"><img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"></div>
+                    <div class="u-info"><div class="u-name" style="color:var(--yellow);">QUEEN KARIN</div><div class="u-seen" style="color:#888;">MY PROFILE</div></div>
+                </div>`;
+            
+            html += users.map(u => {
+                const now = Date.now();
+                const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+                let diff = 999999;
+                if (ls > 0) diff = Math.floor((now - ls) / 60000);
+                
+                let status = "OFFLINE"; 
+                let isOnline = false;
+                if (ls > 0 && !isNaN(diff)) {
+                    if (diff < 2) { status = "ONLINE"; isOnline = true; } 
+                    else if (diff < 60) { status = diff + " MIN AGO"; } 
+                    else if (diff < 1440) { let h = Math.floor(diff/60); status = h + (h === 1 ? " HOUR AGO" : " HOURS AGO"); } 
+                    else { let d = Math.floor(diff/1440); status = d + (d === 1 ? " DAY AGO" : " DAYS AGO"); } 
+                }
+                
+                const hasPending = u.reviewQueue && u.reviewQueue.length > 0;
+                const isActive = u.activeTask && u.endTime > Date.now();
+                const lastRead = parseInt(localStorage.getItem('read_' + u.memberId) || 0);
+                const hasMsg = (u.lastMessageTime && new Date(u.lastMessageTime).getTime() > lastRead);
+                const mobileNotifClass = hasMsg ? "has-msg" : "";
+
+                // --- NEW MESSAGE SOUND LOGIC ---
+                const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
+                const lastSound = parseInt(localStorage.getItem('sound_' + u.memberId) || 0);
+                const isNewMessage = msgTime > lastSound;
+
+                if (isNewMessage) {
+                    triggerSound('sfx-notify');
+                    localStorage.setItem('sound_' + u.memberId, msgTime);
+                }
+                
+                // COLOR HIERARCHY
+                let itemStyle = "";       
+                let avatarBorder = "#333"; 
+                let avatarShadow = "none";
+                let statusClass = "";
+
+                if (isOnline) {
+                    itemStyle = "border: 1px solid var(--green); background: rgba(57,255,20,0.05);";
+                    avatarBorder = "var(--green)";
+                    avatarShadow = "0 0 5px var(--green)";
+                    statusClass = "online";
+                } 
+                else if (hasMsg) {
+                    itemStyle = "border: 1px solid var(--pink); background: rgba(255,0,222,0.05);";
+                    avatarBorder = "var(--pink)";
+                    avatarShadow = "0 0 5px var(--pink)";
+                } 
+                else if (hasPending) {
+                    itemStyle = "border: 1px solid var(--red); background: rgba(255,0,60,0.05);";
+                    avatarBorder = "var(--red)";
+                    avatarShadow = "0 0 5px var(--red)";
+                } 
+                else if (isActive) {
+                    itemStyle = "border: 1px solid var(--blue); background: rgba(0,243,255,0.05);";
+                    avatarBorder = "var(--blue)";
+                    avatarShadow = "0 0 5px var(--blue)";
+                }
+                
+                let icons = "";
+                let checkClass = hasPending ? "active-icon" : "icon-dim";
+                icons += `<div class="icon-box" title="Pending">${ICONS.check.replace('class="svg-icon active-icon"', `class="svg-icon ${checkClass}"`)}</div>`;
+                let timerClass = isActive ? "active-icon" : "icon-dim";
+                icons += `<div class="icon-box" title="Working">${ICONS.timer.replace('class="svg-icon active-icon"', `class="svg-icon ${timerClass}"`)}</div>`;
+                
+                let mailIcon = ICONS.mail; 
+                if(hasMsg) mailIcon = mailIcon.replace('class="svg-icon"', 'class="svg-icon active-icon"');
+                else mailIcon = mailIcon.replace('class="svg-icon"', 'class="svg-icon icon-dim"');
+                icons += `<div class="icon-box">${mailIcon}</div>`;
+                
+                let imgTag = u.avatar && u.avatar.length > 5 ? `<img src="${u.avatar}">` : `<img src="https://api.dicebear.com/7.x/bottts/svg?seed=${u.memberId}&backgroundColor=1a1a1a">`;
+                
+                return `<div class="u-item ${currId === u.memberId ? 'active' : ''} ${mobileNotifClass}" style="${itemStyle}" onclick="selUser('${u.memberId}')">
+                            <div class="u-avatar-main" style="border-color:${avatarBorder}; box-shadow:${avatarShadow};">
+                                ${imgTag}
+                                <div class="notif-dot"></div>
+                            </div>
+                            <div class="u-info"><div class="u-name">${u.name}</div><div class="u-seen ${statusClass}">${status}</div></div>
+                            <div class="u-name-mob d-none">${u.name}</div>
+                            <div class="u-right-col">${icons}</div>
+                        </div>`;
+            }).join('');
+            
+            list.innerHTML = html;
+        } catch(e) { console.error(e); }
+    }
+    
+    // --- OTHER HELPERS ---
+    function sendMsg() { const i = document.getElementById('adminInp'), t = i.value.trim(); if(t && currId) { window.parent.postMessage({ type: "adminMessage", toMemberId: currId, text: t }, "*"); i.value = ""; } }
+    function modPoints(amt) { if(currId) window.parent.postMessage({ type: "adjustPoints", memberId: currId, amount: amt }, "*"); }
+    function adminTask(action) { if(currId) window.parent.postMessage({ type: "adminTaskAction", action: action, memberId: currId }, "*"); }
+    function deleteQueueItem(mid, idx) { const u = users.find(x => x.memberId === mid); if(u && u.taskQueue) { u.taskQueue.splice(idx,1); window.parent.postMessage({ type: "updateTaskQueue", memberId: mid, queue: u.taskQueue }, "*"); updateDetail(u); } }
+    function play(id) { const audio = document.getElementById('sfx-'+id); if(audio) { audio.currentTime = 0; let p = audio.play(); if(p!==undefined) p.catch(e=>{console.log("Audio blocked")}); } }
+    function openApplicationView() { if(currId) { const u = users.find(x => x.memberId === currId); if(u && u.application) { showApplicationModal(u.application); } } }
+    function toggleUserApp() { if(!currId) return; const u = users.find(x => x.memberId === currId); if(!u) return; const isCurrentlyActive = !!u.application; const newValue = isCurrentlyActive ? "" : "Active Application"; u.application = newValue; updateDetail(u); window.parent.postMessage({ type: "saveToCMS", collection: "tasks", memberId: currId, payload: { application: newValue } }, "*"); }
+    function showApplicationModal(text) { document.getElementById('mText').innerText = clean(text); document.getElementById('reviewNormalContent').style.display = 'flex'; document.getElementById('reviewRewardOverlay').style.display = 'none'; document.getElementById('mImg').classList.add('d-none'); document.getElementById('mVid').classList.add('d-none'); document.getElementById('modalActions').style.display = 'none'; document.getElementById('modal').classList.add('active'); }
+    function parseDate(dateStr) { if (!dateStr) return 0; if (dateStr.includes("T")) { return new Date(dateStr).getTime(); } const match = dateStr.match(/(\d{1,2})-(\d{1,2})-(\d{4}), (\d{2}):(\d{2}):(\d{2})/); if (match) { const [_, day, month, year, hour, minute, second] = match; const dd = day.padStart(2, "0"); const mm = month.padStart(2, "0"); return new Date(`${year}-${mm}-${dd}T${hour}:${minute}:${second}`).getTime(); } return 0; }
+    
+    // --- PLACEHOLDERS FOR MISSING MODAL FUNCTIONS TO PREVENT CRASH ---
+    function openMod(id, mid, url, type, text, isHistory, status) {
+        if(!isHistory) currTask = { id: id, mid: mid }; 
+        document.getElementById('mText').innerText = clean(text); 
+        document.getElementById('reviewNormalContent').style.display = 'flex'; 
+        document.getElementById('reviewRewardOverlay').style.display = 'none'; 
+        const i = document.getElementById('mImg'), v = document.getElementById('mVid'), btns = document.getElementById('modalActions'); 
+        if(!url) { i.classList.add('d-none'); v.classList.add('d-none'); } 
+        else if(type==='video' || (url && url.endsWith('.mp4'))) { i.classList.add('d-none'); v.classList.remove('d-none'); v.src = url; v.load(); v.play(); } 
+        else { v.pause(); v.classList.add('d-none'); i.classList.remove('d-none'); i.src = url; } 
+        
+        if(isHistory) { btns.style.display = 'none'; } else { btns.style.display = 'flex'; }
+        document.getElementById('modal').classList.add('active'); 
+    }
+    function closeModal() { document.getElementById('modal').classList.remove('active'); document.getElementById('mVid').pause(); }
+
+    function openModById(itemId, memberId, isHistory) { 
+        const u = users.find(x => x.memberId === memberId); 
+        if(!u) return; 
+        const item = u.reviewQueue ? u.reviewQueue.find(x => x.id === itemId) : null; 
+        if(item) { 
+            if (window.innerWidth <= 768) {
+                showLocalOpsReview(item, memberId);
+            } else {
+                document.getElementById('modalActions').style.display = 'flex'; 
+                openMod(item.id, memberId, item.proofUrl, item.proofType, item.text, false); 
+            }
+        } 
+    }
+    
+    function updateAdminDailyProtocol() {
+        const now = new Date();
+        const seed = now.getUTCFullYear() * 10000 + (now.getUTCMonth() + 1) * 100 + now.getUTCDate();
+        const x = Math.sin(seed) * 10000;
+        const code = Math.floor((x - Math.floor(x)) * 9000) + 1000;
+        
+        const el = document.getElementById('adminDailyCode');
+        if(el) el.innerText = code;
+    }
+    updateAdminDailyProtocol();
+  
+    function showLocalOpsReview(task, mid) {
+        currTask = { id: task.id, mid: mid };
+        const overlay = document.getElementById('opsReviewOverlay');
+        const mediaBox = document.getElementById('oroMedia');
+        const textBox = document.getElementById('oroText');
+        textBox.innerText = clean(task.text);
+        if (task.proofUrl) {
+            if (task.proofType === 'video' || task.proofUrl.endsWith('.mp4')) {
+                mediaBox.innerHTML = `<video src="${task.proofUrl}" controls autoplay muted></video>`;
+            } else {
+                mediaBox.innerHTML = `<img src="${task.proofUrl}">`;
+            }
+        } else {
+            mediaBox.innerHTML = `<div style="color:#666; font-size:0.7rem;">NO MEDIA</div>`;
+        }
+        overlay.style.display = 'flex';
+    }
+
+    function closeOpsOverlay() {
+        document.getElementById('opsReviewOverlay').style.display = 'none';
+        document.getElementById('oroMedia').innerHTML = ''; 
+    }
+
+    function openQueueTask(memberId, idx) { const u = users.find(x => x.memberId === memberId); if (u && u.taskQueue && u.taskQueue[idx]) { openMod(null, memberId, '', 'text', u.taskQueue[idx], true, 'UPCOMING'); } }
+    
+    function doReview(dec) { 
+        if(currTask) { 
+            if(dec === 'approve') {
+                closeOpsOverlay(); 
+                openRewardProtocol(); 
+            } else { 
+                window.parent.postMessage({ type: "reviewDecision", memberId: currTask.mid, taskId: currTask.id, decision: dec }, "*"); 
+                const u = users.find(x => x.memberId === currTask.mid); 
+                if(u) u.reviewQueue = u.reviewQueue.filter(x => x.id !== currTask.id); 
+                renderMainDashboard(); 
+                if(document.getElementById('viewUser').classList.contains('active')) updateDetail(u); 
+                closeModal(); 
+                closeOpsOverlay();
+            } 
+        } 
+    }
+
+    function triggerSound(id) {
+        const el = document.getElementById(id);
+
+        // Ensure the element exists and is an <audio> element
+        if (!(el instanceof HTMLAudioElement)) return;
+
+        // Restart the sound from the beginning
+        el.currentTime = 0;
+
+        // Play safely (avoid autoplay errors)
+        el.play().catch(() => {
+            // Silently ignore play errors (browser restrictions)
+        });
+    }
+
+</script>
+</body>
+</html>
