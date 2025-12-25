@@ -21,6 +21,7 @@ import { getRandomTask, restorePendingUI, finishTask, cancelPendingTask, resetTa
 import { renderChat, sendChatMessage, handleChatKey, sendCoins, loadMoreChat, openChatPreview, closeChatPreview, forceBottom } from './chat.js';
 import { renderGallery, loadMoreHistory, initModalSwipeDetection, closeModal, toggleHistoryView, openHistoryModal, openModal } from './gallery.js';
 import { handleEvidenceUpload, handleProfileUpload, handleAdminUpload } from './uploads.js';
+import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from './kneeling.js';
 
 // --- 2. INITIALIZATION ---
 document.addEventListener('click', () => {
@@ -60,22 +61,24 @@ initDomProfile();
 
 
 // --- 3. THE MESSAGE LISTENER (CORE BRIDGE) ---
+// --- 3. THE MESSAGE LISTENER (CORE BRIDGE) ---
 window.addEventListener("message", (event) => {
     const data = event.data;
 
-    if (data.type === "CHAT_ECHO") {
+       // A. CHAT ECHO
+    if (data.type === "CHAT_ECHO" && data.msgObj) {
         const chatContent = document.getElementById('chatContent');
-        if (chatContent && data.msgObj) {
+        if (chatContent) {
             const m = data.msgObj;
             const contentHtml = `<div class="msg m-slave">${m.message}</div>`;
             const timeDiv = `<div class="msg-time">${new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
             const rowContent = `<div class="msg-col" style="justify-content: flex-end;">${contentHtml} ${timeDiv}</div>`;
             chatContent.innerHTML += `<div class="msg-row mr-out">${rowContent}</div>`;
             forceBottom();
-            setTimeout(styleTributeMessages, 100);
         }
     }
 
+    // YOUR RULES LOGIC
     if (data.type === 'UPDATE_RULES') {
         const rules = data.payload || {};
         for (let i = 1; i <= 8; i++) {
@@ -84,10 +87,8 @@ window.addEventListener("message", (event) => {
         }
     }
 
-    if (data.type === "INIT_TASKS" || data.dailyTasks) {
-        setTaskDatabase(data.dailyTasks || data.tasks || []);
-    }
-
+    // YOUR TASK & WISHLIST INIT
+    if (data.type === "INIT_TASKS" || data.dailyTasks) setTaskDatabase(data.dailyTasks || data.tasks || []);
     if (data.type === "INIT_WISHLIST" || data.wishlist) {
         const items = data.wishlist || [];
         if (Array.isArray(items) && items.length > 0) {
@@ -97,6 +98,7 @@ window.addEventListener("message", (event) => {
         }
     }
 
+    // YOUR DOM STATUS LOGIC
     if (data.type === "UPDATE_DOM_STATUS") {
         const badge = document.getElementById('chatStatusBadge');
         const ring = document.getElementById('chatStatusRing');
@@ -106,6 +108,7 @@ window.addEventListener("message", (event) => {
         if(domBadge) { domBadge.innerHTML = data.online ? '<span class="status-dot"></span> ONLINE' : `<span class="status-dot"></span> ${data.text}`; domBadge.className = data.online ? "dom-status status-online" : "dom-status"; }
     }
 
+    // YOUR Q-FEED LOGIC
     if (data.type === "UPDATE_Q_FEED") {
         const feedData = data.domVideos || data.posts || data.feed;
         if (feedData && Array.isArray(feedData)) {
@@ -116,22 +119,26 @@ window.addEventListener("message", (event) => {
         }
     }
 
+    // --- YOUR COMPLEX PAYLOAD LOGIC (RECOUPLED & SHIELDED) ---
     const payload = data.profile || data.galleryData || data.pendingState ? data : (data.type === "UPDATE_FULL_DATA" ? data : null);
+    
     if (payload) {
-        if (payload.profile) {
-            setGameStats(payload.profile);
-            setUserProfile({
-                name: payload.profile.name || "Slave",
-                hierarchy: payload.profile.hierarchy || "HallBoy",
-                memberId: payload.profile.memberId || "",
-                joined: payload.profile.joined
-            });
-            if (payload.profile.lastWorship) setLastWorshipTime(new Date(payload.profile.lastWorship).getTime());
-            setStats(migrateGameStatsToStats(payload.profile, stats));
-            if(payload.profile.profilePicture) document.getElementById('profilePic').src = getOptimizedUrl(payload.profile.profilePicture, 150);
-            updateStats();
-        }
+        // 1. Profile Sync (Added the !ignoreBackendUpdates shield here)
+        if (data.profile && !ignoreBackendUpdates) {
+        setGameStats(data.profile);
+        setUserProfile({
+            name: data.profile.name || "Slave",
+            hierarchy: data.profile.hierarchy || "HallBoy",
+            memberId: data.profile.memberId || "",
+            joined: data.profile.joined
+        });
+        if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
+        setStats(migrateGameStatsToStats(data.profile, stats));
+        if(data.profile.profilePicture) document.getElementById('profilePic').src = getOptimizedUrl(data.profile.profilePicture, 150);
+        updateStats(); // RECONNECTS THE VISUALS
+    }
 
+        // 2. Gallery Data Logic (Exactly as you sent it)
         if (payload.galleryData) {
             const currentGalleryJson = JSON.stringify(payload.galleryData);
             if (currentGalleryJson !== lastGalleryJson) {
@@ -142,6 +149,7 @@ window.addEventListener("message", (event) => {
             }
         }
 
+        // 3. Pending Task Logic (Exactly as you sent it)
         if (payload.pendingState !== undefined) {
             if (!taskJustFinished && !ignoreBackendUpdates) {
                 setPendingTaskState(payload.pendingState);
@@ -159,7 +167,7 @@ window.addEventListener("message", (event) => {
     }
 
     if (data.type === "UPDATE_CHAT" || data.chatHistory) renderChat(data.chatHistory || data.messages);
-    setTimeout(styleTributeMessages, 100); // Small delay to let chat render first
+    setTimeout(styleTributeMessages, 100); 
 });
 
 // --- 4. LOGIC FUNCTIONS ---
@@ -200,7 +208,7 @@ function updateStats() {
         if (pb) pb.style.width = Math.min(100, Math.max(0, progress)) + "%";
     }
 
-    updateDevotionStatus(); 
+    updateKneelingStatus(); 
 }
 
 // --- TRIBUTE HUNT LOGIC ---
@@ -469,104 +477,6 @@ function finalizeSacrifice() {
 }
 
 
-// --- 5. HOLD-TO-KNEEL LOGIC ---
-let holdTimer = null;
-const REQUIRED_HOLD_TIME = 2000; 
-
-function handleHoldStart() {
-    if (isLocked) return;
-    const fill = document.getElementById('fill');
-    const txtMain = document.getElementById('txt-main');
-    
-    if (fill) {
-        fill.style.transition = "width 2s linear"; 
-        fill.style.width = "100%";
-    }
-    if (txtMain) txtMain.innerText = "KNEELING...";
-
-    holdTimer = setTimeout(() => {
-        completeKneelAction();
-    }, REQUIRED_HOLD_TIME);
-}
-
-function handleHoldEnd() {
-    if (holdTimer) {
-        clearTimeout(holdTimer);
-        holdTimer = null;
-        const fill = document.getElementById('fill');
-        const txtMain = document.getElementById('txt-main');
-        if (fill) {
-            fill.style.transition = "width 0.3s ease"; 
-            fill.style.width = "0%";
-        }
-        if (txtMain) txtMain.innerText = "KNEEL";
-    }
-}
-
-function completeKneelAction() {
-    holdTimer = null; 
-    setLastWorshipTime(Date.now()); 
-    setIsLocked(true); 
-    setIgnoreBackendUpdates(true); 
-
-    const rewardMenu = document.getElementById('kneelRewardOverlay');
-    if (rewardMenu) rewardMenu.classList.remove('hidden');
-
-    triggerSound('msgSound');
-    window.parent.postMessage({ type: "WORSHIP" }, "*");
-    updateDevotionStatus();
-    setTimeout(() => { setIgnoreBackendUpdates(false); }, 10000);
-}
-
-function claimKneelReward(choice) {
-    const rewardMenu = document.getElementById('kneelRewardOverlay');
-    if (rewardMenu) rewardMenu.classList.add('hidden');
-
-    triggerSound('coinSound');
-    triggerCoinShower(); 
-
-    window.parent.postMessage({ 
-        type: "CLAIM_KNEEL_REWARD", 
-        rewardType: choice,
-        rewardValue: choice === 'coins' ? 10 : 50
-    }, "*");
-}
-
-function updateDevotionStatus() {
-    const now = Date.now();
-    const d = new Date();
-    const seed = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
-    const code = Math.floor((Math.abs(Math.sin(seed)) * 9000)) + 1000;
-    if (document.getElementById('dailyRandomId')) document.getElementById('dailyRandomId').innerText = "#" + code;
-
-    const btn = document.getElementById('btn');
-    const txtMain = document.getElementById('txt-main');
-    const fill = document.getElementById('fill');
-    const txtSub = document.getElementById('txt-sub');
-    
-    if (!btn || !txtMain || !fill) return;
-
-    const diffMs = now - lastWorshipTime;
-    const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
-
-    if (lastWorshipTime > 0 && diffMs < cooldownMs) {
-        setIsLocked(true);
-        const minLeft = Math.ceil((cooldownMs - diffMs) / 60000);
-        txtMain.innerText = `LOCKED: ${minLeft}m`;
-        const progress = 100 - ((diffMs / cooldownMs) * 100);
-        fill.style.transition = "none"; 
-        fill.style.width = Math.max(0, progress) + "%";
-        btn.style.cursor = "not-allowed";
-    } else if (!holdTimer) {
-        setIsLocked(false);
-        txtMain.innerText = "KNEEL";
-        fill.style.width = "0%";
-        btn.style.cursor = "pointer";
-    }
-
-    if (txtSub) txtSub.innerText = `TODAY KNEELING: ${gameStats.todayKneeling || 0}`;
-}
-
 // --- OTHER UTILS ---
 function buyRealCoins(amount) {
     triggerSound('sfx-buy');
@@ -605,7 +515,7 @@ function submitSessionRequest() {
 }
 
 // --- 6. LOOPS & MANIFEST ---
-setInterval(updateDevotionStatus, 1000);
+setInterval(updateKneelingStatus, 1000);
 setInterval(() => { window.parent.postMessage({ type: "heartbeat", view: currentView }, "*"); }, 5000);
 
 // Navigation & Stats
@@ -637,7 +547,7 @@ window.loadMoreHistory = loadMoreHistory;
 window.handleHoldStart = handleHoldStart;
 window.handleHoldEnd = handleHoldEnd;
 window.claimKneelReward = claimKneelReward;
-window.updateDevotionStatus = updateDevotionStatus;
+window.updateKneelingStatus = updateKneelingStatus;
 window.handleProfileUpload = handleProfileUpload;
 
 // Tribute & Economy
@@ -660,6 +570,9 @@ window.handleAdminUpload = handleAdminUpload;
 
 window.WISHLIST_ITEMS = WISHLIST_ITEMS;
 window.gameStats = gameStats;
+
+// --- 8. THE HANDSHAKE ---
+window.parent.postMessage({ type: "UI_READY" }, "*");
 
 // --- 7. STANDALONE TEST ---
 if (window.self === window.top) {
