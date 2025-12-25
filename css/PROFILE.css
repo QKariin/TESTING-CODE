@@ -2325,7 +2325,7 @@ html, body {
 }
 
 /* THE PROOF MODE TOGGLE: This only fires when you click See Proof */
-.glass-modal.proof-mode-active { background: transparent !important; ... }
+.glass-modal.proof-mode-active { background: transparent !important; }
 
 
 /* Preserve the text formation you asked for */
