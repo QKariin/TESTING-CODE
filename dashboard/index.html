@@ -184,16 +184,21 @@
                 </div>
 
                 <div class="action-panel">
+                    <!-- THE TASK QUEUE BOX -->
                     <div class="task-queue-box">
                         <div class="sec-title clickable-title" onclick="openTaskGallery()" style="color:var(--blue);">TASK QUEUE</div>
+                        
+                        <!-- THIS ID IS CRITICAL - IF THIS IS MISSING, TASKS DON'T LOAD -->
                         <div id="qListContainer" class="q-list-vertical"></div>
+                        
                         <div class="q-input-row">
-                            <input type="text" id="qInput" class="q-input" placeholder="Add task..." list="cmsTasksList">
+                            <input type="text" id="qInput" class="q-input" placeholder="Add task...">
                             <button class="q-add-btn" onclick="addQueueTask()">+</button>
                         </div>
-                        <button onclick="openTaskGallery()" style="width:100%; padding:4px; background:#111; border:1px solid var(--blue); color:var(--blue); font-size:0.6rem; margin-top:5px; cursor:pointer;">TASK GALLERY</button>
                     </div>
-                    <div style="margin-top:15px;">
+                
+                    <!-- HISTORY -->
+                    <div style="margin-top:20px;">
                         <div class="sec-title">HISTORY</div>
                         <div id="userHistoryGrid" class="history-grid"></div>
                         <button id="loadMoreHist" class="load-more-btn" onclick="loadMoreHist()">LOAD MORE</button>
