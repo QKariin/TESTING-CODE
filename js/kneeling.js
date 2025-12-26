@@ -103,11 +103,15 @@ export function claimKneelReward(choice) {
 export function updateKneelingStatus() {
     const now = Date.now();
     
-    // Daily ID generation (moved from main.js)
-    const d = new Date();
-    const seed = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
-    const code = Math.floor((Math.abs(Math.sin(seed)) * 9000)) + 1000;
-    if (document.getElementById('dailyRandomId')) document.getElementById('dailyRandomId').innerText = "#" + code;
+    // --- SYNCED SHADOW MATH ID (THE ONLY CODE THAT MATTERS) ---
+    const today = new Date();
+    const m = today.getMonth() + 1; 
+    const day = today.getDate();
+    const dayCode = ((110 - m) * 100 + (82 - day)).toString().padStart(4, '0');
+    
+    if (document.getElementById('dailyRandomId')) {
+        document.getElementById('dailyRandomId').innerText = "#" + dayCode;
+    }
 
     const btn = document.getElementById('btn');
     const txtMain = document.getElementById('txt-main');
@@ -127,7 +131,7 @@ export function updateKneelingStatus() {
         fill.style.transition = "none"; 
         fill.style.width = Math.max(0, progress) + "%";
         btn.style.cursor = "not-allowed";
-    } else if (!holdTimer) {
+    } else if (!window.holdTimer) { // Note: ensure holdTimer is globally accessible or tracked correctly
         setIsLocked(false);
         txtMain.innerText = "KNEEL";
         fill.style.width = "0%";
