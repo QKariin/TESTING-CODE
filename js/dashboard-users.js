@@ -199,29 +199,18 @@ export function updateTaskQueue(u) {
     listContainer.innerHTML = displayTasks.map((t, idx) => {
         const isPersonal = idx < personalTasks.length;
         const niceText = clean(t);
-        const safeText = raw(niceText); // FIXED: Quotes won't break the button
+        const safeText = raw(niceText);
 
         return `
-            <div class="q-item-line ${isPersonal ? 'direct-order' : 'filler'}" 
-                 draggable="${isPersonal}" 
-                 ondragstart="${isPersonal ? `handleDragStart(event, ${idx})` : ''}" 
-                 ondragover="handleDragOver(event)" 
-                 ondrop="${isPersonal ? `handleDrop(event, ${idx})` : ''}" 
-                 ondragend="handleDragEnd(event)" 
-                 onclick="${isPersonal ? `openQueueTask('${u.memberId}', ${idx})` : `assignFillerTask('${safeText}')`}"
-                 style="${isPersonal ? '' : 'opacity: 0.5; border-style: dashed;'}">
-                
-                <span class="q-handle">${isPersonal ? '★' : '⚡'}</span>
-                <span class="q-idx">${(idx + 1).toString().padStart(2, '0')}.</span>
-                ${isPersonal ? `<span class="q-badge-queen">QUEEN</span>` : ''}
-                <span class="q-txt-line">${niceText}</span>
-                
-                ${isPersonal ? 
-                    `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : 
-                    `<span style="color:var(--blue); font-size:0.5rem; font-weight:900; margin-left:auto;">+ ENFORCE</span>`
-                }
-            </div>
-        `;
+            <div class="compact-task-card ${isPersonal ? 'direct-order' : 'filler-task'}" id="main-q-${idx}">
+                <div class="dr-card-header">
+                    <span class="mirror-icon">${isPersonal ? '★' : '⚡'}</span>
+                    ${isPersonal ? `<span class="q-tag">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444;">SYSTEM</span>'}
+                    ${isPersonal ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : '<span></span>'}
+                </div>
+                <div class="dr-serif-text">${niceText}</div>
+                <div class="dr-mirror-arrow" onclick="this.closest('.compact-task-card').classList.toggle('is-expanded')">▼</div>
+            </div>`;
     }).join('');
 }
 
