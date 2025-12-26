@@ -368,100 +368,105 @@ body {
     transform: translateX(5px);
 }
 
-/* 2. The Standardized Row (Used on both Left and Right sides of Modal) */
-.directive-row {
+/* --- TACTICAL MIRROR: SLAVE UI -> DASHBOARD --- */
+
+/* 1. The Slave-Style Card (The Mirror) */
+.mirror-card {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 12px;
-    background: rgba(20, 20, 20, 0.9);
-    border: 1px solid #333;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    transition: border 0.3s ease;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(15, 15, 15, 0.95);
+    border: 1px solid #222;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    min-height: 90px;
 }
 
-/* Pink glow for your existing personal orders */
-.directive-row.active-order {
-    border-color: var(--pink) !important;
-    background: rgba(255, 0, 222, 0.03);
+/* My Personal Orders: Pink Glow & Solid */
+.mirror-card.direct-order {
+    border: 1px solid var(--pink) !important;
+    background: rgba(255, 0, 222, 0.05);
+    box-shadow: 0 0 15px rgba(255, 0, 222, 0.15);
 }
 
-/* 3. The Reading-Friendly Text */
-.dr-text-wrapper {
+/* Random Fillers: Grey & Ghostly */
+.mirror-card.filler-task {
+    border: 1px dashed #444;
+    opacity: 0.5;
+}
+
+/* 2. High-Class Typography (Serif) */
+.dr-serif-text {
     flex: 1;
-    min-width: 0; /* Prevents text from breaking layout */
-}
-
-.dr-text-content {
-    font-family: 'Georgia', 'Times New Roman', serif; /* Serif for readability */
-    font-size: 1rem;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1.05rem;
     line-height: 1.5;
     color: #ddd;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Standard: 3 lines only */
+    -webkit-line-clamp: 3; /* Limit to 3 lines initially */
     -webkit-box-orient: vertical;
     overflow: hidden;
+    transition: all 0.3s ease;
 }
 
-/* Expansion state */
-.directive-row.is-expanded .dr-text-content {
-    -webkit-line-clamp: unset; /* Show everything */
+/* EXPANSION: Show everything when arrow is clicked */
+.mirror-card.is-expanded .dr-serif-text {
+    -webkit-line-clamp: unset;
     color: white;
 }
 
-/* 4. The Expand Arrow */
-.dr-arrow {
-    width: 24px;
-    height: 24px;
+/* 3. The Expand Arrow (Functional) */
+.dr-mirror-arrow {
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: #555;
-    transition: 0.3s;
-    font-size: 0.7rem;
+    border: 1px solid #333;
     border-radius: 50%;
-    border: 1px solid transparent;
+    color: #666;
+    font-size: 0.6rem;
+    transition: 0.3s;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
-.dr-arrow:hover {
-    color: var(--blue);
+.dr-mirror-arrow:hover {
     border-color: var(--blue);
+    color: var(--blue);
+    background: rgba(0,243,255,0.05);
 }
 
-.is-expanded .dr-arrow {
+.is-expanded .dr-mirror-arrow {
     transform: rotate(180deg);
+    border-color: var(--pink);
     color: var(--pink);
 }
 
-/* 5. The Enforce Button (Right side only) */
-.dr-enforce-btn {
-    display: inline-block;
-    margin-top: 8px;
-    padding: 4px 10px;
+/* 4. Enforce Button (Armory side only) */
+.dr-armory-btn {
+    margin-top: 10px;
+    padding: 5px 12px;
     background: var(--blue);
     color: black;
     font-family: 'Orbitron';
     font-weight: 900;
-    font-size: 0.5rem;
-    border-radius: 3px;
+    font-size: 0.55rem;
+    border-radius: 4px;
     cursor: pointer;
     letter-spacing: 1px;
-}
-
-.dr-enforce-btn:hover {
-    box-shadow: 0 0 10px var(--blue);
-}
-
-/* 6. The Queen Tag */
-.q-tag {
-    font-size: 0.5rem;
-    font-weight: 900;
-    color: black;
-    background: var(--pink);
-    padding: 2px 5px;
-    border-radius: 2px;
-    margin-bottom: 5px;
     display: inline-block;
+}
+
+/* Icons (Star for mine, Bolt for system) */
+.mirror-icon {
+    width: 20px;
+    font-size: 1.1rem;
+    display: flex;
+    justify-content: center;
 }
