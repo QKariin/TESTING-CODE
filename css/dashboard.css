@@ -398,24 +398,24 @@ body {
 /* 2. High-Class Typography (Serif) */
 .dr-serif-text {
     font-family: 'Georgia', serif;
-    font-size: 0.75rem; /* SMALL FONT */
+    font-size: 0.55rem; /* SMALL FONT */
     line-height: 1;
-    color: #aaa;
+    color: #bbb;
     display: -webkit-box;
     -webkit-line-clamp: 2; /* Exactly 2 lines */
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* THE TOP LINE: Star, Badge, X */
+/* THE TOP LINE: Star | Badge | X */
 .dr-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     border-bottom: 1px solid #1a1a1a;
-    padding-bottom: 4px;
+    padding-bottom: 2px;
 }
 
 /* EXPANSION: Show everything when arrow is clicked */
@@ -426,11 +426,13 @@ body {
 
 /* 3. The Expand Arrow (Functional) */
 .dr-mirror-arrow {
+    width: 100%;
+    text-align: center;
     font-size: 0.5rem;
     color: #333;
     cursor: pointer;
-    text-align: center;
     margin-top: 2px;
+    line-height: 1;
 }
 
 /* The Close/Delete X */
@@ -472,9 +474,25 @@ body {
 }
 
 /* Icons (Star for mine, Bolt for system) */
-.mirror-icon {
-    width: 20px;
-    font-size: 1.1rem;
-    display: flex;
-    justify-content: center;
+.mirror-icon { font-size: 0.8rem; }
+.q-tag { font-size: 0.45rem; font-weight: 900; color: black; background: var(--pink); padding: 1px 4px; border-radius: 2px; }
+.dr-delete-x { color: #444; cursor: pointer; font-size: 0.9rem; font-weight: bold; }
+.dr-delete-x:hover { color: var(--red); }ify-content: center;
 }
+
+.compact-task-card {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 10px;
+    background: rgba(10, 10, 10, 0.9);
+    border: 1px solid #222;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    transition: 0.2s;
+    position: relative;
+    width: 100%;
+}
+
+/* Personal vs Filler Borders */
+.compact-task-card.direct-order { border-color: var(--pink); background: rgba(255, 0, 222, 0.05); }
+.compact-task-card.filler-task { border-style: dashed; opacity: 0.5; }
