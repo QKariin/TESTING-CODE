@@ -1,20 +1,16 @@
 // Dashboard Modal Management
 
-// Dashboard Modal Management
+// --- 1. THE IMPORTS (Check these paths carefully!) ---
 import { 
     currTask, pendingApproveTask, selectedStickerId, pendingRewardMedia, 
     messageImg, stickerConfig, availableDailyTasks, currId, users,
     setCurrTask, setPendingApproveTask, setSelectedStickerId, setPendingRewardMedia,
     setMessageImg, mediaRecorder, audioChunks, setMediaRecorder, setAudioChunks,
-    ACCOUNT_ID, API_KEY, dragSrcIndex, setDragSrcIndex
-} from './dashboard-state.js'; 
+    ACCOUNT_ID, API_KEY, setDragSrcIndex, dragSrcIndex
+} from './dashboard-state.js'; // MUST BE ./dashboard-state.js
 import { getOptimizedUrl, clean, raw } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; 
 
-// --- BIND TO WINDOW IMMEDIATELY (Fixes the "Stuck" window) ---
-window.closeModal = closeModal;
-window.openModal = openModal;
-window.openModById = openModById;
 
 export function closeModal() {
     const modal = document.getElementById('reviewModal');
@@ -309,15 +305,13 @@ export function confirmReward() {
 // --- 3. COMMAND ARMORY (THE NEW SEARCHABLE LOGIC) ---
 
 export function openTaskGallery() {
-    const grid = document.getElementById('glassTaskGrid');
-    if (!grid) return;
+    console.log("Opening Command Armory..."); // This helps us debug
+    const modal = document.getElementById('taskGalleryModal');
+    if (!modal) return;
     
-    // Reset search bar on open
-    const searchInp = document.getElementById('taskSearchInput');
-    if (searchInp) searchInp.value = "";
-
+    // Initial Render
     renderArmoryGrid(availableDailyTasks);
-    document.getElementById('taskGalleryModal').classList.add('active');
+    modal.classList.add('active');
 }
 
 export function filterTaskGallery() {
