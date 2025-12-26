@@ -315,15 +315,25 @@ body {
     overflow: hidden;
 }
 
-/* 5. THE UNROLL (EXPANSION) */
+/* --- STEP 1: UNBREAKABLE EXPANSION --- */
+
+/* Force the card to grow to whatever height the text needs */
 .compact-task-card.is-expanded {
-    background: #000;
-    border-color: var(--blue);
+    height: auto !important;
+    max-height: none !important;
+    min-height: 50px;
+    border-color: var(--blue) !important;
+    background: #000 !important;
+    z-index: 100;
 }
+
+/* Completely remove the 2-line limit and show every single word */
 .compact-task-card.is-expanded .dr-serif-text {
-    -webkit-line-clamp: unset !important;
     display: block !important;
-    color: #fff;
+    -webkit-line-clamp: unset !important;
+    max-height: none !important;
+    overflow: visible !important;
+    color: #fff !important;
 }
 
 /* 6. MICRO ARROW */
