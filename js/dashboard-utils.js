@@ -31,40 +31,40 @@ export function getOptimizedUrl(url, width = 400) {
 }
 
 export function clean(str) {
-    if (!str) return "";
+    if (str === null || str === undefined) return "";
     
-    let text = str;
+    let target = str;
 
-    // 1. If Wix sent an object, grab the text inside
-    if (typeof str === 'object') {
-        text = str.text || str.task || str.title || str.value || JSON.stringify(str);
-    }
-
-    // 2. If it's a string but looks like JSON, unwrap it
-    if (typeof text === 'string' && text.includes('{')) {
-        try {
-            const parsed = JSON.parse(text);
-            text = parsed.text || parsed.task || parsed.title || text;
-        } catch (e) { 
-            // If it's not valid JSON, we manually strip curly braces
-            text = text.replace(/[{}"]/g, ''); 
+    // 1. If it's a Wix Object, hunt for the text key
+    if (typeof target === 'object' && !Array.isArray(target)) {
+        target = target.text || target.task || target.title || target.value || target.label || target.description || "";
+        // If we still didn't find a string, grab the first property that IS a string
+        if (!target) {
+            target = Object.values(str).find(v => typeof v === 'string') || JSON.stringify(str);
         }
     }
 
-    // 3. REMOVE THE "Formatting Shit"
-    let finalString = text.toString();
-    
-    // Remove anything in brackets [CMD:123] or [TASK]
-    finalString = finalString.replace(/\[.*?\]/g, ''); 
-    
-    // Remove prefixes like "text:", "task:", "value:" that Wix adds
-    finalString = finalString.replace(/^(text|task|value|title|description):/i, '');
-    
-    // Remove leftover quotes and backslashes
-    finalString = finalString.replace(/["\\]/g, '');
+    // 2. If it's a JSON string, unwrap it
+    if (typeof target === 'string' && (target.startsWith('{') || target.startsWith('['))) {
+        try {
+            const parsed = JSON.parse(target);
+            if (Array.isArray(parsed)) {
+                target = parsed[0]?.text || parsed[0]?.task || parsed[0];
+            } else {
+                target = parsed.text || parsed.task || target;
+            }
+        } catch (e) { }
+    }
 
-    // 4. Final safety clean
-    return finalString.replace(/[<>]/g, '').trim().substring(0, 100);
+    // 3. NUCLEAR STRIP - Remove every possible "formatting shit" character
+    let result = target.toString();
+    
+    result = result.replace(/[{}"]/g, '');      // Removes { } and "
+    result = result.replace(/\[.*?\]/g, '');    // Removes anything in [brackets]
+    result = result.replace(/\\/g, '');         // Removes backslashes
+    result = result.replace(/^(text|task|value|title|label):/i, ''); // Removes property names
+
+    return result.replace(/[<>]/g, '').trim().substring(0, 100);
 }
 
 export function raw(str) {
