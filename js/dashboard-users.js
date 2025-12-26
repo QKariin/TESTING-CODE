@@ -1,11 +1,9 @@
-// Dashboard User Management
-// User detail display, task queue management, and user interactions
-
 import { 
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
     availableDailyTasks, 
     setCooldownInterval, setHistLimit, setLastHistoryJson 
-} from './dashboard-state.js';
+} from './dashboard-state.js'; // <--- IT MUST BE DASHBOARD-STATE.JS
+
 import { getOptimizedUrl, clean, raw, formatTimer } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; 
 
