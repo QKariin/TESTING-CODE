@@ -13,6 +13,7 @@ import { renderOperationsMonitor } from './dashboard-operations.js';
 import { renderChat } from './dashboard-chat.js';
 import { updateDetail } from './dashboard-users.js';
 import { toggleMobStats } from './dashboard-utils.js';
+import { Bridge } from './bridge.js';
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
@@ -29,6 +30,12 @@ document.addEventListener('DOMContentLoaded', function() {
     renderMainDashboard();
     
     console.log('Dashboard initialized');
+});
+
+// This tells the dashboard to listen to the "Radio Channel" (Vercel) 
+// exactly like it listens to Wix.
+Bridge.listen((data) => {
+    window.postMessage(data, "*"); 
 });
 
 // Main message listener for communication with Wix backend
