@@ -20,29 +20,39 @@ export function clean(str) {
     
     let text = str;
 
-    // 1. If it's a JSON object (common in Wix), extract the text
-    if (typeof str === 'object') {
-        text = str.text || str.title || str.task || JSON.stringify(str);
+    // 1. DEBUG: If you open F12 console, you can see exactly what is breaking
+    // console.log("Cleaning task:", str); 
+
+    // 2. If it's an Object (Wix often sends these)
+    if (typeof str === 'object' && str !== null) {
+        text = str.text || str.title || str.task || str.value || JSON.stringify(str);
     }
 
-    // 2. If it's a string that looks like JSON, try to parse it
-    if (typeof text === 'string' && text.startsWith('{')) {
+    // 3. If it's a JSON String (Wix often stores arrays as strings)
+    if (typeof text === 'string' && (text.startsWith('{') || text.startsWith('['))) {
         try {
             const parsed = JSON.parse(text);
-            text = parsed.text || parsed.title || parsed.task || text;
-        } catch (e) { /* Not JSON, carry on */ }
+            if (Array.isArray(parsed)) {
+                text = parsed[0]?.text || parsed[0]?.task || parsed[0] || text;
+            } else {
+                text = parsed.text || parsed.title || parsed.task || text;
+            }
+        } catch (e) { /* Not valid JSON, continue */ }
     }
 
-    // 3. Remove System Tags like [CMD:...] or [TASK]
+    // 4. Strip out System Commands/Tags (e.g., [TASK], CMD:, etc.)
     if (typeof text === 'string') {
-        text = text.replace(/\[.*?\]/g, ''); // Removes anything inside brackets []
-        text = text.replace(/^(CMD:|TASK:|TEXT:)/i, ''); // Removes prefixes like CMD: or TASK:
+        // Removes anything like [PROTECTED] or [!]
+        text = text.replace(/\[.*?\]/g, ''); 
+        // Removes common prefixes
+        text = text.replace(/^(TASK:|CMD:|TEXT:|MSG:)/i, '');
         
-        // 4. Final sanitization
+        // 5. Clean HTML/Tags and trim whitespace
         text = text.replace(/[<>]/g, '').trim();
     }
 
-    return text.substring(0, 100);
+    // Return the cleaned text (Max 100 chars for the UI)
+    return text.toString().substring(0, 100);
 }
 
 export function raw(str) {
