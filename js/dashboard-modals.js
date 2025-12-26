@@ -109,17 +109,38 @@ function openRewardProtocol() {
     setPendingApproveTask(currTask);
     setSelectedStickerId(null);
     setPendingRewardMedia(null);
-    clearRewardMedia();
+    if (typeof clearRewardMedia === 'function') clearRewardMedia();
+    
     document.getElementById('reviewNormalContent').style.display = 'none';
     document.getElementById('reviewRewardOverlay').style.display = 'flex';
+    
     const grid = document.getElementById('stickerGrid');
-    const source = (stickerConfig.length > 0) ? stickerConfig : [{ id: 's10', name: '10 PTS', val: 10, url: '' }];
-    grid.innerHTML = source.map(s => `<div class="sticker-card" id="stk_${s.id}" onclick="selectSticker('${s.id}', ${s.val})">${s.url ? `<img src="${getOptimizedUrl(s.url, 100)}" class="stk-img">` : `IMG`}<div class="stk-name">${s.name}</div><div class="stk-val">+${s.val}</div></div>`).join('');
+    if (!grid) return;
+
+    // Uses the stickerConfig (10, 20, 30, 40, 50, 100) synced in main.js
+    const source = (stickerConfig && stickerConfig.length > 0) ? stickerConfig : [
+        { id: 's10', name: '10 PTS', val: 10, url: '' }, 
+        { id: 's50', name: '50 PTS', val: 50, url: '' }
+    ];
+    
+    grid.innerHTML = source.map(s => `
+        <div class="sticker-card" id="stk_${s.id}" onclick="selectSticker('${s.id}', ${s.val})">
+            ${s.url ? 
+                `<img src="${getOptimizedUrl(s.url, 100)}" class="stk-img">` : 
+                `<div style="font-size:0.7rem; color:#444; height:40px; display:flex; align-items:center; justify-content:center;">${s.val}</div>`
+            }
+            <div class="stk-name">${s.name}</div>
+        </div>
+    `).join('');
+    
     document.getElementById('rewardBonus').value = 50;
     document.getElementById('rewardComment').value = "";
 }
 
-export function cancelReward() { document.getElementById('reviewNormalContent').style.display = 'flex'; document.getElementById('reviewRewardOverlay').style.display = 'none'; }
+export function cancelReward() { 
+    document.getElementById('reviewNormalContent').style.display = 'flex'; 
+    document.getElementById('reviewRewardOverlay').style.display = 'none'; 
+}
 
 export function selectSticker(id, val) {
     setSelectedStickerId(id);
@@ -138,7 +159,9 @@ export async function handleRewardFileUpload(input) {
             const d = await res.json();
             if (d.files?.[0]) {
                 let url = d.files[0].fileUrl;
-                if (file.type.startsWith('video')) url += "#.mp4";
+                if (file.type.startsWith('video') || file.name.match(/\.(mp4|mov)$/i)) {
+                    url += "#.mp4";
+                }
                 setPendingRewardMedia({ url: url, type: file.type });
                 showRewardPreview(url, file.type);
             }
@@ -148,19 +171,32 @@ export async function handleRewardFileUpload(input) {
 
 export function toggleRewardRecord() {
     const btn = document.getElementById("btnRecordReward");
-    if (mediaRecorder?.state === "recording") { mediaRecorder.stop(); btn.classList.remove("recording"); } 
-    else {
+    if (mediaRecorder?.state === "recording") { 
+        mediaRecorder.stop(); 
+        btn.classList.remove("recording"); 
+    } else {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
             const recorder = new MediaRecorder(stream);
-            setMediaRecorder(recorder); recorder.start(); btn.classList.add("recording"); setAudioChunks([]);
+            setMediaRecorder(recorder); 
+            recorder.start(); 
+            btn.classList.add("recording"); 
+            setAudioChunks([]);
             recorder.ondataavailable = e => setAudioChunks([...audioChunks, e.data]);
             recorder.onstop = async () => {
                 const blob = new Blob(audioChunks, { type: "audio/mp3" }), fd = new FormData();
                 fd.append("file", blob);
                 try {
-                    const res = await fetch(`https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/rewards/audio`, { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd });
+                    const res = await fetch(`https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/rewards/audio`, { 
+                        method: "POST", 
+                        headers: { "Authorization": `Bearer ${API_KEY}` }, 
+                        body: fd 
+                    });
                     const d = await res.json();
-                    if (d.files?.[0]) { const url = d.files[0].fileUrl + "#.mp3"; setPendingRewardMedia({ url: url, type: "audio" }); showRewardPreview(url, "audio"); }
+                    if (d.files?.[0]) { 
+                        const url = d.files[0].fileUrl + "#.mp3"; 
+                        setPendingRewardMedia({ url: url, type: "audio" }); 
+                        showRewardPreview(url, "audio"); 
+                    }
                 } catch (err) { console.error(err); }
             };
         });
@@ -171,12 +207,18 @@ function showRewardPreview(url, type) {
     const box = document.getElementById('rewardMediaPreview');
     if (box) {
         box.classList.remove('d-none');
-        box.innerHTML = (type === 'video' || url.includes('.mp4')) ? `<video src="${url}" muted autoplay loop></video>` : `<img src="${url}">`;
-        box.innerHTML += `<span onclick="clearRewardMedia()" style="position:absolute;top:0;right:0;background:black;cursor:pointer;padding:0 4px;">X</span>`;
+        box.innerHTML = (type === 'video' || url.includes('.mp4')) ? 
+            `<video src="${url}" muted autoplay loop></video>` : 
+            `<img src="${url}">`;
+        box.innerHTML += `<span onclick="clearRewardMedia()" style="position:absolute;top:0;right:0;background:black;cursor:pointer;padding:0 4px;font-size:10px;color:white;z-index:10;">X</span>`;
     }
 }
 
-export function clearRewardMedia() { setPendingRewardMedia(null); const box = document.getElementById('rewardMediaPreview'); if (box) box.classList.add('d-none'); }
+export function clearRewardMedia() { 
+    setPendingRewardMedia(null); 
+    const box = document.getElementById('rewardMediaPreview'); 
+    if (box) box.classList.add('d-none'); 
+}
 
 export function confirmReward() {
     if (!pendingApproveTask) return;
@@ -185,13 +227,11 @@ export function confirmReward() {
     const comment = document.getElementById('rewardComment').value.trim();
     let finalSticker = null;
     
-    // Grab the selected sticker URL
     if (selectedStickerId && selectedStickerId !== 'none') {
         const sObj = stickerConfig.find(s => s.id === selectedStickerId);
         if (sObj) finalSticker = sObj.url;
     }
     
-    // SEND TO WIX (Matches the data structure Wix expects)
     window.parent.postMessage({ 
         type: "reviewDecision", 
         memberId: pendingApproveTask.memberId, 
@@ -203,7 +243,6 @@ export function confirmReward() {
         media: pendingRewardMedia ? pendingRewardMedia.url : null
     }, "*");
     
-    // Tell the Bridge (So slave profile reacts instantly)
     Bridge.send("reviewDecisionSuccess", {
         memberId: pendingApproveTask.memberId,
         decision: 'approve'
