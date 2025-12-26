@@ -120,48 +120,17 @@
 
         <div id="viewUser">
              <div class="user-head">
-    <!-- LEFT: IDENTITY -->
-                <div class="uh-identity">
-                    <button class="mob-back-btn" onclick="showHome()">&larr; BACK</button>
-                    <div id="btnAppView" class="app-icon-btn" onclick="openApplicationView()">
-                        <img src="https://static.wixstatic.com/shapes/ce3e5b_62b9d0e748d648fe888198c912e472cb.svg">
-                    </div>
-                    <div class="uh-name-wrap">
-                        <div id="dName" class="uh-main">SLAVE</div>
-                        <div id="dRank" class="uh-sub">RANK</div>
-                    </div>
+                <div id="btnAppView" class="app-icon-btn" title="View Application" onclick="openApplicationView()">
+                    <img src="https://static.wixstatic.com/shapes/ce3e5b_62b9d0e748d648fe888198c912e472cb.svg">
                 </div>
-            
-                <!-- CENTER: STATUS BAR (Moved from Right Panel) -->
-                <div class="uh-status-bar">
-                    <div class="header-stat-box">
-                        <span class="h-stat-lbl">WALLET</span>
-                        <span id="dWalletVal" class="h-stat-val gold">0</span>
-                    </div>
-                    <div class="header-stat-divider"></div>
-                    <div class="header-stat-box">
-                        <span class="h-stat-lbl">STREAK</span>
-                        <span id="dStreak" class="h-stat-val">0</span>
-                    </div>
-                    <div class="header-stat-box">
-                        <span class="h-stat-lbl">POINTS</span>
-                        <span id="dPoints" class="h-stat-val green">0</span>
-                    </div>
-                    <div class="header-stat-divider"></div>
-                    <div id="userStickerCase" class="h-sticker-case"></div>
+                <button class="mob-back-btn" onclick="showHome()">&larr; BACK</button>
+                <div class="uh-info-side">
+                    <div id="dName" class="uh-main">SLAVE</div>
+                    <div id="dRank" class="uh-sub">RANK</div>
+                    <div id="lastSeen" class="uh-seen">Last seen...</div>
                 </div>
-            
-                <!-- RIGHT: ACTIVE TASK MONITOR -->
-                <div class="uh-active-monitor">
-                    <div class="h-active-wrap">
-                        <div class="h-active-label">ACTIVE TASK</div>
-                        <div id="dActiveText" class="h-active-task-name">No Active Task</div>
-                    </div>
-                    <div id="dActiveTimer" class="h-active-timer">--:--</div>
-                    <div class="h-active-ctrl">
-                        <div class="ma-btn" onclick="adminTaskAction(currId, 'cancel')">✕</div>
-                        <div class="ma-btn" onclick="adminTaskAction(currId, 'skip')">»</div>
-                    </div>
+                <div class="uh-right">
+                    <div id="dJoined" class="uh-joined">SLAVE SINCE: --/--/--</div>
                 </div>
             </div>
 
@@ -184,6 +153,32 @@
                 </div>
 
                 <div class="action-panel">
+                    <div class="wallet-panel-display">
+                        <div class="wpd-label">WALLET BALANCE</div>
+                        <div id="dWalletVal" class="wpd-val">0</div>
+                    </div>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="stat-val" id="dTasks">0</div><div class="stat-lbl">TASKS</div></div>
+                        <div class="stat-box"><div class="stat-val" id="dStreak">0</div><div class="stat-lbl">STREAK</div></div>
+                        <div class="stat-box" style="border-color:rgba(57,255,20,0.3)"><div class="stat-val" style="color:var(--green)" id="dPoints">0</div><div class="stat-lbl">POINTS</div></div>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <div class="sec-title">HONORS & STICKERS</div>
+                        <div id="userStickerCase" class="sticker-case" style="display:none;"></div>
+                    </div>
+                    <div id="pointsGrid" class="pts-grid"></div>
+                    <div id="userQueueSec" style="display:none; flex-direction:column; gap:8px;"></div>
+                    <div class="mini-active">
+                        <div class="ma-status">ACTIVE</div>
+                        <div class="ma-mid">
+                            <div id="dActiveText" class="ma-txt">None</div>
+                            <div id="dActiveTimer" class="ma-timer">--:--</div>
+                        </div>
+                        <div class="ma-ctrl">
+                            <div class="ma-btn" onclick="adminTaskAction(currId, 'cancel')">CANCEL</div>
+                            <div class="ma-btn" onclick="adminTaskAction(currId, 'skip')">SKIP</div>
+                        </div>
+                    </div>
                     <div class="task-queue-box">
                         <div class="sec-title clickable-title" onclick="openTaskGallery()" style="color:var(--blue);">TASK QUEUE</div>
                         <div id="qListContainer" class="q-list-vertical"></div>
