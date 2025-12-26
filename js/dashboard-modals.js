@@ -1,16 +1,17 @@
 // Dashboard Modal Management
 
+// Dashboard Modal Management
 import { 
     currTask, pendingApproveTask, selectedStickerId, pendingRewardMedia, 
     messageImg, stickerConfig, availableDailyTasks, currId, users,
     setCurrTask, setPendingApproveTask, setSelectedStickerId, setPendingRewardMedia,
     setMessageImg, mediaRecorder, audioChunks, setMediaRecorder, setAudioChunks,
-    ACCOUNT_ID, API_KEY, setDragSrcIndex, dragSrcIndex
+    ACCOUNT_ID, API_KEY, dragSrcIndex, setDragSrcIndex
 } from './dashboard-state.js'; 
 import { getOptimizedUrl, clean, raw } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; 
 
-// --- BIND TO WINDOW IMMEDIATELY ---
+// --- BIND TO WINDOW IMMEDIATELY (Fixes the "Stuck" window) ---
 window.closeModal = closeModal;
 window.openModal = openModal;
 window.openModById = openModById;
@@ -19,8 +20,12 @@ export function closeModal() {
     const modal = document.getElementById('reviewModal');
     if (!modal) return;
     modal.classList.remove('active');
-    document.getElementById('reviewNormalContent').style.display = 'flex';
-    document.getElementById('reviewRewardOverlay').style.display = 'none';
+    
+    // Reset the UI inside the modal
+    const normalContent = document.getElementById('reviewNormalContent');
+    const rewardOverlay = document.getElementById('reviewRewardOverlay');
+    if (normalContent) normalContent.style.display = 'flex';
+    if (rewardOverlay) rewardOverlay.style.display = 'none';
     
     setPendingApproveTask(null);
     setSelectedStickerId(null);
