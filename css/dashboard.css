@@ -141,7 +141,18 @@ html, body {
 /* USER VIEW */
 #viewUser { display: none; flex-direction: column; height: 100%; width: 100%; overflow: hidden; background: rgba(5,5,5,0.95); z-index: 50; }
 #viewUser.active { display: flex; }
-.user-head { background: rgba(8,8,8,0.95); border-bottom: 1px solid var(--border); padding: 15px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; z-index: 10; position: relative; }
+.user-head {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: 90px !important;
+    padding: 0 25px !important;
+    background: #080808 !important;
+    border-bottom: 1px solid #222 !important;
+    flex-shrink: 0 !important;
+}
+
 .mob-back-btn { display: none; position: absolute; left: 10px; top: 10px; background: transparent; border: 1px solid #444; color: #888; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; }
 .uh-info-side { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; }
 .uh-main { font-size: 2.2rem; font-weight: 900; color: white; line-height: 1; }
@@ -360,9 +371,11 @@ html, body {
 }
 
 /* LEFT: Name & Rank */
-.uh-identity { display: flex; flex-direction: column; min-width: 200px; }
+.uh-identity { display: flex; align-items: center; gap: 15px; min-width: 250px; }
 .uh-main { font-size: 1.5rem !important; font-weight: 900; line-height: 1; }
 .uh-sub { color: var(--pink); font-size: 0.7rem !important; letter-spacing: 2px; }
+.uh-name-wrap { display: flex; flex-direction: column; }
+
 
 /* CENTER: The Status Bar */
 .uh-status-bar {
@@ -370,42 +383,28 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 25px;
+    gap: 30px;
 }
 
 .header-stat-box { display: flex; flex-direction: column; align-items: center; }
-.h-stat-lbl { font-size: 0.5rem; color: #555; font-weight: bold; letter-spacing: 1px; }
-.h-stat-val { font-size: 1.1rem; font-weight: 900; font-family: 'Orbitron'; }
+.h-stat-lbl { font-size: 0.5rem; color: #555; font-weight: 900; letter-spacing: 1px; margin-bottom: 2px; }
+.h-stat-val { font-size: 1.2rem; font-weight: 900; }
 
-.header-stat-divider { width: 1px; height: 30px; background: #222; }
+.h-sticker-case { display: flex; gap: 5px; margin-left: 15px; }
+.h-sticker-case img { width: 30px; height: 30px; object-fit: contain; }
 
-/* RIGHT: Active Task Monitor */
 .uh-active-monitor {
     display: flex;
     align-items: center;
     gap: 15px;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 5px 15px;
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 8px 15px;
+    border-radius: 6px;
     border: 1px solid #222;
-    min-width: 300px;
+    min-width: 320px;
 }
 
-.h-active-wrap { flex: 1; min-width: 0; }
-.h-active-label { font-size: 0.5rem; color: var(--blue); font-weight: 900; }
-.h-active-task-name { 
-    font-size: 0.7rem; 
-    color: #eee; 
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-    font-family: 'Georgia', serif; 
-}
+.h-active-task-name { font-size: 0.75rem; color: #eee; font-family: 'Georgia', serif; font-weight: bold; }
+.h-active-timer { font-size: 1.4rem; font-weight: 900; color: white; }
 
-.h-active-timer { font-size: 1.2rem; font-weight: 900; color: white; font-family: 'Orbitron'; }
-
-.h-active-ctrl { display: flex; gap: 5px; }
-
-/* Sticker Case in Header */
-.h-sticker-case { display: flex; gap: 5px; }
-.h-sticker-case img { width: 25px; height: 25px; object-fit: contain; }
+.uh-joined { position: absolute; bottom: 5px; right: 25px; font-size: 0.5rem; color: #333; }
