@@ -19,7 +19,7 @@ import { Bridge } from './bridge.js';
 document.addEventListener('DOMContentLoaded', function() {
     // Set up daily code display
     const today = new Date();
-    const dayCode = (today.getDate() * 100 + today.getMonth() + 1).toString().padStart(4, '0');
+    const dayCode = ((today.getMonth() + 1) * 100 + today.getDate()).toString().padStart(4, '0');
     const codeEl = document.getElementById('adminDailyCode');
     if (codeEl) codeEl.innerText = dayCode;
     
