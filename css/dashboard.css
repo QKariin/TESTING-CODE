@@ -3,10 +3,10 @@ html, body {
     font-size: 12px !important;
     margin: 0 !important;
     padding: 0 !important;
-    height: 100% !important;
-    width: 100% !important;
-    background: var(--bg) !important; /* Forces the very bottom layer to be black */
-    overflow-x: hidden;     
+    width: 100vw !important;
+    height: 100vh !important;
+    background: #000 !important; /* This turns the grey zones black */
+    overflow: hidden; /* Prevents double scrollbars */
 }
 /* --- CORE THEME --- */
 :root { 
@@ -23,12 +23,15 @@ html, body {
 .layout {
     display: grid;
     grid-template-columns: 320px 1fr;
-    height: 100vh !important; /* Forces it to fill the window height */
-    width: 100vw !important;  /* Forces it to fill the window width */
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100% !important; /* Kills any "Max Width" logic */
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden;
-}.sidebar { background: rgba(15,15,15,0.98); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; height: 100% !important; min-height: 0; min-width: 320px; }
+}
+
+.sidebar { background: rgba(15,15,15,0.98); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; height: 100% !important; min-height: 0; min-width: 320px; }
 .content { position: relative; height: 100% !important; overflow: hidden; display: flex; flex-direction: column; z-index: 5; background: radial-gradient(circle at center, #111 0%, #000 100%); }
 
 /* SIDEBAR ELEMENTS */
