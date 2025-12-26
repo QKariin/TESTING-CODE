@@ -177,68 +177,76 @@ function updateActiveTask(u) {
     }
 }
 
+// --- TASK QUEUE: THE DIRECTIVE RENDERER ---
 export function updateTaskQueue(u) {
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
 
+    // 1. Get the real orders (The ones you personally touched)
     let personalTasks = u.taskQueue || [];
     
-    // Check if we need to pick new filler tasks (only if user changed)
+    // 2. Stability Check: Keep fillers the same for this user
     if (u.memberId !== fillerUserId) {
         fillerUserId = u.memberId;
         if (availableDailyTasks.length > 0) {
+            // Shuffle the CMS pool to pick fresh fillers
             cachedFillers = [...availableDailyTasks]
                 .filter(t => !personalTasks.includes(t))
                 .sort(() => 0.5 - Math.random());
         }
     }
     
+    // 3. Create the 10-item display list
     const fillersNeeded = Math.max(0, 10 - personalTasks.length);
-    const fillers = cachedFillers.slice(0, fillersNeeded);
-    const displayTasks = [...personalTasks, ...fillers];
+    const displayTasks = [
+        ...personalTasks, 
+        ...cachedFillers.slice(0, fillersNeeded)
+    ];
 
+    // 4. Render the rows
     listContainer.innerHTML = displayTasks.map((t, idx) => {
-        const isPersonal = idx < personalTasks.length;
+        const isDirectOrder = idx < personalTasks.length;
         const niceText = clean(t);
-        const safeText = raw(niceText);
-        
+        const safeText = raw(niceText); // Shield against quotes
+
         return `
-            <div class="q-item-line ${isPersonal ? '' : 'q-filler'}" 
-                 draggable="${isPersonal}" 
-                 ondragstart="${isPersonal ? `handleDragStart(event, ${idx})` : ''}" 
-                 ondragover="handleDragOver(event)" 
-                 ondrop="${isPersonal ? `handleDrop(event, ${idx})` : ''}" 
-                 ondragend="handleDragEnd(event)" 
-                 onclick="${isPersonal ? `openQueueTask('${u.memberId}', ${idx})` : `assignFillerTask('${safeText}')`}"
-                 style="${isPersonal ? '' : 'opacity: 0.5; border-style: dashed;'}">
+            <div class="q-item-line ${isDirectOrder ? 'direct-order' : 'filler'}" 
+                 onclick="${isDirectOrder ? `openQueueTask('${u.memberId}', ${idx})` : `assignFillerTask('${safeText}')`}">
                 
-                <span class="q-handle">${isPersonal ? '≡' : '⚡'}</span>
+                <span class="q-handle">${isDirectOrder ? '★' : '⚡'}</span>
+                
                 <span class="q-idx">${(idx + 1).toString().padStart(2, '0')}.</span>
+                
+                ${isDirectOrder ? `<span class="q-badge-queen">QUEEN</span>` : ''}
+                
                 <span class="q-txt-line">${niceText}</span>
                 
-                ${isPersonal ? 
+                ${isDirectOrder ? 
                     `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : 
-                    `<span class="q-add-hint" style="color:var(--blue); font-size:0.5rem; font-weight:bold;">+ ADD</span>`
+                    `<span style="color:var(--blue); font-size:0.5rem; font-weight:900; margin-left:auto;">+ ENFORCE</span>`
                 }
             </div>
         `;
     }).join('');
 }
 
+// Helper to turn a "Filler" into a "Direct Order"
 window.assignFillerTask = function(text) {
     const u = users.find(x => x.memberId === currId);
-    if (u) {
-        if (!u.taskQueue) u.taskQueue = [];
-        u.taskQueue.push(text);
-        
-        // Reset cache so the next refresh replaces the filler we just moved to personal
-        fillerUserId = null; 
+    if (!u) return;
+    
+    // Move from filler to personal
+    if (!u.taskQueue) u.taskQueue = [];
+    u.taskQueue.push(text);
+    
+    // Reset cache so the system picks a new 10th filler next refresh
+    fillerUserId = null; 
 
-        window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
-        Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
-        
-        updateDetail(u);
-    }
+    // Tell Wix and the Bridge
+    window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+    Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
+    
+    updateDetail(u); // Refresh UI
 };
 
 function updateHistory(u) {
