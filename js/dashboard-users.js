@@ -179,19 +179,24 @@ function updateTaskQueue(u) {
     if (qList.length === 0) {
         listContainer.innerHTML = `<div style="text-align:center;color:#666;font-size:0.7rem;">Empty</div>`;
     } else {
-        listContainer.innerHTML = qList.slice(0, 10).map((t, idx) => `
-            <div class="q-item-line" draggable="true" 
-                 ondragstart="handleDragStart(event, ${idx})" 
-                 ondragover="handleDragOver(event)" 
-                 ondrop="handleDrop(event, ${idx})" 
-                 ondragend="handleDragEnd(event)" 
-                 onclick="openQueueTask('${u.memberId}', ${idx})">
-                <span class="q-handle" onmousedown="event.stopPropagation()">≡</span>
-                <span class="q-idx">${idx + 1}.</span>
-                <span class="q-txt-line">${clean(t)}</span>
-                <span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>
-            </div>
-        `).join('');
+        listContainer.innerHTML = qList.slice(0, 10).map((t, idx) => {
+            // Ensure we extract the text if the item is an object
+            const taskDisplay = (typeof t === 'object') ? (t.text || t.task || t.title) : t;
+            
+            return `
+                <div class="q-item-line" draggable="true" 
+                     ondragstart="handleDragStart(event, ${idx})" 
+                     ondragover="handleDragOver(event)" 
+                     ondrop="handleDrop(event, ${idx})" 
+                     ondragend="handleDragEnd(event)" 
+                     onclick="openQueueTask('${u.memberId}', ${idx})">
+                    <span class="q-handle" onmousedown="event.stopPropagation()">≡</span>
+                    <span class="q-idx">${idx + 1}.</span>
+                    <span class="q-txt-line">${clean(taskDisplay)}</span>
+                    <span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>
+                </div>
+            `;
+        }).join('');
     }
 }
 
