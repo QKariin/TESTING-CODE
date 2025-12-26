@@ -1,17 +1,31 @@
 // Dashboard Modal Management
-// Review modals, task galleries, and modal interactions
 
 import { 
     currTask, pendingApproveTask, selectedStickerId, pendingRewardMedia, 
     messageImg, stickerConfig, availableDailyTasks, currId, users,
     setCurrTask, setPendingApproveTask, setSelectedStickerId, setPendingRewardMedia,
     setMessageImg, mediaRecorder, audioChunks, setMediaRecorder, setAudioChunks,
-    ACCOUNT_ID, API_KEY, dragSrcIndex, setDragSrcIndex
-} from './dashboard-state.js';
+    ACCOUNT_ID, API_KEY, setDragSrcIndex, dragSrcIndex
+} from './dashboard-state.js'; 
 import { getOptimizedUrl, clean, raw } from './dashboard-utils.js';
-import { Bridge } from './bridge.js'; // Added for the sync
+import { Bridge } from './bridge.js'; 
 
-// --- 1. REVIEW MODAL LOGIC (RESTORED FULLY) ---
+// --- BIND TO WINDOW IMMEDIATELY ---
+window.closeModal = closeModal;
+window.openModal = openModal;
+window.openModById = openModById;
+
+export function closeModal() {
+    const modal = document.getElementById('reviewModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    document.getElementById('reviewNormalContent').style.display = 'flex';
+    document.getElementById('reviewRewardOverlay').style.display = 'none';
+    
+    setPendingApproveTask(null);
+    setSelectedStickerId(null);
+    setPendingRewardMedia(null);
+}
 
 export function openModal(taskId, memberId, mediaUrl, mediaType, taskText, isHistory = false, status = null) {
     setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: mediaType, text: taskText });
@@ -20,6 +34,10 @@ export function openModal(taskId, memberId, mediaUrl, mediaType, taskText, isHis
     const mediaBox = document.getElementById('mMediaBox');
     const textEl = document.getElementById('mText');
     const actionsEl = document.getElementById('modalActions');
+    
+    if (!modal || !mediaBox || !textEl) return;
+
+    // ... (rest of your original openModal logic continues here)
     
     // Set media
     if (mediaUrl) {
