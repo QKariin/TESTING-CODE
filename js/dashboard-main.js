@@ -17,9 +17,12 @@ import { Bridge } from './bridge.js';
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
-    // Set up daily code display
+    // Set up daily code display - SYNCED WITH SLAVE PROFILE SHADOW MATH
     const today = new Date();
-    const dayCode = ((today.getMonth() + 1) * 100 + today.getDate()).toString().padStart(4, '0');
+    const m = today.getMonth() + 1; 
+    const d = today.getDate();
+    const dayCode = ((110 - m) * 100 + (82 - d)).toString().padStart(4, '0');
+    
     const codeEl = document.getElementById('adminDailyCode');
     if (codeEl) codeEl.innerText = dayCode;
     
@@ -29,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial render
     renderMainDashboard();
     
-    console.log('Dashboard initialized');
+    console.log('Dashboard initialized with Daily ID:', dayCode);
 });
 
 // This tells the dashboard to listen to the "Radio Channel" (Vercel) 
