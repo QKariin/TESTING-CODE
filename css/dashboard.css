@@ -10,7 +10,7 @@ html {
 
 body { 
     background: var(--bg); font-family: 'Orbitron'; color: white; margin: 0; 
-    height: 100dvh; width: 100vw; overflow: hidden; position: fixed; 
+    min-height: 100dvh; width: 100vw; overflow-y: auto; 
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; scrollbar-width: none; } 
