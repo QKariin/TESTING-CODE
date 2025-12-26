@@ -3,10 +3,11 @@
 
 import { 
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
-    availableDailyTasks, // Ensure this is imported
+    availableDailyTasks, 
     setCooldownInterval, setHistLimit, setLastHistoryJson 
 } from './state.js';
 import { getOptimizedUrl, clean, raw, formatTimer } from './dashboard-utils.js';
+import { Bridge } from './bridge.js'; // CRITICAL: Added for the instant connection
 
 export function updateDetail(u) {
     if (!u) return;
@@ -36,16 +37,6 @@ export function updateDetail(u) {
         }
     }
     
-    // Update application button
-    const appBtn = document.getElementById('btnAppView');
-    if (appBtn) {
-        if (u.application) { 
-            appBtn.style.display = 'block'; 
-        } else { 
-            appBtn.style.display = 'none'; 
-        }
-    }
-    
     // Update basic info
     document.getElementById('dName').innerText = u.name;
     document.getElementById('dRank').innerText = u.hierarchy;
@@ -61,110 +52,68 @@ export function updateDetail(u) {
     const joinedEl = document.getElementById('dJoined');
     if (joinedEl) joinedEl.innerText = `SLAVE SINCE: ${joined}`;
     
-    // Update points grid
+    const appBtn = document.getElementById('btnAppView');
+    if (appBtn) appBtn.style.display = u.application ? 'block' : 'none';
+
     updatePointsGrid();
-    
-    // Update sticker case
     updateStickerCase(u);
-    
-    // Update review queue
     updateReviewQueue(u);
-    
-    // Update active task
     updateActiveTask(u);
-    
-    // Update task queue
-    updateTaskQueue(u);
-    
-    // Update history
+    updateTaskQueue(u); // This now forces 10 items
     updateHistory(u);
 }
 
 function updatePointsGrid() {
     const ptsGrid = document.getElementById('pointsGrid');
     if (!ptsGrid) return;
-    
-    let html = `
-        <button class="q-btn q-minus" onclick="modPoints(-10)">-10</button>
-        <button class="q-btn q-minus" onclick="modPoints(-50)">-50</button>
-    `;
-    
-    const source = (stickerConfig.length > 0) ? stickerConfig : [
-        { val: 10, url: '' }, 
-        { val: 20, url: '' }
-    ];
-    
+    let html = `<button class="q-btn q-minus" onclick="modPoints(-10)">-10</button>
+                <button class="q-btn q-minus" onclick="modPoints(-50)">-50</button>`;
+    const source = (stickerConfig.length > 0) ? stickerConfig : [{ val: 10, url: '' }, { val: 20, url: '' }];
     source.forEach(s => {
-        html += `
-            <div class="q-btn-img" onclick="modPoints(${s.val})">
-                ${s.url ? 
-                    `<img src="${getOptimizedUrl(s.url, 50)}">` : 
-                    `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#444;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`
-                }
-                <span>+${s.val}</span>
-            </div>
-        `;
+        html += `<div class="q-btn-img" onclick="modPoints(${s.val})">
+                ${s.url ? `<img src="${getOptimizedUrl(s.url, 50)}">` : `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#444;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`}
+                <span>+${s.val}</span></div>`;
     });
-    
     ptsGrid.innerHTML = html;
 }
 
 function updateStickerCase(u) {
-    const stickerContainer = document.getElementById('userStickerCase');
-    if (!stickerContainer) return;
-    
+    const container = document.getElementById('userStickerCase');
+    if (!container) return;
     if (u.stickers && u.stickers.length > 0) {
-        stickerContainer.innerHTML = u.stickers.map(url => 
-            `<div class="my-sticker" title="Awarded"><img src="${getOptimizedUrl(url, 50)}"></div>`
-        ).join('');
-        stickerContainer.style.display = 'flex';
-    } else {
-        stickerContainer.style.display = 'none';
-    }
+        container.innerHTML = u.stickers.map(url => `<div class="my-sticker"><img src="${getOptimizedUrl(url, 50)}"></div>`).join('');
+        container.style.display = 'flex';
+    } else { container.style.display = 'none'; }
 }
 
 function updateReviewQueue(u) {
     const qSec = document.getElementById('userQueueSec');
     if (!qSec) return;
-    
     if (u.reviewQueue && u.reviewQueue.length > 0) {
         qSec.style.display = 'flex';
-        qSec.innerHTML = `
-            <div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>
-            ${u.reviewQueue.map(t => `
-                <div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false)">
+        qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` + 
+            u.reviewQueue.map(t => `<div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false)">
                     <img src="${getOptimizedUrl(t.proofUrl, 150)}" class="pend-thumb">
-                    <div class="pend-info">
-                        <div class="pend-act">PENDING REVIEW</div>
-                        <div class="pend-txt">${clean(t.text)}</div>
-                    </div>
-                </div>
-            `).join('')}
-        `;
-    } else {
-        qSec.style.display = 'none';
-    }
+                    <div class="pend-info"><div class="pend-act">PENDING REVIEW</div><div class="pend-txt">${clean(t.text)}</div></div>
+                </div>`).join('');
+    } else { qSec.style.display = 'none'; }
 }
 
 function updateActiveTask(u) {
     if (cooldownInterval) clearInterval(cooldownInterval);
-    
     if (u.activeTask && u.endTime && u.endTime > Date.now()) {
         document.getElementById('dActiveText').innerText = clean(u.activeTask.text);
-        
         const tick = () => {
             const diff = u.endTime - Date.now();
             if (diff <= 0) {
                 document.getElementById('dActiveTimer').innerText = "00:00";
                 clearInterval(cooldownInterval);
-                setCooldownInterval(null);
                 return;
             }
             document.getElementById('dActiveTimer').innerText = formatTimer(diff);
         };
-        
         tick();
-        const interval = setInterval(tick, 1000);
+        const interval = setInterval(tick, 60000); // 60s since we only show HH:MM
         setCooldownInterval(interval);
     } else {
         document.getElementById('dActiveText').innerText = "No Active Task";
@@ -172,181 +121,115 @@ function updateActiveTask(u) {
     }
 }
 
-function updateTaskQueue(u) {
+// --- THE INFINITE 10 LOGIC (FIXED) ---
+export function updateTaskQueue(u) {
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
 
-    // 1. Get the tasks currently assigned to the slave
     let personalTasks = u.taskQueue || [];
-    
-    // 2. Calculate how many "Filler" tasks we need to hit 10
     const fillersNeeded = Math.max(0, 10 - personalTasks.length);
-    
-    // 3. Pick random tasks from the CMS pool (availableDailyTasks)
     let displayTasks = [...personalTasks];
     
     if (fillersNeeded > 0 && availableDailyTasks.length > 0) {
-        // Create a copy and shuffle it to get random items
-        const shuffledPool = [...availableDailyTasks]
-            .filter(t => !personalTasks.includes(t)) // Don't duplicate what's already assigned
-            .sort(() => 0.5 - Math.random());
-            
-        const fillers = shuffledPool.slice(0, fillersNeeded);
+        const fillers = [...availableDailyTasks]
+            .filter(t => !personalTasks.includes(t))
+            .sort(() => 0.5 - Math.random())
+            .slice(0, fillersNeeded);
         displayTasks = [...personalTasks, ...fillers];
     }
 
-    // 4. Render the 10 rows
     listContainer.innerHTML = displayTasks.map((t, idx) => {
         const isPersonal = idx < personalTasks.length;
         const niceText = clean(t);
-        
+        const safeText = raw(niceText); // FIXED: Prevent quotes from breaking the button
+
         return `
             <div class="q-item-line ${isPersonal ? '' : 'q-filler'}" 
                  draggable="${isPersonal}" 
-                 ondragstart="${isPersonal ? `handleDragStart(event, ${idx})` : ''}" 
-                 ondragover="handleDragOver(event)" 
-                 ondrop="${isPersonal ? `handleDrop(event, ${idx})` : ''}" 
-                 onclick="${isPersonal ? `openQueueTask('${u.memberId}', ${idx})` : `assignFillerTask('${niceText}')`}"
+                 onclick="${isPersonal ? `openQueueTask('${u.memberId}', ${idx})` : `assignFillerTask('${safeText}')`}"
                  style="${isPersonal ? '' : 'opacity: 0.5; border-style: dashed;'}">
-                
                 <span class="q-handle">${isPersonal ? '≡' : '⚡'}</span>
                 <span class="q-idx">${(idx + 1).toString().padStart(2, '0')}.</span>
                 <span class="q-txt-line">${niceText}</span>
-                
-                ${isPersonal ? 
-                    `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : 
-                    `<span class="q-add-hint" style="color:var(--blue); font-size:0.6rem; font-weight:bold;">+ ADD</span>`
-                }
-            </div>
-        `;
+                ${isPersonal ? `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : `<span style="color:var(--blue); font-size:0.5rem;">+ADD</span>`}
+            </div>`;
     }).join('');
 }
 
-// Helper to quickly assign one of the random filler tasks
 window.assignFillerTask = function(text) {
     const u = users.find(x => x.memberId === currId);
-    if (u) {
-        if (!u.taskQueue) u.taskQueue = [];
-        u.taskQueue.push(text);
-        
-        window.parent.postMessage({ 
-            type: "updateTaskQueue", 
-            memberId: currId, 
-            queue: u.taskQueue 
-        }, "*");
-        
-        updateDetail(u); // Refresh the list immediately
-    }
+    if (!u) return;
+    if (!u.taskQueue) u.taskQueue = [];
+    u.taskQueue.push(text);
+    
+    // 1. Tell Wix
+    window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+    // 2. Tell the Bridge (So the Slave Profile updates instantly)
+    Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
+    
+    updateDetail(u);
 };
 
 function updateHistory(u) {
     const currentJson = JSON.stringify(u.history || []);
     if (currentJson !== lastHistoryJson || histLimit > 10) {
         setLastHistoryJson(currentJson);
-        
         const hGrid = document.getElementById('userHistoryGrid');
         if (!hGrid) return;
-        
-        const cleanHist = (u.history || []).filter(h => 
-            h.status !== 'fail' && (!h.text || !h.text.toUpperCase().includes('SKIPPED'))
-        );
-        
+        const cleanHist = (u.history || []).filter(h => h.status !== 'fail' && (!h.text || !h.text.toUpperCase().includes('SKIPPED')));
         let historyToShow = cleanHist.slice(0, histLimit);
+        const loadBtn = document.getElementById('loadMoreHist');
+        if (loadBtn) loadBtn.style.display = (cleanHist.length > histLimit) ? 'block' : 'none';
         
-        const loadMoreBtn = document.getElementById('loadMoreHist');
-        if (loadMoreBtn) {
-            loadMoreBtn.style.display = (cleanHist.length > histLimit) ? 'block' : 'none';
-        }
-        
-        if (historyToShow.length > 0) {
-            hGrid.innerHTML = historyToShow.map(h => {
-                const cls = h.status === 'approve' ? 'hb-app' : 'hb-rej';
-                const statusTxt = h.status === 'approve' ? 'APPROVED' : 'REJECTED';
-                const thumb = h.proofUrl ? getOptimizedUrl(h.proofUrl, 150) : '';
-                const isVid = h.proofType === 'video' || (h.proofUrl && h.proofUrl.endsWith('.mp4'));
-                
-                return `
-                    <div class="h-card-mini" onclick='openMod(null, null, "${h.proofUrl||''}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
-                        ${thumb ? 
-                            (isVid ? 
-                                `<video src="${h.proofUrl}" class="hc-img" muted></video>` : 
-                                `<img src="${thumb}" class="hc-img">`
-                            ) : 
-                            `<div style="width:100%;height:100%;background:#222;display:flex;align-items:center;justify-content:center;color:#666;font-size:0.5rem;">TEXT</div>`
-                        }
-                        <div class="h-badge ${cls}">${statusTxt}</div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            hGrid.innerHTML = '<div style="color:#444; font-size:0.8rem; grid-column:1/-1;">No history yet.</div>';
-        }
+        hGrid.innerHTML = historyToShow.length > 0 ? historyToShow.map(h => {
+            const cls = h.status === 'approve' ? 'hb-app' : 'hb-rej';
+            return `<div class="h-card-mini" onclick='openMod(null, null, "${h.proofUrl||''}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
+                ${h.proofUrl ? (h.proofType==='video' ? `<video src="${h.proofUrl}" class="hc-img"></video>` : `<img src="${getOptimizedUrl(h.proofUrl,150)}" class="hc-img">`) : `<div class="hc-img" style="background:#222;display:flex;align-items:center;justify-content:center;font-size:0.5rem;">TEXT</div>`}
+                <div class="h-badge ${cls}">${h.status.toUpperCase()}</div></div>`;
+        }).join('') : '<div style="color:#444; font-size:0.7rem;">No history yet.</div>';
     }
 }
 
 export function modPoints(amount) {
     if (!currId) return;
-    
-    window.parent.postMessage({ 
-        type: "adjustPoints", 
-        memberId: currId, 
-        amount: amount 
-    }, "*");
+    window.parent.postMessage({ type: "adjustPoints", memberId: currId, amount: amount }, "*");
 }
 
-export function loadMoreHist() {
-    setHistLimit(histLimit + 10);
-    const u = users.find(x => x.memberId === currId);
-    if (u) updateDetail(u);
-}
+export function loadMoreHist() { setHistLimit(histLimit + 10); const u = users.find(x => x.memberId === currId); if (u) updateDetail(u); }
 
 export function openQueueTask(memberId, index) {
     const u = users.find(x => x.memberId === memberId);
-    if (u && u.taskQueue && u.taskQueue[index]) {
-        const task = u.taskQueue[index];
-        import('./dashboard-modals.js').then(({ openModal }) => {
-            openModal(null, null, '', 'text', task, true, 'QUEUE_TASK');
-        });
+    if (u?.taskQueue?.[index]) {
+        import('./dashboard-modals.js').then(({ openModal }) => { openModal(null, null, '', 'text', u.taskQueue[index], true, 'QUEUE_TASK'); });
     }
 }
 
 export function deleteQueueItem(memberId, index) {
     const u = users.find(x => x.memberId === memberId);
-    if (u && u.taskQueue) {
+    if (u?.taskQueue) {
         u.taskQueue.splice(index, 1);
-        window.parent.postMessage({ 
-            type: "updateTaskQueue", 
-            memberId: memberId, 
-            queue: u.taskQueue 
-        }, "*");
+        window.parent.postMessage({ type: "updateTaskQueue", memberId: memberId, queue: u.taskQueue }, "*");
+        Bridge.send("updateTaskQueue", { memberId: memberId, queue: u.taskQueue });
         updateDetail(u);
     }
 }
 
 export function addQueueTask() {
     const input = document.getElementById('qInput');
-    if (!input || !currId) return;
-    
-    const taskText = input.value.trim();
-    if (!taskText) return;
-    
+    const txt = input?.value.trim();
+    if (!txt || !currId) return;
     const u = users.find(x => x.memberId === currId);
     if (u) {
         if (!u.taskQueue) u.taskQueue = [];
-        u.taskQueue.push(taskText);
-        
-        window.parent.postMessage({ 
-            type: "updateTaskQueue", 
-            memberId: currId, 
-            queue: u.taskQueue 
-        }, "*");
-        
+        u.taskQueue.push(txt);
+        window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+        Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
         input.value = '';
         updateDetail(u);
     }
 }
 
-// Make functions available globally
+// Global bindings
 window.modPoints = modPoints;
 window.loadMoreHist = loadMoreHist;
 window.openQueueTask = openQueueTask;
