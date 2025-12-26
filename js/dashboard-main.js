@@ -82,11 +82,19 @@ window.addEventListener("message", async (event) => {
     else if (data.type === "updateChat") {
         renderChat(data.messages || []);
         
-        // RECONECTION FIX: Update last message time so the Mail Icon appears
         const u = users.find(x => x.memberId === data.memberId);
-        if (u) {
-            u.lastMessageTime = Date.now();
-            renderSidebar(); 
+        if (u && data.messages && data.messages.length > 0) {
+            // Get the REAL time the last message was created
+            const lastMsg = data.messages[data.messages.length - 1];
+            const msgTime = new Date(lastMsg._createdDate).getTime();
+            
+            u.lastMessageTime = msgTime;
+
+            // Only redraw the sidebar if it's NOT the person we are already looking at
+            // This prevents the person you just clicked from jumping to #1
+            if (u.memberId !== currId) {
+                renderSidebar(); 
+            }
         }
     }
     
