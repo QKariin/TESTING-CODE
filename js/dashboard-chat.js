@@ -30,11 +30,16 @@ export function renderChat(msgs) {
         let avatarHtml = '';
         
         // Message content
+        // Smarter Media Detection
         if (m.message) {
-            if (m.message.startsWith('http') && (m.message.includes('.jpg') || m.message.includes('.png') || m.message.includes('.gif') || m.message.includes('.webp'))) {
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${getOptimizedUrl(m.message, 300)}" onclick="openImageModal('${m.message}')" style="cursor:pointer;"></div>`;
-            } else if (m.message.includes('.mp4') || m.message.includes('.mov') || m.message.includes('.webm')) {
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${m.message}" controls muted style="max-width:200px; max-height:200px;"></video></div>`;
+            const msgLower = m.message.toLowerCase();
+            const isImage = msgLower.match(/\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)/i) || msgLower.includes("image");
+            const isVideo = msgLower.match(/\.(mp4|mov|webm)/i) || msgLower.includes(".mp4");
+
+            if (isImage) {
+                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${getOptimizedUrl(m.message, 300)}" onclick="openImageModal('${m.message}')" style="cursor:pointer; display:block; max-width:100%;"></div>`;
+            } else if (isVideo) {
+                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${m.message}" controls muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
             } else if (m.message.startsWith('💝 TRIBUTE:')) {
                 contentHtml = renderTributeMessage(m.message, timeStr);
             } else if (m.message.includes('Task Verified') || m.message.includes('Task Rejected')) {
