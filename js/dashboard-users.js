@@ -143,37 +143,23 @@ export function updateTaskQueue(u) {
     if (!listContainer) return;
 
     let personalTasks = u.taskQueue || [];
-    
-    // Stability cache logic
-    if (u.memberId !== fillerUserId) {
-        fillerUserId = u.memberId;
-        if (availableDailyTasks.length > 0) {
-            cachedFillers = [...availableDailyTasks]
-                .filter(t => !personalTasks.includes(t))
-                .sort(() => 0.5 - Math.random());
-        }
-    }
-    
-    const fillersNeeded = Math.max(0, 10 - personalTasks.length);
-    const displayTasks = [...personalTasks, ...cachedFillers.slice(0, fillersNeeded)];
+    // ... (Keep your stability cache logic here) ...
+    const displayTasks = [...personalTasks, ...cachedFillers.slice(0, Math.max(0, 10 - personalTasks.length))];
 
     listContainer.innerHTML = displayTasks.map((t, idx) => {
         const isPersonal = idx < personalTasks.length;
         const niceText = clean(t);
-        const safeText = raw(niceText);
-        
-        // CHECK MEMORY: Should this row be expanded?
-        const isExpanded = mainDashboardExpandedTasks.has(niceText);
+        const isExpanded = mainDashboardExpandedTasks.has(niceText); // From Step 2 memory
 
         return `
-            <div class="compact-task-card ${isPersonal ? 'direct-order' : 'filler-task'} ${isExpanded ? 'is-expanded' : ''}">
+            <div class="q-item-line ${isPersonal ? 'direct-order' : 'filler-task'} ${isExpanded ? 'is-expanded' : ''}">
                 <div class="dr-card-header">
-                    <span class="mirror-icon">${isPersonal ? '★' : ''}</span>
-                    ${isPersonal ? `<span class="q-tag">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444;">SYSTEM</span>'}
-                    ${isPersonal ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : '<span></span>'}
+                    <span class="q-handle">${isPersonal ? '★' : ''}</span>
+                    ${isPersonal ? `<span class="q-badge-queen">QUEEN</span>` : '<span style="font-size:0.4rem; color:#333;">SYSTEM</span>'}
+                    ${isPersonal ? `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : '<span></span>'}
                 </div>
-                <div class="dr-serif-text">${niceText}</div>
-                <div class="dr-mirror-arrow" onclick="event.stopPropagation(); toggleMainTaskExpansion(this, '${safeText}')">▼</div>
+                <div class="q-txt-line">${niceText}</div>
+                <div class="dr-mirror-arrow" onclick="event.stopPropagation(); toggleMainTaskExpansion(this, '${raw(niceText)}')">▼</div>
             </div>`;
     }).join('');
 }
