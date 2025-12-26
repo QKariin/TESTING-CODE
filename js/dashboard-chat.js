@@ -1,8 +1,9 @@
 // Dashboard Chat Management
 // Chat rendering, message handling, and file uploads
 
-import { currId, lastChatJson, setLastChatJson, ACCOUNT_ID, API_KEY } from './dashboard-state.js';
+import { currId, lastChatJson, setLastChatJson, ACCOUNT_ID, API_KEY, users } from './dashboard-state.js';
 import { getOptimizedUrl, forceBottom, isAtBottom } from './dashboard-utils.js';
+
 
 let lastNotifiedMessageId = null;
 let isInitialLoad = true;
