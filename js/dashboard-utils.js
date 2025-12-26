@@ -1,41 +1,59 @@
-// Dashboard Utility Functions
-// Helper functions used across the dashboard
-
-export function getOptimizedUrl(url, width = 400) {
-    if (!url) return "";
-    if (url.startsWith("http")) return url;
-    if (url.startsWith("wix:image://v1/")) {
-        const id = url.split('/')[3].split('#')[0];
-        return `https://static.wixstatic.com/media/${id}/v1/fill/w_${width},h_${width},al_c,q_80,usm_0.66_1.00_0.01,enc_auto/${id}`;
-    }
-    if (url.startsWith("wix:video://v1/")) {
-        const id = url.split('/')[3].split('#')[0];
-        return `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
-    }
-    return url;
-}
-
-export function clean(str) {
-    if (!str) return "";
-    // If it's the raw debug string you saw in the console, it's already clean!
-    return str.toString().replace(/[<>]/g, '').substring(0, 100);
-}
+// dashboard-utils.js
 
 export function getOptimizedUrl(url, width = 400) {
     if (!url || typeof url !== 'string') return "";
+    
+    // 1. KILL CLOUDINARY (Stops the 401 errors from your logs)
+    if (url.includes("cloudinary.com")) return "";
+
+    // 2. PASS THROUGH standard web links
     if (url.startsWith("http")) return url;
     
-    // Fix for the "Vector" icons you see in the error
+    // 3. HANDLE WIX VECTORS (Fixes the ERR_UNKNOWN_URL_SCHEME)
     if (url.startsWith("wix:vector://v1/")) {
         const id = url.split('/')[3].split('#')[0];
         return `https://static.wixstatic.com/shapes/${id}`;
     }
     
+    // 4. HANDLE WIX IMAGES
     if (url.startsWith("wix:image://v1/")) {
         const id = url.split('/')[3].split('#')[0];
         return `https://static.wixstatic.com/media/${id}/v1/fill/w_${width},h_${width},al_c,q_80,usm_0.66_1.00_0.01,enc_auto/${id}`;
     }
+
+    // 5. HANDLE WIX VIDEOS
+    if (url.startsWith("wix:video://v1/")) {
+        const id = url.split('/')[3].split('#')[0];
+        return `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
+    }
+
     return url;
+}
+
+export function clean(str) {
+    if (str === null || str === undefined) return "";
+    
+    let target = str;
+
+    // Detect if Wix sent a JSON string
+    if (typeof target === 'string' && (target.startsWith('{') || target.startsWith('['))) {
+        try { target = JSON.parse(target); } catch (e) { }
+    }
+
+    // If it's an array, take the first item
+    if (Array.isArray(target)) target = target[0];
+
+    // If it's an object, find the text
+    if (typeof target === 'object' && target !== null) {
+        target = target.text || target.task || target.value || target.label || JSON.stringify(target);
+    }
+
+    let finalString = target.toString();
+    
+    // Remove bracket commands [LIKE_THIS]
+    finalString = finalString.replace(/\[.*?\]/g, ''); 
+
+    return finalString.replace(/[<>]/g, '').trim().substring(0, 100);
 }
 
 export function raw(str) {
@@ -48,14 +66,6 @@ export function formatTimer(ms) {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
-
-export function triggerSound(id) {
-    const sound = document.getElementById(id);
-    if (sound) {
-        sound.currentTime = 0;
-        sound.play().catch(() => {});
-    }
 }
 
 export function forceBottom() {
