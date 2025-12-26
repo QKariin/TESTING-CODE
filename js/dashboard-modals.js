@@ -225,22 +225,25 @@ export function filterTaskGallery() {
 function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
     const niceText = clean(task);
     const safeText = raw(niceText);
-    const num = (index + 1).toString().padStart(2, '0');
-    
+    const u = users.find(x => x.memberId === currId);
+
     return `
         <div class="mirror-card ${isActiveOrder ? 'direct-order' : (isLibrary ? '' : 'filler-task')}">
-            <div class="mirror-icon">${isActiveOrder ? '★' : '⚡'}</div>
-            
-            <div class="dr-text-wrapper">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                    <span style="font-size:0.6rem; font-weight:900; color:#444;">SLOT ${num}</span>
-                    ${isActiveOrder ? `<span class="q-tag">QUEEN ORDER</span>` : ''}
-                </div>
-                <div class="dr-serif-text">${niceText}</div>
-                ${isLibrary ? `<div class="dr-armory-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">ENFORCE DIRECTIVE</div>` : ''}
+            <!-- TOP ROW -->
+            <div class="dr-card-header">
+                <span class="mirror-icon">${isActiveOrder ? '★' : '⚡'}</span>
+                ${isActiveOrder ? `<span class="q-tag">QUEEN</span>` : '<span style="font-size:0.5rem; color:#333;">SYSTEM</span>'}
+                ${!isLibrary ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${index})">&times;</span>` : '<span></span>'}
             </div>
 
-            <div class="dr-mirror-arrow" onclick="event.stopPropagation(); toggleTaskExpansion(this)">▼</div>
+            <!-- TEXT AREA -->
+            <div class="dr-serif-text">${niceText}</div>
+            
+            <!-- CONTROLS -->
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                ${isLibrary ? `<div class="dr-armory-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">ENFORCE</div>` : '<div></div>'}
+                <div class="dr-mirror-arrow" onclick="toggleTaskExpansion(this)">▼</div>
+            </div>
         </div>`;
 }
 
