@@ -16,43 +16,50 @@ export function getOptimizedUrl(url, width = 400) {
 }
 
 export function clean(str) {
-    if (!str) return "";
+    if (str === null || str === undefined) return "";
     
-    let text = str;
+    let target = str;
 
-    // 1. DEBUG: If you open F12 console, you can see exactly what is breaking
-    // console.log("Cleaning task:", str); 
-
-    // 2. If it's an Object (Wix often sends these)
-    if (typeof str === 'object' && str !== null) {
-        text = str.text || str.title || str.task || str.value || JSON.stringify(str);
+    // 1. If it's a string that looks like JSON, "unwrap" it first
+    if (typeof target === 'string' && (target.startsWith('{') || target.startsWith('['))) {
+        try { target = JSON.parse(target); } catch (e) { /* use as string */ }
     }
 
-    // 3. If it's a JSON String (Wix often stores arrays as strings)
-    if (typeof text === 'string' && (text.startsWith('{') || text.startsWith('['))) {
-        try {
-            const parsed = JSON.parse(text);
-            if (Array.isArray(parsed)) {
-                text = parsed[0]?.text || parsed[0]?.task || parsed[0] || text;
-            } else {
-                text = parsed.text || parsed.title || parsed.task || text;
+    // 2. If it's an array, take the first item
+    if (Array.isArray(target)) {
+        target = target[0];
+    }
+
+    // 3. THE DEEP HUNTER: If it's an object, find the FIRST string value inside it
+    if (typeof target === 'object' && target !== null) {
+        // Try common Wix keys first
+        const commonKeys = ['text', 'task', 'value', 'label', 'title', 'description', 'content'];
+        for (let key of commonKeys) {
+            if (target[key] && typeof target[key] === 'string') {
+                target = target[key];
+                break;
             }
-        } catch (e) { /* Not valid JSON, continue */ }
-    }
-
-    // 4. Strip out System Commands/Tags (e.g., [TASK], CMD:, etc.)
-    if (typeof text === 'string') {
-        // Removes anything like [PROTECTED] or [!]
-        text = text.replace(/\[.*?\]/g, ''); 
-        // Removes common prefixes
-        text = text.replace(/^(TASK:|CMD:|TEXT:|MSG:)/i, '');
+        }
         
-        // 5. Clean HTML/Tags and trim whitespace
-        text = text.replace(/[<>]/g, '').trim();
+        // If still an object, just grab the first property that is a string
+        if (typeof target === 'object') {
+            const firstString = Object.values(target).find(val => typeof val === 'string' && val.length > 2);
+            target = firstString || JSON.stringify(target);
+        }
     }
 
-    // Return the cleaned text (Max 100 chars for the UI)
-    return text.toString().substring(0, 100);
+    // 4. FINAL CLEANUP: Remove system codes and brackets
+    let finalString = target.toString();
+    
+    // Remove anything in brackets [LIKE_THIS]
+    finalString = finalString.replace(/\[.*?\]/g, ''); 
+    // Remove "CMD:", "TASK:", etc.
+    finalString = finalString.replace(/^(.*?):/i, (match, p1) => {
+        const tags = ['CMD', 'TASK', 'TEXT', 'MSG', 'JSON'];
+        return tags.includes(p1.toUpperCase()) ? '' : match;
+    });
+
+    return finalString.replace(/[<>]/g, '').trim().substring(0, 100);
 }
 
 export function raw(str) {
