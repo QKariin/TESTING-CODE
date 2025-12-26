@@ -1,6 +1,4 @@
 // Dashboard Modal Management
-// Review modals, task galleries, and modal interactions
-
 import { 
     currTask, pendingApproveTask, selectedStickerId, pendingRewardMedia, 
     messageImg, stickerConfig, availableDailyTasks, currId, users,
@@ -22,25 +20,29 @@ window.toggleRewardRecord = toggleRewardRecord;
 window.handleRewardFileUpload = handleRewardFileUpload;
 window.clearRewardMedia = clearRewardMedia;
 window.cancelReward = cancelReward;
-
 window.openTaskGallery = openTaskGallery;
 window.closeTaskGallery = closeTaskGallery;
 window.filterTaskGallery = filterTaskGallery;
 window.toggleTaskExpansion = toggleTaskExpansion;
 window.enforceDirectiveFromArmory = enforceDirectiveFromArmory;
+window.handleDragStart = handleDragStart;
+window.handleDragOver = handleDragOver;
+window.handleDragEnd = handleDragEnd;
+window.handleDrop = handleDrop;
 
-// --- 1. CORE MODAL LOGIC (UNTOUCHED REVIEWS) ---
+// --- INTERNAL WORKSHOP CACHE ---
+let workshopFillers = [];
+let workshopUserId = null;
+
+// --- 1. CORE REVIEW MODAL LOGIC ---
 
 export function closeModal() {
     const modal = document.getElementById('reviewModal');
     if (modal) modal.classList.remove('active');
-    
-    // Reset the internal UI
     const normalContent = document.getElementById('reviewNormalContent');
     const rewardOverlay = document.getElementById('reviewRewardOverlay');
     if (normalContent) normalContent.style.display = 'flex';
     if (rewardOverlay) rewardOverlay.style.display = 'none';
-    
     setPendingApproveTask(null);
     setSelectedStickerId(null);
     setPendingRewardMedia(null);
@@ -55,7 +57,7 @@ export function openModal(taskId, memberId, mediaUrl, mediaType, taskText, isHis
     if (!modal || !mediaBox || !textEl) return;
 
     if (mediaUrl) {
-        if (mediaType === 'video' || mediaUrl.includes('.mp4') || mediaUrl.includes('.mov')) {
+        if (mediaType === 'video' || mediaUrl.includes('.mp4')) {
             mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls muted autoplay loop></video>`;
         } else {
             mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 800)}" class="m-img">`;
@@ -67,7 +69,7 @@ export function openModal(taskId, memberId, mediaUrl, mediaType, taskText, isHis
     textEl.innerHTML = clean(taskText || 'No description provided.');
     
     if (isHistory) {
-        actionsEl.innerHTML = status ? `<div class="hist-status st-${status === 'approve' ? 'app' : 'rej'}">${status.toUpperCase()}</div>` : `<button class="btn-main" onclick="closeModal()" style="background:#666;color:white;">CLOSE</button>`;
+        actionsEl.innerHTML = status ? `<div class="hist-status st-${status === 'approve' ? 'app' : 'rej'}">${status.toUpperCase()}</div>` : `<button class="btn-main" onclick="closeModal()">CLOSE</button>`;
     } else {
         actionsEl.innerHTML = `<button class="btn-main" onclick="reviewTask('approve')" style="background:var(--green);color:black;">APPROVE</button><button class="btn-main" onclick="reviewTask('reject')" style="background:var(--red);color:white;">REJECT</button>`;
     }
@@ -81,7 +83,7 @@ export function openModById(taskId, memberId, isHistory) {
     if (t) openModal(taskId, memberId, t.proofUrl, t.proofType, t.text, isHistory, t.status);
 }
 
-// --- 2. REWARD & AUDIO LOGIC (UNTOUCHED) ---
+// --- 2. REWARD & AUDIO LOGIC ---
 
 export function reviewTask(decision) {
     if (!currTask) return;
@@ -164,11 +166,7 @@ function showRewardPreview(url, type) {
     }
 }
 
-export function clearRewardMedia() { 
-    setPendingRewardMedia(null); 
-    const box = document.getElementById('rewardMediaPreview');
-    if (box) box.classList.add('d-none'); 
-}
+export function clearRewardMedia() { setPendingRewardMedia(null); const box = document.getElementById('rewardMediaPreview'); if (box) box.classList.add('d-none'); }
 
 export function confirmReward() {
     if (!pendingApproveTask) return;
@@ -179,105 +177,82 @@ export function confirmReward() {
     closeModal();
 }
 
-// --- 3. DIRECTIVE WORKSHOP (CONSOLIDATED GALLERY LOGIC) ---
+// --- 3. DIRECTIVE WORKSHOP (THE MIRROR DESIGN) ---
 
 export function openTaskGallery() {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
-
-    // Update Header: [NAME] TASKS
     const titleEl = document.getElementById('armoryTitle');
     if (titleEl) titleEl.innerText = `${u.name.toUpperCase()} TASKS`;
-
     renderWorkshopLiveQueue(u);
     renderWorkshopLibrary(availableDailyTasks);
-
     document.getElementById('taskGalleryModal').classList.add('active');
 }
 
 export function filterTaskGallery() {
-    const query = document.getElementById('taskSearchInput')?.value.toLowerCase() || "";
-    const filtered = availableDailyTasks.filter(t => (typeof t === 'string' ? t : (t.text || "")).toLowerCase().includes(query));
+    const q = document.getElementById('taskSearchInput')?.value.toLowerCase() || "";
+    const filtered = availableDailyTasks.filter(t => (typeof t === 'string' ? t : (t.text || "")).toLowerCase().includes(q));
     renderWorkshopLibrary(filtered);
 }
 
 function renderWorkshopLibrary(tasks) {
     const grid = document.getElementById('glassTaskGrid');
     if (!grid) return;
-    grid.innerHTML = tasks.map((t, i) => createDirectiveRow(t, i, false)).join('');
+    grid.innerHTML = tasks.map((t, i) => createMirroredCard(t, i, false, true)).join('');
 }
-
-// --- UPDATED RENDERER FOR VISUAL MIRRORING (CONSOLIDATED) ---
 
 function renderWorkshopLiveQueue(u) {
     const list = document.getElementById('armoryLiveQueue');
     if (!list) return;
-
     let personal = u.taskQueue || [];
-    // Only pick fillers if we need them to hit 10
-    let fillers = availableDailyTasks.filter(t => !personal.includes(t)).slice(0, 10 - personal.length);
+    if (u.memberId !== workshopUserId) {
+        workshopUserId = u.memberId;
+        workshopFillers = availableDailyTasks.filter(t => !personal.includes(t)).sort(() => 0.5 - Math.random());
+    }
+    let fillers = workshopFillers.slice(0, 10 - personal.length);
     let fullList = [...personal, ...fillers];
-
     list.innerHTML = fullList.map((t, i) => createMirroredCard(t, i, i < personal.length)).join('');
 }
 
-function renderWorkshopLibrary(tasks) {
-    const grid = document.getElementById('glassTaskGrid');
-    if (!grid) return;
-    // Right side uses the same cards but as library items
-    grid.innerHTML = tasks.map((t, i) => createMirroredCard(t, i, false, true)).join('');
-}
-
 function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
-    const niceText = clean(task);
-    const safeText = raw(niceText);
+    const niceText = clean(task), safeText = raw(niceText);
     const num = (index + 1).toString().padStart(2, '0');
-    
     return `
-        <div class="q-item-line ${isActiveOrder ? 'direct-order' : (isLibrary ? 'armory-item' : 'filler')}">
+        <div class="q-item-line ${isActiveOrder ? 'direct-order' : (isLibrary ? 'armory-row' : 'filler')}">
             <div class="q-idx" style="font-size:0.7rem; color:#444; width:25px;">${num}</div>
-            
             <div class="dr-text-wrapper" style="flex:1; min-width:0;">
-                ${isActiveOrder ? `<span class="q-badge-queen">QUEEN ORDER</span>` : ''}
+                ${isActiveOrder ? `<span class="q-tag">QUEEN ORDER</span>` : ''}
                 <div class="q-txt-line">${niceText}</div>
                 ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">ENFORCE</div>` : ''}
             </div>
-
-            <!-- THE ARROW -->
             <div class="q-expand-arrow" onclick="event.stopPropagation(); toggleTaskExpansion(this)">▼</div>
-        </div>
-    `;
+        </div>`;
 }
 
-// THE SINGLE TOGGLE FUNCTION
-window.toggleTaskExpansion = function(btn) {
+export function toggleTaskExpansion(btn) {
     const row = btn.closest('.q-item-line');
-    if (row) {
-        row.classList.toggle('expanded');
-    }
-};
+    if (row) row.classList.toggle('expanded');
+}
 
 export function enforceDirectiveFromArmory(element, text) {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
-    if (u.taskQueue && u.taskQueue.length >= 10) { alert("Maximum capacity reached (10)."); return; }
-    
+    if (u.taskQueue && u.taskQueue.length >= 10) { alert("Load Capacity Reached (10)."); return; }
     if (!u.taskQueue) u.taskQueue = [];
-    u.taskQueue.unshift(text); // Teleport to #1 slot
-    
+    u.taskQueue.unshift(text);
     element.innerText = "TRANSMITTING...";
     syncTaskChanges(u);
-    setTimeout(() => { renderWorkshopLiveQueue(u); }, 300);
+    setTimeout(() => { renderWorkshopLiveQueue(u); }, 400);
 }
 
 export function closeTaskGallery() { document.getElementById('taskGalleryModal').classList.remove('active'); }
 
-// --- SYNC & DRAG LOGIC ---
+// --- 4. SYNC & DRAG LOGIC ---
 
 function syncTaskChanges(user) {
     window.parent.postMessage({ type: "updateTaskQueue", memberId: user.memberId, queue: user.taskQueue }, "*");
     Bridge.send("updateTaskQueue", { memberId: user.memberId, queue: user.taskQueue });
-    if (window.updateDetail) window.updateDetail(user);
+    import('./dashboard-users.js').then(m => m.updateDetail(user));
 }
 
 export function handleDragStart(e, idx) { setDragSrcIndex(idx); e.dataTransfer.effectAllowed = 'move'; e.target.style.opacity = '0.4'; }
