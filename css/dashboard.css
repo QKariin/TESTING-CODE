@@ -20,9 +20,16 @@ html, body {
 .hidden-input { display: none; }
 
 /* LAYOUT */
-.layout { display: grid; grid-template-columns: 320px 1fr; height: 100%; width: 100%; overflow: hidden; }
-.sidebar { background: rgba(15,15,15,0.98); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; height: 100%; min-height: 0; min-width: 320px; }
-.content { position: relative; height: 100%; overflow: hidden; display: flex; flex-direction: column; z-index: 5; background: radial-gradient(circle at center, #111 0%, #000 100%); }
+.layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    height: 100vh !important; /* Forces it to fill the window height */
+    width: 100vw !important;  /* Forces it to fill the window width */
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+}.sidebar { background: rgba(15,15,15,0.98); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; height: 100% !important; min-height: 0; min-width: 320px; }
+.content { position: relative; height: 100% !important; overflow: hidden; display: flex; flex-direction: column; z-index: 5; background: radial-gradient(circle at center, #111 0%, #000 100%); }
 
 /* SIDEBAR ELEMENTS */
 .sb-dash-btn { padding: 15px; border-bottom: 1px solid #222; text-align: center; font-weight: 900; letter-spacing: 3px; color: white; cursor: pointer; background: #111; font-size: 1rem; flex-shrink: 0; transition: 0.2s; }
