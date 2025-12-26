@@ -207,13 +207,14 @@ function renderWorkshopLibrary(tasks) {
     grid.innerHTML = tasks.map((t, i) => createDirectiveRow(t, i, false)).join('');
 }
 
-// --- UPDATED RENDERER FOR VISUAL MIRRORING ---
+// --- UPDATED RENDERER FOR VISUAL MIRRORING (CONSOLIDATED) ---
 
 function renderWorkshopLiveQueue(u) {
     const list = document.getElementById('armoryLiveQueue');
     if (!list) return;
 
     let personal = u.taskQueue || [];
+    // Only pick fillers if we need them to hit 10
     let fillers = availableDailyTasks.filter(t => !personal.includes(t)).slice(0, 10 - personal.length);
     let fullList = [...personal, ...fillers];
 
@@ -223,7 +224,7 @@ function renderWorkshopLiveQueue(u) {
 function renderWorkshopLibrary(tasks) {
     const grid = document.getElementById('glassTaskGrid');
     if (!grid) return;
-    // Right side uses the same cards but without the Queen Badge
+    // Right side uses the same cards but as library items
     grid.innerHTML = tasks.map((t, i) => createMirroredCard(t, i, false, true)).join('');
 }
 
@@ -248,6 +249,7 @@ function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
     `;
 }
 
+// THE SINGLE TOGGLE FUNCTION
 window.toggleTaskExpansion = function(btn) {
     const row = btn.closest('.q-item-line');
     if (row) {
@@ -255,32 +257,14 @@ window.toggleTaskExpansion = function(btn) {
     }
 };
 
-function createDirectiveRow(task, index, isActiveOrder) {
-    const niceText = clean(task);
-    const safeText = raw(niceText);
-    
-    return `
-        <div class="directive-row ${isActiveOrder ? 'active-order' : ''}">
-            <div class="dr-text-wrapper">
-                ${isActiveOrder ? `<span class="q-tag">QUEEN ORDER</span>` : ''}
-                <div class="dr-text-content">${niceText}</div>
-                ${!isActiveOrder ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">ENFORCE</div>` : ''}
-            </div>
-            <div class="dr-arrow" onclick="toggleTaskExpansion(this)">▼</div>
-        </div>`;
-}
-
-export function toggleTaskExpansion(btn) {
-    const row = btn.closest('.directive-row');
-    if (row) row.classList.toggle('is-expanded');
-}
-
 export function enforceDirectiveFromArmory(element, text) {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
     if (u.taskQueue && u.taskQueue.length >= 10) { alert("Maximum capacity reached (10)."); return; }
+    
     if (!u.taskQueue) u.taskQueue = [];
     u.taskQueue.unshift(text); // Teleport to #1 slot
+    
     element.innerText = "TRANSMITTING...";
     syncTaskChanges(u);
     setTimeout(() => { renderWorkshopLiveQueue(u); }, 300);
@@ -288,7 +272,7 @@ export function enforceDirectiveFromArmory(element, text) {
 
 export function closeTaskGallery() { document.getElementById('taskGalleryModal').classList.remove('active'); }
 
-// --- 4. SYNC & DRAG LOGIC ---
+// --- SYNC & DRAG LOGIC ---
 
 function syncTaskChanges(user) {
     window.parent.postMessage({ type: "updateTaskQueue", memberId: user.memberId, queue: user.taskQueue }, "*");
