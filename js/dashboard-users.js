@@ -1,13 +1,15 @@
 // Dashboard User Management
+// User detail display, task queue management, and user interactions
+
 import { 
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
     availableDailyTasks, 
     setCooldownInterval, setHistLimit, setLastHistoryJson 
-} from './dashboard-state.js'; // MUST be dashboard-state.js
+} from './dashboard-state.js';
 import { getOptimizedUrl, clean, raw, formatTimer } from './dashboard-utils.js';
-import { Bridge } from './bridge.js';
+import { Bridge } from './bridge.js'; 
 
-// --- STABILITY CACHE (Prevents the 4-second jump) ---
+// --- STABILITY CACHE (Prevents the 4-second shuffle jump) ---
 let cachedFillers = [];
 let fillerUserId = null;
 
@@ -76,7 +78,7 @@ export function updateDetail(u) {
     // Update active task
     updateActiveTask(u);
     
-    // Update task queue
+    // Update task queue (STABLE 10 LOGIC)
     updateTaskQueue(u);
     
     // Update history
@@ -175,51 +177,48 @@ function updateActiveTask(u) {
     }
 }
 
-// --- TASK QUEUE: THE DIRECTIVE RENDERER ---
+// --- UPDATED: STABLE INFINITE 10 LOGIC ---
 export function updateTaskQueue(u) {
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
 
-    // 1. Get the real orders (The ones you personally touched)
     let personalTasks = u.taskQueue || [];
     
-    // 2. Stability Check: Keep fillers the same for this user
+    // Stabilize fillers so they don't shuffle every 4 seconds
     if (u.memberId !== fillerUserId) {
         fillerUserId = u.memberId;
         if (availableDailyTasks.length > 0) {
-            // Shuffle the CMS pool to pick fresh fillers
             cachedFillers = [...availableDailyTasks]
                 .filter(t => !personalTasks.includes(t))
                 .sort(() => 0.5 - Math.random());
         }
     }
     
-    // 3. Create the 10-item display list
     const fillersNeeded = Math.max(0, 10 - personalTasks.length);
-    const displayTasks = [
-        ...personalTasks, 
-        ...cachedFillers.slice(0, fillersNeeded)
-    ];
+    const fillers = cachedFillers.slice(0, fillersNeeded);
+    const displayTasks = [...personalTasks, ...fillers];
 
-    // 4. Render the rows
     listContainer.innerHTML = displayTasks.map((t, idx) => {
-        const isDirectOrder = idx < personalTasks.length;
+        const isPersonal = idx < personalTasks.length;
         const niceText = clean(t);
-        const safeText = raw(niceText); // Shield against quotes
+        const safeText = raw(niceText); // FIXED: Quotes won't break the button
 
         return `
-            <div class="q-item-line ${isDirectOrder ? 'direct-order' : 'filler'}" 
-                 onclick="${isDirectOrder ? `openQueueTask('${u.memberId}', ${idx})` : `assignFillerTask('${safeText}')`}">
+            <div class="q-item-line ${isPersonal ? 'direct-order' : 'filler'}" 
+                 draggable="${isPersonal}" 
+                 ondragstart="${isPersonal ? `handleDragStart(event, ${idx})` : ''}" 
+                 ondragover="handleDragOver(event)" 
+                 ondrop="${isPersonal ? `handleDrop(event, ${idx})` : ''}" 
+                 ondragend="handleDragEnd(event)" 
+                 onclick="${isPersonal ? `openQueueTask('${u.memberId}', ${idx})` : `assignFillerTask('${safeText}')`}"
+                 style="${isPersonal ? '' : 'opacity: 0.5; border-style: dashed;'}">
                 
-                <span class="q-handle">${isDirectOrder ? '★' : '⚡'}</span>
-                
+                <span class="q-handle">${isPersonal ? '★' : '⚡'}</span>
                 <span class="q-idx">${(idx + 1).toString().padStart(2, '0')}.</span>
-                
-                ${isDirectOrder ? `<span class="q-badge-queen">QUEEN</span>` : ''}
-                
+                ${isPersonal ? `<span class="q-badge-queen">QUEEN</span>` : ''}
                 <span class="q-txt-line">${niceText}</span>
                 
-                ${isDirectOrder ? 
+                ${isPersonal ? 
                     `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : 
                     `<span style="color:var(--blue); font-size:0.5rem; font-weight:900; margin-left:auto;">+ ENFORCE</span>`
                 }
@@ -228,23 +227,18 @@ export function updateTaskQueue(u) {
     }).join('');
 }
 
-// Helper to turn a "Filler" into a "Direct Order"
 window.assignFillerTask = function(text) {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
-    
-    // Move from filler to personal
     if (!u.taskQueue) u.taskQueue = [];
     u.taskQueue.push(text);
     
-    // Reset cache so the system picks a new 10th filler next refresh
-    fillerUserId = null; 
+    fillerUserId = null; // Clear cache so the slot refills
 
-    // Tell Wix and the Bridge
     window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
     Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
     
-    updateDetail(u); // Refresh UI
+    updateDetail(u);
 };
 
 function updateHistory(u) {
@@ -274,7 +268,7 @@ function updateHistory(u) {
                 const isVid = h.proofType === 'video' || (h.proofUrl && h.proofUrl.endsWith('.mp4'));
                 
                 return `
-                    <div class="h-card-mini" onclick='openMod(null, null, "${h.proofUrl||''}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
+                    <div class="h-card-mini" onclick='openModal(null, null, "${h.proofUrl||''}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
                         ${thumb ? 
                             (isVid ? 
                                 `<video src="${h.proofUrl}" class="hc-img" muted></video>` : 
@@ -294,12 +288,7 @@ function updateHistory(u) {
 
 export function modPoints(amount) {
     if (!currId) return;
-    
-    window.parent.postMessage({ 
-        type: "adjustPoints", 
-        memberId: currId, 
-        amount: amount 
-    }, "*");
+    window.parent.postMessage({ type: "adjustPoints", memberId: currId, amount: amount }, "*");
 }
 
 export function loadMoreHist() {
@@ -322,7 +311,7 @@ export function deleteQueueItem(memberId, index) {
     const u = users.find(x => x.memberId === memberId);
     if (u && u.taskQueue) {
         u.taskQueue.splice(index, 1);
-        fillerUserId = null; // Reset cache
+        fillerUserId = null; 
         window.parent.postMessage({ type: "updateTaskQueue", memberId: memberId, queue: u.taskQueue }, "*");
         Bridge.send("updateTaskQueue", { memberId: memberId, queue: u.taskQueue });
         updateDetail(u);
@@ -340,7 +329,7 @@ export function addQueueTask() {
     if (u) {
         if (!u.taskQueue) u.taskQueue = [];
         u.taskQueue.push(taskText);
-        fillerUserId = null; // Reset cache
+        fillerUserId = null;
         
         window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
         Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
@@ -350,11 +339,10 @@ export function addQueueTask() {
     }
 }
 
-// Make functions available globally
+// Bindings
 window.modPoints = modPoints;
 window.loadMoreHist = loadMoreHist;
 window.openQueueTask = openQueueTask;
 window.deleteQueueItem = deleteQueueItem;
 window.addQueueTask = addQueueTask;
 window.updateDetail = updateDetail;
-window.assignFillerTask = assignFillerTask;
