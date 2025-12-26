@@ -212,10 +212,33 @@ body {
 .ma-btn:hover { color: white; border-color: #666; }
 .task-queue-box { border: 1px solid var(--blue); padding: 5px; border-radius: 6px; background: rgba(0, 243, 255, 0.02); display: flex; flex-direction: column; gap: 5px; }
 .q-list-vertical { display: flex; flex-direction: column; gap: 2px; width: 100%; }
-.q-item-line { display: flex; align-items: center; padding: 4px 6px; background: #111; border: 1px solid #333; border-radius: 4px; cursor: pointer; width: 100%; overflow: hidden; }
+.q-item-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(15, 15, 15, 0.95);
+    border: 1px solid #333;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
 .q-item-line:hover { background: #1a1a1a; border-color: #555; }
 .q-idx { font-family: 'Rajdhani'; font-weight: bold; color: var(--blue); font-size: 0.75rem; margin-right: 6px; width: 18px; flex-shrink: 0; }
-.q-txt-line { flex: 1; font-family: 'Rajdhani'; font-size: 0.8rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.q-txt-line {
+    flex: 1;
+    font-family: 'Georgia', 'Times New Roman', serif; /* Serif as requested */
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #eee;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Show 3 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    padding-right: 10px;
+}
 .q-item-line { cursor: grab; }
 .q-item-line:active { cursor: grabbing; }
 .q-handle { margin-right: 8px; cursor: grab; font-size: 1rem; color: #666; line-height: 1; }
@@ -245,8 +268,7 @@ body {
 .q-item-line.direct-order {
     border: 1px solid var(--pink) !important;
     background: rgba(255, 0, 222, 0.05) !important;
-    opacity: 1 !important;
-    box-shadow: 0 0 10px rgba(255, 0, 222, 0.1);
+    box-shadow: 0 0 15px rgba(255, 0, 222, 0.1);
 }
 
 .q-item-line.direct-order .q-handle {
@@ -257,9 +279,7 @@ body {
 /* 2. Random Fillers (System background noise) */
 .q-item-line.filler {
     border: 1px dashed #444 !important;
-    background: transparent !important;
-    opacity: 0.4;
-    cursor: copy;
+    opacity: 0.6;
 }
 
 .q-item-line.filler:hover {
@@ -273,11 +293,11 @@ body {
     font-weight: 900;
     color: black;
     background: var(--pink);
-    padding: 2px 5px;
+    padding: 2px 6px;
     border-radius: 3px;
-    margin-right: 8px;
+    margin-bottom: 5px;
+    display: inline-block;
     letter-spacing: 1px;
-    text-transform: uppercase;
 }
 
 /* --- COMMAND ARMORY (The Library Modal) --- */
@@ -307,6 +327,33 @@ body {
     color: #ccc;
     font-weight: 600;
     line-height: 1.2;
+}
+
+/* THE ARROW FIX: Now it actually expands the card */
+.q-item-line.expanded .q-txt-line {
+    -webkit-line-clamp: unset; /* Removes the 3-line limit */
+    display: block;
+}
+
+.q-expand-arrow {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #666;
+    border: 1px solid #333;
+    border-radius: 50%;
+    font-size: 0.6rem;
+    transition: 0.3s;
+    flex-shrink: 0;
+}
+
+.expanded .q-expand-arrow {
+    transform: rotate(180deg);
+    border-color: var(--pink);
+    color: var(--pink);
 }
 
 /* --- TACTICAL DIRECTIVE WORKSHOP (Consolidated) --- */
