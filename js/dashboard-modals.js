@@ -193,13 +193,12 @@ export function openTaskGallery() {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
 
-    // Header: Centered Slave Name
+    // Sets header to: "NAME TASKS"
     const titleEl = document.getElementById('armoryTitle');
     if (titleEl) titleEl.innerText = `${u.name.toUpperCase()} TASKS`;
 
     renderWorkshopLiveQueue(u);
     renderWorkshopLibrary(availableDailyTasks);
-
     document.getElementById('taskGalleryModal').classList.add('active');
 }
 
@@ -254,7 +253,7 @@ function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
 }
 
 export function toggleTaskExpansion(btn, taskText) {
-    const card = btn.closest('.compact-task-card');
+    const card = btn.closest('.q-item-line');
     if (!card) return;
 
     if (workshopExpandedTexts.has(taskText)) {
