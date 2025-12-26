@@ -3,8 +3,9 @@
 
 import { 
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
+    availableDailyTasks, // Ensure this is imported
     setCooldownInterval, setHistLimit, setLastHistoryJson 
-} from './dashboard-state.js';
+} from './state.js';
 import { getOptimizedUrl, clean, raw, formatTimer } from './dashboard-utils.js';
 
 export function updateDetail(u) {
@@ -172,31 +173,71 @@ function updateActiveTask(u) {
 }
 
 function updateTaskQueue(u) {
-    const qList = u.taskQueue || [];
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
-    
-    // DEBUG LINE: This will show you the RAW data in your browser's F12 console
-    if (qList.length > 0) console.log("RAW TASK DATA FROM WIX:", qList[0]);
 
-    if (qList.length === 0) {
-        listContainer.innerHTML = `<div style="text-align:center;color:#666;font-size:0.7rem;">Empty</div>`;
-    } else {
-        listContainer.innerHTML = qList.slice(0, 10).map((t, idx) => `
-            <div class="q-item-line" draggable="true" 
-                 ondragstart="handleDragStart(event, ${idx})" 
-                 ondragover="handleDragOver(event)" 
-                 ondrop="handleDrop(event, ${idx})" 
-                 ondragend="handleDragEnd(event)" 
-                 onclick="openQueueTask('${u.memberId}', ${idx})">
-                <span class="q-handle" onmousedown="event.stopPropagation()">≡</span>
-                <span class="q-idx">${idx + 1}.</span>
-                <span class="q-txt-line">${clean(t)}</span>
-                <span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>
-            </div>
-        `).join('');
+    // 1. Get the tasks currently assigned to the slave
+    let personalTasks = u.taskQueue || [];
+    
+    // 2. Calculate how many "Filler" tasks we need to hit 10
+    const fillersNeeded = Math.max(0, 10 - personalTasks.length);
+    
+    // 3. Pick random tasks from the CMS pool (availableDailyTasks)
+    let displayTasks = [...personalTasks];
+    
+    if (fillersNeeded > 0 && availableDailyTasks.length > 0) {
+        // Create a copy and shuffle it to get random items
+        const shuffledPool = [...availableDailyTasks]
+            .filter(t => !personalTasks.includes(t)) // Don't duplicate what's already assigned
+            .sort(() => 0.5 - Math.random());
+            
+        const fillers = shuffledPool.slice(0, fillersNeeded);
+        displayTasks = [...personalTasks, ...fillers];
     }
+
+    // 4. Render the 10 rows
+    listContainer.innerHTML = displayTasks.map((t, idx) => {
+        const isPersonal = idx < personalTasks.length;
+        const niceText = clean(t);
+        
+        return `
+            <div class="q-item-line ${isPersonal ? '' : 'q-filler'}" 
+                 draggable="${isPersonal}" 
+                 ondragstart="${isPersonal ? `handleDragStart(event, ${idx})` : ''}" 
+                 ondragover="handleDragOver(event)" 
+                 ondrop="${isPersonal ? `handleDrop(event, ${idx})` : ''}" 
+                 onclick="${isPersonal ? `openQueueTask('${u.memberId}', ${idx})` : `assignFillerTask('${niceText}')`}"
+                 style="${isPersonal ? '' : 'opacity: 0.5; border-style: dashed;'}">
+                
+                <span class="q-handle">${isPersonal ? '≡' : '⚡'}</span>
+                <span class="q-idx">${(idx + 1).toString().padStart(2, '0')}.</span>
+                <span class="q-txt-line">${niceText}</span>
+                
+                ${isPersonal ? 
+                    `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : 
+                    `<span class="q-add-hint" style="color:var(--blue); font-size:0.6rem; font-weight:bold;">+ ADD</span>`
+                }
+            </div>
+        `;
+    }).join('');
 }
+
+// Helper to quickly assign one of the random filler tasks
+window.assignFillerTask = function(text) {
+    const u = users.find(x => x.memberId === currId);
+    if (u) {
+        if (!u.taskQueue) u.taskQueue = [];
+        u.taskQueue.push(text);
+        
+        window.parent.postMessage({ 
+            type: "updateTaskQueue", 
+            memberId: currId, 
+            queue: u.taskQueue 
+        }, "*");
+        
+        updateDetail(u); // Refresh the list immediately
+    }
+};
 
 function updateHistory(u) {
     const currentJson = JSON.stringify(u.history || []);
