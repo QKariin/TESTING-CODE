@@ -333,3 +333,122 @@ body {
 .clickable-title:hover::after {
     opacity: 0.6;
 }
+
+/* --- DIRECTIVE WORKSHOP: STANDARDIZED ROWS --- */
+
+.directive-row {
+    background: rgba(15, 15, 15, 0.8);
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 12px 15px;
+    display: flex;
+    gap: 15px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 80px; /* Standardized Height */
+    cursor: default;
+}
+
+/* Hover effect for the Library list */
+#glassTaskGrid .directive-row:hover {
+    border-color: var(--blue);
+    background: rgba(0, 243, 255, 0.05);
+}
+
+/* Numbering on the left */
+.dr-num {
+    font-family: 'Orbitron';
+    font-weight: 900;
+    font-size: 0.8rem;
+    color: #444;
+    min-width: 25px;
+    padding-top: 2px;
+}
+
+/* The Text Container */
+.dr-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Prevents text from pushing the arrow out */
+}
+
+/* THE 3-LINE RULE (Line Clamp) */
+.dr-text {
+    font-family: 'Share Tech Mono';
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #ccc;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Show exactly 3 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* When the row is EXPANDED */
+.directive-row.is-expanded .dr-text {
+    -webkit-line-clamp: unset; /* Show all text */
+    color: white;
+}
+
+/* THE EXPAND ARROW */
+.dr-expand-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #666;
+    font-size: 0.7rem;
+    transition: 0.3s;
+    align-self: flex-start;
+}
+
+.dr-expand-btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    box-shadow: 0 0 10px var(--blue);
+}
+
+/* Arrow rotation when expanded */
+.is-expanded .dr-expand-btn {
+    transform: rotate(180deg);
+    border-color: var(--pink);
+    color: var(--pink);
+}
+
+/* Action Button (The "ENFORCE" label) */
+.dr-enforce-btn {
+    background: var(--blue);
+    color: black;
+    font-family: 'Orbitron';
+    font-weight: 900;
+    font-size: 0.5rem;
+    padding: 4px 8px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: fit-content;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.directive-row:hover .dr-enforce-btn {
+    opacity: 1;
+}
+
+/* Pink glow for your existing personal orders in the Workshop */
+.directive-row.active-order {
+    border-color: var(--pink);
+    background: rgba(255, 0, 222, 0.03);
+}
+
+.directive-row.active-order .dr-num {
+    color: var(--pink);
+}
