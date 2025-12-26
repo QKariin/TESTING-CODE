@@ -180,8 +180,8 @@ function updateTaskQueue(u) {
         listContainer.innerHTML = `<div style="text-align:center;color:#666;font-size:0.7rem;">Empty</div>`;
     } else {
         listContainer.innerHTML = qList.slice(0, 10).map((t, idx) => {
-            // Ensure we extract the text if the item is an object
-            const taskDisplay = (typeof t === 'object') ? (t.text || t.task || t.title) : t;
+            // We pass 't' directly into clean() - the new function handles the rest
+            const cleanText = clean(t);
             
             return `
                 <div class="q-item-line" draggable="true" 
@@ -192,7 +192,7 @@ function updateTaskQueue(u) {
                      onclick="openQueueTask('${u.memberId}', ${idx})">
                     <span class="q-handle" onmousedown="event.stopPropagation()">≡</span>
                     <span class="q-idx">${idx + 1}.</span>
-                    <span class="q-txt-line">${clean(taskDisplay)}</span>
+                    <span class="q-txt-line">${cleanText}</span>
                     <span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>
                 </div>
             `;
