@@ -228,18 +228,13 @@ function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
     const u = users.find(x => x.memberId === currId);
 
     return `
-        <div class="mirror-card ${isActiveOrder ? 'direct-order' : (isLibrary ? '' : 'filler-task')}">
-            <!-- TOP ROW -->
+        <div class="compact-task-card ${isActiveOrder ? 'direct-order' : (isLibrary ? '' : 'filler-task')}">
             <div class="dr-card-header">
                 <span class="mirror-icon">${isActiveOrder ? '★' : '⚡'}</span>
-                ${isActiveOrder ? `<span class="q-tag">QUEEN</span>` : '<span style="font-size:0.5rem; color:#333;">SYSTEM</span>'}
-                ${!isLibrary ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${index})">&times;</span>` : '<span></span>'}
+                ${isActiveOrder ? `<span class="q-tag">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444;">SYSTEM</span>'}
+                ${!isLibrary && isActiveOrder ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${index}); renderWorkshopLiveQueue(users.find(x=>x.memberId===currId))">&times;</span>` : '<span></span>'}
             </div>
-
-            <!-- TEXT AREA -->
             <div class="dr-serif-text">${niceText}</div>
-            
-            <!-- CONTROLS -->
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 ${isLibrary ? `<div class="dr-armory-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">ENFORCE</div>` : '<div></div>'}
                 <div class="dr-mirror-arrow" onclick="toggleTaskExpansion(this)">▼</div>
