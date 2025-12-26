@@ -12,59 +12,66 @@ export function renderSidebar() {
     const list = document.getElementById('userList');
     if (!list || !users.length) return;
 
-    // --- LOGIC: CALCULATE THE NEW SEQUENCE ---
+    // --- 1. SANITIZE & INITIALIZE ---
+    const allDbIds = users.map(u => u.memberId);
     
-    // A. Separate users by their CURRENT status
-    const now = Date.now();
-    const currentOnline = [];
-    const currentOffline = [];
+    // Initial load: Capture starting order
+    if (currentVisualOrder.length === 0) {
+        currentVisualOrder = [...allDbIds];
+    }
 
+    // Remove people who left the DB and add new people who joined
+    currentVisualOrder = currentVisualOrder.filter(id => allDbIds.includes(id));
+    allDbIds.forEach(id => {
+        if (!currentVisualOrder.includes(id)) currentVisualOrder.push(id);
+    });
+
+    const now = Date.now();
+
+    // Helper to check online status (same math used in the icons)
+    const checkOnline = (u) => {
+        const ls = u?.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+        return ls > 0 && (now - ls) / 60000 < 2;
+    };
+
+    // --- 2. APPLY ELITE HIERARCHY RULES ---
     users.forEach(u => {
-        const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
-        const isOnline = ls > 0 && (now - ls) / 60000 < 2;
-        
-        // Handle "New Message" Teleport (Index 0)
+        const isOnline = checkOnline(u);
+        const wasOnline = previousOnlineStates[u.memberId];
         const hasMsg = hasUnreadMessage(u);
-        
-        if (isOnline) {
-            // Check if they just JOINED the Online group
-            if (previousOnlineStates[u.memberId] === false && !currentVisualOrder.includes(u.memberId)) {
-                currentVisualOrder.push(u.memberId); // Add to back of list
-            }
-            currentOnline.push(u);
-        } else {
-            currentOffline.push(u);
+
+        // RULE A: TELEPORT ON NEW MESSAGE (Absolute Top)
+        if (hasMsg) {
+            currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
+            currentVisualOrder.unshift(u.memberId);
         }
-        
-        // Update memory for next check
+
+        // RULE B: JOINING ONLINE (End of Online Group)
+        else if (isOnline && wasOnline === false) {
+            currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
+            const lastOnlineIdx = currentVisualOrder.findLastIndex(id => {
+                const usr = users.find(x => x.memberId === id);
+                return checkOnline(usr);
+            });
+            currentVisualOrder.splice(lastOnlineIdx + 1, 0, u.memberId);
+        }
+
+        // RULE C: FALLING OFFLINE (Top of Offline Group)
+        else if (!isOnline && wasOnline === true) {
+            currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
+            const firstOfflineIdx = currentVisualOrder.findIndex(id => {
+                const usr = users.find(x => x.memberId === id);
+                return !checkOnline(usr);
+            });
+            if (firstOfflineIdx === -1) currentVisualOrder.push(u.memberId);
+            else currentVisualOrder.splice(firstOfflineIdx, 0, u.memberId);
+        }
+
+        // Update memory for next 4-second loop
         previousOnlineStates[u.memberId] = isOnline;
     });
 
-    // B. Re-build the Visual Order based on your Elite Rules
-    // (We keep the physical order from currentVisualOrder but filter by status)
-    
-    // 1. Get the IDs of people currently online (in their existing order)
-    let onlineIds = currentVisualOrder.filter(id => {
-        const u = users.find(x => x.memberId === id);
-        const ls = u?.lastSeen ? new Date(u.lastSeen).getTime() : 0;
-        return ls > 0 && (now - ls) / 60000 < 2;
-    });
-
-    // 2. Get the IDs of people currently offline
-    let offlineIds = currentVisualOrder.filter(id => !onlineIds.includes(id));
-
-    // 3. Move "New Message" to absolute top
-    users.forEach(u => {
-        if (hasUnreadMessage(u)) {
-            onlineIds = onlineIds.filter(id => id !== u.memberId); // Remove from current spot
-            onlineIds.unshift(u.memberId); // Teleport to #1
-        }
-    });
-
-    // C. Combine: Online Block first, then Offline Block
-    currentVisualOrder = [...onlineIds, ...offlineIds];
-
-    // --- RENDERING ---
+    // --- 3. RENDER THE STABLE HTML ---
     let html = '';
     currentVisualOrder.forEach(id => {
         const u = users.find(x => x.memberId === id);
@@ -73,12 +80,12 @@ export function renderSidebar() {
         const isActive = currId === u.memberId;
         const isQueen = u.hierarchy === "Queen";
         const hasMsg = hasUnreadMessage(u);
+        const isOnline = checkOnline(u);
         
         const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
         const diff = ls > 0 ? Math.floor((now - ls) / 60000) : 999999;
         
         let status = "OFFLINE";
-        let isOnline = (ls > 0 && diff < 2);
         if (isOnline) status = "ONLINE";
         else if (ls > 0 && diff < 60) status = diff + " MIN AGO";
 
