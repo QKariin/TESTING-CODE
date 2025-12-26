@@ -266,101 +266,70 @@ body {
    ULTRALIGHT MICRO-CARD SYSTEM (DASHBOARD & WORKSHOP)
    ============================================================ */
 
-/* 1. THE HEADER TRIGGER */
-.clickable-title { cursor: pointer; transition: 0.2s; }
-.clickable-title:hover { text-shadow: 0 0 10px var(--blue); }
+/* --- TASK QUEUE: BLOCK FIX --- */
 
-/* 2. THE MICRO CARD */
-.compact-task-card {
-    display: flex;
-    flex-direction: column;
-    padding: 2px 6px !important; /* STRIPPED TO THE BONE */
-    background: rgba(5, 5, 5, 0.9);
-    border: 1px solid #1a1a1a;
-    border-radius: 3px;
-    margin-bottom: 2px !important; /* MICRO GAP */
-    transition: 0.2s;
-    width: 100%;
-}
-
-/* Status Glows */
-.compact-task-card.direct-order { border-color: var(--pink) !important; background: rgba(255, 0, 222, 0.02); }
-.compact-task-card.filler-task { border-style: dashed; border-color: #333; opacity: 0.4; }
-
-/* 3. MICRO HEADER (Star | Badge | X) */
-.dr-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 1px;
-    padding-bottom: 1px;
-    border-bottom: 1px solid #111;
-}
-
-.mirror-icon { font-size: 0.5rem; width: 12px; }
-.q-tag { font-size: 0.35rem !important; font-weight: 900; color: black; background: var(--pink); padding: 0px 3px; border-radius: 1px; }
-.dr-delete-x { color: #333; cursor: pointer; font-size: 0.7rem !important; line-height: 1; }
-.dr-delete-x:hover { color: var(--red); }
-
-/* 4. THE MICRO TEXT (Serif, 2-Line) */
-.dr-serif-text {
-    font-family: 'Georgia', serif;
-    font-size: 0.6rem !important; /* MINI SIZE */
-    line-height: 1.1;
-    color: #888;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-/* --- STEP 1: UNBREAKABLE EXPANSION --- */
-
-/* Force the card to grow to whatever height the text needs */
-.compact-task-card.is-expanded {
+/* Force the container to allow cards to grow */
+#qListContainer {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
     height: auto !important;
-    max-height: none !important;
-    min-height: 50px;
+    overflow: visible !important;
+}
+
+/* The Card: A solid, independent block */
+.compact-task-card {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 8px 12px !important;
+    background: rgba(5, 5, 5, 0.95) !important;
+    border: 1px solid #222 !important;
+    border-radius: 6px !important;
+    height: auto !important; /* Allow it to grow */
+    min-height: 60px !important;
+    position: relative !important;
+    transition: 0.2s ease-in-out;
+}
+
+/* The Text: High-Class Serif */
+.dr-serif-text {
+    font-family: 'Georgia', serif !important;
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+    color: #bbb !important;
+    margin-top: 5px !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2; /* Default: 2 lines */
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+
+/* THE NUCLEAR UNROLL: No limits when expanded */
+.compact-task-card.is-expanded {
     border-color: var(--blue) !important;
     background: #000 !important;
-    z-index: 100;
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
 }
 
-/* Completely remove the 2-line limit and show every single word */
 .compact-task-card.is-expanded .dr-serif-text {
-    display: block !important;
-    -webkit-line-clamp: unset !important;
-    max-height: none !important;
+    display: block !important; /* Kills the box mode */
+    -webkit-line-clamp: unset !important; /* Kills the 2-line limit */
     overflow: visible !important;
     color: #fff !important;
 }
 
-/* 6. MICRO ARROW */
+/* The Arrow: Inside the card at the bottom */
 .dr-mirror-arrow {
-    width: 100%;
-    text-align: center;
-    font-size: 0.4rem;
-    color: #222;
-    cursor: pointer;
-    line-height: 1;
+    width: 100% !important;
+    text-align: center !important;
+    padding: 5px 0 !important;
+    cursor: pointer !important;
+    color: #444 !important;
+    font-size: 0.7rem !important;
+    transition: 0.3s;
 }
-.is-expanded .dr-mirror-arrow { transform: rotate(180deg); color: var(--pink); }
 
-/* 7. MICRO ENFORCE BUTTON */
-.dr-enforce-btn {
-    margin-top: 4px;
-    padding: 2px 8px;
-    background: transparent;
-    border: 1px solid var(--blue);
-    color: var(--blue);
-    font-family: 'Orbitron';
-    font-weight: 900;
-    font-size: 0.45rem;
-    border-radius: 2px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+.compact-task-card.is-expanded .dr-mirror-arrow {
+    transform: rotate(180deg);
+    color: var(--pink);
 }
-.dr-enforce-btn:hover { background: var(--blue); color: #000; }
