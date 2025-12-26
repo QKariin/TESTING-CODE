@@ -179,32 +179,21 @@ function updateActiveTask(u) {
 export function updateTaskQueue(u) {
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
-
     let personalTasks = u.taskQueue || [];
-    
-    // Stabilize fillers so they don't shuffle every 4 seconds
     if (u.memberId !== fillerUserId) {
         fillerUserId = u.memberId;
         if (availableDailyTasks.length > 0) {
-            cachedFillers = [...availableDailyTasks]
-                .filter(t => !personalTasks.includes(t))
-                .sort(() => 0.5 - Math.random());
+            cachedFillers = [...availableDailyTasks].filter(t => !personalTasks.includes(t)).sort(() => 0.5 - Math.random());
         }
     }
-    
-    const fillersNeeded = Math.max(0, 10 - personalTasks.length);
-    const fillers = cachedFillers.slice(0, fillersNeeded);
-    const displayTasks = [...personalTasks, ...fillers];
-
+    const displayTasks = [...personalTasks, ...cachedFillers.slice(0, Math.max(0, 10 - personalTasks.length))];
     listContainer.innerHTML = displayTasks.map((t, idx) => {
         const isPersonal = idx < personalTasks.length;
         const niceText = clean(t);
-        const safeText = raw(niceText);
-
         return `
-            <div class="compact-task-card ${isPersonal ? 'direct-order' : 'filler-task'}" id="main-q-${idx}">
+            <div class="compact-task-card ${isPersonal ? 'direct-order' : 'filler-task'}">
                 <div class="dr-card-header">
-                    <span class="mirror-icon">${isPersonal ? '★' : '⚡'}</span>
+                    <span class="mirror-icon">${isPersonal ? '★' : ''}</span>
                     ${isPersonal ? `<span class="q-tag">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444;">SYSTEM</span>'}
                     ${isPersonal ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : '<span></span>'}
                 </div>
@@ -219,12 +208,9 @@ window.assignFillerTask = function(text) {
     if (!u) return;
     if (!u.taskQueue) u.taskQueue = [];
     u.taskQueue.push(text);
-    
-    fillerUserId = null; // Clear cache so the slot refills
-
+    fillerUserId = null; 
     window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
     Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
-    
     updateDetail(u);
 };
 
