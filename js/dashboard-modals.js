@@ -108,34 +108,13 @@ export function reviewTask(decision) {
 function openRewardProtocol() {
     setPendingApproveTask(currTask);
     setSelectedStickerId(null);
-    setPendingRewardMedia(null); // RESTORED: Clears the "Evaluation Photo" brain
-    if (typeof clearRewardMedia === 'function') clearRewardMedia(); // RESTORED: Clears the UI preview
-    
+    setPendingRewardMedia(null);
+    clearRewardMedia();
     document.getElementById('reviewNormalContent').style.display = 'none';
     document.getElementById('reviewRewardOverlay').style.display = 'flex';
-    
     const grid = document.getElementById('stickerGrid');
-    const source = (stickerConfig.length > 0) ? stickerConfig : [
-        { id: 's10', name: '10 PTS', val: 10, url: '' }, 
-        { id: 's20', name: '20 PTS', val: 20, url: '' }
-        { id: 's30', name: '30 PTS', val: 30, url: '' }
-        { id: 's40', name: '40 PTS', val: 40, url: '' }
-        { id: 's50', name: '50 PTS', val: 50, url: '' }
-        { id: 's100', name: '100 PTS', val: 1000, url: '' }
-    ];
-    
-    let html = source.map(s => `
-        <div class="sticker-card" id="stk_${s.id}" onclick="selectSticker('${s.id}', ${s.val})">
-            ${s.url ? 
-                `<img src="${getOptimizedUrl(s.url, 100)}" class="stk-img">` : 
-                `<div style="font-size:0.7rem; color:#444; height:40px; display:flex; align-items:center;">IMG</div>`
-            }
-            <div class="stk-name">${s.name}</div>
-            <div class="stk-val" style="font-size:0.5rem; color:var(--green);">+${s.val}</div>
-        </div>
-    `).join('');
-    
-    grid.innerHTML = html;
+    const source = (stickerConfig.length > 0) ? stickerConfig : [{ id: 's10', name: '10 PTS', val: 10, url: '' }];
+    grid.innerHTML = source.map(s => `<div class="sticker-card" id="stk_${s.id}" onclick="selectSticker('${s.id}', ${s.val})">${s.url ? `<img src="${getOptimizedUrl(s.url, 100)}" class="stk-img">` : `IMG`}<div class="stk-name">${s.name}</div><div class="stk-val">+${s.val}</div></div>`).join('');
     document.getElementById('rewardBonus').value = 50;
     document.getElementById('rewardComment').value = "";
 }
@@ -201,10 +180,35 @@ export function clearRewardMedia() { setPendingRewardMedia(null); const box = do
 
 export function confirmReward() {
     if (!pendingApproveTask) return;
+    
     let bonus = parseInt(document.getElementById('rewardBonus').value) || 50;
     const comment = document.getElementById('rewardComment').value.trim();
-    let finalImage = selectedStickerId ? stickerConfig.find(s => s.id === selectedStickerId)?.url : (messageImg || null);
-    window.parent.postMessage({ type: "reviewDecision", memberId: pendingApproveTask.memberId, taskId: pendingApproveTask.id, decision: 'approve', bonusCoins: bonus, sticker: finalImage, comment: comment, media: pendingRewardMedia?.url }, "*");
+    let finalSticker = null;
+    
+    // Grab the selected sticker URL
+    if (selectedStickerId && selectedStickerId !== 'none') {
+        const sObj = stickerConfig.find(s => s.id === selectedStickerId);
+        if (sObj) finalSticker = sObj.url;
+    }
+    
+    // SEND TO WIX (Matches the data structure Wix expects)
+    window.parent.postMessage({ 
+        type: "reviewDecision", 
+        memberId: pendingApproveTask.memberId, 
+        taskId: pendingApproveTask.id, 
+        decision: 'approve',
+        bonusCoins: bonus,
+        sticker: finalSticker,
+        comment: comment,
+        media: pendingRewardMedia ? pendingRewardMedia.url : null
+    }, "*");
+    
+    // Tell the Bridge (So slave profile reacts instantly)
+    Bridge.send("reviewDecisionSuccess", {
+        memberId: pendingApproveTask.memberId,
+        decision: 'approve'
+    });
+
     closeModal();
 }
 
