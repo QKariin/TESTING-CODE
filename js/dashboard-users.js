@@ -176,27 +176,25 @@ function updateTaskQueue(u) {
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
     
+    // DEBUG LINE: This will show you the RAW data in your browser's F12 console
+    if (qList.length > 0) console.log("RAW TASK DATA FROM WIX:", qList[0]);
+
     if (qList.length === 0) {
         listContainer.innerHTML = `<div style="text-align:center;color:#666;font-size:0.7rem;">Empty</div>`;
     } else {
-        listContainer.innerHTML = qList.slice(0, 10).map((t, idx) => {
-            // We pass 't' directly into clean() - the new function handles the rest
-            const cleanText = clean(t);
-            
-            return `
-                <div class="q-item-line" draggable="true" 
-                     ondragstart="handleDragStart(event, ${idx})" 
-                     ondragover="handleDragOver(event)" 
-                     ondrop="handleDrop(event, ${idx})" 
-                     ondragend="handleDragEnd(event)" 
-                     onclick="openQueueTask('${u.memberId}', ${idx})">
-                    <span class="q-handle" onmousedown="event.stopPropagation()">≡</span>
-                    <span class="q-idx">${idx + 1}.</span>
-                    <span class="q-txt-line">${cleanText}</span>
-                    <span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>
-                </div>
-            `;
-        }).join('');
+        listContainer.innerHTML = qList.slice(0, 10).map((t, idx) => `
+            <div class="q-item-line" draggable="true" 
+                 ondragstart="handleDragStart(event, ${idx})" 
+                 ondragover="handleDragOver(event)" 
+                 ondrop="handleDrop(event, ${idx})" 
+                 ondragend="handleDragEnd(event)" 
+                 onclick="openQueueTask('${u.memberId}', ${idx})">
+                <span class="q-handle" onmousedown="event.stopPropagation()">≡</span>
+                <span class="q-idx">${idx + 1}.</span>
+                <span class="q-txt-line">${clean(t)}</span>
+                <span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>
+            </div>
+        `).join('');
     }
 }
 
