@@ -4,7 +4,9 @@
 import { users, currId, setCurrId } from './dashboard-state.js';
 import { getOptimizedUrl, clean } from './dashboard-utils.js';
 
-let currentVisualOrder = [];
+// --- ADD THESE TWO LINES AT THE TOP ---
+let currentVisualOrder = []; 
+let previousOnlineStates = {}; // <--- THIS WAS MISSING AND CAUSED THE CRASH
 
 export function renderSidebar() {
     const list = document.getElementById('userList');
