@@ -262,103 +262,11 @@ body {
 .my-sticker { width: 40px; height: 40px; border-radius: 4px; border: 1px solid #333; background: #111; padding: 2px; }
 .my-sticker img { width: 100%; height: 100%; object-fit: contain; }
 
-/* --- TASK QUEUE: DIRECTIVE VISUALS --- */
+/* ============================================================
+   MASTER TASK CARD SYSTEM (DASHBOARD & WORKSHOP)
+   ============================================================ */
 
-/* 1. Direct Orders (YOUR personal commands) */
-.q-item-line.direct-order {
-    border: 1px solid var(--pink) !important;
-    background: rgba(255, 0, 222, 0.05) !important;
-    box-shadow: 0 0 15px rgba(255, 0, 222, 0.1);
-}
-
-.q-item-line.direct-order .q-handle {
-    color: var(--pink) !important;
-    text-shadow: 0 0 5px var(--pink);
-}
-
-/* 2. Random Fillers (System background noise) */
-.q-item-line.filler {
-    border: 1px dashed #444 !important;
-    opacity: 0.6;
-}
-
-.q-item-line.filler:hover {
-    opacity: 0.8;
-    border-color: var(--blue) !important;
-}
-
-/* 3. The Queen's Badge */
-.q-badge-queen {
-    font-size: 0.5rem;
-    font-weight: 900;
-    color: black;
-    background: var(--pink);
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-bottom: 5px;
-    display: inline-block;
-    letter-spacing: 1px;
-}
-
-/* --- COMMAND ARMORY (The Library Modal) --- */
-.armory-item {
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid #333;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.armory-item:hover {
-    border-color: var(--blue);
-    background: rgba(0, 243, 255, 0.05);
-    transform: translateY(-2px);
-}
-
-.armory-text {
-    font-family: 'Rajdhani';
-    font-size: 0.9rem;
-    color: #ccc;
-    font-weight: 600;
-    line-height: 1.2;
-}
-
-/* THE ARROW FIX: Now it actually expands the card */
-.q-item-line.expanded .q-txt-line {
-    -webkit-line-clamp: unset; /* Removes the 3-line limit */
-    display: block;
-}
-
-.q-expand-arrow {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #666;
-    border: 1px solid #333;
-    border-radius: 50%;
-    font-size: 0.6rem;
-    transition: 0.3s;
-    flex-shrink: 0;
-}
-
-.expanded .q-expand-arrow {
-    transform: rotate(180deg);
-    border-color: var(--pink);
-    color: var(--pink);
-}
-
-/* --- TACTICAL DIRECTIVE WORKSHOP (Consolidated) --- */
-
-/* 1. The Header Trigger on the main Dashboard */
+/* 1. THE HEADER TRIGGER (Main Dashboard Title) */
 .clickable-title {
     cursor: pointer;
     transition: 0.3s;
@@ -368,131 +276,112 @@ body {
     transform: translateX(5px);
 }
 
-/* --- TACTICAL MIRROR: SLAVE UI -> DASHBOARD --- */
-
-/* 1. The Slave-Style Card (The Mirror) */
-.mirror-card {
+/* 2. THE COMPACT CARD (The "Mirror" Design) */
+.compact-task-card {
     display: flex;
-    flex-direction: column; /* Stack header over text */
-    padding: 8px 12px; /* Tight padding */
+    flex-direction: column;
+    padding: 8px 12px;
     background: rgba(10, 10, 10, 0.95);
     border: 1px solid #222;
     border-radius: 6px;
     margin-bottom: 6px;
-    transition: 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    width: 100%;
 }
 
-/* My Personal Orders: Pink Glow & Solid */
-.mirror-card.direct-order {
+/* Status: Direct Orders (Pink Glow) */
+.compact-task-card.direct-order {
     border: 1px solid var(--pink) !important;
     background: rgba(255, 0, 222, 0.05);
-    box-shadow: 0 0 15px rgba(255, 0, 222, 0.15);
+    box-shadow: 0 0 10px rgba(255, 0, 222, 0.1);
 }
 
-/* Random Fillers: Grey & Ghostly */
-.mirror-card.filler-task {
+/* Status: Random Fillers (Ghostly) */
+.compact-task-card.filler-task {
     border: 1px dashed #444;
     opacity: 0.5;
 }
 
-/* 2. High-Class Typography (Serif) */
-.dr-serif-text {
-    font-family: 'Georgia', serif;
-    font-size: 0.55rem; /* SMALL FONT */
-    line-height: 1;
-    color: #bbb;
-    display: -webkit-box;
-    -webkit-line-clamp: 2; /* Exactly 2 lines */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-/* THE TOP LINE: Star | Badge | X */
+/* 3. CARD HEADER (Star | Badge | X) */
 .dr-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
     border-bottom: 1px solid #1a1a1a;
-    padding-bottom: 2px;
+    padding-bottom: 3px;
 }
 
-/* EXPANSION: Show everything when arrow is clicked */
-.mirror-card.is-expanded .dr-serif-text {
-    -webkit-line-clamp: unset;
+.mirror-icon { font-size: 0.8rem; width: 20px; }
+.q-tag { font-size: 0.45rem; font-weight: 900; color: black; background: var(--pink); padding: 1px 5px; border-radius: 2px; letter-spacing: 1px; }
+.dr-delete-x { color: #444; cursor: pointer; font-size: 1rem; font-weight: bold; transition: 0.2s; }
+.dr-delete-x:hover { color: var(--red); }
+
+/* 4. THE TEXT (Small Serif, 2-Line Limit) */
+.dr-serif-text {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 0.8rem; /* Small & Precise */
+    line-height: 1.3;
+    color: #bbb;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Exactly 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.3s;
+}
+
+/* 5. THE EXPANSION LOGIC (The "Unroll") */
+.compact-task-card.is-expanded {
+    border-color: var(--blue);
+    background: rgba(0, 243, 255, 0.05);
+}
+
+.compact-task-card.is-expanded .dr-serif-text {
+    -webkit-line-clamp: unset !important;
+    display: block !important;
+    overflow: visible !important;
     color: white;
 }
 
-/* 3. The Expand Arrow (Functional) */
+/* 6. THE ARROW CONTROLS */
 .dr-mirror-arrow {
     width: 100%;
     text-align: center;
-    font-size: 0.5rem;
+    font-size: 0.6rem;
     color: #333;
     cursor: pointer;
-    margin-top: 2px;
-    line-height: 1;
-}
-
-/* The Close/Delete X */
-.dr-delete-x {
-    color: #444;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: bold;
-    transition: 0.2s;
-}
-.dr-delete-x:hover { color: var(--red); }
-
-
-.dr-mirror-arrow:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-    background: rgba(0,243,255,0.05);
+    margin-top: 5px;
+    transition: 0.3s;
 }
 
 .is-expanded .dr-mirror-arrow {
     transform: rotate(180deg);
-    border-color: var(--pink);
     color: var(--pink);
 }
 
-/* 4. Enforce Button (Armory side only) */
-.dr-armory-btn {
+/* 7. THE ENFORCE BUTTON (Elite Style) */
+.dr-enforce-btn {
     margin-top: 10px;
     padding: 5px 12px;
-    background: var(--blue);
-    color: black;
+    background: transparent;
+    border: 1px solid var(--blue);
+    color: var(--blue);
     font-family: 'Orbitron';
     font-weight: 900;
     font-size: 0.55rem;
     border-radius: 4px;
     cursor: pointer;
     letter-spacing: 1px;
-    display: inline-block;
-}
-
-/* Icons (Star for mine, Bolt for system) */
-.mirror-icon { font-size: 0.8rem; }
-.q-tag { font-size: 0.45rem; font-weight: 900; color: black; background: var(--pink); padding: 1px 4px; border-radius: 2px; }
-.dr-delete-x { color: #444; cursor: pointer; font-size: 0.9rem; font-weight: bold; }
-.dr-delete-x:hover { color: var(--red); }ify-content: center;
-}
-
-.compact-task-card {
     display: flex;
-    flex-direction: column;
-    padding: 6px 10px;
-    background: rgba(10, 10, 10, 0.9);
-    border: 1px solid #222;
-    border-radius: 4px;
-    margin-bottom: 5px;
-    transition: 0.2s;
-    position: relative;
-    width: 100%;
+    align-items: center;
+    gap: 6px;
+    transition: 0.3s;
 }
 
-/* Personal vs Filler Borders */
-.compact-task-card.direct-order { border-color: var(--pink); background: rgba(255, 0, 222, 0.05); }
-.compact-task-card.filler-task { border-style: dashed; opacity: 0.5; }
+.dr-enforce-btn:hover {
+    background: var(--blue);
+    color: black;
+    box-shadow: 0 0 15px var(--blue);
+}
