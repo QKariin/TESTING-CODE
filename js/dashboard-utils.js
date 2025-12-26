@@ -16,50 +16,26 @@ export function getOptimizedUrl(url, width = 400) {
 }
 
 export function clean(str) {
-    if (str === null || str === undefined) return "";
+    if (!str) return "";
+    // If it's the raw debug string you saw in the console, it's already clean!
+    return str.toString().replace(/[<>]/g, '').substring(0, 100);
+}
+
+export function getOptimizedUrl(url, width = 400) {
+    if (!url || typeof url !== 'string') return "";
+    if (url.startsWith("http")) return url;
     
-    let target = str;
-
-    // 1. If it's a string that looks like JSON, "unwrap" it first
-    if (typeof target === 'string' && (target.startsWith('{') || target.startsWith('['))) {
-        try { target = JSON.parse(target); } catch (e) { /* use as string */ }
+    // Fix for the "Vector" icons you see in the error
+    if (url.startsWith("wix:vector://v1/")) {
+        const id = url.split('/')[3].split('#')[0];
+        return `https://static.wixstatic.com/shapes/${id}`;
     }
-
-    // 2. If it's an array, take the first item
-    if (Array.isArray(target)) {
-        target = target[0];
-    }
-
-    // 3. THE DEEP HUNTER: If it's an object, find the FIRST string value inside it
-    if (typeof target === 'object' && target !== null) {
-        // Try common Wix keys first
-        const commonKeys = ['text', 'task', 'value', 'label', 'title', 'description', 'content'];
-        for (let key of commonKeys) {
-            if (target[key] && typeof target[key] === 'string') {
-                target = target[key];
-                break;
-            }
-        }
-        
-        // If still an object, just grab the first property that is a string
-        if (typeof target === 'object') {
-            const firstString = Object.values(target).find(val => typeof val === 'string' && val.length > 2);
-            target = firstString || JSON.stringify(target);
-        }
-    }
-
-    // 4. FINAL CLEANUP: Remove system codes and brackets
-    let finalString = target.toString();
     
-    // Remove anything in brackets [LIKE_THIS]
-    finalString = finalString.replace(/\[.*?\]/g, ''); 
-    // Remove "CMD:", "TASK:", etc.
-    finalString = finalString.replace(/^(.*?):/i, (match, p1) => {
-        const tags = ['CMD', 'TASK', 'TEXT', 'MSG', 'JSON'];
-        return tags.includes(p1.toUpperCase()) ? '' : match;
-    });
-
-    return finalString.replace(/[<>]/g, '').trim().substring(0, 100);
+    if (url.startsWith("wix:image://v1/")) {
+        const id = url.split('/')[3].split('#')[0];
+        return `https://static.wixstatic.com/media/${id}/v1/fill/w_${width},h_${width},al_c,q_80,usm_0.66_1.00_0.01,enc_auto/${id}`;
+    }
+    return url;
 }
 
 export function raw(str) {
