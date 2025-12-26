@@ -368,3 +368,58 @@ html, body {
     text-shadow: 0 0 15px var(--blue);
     transform: translateX(5px);
 }
+
+/* --- REWARD PROTOCOL OVERLAY FIX --- */
+#reviewRewardOverlay {
+    display: none; /* Hidden by default */
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 5, 5, 0.98);
+    z-index: 100;
+    flex-direction: column;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Ensure the sticker grid is tight and micro-sized */
+.sticker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+}
+
+.sticker-card {
+    background: #111;
+    border: 1px solid #333;
+    padding: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.sticker-card.selected {
+    border-color: var(--green);
+    background: rgba(57, 255, 20, 0.1);
+}
+
+.stk-img { width: 40px; height: 40px; object-fit: contain; }
+.stk-name { font-size: 0.5rem; color: #666; font-family: 'Rajdhani'; text-transform: uppercase; margin-top: 3px; }
+
+/* The Inputs (Points & Comment) */
+.rw-inp {
+    width: 100%;
+    background: #000;
+    border: 1px solid #333;
+    color: var(--green);
+    padding: 10px;
+    border-radius: 4px;
+    font-family: 'Orbitron';
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+    outline: none;
+}
