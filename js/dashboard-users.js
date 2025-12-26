@@ -1,52 +1,46 @@
 // Dashboard User Management
-// User detail display, task queue management, and user interactions
-
 import { 
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
     availableDailyTasks, 
     setCooldownInterval, setHistLimit, setLastHistoryJson 
 } from './state.js';
 import { getOptimizedUrl, clean, raw, formatTimer } from './dashboard-utils.js';
-import { Bridge } from './bridge.js'; // CRITICAL: Added for the instant connection
+import { Bridge } from './bridge.js';
 
+// --- CORE UPDATE FUNCTION ---
 export function updateDetail(u) {
     if (!u) return;
     
-    // Update online status
+    // Online Status Logic
     const now = Date.now();
     const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
-    let diff = 999999;
-    if (ls > 0) diff = Math.floor((now - ls) / 60000);
+    let diff = ls > 0 ? Math.floor((now - ls) / 60000) : 999999;
     
     let status = "OFFLINE";
-    let isOnline = false;
-    if (ls > 0 && !isNaN(diff)) {
-        if (diff < 2) { status = "ONLINE"; isOnline = true; }
-        else if (diff < 60) { status = diff + " MIN AGO"; }
-    }
+    let isOnline = (ls > 0 && diff < 2);
+    if (isOnline) status = "ONLINE";
+    else if (ls > 0 && diff < 60) status = `${diff} MIN AGO`;
     
     const lsEl = document.getElementById('lastSeen');
     if (lsEl) {
         lsEl.innerText = status;
-        if (isOnline) { 
-            lsEl.classList.add('online'); 
-            lsEl.style.textShadow = "0 0 5px rgba(57,255,20,0.5)"; 
-        } else { 
-            lsEl.classList.remove('online'); 
-            lsEl.style.textShadow = "none"; 
-        }
+        lsEl.classList.toggle('online', isOnline);
     }
     
-    // Update basic info
-    document.getElementById('dName').innerText = u.name;
-    document.getElementById('dRank').innerText = u.hierarchy;
-    document.getElementById('dPoints').innerText = u.points || 0;
-    
-    const walletVal = document.getElementById('dWalletVal');
-    if (walletVal) walletVal.innerText = u.coins || 0;
-    
-    document.getElementById('dTasks').innerText = u.completed || 0;
-    document.getElementById('dStreak').innerText = u.streak || 0;
+    // UI Assignments
+    const fields = {
+        'dName': u.name,
+        'dRank': u.hierarchy,
+        'dPoints': u.points || 0,
+        'dWalletVal': u.coins || 0,
+        'dTasks': u.completed || 0,
+        'dStreak': u.streak || 0
+    };
+
+    Object.entries(fields).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+    });
     
     const joined = u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "N/A";
     const joinedEl = document.getElementById('dJoined');
@@ -55,14 +49,97 @@ export function updateDetail(u) {
     const appBtn = document.getElementById('btnAppView');
     if (appBtn) appBtn.style.display = u.application ? 'block' : 'none';
 
+    // Sub-renders
     updatePointsGrid();
     updateStickerCase(u);
     updateReviewQueue(u);
     updateActiveTask(u);
-    updateTaskQueue(u); // This now forces 10 items
+    updateTaskQueue(u); // Infinite 10 Logic
     updateHistory(u);
 }
 
+// --- TASK QUEUE: THE INFINITE 10 ---
+export function updateTaskQueue(u) {
+    const listContainer = document.getElementById('qListContainer');
+    if (!listContainer) return;
+
+    let personalTasks = u.taskQueue || [];
+    const fillersNeeded = Math.max(0, 10 - personalTasks.length);
+    let displayTasks = [...personalTasks];
+    
+    if (fillersNeeded > 0 && availableDailyTasks.length > 0) {
+        const fillers = [...availableDailyTasks]
+            .filter(t => !personalTasks.includes(t))
+            .sort(() => 0.5 - Math.random())
+            .slice(0, fillersNeeded);
+        displayTasks = [...personalTasks, ...fillers];
+    }
+
+    listContainer.innerHTML = displayTasks.map((t, idx) => {
+        const isPersonal = idx < personalTasks.length;
+        const niceText = clean(t);
+        const safeText = raw(niceText); 
+
+        return `
+            <div class="q-item-line ${isPersonal ? '' : 'q-filler'}" 
+                 onclick="${isPersonal ? `openQueueTask('${u.memberId}', ${idx})` : `assignFillerTask('${safeText}')`}"
+                 style="${isPersonal ? '' : 'opacity: 0.5; border-style: dashed;'}">
+                <span class="q-handle">${isPersonal ? '≡' : '⚡'}</span>
+                <span class="q-idx">${(idx + 1).toString().padStart(2, '0')}.</span>
+                <span class="q-txt-line">${niceText}</span>
+                ${isPersonal ? 
+                    `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : 
+                    `<span style="color:var(--blue); font-size:0.5rem;">+ADD</span>`}
+            </div>`;
+    }).join('');
+}
+
+// --- ACTIONS ---
+window.assignFillerTask = function(text) {
+    const u = users.find(x => x.memberId === currId);
+    if (!u) return;
+    if (!u.taskQueue) u.taskQueue = [];
+    u.taskQueue.push(text);
+    
+    // Sync with Wix
+    window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+    // Sync with Bridge (Profile)
+    Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
+    
+    updateDetail(u);
+};
+
+export function modPoints(amount) {
+    if (!currId) return;
+    window.parent.postMessage({ type: "adjustPoints", memberId: currId, amount: amount }, "*");
+}
+
+export function deleteQueueItem(memberId, index) {
+    const u = users.find(x => x.memberId === memberId);
+    if (u?.taskQueue) {
+        u.taskQueue.splice(index, 1);
+        window.parent.postMessage({ type: "updateTaskQueue", memberId: memberId, queue: u.taskQueue }, "*");
+        Bridge.send("updateTaskQueue", { memberId: memberId, queue: u.taskQueue });
+        updateDetail(u);
+    }
+}
+
+export function addQueueTask() {
+    const input = document.getElementById('qInput');
+    const txt = input?.value.trim();
+    if (!txt || !currId) return;
+    const u = users.find(x => x.memberId === currId);
+    if (u) {
+        if (!u.taskQueue) u.taskQueue = [];
+        u.taskQueue.push(txt);
+        window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+        Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
+        input.value = '';
+        updateDetail(u);
+    }
+}
+
+// --- UI HELPERS ---
 function updatePointsGrid() {
     const ptsGrid = document.getElementById('pointsGrid');
     if (!ptsGrid) return;
@@ -113,66 +190,13 @@ function updateActiveTask(u) {
             document.getElementById('dActiveTimer').innerText = formatTimer(diff);
         };
         tick();
-        const interval = setInterval(tick, 60000); // 60s since we only show HH:MM
+        const interval = setInterval(tick, 60000); 
         setCooldownInterval(interval);
     } else {
         document.getElementById('dActiveText').innerText = "No Active Task";
         document.getElementById('dActiveTimer').innerText = "--:--";
     }
 }
-
-// --- THE INFINITE 10 LOGIC (FIXED) ---
-// (Keep your imports at the top, just ensure Bridge is there)
-import { Bridge } from './bridge.js';
-
-function updateTaskQueue(u) {
-    const listContainer = document.getElementById('qListContainer');
-    if (!listContainer) return;
-
-    let personalTasks = u.taskQueue || [];
-    const fillersNeeded = Math.max(0, 10 - personalTasks.length);
-    let displayTasks = [...personalTasks];
-    
-    if (fillersNeeded > 0 && availableDailyTasks.length > 0) {
-        const fillers = [...availableDailyTasks]
-            .filter(t => !personalTasks.includes(t))
-            .sort(() => 0.5 - Math.random())
-            .slice(0, fillersNeeded);
-        displayTasks = [...personalTasks, ...fillers];
-    }
-
-    listContainer.innerHTML = displayTasks.map((t, idx) => {
-        const isPersonal = idx < personalTasks.length;
-        const niceText = clean(t);
-        // FIX: Wrap the text so quotes don't crash the button
-        const safeText = raw(niceText); 
-
-        return `
-            <div class="q-item-line ${isPersonal ? '' : 'q-filler'}" 
-                 draggable="${isPersonal}" 
-                 onclick="${isPersonal ? `openQueueTask('${u.memberId}', ${idx})` : `assignFillerTask('${safeText}')`}"
-                 style="${isPersonal ? '' : 'opacity: 0.5; border-style: dashed;'}">
-                <span class="q-handle">${isPersonal ? '≡' : '⚡'}</span>
-                <span class="q-idx">${(idx + 1).toString().padStart(2, '0')}.</span>
-                <span class="q-txt-line">${niceText}</span>
-                ${isPersonal ? `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : `<span style="color:var(--blue); font-size:0.5rem;">+ADD</span>`}
-            </div>`;
-    }).join('');
-}
-
-window.assignFillerTask = function(text) {
-    const u = users.find(x => x.memberId === currId);
-    if (!u) return;
-    if (!u.taskQueue) u.taskQueue = [];
-    u.taskQueue.push(text);
-    
-    // 1. Tell Wix
-    window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
-    // 2. Tell the Bridge (Instant Profile Sync)
-    Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
-    
-    updateDetail(u);
-};
 
 function updateHistory(u) {
     const currentJson = JSON.stringify(u.history || []);
@@ -194,11 +218,6 @@ function updateHistory(u) {
     }
 }
 
-export function modPoints(amount) {
-    if (!currId) return;
-    window.parent.postMessage({ type: "adjustPoints", memberId: currId, amount: amount }, "*");
-}
-
 export function loadMoreHist() { setHistLimit(histLimit + 10); const u = users.find(x => x.memberId === currId); if (u) updateDetail(u); }
 
 export function openQueueTask(memberId, index) {
@@ -208,34 +227,10 @@ export function openQueueTask(memberId, index) {
     }
 }
 
-export function deleteQueueItem(memberId, index) {
-    const u = users.find(x => x.memberId === memberId);
-    if (u?.taskQueue) {
-        u.taskQueue.splice(index, 1);
-        window.parent.postMessage({ type: "updateTaskQueue", memberId: memberId, queue: u.taskQueue }, "*");
-        Bridge.send("updateTaskQueue", { memberId: memberId, queue: u.taskQueue });
-        updateDetail(u);
-    }
-}
-
-export function addQueueTask() {
-    const input = document.getElementById('qInput');
-    const txt = input?.value.trim();
-    if (!txt || !currId) return;
-    const u = users.find(x => x.memberId === currId);
-    if (u) {
-        if (!u.taskQueue) u.taskQueue = [];
-        u.taskQueue.push(txt);
-        window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
-        Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
-        input.value = '';
-        updateDetail(u);
-    }
-}
-
-// Global bindings
+// Global bindings for HTML
 window.modPoints = modPoints;
 window.loadMoreHist = loadMoreHist;
 window.openQueueTask = openQueueTask;
 window.deleteQueueItem = deleteQueueItem;
 window.addQueueTask = addQueueTask;
+window.updateDetail = updateDetail;
