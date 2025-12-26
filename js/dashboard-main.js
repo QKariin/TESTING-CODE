@@ -56,6 +56,20 @@ window.addEventListener("message", async (event) => {
         setAvailableDailyTasks(data.dailyTasks || []);
         setQueenContent(data.queenCMS || []);
         
+        // --- THE STICKER MAPPING (10, 20, 30, 40, 50, 100) ---
+        // We hunt for the specific row in your CMS that contains the sticker links
+        const stickerSource = data.queenCMS?.find(item => item["10"] || item["100"]);
+        if (stickerSource) {
+            const vals = [10, 20, 30, 40, 50, 100];
+            const newConfig = vals.map(v => ({
+                id: `s${v}`,
+                name: `${v} PTS`,
+                val: v,
+                url: stickerSource[v.toString()] || "" // Grabs link from column "10", "20", etc.
+            }));
+            setStickerConfig(newConfig);
+        }
+
         renderMainDashboard();
         
         // Update current user if viewing one
@@ -67,9 +81,17 @@ window.addEventListener("message", async (event) => {
     
     else if (data.type === "updateChat") {
         renderChat(data.messages || []);
+        
+        // RECONECTION FIX: Update last message time so the Mail Icon appears
+        const u = users.find(x => x.memberId === data.memberId);
+        if (u) {
+            u.lastMessageTime = Date.now();
+            renderSidebar(); 
+        }
     }
     
     else if (data.type === "stickerConfig") {
+        // Handle manual config updates if sent separately
         setStickerConfig(data.stickers || []);
     }
     
@@ -81,6 +103,25 @@ window.addEventListener("message", async (event) => {
         import('./dashboard-protocol.js').then(({ updateProtocolProgress }) => {
             updateProtocolProgress();
         });
+    }
+
+    // --- THE INSTANT ECHO HANDLERS (Kills the 4s lag) ---
+    else if (data.type === "instantUpdate") {
+        const u = users.find(x => x.memberId === data.memberId);
+        if (u) {
+            u.points = data.newPoints; // Instant points update
+            updateDetail(u);
+        }
+    }
+
+    else if (data.type === "instantReviewSuccess") {
+        const u = users.find(x => x.memberId === data.memberId);
+        if (u && u.reviewQueue) {
+            // Remove the approved/rejected task from the list immediately
+            u.reviewQueue = u.reviewQueue.filter(t => t.id !== data.taskId);
+            renderMainDashboard();
+            if (currId === data.memberId) updateDetail(u);
+        }
     }
 });
 
