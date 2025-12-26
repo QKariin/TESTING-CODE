@@ -27,17 +27,20 @@ window.openTaskGallery = openTaskGallery;
 window.closeTaskGallery = closeTaskGallery;
 window.filterTaskGallery = filterTaskGallery;
 window.toggleTaskExpansion = toggleTaskExpansion;
+window.enforceDirectiveFromArmory = enforceDirectiveFromArmory;
 
-// --- 1. CORE MODAL LOGIC (UNTOUCHED) ---
+// --- 1. CORE MODAL LOGIC (UNTOUCHED REVIEWS) ---
 
 export function closeModal() {
     const modal = document.getElementById('reviewModal');
-    if (!modal) return;
-    modal.classList.remove('active');
+    if (modal) modal.classList.remove('active');
+    
+    // Reset the internal UI
     const normalContent = document.getElementById('reviewNormalContent');
     const rewardOverlay = document.getElementById('reviewRewardOverlay');
     if (normalContent) normalContent.style.display = 'flex';
     if (rewardOverlay) rewardOverlay.style.display = 'none';
+    
     setPendingApproveTask(null);
     setSelectedStickerId(null);
     setPendingRewardMedia(null);
@@ -96,11 +99,14 @@ function openRewardProtocol() {
     setPendingApproveTask(currTask);
     setSelectedStickerId(null);
     setPendingRewardMedia(null);
+    clearRewardMedia();
     document.getElementById('reviewNormalContent').style.display = 'none';
     document.getElementById('reviewRewardOverlay').style.display = 'flex';
     const grid = document.getElementById('stickerGrid');
     const source = (stickerConfig.length > 0) ? stickerConfig : [{ id: 's10', name: '10 PTS', val: 10, url: '' }];
     grid.innerHTML = source.map(s => `<div class="sticker-card" id="stk_${s.id}" onclick="selectSticker('${s.id}', ${s.val})">${s.url ? `<img src="${getOptimizedUrl(s.url, 100)}" class="stk-img">` : `IMG`}<div class="stk-name">${s.name}</div><div class="stk-val">+${s.val}</div></div>`).join('');
+    document.getElementById('rewardBonus').value = 50;
+    document.getElementById('rewardComment').value = "";
 }
 
 export function cancelReward() { document.getElementById('reviewNormalContent').style.display = 'flex'; document.getElementById('reviewRewardOverlay').style.display = 'none'; }
@@ -151,12 +157,18 @@ export function toggleRewardRecord() {
 
 function showRewardPreview(url, type) {
     const box = document.getElementById('rewardMediaPreview');
-    box.classList.remove('d-none');
-    box.innerHTML = (type === 'video' || url.includes('.mp4')) ? `<video src="${url}" muted autoplay loop></video>` : `<img src="${url}">`;
-    box.innerHTML += `<span onclick="clearRewardMedia()" style="position:absolute;top:0;right:0;background:black;cursor:pointer;padding:0 4px;">X</span>`;
+    if (box) {
+        box.classList.remove('d-none');
+        box.innerHTML = (type === 'video' || url.includes('.mp4')) ? `<video src="${url}" muted autoplay loop></video>` : `<img src="${url}">`;
+        box.innerHTML += `<span onclick="clearRewardMedia()" style="position:absolute;top:0;right:0;background:black;cursor:pointer;padding:0 4px;">X</span>`;
+    }
 }
 
-export function clearRewardMedia() { setPendingRewardMedia(null); document.getElementById('rewardMediaPreview').classList.add('d-none'); }
+export function clearRewardMedia() { 
+    setPendingRewardMedia(null); 
+    const box = document.getElementById('rewardMediaPreview');
+    if (box) box.classList.add('d-none'); 
+}
 
 export function confirmReward() {
     if (!pendingApproveTask) return;
@@ -167,20 +179,17 @@ export function confirmReward() {
     closeModal();
 }
 
-// --- 3. DIRECTIVE WORKSHOP (THE SPLIT RENDERER) ---
+// --- 3. DIRECTIVE WORKSHOP (CONSOLIDATED GALLERY LOGIC) ---
 
 export function openTaskGallery() {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
 
-    // Set Sub-header name
-    const subHeader = document.getElementById('armorySubHeader');
-    if (subHeader) subHeader.innerText = `OPERATING ON SUBJECT: ${u.name}`;
+    // Update Header: [NAME] TASKS
+    const titleEl = document.getElementById('armoryTitle');
+    if (titleEl) titleEl.innerText = `${u.name.toUpperCase()} TASKS`;
 
-    // 1. Render Left Column (Slave's Mind)
     renderWorkshopLiveQueue(u);
-
-    // 2. Render Right Column (Library)
     renderWorkshopLibrary(availableDailyTasks);
 
     document.getElementById('taskGalleryModal').classList.add('active');
@@ -188,90 +197,68 @@ export function openTaskGallery() {
 
 export function filterTaskGallery() {
     const query = document.getElementById('taskSearchInput')?.value.toLowerCase() || "";
-    const filtered = availableDailyTasks.filter(t => {
-        const text = (typeof t === 'string') ? t : (t.text || t.task || "");
-        return text.toLowerCase().includes(query);
-    });
+    const filtered = availableDailyTasks.filter(t => (typeof t === 'string' ? t : (t.text || "")).toLowerCase().includes(query));
     renderWorkshopLibrary(filtered);
 }
 
-// RENDER RIGHT: The searchable pool
 function renderWorkshopLibrary(tasks) {
     const grid = document.getElementById('glassTaskGrid');
     if (!grid) return;
     grid.innerHTML = tasks.map((t, i) => createDirectiveRow(t, i, false)).join('');
 }
 
-// RENDER LEFT: The 10 slots
 function renderWorkshopLiveQueue(u) {
     const list = document.getElementById('armoryLiveQueue');
     if (!list) return;
-
-    // Use a simplified version of the Infinite 10 logic
     let personal = u.taskQueue || [];
     let fillers = availableDailyTasks.filter(t => !personal.includes(t)).slice(0, 10 - personal.length);
     let fullList = [...personal, ...fillers];
-
     list.innerHTML = fullList.map((t, i) => createDirectiveRow(t, i, i < personal.length)).join('');
 }
 
-// THE STANDARDIZED ROW CREATOR
 function createDirectiveRow(task, index, isActiveOrder) {
     const niceText = clean(task);
     const safeText = raw(niceText);
-    const num = (index + 1).toString().padStart(2, '0');
     
     return `
         <div class="directive-row ${isActiveOrder ? 'active-order' : ''}">
-            <div class="dr-num">${num}</div>
-            <div class="dr-content">
-                <div class="dr-text">${niceText}</div>
+            <div class="dr-text-wrapper">
+                ${isActiveOrder ? `<span class="q-tag">QUEEN ORDER</span>` : ''}
+                <div class="dr-text-content">${niceText}</div>
                 ${!isActiveOrder ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">ENFORCE</div>` : ''}
             </div>
-            <div class="dr-expand-btn" onclick="toggleTaskExpansion(this)">▼</div>
-        </div>
-    `;
+            <div class="dr-arrow" onclick="toggleTaskExpansion(this)">▼</div>
+        </div>`;
 }
-
-// --- 4. WORKSHOP INTERACTIONS ---
 
 export function toggleTaskExpansion(btn) {
     const row = btn.closest('.directive-row');
     if (row) row.classList.toggle('is-expanded');
 }
 
-window.enforceDirectiveFromArmory = function(element, text) {
+export function enforceDirectiveFromArmory(element, text) {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
-
-    // Load Capacity check
-    if (u.taskQueue && u.taskQueue.length >= 10) {
-        alert("Slave capacity reached. Remove an order first.");
-        return;
-    }
-
-    // Teleport logic
+    if (u.taskQueue && u.taskQueue.length >= 10) { alert("Maximum capacity reached (10)."); return; }
     if (!u.taskQueue) u.taskQueue = [];
-    u.taskQueue.unshift(text);
-
-    // Visual feedback
-    element.innerText = "ENFORCED";
-    element.style.background = "var(--pink)";
-
-    // Sync to Wix + Bridge
-    window.parent.postMessage({ type: "updateTaskQueue", memberId: u.memberId, queue: u.taskQueue }, "*");
-    Bridge.send("updateTaskQueue", { memberId: u.memberId, queue: u.taskQueue });
-
-    // Refresh UI
-    renderWorkshopLiveQueue(u);
-    import('./dashboard-users.js').then(m => m.updateDetail(u));
-};
+    u.taskQueue.unshift(text); // Teleport to #1 slot
+    element.innerText = "TRANSMITTING...";
+    syncTaskChanges(u);
+    setTimeout(() => { renderWorkshopLiveQueue(u); }, 300);
+}
 
 export function closeTaskGallery() { document.getElementById('taskGalleryModal').classList.remove('active'); }
 
-// Drag & Drop (Untouched original logic)
+// --- 4. SYNC & DRAG LOGIC ---
+
+function syncTaskChanges(user) {
+    window.parent.postMessage({ type: "updateTaskQueue", memberId: user.memberId, queue: user.taskQueue }, "*");
+    Bridge.send("updateTaskQueue", { memberId: user.memberId, queue: user.taskQueue });
+    if (window.updateDetail) window.updateDetail(user);
+}
+
 export function handleDragStart(e, idx) { setDragSrcIndex(idx); e.dataTransfer.effectAllowed = 'move'; e.target.style.opacity = '0.4'; }
-export function handleDragOver(e) { if (e.preventDefault) e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
+export function handleDragOver(e) { e.preventDefault(); return false; }
 export function handleDragEnd(e) { e.target.style.opacity = '1'; }
 export function handleDrop(e, dropIndex) {
     if (e.stopPropagation) e.stopPropagation();
@@ -281,10 +268,8 @@ export function handleDrop(e, dropIndex) {
         const item = u.taskQueue[dragSrcIndex];
         u.taskQueue.splice(dragSrcIndex, 1);
         u.taskQueue.splice(dropIndex, 0, item);
-        window.parent.postMessage({ type: "updateTaskQueue", memberId: u.memberId, queue: u.taskQueue }, "*");
-        Bridge.send("updateTaskQueue", { memberId: u.memberId, queue: u.taskQueue });
+        syncTaskChanges(u);
         renderWorkshopLiveQueue(u);
-        import('./dashboard-users.js').then(m => m.updateDetail(u));
     }
     return false;
 }
