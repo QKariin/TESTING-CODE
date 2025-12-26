@@ -1,4 +1,6 @@
 // Dashboard Modal Management
+// Review modals, task galleries, and modal interactions
+
 import { 
     currTask, pendingApproveTask, selectedStickerId, pendingRewardMedia, 
     messageImg, stickerConfig, availableDailyTasks, currId, users,
@@ -9,7 +11,7 @@ import {
 import { getOptimizedUrl, clean, raw } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; 
 
-// --- BIND TO WINDOW IMMEDIATELY ---
+// --- BIND TO WINDOW IMMEDIATELY (Prevents "Not Defined" errors) ---
 window.closeModal = closeModal;
 window.openModal = openModal;
 window.openModById = openModById;
@@ -20,21 +22,18 @@ window.toggleRewardRecord = toggleRewardRecord;
 window.handleRewardFileUpload = handleRewardFileUpload;
 window.clearRewardMedia = clearRewardMedia;
 window.cancelReward = cancelReward;
+
 window.openTaskGallery = openTaskGallery;
 window.closeTaskGallery = closeTaskGallery;
 window.filterTaskGallery = filterTaskGallery;
 window.toggleTaskExpansion = toggleTaskExpansion;
 window.enforceDirectiveFromArmory = enforceDirectiveFromArmory;
-window.handleDragStart = handleDragStart;
-window.handleDragOver = handleDragOver;
-window.handleDragEnd = handleDragEnd;
-window.handleDrop = handleDrop;
 
-// --- INTERNAL WORKSHOP CACHE ---
+// --- INTERNAL WORKSHOP CACHE (Prevents 4s shuffle) ---
 let workshopFillers = [];
 let workshopUserId = null;
 
-// --- 1. CORE REVIEW MODAL LOGIC ---
+// --- 1. CORE REVIEW MODAL LOGIC (UNTOUCHED) ---
 
 export function closeModal() {
     const modal = document.getElementById('reviewModal');
@@ -83,7 +82,7 @@ export function openModById(taskId, memberId, isHistory) {
     if (t) openModal(taskId, memberId, t.proofUrl, t.proofType, t.text, isHistory, t.status);
 }
 
-// --- 2. REWARD & AUDIO LOGIC ---
+// --- 2. REWARD & AUDIO LOGIC (UNTOUCHED) ---
 
 export function reviewTask(decision) {
     if (!currTask) return;
@@ -177,22 +176,38 @@ export function confirmReward() {
     closeModal();
 }
 
-// --- 3. DIRECTIVE WORKSHOP (THE MIRROR DESIGN) ---
+// --- 3. DIRECTIVE WORKSHOP (THE MIRROR LOGIC) ---
 
 export function openTaskGallery() {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
+
+    // Header Sync: [SLAVE NAME] TASKS
     const titleEl = document.getElementById('armoryTitle');
     if (titleEl) titleEl.innerText = `${u.name.toUpperCase()} TASKS`;
+
     renderWorkshopLiveQueue(u);
     renderWorkshopLibrary(availableDailyTasks);
+
     document.getElementById('taskGalleryModal').classList.add('active');
 }
 
-export function filterTaskGallery() {
-    const q = document.getElementById('taskSearchInput')?.value.toLowerCase() || "";
-    const filtered = availableDailyTasks.filter(t => (typeof t === 'string' ? t : (t.text || "")).toLowerCase().includes(q));
-    renderWorkshopLibrary(filtered);
+function renderWorkshopLiveQueue(u) {
+    const list = document.getElementById('armoryLiveQueue');
+    if (!list) return;
+
+    let personal = u.taskQueue || [];
+    
+    // Stability cache check
+    if (u.memberId !== workshopUserId) {
+        workshopUserId = u.memberId;
+        workshopFillers = availableDailyTasks.filter(t => !personal.includes(t)).sort(() => 0.5 - Math.random());
+    }
+
+    let fillers = workshopFillers.slice(0, 10 - personal.length);
+    let fullList = [...personal, ...fillers];
+
+    list.innerHTML = fullList.map((t, i) => createMirroredCard(t, i, i < personal.length)).join('');
 }
 
 function renderWorkshopLibrary(tasks) {
@@ -201,46 +216,54 @@ function renderWorkshopLibrary(tasks) {
     grid.innerHTML = tasks.map((t, i) => createMirroredCard(t, i, false, true)).join('');
 }
 
-function renderWorkshopLiveQueue(u) {
-    const list = document.getElementById('armoryLiveQueue');
-    if (!list) return;
-    let personal = u.taskQueue || [];
-    if (u.memberId !== workshopUserId) {
-        workshopUserId = u.memberId;
-        workshopFillers = availableDailyTasks.filter(t => !personal.includes(t)).sort(() => 0.5 - Math.random());
-    }
-    let fillers = workshopFillers.slice(0, 10 - personal.length);
-    let fullList = [...personal, ...fillers];
-    list.innerHTML = fullList.map((t, i) => createMirroredCard(t, i, i < personal.length)).join('');
+export function filterTaskGallery() {
+    const q = document.getElementById('taskSearchInput')?.value.toLowerCase() || "";
+    const filtered = availableDailyTasks.filter(t => (typeof t === 'string' ? t : (t.text || "")).toLowerCase().includes(q));
+    renderWorkshopLibrary(filtered);
 }
 
 function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
-    const niceText = clean(task), safeText = raw(niceText);
+    const niceText = clean(task);
+    const safeText = raw(niceText);
     const num = (index + 1).toString().padStart(2, '0');
+    
     return `
-        <div class="q-item-line ${isActiveOrder ? 'direct-order' : (isLibrary ? 'armory-row' : 'filler')}">
-            <div class="q-idx" style="font-size:0.7rem; color:#444; width:25px;">${num}</div>
-            <div class="dr-text-wrapper" style="flex:1; min-width:0;">
-                ${isActiveOrder ? `<span class="q-tag">QUEEN ORDER</span>` : ''}
-                <div class="q-txt-line">${niceText}</div>
-                ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">ENFORCE</div>` : ''}
+        <div class="mirror-card ${isActiveOrder ? 'direct-order' : (isLibrary ? '' : 'filler-task')}">
+            <div class="mirror-icon">${isActiveOrder ? '★' : '⚡'}</div>
+            
+            <div class="dr-text-wrapper">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="font-size:0.6rem; font-weight:900; color:#444;">SLOT ${num}</span>
+                    ${isActiveOrder ? `<span class="q-tag">QUEEN ORDER</span>` : ''}
+                </div>
+                <div class="dr-serif-text">${niceText}</div>
+                ${isLibrary ? `<div class="dr-armory-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">ENFORCE DIRECTIVE</div>` : ''}
             </div>
-            <div class="q-expand-arrow" onclick="event.stopPropagation(); toggleTaskExpansion(this)">▼</div>
+
+            <div class="dr-mirror-arrow" onclick="event.stopPropagation(); toggleTaskExpansion(this)">▼</div>
         </div>`;
 }
 
 export function toggleTaskExpansion(btn) {
-    const row = btn.closest('.q-item-line');
-    if (row) row.classList.toggle('expanded');
+    const row = btn.closest('.mirror-card');
+    if (row) row.classList.toggle('is-expanded');
 }
 
 export function enforceDirectiveFromArmory(element, text) {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
-    if (u.taskQueue && u.taskQueue.length >= 10) { alert("Load Capacity Reached (10)."); return; }
+
+    if (u.taskQueue && u.taskQueue.length >= 10) {
+        alert("Slave capacity reached. Remove an order first.");
+        return;
+    }
+
     if (!u.taskQueue) u.taskQueue = [];
-    u.taskQueue.unshift(text);
+    u.taskQueue.unshift(text); // Priority #1 slot
+
     element.innerText = "TRANSMITTING...";
+    element.style.background = "var(--pink)";
+
     syncTaskChanges(u);
     setTimeout(() => { renderWorkshopLiveQueue(u); }, 400);
 }
