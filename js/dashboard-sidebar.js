@@ -12,15 +12,15 @@ export function renderSidebar() {
     const list = document.getElementById('userList');
     if (!list || !users.length) return;
 
-    // --- 1. SANITIZE & INITIALIZE ---
+    // 1. SYNC THE MASTER LIST (No duplicates, no lost users)
     const allDbIds = users.map(u => u.memberId);
     
-    // Initial load: Capture starting order
+    // Initialize if empty
     if (currentVisualOrder.length === 0) {
         currentVisualOrder = [...allDbIds];
     }
 
-    // Remove people who left the DB and add new people who joined
+    // Clean up IDs that no longer exist and add new ones
     currentVisualOrder = currentVisualOrder.filter(id => allDbIds.includes(id));
     allDbIds.forEach(id => {
         if (!currentVisualOrder.includes(id)) currentVisualOrder.push(id);
@@ -28,50 +28,55 @@ export function renderSidebar() {
 
     const now = Date.now();
 
-    // Helper to check online status (same math used in the icons)
-    const checkOnline = (u) => {
-        const ls = u?.lastSeen ? new Date(u.lastSeen).getTime() : 0;
-        return ls > 0 && (now - ls) / 60000 < 2;
+    // Helper to check if a user is online (Matches your Velo logic)
+    const isUserOnline = (u) => {
+        if (!u || !u.lastSeen) return false;
+        const ls = new Date(u.lastSeen).getTime();
+        return (now - ls) / 60000 < 5; // Generous 5-min window to prevent flickering
     };
 
-    // --- 2. APPLY ELITE HIERARCHY RULES ---
+    // 2. CALCULATE POSITION CHANGES
     users.forEach(u => {
-        const isOnline = checkOnline(u);
+        const isOnline = isUserOnline(u);
         const wasOnline = previousOnlineStates[u.memberId];
         const hasMsg = hasUnreadMessage(u);
 
-        // RULE A: TELEPORT ON NEW MESSAGE (Absolute Top)
+        // TRIGGER A: NEW MESSAGE (Teleport to #1)
         if (hasMsg) {
             currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
             currentVisualOrder.unshift(u.memberId);
         }
 
-        // RULE B: JOINING ONLINE (End of Online Group)
-        else if (isOnline && wasOnline === false) {
+        // TRIGGER B: JUST LOGGED ON (Join end of Online section)
+        else if (isOnline && (wasOnline === false || wasOnline === undefined)) {
             currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
-            const lastOnlineIdx = currentVisualOrder.findLastIndex(id => {
-                const usr = users.find(x => x.memberId === id);
-                return checkOnline(usr);
+            // Find where the online zone ends
+            let lastOnlineIdx = -1;
+            currentVisualOrder.forEach((id, idx) => {
+                if (isUserOnline(users.find(x => x.memberId === id))) lastOnlineIdx = idx;
             });
             currentVisualOrder.splice(lastOnlineIdx + 1, 0, u.memberId);
         }
 
-        // RULE C: FALLING OFFLINE (Top of Offline Group)
+        // TRIGGER C: JUST LOGGED OFF (Join top of Offline section)
         else if (!isOnline && wasOnline === true) {
             currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
-            const firstOfflineIdx = currentVisualOrder.findIndex(id => {
-                const usr = users.find(x => x.memberId === id);
-                return !checkOnline(usr);
-            });
+            // Find where the offline zone starts
+            const firstOfflineIdx = currentVisualOrder.findIndex(id => !isUserOnline(users.find(x => x.memberId === id)));
             if (firstOfflineIdx === -1) currentVisualOrder.push(u.memberId);
             else currentVisualOrder.splice(firstOfflineIdx, 0, u.memberId);
         }
 
-        // Update memory for next 4-second loop
+        // Save current state for the next check in 4 seconds
         previousOnlineStates[u.memberId] = isOnline;
     });
 
-    // --- 3. RENDER THE STABLE HTML ---
+    // 3. FINAL SORT ENFORCEMENT (Safety catch: Online must be above Offline)
+    const finalOnline = currentVisualOrder.filter(id => isUserOnline(users.find(x => x.memberId === id)));
+    const finalOffline = currentVisualOrder.filter(id => !finalOnline.includes(id));
+    currentVisualOrder = [...finalOnline, ...finalOffline];
+
+    // 4. RENDER HTML
     let html = '';
     currentVisualOrder.forEach(id => {
         const u = users.find(x => x.memberId === id);
@@ -80,14 +85,14 @@ export function renderSidebar() {
         const isActive = currId === u.memberId;
         const isQueen = u.hierarchy === "Queen";
         const hasMsg = hasUnreadMessage(u);
-        const isOnline = checkOnline(u);
+        const online = isUserOnline(u);
         
         const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
-        const diff = ls > 0 ? Math.floor((now - ls) / 60000) : 999999;
+        const diff = ls > 0 ? Math.floor((now - ls) / 60000) : 999;
         
-        let status = "OFFLINE";
-        if (isOnline) status = "ONLINE";
-        else if (ls > 0 && diff < 60) status = diff + " MIN AGO";
+        let statusText = "OFFLINE";
+        if (online) statusText = "ONLINE";
+        else if (ls > 0 && diff < 60) statusText = `${diff} MIN AGO`;
 
         html += `
             <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" onclick="selUser('${u.memberId}')">
@@ -96,7 +101,7 @@ export function renderSidebar() {
                 </div>
                 <div class="u-info">
                     <div class="u-name">${clean(u.name)}</div>
-                    <div class="u-seen ${isOnline ? 'online' : ''}">${status}</div>
+                    <div class="u-seen ${online ? 'online' : ''}">${statusText}</div>
                 </div>
                 <div class="u-right-col">
                     ${renderUserIcons(u)}
