@@ -308,3 +308,28 @@ body {
     font-weight: 600;
     line-height: 1.2;
 }
+
+/* Make the Task Queue Header Interactive */
+.clickable-title {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+    position: relative;
+}
+
+.clickable-title:hover {
+    text-shadow: 0 0 15px var(--blue);
+    letter-spacing: 2px;
+    transform: translateX(5px);
+}
+
+.clickable-title::after {
+    content: ' [OPEN ARMORY]';
+    font-size: 0.4rem;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.clickable-title:hover::after {
+    opacity: 0.6;
+}
