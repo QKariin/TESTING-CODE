@@ -1,6 +1,4 @@
-// Dashboard Main Controller
-// Main initialization, message handling, and coordination between modules
-
+// --- 1. CORE STATE IMPORTS ---
 import { 
     users, globalQueue, globalTributes, availableDailyTasks, queenContent, 
     stickerConfig, broadcastPresets, timerInterval, currId,
@@ -8,12 +6,16 @@ import {
     setQueenContent, setStickerConfig, setBroadcastPresets, setTimerInterval
 } from './dashboard-state.js';
 
+// --- 2. MODULE IMPORTS ---
 import { renderSidebar } from './dashboard-sidebar.js';
 import { renderOperationsMonitor } from './dashboard-operations.js';
 import { renderChat } from './dashboard-chat.js';
 import { updateDetail } from './dashboard-users.js';
 import { toggleMobStats } from './dashboard-utils.js';
+
+// --- 3. SYSTEM & BRIDGE IMPORTS ---
 import { Bridge } from './bridge.js';
+import './dashboard-modals.js'; // This wakes up the Command Armory
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
