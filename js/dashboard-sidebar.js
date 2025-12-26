@@ -100,7 +100,7 @@ export function selUser(id) {
     if (typeof window.parent !== 'undefined') {
         window.parent.postMessage({ type: "selectUser", memberId: id }, "*");
     }
-    
+    localStorage.setItem('read_' + id, Date.now().toString());
     document.getElementById('adminChatBox').innerHTML = "";
     setCurrId(id);
     
