@@ -35,36 +35,33 @@ export function clean(str) {
     
     let target = str;
 
-    // 1. If it's a Wix Object, hunt for the text key
+    // 1. Handle Objects or JSON Strings (Wix Collections)
     if (typeof target === 'object' && !Array.isArray(target)) {
-        target = target.text || target.task || target.title || target.value || target.label || target.description || "";
-        // If we still didn't find a string, grab the first property that IS a string
-        if (!target) {
-            target = Object.values(str).find(v => typeof v === 'string') || JSON.stringify(str);
-        }
+        target = target.text || target.task || target.title || target.value || JSON.stringify(target);
     }
-
-    // 2. If it's a JSON string, unwrap it
     if (typeof target === 'string' && (target.startsWith('{') || target.startsWith('['))) {
         try {
             const parsed = JSON.parse(target);
-            if (Array.isArray(parsed)) {
-                target = parsed[0]?.text || parsed[0]?.task || parsed[0];
-            } else {
-                target = parsed.text || parsed.task || target;
-            }
+            target = Array.isArray(parsed) ? (parsed[0]?.text || parsed[0]) : (parsed.text || target);
         } catch (e) { }
     }
 
-    // 3. NUCLEAR STRIP - Remove every possible "formatting shit" character
-    let result = target.toString();
-    
-    result = result.replace(/[{}"]/g, '');      // Removes { } and "
-    result = result.replace(/\[.*?\]/g, '');    // Removes anything in [brackets]
-    result = result.replace(/\\/g, '');         // Removes backslashes
-    result = result.replace(/^(text|task|value|title|label):/i, ''); // Removes property names
+    // 2. THE RICH TEXT KILLER (Removes <p>, <span>, class="...", etc.)
+    if (typeof target === 'string') {
+        // This removes all HTML tags completely
+        target = target.replace(/<[^>]*>?/gm, ' '); 
+        
+        // This decodes symbols like &amp; into & or &quot; into "
+        const doc = new DOMParser().parseFromString(target, 'text/html');
+        target = doc.body.textContent || target;
+    }
 
-    return result.replace(/[<>]/g, '').trim().substring(0, 100);
+    // 3. FINAL CLEANUP (Brackets and extra spaces)
+    let result = target.toString();
+    result = result.replace(/\[.*?\]/g, ''); // Remove [TASK_ID] etc.
+    result = result.replace(/\s\s+/g, ' ');  // Remove double spaces
+
+    return result.trim().substring(0, 100);
 }
 
 export function raw(str) {
