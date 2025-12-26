@@ -5,7 +5,7 @@ import {
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
     availableDailyTasks, 
     setCooldownInterval, setHistLimit, setLastHistoryJson 
-} from './state.js';
+} from './dashboard-state.js';
 import { getOptimizedUrl, clean, raw, formatTimer } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; // Added to make the connection instant
 
