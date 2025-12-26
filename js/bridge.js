@@ -1,21 +1,25 @@
-
+// js/bridge.js
 const channel = new BroadcastChannel('ecosystem_link');
 
 export const Bridge = {
-    // Send a command to the other side
-    send: (type, data = {}) => {
-        channel.postMessage({ type, ...data });
-        console.log("OUTGOING:", type, data);
+    // 1. SAVE to the Shared Brain
+    saveState: (data) => {
+        localStorage.setItem('ecosystem_state', JSON.stringify(data));
+        // Tell everyone else to sync
+        channel.postMessage({ type: "STATE_SYNC", state: data });
     },
-    
-    // Listen for commands from the other side
+
+    // 2. READ from the Shared Brain
+    getState: () => {
+        const saved = localStorage.getItem('ecosystem_state');
+        return saved ? JSON.parse(saved) : null;
+    },
+
+    // 3. SHOUT commands
+    send: (type, data) => channel.postMessage({ type, ...data }),
+
+    // 4. LISTEN for changes
     listen: (callback) => {
-        channel.onmessage = (event) => {
-            console.log("INCOMING:", event.data.type, event.data);
-            callback(event.data);
-        };
+        channel.onmessage = (e) => callback(e.data);
     }
 };
-
-// Make it global so we can use it in HTML if needed
-window.EcosystemBridge = Bridge;
