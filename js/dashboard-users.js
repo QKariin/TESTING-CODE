@@ -122,7 +122,10 @@ function updateActiveTask(u) {
 }
 
 // --- THE INFINITE 10 LOGIC (FIXED) ---
-export function updateTaskQueue(u) {
+// (Keep your imports at the top, just ensure Bridge is there)
+import { Bridge } from './bridge.js';
+
+function updateTaskQueue(u) {
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
 
@@ -141,7 +144,8 @@ export function updateTaskQueue(u) {
     listContainer.innerHTML = displayTasks.map((t, idx) => {
         const isPersonal = idx < personalTasks.length;
         const niceText = clean(t);
-        const safeText = raw(niceText); // FIXED: Prevent quotes from breaking the button
+        // FIX: Wrap the text so quotes don't crash the button
+        const safeText = raw(niceText); 
 
         return `
             <div class="q-item-line ${isPersonal ? '' : 'q-filler'}" 
@@ -164,7 +168,7 @@ window.assignFillerTask = function(text) {
     
     // 1. Tell Wix
     window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
-    // 2. Tell the Bridge (So the Slave Profile updates instantly)
+    // 2. Tell the Bridge (Instant Profile Sync)
     Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
     
     updateDetail(u);
