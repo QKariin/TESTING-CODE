@@ -4,50 +4,90 @@
 import { users, currId, setCurrId } from './dashboard-state.js';
 import { getOptimizedUrl, clean } from './dashboard-utils.js';
 
+let currentVisualOrder = [];
+
 export function renderSidebar() {
     const list = document.getElementById('userList');
-    if (!list) return;
+    if (!list || !users.length) return;
 
-    // Sort users: Queen first, then by last message time
-    const sortedUsers = [...users].sort((a, b) => {
-        if (a.hierarchy === "Queen" && b.hierarchy !== "Queen") return -1;
-        if (b.hierarchy === "Queen" && a.hierarchy !== "Queen") return 1;
-        return (b.lastMessageTime || 0) - (a.lastMessageTime || 0);
+    // --- LOGIC: CALCULATE THE NEW SEQUENCE ---
+    
+    // A. Separate users by their CURRENT status
+    const now = Date.now();
+    const currentOnline = [];
+    const currentOffline = [];
+
+    users.forEach(u => {
+        const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+        const isOnline = ls > 0 && (now - ls) / 60000 < 2;
+        
+        // Handle "New Message" Teleport (Index 0)
+        const hasMsg = hasUnreadMessage(u);
+        
+        if (isOnline) {
+            // Check if they just JOINED the Online group
+            if (previousOnlineStates[u.memberId] === false && !currentVisualOrder.includes(u.memberId)) {
+                currentVisualOrder.push(u.memberId); // Add to back of list
+            }
+            currentOnline.push(u);
+        } else {
+            currentOffline.push(u);
+        }
+        
+        // Update memory for next check
+        previousOnlineStates[u.memberId] = isOnline;
     });
 
+    // B. Re-build the Visual Order based on your Elite Rules
+    // (We keep the physical order from currentVisualOrder but filter by status)
+    
+    // 1. Get the IDs of people currently online (in their existing order)
+    let onlineIds = currentVisualOrder.filter(id => {
+        const u = users.find(x => x.memberId === id);
+        const ls = u?.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+        return ls > 0 && (now - ls) / 60000 < 2;
+    });
+
+    // 2. Get the IDs of people currently offline
+    let offlineIds = currentVisualOrder.filter(id => !onlineIds.includes(id));
+
+    // 3. Move "New Message" to absolute top
+    users.forEach(u => {
+        if (hasUnreadMessage(u)) {
+            onlineIds = onlineIds.filter(id => id !== u.memberId); // Remove from current spot
+            onlineIds.unshift(u.memberId); // Teleport to #1
+        }
+    });
+
+    // C. Combine: Online Block first, then Offline Block
+    currentVisualOrder = [...onlineIds, ...offlineIds];
+
+    // --- RENDERING ---
     let html = '';
-    sortedUsers.forEach(u => {
+    currentVisualOrder.forEach(id => {
+        const u = users.find(x => x.memberId === id);
+        if (!u) return;
+
         const isActive = currId === u.memberId;
         const isQueen = u.hierarchy === "Queen";
         const hasMsg = hasUnreadMessage(u);
         
-        const now = Date.now();
         const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
-        let diff = 999999;
-        if (ls > 0) diff = Math.floor((now - ls) / 60000);
+        const diff = ls > 0 ? Math.floor((now - ls) / 60000) : 999999;
         
         let status = "OFFLINE";
-        let isOnline = false;
-        if (ls > 0 && !isNaN(diff)) {
-            if (diff < 2) { status = "ONLINE"; isOnline = true; }
-            else if (diff < 60) { status = diff + " MIN AGO"; }
-        }
-
-        const activeClass = isActive ? 'active' : '';
-        const queenClass = isQueen ? 'queen-item' : '';
-        const msgClass = hasMsg ? 'has-msg' : '';
-        const onlineClass = isOnline ? 'online' : '';
+        let isOnline = (ls > 0 && diff < 2);
+        if (isOnline) status = "ONLINE";
+        else if (ls > 0 && diff < 60) status = diff + " MIN AGO";
 
         html += `
-            <div class="u-item ${activeClass} ${queenClass} ${msgClass}" onclick="selUser('${u.memberId}')">
+            <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" onclick="selUser('${u.memberId}')">
                 <div class="u-avatar-main">
                     ${u.avatar ? `<img src="${getOptimizedUrl(u.avatar, 100)}" alt="${u.name}">` : ''}
-                    <div class="notif-dot"></div>
                 </div>
                 <div class="u-info">
                     <div class="u-name">${clean(u.name)}</div>
-                    <div class="u-seen ${onlineClass}">${status}</div>
-                    <div class="u-name-mob" style="display:none;">${clean(u.name).substring(0, 8)}</div>
+                    <div class="u-seen ${isOnline ? 'online' : ''}">${status}</div>
                 </div>
                 <div class="u-right-col">
                     ${renderUserIcons(u)}
