@@ -28,6 +28,10 @@ window.closeTaskGallery = closeTaskGallery;
 window.filterTaskGallery = filterTaskGallery;
 window.toggleTaskExpansion = toggleTaskExpansion;
 window.enforceDirectiveFromArmory = enforceDirectiveFromArmory;
+window.handleDragStart = handleDragStart;
+window.handleDragOver = handleDragOver;
+window.handleDragEnd = handleDragEnd;
+window.handleDrop = handleDrop;
 
 // --- INTERNAL WORKSHOP CACHE (Prevents 4s shuffle) ---
 let workshopFillers = [];
@@ -38,10 +42,13 @@ let workshopUserId = null;
 export function closeModal() {
     const modal = document.getElementById('reviewModal');
     if (modal) modal.classList.remove('active');
+    
+    // Reset the internal UI
     const normalContent = document.getElementById('reviewNormalContent');
     const rewardOverlay = document.getElementById('reviewRewardOverlay');
     if (normalContent) normalContent.style.display = 'flex';
     if (rewardOverlay) rewardOverlay.style.display = 'none';
+    
     setPendingApproveTask(null);
     setSelectedStickerId(null);
     setPendingRewardMedia(null);
@@ -56,7 +63,7 @@ export function openModal(taskId, memberId, mediaUrl, mediaType, taskText, isHis
     if (!modal || !mediaBox || !textEl) return;
 
     if (mediaUrl) {
-        if (mediaType === 'video' || mediaUrl.includes('.mp4')) {
+        if (mediaType === 'video' || mediaUrl.includes('.mp4') || mediaUrl.includes('.mov')) {
             mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls muted autoplay loop></video>`;
         } else {
             mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 800)}" class="m-img">`;
@@ -68,7 +75,7 @@ export function openModal(taskId, memberId, mediaUrl, mediaType, taskText, isHis
     textEl.innerHTML = clean(taskText || 'No description provided.');
     
     if (isHistory) {
-        actionsEl.innerHTML = status ? `<div class="hist-status st-${status === 'approve' ? 'app' : 'rej'}">${status.toUpperCase()}</div>` : `<button class="btn-main" onclick="closeModal()">CLOSE</button>`;
+        actionsEl.innerHTML = status ? `<div class="hist-status st-${status === 'approve' ? 'app' : 'rej'}">${status.toUpperCase()}</div>` : `<button class="btn-main" onclick="closeModal()" style="background:#666;color:white;">CLOSE</button>`;
     } else {
         actionsEl.innerHTML = `<button class="btn-main" onclick="reviewTask('approve')" style="background:var(--green);color:black;">APPROVE</button><button class="btn-main" onclick="reviewTask('reject')" style="background:var(--red);color:white;">REJECT</button>`;
     }
@@ -148,9 +155,11 @@ export function toggleRewardRecord() {
             recorder.onstop = async () => {
                 const blob = new Blob(audioChunks, { type: "audio/mp3" }), fd = new FormData();
                 fd.append("file", blob);
-                const res = await fetch(`https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/rewards/audio`, { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd });
-                const d = await res.json();
-                if (d.files?.[0]) { const url = d.files[0].fileUrl + "#.mp3"; setPendingRewardMedia({ url: url, type: "audio" }); showRewardPreview(url, "audio"); }
+                try {
+                    const res = await fetch(`https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/rewards/audio`, { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd });
+                    const d = await res.json();
+                    if (d.files?.[0]) { const url = d.files[0].fileUrl + "#.mp3"; setPendingRewardMedia({ url: url, type: "audio" }); showRewardPreview(url, "audio"); }
+                } catch (err) { console.error(err); }
             };
         });
     }
@@ -176,13 +185,13 @@ export function confirmReward() {
     closeModal();
 }
 
-// --- 3. DIRECTIVE WORKSHOP (THE MIRROR LOGIC) ---
+// --- 3. DIRECTIVE WORKSHOP (FIXED DESIGN & ARROWS) ---
 
 export function openTaskGallery() {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
 
-    // Header Sync: [SLAVE NAME] TASKS
+    // Header: Centered Slave Name
     const titleEl = document.getElementById('armoryTitle');
     if (titleEl) titleEl.innerText = `${u.name.toUpperCase()} TASKS`;
 
@@ -192,13 +201,23 @@ export function openTaskGallery() {
     document.getElementById('taskGalleryModal').classList.add('active');
 }
 
+export function filterTaskGallery() {
+    const q = document.getElementById('taskSearchInput')?.value.toLowerCase() || "";
+    const filtered = availableDailyTasks.filter(t => (typeof t === 'string' ? t : (t.text || "")).toLowerCase().includes(q));
+    renderWorkshopLibrary(filtered);
+}
+
+function renderWorkshopLibrary(tasks) {
+    const grid = document.getElementById('glassTaskGrid');
+    if (!grid) return;
+    grid.innerHTML = tasks.map((t, i) => createMirroredCard(t, i, false, true)).join('');
+}
+
 function renderWorkshopLiveQueue(u) {
     const list = document.getElementById('armoryLiveQueue');
     if (!list) return;
 
     let personal = u.taskQueue || [];
-    
-    // Stability cache check
     if (u.memberId !== workshopUserId) {
         workshopUserId = u.memberId;
         workshopFillers = availableDailyTasks.filter(t => !personal.includes(t)).sort(() => 0.5 - Math.random());
@@ -210,18 +229,6 @@ function renderWorkshopLiveQueue(u) {
     list.innerHTML = fullList.map((t, i) => createMirroredCard(t, i, i < personal.length)).join('');
 }
 
-function renderWorkshopLibrary(tasks) {
-    const grid = document.getElementById('glassTaskGrid');
-    if (!grid) return;
-    grid.innerHTML = tasks.map((t, i) => createMirroredCard(t, i, false, true)).join('');
-}
-
-export function filterTaskGallery() {
-    const q = document.getElementById('taskSearchInput')?.value.toLowerCase() || "";
-    const filtered = availableDailyTasks.filter(t => (typeof t === 'string' ? t : (t.text || "")).toLowerCase().includes(q));
-    renderWorkshopLibrary(filtered);
-}
-
 function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
     const niceText = clean(task);
     const safeText = raw(niceText);
@@ -230,21 +237,23 @@ function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
     return `
         <div class="compact-task-card ${isActiveOrder ? 'direct-order' : (isLibrary ? '' : 'filler-task')}">
             <div class="dr-card-header">
-                <span class="mirror-icon">${isActiveOrder ? '★' : '⚡'}</span>
+                <span class="mirror-icon">${isActiveOrder ? '★' : ''}</span>
                 ${isActiveOrder ? `<span class="q-tag">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444;">SYSTEM</span>'}
-                ${!isLibrary && isActiveOrder ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${index}); renderWorkshopLiveQueue(users.find(x=>x.memberId===currId))">&times;</span>` : '<span></span>'}
+                ${!isLibrary && isActiveOrder ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${index}); openTaskGallery()">&times;</span>` : '<span></span>'}
             </div>
             <div class="dr-serif-text">${niceText}</div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                ${isLibrary ? `<div class="dr-armory-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">ENFORCE</div>` : '<div></div>'}
+                ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')"><span>⚡</span> ENFORCE</div>` : '<div></div>'}
                 <div class="dr-mirror-arrow" onclick="toggleTaskExpansion(this)">▼</div>
             </div>
         </div>`;
 }
 
 export function toggleTaskExpansion(btn) {
-    const row = btn.closest('.mirror-card');
-    if (row) row.classList.toggle('is-expanded');
+    const card = btn.closest('.compact-task-card');
+    if (card) {
+        card.classList.toggle('is-expanded');
+    }
 }
 
 export function enforceDirectiveFromArmory(element, text) {
@@ -252,32 +261,32 @@ export function enforceDirectiveFromArmory(element, text) {
     if (!u) return;
 
     if (u.taskQueue && u.taskQueue.length >= 10) {
-        alert("Slave capacity reached. Remove an order first.");
+        alert("Maximum load reached. Remove an order first.");
         return;
     }
 
     if (!u.taskQueue) u.taskQueue = [];
-    u.taskQueue.unshift(text); // Priority #1 slot
+    u.taskQueue.unshift(text); // Force to Priority #1 slot
 
     element.innerText = "TRANSMITTING...";
-    element.style.background = "var(--pink)";
-
     syncTaskChanges(u);
     setTimeout(() => { renderWorkshopLiveQueue(u); }, 400);
 }
 
 export function closeTaskGallery() { document.getElementById('taskGalleryModal').classList.remove('active'); }
 
-// --- 4. SYNC & DRAG LOGIC ---
+// --- 4. SYNC & DRAG LOGIC (UNTOUCHED) ---
 
 function syncTaskChanges(user) {
     window.parent.postMessage({ type: "updateTaskQueue", memberId: user.memberId, queue: user.taskQueue }, "*");
     Bridge.send("updateTaskQueue", { memberId: user.memberId, queue: user.taskQueue });
+    
+    // Update local Detail view if users.js is loaded
     import('./dashboard-users.js').then(m => m.updateDetail(user));
 }
 
 export function handleDragStart(e, idx) { setDragSrcIndex(idx); e.dataTransfer.effectAllowed = 'move'; e.target.style.opacity = '0.4'; }
-export function handleDragOver(e) { e.preventDefault(); return false; }
+export function handleDragOver(e) { if (e.preventDefault) e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
 export function handleDragEnd(e) { e.target.style.opacity = '1'; }
 export function handleDrop(e, dropIndex) {
     if (e.stopPropagation) e.stopPropagation();
