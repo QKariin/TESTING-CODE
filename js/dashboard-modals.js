@@ -11,6 +11,8 @@ import {
 import { getOptimizedUrl, clean, raw } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; 
 
+let workshopExpandedTexts = new Set();
+
 // --- BIND TO WINDOW IMMEDIATELY (Prevents "Not Defined" errors) ---
 window.closeModal = closeModal;
 window.openModal = openModal;
@@ -249,10 +251,16 @@ function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
         </div>`;
 }
 
-export function toggleTaskExpansion(btn) {
+export function toggleTaskExpansion(btn, taskText) {
     const card = btn.closest('.compact-task-card');
-    if (card) {
-        card.classList.toggle('is-expanded');
+    if (!card) return;
+
+    if (workshopExpandedTexts.has(taskText)) {
+        workshopExpandedTexts.delete(taskText);
+        card.classList.remove('is-expanded');
+    } else {
+        workshopExpandedTexts.add(taskText);
+        card.classList.add('is-expanded');
     }
 }
 
