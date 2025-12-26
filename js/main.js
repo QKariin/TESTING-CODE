@@ -22,6 +22,7 @@ import { renderChat, sendChatMessage, handleChatKey, sendCoins, loadMoreChat, op
 import { renderGallery, loadMoreHistory, initModalSwipeDetection, closeModal, toggleHistoryView, openHistoryModal, openModal } from './gallery.js';
 import { handleEvidenceUpload, handleProfileUpload, handleAdminUpload } from './uploads.js';
 import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from './kneeling.js';
+import { Bridge } from './bridge.js';
 
 // --- 2. INITIALIZATION ---
 document.addEventListener('click', () => {
@@ -70,8 +71,13 @@ function initDomProfile() {
 }
 initDomProfile();
 
+// Listen to the Ecosystem Bridge (The Radio)
+// This forwards Dashboard commands directly into the Profile logic
+Bridge.listen((data) => {
+    console.log("Bridge Message Received:", data.type);
+    window.postMessage(data, "*"); 
+});
 
-// --- 3. THE MESSAGE LISTENER (CORE BRIDGE) ---
 // --- 3. THE MESSAGE LISTENER (CORE BRIDGE) ---
 window.addEventListener("message", (event) => {
     const data = event.data;
