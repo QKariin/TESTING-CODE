@@ -119,8 +119,9 @@
         </div>
 
         <div id="viewUser">
-             <div class="user-head">
-    <!-- LEFT: IDENTITY -->
+            <!-- 1. THE ELITE HEADER (Status Bar) -->
+            <div class="user-head">
+                <!-- LEFT: IDENTITY -->
                 <div class="uh-identity">
                     <button class="mob-back-btn" onclick="showHome()">&larr; BACK</button>
                     <div id="btnAppView" class="app-icon-btn" onclick="openApplicationView()">
@@ -129,16 +130,16 @@
                     <div class="uh-name-wrap">
                         <div id="dName" class="uh-main">SLAVE</div>
                         <div id="dRank" class="uh-sub">RANK</div>
+                        <div id="lastSeen" class="uh-seen">Last seen...</div>
                     </div>
                 </div>
-            
-                <!-- CENTER: STATUS BAR (Moved from Right Panel) -->
+        
+                <!-- CENTER: WEALTH & HONORS -->
                 <div class="uh-status-bar">
                     <div class="header-stat-box">
                         <span class="h-stat-lbl">WALLET</span>
                         <span id="dWalletVal" class="h-stat-val gold">0</span>
                     </div>
-                    <div class="header-stat-divider"></div>
                     <div class="header-stat-box">
                         <span class="h-stat-lbl">STREAK</span>
                         <span id="dStreak" class="h-stat-val">0</span>
@@ -147,11 +148,10 @@
                         <span class="h-stat-lbl">POINTS</span>
                         <span id="dPoints" class="h-stat-val green">0</span>
                     </div>
-                    <div class="header-stat-divider"></div>
                     <div id="userStickerCase" class="h-sticker-case"></div>
                 </div>
-            
-                <!-- RIGHT: ACTIVE TASK MONITOR -->
+        
+                <!-- RIGHT: LIVE MONITOR -->
                 <div class="uh-active-monitor">
                     <div class="h-active-wrap">
                         <div class="h-active-label">ACTIVE TASK</div>
@@ -163,40 +163,44 @@
                         <div class="ma-btn" onclick="adminTaskAction(currId, 'skip')">»</div>
                     </div>
                 </div>
+                <div id="dJoined" class="uh-joined">SLAVE SINCE: --/--/--</div>
             </div>
-
+        
+            <!-- 2. THE SPLIT VIEW (Chat & Actions) -->
             <div class="split">
+                <!-- CHAT (Left side) -->
                 <div class="chat-panel">
                     <div class="cp-head">ENCRYPTED FEED</div>
                     <div class="c-body" id="adminChatBox"></div>
                     <div class="c-foot">
-                        <div id="plusMenu" class="d-none">
-                            <label class="menu-btn" for="adminMediaInput">
-                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
-                                Photo/Video
-                            </label>
-                        </div>
                         <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden-input" onchange="handleAdminUpload(this)">
                         <button class="btn-plus" onclick="document.getElementById('adminMediaInput').click()">+</button>
                         <input type="text" id="adminInp" class="inp" placeholder="Command..." onkeypress="if(event.key==='Enter') sendMsg()">
                         <button onclick="sendMsg()" class="btn-send">></button>
                     </div>
                 </div>
-
+        
+                <!-- ACTION ZONE (Right side) -->
                 <div class="action-panel">
-                    <!-- THE TASK QUEUE BOX -->
-                    <div class="task-queue-box">
+                    <!-- PENDING REVIEW (Red Section - RESTORED) -->
+                    <div id="userQueueSec" style="display:none; flex-direction:column; gap:8px; margin-bottom:15px;">
+                        <!-- Red Pending Cards land here -->
+                    </div>
+        
+                    <!-- POINTS CONTROL -->
+                    <div class="sec-title">ADJUST STATUS</div>
+                    <div id="pointsGrid" class="pts-grid"></div>
+        
+                    <!-- TASK QUEUE (Blue Section) -->
+                    <div class="task-queue-box" style="margin-top:15px;">
                         <div class="sec-title clickable-title" onclick="openTaskGallery()" style="color:var(--blue);">TASK QUEUE</div>
-                        
-                        <!-- THIS ID IS CRITICAL - IF THIS IS MISSING, TASKS DON'T LOAD -->
                         <div id="qListContainer" class="q-list-vertical"></div>
-                        
-                        <div class="q-input-row">
+                        <div class="q-input-row" style="margin-top:8px;">
                             <input type="text" id="qInput" class="q-input" placeholder="Add task...">
                             <button class="q-add-btn" onclick="addQueueTask()">+</button>
                         </div>
                     </div>
-                
+        
                     <!-- HISTORY -->
                     <div style="margin-top:20px;">
                         <div class="sec-title">HISTORY</div>
