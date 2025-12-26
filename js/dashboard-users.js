@@ -8,6 +8,7 @@ import { getOptimizedUrl, clean, raw, formatTimer } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; 
 
 // --- STABILITY CACHE (Prevents the 4-second shuffle jump) ---
+let expandedTaskTexts = new Set();
 let cachedFillers = [];
 let fillerUserId = null;
 
@@ -190,16 +191,16 @@ export function updateTaskQueue(u) {
     listContainer.innerHTML = displayTasks.map((t, idx) => {
         const isPersonal = idx < personalTasks.length;
         const niceText = clean(t);
+        const isExpanded = expandedTaskTexts.has(niceText);
         return `
-            <div class="compact-task-card ${isPersonal ? 'direct-order' : 'filler-task'}">
+            <div class="compact-task-card ${isPersonal ? 'direct-order' : 'filler-task'} ${isExpanded ? 'is-expanded' : ''}">
                 <div class="dr-card-header">
                     <span class="mirror-icon">${isPersonal ? '★' : ''}</span>
                     ${isPersonal ? `<span class="q-tag">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444;">SYSTEM</span>'}
                     ${isPersonal ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : '<span></span>'}
                 </div>
                 <div class="dr-serif-text">${niceText}</div>
-                <div class="dr-mirror-arrow" onclick="this.closest('.compact-task-card').classList.toggle('is-expanded')">▼</div>
-            </div>`;
+                <div class="dr-mirror-arrow" onclick="event.stopPropagation(); toggleMainTaskExpansion(this, '${raw(niceText)}')">▼</div>`;
     }).join('');
 }
 
@@ -319,3 +320,16 @@ window.openQueueTask = openQueueTask;
 window.deleteQueueItem = deleteQueueItem;
 window.addQueueTask = addQueueTask;
 window.updateDetail = updateDetail;
+
+window.toggleMainTaskExpansion = function(btn, taskText) {
+    const card = btn.closest('.compact-task-card');
+    if (!card) return;
+
+    if (expandedTaskTexts.has(taskText)) {
+        expandedTaskTexts.delete(taskText);
+        card.classList.remove('is-expanded');
+    } else {
+        expandedTaskTexts.add(taskText);
+        card.classList.add('is-expanded');
+    }
+};
