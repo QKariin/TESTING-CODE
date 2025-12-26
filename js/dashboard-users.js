@@ -1,21 +1,35 @@
+// Dashboard User Management
+// User detail display, task queue management, and user interactions
+
 import { 
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
     availableDailyTasks, 
     setCooldownInterval, setHistLimit, setLastHistoryJson 
-} from './dashboard-state.js'; // <--- IT MUST BE DASHBOARD-STATE.JS
-
+} from './dashboard-state.js';
 import { getOptimizedUrl, clean, raw, formatTimer } from './dashboard-utils.js';
-import { Bridge } from './bridge.js'; 
+import { Bridge } from './bridge.js';
 
-// --- STABILITY CACHE (Prevents the 4-second shuffle jump) ---
-let expandedTaskTexts = new Set();
+// --- STEP 2: EXPANSION MEMORY ---
+// This keeps tasks open during the 4-second Wix refresh
+const mainDashboardExpandedTasks = new Set();
+
+// --- BIND TO WINDOW IMMEDIATELY ---
+window.modPoints = modPoints;
+window.loadMoreHist = loadMoreHist;
+window.openQueueTask = openQueueTask;
+window.deleteQueueItem = deleteQueueItem;
+window.addQueueTask = addQueueTask;
+window.updateDetail = updateDetail;
+window.toggleMainTaskExpansion = toggleMainTaskExpansion; // NEW
+
+// --- STABILITY CACHE ---
 let cachedFillers = [];
 let fillerUserId = null;
 
 export function updateDetail(u) {
     if (!u) return;
     
-    // Update online status
+    // 1. Online Status
     const now = Date.now();
     const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
     let diff = 999999;
@@ -40,17 +54,11 @@ export function updateDetail(u) {
         }
     }
     
-    // Update application button
+    // 2. Application Button
     const appBtn = document.getElementById('btnAppView');
-    if (appBtn) {
-        if (u.application) { 
-            appBtn.style.display = 'block'; 
-        } else { 
-            appBtn.style.display = 'none'; 
-        }
-    }
+    if (appBtn) appBtn.style.display = u.application ? 'block' : 'none';
     
-    // Update basic info
+    // 3. Basic info
     document.getElementById('dName').innerText = u.name;
     document.getElementById('dRank').innerText = u.hierarchy;
     document.getElementById('dPoints').innerText = u.points || 0;
@@ -65,108 +73,61 @@ export function updateDetail(u) {
     const joinedEl = document.getElementById('dJoined');
     if (joinedEl) joinedEl.innerText = `SLAVE SINCE: ${joined}`;
     
-    // Update points grid
+    // 4. Trigger sub-renders
     updatePointsGrid();
-    
-    // Update sticker case
     updateStickerCase(u);
-    
-    // Update review queue
     updateReviewQueue(u);
-    
-    // Update active task
     updateActiveTask(u);
-    
-    // Update task queue (STABLE 10 LOGIC)
-    updateTaskQueue(u);
-    
-    // Update history
+    updateTaskQueue(u); // Refreshes every 4s
     updateHistory(u);
 }
 
 function updatePointsGrid() {
     const ptsGrid = document.getElementById('pointsGrid');
     if (!ptsGrid) return;
-    
-    let html = `
-        <button class="q-btn q-minus" onclick="modPoints(-10)">-10</button>
-        <button class="q-btn q-minus" onclick="modPoints(-50)">-50</button>
-    `;
-    
-    const source = (stickerConfig.length > 0) ? stickerConfig : [
-        { val: 10, url: '' }, 
-        { val: 20, url: '' }
-    ];
-    
+    let html = `<button class="q-btn q-minus" onclick="modPoints(-10)">-10</button>
+                <button class="q-btn q-minus" onclick="modPoints(-50)">-50</button>`;
+    const source = (stickerConfig.length > 0) ? stickerConfig : [{ val: 10, url: '' }, { val: 20, url: '' }];
     source.forEach(s => {
-        html += `
-            <div class="q-btn-img" onclick="modPoints(${s.val})">
-                ${s.url ? 
-                    `<img src="${getOptimizedUrl(s.url, 50)}">` : 
-                    `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#444;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`
-                }
-                <span>+${s.val}</span>
-            </div>
-        `;
+        html += `<div class="q-btn-img" onclick="modPoints(${s.val})">
+                ${s.url ? `<img src="${getOptimizedUrl(s.url, 50)}">` : `<svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#444;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`}
+                <span>+${s.val}</span></div>`;
     });
-    
     ptsGrid.innerHTML = html;
 }
 
 function updateStickerCase(u) {
-    const stickerContainer = document.getElementById('userStickerCase');
-    if (!stickerContainer) return;
-    
-    if (u.stickers && u.stickers.length > 0) {
-        stickerContainer.innerHTML = u.stickers.map(url => 
-            `<div class="my-sticker" title="Awarded"><img src="${getOptimizedUrl(url, 50)}"></div>`
-        ).join('');
-        stickerContainer.style.display = 'flex';
-    } else {
-        stickerContainer.style.display = 'none';
+    const container = document.getElementById('userStickerCase');
+    if (container) {
+        if (u.stickers && u.stickers.length > 0) {
+            container.innerHTML = u.stickers.map(url => `<div class="my-sticker"><img src="${getOptimizedUrl(url, 50)}"></div>`).join('');
+            container.style.display = 'flex';
+        } else { container.style.display = 'none'; }
     }
 }
 
 function updateReviewQueue(u) {
     const qSec = document.getElementById('userQueueSec');
     if (!qSec) return;
-    
     if (u.reviewQueue && u.reviewQueue.length > 0) {
         qSec.style.display = 'flex';
-        qSec.innerHTML = `
-            <div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>
-            ${u.reviewQueue.map(t => `
-                <div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false)">
+        qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` + 
+            u.reviewQueue.map(t => `<div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false)">
                     <img src="${getOptimizedUrl(t.proofUrl, 150)}" class="pend-thumb">
-                    <div class="pend-info">
-                        <div class="pend-act">PENDING REVIEW</div>
-                        <div class="pend-txt">${clean(t.text)}</div>
-                    </div>
-                </div>
-            `).join('')}
-        `;
-    } else {
-        qSec.style.display = 'none';
-    }
+                    <div class="pend-info"><div class="pend-act">PENDING</div><div class="pend-txt">${clean(t.text)}</div></div>
+                </div>`).join('');
+    } else { qSec.style.display = 'none'; }
 }
 
 function updateActiveTask(u) {
     if (cooldownInterval) clearInterval(cooldownInterval);
-    
     if (u.activeTask && u.endTime && u.endTime > Date.now()) {
         document.getElementById('dActiveText').innerText = clean(u.activeTask.text);
-        
         const tick = () => {
             const diff = u.endTime - Date.now();
-            if (diff <= 0) {
-                document.getElementById('dActiveTimer').innerText = "00:00";
-                clearInterval(cooldownInterval);
-                setCooldownInterval(null);
-                return;
-            }
+            if (diff <= 0) { document.getElementById('dActiveTimer').innerText = "00:00"; clearInterval(cooldownInterval); return; }
             document.getElementById('dActiveTimer').innerText = formatTimer(diff);
         };
-        
         tick();
         const interval = setInterval(tick, 1000);
         setCooldownInterval(interval);
@@ -176,22 +137,34 @@ function updateActiveTask(u) {
     }
 }
 
-// --- UPDATED: STABLE INFINITE 10 LOGIC ---
+// --- UPDATED RENDERER (STEP 2 INTEGRATED) ---
 export function updateTaskQueue(u) {
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
+
     let personalTasks = u.taskQueue || [];
+    
+    // Stability cache logic
     if (u.memberId !== fillerUserId) {
         fillerUserId = u.memberId;
         if (availableDailyTasks.length > 0) {
-            cachedFillers = [...availableDailyTasks].filter(t => !personalTasks.includes(t)).sort(() => 0.5 - Math.random());
+            cachedFillers = [...availableDailyTasks]
+                .filter(t => !personalTasks.includes(t))
+                .sort(() => 0.5 - Math.random());
         }
     }
-    const displayTasks = [...personalTasks, ...cachedFillers.slice(0, Math.max(0, 10 - personalTasks.length))];
+    
+    const fillersNeeded = Math.max(0, 10 - personalTasks.length);
+    const displayTasks = [...personalTasks, ...cachedFillers.slice(0, fillersNeeded)];
+
     listContainer.innerHTML = displayTasks.map((t, idx) => {
         const isPersonal = idx < personalTasks.length;
         const niceText = clean(t);
-        const isExpanded = expandedTaskTexts.has(niceText);
+        const safeText = raw(niceText);
+        
+        // CHECK MEMORY: Should this row be expanded?
+        const isExpanded = mainDashboardExpandedTasks.has(niceText);
+
         return `
             <div class="compact-task-card ${isPersonal ? 'direct-order' : 'filler-task'} ${isExpanded ? 'is-expanded' : ''}">
                 <div class="dr-card-header">
@@ -200,8 +173,23 @@ export function updateTaskQueue(u) {
                     ${isPersonal ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : '<span></span>'}
                 </div>
                 <div class="dr-serif-text">${niceText}</div>
-                <div class="dr-mirror-arrow" onclick="event.stopPropagation(); toggleMainTaskExpansion(this, '${raw(niceText)}')">▼</div>`;
+                <div class="dr-mirror-arrow" onclick="event.stopPropagation(); toggleMainTaskExpansion(this, '${safeText}')">▼</div>
+            </div>`;
     }).join('');
+}
+
+// THE MEMORY TOGGLE FUNCTION
+export function toggleMainTaskExpansion(btn, taskText) {
+    const card = btn.closest('.compact-task-card');
+    if (!card) return;
+
+    if (mainDashboardExpandedTasks.has(taskText)) {
+        mainDashboardExpandedTasks.delete(taskText);
+        card.classList.remove('is-expanded');
+    } else {
+        mainDashboardExpandedTasks.add(taskText);
+        card.classList.add('is-expanded');
+    }
 }
 
 window.assignFillerTask = function(text) {
@@ -219,44 +207,18 @@ function updateHistory(u) {
     const currentJson = JSON.stringify(u.history || []);
     if (currentJson !== lastHistoryJson || histLimit > 10) {
         setLastHistoryJson(currentJson);
-        
         const hGrid = document.getElementById('userHistoryGrid');
         if (!hGrid) return;
-        
-        const cleanHist = (u.history || []).filter(h => 
-            h.status !== 'fail' && (!h.text || !h.text.toUpperCase().includes('SKIPPED'))
-        );
-        
+        const cleanHist = (u.history || []).filter(h => h.status !== 'fail' && (!h.text || !h.text.toUpperCase().includes('SKIPPED')));
         let historyToShow = cleanHist.slice(0, histLimit);
+        const loadBtn = document.getElementById('loadMoreHist');
+        if (loadBtn) loadBtn.style.display = (cleanHist.length > histLimit) ? 'block' : 'none';
         
-        const loadMoreBtn = document.getElementById('loadMoreHist');
-        if (loadMoreBtn) {
-            loadMoreBtn.style.display = (cleanHist.length > histLimit) ? 'block' : 'none';
-        }
-        
-        if (historyToShow.length > 0) {
-            hGrid.innerHTML = historyToShow.map(h => {
-                const cls = h.status === 'approve' ? 'hb-app' : 'hb-rej';
-                const statusTxt = h.status === 'approve' ? 'APPROVED' : 'REJECTED';
-                const thumb = h.proofUrl ? getOptimizedUrl(h.proofUrl, 150) : '';
-                const isVid = h.proofType === 'video' || (h.proofUrl && h.proofUrl.endsWith('.mp4'));
-                
-                return `
-                    <div class="h-card-mini" onclick='openModal(null, null, "${h.proofUrl||''}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
-                        ${thumb ? 
-                            (isVid ? 
-                                `<video src="${h.proofUrl}" class="hc-img" muted></video>` : 
-                                `<img src="${thumb}" class="hc-img">`
-                            ) : 
-                            `<div style="width:100%;height:100%;background:#222;display:flex;align-items:center;justify-content:center;color:#666;font-size:0.5rem;">TEXT</div>`
-                        }
-                        <div class="h-badge ${cls}">${statusTxt}</div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            hGrid.innerHTML = '<div style="color:#444; font-size:0.8rem; grid-column:1/-1;">No history yet.</div>';
-        }
+        hGrid.innerHTML = historyToShow.length > 0 ? historyToShow.map(h => {
+            const cls = h.status === 'approve' ? 'hb-app' : 'hb-rej';
+            return `<div class="h-card-mini" onclick='openModal(null, null, "${h.proofUrl||''}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
+                <img src="${getOptimizedUrl(h.proofUrl,150)}" class="hc-img"><div class="h-badge ${cls}">${h.status.toUpperCase()}</div></div>`;
+        }).join('') : '<div style="color:#444; font-size:0.7rem;">No history.</div>';
     }
 }
 
@@ -265,25 +227,18 @@ export function modPoints(amount) {
     window.parent.postMessage({ type: "adjustPoints", memberId: currId, amount: amount }, "*");
 }
 
-export function loadMoreHist() {
-    setHistLimit(histLimit + 10);
-    const u = users.find(x => x.memberId === currId);
-    if (u) updateDetail(u);
-}
+export function loadMoreHist() { setHistLimit(histLimit + 10); const u = users.find(x => x.memberId === currId); if (u) updateDetail(u); }
 
 export function openQueueTask(memberId, index) {
     const u = users.find(x => x.memberId === memberId);
-    if (u && u.taskQueue && u.taskQueue[index]) {
-        const task = u.taskQueue[index];
-        import('./dashboard-modals.js').then(({ openModal }) => {
-            openModal(null, null, '', 'text', task, true, 'QUEUE_TASK');
-        });
+    if (u?.taskQueue?.[index]) {
+        import('./dashboard-modals.js').then(m => m.openModal(null, null, '', 'text', u.taskQueue[index], true, 'QUEUE_TASK'));
     }
 }
 
 export function deleteQueueItem(memberId, index) {
     const u = users.find(x => x.memberId === memberId);
-    if (u && u.taskQueue) {
+    if (u?.taskQueue) {
         u.taskQueue.splice(index, 1);
         fillerUserId = null; 
         window.parent.postMessage({ type: "updateTaskQueue", memberId: memberId, queue: u.taskQueue }, "*");
@@ -294,42 +249,16 @@ export function deleteQueueItem(memberId, index) {
 
 export function addQueueTask() {
     const input = document.getElementById('qInput');
-    if (!input || !currId) return;
-    
-    const taskText = input.value.trim();
-    if (!taskText) return;
-    
+    const txt = input?.value.trim();
+    if (!txt || !currId) return;
     const u = users.find(x => x.memberId === currId);
     if (u) {
         if (!u.taskQueue) u.taskQueue = [];
-        u.taskQueue.push(taskText);
+        u.taskQueue.push(txt);
         fillerUserId = null;
-        
         window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
         Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
-        
         input.value = '';
         updateDetail(u);
     }
 }
-
-// Bindings
-window.modPoints = modPoints;
-window.loadMoreHist = loadMoreHist;
-window.openQueueTask = openQueueTask;
-window.deleteQueueItem = deleteQueueItem;
-window.addQueueTask = addQueueTask;
-window.updateDetail = updateDetail;
-
-window.toggleMainTaskExpansion = function(btn, taskText) {
-    const card = btn.closest('.compact-task-card');
-    if (!card) return;
-
-    if (expandedTaskTexts.has(taskText)) {
-        expandedTaskTexts.delete(taskText);
-        card.classList.remove('is-expanded');
-    } else {
-        expandedTaskTexts.add(taskText);
-        card.classList.add('is-expanded');
-    }
-};
