@@ -207,14 +207,53 @@ function renderWorkshopLibrary(tasks) {
     grid.innerHTML = tasks.map((t, i) => createDirectiveRow(t, i, false)).join('');
 }
 
+// --- UPDATED RENDERER FOR VISUAL MIRRORING ---
+
 function renderWorkshopLiveQueue(u) {
     const list = document.getElementById('armoryLiveQueue');
     if (!list) return;
+
     let personal = u.taskQueue || [];
     let fillers = availableDailyTasks.filter(t => !personal.includes(t)).slice(0, 10 - personal.length);
     let fullList = [...personal, ...fillers];
-    list.innerHTML = fullList.map((t, i) => createDirectiveRow(t, i, i < personal.length)).join('');
+
+    list.innerHTML = fullList.map((t, i) => createMirroredCard(t, i, i < personal.length)).join('');
 }
+
+function renderWorkshopLibrary(tasks) {
+    const grid = document.getElementById('glassTaskGrid');
+    if (!grid) return;
+    // Right side uses the same cards but without the Queen Badge
+    grid.innerHTML = tasks.map((t, i) => createMirroredCard(t, i, false, true)).join('');
+}
+
+function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
+    const niceText = clean(task);
+    const safeText = raw(niceText);
+    const num = (index + 1).toString().padStart(2, '0');
+    
+    return `
+        <div class="q-item-line ${isActiveOrder ? 'direct-order' : (isLibrary ? 'armory-item' : 'filler')}">
+            <div class="q-idx" style="font-size:0.7rem; color:#444; width:25px;">${num}</div>
+            
+            <div class="dr-text-wrapper" style="flex:1; min-width:0;">
+                ${isActiveOrder ? `<span class="q-badge-queen">QUEEN ORDER</span>` : ''}
+                <div class="q-txt-line">${niceText}</div>
+                ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">ENFORCE</div>` : ''}
+            </div>
+
+            <!-- THE ARROW -->
+            <div class="q-expand-arrow" onclick="event.stopPropagation(); toggleTaskExpansion(this)">▼</div>
+        </div>
+    `;
+}
+
+window.toggleTaskExpansion = function(btn) {
+    const row = btn.closest('.q-item-line');
+    if (row) {
+        row.classList.toggle('expanded');
+    }
+};
 
 function createDirectiveRow(task, index, isActiveOrder) {
     const niceText = clean(task);
