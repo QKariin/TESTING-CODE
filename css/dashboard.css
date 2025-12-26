@@ -373,17 +373,13 @@ body {
 /* 1. The Slave-Style Card (The Mirror) */
 .mirror-card {
     display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    padding: 15px;
-    background: rgba(15, 15, 15, 0.95);
+    flex-direction: column; /* Stack header over text */
+    padding: 8px 12px; /* Tight padding */
+    background: rgba(10, 10, 10, 0.95);
     border: 1px solid #222;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    min-height: 90px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    transition: 0.2s;
 }
 
 /* My Personal Orders: Pink Glow & Solid */
@@ -401,16 +397,25 @@ body {
 
 /* 2. High-Class Typography (Serif) */
 .dr-serif-text {
-    flex: 1;
-    font-family: 'Georgia', 'Times New Roman', serif;
-    font-size: 1.05rem;
-    line-height: 1.5;
-    color: #ddd;
+    font-family: 'Georgia', serif;
+    font-size: 0.75rem; /* SMALL FONT */
+    line-height: 1;
+    color: #aaa;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Limit to 3 lines initially */
+    -webkit-line-clamp: 2; /* Exactly 2 lines */
     -webkit-box-orient: vertical;
     overflow: hidden;
-    transition: all 0.3s ease;
+}
+
+/* THE TOP LINE: Star, Badge, X */
+.dr-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #1a1a1a;
+    padding-bottom: 4px;
 }
 
 /* EXPANSION: Show everything when arrow is clicked */
@@ -421,20 +426,23 @@ body {
 
 /* 3. The Expand Arrow (Functional) */
 .dr-mirror-arrow {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 0.5rem;
+    color: #333;
     cursor: pointer;
-    border: 1px solid #333;
-    border-radius: 50%;
-    color: #666;
-    font-size: 0.6rem;
-    transition: 0.3s;
-    flex-shrink: 0;
+    text-align: center;
     margin-top: 2px;
 }
+
+/* The Close/Delete X */
+.dr-delete-x {
+    color: #444;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: 0.2s;
+}
+.dr-delete-x:hover { color: var(--red); }
+
 
 .dr-mirror-arrow:hover {
     border-color: var(--blue);
