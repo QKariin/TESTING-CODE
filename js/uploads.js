@@ -51,21 +51,33 @@ export async function handleEvidenceUpload(input) {
 
 export async function handleProfileUpload(input) {
     if (input.files && input.files[0]) {
+        const file = input.files[0];
         const fd = new FormData();
-        fd.append('file', input.files[0]);
-        fd.append('upload_preset', CONFIG.UPLOAD_PRESET);
-        
+        fd.append("file", file);
+
         try {
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUD_NAME}/image/upload`, {
-                method: 'POST',
-                body: fd
-            });
-            
+            const res = await fetch(
+                `https://api.bytescale.com/v2/accounts/${CONFIG.ACCOUNT_ID}/uploads/form_data?path=/profile`,
+                {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${CONFIG.API_KEY}` },
+                    body: fd
+                }
+            );
+
+            if (!res.ok) {
+                console.error("Profile upload failed");
+                return;
+            }
+
             const d = await res.json();
-            if (d.secure_url) {
+
+            if (d.files && d.files[0] && d.files[0].fileUrl) {
+                const finalUrl = d.files[0].fileUrl;
+
                 window.parent.postMessage({
                     type: "UPDATE_PROFILE_PIC",
-                    url: d.secure_url
+                    url: finalUrl
                 }, "*");
             }
         } catch (err) {
