@@ -17,7 +17,32 @@ export function getOptimizedUrl(url, width = 400) {
 
 export function clean(str) {
     if (!str) return "";
-    return str.replace(/[<>]/g, '').substring(0, 100);
+    
+    let text = str;
+
+    // 1. If it's a JSON object (common in Wix), extract the text
+    if (typeof str === 'object') {
+        text = str.text || str.title || str.task || JSON.stringify(str);
+    }
+
+    // 2. If it's a string that looks like JSON, try to parse it
+    if (typeof text === 'string' && text.startsWith('{')) {
+        try {
+            const parsed = JSON.parse(text);
+            text = parsed.text || parsed.title || parsed.task || text;
+        } catch (e) { /* Not JSON, carry on */ }
+    }
+
+    // 3. Remove System Tags like [CMD:...] or [TASK]
+    if (typeof text === 'string') {
+        text = text.replace(/\[.*?\]/g, ''); // Removes anything inside brackets []
+        text = text.replace(/^(CMD:|TASK:|TEXT:)/i, ''); // Removes prefixes like CMD: or TASK:
+        
+        // 4. Final sanitization
+        text = text.replace(/[<>]/g, '').trim();
+    }
+
+    return text.substring(0, 100);
 }
 
 export function raw(str) {
