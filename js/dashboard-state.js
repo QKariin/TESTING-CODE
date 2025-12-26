@@ -80,3 +80,7 @@ export function setNewbieImmunity(immunity) { newbieImmunity = immunity; }
 
 export function setMediaRecorder(recorder) { mediaRecorder = recorder; }
 export function setAudioChunks(chunks) { audioChunks = chunks; }
+
+// --- ARMORY STATE ---
+export let armorySearchQuery = "";
+export function setArmorySearchQuery(q) { armorySearchQuery = q; }
