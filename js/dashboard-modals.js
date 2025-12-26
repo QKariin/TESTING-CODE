@@ -237,19 +237,18 @@ function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
     const u = users.find(x => x.memberId === currId);
 
     return `
-        <div class="compact-task-card ${isActiveOrder ? 'direct-order' : (isLibrary ? '' : 'filler-task')}">
-            <div class="dr-card-header">
-                <span class="mirror-icon">${isActiveOrder ? '★' : ''}</span>
-                ${isActiveOrder ? `<span class="q-tag">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444;">SYSTEM</span>'}
-                ${!isLibrary && isActiveOrder ? `<span class="dr-delete-x" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${index}); openTaskGallery()">&times;</span>` : '<span></span>'}
-            </div>
-            <div class="dr-serif-text">${niceText}</div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')"><span>⚡</span> ENFORCE</div>` : '<div></div>'}
-                <div class="dr-mirror-arrow" onclick="toggleTaskExpansion(this)">▼</div>
-            </div>
-        </div>`;
-}
+        <div class="q-item-line ${isActiveOrder ? 'direct-order' : (isLibrary ? '' : 'filler-task')} ${isExpanded ? 'is-expanded' : ''}">
+        <div class="dr-card-header">
+            <span class="q-handle">${isActiveOrder ? '★' : ''}</span>
+            ${isActiveOrder ? `<span class="q-badge-queen">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444;">SYSTEM</span>'}
+            ${!isLibrary && isActiveOrder ? `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${index}); openTaskGallery()">&times;</span>` : '<span></span>'}
+        </div>
+        <div class="q-txt-line">${niceText}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')"><span>⚡</span> ENFORCE</div>` : '<div></div>'}
+            <div class="dr-mirror-arrow" onclick="toggleTaskExpansion(this, '${safeText}')">▼</div>
+        </div>
+    </div>`;
 
 export function toggleTaskExpansion(btn, taskText) {
     const card = btn.closest('.compact-task-card');
