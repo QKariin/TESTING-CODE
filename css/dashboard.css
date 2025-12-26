@@ -1,16 +1,17 @@
 /* Dashboard CSS - Complete Styles */
-html {
-    font-size: 12px !important; 
+html, body {
+    font-size: 12px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    background: var(--bg) !important; /* Forces the very bottom layer to be black */
+    overflow-x: hidden;     
 }
 /* --- CORE THEME --- */
 :root { 
     --bg: #050505; --panel: #0a0a0a; --border: #333; --pink: #ff00de; --green: #39ff14; 
     --red: #ff003c; --blue: #00f3ff; --yellow: #ffd700; --grey: #888888; 
-}
-
-body { 
-    background: var(--bg); font-family: 'Orbitron'; color: white; margin: 0; 
-    min-height: 100dvh; width: 100vw; overflow-y: auto; 
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; scrollbar-width: none; } 
