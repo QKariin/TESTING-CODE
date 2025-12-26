@@ -31,28 +31,39 @@ export function getOptimizedUrl(url, width = 400) {
 }
 
 export function clean(str) {
-    if (str === null || str === undefined) return "";
+    if (!str) return "";
     
-    let target = str;
+    let text = str;
 
-    // Detect if Wix sent a JSON string
-    if (typeof target === 'string' && (target.startsWith('{') || target.startsWith('['))) {
-        try { target = JSON.parse(target); } catch (e) { }
+    // 1. If Wix sent an object, grab the text inside
+    if (typeof str === 'object') {
+        text = str.text || str.task || str.title || str.value || JSON.stringify(str);
     }
 
-    // If it's an array, take the first item
-    if (Array.isArray(target)) target = target[0];
-
-    // If it's an object, find the text
-    if (typeof target === 'object' && target !== null) {
-        target = target.text || target.task || target.value || target.label || JSON.stringify(target);
+    // 2. If it's a string but looks like JSON, unwrap it
+    if (typeof text === 'string' && text.includes('{')) {
+        try {
+            const parsed = JSON.parse(text);
+            text = parsed.text || parsed.task || parsed.title || text;
+        } catch (e) { 
+            // If it's not valid JSON, we manually strip curly braces
+            text = text.replace(/[{}"]/g, ''); 
+        }
     }
 
-    let finalString = target.toString();
+    // 3. REMOVE THE "Formatting Shit"
+    let finalString = text.toString();
     
-    // Remove bracket commands [LIKE_THIS]
+    // Remove anything in brackets [CMD:123] or [TASK]
     finalString = finalString.replace(/\[.*?\]/g, ''); 
+    
+    // Remove prefixes like "text:", "task:", "value:" that Wix adds
+    finalString = finalString.replace(/^(text|task|value|title|description):/i, '');
+    
+    // Remove leftover quotes and backslashes
+    finalString = finalString.replace(/["\\]/g, '');
 
+    // 4. Final safety clean
     return finalString.replace(/[<>]/g, '').trim().substring(0, 100);
 }
 
