@@ -16,6 +16,8 @@ import { toggleMobStats } from './dashboard-utils.js';
 // --- 3. SYSTEM & BRIDGE IMPORTS ---
 import { Bridge } from './bridge.js';
 import './dashboard-modals.js'; // This wakes up the Command Armory
+import './dashboard-navigation.js';
+
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
