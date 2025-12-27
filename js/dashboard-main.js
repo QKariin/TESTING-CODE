@@ -24,15 +24,15 @@ import './dashboard-navigation.js';
 document.addEventListener('DOMContentLoaded', function() {
     
     // --- 1. AUDIO WAKE-UP (Priming the engine so notifications work) ---
+    // --- 1. AUDIO WAKE-UP ---
     document.addEventListener('click', () => {
-        const sfx = document.getElementById('sfx-notify');
+        const sfx = document.getElementById('msgSound'); // Updated ID
         if (sfx) {
-            // Play and immediately pause to "unlock" audio for the session
             sfx.play().then(() => {
                 sfx.pause();
                 sfx.currentTime = 0;
-                console.log("Audio Engine Primed");
-            }).catch(e => console.log("Audio wait..."));
+                console.log("Audio Engine Ready: msgSound");
+            }).catch(e => console.log("Audio blocked - click again."));
         }
     }, { once: true });
 
