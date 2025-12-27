@@ -5,8 +5,8 @@ const CACHE_NAME = "ecosystem-pwa-v1";
 const OFFLINE_ASSETS = [
   "/",
   "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png"
+  "/icons/collar-192.png",
+  "/icons/collar-512.png"
 ];
 
 // Install event
