@@ -38,7 +38,7 @@ html, body {
 .sb-dash-btn { padding: 15px; border-bottom: 1px solid #222; text-align: center; font-weight: 900; letter-spacing: 3px; color: white; cursor: pointer; background: #111; font-size: 1rem; flex-shrink: 0; transition: 0.2s; }
 .sb-dash-btn:hover { background: #222; color: var(--pink); }
 .sb-head { padding: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: center; background: transparent; font-weight: bold; letter-spacing: 1px; color: #666; font-size: 0.8rem; font-family: 'Rajdhani'; flex-shrink: 0; }
-.user-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.user-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; color: #ffffff !important; gap: 6px; }
 
 /* USER ITEMS */
 .user-list.focus-mode .u-item.active { background: linear-gradient(90deg, #111 0%, #000 100%) !important; transform: scale(1.05) translateX(5px); z-index: 100; box-shadow: 0 5px 30px rgba(0,0,0,1); border-color: var(--pink); }
