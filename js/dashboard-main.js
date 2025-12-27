@@ -80,18 +80,21 @@ window.addEventListener("message", async (event) => {
     }
     
     else if (data.type === "updateChat") {
+        // 1. Draw the messages in the chat box
         renderChat(data.messages || []);
         
         const u = users.find(x => x.memberId === data.memberId);
+        
+        // 2. Only update the "Clock" if there are actual messages
         if (u && data.messages && data.messages.length > 0) {
-            // Get the REAL time the last message was created
+            // Get the REAL time from the very last message in the list
             const lastMsg = data.messages[data.messages.length - 1];
-            const msgTime = new Date(lastMsg._createdDate).getTime();
+            const realMsgTime = new Date(lastMsg._createdDate).getTime();
             
-            u.lastMessageTime = msgTime;
+            // Set the user's last message time to the REAL database time
+            u.lastMessageTime = realMsgTime;
 
-            // Only redraw the sidebar if it's NOT the person we are already looking at
-            // This prevents the person you just clicked from jumping to #1
+            // 3. Only trigger a Sidebar jump if it's NOT the person we are currently viewing
             if (u.memberId !== currId) {
                 renderSidebar(); 
             }
