@@ -145,8 +145,14 @@ function renderUserIcons(u) {
 }
 
 function hasUnreadMessage(u) {
+    // 1. If I am currently viewing this person, the icon must be grey
+    if (u.memberId === currId) return false;
+
+    // 2. Otherwise, check the last message time against the last click time
     const readTime = localStorage.getItem('read_' + u.memberId);
     if (!readTime) return u.lastMessageTime > 0;
+    
+    // If the message is newer than the last time I clicked the user, light it up
     return u.lastMessageTime > parseInt(readTime);
 }
 
