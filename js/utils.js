@@ -44,6 +44,20 @@ export function triggerSound(id) {
     }
 }
 
+export function unlockAudio() {
+    const audios = document.querySelectorAll("audio");
+    audios.forEach(a => {
+        a.play().then(() => {
+            a.pause();
+            a.currentTime = 0;
+        }).catch(() => {});
+    });
+
+    // Remove listener after unlocking
+    window.removeEventListener("click", unlockAudio);
+    window.removeEventListener("touchstart", unlockAudio);
+}
+
 // RESTORED: Full HTML cleaning with line-break handling and symbol decoding
 export function cleanHTML(html) {
     if(!html) return "";

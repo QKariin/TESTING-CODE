@@ -195,7 +195,8 @@ function updateHistory(u) {
         setLastHistoryJson(currentJson);
         const hGrid = document.getElementById('userHistoryGrid');
         if (!hGrid) return;
-        const cleanHist = (u.history || []).filter(h => h.status !== 'fail' && (!h.text || !h.text.toUpperCase().includes('SKIPPED')));
+        //const cleanHist = (u.history || []).filter(h => h.status !== 'fail' && (!h.text || !h.text.toUpperCase().includes('SKIPPED')));
+        const cleanHist = (u.history || []).filter(h => h.status && h.status !== 'fail' && (!h.text || !h.text.toUpperCase().includes('SKIPPED')));
         let historyToShow = cleanHist.slice(0, histLimit);
         const loadBtn = document.getElementById('loadMoreHist');
         if (loadBtn) loadBtn.style.display = (cleanHist.length > histLimit) ? 'block' : 'none';

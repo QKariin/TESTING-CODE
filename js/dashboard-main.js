@@ -5,6 +5,7 @@ import {
     setUsers, setGlobalQueue, setGlobalTributes, setAvailableDailyTasks, 
     setQueenContent, setStickerConfig, setBroadcastPresets, setTimerInterval
 } from './dashboard-state.js';
+import { unlockAudio } from './utils.js';   
 
 // --- 2. MODULE IMPORTS ---
 import { renderSidebar } from './dashboard-sidebar.js';
@@ -57,6 +58,9 @@ document.addEventListener('DOMContentLoaded', function() {
 Bridge.listen((data) => {
     window.postMessage(data, "*"); 
 });
+
+window.addEventListener("click", unlockAudio);
+window.addEventListener("touchstart", unlockAudio);
 
 // Main message listener for communication with Wix backend
 window.addEventListener("message", async (event) => {

@@ -3,6 +3,7 @@
 
 import { users, currId, setCurrId } from './dashboard-state.js';
 import { getOptimizedUrl, clean } from './dashboard-utils.js';
+import { triggerSound } from './utils.js';
 
 // --- ADD THESE TWO LINES AT THE TOP ---
 let currentVisualOrder = []; 
@@ -42,6 +43,16 @@ export function renderSidebar() {
         if (hasMsg) {
             currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
             currentVisualOrder.unshift(u.memberId);
+        }
+
+        // --- NEW MESSAGE SOUND LOGIC ---
+        const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
+        const lastSound = parseInt(localStorage.getItem('sound_' + u.memberId) || 0);
+        const isNewMessage = msgTime > lastSound;
+
+        if (isNewMessage) {
+            triggerSound('sfx-notify');
+            localStorage.setItem('sound_' + u.memberId, msgTime);
         }
 
         // B. ENTRANCE: Just logged on (Join BACK of Online group)
