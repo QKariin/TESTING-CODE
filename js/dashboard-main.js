@@ -87,12 +87,17 @@ window.addEventListener("message", async (event) => {
         
         // 2. Only update the "Clock" if there are actual messages
         if (u && data.messages && data.messages.length > 0) {
-            // Get the REAL time from the very last message in the list
             const lastMsg = data.messages[data.messages.length - 1];
             const realMsgTime = new Date(lastMsg._createdDate).getTime();
             
             // Set the user's last message time to the REAL database time
             u.lastMessageTime = realMsgTime;
+
+            // --- THE MISSING LINE: THE HANDSHAKE ---
+            // If I am currently looking at this guy, mark his messages as "Read" in memory
+            if (data.memberId === currId) {
+                localStorage.setItem('read_' + data.memberId, Date.now().toString());
+            }
 
             // 3. Only trigger a Sidebar jump if it's NOT the person we are currently viewing
             if (u.memberId !== currId) {
