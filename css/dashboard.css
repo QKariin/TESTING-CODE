@@ -51,7 +51,7 @@ html, body {
 .notif-dot { position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: var(--pink); border-radius: 50%; border: 2px solid #000; z-index: 10; display: none; box-shadow: 0 0 5px var(--pink); }
 .has-msg .notif-dot { display: block; }
 .u-info { display: flex; flex-direction: column; justify-content: center; flex: 1; overflow: hidden; }
-.u-name { font-size: 0.95rem; font-weight: bold; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.u-name { font-size: 0.95rem; font-weight: color: #ffffff; bold; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .u-seen { font-size: 0.7rem; color: #777; font-family: 'Rajdhani'; margin-top: 3px; text-transform: uppercase; font-weight: bold; }
 .online { color: var(--green); text-shadow: 0 0 5px rgba(57,255,20,0.5); }
 .u-right-col { 
