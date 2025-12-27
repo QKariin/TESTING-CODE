@@ -151,6 +151,7 @@ function hasUnreadMessage(u) {
 }
 
 export function selUser(id) {
+    if (id === currId) return; 
     if (typeof window.parent !== 'undefined') {
         window.parent.postMessage({ type: "selectUser", memberId: id }, "*");
     }
