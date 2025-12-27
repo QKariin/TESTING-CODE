@@ -93,29 +93,23 @@ window.addEventListener("message", async (event) => {
     }
     
     else if (data.type === "updateChat") {
-        // 1. Draw the messages in the chat box
         renderChat(data.messages || []);
-        
         const u = users.find(x => x.memberId === data.memberId);
         
-        // 2. Only proceed if the user exists and there are messages
         if (u && data.messages && data.messages.length > 0) {
             const lastMsg = data.messages[data.messages.length - 1];
-            const realMsgTime = new Date(lastMsg._createdDate).getTime();
+            const msgTime = new Date(lastMsg._createdDate).getTime();
 
-            // --- THE SOUND TRIGGER ---
-            // Trigger sound ONLY if:
-            // 1. realMsgTime is NEWER than the last message we recorded for this user
-            // 2. The sender is NOT the admin
-            // 3. We are NOT currently looking at this slave (don't beep while reading)
-            if (realMsgTime > (u.lastMessageTime || 0) && 
+            // --- THE NEW TRIGGER ---
+            if (msgTime > (u.lastMessageTime || 0) && 
                 lastMsg.sender !== 'admin' && 
                 data.memberId !== currId) {
                 
-                const sfx = document.getElementById('sfx-notify');
+                const sfx = document.getElementById('msgSound'); // Updated ID
                 if (sfx) {
                     sfx.currentTime = 0;
-                    sfx.play().catch(e => console.log("Audio waiting for first click..."));
+                    sfx.volume = 0.5; // Set volume to 50%
+                    sfx.play().catch(e => console.error("Sound failed", e));
                 }
             }
             
