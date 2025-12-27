@@ -20,8 +20,23 @@ import './dashboard-navigation.js';
 
 
 // Initialize dashboard
+// Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
-    // Set up daily code display - SYNCED WITH SLAVE PROFILE SHADOW MATH
+    
+    // --- 1. AUDIO WAKE-UP (Priming the engine so notifications work) ---
+    document.addEventListener('click', () => {
+        const sfx = document.getElementById('sfx-notify');
+        if (sfx) {
+            // Play and immediately pause to "unlock" audio for the session
+            sfx.play().then(() => {
+                sfx.pause();
+                sfx.currentTime = 0;
+                console.log("Audio Engine Primed");
+            }).catch(e => console.log("Audio wait..."));
+        }
+    }, { once: true });
+
+    // --- 2. DAILY ID (Synced Shadow Math) ---
     const today = new Date();
     const m = today.getMonth() + 1; 
     const d = today.getDate();
@@ -30,10 +45,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const codeEl = document.getElementById('adminDailyCode');
     if (codeEl) codeEl.innerText = dayCode;
     
-    // Start timer loop for active tasks
+    // --- 3. START SYSTEMS ---
     startTimerLoop();
-    
-    // Initial render
     renderMainDashboard();
     
     console.log('Dashboard initialized with Daily ID:', dayCode);
@@ -85,21 +98,36 @@ window.addEventListener("message", async (event) => {
         
         const u = users.find(x => x.memberId === data.memberId);
         
-        // 2. Only update the "Clock" if there are actual messages
+        // 2. Only proceed if the user exists and there are messages
         if (u && data.messages && data.messages.length > 0) {
             const lastMsg = data.messages[data.messages.length - 1];
             const realMsgTime = new Date(lastMsg._createdDate).getTime();
+
+            // --- THE SOUND TRIGGER ---
+            // Trigger sound ONLY if:
+            // 1. realMsgTime is NEWER than the last message we recorded for this user
+            // 2. The sender is NOT the admin
+            // 3. We are NOT currently looking at this slave (don't beep while reading)
+            if (realMsgTime > (u.lastMessageTime || 0) && 
+                lastMsg.sender !== 'admin' && 
+                data.memberId !== currId) {
+                
+                const sfx = document.getElementById('sfx-notify');
+                if (sfx) {
+                    sfx.currentTime = 0;
+                    sfx.play().catch(e => console.log("Audio waiting for first click..."));
+                }
+            }
             
-            // Set the user's last message time to the REAL database time
+            // 3. Update the state with the real time
             u.lastMessageTime = realMsgTime;
 
-            // --- THE MISSING LINE: THE HANDSHAKE ---
-            // If I am currently looking at this guy, mark his messages as "Read" in memory
+            // 4. THE HANDSHAKE: If I am currently looking at this guy, mark as "Read" instantly
             if (data.memberId === currId) {
                 localStorage.setItem('read_' + data.memberId, Date.now().toString());
             }
 
-            // 3. Only trigger a Sidebar jump if it's NOT the person we are currently viewing
+            // 5. Only redraw sidebar (for icons/jumps) if it's NOT the person on screen
             if (u.memberId !== currId) {
                 renderSidebar(); 
             }
