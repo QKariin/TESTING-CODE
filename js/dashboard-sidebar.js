@@ -12,15 +12,11 @@ export function renderSidebar() {
     const list = document.getElementById('userList');
     if (!list || !users.length) return;
 
-    // 1. SYNC THE MASTER LIST (No duplicates, no lost users)
+    // 1. SYNC THE MASTER LIST (No duplicates)
     const allDbIds = users.map(u => u.memberId);
-    
-    // Initialize if empty
     if (currentVisualOrder.length === 0) {
         currentVisualOrder = [...allDbIds];
     }
-
-    // Clean up IDs that no longer exist and add new ones
     currentVisualOrder = currentVisualOrder.filter(id => allDbIds.includes(id));
     allDbIds.forEach(id => {
         if (!currentVisualOrder.includes(id)) currentVisualOrder.push(id);
@@ -32,51 +28,50 @@ export function renderSidebar() {
     const isUserOnline = (u) => {
         if (!u || !u.lastSeen) return false;
         const ls = new Date(u.lastSeen).getTime();
-        return (now - ls) / 60000 < 5; // Generous 5-min window to prevent flickering
+        return (now - ls) / 60000 < 5; 
     };
 
-    // 2. CALCULATE POSITION CHANGES
+    // 2. IDENTIFY THE ZONES
+    let onlineGroup = currentVisualOrder.filter(id => isUserOnline(users.find(x => x.memberId === id)));
+    let offlineGroup = currentVisualOrder.filter(id => !onlineGroup.includes(id));
+
+    // 3. APPLY ONLINE MOVEMENT RULES (Teleport & Entrance)
     users.forEach(u => {
         const isOnline = isUserOnline(u);
         const wasOnline = previousOnlineStates[u.memberId];
         const hasMsg = hasUnreadMessage(u);
 
-        // TRIGGER A: NEW MESSAGE (Teleport to #1)
+        // TRIGGER: NEW MESSAGE (Teleport to #1 in the Online Group)
         if (hasMsg) {
-            currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
-            currentVisualOrder.unshift(u.memberId);
+            onlineGroup = onlineGroup.filter(id => id !== u.memberId);
+            onlineGroup.unshift(u.memberId);
         }
 
-        // TRIGGER B: JUST LOGGED ON (Join end of Online section)
+        // TRIGGER: JUST LOGGED ON (Join end of Online group)
         else if (isOnline && (wasOnline === false || wasOnline === undefined)) {
-            currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
-            // Find where the online zone ends
-            let lastOnlineIdx = -1;
-            currentVisualOrder.forEach((id, idx) => {
-                if (isUserOnline(users.find(x => x.memberId === id))) lastOnlineIdx = idx;
-            });
-            currentVisualOrder.splice(lastOnlineIdx + 1, 0, u.memberId);
+            if (!onlineGroup.includes(u.memberId)) {
+                onlineGroup.push(u.memberId);
+            }
         }
-
-        // TRIGGER C: JUST LOGGED OFF (Join top of Offline section)
-        else if (!isOnline && wasOnline === true) {
-            currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
-            // Find where the offline zone starts
-            const firstOfflineIdx = currentVisualOrder.findIndex(id => !isUserOnline(users.find(x => x.memberId === id)));
-            if (firstOfflineIdx === -1) currentVisualOrder.push(u.memberId);
-            else currentVisualOrder.splice(firstOfflineIdx, 0, u.memberId);
-        }
-
-        // Save current state for the next check in 4 seconds
+        
         previousOnlineStates[u.memberId] = isOnline;
     });
 
-    // 3. FINAL SORT ENFORCEMENT (Safety catch: Online must be above Offline)
-    const finalOnline = currentVisualOrder.filter(id => isUserOnline(users.find(x => x.memberId === id)));
-    const finalOffline = currentVisualOrder.filter(id => !finalOnline.includes(id));
-    currentVisualOrder = [...finalOnline, ...finalOffline];
+    // --- 4. THE ELITE OFFLINE SORT (Newest 'Last Seen' at Top) ---
+    const offlineUsersData = offlineGroup.map(id => users.find(x => x.memberId === id));
+    
+    offlineUsersData.sort((a, b) => {
+        const timeA = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+        const timeB = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+        return timeB - timeA; // Most recent first
+    });
 
-    // 4. RENDER HTML
+    const sortedOfflineIds = offlineUsersData.map(u => u.memberId);
+
+    // 5. COMBINE ZONES
+    currentVisualOrder = [...onlineGroup, ...sortedOfflineIds];
+
+    // 6. RENDER HTML
     let html = '';
     currentVisualOrder.forEach(id => {
         const u = users.find(x => x.memberId === id);
@@ -93,6 +88,7 @@ export function renderSidebar() {
         let statusText = "OFFLINE";
         if (online) statusText = "ONLINE";
         else if (ls > 0 && diff < 60) statusText = `${diff} MIN AGO`;
+        else if (ls > 0) statusText = new Date(ls).toLocaleDateString([], {month:'short', day:'numeric'});
 
         html += `
             <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" onclick="selUser('${u.memberId}')">
