@@ -3,6 +3,7 @@
 
 import { currId, lastChatJson, setLastChatJson, ACCOUNT_ID, API_KEY, users } from './dashboard-state.js';
 import { getOptimizedUrl, forceBottom, isAtBottom } from './dashboard-utils.js';
+import { triggerSound } from './utils.js';
 
 
 let lastNotifiedMessageId = null;
@@ -79,6 +80,16 @@ export function renderChat(msgs) {
         setTimeout(forceBottom, 100);
         setTimeout(forceBottom, 500);
     }
+
+    //Play sound for new messages
+    if (!isInitialLoad) {
+        const lastMsg = msgs[msgs.length-1];
+        if (lastMsg.sender === 'user' && lastMsg._id !== lastNotifiedMessageId) {
+            triggerSound('sfx-notify');
+            lastNotifiedMessageId = lastMsg._id;
+        }
+    }
+    isInitialLoad = false;
 }
 
 function renderTributeMessage(message, timeStr) {
