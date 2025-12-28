@@ -585,27 +585,39 @@ html, body {
   .tribute-card-right {
     text-align: left;
   }
-/* STEP: Fix the gap between Buy Coins and the Active Task */
-   /* 1. Force the entire right-side container down */
-    .layout-right {
-        margin-top: 60px !important; /* Huge gap to clear the Buy Coins button */
-        display: block !important;
-        clear: both !important;
-    }
-
-    /* 2. Push the Navigation buttons away from the task */
-    .nav-tabs {
-        margin-bottom: 30px !important;
+/* 1. Break the fixed height cage */
+    .top-section-split {
         display: flex !important;
         flex-direction: column !important;
-        gap: 10px !important;
+        height: auto !important; /* Forces the container to grow instead of squash */
+        min-height: 100vh !important;
+        gap: 0 !important;
     }
 
-    /* 3. Fix the "Active Task" badge so it doesn't float into the buttons */
+    /* 2. Target the Task Area specifically */
+    #viewServingTop {
+        padding-top: 50px !important; /* This creates the physical gap you need */
+        margin-top: 20px !important;
+    }
+
+    /* 3. Push the navigation list away */
+    .layout-left {
+        height: auto !important;
+        flex: none !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* 4. Fix the Green Active Task badge so it doesn't float into "Buy Coins" */
     #activeBadge {
-        position: relative !important; /* Stops it from overlapping elements above */
-        top: 0 !important;
-        margin-bottom: 10px !important;
+        position: absolute !important;
+        top: -12px !important; /* Lower it slightly so it sits on the card line */
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+    }
+
+    /* 5. Target the card directly for extra safety */
+    #taskCard {
+        margin-top: 30px !important;
     }
 }
 
