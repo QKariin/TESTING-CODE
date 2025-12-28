@@ -310,7 +310,8 @@ function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
             </div>
             <div class="q-txt-line">${niceText}</div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')"><span>⚡</span> ENFORCE</div>` : '<div></div>'}
+                // Add the ⚡ icon directly inside the text here:
+                ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">⚡ ENFORCE</div>` : '<div></div>'}
                 <div class="dr-mirror-arrow" onclick="toggleTaskExpansion(this, '${safeText}')">▼</div>
             </div>
         </div>`;
