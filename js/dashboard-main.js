@@ -57,6 +57,15 @@ document.addEventListener('DOMContentLoaded', function() {
 // This tells the dashboard to listen to the "Radio Channel" (Vercel) 
 // exactly like it listens to Wix.
 Bridge.listen((data) => {
+    // --- THE ECHO FILTER ---
+    // List of types we ignore because Wix Velo is already handling them directly.
+    const ignoreList = ["UPDATE_CHAT", "UPDATE_FULL_DATA", "UPDATE_DOM_STATUS", "UPDATE_RULES", "instantUpdate", "instantReviewSuccess"];
+
+    if (ignoreList.includes(data.type)) {
+        return; // Ignore the echo from the dashboard and stop here
+    }
+
+    // Only let actual commands (like 'updateTaskQueue' or 'forceActiveTask') through
     window.postMessage(data, "*"); 
 });
 
