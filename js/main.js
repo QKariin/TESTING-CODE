@@ -72,16 +72,23 @@ function initDomProfile() {
 initDomProfile();
 
 // --- THE DOUBLE MESSAGE FIX ---
+// js/main.js (Slave Side)
 Bridge.listen((data) => {
-    // List of types Wix already sends directly. 
-    // We ignore these from the Bridge to stop the double message echo.
-    const ignoreFromDashboard = ["CHAT_ECHO", "UPDATE_CHAT", "UPDATE_FULL_DATA", "UPDATE_DOM_STATUS"];
+    // IGNORE these so they don't show up twice
+    const ignoreList = [
+        "CHAT_ECHO", 
+        "UPDATE_CHAT", 
+        "UPDATE_FULL_DATA", 
+        "UPDATE_DOM_STATUS", 
+        "instantUpdate", 
+        "instantReviewSuccess"
+    ];
 
-    if (ignoreFromDashboard.includes(data.type)) {
-        return; // Stop here. Do not repeat what Wix already said.
+    if (ignoreList.includes(data.type)) {
+        return; // Stop the echo
     }
 
-    // Only forward actual COMMANDS (like Enforce/Skip) to the logic
+    // Only let through commands like "updateTaskQueue" or "forceActiveTask"
     window.postMessage(data, "*"); 
 });
 
