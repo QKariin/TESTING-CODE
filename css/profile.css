@@ -983,7 +983,7 @@ html, body {
   margin: 0 auto;
   margin-top: 20px;
   padding: 0;
-  padding-bottom: 20px !important; 
+  padding-bottom: 80px !important; /* ADD THIS LINE - The Gap */
   width: 75% !important;
 }
 
