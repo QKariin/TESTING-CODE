@@ -586,15 +586,27 @@ html, body {
     text-align: left;
   }
 /* STEP: Fix the gap between Buy Coins and the Active Task */
+   /* 1. Force the entire right-side container down */
     .layout-right {
-        margin-top: 25px !important; /* This pushes the task area down */
-        padding-top: 10px !important;
+        margin-top: 60px !important; /* Huge gap to clear the Buy Coins button */
+        display: block !important;
+        clear: both !important;
     }
 
-    /* Optional: Give the Buy Coins button a bit of extra space specifically */
-    .btn-foot-bank {
+    /* 2. Push the Navigation buttons away from the task */
+    .nav-tabs {
+        margin-bottom: 30px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    /* 3. Fix the "Active Task" badge so it doesn't float into the buttons */
+    #activeBadge {
+        position: relative !important; /* Stops it from overlapping elements above */
+        top: 0 !important;
         margin-bottom: 10px !important;
-    }  
+    }
 }
 
 /* Animations - Much Cleaner */
