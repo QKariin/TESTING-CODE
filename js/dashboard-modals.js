@@ -282,7 +282,7 @@ function renderWorkshopLiveQueue(u) {
     const list = document.getElementById('armoryLiveQueue');
     if (!list) return;
 
-    let personal = u.taskQueue || [];
+    let personal = (u.taskQueue || []).slice(0, 10);
     if (u.memberId !== workshopUserId) {
         workshopUserId = u.memberId;
         workshopFillers = availableDailyTasks.filter(t => !personal.includes(t)).sort(() => 0.5 - Math.random());
