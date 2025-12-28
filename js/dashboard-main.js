@@ -219,17 +219,18 @@ function startTimerLoop() {
 // Admin task actions
 export function adminTaskAction(memberId, action) {
     if (action === 'send') {
-        // Set mode to 'active' so it skips the 1-10 picker
-        setArmoryTarget("active");
-        window.openTaskGallery("active");
+        // 1. Set mode to active
+        setArmoryTargetMode("active");
+        // 2. Open library (The window. is important to find it)
+        window.openTaskGallery(); 
     } 
     else if (action === 'skip') {
-        // 1. Tell Wix to clear the task (Free skip)
+        // 1. Tell Wix to clear current task (Free skip)
         window.parent.postMessage({ type: "adminTaskAction", memberId: memberId, action: "skip" }, "*");
         
-        // 2. Set mode and open the library to pick the replacement
-        setArmoryTarget("active");
-        window.openTaskGallery("active");
+        // 2. Set mode to active and open library
+        setArmoryTargetMode("active");
+        window.openTaskGallery();
     }
 }
 
