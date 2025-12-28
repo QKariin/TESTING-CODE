@@ -390,6 +390,46 @@ window.executeManualEnforce = function(slot) {
     setTimeout(() => { renderWorkshopLiveQueue(u); }, 300);
 }
 
+// --- WORKSHOP ACTION HANDLERS ---
+
+window.workshopDeleteAction = function(memberId, index) {
+    // 1. Call the delete function (it's global from users.js)
+    if (window.deleteQueueItem) {
+        window.deleteQueueItem(memberId, index);
+        // 2. Find the user and redraw the mirror list instantly
+        const u = users.find(x => x.memberId === memberId);
+        if (u) renderWorkshopLiveQueue(u);
+    }
+};
+
+window.executeManualEnforce = function(slot) {
+    const u = users.find(x => x.memberId === currId);
+    if (!u) return;
+    if (!u.taskQueue) u.taskQueue = [];
+
+    // Surgically insert into the slot you chose
+    u.taskQueue.splice(slot - 1, 0, pendingDirectiveText);
+
+    // Maintain the 10-slot limit
+    if (u.taskQueue.length > 10) u.taskQueue = u.taskQueue.slice(0, 10);
+
+    syncTaskChanges(u);
+    document.getElementById('slotPickerModal').classList.remove('active');
+    setTimeout(() => { renderWorkshopLiveQueue(u); }, 300);
+};
+
+window.fastTopEnforce = function(text) {
+    const u = users.find(x => x.memberId === currId);
+    if (!u) return;
+    if (!u.taskQueue) u.taskQueue = [];
+    
+    u.taskQueue.unshift(text); // Straight to #1
+    if (u.taskQueue.length > 10) u.taskQueue = u.taskQueue.slice(0, 10);
+    
+    syncTaskChanges(u);
+    renderWorkshopLiveQueue(u);
+};
+
 window.fastTopEnforce = function(text) {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
