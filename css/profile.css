@@ -585,40 +585,6 @@ html, body {
   .tribute-card-right {
     text-align: left;
   }
-/* 1. Break the fixed height cage */
-    .top-section-split {
-        display: flex !important;
-        flex-direction: column !important;
-        height: auto !important; /* Forces the container to grow instead of squash */
-        min-height: 100vh !important;
-        gap: 30px !important; /* ADD PROPER SPACING BETWEEN SECTIONS */
-    }
-
-    /* 2. Target the Task Area specifically */
-    #viewServingTop {
-        padding-top: 20px !important; /* Reduce this since we added gap above */
-        margin-top: 0px !important; /* Remove extra margin since gap handles spacing */
-    }
-
-    /* 3. Push the navigation list away */
-    .layout-left {
-        height: auto !important;
-        flex: none !important;
-        margin-bottom: 0px !important; /* Remove since gap handles spacing */
-    }
-
-    /* 4. Fix the Green Active Task badge so it doesn't float into "Buy Coins" */
-    #activeBadge {
-        position: absolute !important;
-        top: -12px !important; /* Lower it slightly so it sits on the card line */
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-    }
-
-    /* 5. Target the card directly for extra safety */
-    #taskCard {
-        margin-top: 30px !important;
-    }
 }
 
 /* Animations - Much Cleaner */
@@ -982,9 +948,7 @@ html, body {
   gap: 8px;
   margin: 0 auto;
   margin-top: 20px;
-  margin-bottom: 50px !important; /* This creates the physical gap */
   padding: 0;
-  padding-bottom: 80px !important; /* ADD THIS LINE - The Gap */
   width: 75% !important;
 }
 
@@ -2495,14 +2459,7 @@ html, body {
     gap: 12px;
   }
   .app-container { width: 80%; max-width: 1600px; padding-top: 60px; }
-  
-  .top-section-split {
-    display: flex !important;
-    flex-direction: column !important;
-    height: auto !important; /* Forces it to grow instead of squash */
-    gap: 20px !important;    /* Adds space between the menu and the task */
-}
-  
+  .top-section-split { flex-direction: row; align-items: flex-start; }
   .layout-left { width: 30%; min-width: 280px; position: sticky; top: 20px; }
   .layout-right { width: 70%; margin-top: 25px; }
 } /* THIS CLOSES DESKTOP */
@@ -2549,4 +2506,3 @@ html, body {
   
   * { box-shadow: none !important; text-shadow: none !important; }
 }
-
