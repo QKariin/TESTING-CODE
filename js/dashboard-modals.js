@@ -35,6 +35,8 @@ window.handleDragOver = handleDragOver;
 window.handleDragEnd = handleDragEnd;
 window.handleDrop = handleDrop;
 
+window.fastTopEnforce = fastTopEnforce;
+window.executeManualEnforce = executeManualEnforce;
 // --- INTERNAL WORKSHOP CACHE (Prevents 4s shuffle) ---
 let workshopFillers = [];
 let workshopUserId = null;
@@ -389,6 +391,49 @@ function syncTaskChanges(user) {
     // Update local Detail view if users.js is loaded
     import('./dashboard-users.js').then(m => m.updateDetail(user));
 }
+
+// --- SLOT PICKER LOGIC ---
+let pendingDirectiveText = ""; // Remembers the task while you pick a slot
+
+export function enforceDirectiveFromArmory(text) {
+    pendingDirectiveText = text;
+    const grid = document.getElementById('slotGrid');
+    if (!grid) return;
+
+    // 1. Build the 1-10 grid of buttons
+    grid.innerHTML = Array.from({length: 10}, (_, i) => i + 1).map(num => 
+        `<div class="slot-btn" onclick="executeManualEnforce(${num})">${num}</div>`
+    ).join('');
+
+    // 2. Open the custom centered modal
+    document.getElementById('slotPickerModal').classList.add('active');
+}
+
+window.executeManualEnforce = function(slot) {
+    const u = users.find(x => x.memberId === currId);
+    if (!u) return;
+
+    if (!u.taskQueue) u.taskQueue = [];
+    // Surgically insert into the slot you chose
+    u.taskQueue.splice(slot - 1, 0, pendingDirectiveText);
+
+    // Keep it at exactly 10
+    if (u.taskQueue.length > 10) u.taskQueue = u.taskQueue.slice(0, 10);
+
+    syncTaskChanges(u);
+    document.getElementById('slotPickerModal').classList.remove('active');
+    setTimeout(() => { renderWorkshopLiveQueue(u); }, 300);
+};
+
+window.fastTopEnforce = function(text) {
+    const u = users.find(x => x.memberId === currId);
+    if (!u) return;
+    if (!u.taskQueue) u.taskQueue = [];
+    u.taskQueue.unshift(text); // No prompt, straight to #1
+    if (u.taskQueue.length > 10) u.taskQueue = u.taskQueue.slice(0, 10);
+    syncTaskChanges(u);
+    renderWorkshopLiveQueue(u);
+};
 
 export function handleDragStart(e, idx) { setDragSrcIndex(idx); e.dataTransfer.effectAllowed = 'move'; e.target.style.opacity = '0.4'; }
 export function handleDragOver(e) { if (e.preventDefault) e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
