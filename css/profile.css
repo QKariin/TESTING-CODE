@@ -585,6 +585,16 @@ html, body {
   .tribute-card-right {
     text-align: left;
   }
+/* STEP: Fix the gap between Buy Coins and the Active Task */
+    .layout-right {
+        margin-top: 25px !important; /* This pushes the task area down */
+        padding-top: 10px !important;
+    }
+
+    /* Optional: Give the Buy Coins button a bit of extra space specifically */
+    .btn-foot-bank {
+        margin-bottom: 10px !important;
+    }  
 }
 
 /* Animations - Much Cleaner */
