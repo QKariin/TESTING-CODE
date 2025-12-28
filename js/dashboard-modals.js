@@ -38,9 +38,6 @@ window.handleDragOver = handleDragOver;
 window.handleDragEnd = handleDragEnd;
 window.handleDrop = handleDrop;
 
-window.fastTopEnforce = fastTopEnforce;
-window.executeManualEnforce = executeManualEnforce;
-
 // --- 1. CORE REVIEW MODAL LOGIC (UNTOUCHED) ---
 
 export function closeModal() {
