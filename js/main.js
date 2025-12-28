@@ -71,10 +71,17 @@ function initDomProfile() {
 }
 initDomProfile();
 
-// Listen to the Ecosystem Bridge (The Radio)
-// This forwards Dashboard commands directly into the Profile logic
+// --- THE DOUBLE MESSAGE FIX ---
 Bridge.listen((data) => {
-    console.log("Bridge Message Received:", data.type);
+    // List of types Wix already sends directly. 
+    // We ignore these from the Bridge to stop the double message echo.
+    const ignoreFromDashboard = ["CHAT_ECHO", "UPDATE_CHAT", "UPDATE_FULL_DATA", "UPDATE_DOM_STATUS"];
+
+    if (ignoreFromDashboard.includes(data.type)) {
+        return; // Stop here. Do not repeat what Wix already said.
+    }
+
+    // Only forward actual COMMANDS (like Enforce/Skip) to the logic
     window.postMessage(data, "*"); 
 });
 
