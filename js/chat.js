@@ -169,6 +169,7 @@ export function sendChatMessage() {
     const input = document.getElementById('chatMsgInput');
     const txt = input?.value.trim();
     if (!txt) return;
+    console.log("Sending chat message:", txt);
     window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: txt }, "*");
     input.value = "";
 }
