@@ -6,7 +6,8 @@ import {
     messageImg, stickerConfig, availableDailyTasks, currId, users,
     setCurrTask, setPendingApproveTask, setSelectedStickerId, setPendingRewardMedia,
     setMessageImg, mediaRecorder, audioChunks, setMediaRecorder, setAudioChunks,
-    ACCOUNT_ID, API_KEY, dragSrcIndex, setDragSrcIndex
+    ACCOUNT_ID, API_KEY, dragSrcIndex, setDragSrcIndex,
+    armoryTarget, setArmoryTarget // <--- ADD THESE TWO HERE
 } from './dashboard-state.js';
 import { getOptimizedUrl, clean, raw } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; 
@@ -208,10 +209,14 @@ export function confirmReward() {
 // --- 3. DIRECTIVE WORKSHOP (MIRROR DESIGN) ---
 
 export function openTaskGallery() {
+    // If you click the "TASK QUEUE" title, it defaults to queue mode.
+    // If you click SEND/SKIP, the mode was already set to active by main.js.
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
+
     const titleEl = document.getElementById('armoryTitle');
     if (titleEl) titleEl.innerText = `${u.name.toUpperCase()} TASKS`;
+
     renderWorkshopLiveQueue(u);
     renderWorkshopLibrary(availableDailyTasks);
     document.getElementById('taskGalleryModal').classList.add('active');
@@ -274,10 +279,44 @@ export function toggleTaskExpansion(btn, taskText) {
 // --- 4. ENFORCE & PICKER LOGIC ---
 
 export function enforceDirectiveFromArmory(text) {
+    // --- IF MODE IS ACTIVE: DIRECT INJECTION (SEND/SKIP FLOW) ---
+    // Fixed: Using armoryTarget to match your state file
+    if (armoryTarget === "active") {
+        const u = users.find(x => x.memberId === currId);
+        if (!u) return;
+
+        // Calculate 24 hours from THIS exact millisecond
+        const newEndTime = Date.now() + (24 * 60 * 60 * 1000);
+
+        // Tell Wix: "Master Override. Ignore the slave, set this as active now."
+        window.parent.postMessage({ 
+            type: "forceActiveTask", 
+            memberId: u.memberId, 
+            taskText: text,
+            endTime: newEndTime
+        }, "*");
+
+        // Instant visual update so you see it work immediately
+        u.activeTask = { text: text };
+        u.endTime = newEndTime;
+        
+        import('./dashboard-users.js').then(m => m.updateDetail(u));
+        closeTaskGallery();
+        
+        // Reset mode back to queue for next time
+        setArmoryTarget("queue");
+        return; 
+    }
+
+    // --- IF MODE IS QUEUE: SHOW SLOT PICKER (NORMAL FLOW) ---
     pendingDirectiveText = text;
     const grid = document.getElementById('slotGrid');
     if (!grid) return;
-    grid.innerHTML = Array.from({length: 10}, (_, i) => i + 1).map(num => `<div class="slot-btn" onclick="executeManualEnforce(${num})">${num}</div>`).join('');
+
+    grid.innerHTML = Array.from({length: 10}, (_, i) => i + 1).map(num => 
+        `<div class="slot-btn" onclick="executeManualEnforce(${num})">${num}</div>`
+    ).join('');
+
     document.getElementById('slotPickerModal').classList.add('active');
 }
 
