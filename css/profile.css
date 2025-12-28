@@ -983,6 +983,7 @@ html, body {
   margin: 0 auto;
   margin-top: 20px;
   padding: 0;
+  padding-bottom: 20px !important; 
   width: 75% !important;
 }
 
