@@ -31,6 +31,52 @@ html, body {
     overflow: hidden;
 }
 
+/* THE NEW BUTTON ON THE RIGHT (Library side) */
+.dr-fast-top-btn {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--pink);
+    color: var(--pink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: 0.2s;
+    background: transparent;
+}
+
+.dr-fast-top-btn:hover {
+    background: var(--pink);
+    color: black;
+    box-shadow: 0 0 10px var(--pink);
+}
+
+/* THE SLOT PICKER BUTTONS */
+.slot-btn {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #111;
+    border: 1px solid #333;
+    color: white;
+    font-family: 'Orbitron';
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.slot-btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: rgba(0, 243, 255, 0.1);
+    transform: scale(1.1);
+}
+
 .sidebar { background: rgba(15,15,15,0.98); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; height: 100% !important; min-height: 0; min-width: 320px; }
 .content { position: relative; height: 100% !important; overflow: hidden; display: flex; flex-direction: column; z-index: 5; background: radial-gradient(circle at center, #111 0%, #000 100%); }
 
@@ -60,6 +106,25 @@ html, body {
     white-space: nowrap; 
     overflow: hidden; 
     text-overflow: ellipsis; 
+}
+
+.dr-enforce-btn {
+    background: transparent !important; /* Transparent background */
+    border: 1px solid var(--blue) !important; /* Blue border */
+    color: var(--blue) !important;
+    display: inline-flex !important; /* Forces icon and text on one line */
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 0.6rem !important;
+    padding: 2px 8px !important;
+    cursor: pointer !important;
+    border-radius: 3px !important;
+    font-family: 'Orbitron', sans-serif !important;
+    white-space: nowrap !important;
+}
+
+.dr-enforce-btn:hover {
+    background: rgba(0, 243, 255, 0.1) !important;
 }
 
 .u-seen { font-size: 0.6rem; color: #777; font-family: 'Rajdhani'; margin-top: 3px; text-transform: uppercase; font-weight: bold; }
