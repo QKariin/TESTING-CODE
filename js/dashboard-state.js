@@ -86,5 +86,5 @@ export let armorySearchQuery = "";
 export function setArmorySearchQuery(q) { armorySearchQuery = q; }
 
 // Tracks where the next 'Enforce' click goes: "queue" or "active"
-export let armoryTargetMode = "queue"; 
-export function setArmoryTargetMode(val) { armoryTargetMode = val; }
+export let armoryTarget = "queue";
+export function setArmoryTarget(val) { armoryTarget = val; }
