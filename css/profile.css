@@ -2494,7 +2494,14 @@ html, body {
     gap: 12px;
   }
   .app-container { width: 80%; max-width: 1600px; padding-top: 60px; }
-  .top-section-split { flex-direction: row; align-items: flex-start; }
+  
+  .top-section-split {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important; /* Forces it to grow instead of squash */
+    gap: 20px !important;    /* Adds space between the menu and the task */
+}
+  
   .layout-left { width: 30%; min-width: 280px; position: sticky; top: 20px; }
   .layout-right { width: 70%; margin-top: 25px; }
 } /* THIS CLOSES DESKTOP */
