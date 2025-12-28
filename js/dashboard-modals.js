@@ -308,7 +308,7 @@ function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
             <div class="dr-card-header">
                 <span class="q-handle">${isActiveOrder ? '★' : ''}</span>
                 ${isActiveOrder ? `<span class="q-badge-queen">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444; font-family:Orbitron;">SYSTEM</span>'}
-                ${!isLibrary && isActiveOrder ? `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${index}); renderWorkshopLiveQueue(users.find(x=>x.memberId===currId))">&times;</span>` : '<span></span>'}
+                ${!isLibrary && isActiveOrder ? `<span class="q-del" onclick="event.stopPropagation(); workshopDeleteAction('${u.memberId}', ${index})">&times;</span>` : '<span></span>'}
             </div>
             
             <!-- TEXT AREA: MICRO SERIF -->
@@ -388,7 +388,7 @@ window.executeManualEnforce = function(slot) {
     syncTaskChanges(u);
     document.getElementById('slotPickerModal').classList.remove('active');
     setTimeout(() => { renderWorkshopLiveQueue(u); }, 300);
-};
+}
 
 window.fastTopEnforce = function(text) {
     const u = users.find(x => x.memberId === currId);
