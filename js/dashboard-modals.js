@@ -247,21 +247,49 @@ function renderWorkshopLiveQueue(u) {
 }
 
 function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
-    const niceText = clean(task), safeText = raw(niceText);
+    const niceText = clean(task);
+    const safeText = raw(niceText);
     const u = users.find(x => x.memberId === currId);
+    
+    // Checks memory so the card stays open/closed correctly
     const isExpanded = workshopExpandedTexts.has(niceText);
+
+    // --- NEW: MODE-BASED BUTTON ---
+    let actionButtonHtml = '<div></div>';
+    if (isLibrary) {
+        if (armoryTarget === "active") {
+            // Button for SEND/SKIP mode
+            actionButtonHtml = `<div class="dr-enforce-btn" style="border-color:var(--green); color:var(--green);" onclick="enforceDirectiveFromArmory('${safeText}')">⚡ SEND NOW</div>`;
+        } else {
+            // Standard ENFORCE button for the 10 slots
+            actionButtonHtml = `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory('${safeText}')">⚡ ENFORCE</div>`;
+        }
+    }
+
     return `
         <div class="q-item-line ${isActiveOrder ? 'direct-order' : (isLibrary ? '' : 'filler-task')} ${isExpanded ? 'is-expanded' : ''}">
+            
+            <!-- TOP ROW: STATUS & DELETE -->
             <div class="dr-card-header">
                 <span class="q-handle">${isActiveOrder ? '★' : ''}</span>
                 ${isActiveOrder ? `<span class="q-badge-queen">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444; font-family:Orbitron;">SYSTEM</span>'}
                 ${!isLibrary && isActiveOrder ? `<span class="q-del" onclick="event.stopPropagation(); workshopDeleteAction('${u.memberId}', ${index})">&times;</span>` : '<span></span>'}
             </div>
+            
+            <!-- TEXT AREA: MICRO SERIF -->
             <div class="q-txt-line">${niceText}</div>
+            
+            <!-- FOOTER: ACTIONS -->
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-top:5px;">
-                ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory('${safeText}')">⚡ ENFORCE</div>` : '<div></div>'}
+                
+                <!-- LEFT: THE ACTION BUTTON (Dynamic) -->
+                ${actionButtonHtml}
+                
                 <div style="display:flex; gap:8px; align-items:center;">
-                    ${isLibrary ? `<div class="dr-fast-top-btn" onclick="fastTopEnforce('${safeText}')">★ 1</div>` : ''}
+                    <!-- RIGHT: THE FAST-TOP SHORTCUT (Only in Queue Mode) -->
+                    ${isLibrary && armoryTarget !== "active" ? `<div class="dr-fast-top-btn" title="Push to Slot #1" onclick="fastTopEnforce('${safeText}')">★ 1</div>` : ''}
+                    
+                    <!-- THE ARROW -->
                     <div class="dr-mirror-arrow" onclick="toggleTaskExpansion(this, '${safeText}')">▼</div>
                 </div>
             </div>
