@@ -982,6 +982,7 @@ html, body {
   gap: 8px;
   margin: 0 auto;
   margin-top: 20px;
+  margin-bottom: 50px !important; /* This creates the physical gap */
   padding: 0;
   padding-bottom: 80px !important; /* ADD THIS LINE - The Gap */
   width: 75% !important;
