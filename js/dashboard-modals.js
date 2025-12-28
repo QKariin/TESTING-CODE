@@ -11,7 +11,10 @@ import {
 import { getOptimizedUrl, clean, raw } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; 
 
-let workshopExpandedTexts = new Set();
+let pendingDirectiveText = ""; 
+let workshopFillers = [];
+let workshopUserId = null;
+const workshopExpandedTexts = new Set();
 
 // --- BIND TO WINDOW IMMEDIATELY (Prevents "Not Defined" errors) ---
 window.closeModal = closeModal;
@@ -37,9 +40,6 @@ window.handleDrop = handleDrop;
 
 window.fastTopEnforce = fastTopEnforce;
 window.executeManualEnforce = executeManualEnforce;
-// --- INTERNAL WORKSHOP CACHE (Prevents 4s shuffle) ---
-let workshopFillers = [];
-let workshopUserId = null;
 
 // --- 1. CORE REVIEW MODAL LOGIC (UNTOUCHED) ---
 
@@ -347,38 +347,6 @@ export function toggleTaskExpansion(btn, taskText) {
     }
 }
 
-export function enforceDirectiveFromArmory(element, text) {
-    const u = users.find(x => x.memberId === currId);
-    if (!u) return;
-
-    // 1. ASK FOR POSITION
-    let slotStr = prompt("ENTER TARGET SLOT (1-10):", "1");
-    let slot = parseInt(slotStr);
-
-    // If you hit cancel or type trash, stop the command
-    if (isNaN(slot) || slot < 1 || slot > 10) {
-        console.log("Directive Cancelled.");
-        return;
-    }
-
-    // 2. INJECT AT SPECIFIC POSITION
-    if (!u.taskQueue) u.taskQueue = [];
-    u.taskQueue.splice(slot - 1, 0, text);
-
-    // 3. MAINTAIN THE 10 (Automatically push the 11th task out)
-    if (u.taskQueue.length > 10) {
-        u.taskQueue = u.taskQueue.slice(0, 10);
-    }
-
-    // 4. VISUAL FEEDBACK
-    element.innerText = "TRANSMITTED";
-    element.style.background = "var(--pink)";
-    element.style.color = "black";
-
-    // 5. SYNC EVERYTHING
-    syncTaskChanges(u);
-    setTimeout(() => { renderWorkshopLiveQueue(u); }, 400);
-}
 
 export function closeTaskGallery() { document.getElementById('taskGalleryModal').classList.remove('active'); }
 
