@@ -333,15 +333,31 @@ export function enforceDirectiveFromArmory(element, text) {
     const u = users.find(x => x.memberId === currId);
     if (!u) return;
 
-    if (u.taskQueue && u.taskQueue.length >= 10) {
-        alert("Maximum load reached. Remove an order first.");
+    // 1. ASK FOR POSITION
+    let slotStr = prompt("ENTER TARGET SLOT (1-10):", "1");
+    let slot = parseInt(slotStr);
+
+    // If you hit cancel or type trash, stop the command
+    if (isNaN(slot) || slot < 1 || slot > 10) {
+        console.log("Directive Cancelled.");
         return;
     }
 
+    // 2. INJECT AT SPECIFIC POSITION
     if (!u.taskQueue) u.taskQueue = [];
-    u.taskQueue.unshift(text); // Force to Priority #1 slot
+    u.taskQueue.splice(slot - 1, 0, text);
 
-    element.innerText = "TRANSMITTING...";
+    // 3. MAINTAIN THE 10 (Automatically push the 11th task out)
+    if (u.taskQueue.length > 10) {
+        u.taskQueue = u.taskQueue.slice(0, 10);
+    }
+
+    // 4. VISUAL FEEDBACK
+    element.innerText = "TRANSMITTED";
+    element.style.background = "var(--pink)";
+    element.style.color = "black";
+
+    // 5. SYNC EVERYTHING
     syncTaskChanges(u);
     setTimeout(() => { renderWorkshopLiveQueue(u); }, 400);
 }
