@@ -103,7 +103,7 @@ export function claimKneelReward(choice) {
 export function updateKneelingStatus() {
     const now = Date.now();
     
-    // --- SYNCED SHADOW MATH ID (THE ONLY CODE THAT MATTERS) ---
+    // --- SYNCED SHADOW MATH ID ---
     const today = new Date();
     const m = today.getMonth() + 1; 
     const day = today.getDate();
@@ -123,17 +123,21 @@ export function updateKneelingStatus() {
     const diffMs = now - lastWorshipTime;
     const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
 
+    // 1. Check if we are in the COOLDOWN period
     if (lastWorshipTime > 0 && diffMs < cooldownMs) {
         setIsLocked(true);
         const minLeft = Math.ceil((cooldownMs - diffMs) / 60000);
         txtMain.innerText = `LOCKED: ${minLeft}m`;
         const progress = 100 - ((diffMs / cooldownMs) * 100);
-        fill.style.transition = "none"; 
+        fill.style.transition = "none"; // No transition while locked
         fill.style.width = Math.max(0, progress) + "%";
         btn.style.cursor = "not-allowed";
-    } else if (!window.holdTimer) { // Note: ensure holdTimer is globally accessible or tracked correctly
+    } 
+    // 2. ONLY reset the UI if the user is NOT currently holding the button
+    else if (!holdTimer) { 
         setIsLocked(false);
         txtMain.innerText = "KNEEL";
+        fill.style.transition = "width 0.3s ease"; // Smooth reset
         fill.style.width = "0%";
         btn.style.cursor = "pointer";
     }
