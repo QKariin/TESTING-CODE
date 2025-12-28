@@ -219,17 +219,15 @@ function startTimerLoop() {
 // Admin task actions
 export function adminTaskAction(memberId, action) {
     if (action === 'send') {
-        // 1. Set mode to active
-        setArmoryTargetMode("active");
-        // 2. Open library (The window. is important to find it)
-        window.openTaskGallery(); 
+        setArmoryTarget("active"); // Direct injection mode
+        window.openTaskGallery();
     } 
     else if (action === 'skip') {
-        // 1. Tell Wix to clear current task (Free skip)
+        // Free skip (Tell Wix to clear the screen)
         window.parent.postMessage({ type: "adminTaskAction", memberId: memberId, action: "skip" }, "*");
         
-        // 2. Set mode to active and open library
-        setArmoryTargetMode("active");
+        // Open library to pick the replacement
+        setArmoryTarget("active");
         window.openTaskGallery();
     }
 }
