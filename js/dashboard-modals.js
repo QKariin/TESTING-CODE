@@ -298,22 +298,36 @@ function createMirroredCard(task, index, isActiveOrder, isLibrary = false) {
     const niceText = clean(task);
     const safeText = raw(niceText);
     const u = users.find(x => x.memberId === currId);
-    // Check if this specific task is expanded in the workshop memory
+    
+    // Checks memory so the card stays open/closed correctly
     const isExpanded = workshopExpandedTexts.has(niceText);
 
     return `
-         <div class="q-item-line ${isActiveOrder ? 'direct-order' : (isLibrary ? '' : 'filler-task')} ${isExpanded ? 'is-expanded' : ''}">
+        <div class="q-item-line ${isActiveOrder ? 'direct-order' : (isLibrary ? '' : 'filler-task')} ${isExpanded ? 'is-expanded' : ''}">
+            
+            <!-- TOP ROW: STATUS & DELETE -->
             <div class="dr-card-header">
                 <span class="q-handle">${isActiveOrder ? '★' : ''}</span>
-                ${isActiveOrder ? `<span class="q-badge-queen">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444;">SYSTEM</span>'}
-                ${!isLibrary && isActiveOrder ? `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${index}); openTaskGallery()">&times;</span>` : '<span></span>'}
+                ${isActiveOrder ? `<span class="q-badge-queen">QUEEN</span>` : '<span style="font-size:0.4rem; color:#444; font-family:Orbitron;">SYSTEM</span>'}
+                ${!isLibrary && isActiveOrder ? `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${index}); renderWorkshopLiveQueue(users.find(x=>x.memberId===currId))">&times;</span>` : '<span></span>'}
             </div>
             
+            <!-- TEXT AREA: MICRO SERIF -->
             <div class="q-txt-line">${niceText}</div>
             
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory(this, '${safeText}')">⚡ ENFORCE</div>` : '<div></div>'}
-                <div class="dr-mirror-arrow" onclick="toggleTaskExpansion(this, '${safeText}')">▼</div>
+            <!-- FOOTER: ACTIONS -->
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-top:5px;">
+                
+                <!-- LEFT: THE MAIN ENFORCE (Triggers Slot Picker) -->
+                ${isLibrary ? `<div class="dr-enforce-btn" onclick="enforceDirectiveFromArmory('${safeText}')">⚡ ENFORCE</div>` : '<div></div>'}
+                
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <!-- RIGHT: THE NEW FAST-TOP SHORTCUT (Library Only) -->
+                    ${isLibrary ? `<div class="dr-fast-top-btn" title="Push to Slot #1" onclick="fastTopEnforce('${safeText}')">★ 1</div>` : ''}
+                    
+                    <!-- THE ARROW -->
+                    <div class="dr-mirror-arrow" onclick="toggleTaskExpansion(this, '${safeText}')">▼</div>
+                </div>
             </div>
         </div>`;
 }
