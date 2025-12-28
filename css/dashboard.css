@@ -63,18 +63,22 @@ html, body {
 }
 
 .dr-enforce-btn {
-    background: transparent !important;
-    border: 1px solid var(--blue) !important;
+    background: transparent !important; /* Transparent background */
+    border: 1px solid var(--blue) !important; /* Blue border */
     color: var(--blue) !important;
-    display: inline-flex !important; /* Forces one line */
+    display: inline-flex !important; /* Forces icon and text on one line */
     align-items: center !important;
     gap: 5px !important;
-    font-size: 0.6rem !important; /* Small font */
-    white-space: nowrap !important; /* Prevents wrapping */
+    font-size: 0.6rem !important;
     padding: 2px 8px !important;
     cursor: pointer !important;
     border-radius: 3px !important;
     font-family: 'Orbitron', sans-serif !important;
+    white-space: nowrap !important;
+}
+
+.dr-enforce-btn:hover {
+    background: rgba(0, 243, 255, 0.1) !important;
 }
 
 .u-seen { font-size: 0.6rem; color: #777; font-family: 'Rajdhani'; margin-top: 3px; text-transform: uppercase; font-weight: bold; }
