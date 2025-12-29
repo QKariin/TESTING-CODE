@@ -632,6 +632,13 @@ window.gameStats = gameStats;
 // --- 8. THE HANDSHAKE ---
 window.parent.postMessage({ type: "UI_READY" }, "*");
 
+window.resetTributeFlow = function() {
+    selectedReason = "";
+    selectedItem = null;
+    const note = document.getElementById('huntNote');
+    if (note) note.value = "";
+    showHuntStep(1);
+};
 // --- 7. STANDALONE TEST ---
 if (window.self === window.top) {
     setTimeout(() => {
