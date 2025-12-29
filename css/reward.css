@@ -29,23 +29,22 @@
 }
 
 /* THE LARGE GRID */
-#revealGridContainer {
-    position: relative;
-    width: 260px; /* Precise center size */
-    height: 260px;
-    border: 1px solid #333;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #000;
-    box-shadow: 0 0 40px rgba(0,0,0,1);
+#revealLevelLabel {
+    font-family: 'Georgia', serif !important;
+    font-style: italic;
+    font-size: 1.2rem !important; /* Larger and more dominant */
+    color: var(--neon-pink) !important;
+    text-shadow: 0 0 10px rgba(255, 0, 222, 0.3);
+    margin-bottom: 5px;
+    letter-spacing: 3px;
 }
 
 .reveal-bg-media {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important; /* Perfect fill, no white bars */
     z-index: 1;
 }
 
