@@ -3,21 +3,19 @@
 /* --- FULL CHAT OVERLAY STYLE --- */
 
 #revealSection {
-    position: absolute; /* This is the key to covering the chat */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%; /* Fills the whole chatBody */
-    background: rgba(5, 5, 5, 0.95) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 20; /* Sits above the messages */
-    display: none; /* Toggled by JS */
+    position: absolute !important; /* Pinned to the chatCard */
+    inset: 0 !important; /* Covers top, bottom, left, right exactly */
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+    z-index: 2000 !important; /* Forces it above header and footer */
+    display: none; 
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    border-bottom: none;
 }
 
 #revealLevelLabel {
@@ -33,13 +31,13 @@
 /* THE LARGE GRID */
 #revealGridContainer {
     position: relative;
-    width: 90%; /* Fills the width of the chat */
-    aspect-ratio: 1 / 1; /* Keeps it perfectly square */
-    border: 2px solid #333;
-    border-radius: 12px;
+    width: 260px; /* Precise center size */
+    height: 260px;
+    border: 1px solid #333;
+    border-radius: 10px;
     overflow: hidden;
     background: #000;
-    box-shadow: 0 0 30px rgba(0,0,0,1);
+    box-shadow: 0 0 40px rgba(0,0,0,1);
 }
 
 .reveal-bg-media {
