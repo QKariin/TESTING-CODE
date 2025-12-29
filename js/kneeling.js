@@ -60,25 +60,27 @@ function completeKneelAction() {
     if (holdTimer) clearTimeout(holdTimer);
     holdTimer = null; 
 
-    // Lock immediately
+    // 1. START THE LOCKDOWN IMMEDIATELY
     const now = Date.now();
-    setLastWorshipTime(now); 
+    setLastWorshipTime(now); // Save the current time as the start of the 60m
     setIsLocked(true); 
     setIgnoreBackendUpdates(true);
 
-    // Update UI immediately
-    updateKneelingStatus();
-
-    // Tell backend to start timer
+    // 2. TELL WIX THE ACTION IS DONE (Permanent Save)
     window.parent.postMessage({ type: "FINISH_KNEELING" }, "*");
 
-    // Show reward popup (optional bonus)
+    // 3. UPDATE THE BAR (Change it to "LOCKED: 60m" right now)
+    updateKneelingStatus();
+
+    // 4. SHOW THE REWARD POPUP (Over the chat, as requested)
     const rewardMenu = document.getElementById('kneelRewardOverlay');
-    if (rewardMenu) rewardMenu.classList.remove('hidden');
+    if (rewardMenu) {
+        rewardMenu.classList.remove('hidden');
+    }
 
     triggerSound('msgSound');
     
-    // Release shield after backend sync
+    // Release the update shield after 15 seconds
     setTimeout(() => { setIgnoreBackendUpdates(false); }, 15000);
 }
 
