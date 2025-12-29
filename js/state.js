@@ -5,8 +5,8 @@ export let gameStats = {
     currentStreak: 0, 
     points: 0, 
     coins: 0,
-    kneelCount: 0,      // Added for the Kneel button
-    todayKneeling: 0    // Added for the Kneel button
+    kneelCount: 0,
+    todayKneeling: 0
 };
 
 export let stats = { 
@@ -28,10 +28,10 @@ export let userProfile = {
 };
 
 // --- REWARD SYSTEM DATA ---
-export let activeRevealMap = [];     // Stores the 1-9 numbers for the current unblurred squares
-export let vaultItems = [];          // Stores the list of completed reward URLs
-export let currentLibraryMedia = ""; // The URL of the image/video currently being unblurred
-export let libraryProgressIndex = 1; // Tracks if they are on Day 1, Day 2, etc.
+export let activeRevealMap = [];     
+export let vaultItems = [];          
+export let currentLibraryMedia = ""; 
+export let libraryProgressIndex = 1; 
 
 // --- 2. APP STATE VARIABLES ---
 export let isLocked = false;
@@ -60,21 +60,18 @@ export let lastWorshipTime = 0;
 export let currentHistoryIndex = 0;
 export let touchStartX = 0;
 
-// --- 3. SETTERS (The "Phone Lines" for other files) ---
+// --- 3. SETTERS (MERGED & FIXED) ---
 
-// This matches the "setGameStats" import in your main.js
 export function setGameStats(newStats) {
-    gameStats = { ...gameStats, ...newStats };
+    Object.assign(gameStats, newStats); // Reconnects the UI
 }
 
-// This matches the "setStats" importY
 export function setStats(newStats) {
-    stats = { ...stats, ...newStats };
+    Object.assign(stats, newStats);
 }
 
-// This matches the "setUserProfile" import
 export function setUserProfile(newProfile) {
-    userProfile = { ...userProfile, ...newProfile };
+    Object.assign(userProfile, newProfile);
 }
 
 export function setCurrentTask(task) { currentTask = task; }
@@ -83,8 +80,6 @@ export function setTaskDatabase(tasks) { taskDatabase = tasks; }
 export function setGalleryData(data) { galleryData = data; }
 export function setWishlistItems(items) { WISHLIST_ITEMS = items; }
 export function setCmsHierarchyData(data) { cmsHierarchyData = data; }
-
-// CRITICAL: These were missing and caused your crash!
 export function setCooldownInterval(val) { cooldownInterval = val; }
 export function setTaskJustFinished(val) { taskJustFinished = val; }
 export function setIgnoreBackendUpdates(val) { ignoreBackendUpdates = val; }
@@ -102,16 +97,7 @@ export function setLastWorshipTime(val) { lastWorshipTime = val; }
 export function setIsLocked(val) { isLocked = val; }
 export function setCurrentHistoryIndex(val) { currentHistoryIndex = val; }
 export function setTouchStartX(val) { touchStartX = val; }
-
-// js/state.js - FIX FOR THE DISCONNECT
-export function setGameStats(newStats) {
-    Object.assign(gameStats, newStats); // This updates the object main.js is already holding
-}
-
-export function setStats(newStats) {
-    Object.assign(stats, newStats);
-}
-
-export function setUserProfile(newProfile) {
-    Object.assign(userProfile, newProfile);
-}
+export function setActiveRevealMap(val) { activeRevealMap = val || []; }
+export function setVaultItems(val) { vaultItems = val || []; }
+export function setCurrentLibraryMedia(val) { currentLibraryMedia = val || ""; }
+export function setLibraryProgressIndex(val) { libraryProgressIndex = val || 1; }
