@@ -59,16 +59,34 @@ export function unlockAudio() {
 }
 
 // RESTORED: Full HTML cleaning with line-break handling and symbol decoding
+// js/utils.js (Slave Side)
+
 export function cleanHTML(html) {
-    if(!html) return "";
+    if (!html) return "";
+    
     try {
-        let text = html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n");
-        text = text.replace(/<[^>]+>/g, "");
-        const txt = document.createElement("textarea");
-        txt.innerHTML = text;
-        return txt.value.trim();
+        let target = html;
+
+        // 1. If it's a string but looks like JSON, unwrap it first
+        if (typeof target === 'string' && (target.startsWith('{') || target.startsWith('['))) {
+            try {
+                const parsed = JSON.parse(target);
+                target = Array.isArray(parsed) ? (parsed[0]?.text || parsed[0]) : (parsed.text || target);
+            } catch (e) { }
+        }
+
+        // 2. THE NUCLEAR STRIPPER (Removes <p>, <span>, class="font", etc.)
+        // This uses the browser's engine to extract ONLY the clean text
+        const doc = new DOMParser().parseFromString(target, 'text/html');
+        let result = doc.body.textContent || target || "";
+
+        // 3. Final Polish: remove system brackets [LIKE_THIS] and extra spaces
+        result = result.replace(/\[.*?\]/g, '').replace(/\s\s+/g, ' ');
+
+        return result.trim();
     } catch (e) {
-        return html; // Fallback if DOM is not ready
+        // Fallback just in case
+        return html.replace(/<[^>]*>?/gm, '').trim();
     }
 }
 
