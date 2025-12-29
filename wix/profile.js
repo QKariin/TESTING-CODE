@@ -19,9 +19,6 @@ const funnySayings = [
 ];
 
 $w.onReady(async function () {
-    // REMOVED testEngine.init() to stop duplicate message handling
-    const testEngine = createDomEngine("#html2");
-
     if (wixUsers.currentUser.loggedIn) {
         currentUserEmail = await wixUsers.currentUser.getEmail();
         
@@ -98,25 +95,6 @@ $w("#html2").onMessage(async (event) => {
         } catch(e) { console.error("Feed Error", e); }
     }
 
-    else if (data.type === "FINISH_KNEELING") {
-            const results = await wixData.query("Tasks")
-                .eq("memberId", currentUserEmail)
-                .find({ suppressAuth: true });
-
-            if (results.items.length > 0) {
-                let item = results.items[0];
-                
-                // Lock the time in the database IMMEDIATELY
-                item.lastWorship = new Date(); 
-                
-                await wixData.update("Tasks", item, { suppressAuth: true });
-                console.log("Kneeling timestamp locked in database.");
-                
-                // Sync the UI so the countdown starts based on the DB time
-                await syncProfileAndTasks();
-            }
-        }
-
     // C. TASK PROGRESS LOGIC
     else if (data.type === "savePendingState") {
         await secureUpdateTaskAction(currentUserEmail, { pendingState: data.pendingState, consumeQueue: data.consumeQueue });
@@ -159,6 +137,8 @@ $w("#html2").onMessage(async (event) => {
                 item.score = (item.score || 0) + amount;
             }
             
+            item.lastWorship = new Date();
+            item.kneelCount = (item.kneelCount || 0) + 1;
             await wixData.update("Tasks", item, { suppressAuth: true });
 
             const label = type === 'coins' ? "COINS" : "POINTS";
@@ -175,7 +155,6 @@ $w("#html2").onMessage(async (event) => {
 
     // E. CHAT & TRIBUTES
     else if (data.type === "SEND_CHAT_TO_BACKEND") {
-        console.log(data.text);
         const profileResult = await secureGetProfile(currentUserEmail);
         if (profileResult.success) {
             const messageCoins = (profileResult.profile.parameters || {}).MessageCoins || 10;
