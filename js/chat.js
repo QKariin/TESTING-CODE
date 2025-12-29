@@ -192,8 +192,10 @@ export function sendCoins(amount) {
 export function openChatPreview(url, isVideo) {
     const overlay = document.getElementById('chatMediaOverlay');
     const content = document.getElementById('chatMediaOverlayContent');
+    const decoded = decodeURIComponent(url);
+
     if (!overlay || !content) return;
-    content.innerHTML = isVideo ? `<video src="${url}" controls autoplay class="cmo-media"></video>` : `<img src="${url}" class="cmo-media">`;
+    content.innerHTML = isVideo ? `<video src="${decoded}" controls autoplay class="cmo-media"></video>` : `<img src="${decoded}" class="cmo-media">`;
     overlay.style.display = 'flex';
 }
 
