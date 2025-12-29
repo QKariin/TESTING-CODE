@@ -19,25 +19,25 @@ const funnySayings = [
 ];
 
 $w.onReady(async function () {
-  if (wixUsers.currentUser.loggedIn) {
-      currentUserEmail = await wixUsers.currentUser.getEmail();
-      
-      // Mark Online & Set Presence Loop
-      updatePresenceAction(currentUserEmail);
-      setInterval(() => updatePresenceAction(currentUserEmail), 60000);
-      
-      // Parallel Boot-up: Load everything in the background immediately
-      // We don't send it yet, we just get it ready.
-      const initialDataPromise = Promise.all([
-          loadStaticData(),
-          loadRulesToInterface(),
-          syncProfileAndTasks()
-      ]);
+    // REMOVED testEngine.init() to stop duplicate message handling
+    const testEngine = createDomEngine("#html2");
 
-      // Set up secondary loops
-      setInterval(syncProfileAndTasks, 5000);
-      setInterval(checkDomOnlineStatus, 60000);
-  }
+    if (wixUsers.currentUser.loggedIn) {
+        currentUserEmail = await wixUsers.currentUser.getEmail();
+        
+        // Mark Online & Set Presence Loop
+        updatePresenceAction(currentUserEmail);
+        setInterval(() => updatePresenceAction(currentUserEmail), 60000);
+        
+        // Parallel Boot-up
+        loadStaticData();
+        loadRulesToInterface();
+        syncProfileAndTasks();
+
+        // Set up secondary refresh loops
+        setInterval(syncProfileAndTasks, 5000);
+        setInterval(checkDomOnlineStatus, 60000);
+    }
 });
 
 // --- HELPER FUNCTION FOR RULES ---
@@ -58,102 +58,24 @@ async function loadRulesToInterface() {
     } catch (error) { console.error("Error loading rules: ", error); }
 }
 
-// --- LISTEN FOR HTML MESSAGES ---
+// --- LISTEN FOR HTML MESSAGES FROM VERCEL ---
 $w("#html2").onMessage(async (event) => {
     const data = event.data;
 
-    // --- NEW: THE HANDSHAKE ---
-    // When Vercel says it is loaded, Wix sends the data immediately
+    // A. HANDSHAKE (Immediate data push when Slave page loads)
     if (data.type === "UI_READY") {
-        console.log("Vercel Engine Ready. Sending data...");
+        console.log("Slave UI Ready. Synchronizing...");
         await loadStaticData();
         await loadRulesToInterface();
         await syncProfileAndTasks();
         await checkDomOnlineStatus();
     }
 
-    /*else if (data.type === "WORSHIP") {
-        const results = await wixData.query("Tasks")
-            .eq("memberId", currentUserEmail)
-            .find({ suppressAuth: true });
-
-        if (results.items.length > 0) {
-            let item = results.items[0];
-
-            // Ensure parameters object exists
-            item.parameters = item.parameters || {};
-            const params = item.parameters;
-
-            // Auto‑initialize KneelingCoins (wallet)
-            if (params.KneelingCoins == null) {
-                params.KneelingCoins = 10;
-                await wixData.update("Tasks", item, { suppressAuth: true });
-            }
-
-            // Auto‑initialize KneelingPoints (score)
-            if (params.KneelingPoints == null) {
-                params.KneelingPoints = 100;
-                await wixData.update("Tasks", item, { suppressAuth: true });
-            }
-
-            // Auto‑initialize KneelingCooldownHours
-            if (params.KneelingCooldownHours == null) {
-                params.KneelingCooldownHours = 1;
-                await wixData.update("Tasks", item, { suppressAuth: true });
-            }
-
-            // Ensure stats object exists
-            item.stats = item.stats || {};
-
-            // Cooldown logic (readable)
-            const now = new Date();
-            const last = item.lastWorship ? new Date(item.lastWorship) : null;
-            const cooldownMs = params.KneelingCooldownHours * 60 * 60 * 1000;
-
-            const canWorship = !last || (now.getTime() - last.getTime()) > cooldownMs;
-
-            if (canWorship) {
-                // Update kneeling timestamp
-                item.lastWorship = now;
-
-                // Wallet update
-                item.wallet = (item.wallet || 0) + params.KneelingCoins;
-
-                // Score update
-                item.score = (item.score || 0) + params.KneelingPoints;
-
-                // Kneel count (top-level)
-                item.kneelCount = (item.kneelCount || 0) + 1;
-
-                // Kneel count inside stats
-                item.stats.kneelCount = (item.stats.kneelCount || 0) + 1;
-
-                await wixData.update("Tasks", item, { suppressAuth: true });
-
-                await insertMessage({
-                    memberId: currentUserEmail,
-                    message: "*kneels in devotion*",
-                    sender: "user",
-                    read: false
-                });
-
-                await syncProfileAndTasks();
-                await syncChat();
-            } else {
-                await insertMessage({
-                    memberId: currentUserEmail,
-                    message: "YOU MUST WAIT BEFORE KNEELING AGAIN.",
-                    sender: "system",
-                    read: false
-                });
-            }
-        }
-    }*/
-
     else if (data.type === "heartbeat") {
         if (data.view === 'serve') await checkDomOnlineStatus();
     }
 
+    // B. SOCIAL FEED LOGIC
     else if (data.type === "LOAD_Q_FEED") {
         try {
             const cmsResults = await wixData.query("QKarinonline")
@@ -162,9 +84,7 @@ $w("#html2").onMessage(async (event) => {
                 .find({ suppressAuth: true });
 
             const processedItems = cmsResults.items.map(item => {
-                // FIXED: Specifically looking for the "page" field key
                 const rawLink = item.page || item.url || item.media;
-                
                 return {
                     ...item,
                     url: getPublicUrl(rawLink) 
@@ -178,47 +98,31 @@ $w("#html2").onMessage(async (event) => {
         } catch(e) { console.error("Feed Error", e); }
     }
 
+    else if (data.type === "FINISH_KNEELING") {
+            const results = await wixData.query("Tasks")
+                .eq("memberId", currentUserEmail)
+                .find({ suppressAuth: true });
+
+            if (results.items.length > 0) {
+                let item = results.items[0];
+                
+                // Lock the time in the database IMMEDIATELY
+                item.lastWorship = new Date(); 
+                
+                await wixData.update("Tasks", item, { suppressAuth: true });
+                console.log("Kneeling timestamp locked in database.");
+                
+                // Sync the UI so the countdown starts based on the DB time
+                await syncProfileAndTasks();
+            }
+        }
+
+    // C. TASK PROGRESS LOGIC
     else if (data.type === "savePendingState") {
         await secureUpdateTaskAction(currentUserEmail, { pendingState: data.pendingState, consumeQueue: data.consumeQueue });
         await syncProfileAndTasks(); 
     }
 
-    else if (data.type === "CLAIM_KNEEL_REWARD") {
-        const results = await wixData.query("Tasks")
-            .eq("memberId", currentUserEmail)
-            .find({ suppressAuth: true });
-
-        if (results.items.length > 0) {
-            let item = results.items[0];
-            const amount = data.rewardValue;
-            const type = data.rewardType; // 'coins' or 'points'
-
-            // Update Database
-            if (type === 'coins') {
-                item.wallet = (item.wallet || 0) + amount;
-            } else {
-                item.score = (item.score || 0) + amount;
-            }
-            
-            item.lastWorship = new Date();
-            item.kneelCount = (item.kneelCount || 0) + 1;
-
-            await wixData.update("Tasks", item, { suppressAuth: true });
-
-            // Send custom message to chat
-            const label = type === 'coins' ? "COINS 🪙" : "POINTS ⭐";
-            await insertMessage({
-                memberId: currentUserEmail,
-                message: `${item.title_fld || "Slave"} earned ${amount} ${label} for his kneeling.`,
-                sender: "system",
-                read: false
-            });
-
-            // Sync UI
-            await syncProfileAndTasks();
-        }
-    }
-    
     else if (data.type === "uploadEvidence") {
         const proofType = data.mimeType && data.mimeType.startsWith('video') ? "video" : "image";
         await secureUpdateTaskAction(currentUserEmail, {
@@ -228,41 +132,72 @@ $w("#html2").onMessage(async (event) => {
         await syncProfileAndTasks(); 
     }
 
+    else if (data.type === "taskSkipped") {
+        // This is called when a slave fails a task (300 coin penalty)
+        await secureUpdateTaskAction(currentUserEmail, { clear: true, wasSkipped: true, taskTitle: data.taskTitle });
+        const result = await processCoinTransaction(currentUserEmail, -300, "TAX");
+        if (result.success) { 
+            await insertMessage({ memberId: currentUserEmail, message: "TASK FAILED: " + data.taskTitle, sender: "system", read: false }); 
+        } 
+        await syncProfileAndTasks();
+    }
+
+    // D. DEVOTION LOGIC
+    else if (data.type === "CLAIM_KNEEL_REWARD") {
+        const results = await wixData.query("Tasks")
+            .eq("memberId", currentUserEmail)
+            .find({ suppressAuth: true });
+
+        if (results.items.length > 0) {
+            let item = results.items[0];
+            const amount = data.rewardValue;
+            const type = data.rewardType; 
+
+            if (type === 'coins') {
+                item.wallet = (item.wallet || 0) + amount;
+            } else {
+                item.score = (item.score || 0) + amount;
+            }
+            
+            await wixData.update("Tasks", item, { suppressAuth: true });
+
+            const label = type === 'coins' ? "COINS" : "POINTS";
+            await insertMessage({
+                memberId: currentUserEmail,
+                message: "Slave earned " + amount + " " + label + " for kneeling.",
+                sender: "system",
+                read: false
+            });
+
+            await syncProfileAndTasks();
+        }
+    }
+
+    // E. CHAT & TRIBUTES
     else if (data.type === "SEND_CHAT_TO_BACKEND") {
+        console.log(data.text);
         const profileResult = await secureGetProfile(currentUserEmail);
         if (profileResult.success) {
             const messageCoins = (profileResult.profile.parameters || {}).MessageCoins || 10;
             const result = await processCoinTransaction(currentUserEmail, -messageCoins, "TAX");
-            if (result.success) { await insertMessage({ memberId: currentUserEmail, message: data.text, sender: "user", read: false }); } 
-            else { await insertMessage({ memberId: currentUserEmail, message: "Insufficient funds", sender: "system", read: true }); }
+            if (result.success) { 
+                await insertMessage({ memberId: currentUserEmail, message: data.text, sender: "user", read: false }); 
+            } 
             await syncChat(); 
         }
     }
 
     else if (data.type === "PURCHASE_ITEM") {
-    const result = await processCoinTransaction(currentUserEmail, -Math.abs(data.cost), `Tribute: ${data.itemName}`);
-    if (result.success) {
-        // Send as SYSTEM message (not user message)
-        await insertMessage({ 
-            memberId: currentUserEmail, 
-            message: data.messageToDom, 
-            sender: "system",  // ← Changed from "user" to "system"
-            read: false 
-        });
-        
-        await syncProfileAndTasks();
-        await syncChat();
-    }
-}
-
-
-    else if (data.type === "SESSION_REQUEST") {
-        const result = await processCoinTransaction(currentUserEmail, -Math.abs(data.cost), "Session Hold");
+        const result = await processCoinTransaction(currentUserEmail, -Math.abs(data.cost), "Tribute: " + data.itemName);
         if (result.success) {
-            const msg = `📅 REQUEST: ${data.sessionType.toUpperCase()} SESSION\nTime: ${data.requestedTimeLabel}\nFocus: ${data.focus}`;
-            await insertMessage({ memberId: currentUserEmail, message: msg, sender: "system", read: false });
-            await syncChat();
+            await insertMessage({ 
+                memberId: currentUserEmail, 
+                message: data.messageToDom, 
+                sender: "system", 
+                read: false 
+            });
             await syncProfileAndTasks();
+            await syncChat();
         }
     }
 
@@ -271,11 +206,12 @@ $w("#html2").onMessage(async (event) => {
         const saying = funnySayings[Math.floor(Math.random() * funnySayings.length)];
         const result = await processCoinTransaction(currentUserEmail, -Math.abs(amount), data.category);
         if (result.success) {
-            await insertMessage({ memberId: currentUserEmail, message: `You sent ${amount} coins. ${saying}`, sender: "system", type: "system_gold", read: true });
+            await insertMessage({ memberId: currentUserEmail, message: "You sent " + amount + " coins. " + saying, sender: "system", read: true });
             await syncProfileAndTasks();
         }
     }
 
+    // F. PAYMENT & PROFILE PIC
     else if (data.type === "INITIATE_STRIPE_PAYMENT") {
         try {
             const paymentUrl = await getPaymentLink(Number(data.amount));
@@ -283,35 +219,40 @@ $w("#html2").onMessage(async (event) => {
         } catch (err) { console.error("Payment Failed", err); }
     }
 
-    else if (data.type === "taskSkipped") {
-        await secureUpdateTaskAction(currentUserEmail, { clear: true, wasSkipped: true, taskTitle: data.taskTitle });
-        const result = await processCoinTransaction(currentUserEmail, -300, "TAX");
-        if (result.success) { await insertMessage({ memberId: currentUserEmail, message: `SKIPPED TASK: ${data.taskTitle}`, sender: "system", read: false }); } 
-        else { await insertMessage({ memberId: currentUserEmail, message: "Insufficient funds to skip", sender: "system", read: true }); }
-        await syncProfileAndTasks();
+    else if (data.type === "UPDATE_PROFILE_PIC") {
+        const results = await wixData.query("Tasks")
+            .eq("memberId", currentUserEmail)
+            .find({ suppressAuth: true });
+
+        if (results.items.length > 0) {
+            let item = results.items[0];
+            item.image_fld = data.url; 
+            await wixData.update("Tasks", item, { suppressAuth: true });
+            await insertMessage({ 
+                memberId: currentUserEmail, 
+                message: "Profile Picture Updated.", 
+                sender: "system", 
+                read: false 
+            });
+            await syncProfileAndTasks(); 
+        }
     }
 });
 
 async function loadStaticData() {
     try {
-        // 1. Load Tasks (Keep this as is)
         const taskResults = await wixData.query("DailyTasks").limit(500).find({ suppressAuth: true });
         staticTasksPool = taskResults.items.map(item => item.taskText || item.title || "Serve me.");
         $w("#html2").postMessage({ type: "INIT_TASKS", tasks: staticTasksPool });
 
-        // 2. Load Wishlist (Tributes) - FIXED FOR YOUR FIELDS
         const wishResults = await wixData.query("Wishlist").limit(500).find({ suppressAuth: true });
-        
         const wishlist = wishResults.items.map(item => ({ 
-            id: item._id, // Wix internal ID
-            name: item.title || "GIFT", // Your 'title' field
-            price: Number(item.price || 0), // Your 'price' field
-            cat: "all", // Default to 'all' since you have no categories
-            img: getPublicUrl(item.image) // Your 'image' field
+            id: item._id, 
+            name: item.title || "GIFT", 
+            price: Number(item.price || 0), 
+            img: getPublicUrl(item.image) 
         }));
-
         $w("#html2").postMessage({ type: "INIT_WISHLIST", wishlist });
-        console.log("Wix: Successfully sent " + wishlist.length + " tributes.");
 
     } catch (e) { console.error("Static Data Error", e); }
 }
@@ -321,6 +262,10 @@ async function syncProfileAndTasks() {
         const statsResults = await wixData.query("Tasks").eq("memberId", currentUserEmail).find({suppressAuth: true});
         if(statsResults.items.length === 0) return;
         let statsItem = statsResults.items[0];
+
+        // --- THE SILHOUETTE FIX ---
+        const silhouette = "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png";
+        const userPic = statsItem.image_fld ? getPublicUrl(statsItem.image_fld) : silhouette;
 
         let history = [];
         if (statsItem.taskdom_history) {
@@ -338,6 +283,7 @@ async function syncProfileAndTasks() {
         let rawDate = statsItem.joined || statsItem._createdDate;
         let safeJoinedString = rawDate ? new Date(rawDate).toISOString() : new Date().toISOString();
 
+        // Push data to the Vercel Slave Profile
         $w("#html2").postMessage({ 
             type: "UPDATE_FULL_DATA",
             profile: {
@@ -349,7 +295,7 @@ async function syncProfileAndTasks() {
                 coins: statsItem.wallet || 0, 
                 name: statsItem.title_fld || statsItem.title || "Slave",
                 hierarchy: statsItem.hierarchy || "Newbie",
-                profilePicture: getPublicUrl(statsItem.image_fld) || "",
+                profilePicture: userPic, 
                 taskQueue: currentQueue,
                 joined: safeJoinedString, 
                 lastWorship: statsItem.lastWorship
@@ -380,7 +326,7 @@ async function checkDomOnlineStatus() {
             const lastActive = results.items[0].date.getTime();
             const diffMinutes = Math.floor((Date.now() - lastActive) / 60000);
             isOnline = (diffMinutes < 3);
-            statusText = isOnline ? "ONLINE" : (diffMinutes < 60 ? `LAST SEEN: ${diffMinutes}m AGO` : `LAST SEEN: TODAY`);
+            statusText = isOnline ? "ONLINE" : (diffMinutes < 60 ? "LAST SEEN: " + diffMinutes + "m AGO" : "LAST SEEN: TODAY");
         }
         $w("#html2").postMessage({ type: "UPDATE_DOM_STATUS", online: isOnline, text: statusText });
     } catch (e) { console.log("Status Error", e); }

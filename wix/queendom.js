@@ -12,14 +12,16 @@ let heartbeatInterval = null;
 
 $w.onReady(function () {
     // 1. Data Refresh Loops
+    // This is the "Slow Channel" that keeps everything in sync every 4 seconds
     setInterval(refreshDashboard, 4000); 
     refreshDashboard();
 
+    // Fast Chat refresh
     setInterval(async () => {
         if (currentViewedUserId) await refreshChatForUser(currentViewedUserId);
     }, 1500); 
 
-    // 2. LISTENER FOR HTML MESSAGES
+    // 2. LISTENER FOR MESSAGES FROM VERCEL DASHBOARD
     $w("#htmlMaster").onMessage(async (event) => {
         const data = event.data;
         let processed = false;
@@ -70,25 +72,19 @@ $w.onReady(function () {
 
             // --- STEP 2: SEND VERDICT MESSAGES ---
             try {
-                // A. Send Text Verdict (Green/Red Bubble)
                 if (data.decision === 'approve') {
                     let msgText = "✔️ Task Verified.";
                     if (data.bonusCoins > 0) msgText += ` +${data.bonusCoins} Points.`;
                     if (data.comment) msgText += `\n"${data.comment}"`;
-                    
                     await insertMessage({ memberId: data.memberId, message: msgText, sender: "admin", read: false });
                 } else {
                     await insertMessage({ memberId: data.memberId, message: "Task Rejected.", sender: "admin", read: false });
                 }
 
-                // B. Send Media Attachment (FIX: Send as separate message so it renders as image)
                 if (data.media) {
                     await insertMessage({ memberId: data.memberId, message: data.media, sender: "admin", read: false });
                 }
-
-            } catch (e) {
-                console.error("Failed to send chat:", e);
-            }
+            } catch (e) { console.error("Failed to send chat:", e); }
 
             // --- STEP 3: SAVE HISTORY ---
             if (data.decision === 'approve' && (data.sticker || data.comment || data.media)) {
@@ -119,7 +115,7 @@ $w.onReady(function () {
                 await reviewTaskAction(data.memberId, data.decision, data.taskId);
             } catch (e) { console.error("Critical Error in reviewTaskAction:", e); }
 
-            // --- STEP 5: LOG ---
+            // --- STEP 5: LOG REACTION ---
             if (data.decision === 'approve') {
                 try {
                     await wixData.insert("taskreaction", {
@@ -132,6 +128,15 @@ $w.onReady(function () {
                     }, { suppressAuth: true });
                 } catch (err) { console.error("Log error", err); }
             }
+
+            // --- THE INSTANT ECHO (REVIEWS) ---
+            // This tells Vercel to remove the item from the list IMMEDIATELY
+            $w("#htmlMaster").postMessage({ 
+                type: "instantReviewSuccess", 
+                memberId: data.memberId, 
+                taskId: data.taskId,
+                decision: data.decision
+            });
 
             refreshDashboard();
             processed = true;
@@ -146,12 +151,21 @@ $w.onReady(function () {
                     uItem.score = (uItem.score || 0) + amount;
                     uItem.points = uItem.score; 
                     await wixData.update("Tasks", uItem, {suppressAuth:true});
+
+                    // --- THE INSTANT ECHO (POINTS) ---
+                    // This tells Vercel to change the points number IMMEDIATELY
+                    $w("#htmlMaster").postMessage({ 
+                        type: "instantUpdate", 
+                        memberId: data.memberId, 
+                        newPoints: uItem.score 
+                    });
                 }
             } catch(e) { console.error("Adjust Points Error", e); }
 
             let phrase = data.amount > 0 ? praiseTalk[Math.floor(Math.random() * praiseTalk.length)] : trashTalk[Math.floor(Math.random() * trashTalk.length)];
             let msg = data.amount > 0 ? `You received ${data.amount} points. ${phrase}` : `You lost ${Math.abs(data.amount)} points. ${phrase}`;
             await insertMessage({ memberId: data.memberId, message: msg, sender: "system", read: false });
+            
             refreshDashboard();
             processed = true;
         }
@@ -180,12 +194,32 @@ $w.onReady(function () {
             processed = true;
         }
 
+        else if (data.type === "forceActiveTask") {
+            try {
+                const mid = data.memberId;
+                const userRes = await wixData.query("Tasks").eq("memberId", mid).find({ suppressAuth: true });
+                if (userRes.items.length > 0) {
+                    let uItem = userRes.items[0];
+                    uItem.taskdom_pending_state = {
+                        task: { text: data.taskText, category: 'forced' },
+                        endTime: data.endTime,
+                        status: "PENDING"
+                    };
+                    await wixData.update("Tasks", uItem, { suppressAuth: true });
+                    await insertMessage({ 
+                        memberId: mid, 
+                        message: "SYSTEM: DIRECT COMMAND RECEIVED - " + data.taskText, 
+                        sender: "system", 
+                        read: false 
+                    });
+                    refreshDashboard();
+                }
+            } catch (e) { console.error("Force Task Error", e); }
+            processed = true;
+        }
+
         else if (data.type === "visibilitychange") {
             if (data.status) { stopHeartbeat(); } else { startHeartbeat(); }
-        }
-        
-        else {
-            console.log("Unprocessed message:", data);
         }
     });
 });
@@ -193,7 +227,7 @@ $w.onReady(function () {
 async function refreshDashboard() {
     try {
         const usersResult = await wixData.query("Tasks").descending("joined").limit(100).find({ suppressAuth: true });
-        const dailyTasksResult = await wixData.query("DailyTasks").limit(300).find({ suppressAuth: true });
+        const dailyTasksResult = await wixData.query("DailyTasks").limit(1000).find({ suppressAuth: true });
         const dailyTasksList = dailyTasksResult.items.map(i => i.taskText || i.title || i.task); 
         
         const cmsResult = await wixData.query("QKarinonline").find({ suppressAuth: true });
@@ -205,7 +239,12 @@ async function refreshDashboard() {
 
         usersResult.items.forEach(u => {
             let displayName = u.title_fld || u.title || "Slave";
-            let avatarUrl = getPublicUrl(u.profilePicture || u.profilePhoto || u.image_fld);
+            
+            // --- THE SILHOUETTE FIX ---
+            // If image_fld is empty, we use this default silhouette URL
+            const silhouette = "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png";
+            let avatarUrl = u.image_fld ? getPublicUrl(u.image_fld) : silhouette;
+            
             let history = [];
             if (u.taskdom_history) {
                 if (typeof u.taskdom_history === 'string') {
@@ -235,7 +274,7 @@ async function refreshDashboard() {
                 memberId: u.memberId,
                 name: displayName,
                 hierarchy: u.hierarchy || "Newbie",
-                avatar: avatarUrl,
+                avatar: avatarUrl, // This now sends the silhouette if image is missing
                 joinedDate: u.joined,
                 lastSeen: u.lastSeen,
                 lastMessageTime: u.lastMessageTime || 0, 
@@ -277,8 +316,8 @@ async function refreshChatForUser(memberId) {
 
 async function dashboardHeartbeat() {
     try {
-            lastHeartbeat = Date.now();
-            const results = await wixData.query("Status")
+        lastHeartbeat = Date.now();
+        const results = await wixData.query("Status")
             .eq("memberId", "xxxqkarinxxx@gmail.com")
             .eq("type", "Online")
             .find({suppressAuth: true});
