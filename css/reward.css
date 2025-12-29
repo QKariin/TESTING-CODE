@@ -70,9 +70,9 @@
 }
 
 .reveal-square.frosted {
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px) !important; /* Temporarily low for testing */
+    -webkit-backdrop-filter: blur(2px) !important;
 }
 
 .reveal-square.clear {
