@@ -171,21 +171,24 @@
 }
 
 /* 2. THE MENU BOX: This is the solid box that CATCHES the click */
-.market-menu-group {
+/* Target the IDs physically present in your HTML */
+#reward-main-menu, #reward-buy-menu {
     display: flex !important;
     flex-direction: column !important;
-    gap: 12px !important;
-    /* THIS IS THE KEY: Re-enable touch only for the buttons and their background */
-    pointer-events: auto !important; 
-    z-index: 5051 !important;
+    gap: 10px !important;
+    width: 220px !important;
+    padding: 20px !important;
     
-    /* Keep your existing look */
+    /* THE VITAL FIX: WAKES UP THE BUTTONS */
+    pointer-events: auto !important; 
+    z-index: 6000 !important;
+
+    /* Styling */
     background: rgba(0, 0, 0, 0.85) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px !important;
-    padding: 25px !important;
-    backdrop-filter: blur(15px) !important;
-    -webkit-backdrop-filter: blur(15px) !important;
+    border-radius: 15px !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
 }
 
 
