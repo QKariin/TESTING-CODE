@@ -22,12 +22,19 @@ export function renderRewardGrid() {
         : `<img src="${getOptimizedUrl(currentLibraryMedia, 800)}" class="reveal-bg-media">`;
 
     // B. Build Grid
+    // (Inside renderRewardGrid loop)
     let gridHtml = '<div class="reveal-grid-overlay">';
     for (let i = 1; i <= 9; i++) {
         const isUnblurred = activeRevealMap.includes(i);
+        
+        // If it's the last unblurred square added to the list, we give it a special ID
+        const isNewest = (activeRevealMap[activeRevealMap.length - 1] === i);
+        
         gridHtml += `
-            <div class="reveal-square ${isUnblurred ? 'clear' : 'frosted'}" id="sq-${i}">
-                ${!isUnblurred ? `<span class="sq-num">${i}</span>` : ''}
+            <div class="reveal-square ${isUnblurred ? 'clear' : 'frosted'}" 
+                 style="${isNewest ? 'z-index: 10;' : ''}"
+                 id="sq-${i}">
+                ${!isUnblurred ? `<span class="sq-num">${(i).toString().padStart(2, '0')}</span>` : ''}
             </div>`;
     }
     gridHtml += '</div>';
