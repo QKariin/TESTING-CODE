@@ -42,14 +42,12 @@
    Unlocked height so it never crops your photos. */
 #revealGridContainer {
     position: relative !important;
-    width: 95% !important;
-    max-width: 400px !important; /* Limits size so buttons stay visible */
-    aspect-ratio: 1 / 1 !important;
-    margin: 10px auto !important;
-    border: 1px solid #222;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #000;
+    width: fit-content !important; /* Snaps to the image width */
+    height: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    background: transparent !important;
+    overflow: visible !important;
 }
 
 /* 4. THE MEDIA (Photo or Video)
@@ -69,7 +67,10 @@
    Stretches perfectly to match the image height. */
 .reveal-grid-overlay {
     position: absolute !important;
-    inset: 0 !important; /* Pinned to the edges of the media */
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 80% !important; /* Sits exactly on top of the 80% media */
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     grid-template-rows: repeat(3, 1fr) !important;
