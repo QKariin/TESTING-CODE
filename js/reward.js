@@ -6,11 +6,11 @@ import { getOptimizedUrl, triggerSound } from './utils.js';
 // js/reward.js - THE REVEAL ENGINE (REACTIVE VERSION)
 
 export function renderRewardGrid() {
-    // Target the specific Media Slot instead of the whole container
-    const mediaTarget = document.getElementById('rewardMediaTarget');
+    const gridContainer = document.getElementById('revealGridContainer');
     const section = document.getElementById('revealSection');
 
-    if (!mediaTarget || !currentLibraryMedia) {
+    // If no media is loaded yet, keep the section hidden
+    if (!gridContainer || !currentLibraryMedia) {
         if (section) section.style.display = 'none';
         return;
     }
