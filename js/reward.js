@@ -78,20 +78,53 @@ export function buyRewardFragment(cost) {
 }
 
 export function toggleRewardGrid() {
+    console.log("EXECUTION: toggleRewardGrid fired"); // <--- LOG 1
     const section = document.getElementById('revealSection');
     const btn = document.getElementById('toggleGridBtn');
-    if (!section || !btn) return;
+    if (!section || !btn) {
+        console.log("ERROR: revealSection or toggleGridBtn missing in DOM");
+        return;
+    }
 
-    if (section.style.display === 'none') {
-        section.style.display = 'flex'; // Use flex for centering
+    if (section.style.display === 'none' || section.style.display === '') {
+        section.style.display = 'flex'; 
         btn.style.opacity = '1';
     } else {
         section.style.display = 'none';
         btn.style.opacity = '0.6';
-        
-        // --- THE RESET: Move back to Tier 1 menu on close ---
         toggleRewardSubMenu(false);
     }
+}
+
+export function toggleRewardSubMenu(show) {
+    console.log("EXECUTION: toggleRewardSubMenu fired with:", show); // <--- LOG 2
+    const mainMenu = document.getElementById('reward-main-menu');
+    const buyMenu = document.getElementById('reward-buy-menu');
+    
+    if (!mainMenu || !buyMenu) {
+        console.log("ERROR: Menu containers missing");
+        return;
+    }
+
+    if (show) {
+        mainMenu.style.display = 'none';
+        buyMenu.style.display = 'flex';
+        buyMenu.classList.remove('hidden');
+    } else {
+        mainMenu.style.display = 'flex';
+        buyMenu.style.display = 'none';
+    }
+}
+
+export function buyRewardFragment(cost) {
+    console.log("EXECUTION: buyRewardFragment fired for cost:", cost); // <--- LOG 3
+    if (gameStats.coins < cost) {
+        triggerSound('sfx-deny');
+        alert("INSUFFICIENT COINS.");
+        return;
+    }
+    window.parent.postMessage({ type: "PURCHASE_REVEAL", cost: cost }, "*");
+    triggerSound('coinSound');
 }
 
 
