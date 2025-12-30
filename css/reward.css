@@ -132,4 +132,26 @@
 }
 .dr-close-glass:hover { border-color: #666; color: #888; }
 
+
+/* --- STEP 1: TARGETING SCANNER --- */
+
+/* The glowing border that will jump between squares */
+.reveal-square.is-targeting {
+    border: 2px solid var(--neon-blue) !important;
+    background: rgba(0, 243, 255, 0.1) !important;
+    box-shadow: inset 0 0 15px var(--neon-blue), 0 0 20px var(--neon-blue) !important;
+    z-index: 10;
+    transition: none !important; /* Must be instant for the jump effect */
+}
+
+/* The final 'Lock-In' flash */
+@keyframes lockInPulse {
+    0% { background: var(--neon-blue); opacity: 1; }
+    50% { background: white; opacity: 0.8; }
+    100% { background: transparent; opacity: 0; }
+}
+
+.reveal-square.locked-item {
+    animation: lockInPulse 0.5s ease-out 3; /* Flashes 3 times before revealing */
+}
 /* 10. NO SPECIAL MEDIA QUERIES - THE ABOVE LOGIC WORKS FOR BOTH */
