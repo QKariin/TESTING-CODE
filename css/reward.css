@@ -1,23 +1,21 @@
-/* --- TACTICAL REVEAL SYSTEM: MASTER CSS --- */
+/* --- TACTICAL REVEAL SYSTEM: MASTER VERSION --- */
 
-/* 1. THE OVERLAY (The Boss) */
+/* 1. THE OVERLAY (The Ghost Layer)
+   Covers the whole chat window without pushing elements. */
 #revealSection {
     position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
+    inset: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    background: rgba(0, 0, 0, 0.92) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    z-index: 5000 !important; /* Puts it on top of the header/footer */
-    display: none; /* Toggled to 'flex' by JS */
+    background: rgba(0, 0, 0, 0.96) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+    z-index: 5000 !important;
+    display: none; /* Toggled to flex by JS */
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 20px !important;
+    justify-content: space-between; /* Spreads Title, Photo, and Button */
+    padding: 20px 10px !important;
     box-sizing: border-box !important;
 }
 
@@ -28,44 +26,43 @@
     font-weight: bold;
     font-size: 1.1rem !important;
     color: var(--neon-pink) !important;
-    text-shadow: 0 0 10px rgba(255, 0, 222, 0.3);
-    margin-bottom: 10px !important;
-    letter-spacing: 3px;
     text-transform: uppercase;
-    text-align: center;
+    letter-spacing: 3px;
+    flex-shrink: 0;
 }
 
 /* 3. THE MASTER GRID CONTAINER
-   Uses fit-content so the BLUR SNAPS to the photo edges. */
+   This wraps the photo exactly. No extra space on sides. */
 #revealGridContainer {
     position: relative !important;
-    width: fit-content !important; /* SNAPS TO PHOTO WIDTH */
-    height: auto !important;
-    max-height: 75% !important; /* Leaves space for labels and buttons */
+    height: 70% !important; /* FORCED HEIGHT FOR THE REWARD */
+    width: fit-content !important; /* SNAPS TO IMAGE WIDTH */
     margin: 0 auto !important;
-    border: 1px solid #222;
-    border-radius: 8px;
-    background: transparent !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
-    display: inline-block !important; /* Kills the full-width box */
+    border: 1px solid #222;
+    border-radius: 4px;
 }
 
-/* 4. THE MEDIA (Photo or Video)
-   Sets the width for the container. */
-reveal-bg-media {
-    display: block !important;
-    width: auto !important;
-    height: auto !important;
+/* 4. THE MEDIA (The Prize)
+   Unlocked proportions. 100% of the container height. */
+.reveal-bg-media {
+    position: relative !important;
+    height: 100% !important; /* Master of the height */
+    width: auto !important;   /* Keeps original proportion */
     max-width: 100% !important;
-    max-height: 65vh !important; /* Limits height on mobile */
+    display: block !important;
     object-fit: contain !important;
+    z-index: 1;
 }
 
-/* 5. THE 3x3 GRID OVERLAY 
-   Pinned exactly to the photo. */
+/* 5. THE 3x3 GRID OVERLAY
+   Physically glued to the photo's edges. */
 .reveal-grid-overlay {
     position: absolute !important;
-    inset: 0 !important; /* Snaps to the relative parent (the photo) */
+    inset: 0 !important; /* SNAPS EXACTLY TO PHOTO EDGES */
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     grid-template-rows: repeat(3, 1fr) !important;
@@ -77,7 +74,6 @@ reveal-bg-media {
     position: relative;
     box-sizing: border-box;
     border: 0.5px solid rgba(255, 255, 255, 0.08) !important;
-    overflow: hidden;
 }
 
 .reveal-square.frosted {
@@ -86,48 +82,40 @@ reveal-bg-media {
     -webkit-backdrop-filter: blur(60px) !important;
 }
 
-/* 7. THE REVEAL (Melt Effect) */
 .reveal-square.clear {
     background: transparent !important;
     backdrop-filter: blur(0px) !important;
     -webkit-backdrop-filter: blur(0px) !important;
-    transition: backdrop-filter 1.2s ease, background 1.2s ease !important;
+    transition: backdrop-filter 1.2s ease;
 }
 
-/* 8. THE NUMBERS */
+/* 7. THE NUMBERS */
 .sq-num {
     font-family: 'Share Tech Mono', monospace !important;
     font-size: 0.7rem !important;
-    color: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.15) !important;
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
 }
 
-/* 9. IPHONE STYLE SLIDERS */
-.reward-slider-container { display: flex; flex-direction: column; gap: 15px; width: 100%; padding: 10px; max-width: 400px; }
+/* 8. IPHONE SLIDERS (Reward Menu) */
+.reward-slider-container { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 400px; padding: 10px; }
 .iphone-slider { position: relative; width: 100%; height: 55px; background: rgba(255, 255, 255, 0.05); border: 1px solid #333; border-radius: 30px; overflow: hidden; cursor: pointer; }
 .slider-track-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Georgia', serif; font-size: 0.8rem; color: #555; pointer-events: none; z-index: 2; }
 .slider-knob { position: absolute; left: 4px; top: 4px; bottom: 4px; aspect-ratio: 1 / 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 3; }
-.slider-pink .slider-knob { background: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); }
-.slider-gold .slider-knob { background: var(--neon-yellow); box-shadow: 0 0 15px var(--neon-yellow); }
+.slider-pink .slider-knob { background: var(--neon-pink); }
+.slider-gold .slider-knob { background: var(--neon-yellow); }
 .slider-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; z-index: 1; }
 .slider-pink .slider-fill { background: rgba(255, 0, 222, 0.15); }
 .slider-gold .slider-fill { background: rgba(255, 215, 0, 0.15); }
 
-/* --- 10. MOBILE PRECISION (FIXED: NO MORE BOX BLUR) --- */
-@media (max-width: 768px) {
-    #revealGridContainer { 
-        width: fit-content !important; /* SNAP TO PHOTO */
-        max-width: 95% !important; /* Prevent going off-screen */
-        height: 70% !important; /* Smaller height to ensure button is visible */
-    }
-    #revealLevelLabel { font-size: 0.9rem !important; margin-top: 10px; }
+/* 9. THE CLOSE BUTTON */
+.dr-close-glass {
+    margin-top: 10px; background: transparent; border: 1px solid #333; color: #444; font-family: 'Rajdhani'; font-size: 0.6rem; padding: 5px 20px; border-radius: 20px; cursor: pointer; letter-spacing: 2px; flex-shrink: 0;
 }
 
-.dr-close-glass {
-    margin-top: 20px; background: transparent; border: 1px solid #333; color: #444; font-family: 'Rajdhani'; font-size: 0.6rem; padding: 5px 15px; border-radius: 20px; cursor: pointer; letter-spacing: 2px; transition: 0.3s;
+/* --- 10. MOBILE PRECISION --- */
+@media (max-width: 768px) {
+    #revealGridContainer { height: 60vh !important; } /* Uses more vertical space on mobile */
+    #revealLevelLabel { font-size: 1rem !important; }
 }
-.dr-close-glass:hover { border-color: #666; color: #888; }
