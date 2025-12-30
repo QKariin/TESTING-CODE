@@ -152,17 +152,13 @@
                   <div id="chatBadge">CHAT</div>
                   
                   <!-- THE REVEAL TARGET -->
-                  <!-- THE REVEAL TARGET -->
                   <div id="revealSection" style="display: none;">
                       <div id="revealLevelLabel">Kneeling rewards:</div>
                       
-                      <!-- THE PRIZE GRID (The Jail) -->
-                      <div id="revealGridContainer" style="position: relative;">
+                      <!-- THE PRIZE GRID (Opened) -->
+                      <div id="revealGridContainer">
                           
-                          <!-- NEW: THE MEDIA SLOT (JS will only touch THIS) -->
-                          <div id="rewardMediaTarget"></div>
-                  
-                          <!-- THE INTEGRATED COMMAND BLOCK (Floats over the target) -->
+                          <!-- THE INTEGRATED COMMAND BLOCK (Moved INSIDE to float over the photo) -->
                           <div class="reveal-market-row">
                               
                               <!-- TIER 1: MAIN OPTIONS -->
@@ -187,11 +183,12 @@
                                       &larr; BACK
                                   </button>
                               </div>
-                  
+              
                           </div> <!-- End reveal-market-row -->
-                      </div> <!-- End revealGridContainer -->
-                  </div> <!-- End revealSection -->- End revealSection -->
+                      </div> <!-- End revealGridContainer (Now correctly closing AFTER the buttons) -->
+                  </div> <!-- End revealSection -->
 
+    <!-- Rest of your Chat Card (Header, Body, Footer) follows here... -->
                     <!-- Header -->
                     <!-- CHAT HEADER: ADDED THE TOGGLE ICON -->
                 <div class="chat-header-row" style="position: relative; z-index: 1001; background: rgba(15,15,15,0.9); backdrop-filter: blur(10px); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;">
