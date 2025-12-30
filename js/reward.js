@@ -151,6 +151,49 @@ export function initSlider(e, choice) {
     document.addEventListener('touchend', stopHandlers);
 }
 
+// --- STEP 2: THE DIGITAL ROULETTE ENGINE ---
+export function runTargetingAnimation(winnerId, finalCallback) {
+    const frostedSquares = Array.from(document.querySelectorAll('.reveal-square.frosted'));
+    if (frostedSquares.length === 0) return finalCallback();
+
+    let currentIndex = 0;
+    let jumps = 0;
+    const maxJumps = 15; // How many times the light jumps before stopping
+
+    const interval = setInterval(() => {
+        // 1. Remove targeting from everyone
+        frostedSquares.forEach(sq => sq.classList.remove('is-expanded', 'is-targeting'));
+
+        // 2. Pick a random square for the "Scanning" look
+        const randomSq = frostedSquares[Math.floor(Math.random() * frostedSquares.length)];
+        randomSq.classList.add('is-targeting');
+
+        jumps++;
+
+        // 3. Check if we are at the end
+        if (jumps >= maxJumps) {
+            clearInterval(interval);
+            
+            // 4. Lock onto the REAL winner
+            const actualWinner = document.getElementById(`sq-${winnerId}`);
+            if (actualWinner) {
+                frostedSquares.forEach(sq => sq.classList.remove('is-targeting'));
+                actualWinner.classList.add('locked-item'); // Trigger the 3x flash
+                
+                // Wait for the flashes to finish, then reveal
+                setTimeout(() => {
+                    finalCallback();
+                }, 1500);
+            } else {
+                finalCallback();
+            }
+        }
+    }, 100); // Jump speed (100ms)
+}
+
+// Bind to window
+window.runTargetingAnimation = runTargetingAnimation;
+
 // Global Bindings
 window.handleRevealFragment = handleRevealFragment;
 window.initSlider = initSlider;
