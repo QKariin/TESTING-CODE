@@ -1,5 +1,5 @@
 // js/reward.js - THE REVEAL ENGINE
-import { activeRevealMap, currentLibraryMedia, libraryProgressIndex, gameStats } from './state.js';
+import { activeRevealMap, currentLibraryMedia, libraryProgressIndex, gameStats, vaultItems } from './state.js';
 import { getOptimizedUrl, triggerSound } from './utils.js';
 
 // --- 1. THE GRID RENDERER (Draws the 3x3 frosted glass) ---
@@ -229,6 +229,42 @@ export function runTargetingAnimation(winnerId, finalCallback) {
     }, 50); // Speed: 80ms is a fast "Digital" jump
 }
 
+export function renderVault() {
+    const grid = document.getElementById('vaultGrid');
+    if (!grid) return;
+
+    if (!vaultItems || vaultItems.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#444; font-family:'Rajdhani'; font-size:0.7rem; letter-spacing:2px;">YOUR VAULT IS CURRENTLY EMPTY.</div>`;
+        return;
+    }
+
+    // Draw each unlocked reward as a high-class card
+    grid.innerHTML = vaultItems.map((item, index) => {
+        // Detect if the item is an old string URL or the new high-detail object
+        const url = typeof item === 'string' ? item : item.mediaUrl;
+        const dayNum = typeof item === 'object' ? item.day : (index + 1);
+        const isVideo = url.match(/\.(mp4|mov|webm)/i);
+
+        return `
+            <div class="gallery-item" onclick="window.openVaultMedia('${url}', ${isVideo ? 'true' : 'false'})">
+                <img src="${getOptimizedUrl(url, 400)}" class="gi-thumb" style="opacity: 1 !important; filter: none !important;">
+                <div class="gi-badge" style="color:var(--neon-yellow); border-color:var(--neon-yellow);">LEVEL ${dayNum}</div>
+                ${item.unlockedAt ? `<div style="position:absolute; bottom:5px; right:5px; font-size:0.4rem; color:#666; font-family:'Share Tech Mono';">SECURED: ${new Date(item.unlockedAt).toLocaleDateString()}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+// Helper to open the big glass modal for vault items
+window.openVaultMedia = function(url, isVideo) {
+    import('./gallery.js').then(({ openModal }) => {
+        // We reuse your perfect history modal for the vault
+        openModal(url, "UNLOCKED", "High-Class Reward", isVideo);
+    });
+};
+
+// Bind to window
+window.renderVault = renderVault;
 // Global binding
 window.buyRewardFragment = buyRewardFragment;
 // Bind to window
