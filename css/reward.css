@@ -184,8 +184,7 @@
     backdrop-filter: blur(15px) !important;
     -webkit-backdrop-filter: blur(15px) !important;
     
-    pointer-events: auto !important; 
-    z-index: 6000 !important;
+    pointer-events: auto !important; /* ALLOWS CLICKS ON BUTTONS */
 }
 
 
