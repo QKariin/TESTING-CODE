@@ -47,6 +47,10 @@ html, body {
     background: transparent;
 }
 
+.hidden { display: none !important; }
+
+.chat-panel { position: relative; }
+
 .dr-fast-top-btn:hover {
     background: var(--pink);
     color: black;

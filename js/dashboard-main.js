@@ -246,7 +246,8 @@ window.renderMainDashboard = renderMainDashboard;
 window.adminTaskAction = adminTaskAction;
 window.toggleMobStats = toggleMobStats;
 window.currId = currId;
-
+window.openChatPreview = openChatPreview;
+window.closeChatPreview = closeChatPreview;
 
 // Send ready signal to parent
 if (window.parent) {

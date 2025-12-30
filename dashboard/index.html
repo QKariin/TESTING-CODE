@@ -138,6 +138,24 @@
             <div class="split">
                 <div class="chat-panel">
                     <div class="cp-head">ENCRYPTED FEED</div>
+                    <!--Show media in chat -->
+                    <div id="chatMediaOverlay" class="hidden"
+                        style="position: absolute; inset: 0; background: rgba(0,0,0,0.92);
+                                z-index: 500; backdrop-filter: blur(20px);
+                                display: flex; align-items: center; justify-content: center;">
+
+                        <!-- Close button -->
+                        <div id="mediaOverlayClose"
+                            onclick="closeChatPreview()"
+                            style="position:absolute; top:20px; right:20px; cursor:pointer;
+                                    font-size:2rem; color:white; font-weight:300;">
+                            &times;
+                        </div>
+                        <div id="chatMediaOverlayContent"
+                            style="width: 100%; max-width: 90%; max-height: 90%;
+                                    display:flex; align-items:center; justify-content:center;">
+                        </div>
+                    </div>
                     <div class="c-body" id="adminChatBox"></div>
                     <div class="c-foot">
                         <div id="plusMenu" class="d-none">

@@ -100,17 +100,25 @@ export function renderChat(messages) {
             if (isVideo) {
                 contentHtml = `
                     <div class="msg ${msgClass}" style="padding:0; background:black;">
-                        <video src="${m.message}" controls style="max-width:100%; border-radius:8px; display:block;"></video>
+                        <video 
+                            src="${m.message}" 
+                            controls 
+                            style="max-width:100%; border-radius:8px; display:block; cursor:pointer;"
+                            onclick="openChatPreview('${encodeURIComponent(m.message)}', true)">
+                        </video>
                     </div>`;
             } 
             else if (isImage) {
                 contentHtml = `
                     <div class="msg ${msgClass}" style="padding:0;">
-                        <img src="${m.message}" style="max-width:100%; border-radius:8px; display:block;">
+                        <img 
+                            src="${m.message}" 
+                            style="max-width:100%; border-radius:8px; display:block; cursor:pointer;"
+                            onclick="openChatPreview('${encodeURIComponent(m.message)}', false)">
                     </div>`;
             } 
             else {
-                // It's a normal link → show as clickable text
+                // Normal link
                 contentHtml = `
                     <div class="msg ${msgClass}">
                         <a href="${m.message}" target="_blank" rel="noopener noreferrer">${m.message}</a>
@@ -183,13 +191,21 @@ export function sendCoins(amount) {
 
 export function openChatPreview(url, isVideo) {
     const overlay = document.getElementById('chatMediaOverlay');
-    const content = document.getElementById('cmoContent');
+    const content = document.getElementById('chatMediaOverlayContent');
+    const decoded = decodeURIComponent(url);
+
     if (!overlay || !content) return;
-    content.innerHTML = isVideo ? `<video src="${url}" controls autoplay class="cmo-media"></video>` : `<img src="${url}" class="cmo-media">`;
+    content.innerHTML = isVideo ? `<video src="${decoded}" controls autoplay class="cmo-media"></video>` : `<img src="${decoded}" class="cmo-media">`;
+    overlay.classList.remove('hidden');
     overlay.style.display = 'flex';
 }
 
 export function closeChatPreview() {
     const overlay = document.getElementById('chatMediaOverlay');
-    if (overlay) overlay.style.display = 'none';
+    const container = document.getElementById('chatMediaOverlayContent');
+
+    if (!overlay || !container) return;
+
+    overlay.classList.add('hidden');
+    container.innerHTML = ""; // stops video + clears image
 }
