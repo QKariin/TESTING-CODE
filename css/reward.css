@@ -7,6 +7,8 @@
     width: 100% !important;
     height: 100% !important;
     background: rgba(0, 0, 0, 0.95) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
     z-index: 2000 !important;
     display: none; 
     flex-direction: column;
@@ -15,31 +17,32 @@
     padding: 5px !important; /* CRUSH DEAD SPACE */
 }
 
-/* 2. THE HEADER LABEL */
+/* 2. THE HEADER LABEL (Serif / Tight) */
 #revealLevelLabel {
-    font-family: 'Georgia', serif !important; /* High-class Serif */
+    font-family: 'Georgia', serif !important;
     font-style: italic;
-    font-size: 0.9rem !important; /* Shrunk slightly to save space for the photo */
+    font-size: 0.9rem !important;
     color: var(--neon-pink) !important;
     text-shadow: 0 0 10px rgba(255, 0, 222, 0.3);
-    margin-bottom: 5px !important; /* Micro-gap to kill dead space */
+    margin-bottom: 5px !important;
     letter-spacing: 2px;
     text-transform: uppercase;
     text-align: center;
     opacity: 0.8;
 }
 
-/* 3. THE MASTER CONTAINER (This was missing!) */
+/* 3. THE MASTER CONTAINER (Max Size) */
 #revealGridContainer {
     position: relative !important;
-    width: 98% !important; /* FILLS ENTIRE CHAT WIDTH */
-    max-width: 480px !important; /* LIMITS ON DESKTOP */
+    width: 98% !important;
+    max-width: 480px !important;
     aspect-ratio: 1 / 1 !important;
     margin: 0 auto !important;
     border: 1px solid #1a1a1a;
-    border-radius: 4px; /* TIGHTER EDGES FOR TACTICAL LOOK */
+    border-radius: 4px;
     overflow: hidden;
     background: #000;
+    box-shadow: 0 10px 50px rgba(0,0,0,1);
 }
 
 /* 4. THE MEDIA (Photo or Video) */
@@ -64,87 +67,54 @@
 
 /* 6. THE FROSTED GLASS SQUARES */
 .reveal-square {
-    border: 0.2px solid rgba(255, 255, 255, 0.03);
-    transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.reveal-square.frosted {
-    background: rgba(5, 5, 5, 0.8) !important; /* DARKER FROST */
-    backdrop-filter: blur(80px) !important; /* THE NUCLEAR BLUR */
-    -webkit-backdrop-filter: blur(80px) !important;
-    border: 0.1px solid rgba(255, 255, 255, 0.05);
-}
-
-.reveal-square.clear {
-    backdrop-filter: blur(0px) !important;
-    -webkit-backdrop-filter: blur(0px) !important;
-    background: transparent !important;
-    border: none !important;
-}
-
-.sq-num {
-    font-family: 'Orbitron';
-    font-size: 0.5rem;
-    color: rgba(255, 255, 255, 0.05);
-}
-
-/* 7. IPHONE STYLE SLIDERS (For Reward Menu) */
-.reward-slider-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-    padding: 10px;
-}
-
-.iphone-slider {
     position: relative;
-    width: 100%;
-    height: 55px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid #333;
-    border-radius: 30px;
+    border: 0.2px solid rgba(255, 255, 255, 0.03);
     overflow: hidden;
 }
 
-.slider-track-text {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Georgia', serif;
-    font-size: 0.8rem;
-    color: #666;
-    pointer-events: none;
-    z-index: 2;
+.reveal-square.frosted {
+    background: rgba(5, 5, 5, 0.8) !important;
+    backdrop-filter: blur(80px) !important;
+    -webkit-backdrop-filter: blur(80px) !important;
 }
 
-.slider-knob {
+.reveal-square.frosted::after {
+    content: "";
     position: absolute;
-    left: 4px;
-    top: 4px;
-    bottom: 4px;
-    aspect-ratio: 1 / 1;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 3;
-    background: #222;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: rgba(0, 243, 255, 0.1);
+    animation: scanline 3s linear infinite;
 }
 
+/* 7. THE SHATTER REVEAL ANIMATION */
+@keyframes squareShatter {
+    0% { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(80px); transform: scale(1); }
+    30% { background: rgba(0, 243, 255, 0.4); box-shadow: 0 0 30px var(--blue); }
+    100% { background: transparent; backdrop-filter: blur(0px); transform: scale(1); }
+}
+
+.reveal-square.clear {
+    animation: squareShatter 1s cubic-bezier(0.23, 1, 0.32, 1) forwards !important;
+}
+
+/* 8. THE NUMBERS (Technical Style) */
+.sq-num {
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 0.8rem !important;
+    color: rgba(0, 243, 255, 0.2) !important;
+    text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+    z-index: 5;
+}
+
+/* 9. IPHONE STYLE SLIDERS */
+.reward-slider-container { display: flex; flex-direction: column; gap: 15px; width: 100%; padding: 10px; }
+.iphone-slider { position: relative; width: 100%; height: 55px; background: rgba(255, 255, 255, 0.05); border: 1px solid #333; border-radius: 30px; overflow: hidden; }
+.slider-track-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Georgia', serif; font-size: 0.8rem; color: #666; pointer-events: none; z-index: 2; }
+.slider-knob { position: absolute; left: 4px; top: 4px; bottom: 4px; aspect-ratio: 1 / 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 3; }
 .slider-pink .slider-knob { background: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); }
 .slider-gold .slider-knob { background: var(--neon-yellow); box-shadow: 0 0 15px var(--neon-yellow); }
-
-.slider-fill {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 0;
-    z-index: 1;
-}
-
+.slider-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; z-index: 1; }
 .slider-pink .slider-fill { background: rgba(255, 0, 222, 0.15); }
 .slider-gold .slider-fill { background: rgba(255, 215, 0, 0.15); }
+
+@keyframes scanline { 0% { top: 0%; } 100% { top: 100%; } }
