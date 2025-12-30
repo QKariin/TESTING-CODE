@@ -47,12 +47,12 @@ export function renderSidebar() {
 
         // --- NEW MESSAGE SOUND LOGIC ---
         const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
-        const lastSound = parseInt(localStorage.getItem('sound_' + u.memberId) || 0);
-        const isNewMessage = msgTime > lastSound;
+        const lastSound = Number(localStorage.getItem('sound_' + u.memberId) || 0);
+        const isNewMessage = hasMsg && msgTime > lastSound;
 
         if (isNewMessage) {
-            triggerSound('sfx-notify');
             localStorage.setItem('sound_' + u.memberId, msgTime);
+            triggerSound('sfx-notify');
         }
 
         // B. ENTRANCE: Just logged on (Join BACK of Online group)
