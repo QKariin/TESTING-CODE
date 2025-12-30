@@ -70,12 +70,15 @@
    SNAPS ONLY TO MEDIA - NOT THE BOX. */
 .reveal-grid-overlay {
     position: absolute !important;
-    inset: 0 !important; /* Physically glued to the photo's top, bottom, left, right */
+    inset: 0 !important;
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     grid-template-rows: repeat(3, 1fr) !important;
     z-index: 2;
+    /* --- THE FIX --- */
+    pointer-events: none !important; 
 }
+
 
 /* 6. THE FROSTED GLASS SQUARES */
 .reveal-square {
@@ -161,9 +164,9 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    /* This MUST be higher than the 3x3 grid (z-index 2) and Section (z-index 5000) */
-    z-index: 5050 !important; 
-    pointer-events: none !important; /* Let clicks pass through the gaps */
+    z-index: 5050 !important;
+    /* --- THE FIX --- */
+    pointer-events: none !important; 
 }
 
 .market-menu-group {
