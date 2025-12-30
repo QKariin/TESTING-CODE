@@ -272,21 +272,19 @@ export function toggleRewardSubMenu(show) {
     if (!mainMenu || !buyMenu) return;
 
     if (show) {
-        // 1. Hide main
+        // HIDE MAIN, SHOW BUY
         mainMenu.classList.add('hidden');
-        mainMenu.style.display = 'none';
+        mainMenu.style.setProperty('display', 'none', 'important');
 
-        // 2. Show buy (Remove the 'hidden' class physically)
-        buyMenu.classList.remove('hidden');
-        buyMenu.style.display = 'flex';
+        buyMenu.classList.remove('hidden'); // KILL THE HIDDEN CLASS
+        buyMenu.style.setProperty('display', 'flex', 'important');
     } else {
-        // 1. Show main
+        // SHOW MAIN, HIDE BUY
         mainMenu.classList.remove('hidden');
-        mainMenu.style.display = 'flex';
+        mainMenu.style.setProperty('display', 'flex', 'important');
 
-        // 2. Hide buy
         buyMenu.classList.add('hidden');
-        buyMenu.style.display = 'none';
+        buyMenu.style.setProperty('display', 'none', 'important');
     }
 }
 
