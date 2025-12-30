@@ -158,19 +158,33 @@
                         <div id="revealGridContainer"></div>
                     
                         <!-- THE INTEGRATED COMMAND BLOCK -->
+                        <!-- THE INTEGRATED COMMAND BLOCK -->
                         <div class="reveal-market-row">
-                            <button onclick="buyRewardFragment(100)" class="dr-enforce-btn market-btn">
-                                ⚡ OPEN MORE (100 🪙)
-                            </button>
-                            <button onclick="buyRewardFragment(500)" class="dr-enforce-btn market-btn" style="font-weight:900;">
-                                🔥 FULL PICTURE (500 🪙)
-                            </button>
-                            <!-- NOW CENTERED AND PART OF THE BLOCK -->
-                            <button onclick="toggleRewardGrid()" class="dr-enforce-btn close-btn">
-                                CLOSE VIEW
-                            </button>
+                            
+                            <!-- TIER 1: MAIN OPTIONS -->
+                            <div id="reward-main-menu" style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                                <button onclick="toggleRewardSubMenu(true)" class="dr-enforce-btn close-btn" style="border-color:var(--neon-blue) !important; color:var(--neon-blue) !important;">
+                                    OPEN MORE
+                                </button>
+                                <button onclick="toggleRewardGrid()" class="dr-enforce-btn close-btn">
+                                    CLOSE VIEW
+                                </button>
+                            </div>
+                        
+                            <!-- TIER 2: PURCHASE OPTIONS (Starts Hidden) -->
+                            <div id="reward-buy-menu" class="hidden" style="flex-direction: column; gap: 6px; align-items: center;">
+                                <button onclick="buyRewardFragment(100)" class="dr-enforce-btn market-btn">
+                                    1 SQUARE (100 🪙)
+                                </button>
+                                <button onclick="buyRewardFragment(500)" class="dr-enforce-btn market-btn" style="font-weight:900;">
+                                    ENTIRE PICTURE (500 🪙)
+                                </button>
+                                <button onclick="toggleRewardSubMenu(false)" class="dr-enforce-btn close-btn" style="font-size:0.45rem; padding:4px 10px !important; margin-top:5px;">
+                                    &larr; BACK
+                                </button>
+                            </div>
+                        
                         </div>
-                    </div>
                     <!-- Header -->
                     <!-- CHAT HEADER: ADDED THE TOGGLE ICON -->
                 <div class="chat-header-row" style="position: relative; z-index: 1001; background: rgba(15,15,15,0.9); backdrop-filter: blur(10px); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;">
