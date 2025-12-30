@@ -89,24 +89,25 @@ export function claimKneelReward(choice) {
     const rewardMenu = document.getElementById('kneelRewardOverlay');
     if (rewardMenu) rewardMenu.classList.add('hidden');
 
-    // Handle fragment reveal differently
-    if (choice === 'fragment') {
-        // Import and call the fragment reveal function
-        import('./reward.js').then(({ handleRevealFragment }) => {
-            handleRevealFragment();
-        });
-        return; // Don't do the coin shower or normal reward flow
-    }
-
-    // Normal coin/points flow
     triggerSound('coinSound');
     triggerCoinShower();
 
+    // 1. Tell Wix (Permanent Database Save)
     window.parent.postMessage({ 
         type: "CLAIM_KNEEL_REWARD", 
         rewardType: choice,
         rewardValue: choice === 'coins' ? 10 : 50
     }, "*");
+
+    // 2. THE BRIDGE SHOUT: Tell the Queen's Dashboard instantly
+    import('./bridge.js').then(({ Bridge }) => {
+        Bridge.send("SLAVE_REWARD_CLAIMED", {
+            memberId: userProfile.memberId,
+            choice: choice,
+            value: choice === 'coins' ? 10 : 50,
+            timestamp: Date.now()
+        });
+    });
 }
 
 
