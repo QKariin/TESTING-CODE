@@ -1,5 +1,5 @@
 // js/reward.js - THE REVEAL ENGINE
-import { activeRevealMap, currentLibraryMedia, libraryProgressIndex, gameStats, currId } from './state.js';
+import { activeRevealMap, currentLibraryMedia, libraryProgressIndex, gameStats, userProfile } from './state.js';
 import { getOptimizedUrl, triggerSound } from './utils.js';
 
 // --- 1. THE GRID RENDERER (Draws the 3x3 frosted glass) ---
