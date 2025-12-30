@@ -8,6 +8,7 @@ import { triggerSound } from './utils.js';
 // --- ADD THESE TWO LINES AT THE TOP ---
 let currentVisualOrder = []; 
 let previousOnlineStates = {}; // <--- THIS WAS MISSING AND CAUSED THE CRASH
+const soundMemory = {};
 
 export function renderSidebar() {
     const list = document.getElementById('userList');
@@ -47,12 +48,17 @@ export function renderSidebar() {
 
         // --- NEW MESSAGE SOUND LOGIC ---
         const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
-        const lastSound = parseInt(localStorage.getItem('sound_' + u.memberId) || 0);
-        const isNewMessage = msgTime > lastSound;
+        const lastSoundLS = Number(localStorage.getItem('sound_' + u.memberId) || 0);
+        const lastSoundRAM = soundMemory[u.memberId] || 0;
+
+        const lastSound = Math.max(lastSoundLS, lastSoundRAM);
+
+        const isNewMessage = hasMsg && msgTime > lastSound;
 
         if (isNewMessage) {
+            soundMemory[u.memberId] = msgTime; // update RAM immediately
+            localStorage.setItem('sound_' + u.memberId, msgTime); // update disk
             triggerSound('sfx-notify');
-            localStorage.setItem('sound_' + u.memberId, msgTime);
         }
 
         // B. ENTRANCE: Just logged on (Join BACK of Online group)
