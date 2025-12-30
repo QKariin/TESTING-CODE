@@ -139,6 +139,25 @@ window.addEventListener("message", (event) => {
         if(domBadge) { domBadge.innerHTML = data.online ? '<span class="status-dot"></span> ONLINE' : `<span class="status-dot"></span> ${data.text}`; domBadge.className = data.online ? "dom-status status-online" : "dom-status"; }
     }
 
+        // Handle fragment reveal response from Velo
+    if (data.type === "FRAGMENT_REVEALED") {
+        const { fragmentNumber, day, totalRevealed, isComplete } = data;
+        
+        // Import and run the targeting animation
+        import('./reward.js').then(({ runTargetingAnimation }) => {
+            runTargetingAnimation(fragmentNumber, () => {
+                // After animation completes, update the grid
+                renderRewardGrid();
+                
+                // Show completion message if all 9 squares are done
+                if (isComplete) {
+                    triggerSound('coinSound');
+                    // Optional: Show "LEVEL COMPLETE" message
+                }
+            });
+        });
+    }
+
     // YOUR Q-FEED LOGIC
     if (data.type === "UPDATE_Q_FEED") {
         const feedData = data.domVideos || data.posts || data.feed;
