@@ -72,25 +72,23 @@ export function buyRewardFragment(cost) {
     triggerSound('coinSound');
 }
 
-
 export function toggleRewardGrid() {
     const section = document.getElementById('revealSection');
     const btn = document.getElementById('toggleGridBtn');
     if (!section || !btn) return;
 
     if (section.style.display === 'none') {
-        section.style.display = 'block';
+        section.style.display = 'flex'; // Use flex for centering
         btn.style.opacity = '1';
-        btn.style.filter = 'drop-shadow(0 0 5px var(--neon-blue))';
     } else {
         section.style.display = 'none';
         btn.style.opacity = '0.6';
-        btn.style.filter = 'none';
+        
+        // --- THE RESET: Move back to Tier 1 menu on close ---
+        toggleRewardSubMenu(false);
     }
 }
 
-// Global binding
-window.toggleRewardGrid = toggleRewardGrid;
 
 // --- 2. THE REVEAL FRAGMENT BUTTON (The 3rd Option) ---
 export function handleRevealFragment() {
@@ -262,7 +260,28 @@ window.openVaultMedia = function(url, isVideo) {
         openModal(url, "UNLOCKED", "High-Class Reward", isVideo);
     });
 };
+// --- STEP 2: TIERED MENU TOGGLE ---
+export function toggleRewardSubMenu(show) {
+    const mainMenu = document.getElementById('reward-main-menu');
+    const buyMenu = document.getElementById('reward-buy-menu');
+    
+    if (!mainMenu || !buyMenu) return;
 
+    if (show) {
+        // Hide Main, Show Buy
+        mainMenu.style.display = 'none';
+        buyMenu.style.display = 'flex';
+    } else {
+        // Show Main, Hide Buy
+        mainMenu.style.display = 'flex';
+        buyMenu.style.display = 'none';
+    }
+}
+
+// Global binding
+window.toggleRewardGrid = toggleRewardGrid;
+// Bind it to window
+window.toggleRewardSubMenu = toggleRewardSubMenu;
 // Bind to window
 window.renderVault = renderVault;
 // Global binding
