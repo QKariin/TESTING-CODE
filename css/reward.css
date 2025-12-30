@@ -137,11 +137,18 @@
 
 /* 1. The Jumping Blue Border */
 .reveal-square.is-targeting {
-    border: 2px solid #00f3ff !important;
-    background: rgba(0, 243, 255, 0.15) !important;
-    box-shadow: inset 0 0 15px #00f3ff, 0 0 20px #00f3ff !important;
-    z-index: 100 !important;
-    transition: none !important; /* Instant jump */
+    /* Thicker border to be seen over the blur */
+    border: 3px solid #00f3ff !important; 
+    background: rgba(0, 243, 255, 0.3) !important;
+    
+    /* Massive z-index to stay ABOVE the photo and the frost */
+    z-index: 9999 !important; 
+    
+    /* Remove any blur from the active scanning square so it's sharp */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    
+    box-shadow: 0 0 20px #00f3ff, inset 0 0 20px #00f3ff !important;
 }
 
 /* 2. The Final Lock-In Flash (3 fast pulses) */
@@ -152,9 +159,9 @@
 }
 
 .reveal-square.locked-item {
-    animation: lockInPulse 0.3s ease-out 3 !important;
-    border: 2px solid white !important;
-    z-index: 101 !important;
+    z-index: 10000 !important;
+    border: 4px solid white !important;
+    animation: lockInPulse 0.3s ease-out 4 !important;
 }
 
 /* 3. Smooth Melt for the Winner */
