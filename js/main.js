@@ -198,27 +198,23 @@ window.addEventListener("message", (event) => {
 
       // C. INSTANT REVEAL SYNC (The Roulette Trigger)
     if (data.type === "INSTANT_REVEAL_SYNC") {
-        console.log("Slave: System Targeting Initiated...");
-
-        // 1. Ensure the grid is physically on the screen before animating
+        // 1. URGENT: Update the media URL first
         if (data.currentLibraryMedia) {
             setCurrentLibraryMedia(data.currentLibraryMedia);
         }
+        
+        // 2. Physically draw the grid and photo NOW
         renderRewardGrid(); 
 
-        // 2. Identify which square Wix just picked
-        const winnerId = data.activeRevealMap[data.activeRevealMap.length - 1];
-
-        // 3. START THE SCANNING
-        runTargetingAnimation(winnerId, () => {
-            // This runs ONLY after the blue light finishes jumping and flashing:
+        // 3. Start the animation only after a tiny delay to let the browser breathe
+        setTimeout(() => {
+            const winnerId = data.activeRevealMap[data.activeRevealMap.length - 1];
             
-            // Update the map and do the final reveal
-            setActiveRevealMap(data.activeRevealMap || []);
-            renderRewardGrid();
-            
-            console.log("Slave: Target Synchronized.");
-        });
+            runTargetingAnimation(winnerId, () => {
+                setActiveRevealMap(data.activeRevealMap || []);
+                renderRewardGrid(); // Final reveal
+            });
+        }, 50); 
     }
 
         // 2. Gallery Data Logic (Exactly as you sent it)
