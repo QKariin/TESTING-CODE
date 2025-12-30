@@ -19,6 +19,7 @@ import { toggleMobStats } from './dashboard-utils.js';
 import { Bridge } from './bridge.js';
 import './dashboard-modals.js'; // This wakes up the Command Armory
 import './dashboard-navigation.js';
+import { openChatPreview, closeChatPreview } from './chat.js';
 
 
 // Initialize dashboard
@@ -269,6 +270,8 @@ window.renderMainDashboard = renderMainDashboard;
 window.adminTaskAction = adminTaskAction;
 window.toggleMobStats = toggleMobStats;
 window.currId = currId;
+window.openChatPreview = openChatPreview;
+window.closeChatPreview = closeChatPreview;
 
 
 // Send ready signal to parent

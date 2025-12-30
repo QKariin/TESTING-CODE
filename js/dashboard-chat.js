@@ -38,7 +38,7 @@ export function renderChat(msgs) {
             if (isImage) {
                 contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${getOptimizedUrl(m.message, 300)}" onclick="openChatPreview('${encodeURIComponent(m.message)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
             } else if (isVideo) {
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${m.message}" onclick="openChatPreview('${encodeURIComponent(m.message)}', true)"controls muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
+                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${m.message}" onclick="openChatPreview('${encodeURIComponent(m.message)}', true)" muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
             } else if (m.message.startsWith('💝 TRIBUTE:')) {
                 contentHtml = renderTributeMessage(m.message, timeStr);
             } else if (m.message.includes('Task Verified') || m.message.includes('Task Rejected')) {
