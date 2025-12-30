@@ -54,19 +54,42 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Dashboard initialized with Daily ID:', dayCode);
 });
 
-// This tells the dashboard to listen to the "Radio Channel" (Vercel) 
-// exactly like it listens to Wix.
+// js/dashboard-main.js (THE COMMANDER'S RADIO)
 Bridge.listen((data) => {
-    // --- THE ECHO FILTER ---
-    // List of types we ignore because Wix Velo is already handling them directly.
-    const ignoreList = ["UPDATE_CHAT", "UPDATE_FULL_DATA", "UPDATE_DOM_STATUS", "UPDATE_RULES", "instantUpdate", "instantReviewSuccess"];
-
-    if (ignoreList.includes(data.type)) {
-        return; // Ignore the echo from the dashboard and stop here
+    // 1. FORWARD TO WIX LOGIC
+    // We ignore echoes of our own messages to prevent a loop on the dashboard
+    if (data.type === "CHAT_ECHO" || data.type === "UPDATE_CHAT") {
+        // We let Wix handle the chat updates for the dashboard
+        window.postMessage(data, "*"); 
+        return;
     }
 
-    // Only let actual commands (like 'updateTaskQueue' or 'forceActiveTask') through
     window.postMessage(data, "*"); 
+
+    // 2. INSTANT NOTIFICATION: Slave Reward Claimed
+    if (data.type === "SLAVE_REWARD_CLAIMED") {
+        console.log("Intel Received: Subject claimed " + data.choice);
+        
+        const u = users.find(x => x.memberId === data.memberId);
+        if (u) {
+            // Update local numbers immediately
+            if (data.choice === 'coins') u.coins += data.value;
+            else u.points += data.value;
+
+            // VISUAL PULSE: The card in your sidebar glows gold or pink
+            const sidebarItem = document.querySelector(`[onclick*="${data.memberId}"]`);
+            if (sidebarItem) {
+                const color = data.choice === 'coins' ? '#ffd700' : '#ff00de';
+                sidebarItem.style.boxShadow = `inset 0 0 20px ${color}`;
+                setTimeout(() => { sidebarItem.style.boxShadow = "none"; }, 2000);
+            }
+            
+            // Refresh detail panel if you are looking at them
+            if (window.currId === data.memberId) {
+                window.updateDetail(u);
+            }
+        }
+    }
 });
 
 window.addEventListener("click", unlockAudio);
