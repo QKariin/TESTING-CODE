@@ -14,7 +14,7 @@ import {
     setTaskQueue, setCmsHierarchyData, setWishlistItems, setLastWorshipTime, 
     setCurrentHistoryIndex, setTouchStartX, setIsLocked, setCooldownInterval, setActiveRevealMap, setVaultItems, setCurrentLibraryMedia, setLibraryProgressIndex 
 } from './state.js';
-import { renderRewardGrid } from './reward.js';
+import { renderRewardGrid, runTargetingAnimation } from './reward.js';
 import { getOptimizedUrl, SafeStorage, triggerSound, migrateGameStatsToStats, cleanHTML } from './utils.js';
 import { switchTab, toggleStats, openSessionUI, closeSessionUI, updateSessionCost, toggleSection, renderDomVideos, renderNews, renderWishlist } from './ui.js';
 import { getRandomTask, restorePendingUI, finishTask, cancelPendingTask, resetTaskDisplay } from './tasks.js';
