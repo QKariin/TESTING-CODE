@@ -1,6 +1,4 @@
-//import { BYTESCALE_CONFIG } from "./config";
-import { BYTESCALE_CONFIG } from "@/lib/config";
-
+import { BYTESCALE_CONFIG } from "../lib/config.js";
 
 function generateFilename(originalFile) {
   const ext = originalFile.name.split(".").pop();
