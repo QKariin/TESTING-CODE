@@ -9,7 +9,7 @@ export default function handler(req, res) {
     return res.status(400).json({ error: "Missing filePath" });
   }
 
-  const subject = filePath.split("/")[0];
+  const subject = filePath.split("/")[1];
 
   // Default to admin if unknown
   const account = BYTESCALE_CONFIG[subject] || BYTESCALE_CONFIG["admin"];
@@ -18,8 +18,6 @@ export default function handler(req, res) {
 
   // ✔ Load secret key from Vercel environment
   const secretKey = process.env[SECRET_KEY_ENV];
-  console.log('SECRET_KEY_ENV:', SECRET_KEY_ENV);
-  console.log('secretKey exists:', !!secretKey);
 
   if (!secretKey) {
     return res.status(500).json({ error: "Missing secret key in environment" });
@@ -27,7 +25,7 @@ export default function handler(req, res) {
 
   const expires = Date.now() + 1000 * 60 * 5;
 
-  const url = `https://upcdn.io/${ACCOUNT_ID}/raw/${filePath}?expires=${expires}`;
+  const url = `https://upcdn.io/${ACCOUNT_ID}/raw${filePath}?expires=${expires}`;
 
   const signature = crypto
     .createHmac("sha256", secretKey)
