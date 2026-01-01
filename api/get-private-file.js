@@ -25,12 +25,11 @@ export default function handler(req, res) {
 
   const expires = Date.now() + 1000 * 60 * 5;
 
-  const url = `https://upcdn.io/${ACCOUNT_ID}/raw${filePath}?expires=${expires}`;
-
+  const stringToSign = `${filePath}?expires=${expires}`;
   const signature = crypto
     .createHmac("sha256", secretKey)
-    .update(url)
+    .update(stringToSign)
     .digest("hex");
 
-  res.status(200).json({ url: `${url}&signature=${signature}` });
+  const url = `https://upcdn.io/${ACCOUNT_ID}/raw${filePath}?expires=${expires}&signature=${signature}`;
 }
