@@ -2,7 +2,7 @@ import crypto from "crypto";
 //import { BYTESCALE_CONFIG } from "../../js/config";
 import { BYTESCALE_CONFIG } from "../lib/config.js";
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   const { filePath } = req.query;
 
   if (!filePath) {
@@ -14,24 +14,22 @@ export default function handler(req, res) {
   // Default to admin if unknown
   const account = BYTESCALE_CONFIG[subject] || BYTESCALE_CONFIG["admin"];
 
-  const { ACCOUNT_ID, SECRET_KEY_ENV } = account;
+  const { ACCOUNT_ID, PUBLIC_KEY } = account;
 
-  // ✔ Load secret key from Vercel environment
-  const secretKey = process.env[SECRET_KEY_ENV];
+  try {
+    const response = await fetch(`https://upcdn.io/${ACCOUNT_ID}/raw${filePath}`, {
+      headers: { Authorization: `Bearer ${PUBLIC_KEY}` }
+    });
 
-  if (!secretKey) {
-    return res.status(500).json({ error: "Missing secret key in environment" });
+    if (!response.ok) {
+      return res.status(response.status).json({ error: 'Failed to fetch file' });
+    }
+
+    const buffer = await response.arrayBuffer();
+    res.setHeader('Content-Type', response.headers.get('content-type') || 'application/octet-stream');
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error('Proxy error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  const expires = Date.now() + 1000 * 60 * 5;
-
-  const stringToSign = `/raw${filePath}?expires=${expires}`;
-  const signature = crypto
-    .createHmac("sha256", secretKey)
-    .update(stringToSign)
-    .digest("hex");
-
-  const url = `https://upcdn.io/${ACCOUNT_ID}/raw${filePath}?expires=${expires}&signature=${signature}`;
-
-  res.json({ url });
 }

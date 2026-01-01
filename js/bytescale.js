@@ -36,9 +36,7 @@ export async function uploadToBytescale(subject, file) {
 
 export async function getPrivateFile(filePath) {
   const res = await fetch(`/api/get-private-file?filePath=${encodeURIComponent(filePath)}`);
-  const data = await res.json();
-
-  if (!res.ok) throw new Error(data.error || "Failed to retrieve file");
-
-  return data.url;
+  if (!res.ok) throw new Error('Failed to retrieve file');
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
 }
