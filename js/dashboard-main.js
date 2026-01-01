@@ -131,7 +131,7 @@ window.addEventListener("message", async (event) => {
     }
     
     else if (data.type === "updateChat") {
-        renderChat(data.messages || []);
+        await renderChat(data.messages || []);
         
         const u = users.find(x => x.memberId === data.memberId);
         

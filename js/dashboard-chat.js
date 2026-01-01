@@ -3,16 +3,33 @@
 
 import { currId, lastChatJson, setLastChatJson, ACCOUNT_ID, API_KEY, users } from './dashboard-state.js';
 import { getOptimizedUrl, forceBottom, isAtBottom } from './dashboard-utils.js';
+import { getPrivateFile } from './bytescale.js';
 
 let lastNotifiedMessageId = null;
 let isInitialLoad = true;
 
-export function renderChat(msgs) {
+export async function renderChat(msgs) {
     if (!msgs || !Array.isArray(msgs)) return;
     
     const currentJson = JSON.stringify(msgs);
     if (currentJson === lastChatJson) return;
     setLastChatJson(currentJson);
+    
+    // Proxy Bytescale URLs for private access (in parallel)
+    const signingPromises = msgs.map(async (m) => {
+        if (m.message && m.message.startsWith('https://upcdn.io/')) {
+            const parts = m.message.split('/raw/');
+            if (parts.length === 2) {
+                const filePath = '/' + parts[1];
+                try {
+                    m.mediaUrl = await getPrivateFile(filePath);
+                } catch (e) {
+                    console.error('Failed to proxy URL', e);
+                }
+            }
+        }
+    });
+    await Promise.all(signingPromises);
     
     const b = document.getElementById('adminChatBox');
     if (!b) return;
@@ -36,9 +53,13 @@ export function renderChat(msgs) {
             const isVideo = msgLower.match(/\.(mp4|mov|webm)/i) || msgLower.includes(".mp4");
 
             if (isImage) {
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${getOptimizedUrl(m.message, 300)}" onclick="openChatPreview('${encodeURIComponent(m.message)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
+                const srcUrl = m.mediaUrl || getOptimizedUrl(m.message, 300);
+                const previewUrl = m.mediaUrl || m.message;
+                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
             } else if (isVideo) {
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${m.message}" onclick="openChatPreview('${encodeURIComponent(m.message)}', true)" muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
+                const srcUrl = m.mediaUrl || m.message;
+                const previewUrl = m.mediaUrl || m.message;
+                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', true)" muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
             } else if (m.message.startsWith('💝 TRIBUTE:')) {
                 contentHtml = renderTributeMessage(m.message, timeStr);
             } else if (m.message.includes('Task Verified') || m.message.includes('Task Rejected')) {
