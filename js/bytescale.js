@@ -17,7 +17,7 @@ export async function uploadToBytescale(subject, file) {
   fd.append("file", file, filename);
 
   const dateFolder = new Date().toISOString().split("T")[0];
-  const path = `/Home/${subject}/${dateFolder}`;
+  const path = `/${subject}/${dateFolder}/${filename}`;
 
   const res = await fetch(
     `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=${path}`,
