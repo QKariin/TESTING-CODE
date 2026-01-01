@@ -8,40 +8,27 @@ export async function handleEvidenceUpload(input) {
     try {
         if (input.files && input.files[0]) {
             const file = input.files[0];
-            const fd = new FormData();
-            fd.append("file", file);
             
             const statusEl = document.getElementById("uploadStatus");
             if (statusEl) statusEl.innerText = "Uploading...";
             
             const folder = userProfile.name.replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
-            const res = await fetch(`https://api.bytescale.com/v2/accounts/${CONFIG.ACCOUNT_ID}/uploads/form_data?path=/evidence/${folder}`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${CONFIG.API_KEY}`
-                },
-                body: fd
-            });
+            const finalUrl = await uploadToBytescale("evidence", file, folder);
             
-            if (!res.ok) {
+            if (finalUrl === "failed") {
                 if (statusEl) statusEl.innerText = "Upload failed.";
                 return;
             }
             
-            const d = await res.json();
-            if (d.files && d.files[0] && d.files[0].fileUrl) {
-                // FIXED: Now correctly reads currentTask.text
-                window.parent.postMessage({
-                    type: "uploadEvidence",
-                    task: currentTask ? currentTask.text : "Task",
-                    fileUrl: d.files[0].fileUrl,
-                    mimeType: file.type
-                }, "*");
-                finishTask(true);
-                if (statusEl) statusEl.innerText = "Upload complete!";
-            } else {
-                if (statusEl) statusEl.innerText = "Upload failed (unexpected response).";
-            }
+            // FIXED: Now correctly reads currentTask.text
+            window.parent.postMessage({
+                type: "uploadEvidence",
+                task: currentTask ? currentTask.text : "Task",
+                fileUrl: finalUrl,
+                mimeType: file.type
+            }, "*");
+            finishTask(true);
+            if (statusEl) statusEl.innerText = "Upload complete!";
         }
     } catch (err) {
         const statusEl = document.getElementById("uploadStatus");
@@ -53,34 +40,20 @@ export async function handleEvidenceUpload(input) {
 export async function handleProfileUpload(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        const fd = new FormData();
-        fd.append("file", file);
 
         try {
-            const res = await fetch(
-                `https://api.bytescale.com/v2/accounts/${CONFIG.ACCOUNT_ID}/uploads/form_data?path=/profile`,
-                {
-                    method: "POST",
-                    headers: { "Authorization": `Bearer ${CONFIG.API_KEY}` },
-                    body: fd
-                }
-            );
+            const folder = userProfile.name.replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
+            const finalUrl = await uploadToBytescale("profile", file, folder);
 
-            if (!res.ok) {
+            if (finalUrl === "failed") {
                 console.error("Profile upload failed");
                 return;
             }
 
-            const d = await res.json();
-
-            if (d.files && d.files[0] && d.files[0].fileUrl) {
-                const finalUrl = d.files[0].fileUrl;
-
-                window.parent.postMessage({
-                    type: "UPDATE_PROFILE_PIC",
-                    url: finalUrl
-                }, "*");
-            }
+            window.parent.postMessage({
+                type: "UPDATE_PROFILE_PIC",
+                url: finalUrl
+            }, "*");
         } catch (err) {
             console.error("Profile upload error:", err);
         }
@@ -101,7 +74,7 @@ export async function handleAdminUpload(input) {
             const oldText = btn ? btn.innerText : "+";
             if (btn) btn.innerText = "⏳";
 
-            let finalUrl = await uploadToBytescale("chat", file);
+            let finalUrl = await uploadToBytescale("chat", file, userProfile.name.replace(/[^a-z0-9-_]/gi, "_").toLowerCase());
             //const res = await fetch(
             //    `https://api.bytescale.com/v2/accounts/${CONFIG.ACCOUNT_ID}/uploads/form_data?path=/admin`,
             //    { 

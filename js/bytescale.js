@@ -5,7 +5,7 @@ function generateFilename(originalFile) {
   return `${crypto.randomUUID()}.${ext}`;
 }
 
-export async function uploadToBytescale(subject, file) {
+export async function uploadToBytescale(subject, file, customFolder) {
   const account = BYTESCALE_CONFIG[subject] || BYTESCALE_CONFIG["admin"];
   if (!account) throw new Error("Unknown Bytescale account");
 
@@ -16,8 +16,8 @@ export async function uploadToBytescale(subject, file) {
   const fd = new FormData();
   fd.append("file", file, filename);
 
-  const dateFolder = new Date().toISOString().split("T")[0];
-  const path = `/${subject}/${dateFolder}/${filename}`;
+  const folder = customFolder || new Date().toISOString().split("T")[0];
+  const path = `/${subject}/${folder}/${filename}`;
 
   const res = await fetch(
     `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?filePath=${encodeURIComponent(path)}`,
