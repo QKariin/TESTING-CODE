@@ -43,10 +43,11 @@ export async function getPrivateFile(filePath) {
 }
 
 function isUpcdnUrl(url) {
-  return typeof url === "string" 
-    && url.includes("upcdn.io")
-    && !url.includes("&sig=")   // exclude already-signed URLs
-    && !url.includes("?sig=");  // covers both patterns
+  if (!url || typeof url !== "string") return false;
+  if (url === "undefined") return false;
+  if (!url.includes("upcdn.io")) return false;
+  if (url.includes("&sig=") || url.includes("?sig=")) return false;
+  return true;
 }
 
 async function signUrl(url) {
