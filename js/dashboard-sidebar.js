@@ -177,7 +177,7 @@ function hasUnreadMessage(u) {
     return u.lastMessageTime > parseInt(readTime);
 }
 
-function hasUnreadMessageCurentUser(u) {
+function hasUnreadMessageCurrentUser(u) {
     // 2. Otherwise, check the last message time against the last click time
     const readTime = localStorage.getItem('read_' + u.memberId);
     if (!readTime) return u.lastMessageTime > 0;
