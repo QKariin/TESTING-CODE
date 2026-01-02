@@ -58,7 +58,7 @@ export async function renderChat(messages) {
     );
 
     // Proxy Bytescale URLs for private access (in parallel)
-    /*const signingPromises = visibleMessages.map(async (m) => {
+    const signingPromises = visibleMessages.map(async (m) => {
         if (m.message && m.message.startsWith('https://upcdn.io/')) {
             const parts = m.message.split('/raw/');
             if (parts.length === 2) {
@@ -71,7 +71,7 @@ export async function renderChat(messages) {
             }
         }
     });
-    await Promise.all(signingPromises);*/
+    await Promise.all(signingPromises);
 
     // 4. RENDER HTML
     chatContent.innerHTML = visibleMessages.map(m => {
