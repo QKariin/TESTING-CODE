@@ -53,7 +53,8 @@ export function renderSidebar() {
 
         const lastSound = Math.max(lastSoundLS, lastSoundRAM);
 
-        const isNewMessage = hasMsg && msgTime > lastSound;
+        //const isNewMessage = hasMsg && msgTime > lastSound;
+        const isNewMessage = msgTime > lastSound;
 
         if (isNewMessage) {
             soundMemory[u.memberId] = msgTime; // update RAM immediately
