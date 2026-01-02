@@ -39,7 +39,7 @@ export async function unlockAudio() {
 
     // Preload your sounds here
     await loadSound("ding", "/audio/2019-preview1.mp3");
-    await loadSound("alert", "/audio/2019-preview1.mp3");
+    await loadSound("message", "/audio/message.mp3");
 
     console.log("Audio unlocked and sounds preloaded");
 }

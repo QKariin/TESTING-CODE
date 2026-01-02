@@ -61,8 +61,8 @@ export function renderSidebar() {
         if (isNewMessage) {
             soundMemory[u.memberId] = msgTime; // update RAM immediately
             localStorage.setItem('sound_' + u.memberId, msgTime); // update disk
-            triggerSound('sfx-notify');
-            triggerSounds("ding");
+            //triggerSound('sfx-notify');
+            triggerSounds("message");
         }
 
         // B. ENTRANCE: Just logged on (Join BACK of Online group)
