@@ -45,9 +45,9 @@ export async function getPrivateFile(filePath) {
 function isUpcdnUrl(url) {
   console.log("isUpcdnUrl check:", url);
   if (!url || typeof url !== "string") return false;
-  if (url === "undefined") return false;
   if (!url.includes("upcdn.io")) return false;
-  if (url.includes("&sig=") || url.includes("?sig=")) return false;
+  if (!url.includes("/raw/")) return false;
+  if (url.includes("?")) return false; // reject ALL query params
   return true;
 }
 
