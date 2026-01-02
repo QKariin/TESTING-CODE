@@ -97,7 +97,7 @@ async function processMediaElement(el) {
   }
 
   // Handle <video><source></source></video>
-  if (el.tagName === "VIDEO") {
+  /*if (el.tagName === "VIDEO") {
     const sources = el.querySelectorAll("source");
     for (const source of sources) {
       const src = source.getAttribute("src");
@@ -106,7 +106,7 @@ async function processMediaElement(el) {
         source.setAttribute("src", signed);
       }
     }
-  }
+  }*/
 }
 
 export async function scanExisting() {
