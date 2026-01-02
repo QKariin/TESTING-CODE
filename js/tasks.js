@@ -43,10 +43,14 @@ export function getRandomTask() {
     }
     
     let taskText = "Waiting for orders...";
+    console.log("Task selection - Queue:", taskQueue, "Database:", taskDatabase);
+    
     if (taskQueue && taskQueue.length > 0) {
         taskText = taskQueue[0];
+        console.log("Selected task from QUEUE:", taskText);
     } else if (taskDatabase && taskDatabase.length > 0) {
         taskText = taskDatabase[Math.floor(Math.random() * taskDatabase.length)];
+        console.log("Selected task from DATABASE (fallback):", taskText);
     }
     
     const newTask = { text: taskText, category: 'general', timestamp: Date.now() };
