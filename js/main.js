@@ -714,10 +714,7 @@ if (window.self === window.top) {
     }, 2000); 
 }
 
-//scanExisting();
-//observeNewElements();
-
-window.addEventListener("load", () => {
+/*window.addEventListener("load", () => {
   scanExisting();
   observeNewElements();
-});
+});*/
