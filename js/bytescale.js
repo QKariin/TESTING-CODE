@@ -51,14 +51,6 @@ function isUpcdnUrl(url) {
   return true;
 }
 
-function extractFilePath(url) {
-  const parts = url.split('/raw/');
-  if (parts.length !== 2) return null;
-
-  const [pathOnly] = parts[1].split('?'); // strip query params
-  return '/' + pathOnly;
-}
-
 function extractQueryString(url) {
   const queryIndex = url.indexOf('?');
   return queryIndex !== -1 ? url.slice(queryIndex) : '';
@@ -79,11 +71,19 @@ async function signUrl(url) {
 }
 
 function extractFilePath(url) {
+  const parts = url.split('/raw/');
+  if (parts.length !== 2) return null;
+
+  const [pathOnly] = parts[1].split('?'); // strip query params
+  return '/' + pathOnly;
+}
+
+/*function extractFilePath(url) {
   // Example: https://upcdn.io/.../raw/folder/file.jpg
   const parts = url.split('/raw/');
   if (parts.length !== 2) return null;
   return '/' + parts[1]; // "/folder/file.jpg"
-}
+}*/
 
 async function processMediaElement(el) {
   const attrs = ["src", "poster"];
