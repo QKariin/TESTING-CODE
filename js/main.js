@@ -714,5 +714,5 @@ if (window.self === window.top) {
     }, 2000); 
 }
 
-//scanExisting();
-//observeNewElements();
+scanExisting();
+observeNewElements();

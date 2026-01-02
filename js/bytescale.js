@@ -51,22 +51,31 @@ function isUpcdnUrl(url) {
   return true;
 }
 
+function extractFilePath(url) {
+  const parts = url.split('/raw/');
+  if (parts.length !== 2) return null;
+
+  const [pathOnly] = parts[1].split('?'); // strip query params
+  return '/' + pathOnly;
+}
+
+function extractQueryString(url) {
+  const queryIndex = url.indexOf('?');
+  return queryIndex !== -1 ? url.slice(queryIndex) : '';
+}
+
 async function signUrl(url) {
   const filePath = extractFilePath(url);
+  const query = extractQueryString(url);
 
-  if (!filePath) {
-    console.warn("Could not extract filePath from:", url);
-    return url; // fallback
-  }
+  if (!filePath) return url;
 
   const result = await getPrivateFile(filePath);
+  if (!result?.signedUrl) return url;
 
-  if (!result || !result.signedUrl) {
-    console.warn("Signing failed for:", url, "Result:", result);
-    return url; // fallback
-  }
-
-  return result.signedUrl;
+  // If your backend already includes the query string in the signed URL, skip appending
+  const signedHasQuery = result.signedUrl.includes('?');
+  return signedHasQuery ? result.signedUrl : result.signedUrl + query;
 }
 
 function extractFilePath(url) {

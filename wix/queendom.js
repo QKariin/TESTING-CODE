@@ -56,13 +56,11 @@ $w.onReady(function () {
                         const userRes = await wixData.query("Tasks").eq("memberId", data.memberId).find({suppressAuth:true});
                         if(userRes.items.length > 0) {
                             let uItem = userRes.items[0];
-                            uItem.score = (uItem.score || 0) + amount;
-                            uItem.points = uItem.score; 
-                            
-                            if(typeof uItem.dailyScore === 'number') uItem.dailyScore += amount;
-                            if(typeof uItem.weeklyScore === 'number') uItem.weeklyScore += amount;
-                            if(typeof uItem.monthlyScore === 'number') uItem.monthlyScore += amount;
-                            if(typeof uItem.yearlyScore === 'number') uItem.yearlyScore += amount;
+                            uItem.score        = (uItem.score || 0) + amount;
+                            uItem.dailyScore   = (uItem.dailyScore || 0) + amount;
+                            uItem.weeklyScore  = (uItem.weeklyScore || 0) + amount;
+                            uItem.monthlyScore = (uItem.monthlyScore || 0) + amount;
+                            uItem.yearlyScore  = (uItem.yearlyScore || 0) + amount;
 
                             await wixData.update("Tasks", uItem, {suppressAuth:true});
                         }
@@ -148,8 +146,11 @@ $w.onReady(function () {
                 const userRes = await wixData.query("Tasks").eq("memberId", data.memberId).find({suppressAuth:true});
                 if(userRes.items.length > 0) {
                     let uItem = userRes.items[0];
-                    uItem.score = (uItem.score || 0) + amount;
-                    uItem.points = uItem.score; 
+                    uItem.score        = (uItem.score || 0) + amount;
+                    uItem.dailyScore   = (uItem.dailyScore || 0) + amount;
+                    uItem.weeklyScore  = (uItem.weeklyScore || 0) + amount;
+                    uItem.monthlyScore = (uItem.monthlyScore || 0) + amount;
+                    uItem.yearlyScore  = (uItem.yearlyScore || 0) + amount;
                     await wixData.update("Tasks", uItem, {suppressAuth:true});
 
                     // --- THE INSTANT ECHO (POINTS) ---

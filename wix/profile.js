@@ -55,7 +55,7 @@ async function loadRulesToInterface() {
     } catch (error) { console.error("Error loading rules: ", error); }
 }
 
-// --- LISTEN FOR HTML MESSAGES FROM VERCEL ---
+/// --- LISTEN FOR HTML MESSAGES FROM VERCEL ---
 $w("#html2").onMessage(async (event) => {
     const data = event.data;
 
@@ -95,6 +95,156 @@ $w("#html2").onMessage(async (event) => {
         } catch(e) { console.error("Feed Error", e); }
     }
 
+    else if (data.type === "REVEAL_FRAGMENT") {
+        const results = await wixData.query("Tasks").eq("memberId", currentUserEmail).find({ suppressAuth: true });
+
+        if (results.items.length > 0) {
+            let user = results.items[0];
+            let progress = 1; // Default to Day 1
+            if (user.libraryProgressIndex) progress = user.libraryProgressIndex;
+
+            // 1. Fetch the specific content for the slave's current level
+            const libraryRes = await wixData.query("DirectivesLibrary").eq("order", progress).limit(1).find({ suppressAuth: true });
+            
+            if (libraryRes.items.length > 0) {
+                const currentMedia = libraryRes.items[0].mediaUrl;
+                
+                // 2. Determine which square to unblur
+                let revealMap = [];
+                try { revealMap = JSON.parse(user.activeRevealMap || "[]"); } catch(e) { revealMap = []; }
+
+                const availableSquares = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(n => !revealMap.includes(n));
+
+                if (availableSquares.length > 0) {
+                    const pick = availableSquares[Math.floor(Math.random() * availableSquares.length)];
+                    revealMap.push(pick);
+                    user.activeRevealMap = JSON.stringify(revealMap);
+
+                    // 3. CHECK FOR COMPLETION (9 squares)
+                    if (revealMap.length === 9) {
+                        let vault = [];
+                        try { vault = JSON.parse(user.rewardVault || "[]"); } catch(e) { vault = []; }
+                        
+                        vault.push({
+                            day: progress,
+                            mediaUrl: currentMedia,
+                            unlockedAt: new Date().toISOString()
+                        });
+                        user.rewardVault = JSON.stringify(vault);
+                        user.libraryProgressIndex = progress + 1;
+                        user.activeRevealMap = "[]"; 
+                    }
+
+                    await wixData.update("Tasks", user, { suppressAuth: true });
+                    
+                    // --- THE FIX: INSTANT REVEAL ECHO ---
+                    // We send the new map and the media URL to Vercel IMMEDIATELY
+                    /*$w("#html2").postMessage({ 
+                        type: "INSTANT_REVEAL_SYNC", 
+                        activeRevealMap: revealMap,
+                        currentLibraryMedia: getPublicUrl(currentMedia)
+                    });*/
+
+                    // Send animation data back to frontend 
+                    $w("#html2").postMessage({ 
+                        type: "FRAGMENT_REVEALED", 
+                        fragmentNumber: pick, 
+                        day: progress, 
+                        totalRevealed: revealMap.length, 
+                        isComplete: revealMap.length === 9 });
+
+                    // 4. Send Message to Chat
+                    await insertMessage({
+                        memberId: currentUserEmail,
+                        message: "Slave unblurred fragment #" + pick + " of Level " + progress + " content.",
+                        sender: "system",
+                        read: false
+                    });
+
+                    // 5. Sync the UI (Deep Sync)
+                    await syncProfileAndTasks();
+                }
+            }
+        }
+    }
+    
+    else if (data.type === "PURCHASE_REVEAL") {
+        const cost = Number(data.cost);
+        const results = await wixData.query("Tasks").eq("memberId", currentUserEmail).find({ suppressAuth: true });
+
+        if (results.items.length > 0) {
+            let user = results.items[0];
+            
+            // 1. Double check the wallet (Security)
+            if ((user.wallet || 0) < cost) {
+                await insertMessage({ memberId: currentUserEmail, message: "Transaction Failed: Insufficient Coins.", sender: "system", read: true });
+                return;
+            }
+
+            // 2. Subtract the Coins
+            user.wallet -= cost;
+            
+            let progress = user.libraryProgressIndex || 1;
+            const libraryRes = await wixData.query("DirectivesLibrary").eq("order", progress).limit(1).find({ suppressAuth: true });
+
+            if (libraryRes.items.length > 0) {
+                const currentMedia = libraryRes.items[0].mediaUrl;
+                let revealMap = [];
+                try { revealMap = JSON.parse(user.activeRevealMap || "[]"); } catch(e) { revealMap = []; }
+
+                // --- CASE A: BUY SINGLE FRAGMENT (100) ---
+                if (cost === 100) {
+                    const availableSquares = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(n => !revealMap.includes(n));
+                    if (availableSquares.length > 0) {
+                        const pick = availableSquares[Math.floor(Math.random() * availableSquares.length)];
+                        revealMap.push(pick);
+                        user.activeRevealMap = JSON.stringify(revealMap);
+
+                        // If that was the last square, move to Vault
+                        if (revealMap.length === 9) {
+                            let vault = [];
+                            try { vault = JSON.parse(user.rewardVault || "[]"); } catch(e) { vault = []; }
+                            vault.push({ day: progress, mediaUrl: currentMedia, unlockedAt: new Date().toISOString() });
+                            user.rewardVault = JSON.stringify(vault);
+                            user.libraryProgressIndex = progress + 1;
+                            user.activeRevealMap = "[]";
+                        }
+                    }
+                } 
+                // --- CASE B: BUY FULL REVEAL (500) ---
+                else if (cost === 500) {
+                    let vault = [];
+                    try { vault = JSON.parse(user.rewardVault || "[]"); } catch(e) { vault = []; }
+                    
+                    // Unlock everything instantly
+                    revealMap = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+                    vault.push({ day: progress, mediaUrl: currentMedia, unlockedAt: new Date().toISOString() });
+                    
+                    user.rewardVault = JSON.stringify(vault);
+                    user.libraryProgressIndex = progress + 1;
+                    user.activeRevealMap = "[]"; // Clear map for next level
+                }
+
+                // 3. Save to Database
+                await wixData.update("Tasks", user, { suppressAuth: true });
+
+                // 4. Send Instant Echo to UI
+                $w("#html2").postMessage({ 
+                    type: "INSTANT_REVEAL_SYNC", 
+                    activeRevealMap: revealMap,
+                    currentLibraryMedia: getPublicUrl(currentMedia)
+                });
+
+                // 5. Notify Chat
+                const msg = cost === 500 ? "Slave sacrificed 500 coins for Full Disclosure." : "Slave sacrificed 100 coins for a fragment.";
+                await insertMessage({ memberId: currentUserEmail, message: msg, sender: "system", read: false });
+
+                await syncProfileAndTasks();
+            }
+        }
+    }
+    // ... C, D, E logic continue here (NOT cut, just following your snippet)
+
     // C. TASK PROGRESS LOGIC
     else if (data.type === "savePendingState") {
         await secureUpdateTaskAction(currentUserEmail, { pendingState: data.pendingState, consumeQueue: data.consumeQueue });
@@ -121,6 +271,19 @@ $w("#html2").onMessage(async (event) => {
     }
 
     // D. DEVOTION LOGIC
+    else if (data.type === "FINISH_KNEELING") {
+        // SECURITY LOCK: Save the kneeling completion time immediately
+        const results = await wixData.query("Tasks")
+            .eq("memberId", currentUserEmail)
+            .find({ suppressAuth: true });
+
+        if (results.items.length > 0) {
+            let item = results.items[0];
+            item.lastWorship = new Date(); // Lock the 60-minute timer
+            await wixData.update("Tasks", item, { suppressAuth: true });
+        }
+    }
+
     else if (data.type === "CLAIM_KNEEL_REWARD") {
         const results = await wixData.query("Tasks")
             .eq("memberId", currentUserEmail)
@@ -135,9 +298,12 @@ $w("#html2").onMessage(async (event) => {
                 item.wallet = (item.wallet || 0) + amount;
             } else {
                 item.score = (item.score || 0) + amount;
+                item.dailyScore = (item.dailyScore || 0) + amount;
+                item.weeklyScore = (item.weeklyScore || 0) + amount;
+                item.monthlyScore = (item.monthlyScore || 0) + amount;
+                item.yearlyScore = (item.yearlyScore || 0) + amount;
             }
             
-            item.lastWorship = new Date();
             item.kneelCount = (item.kneelCount || 0) + 1;
             await wixData.update("Tasks", item, { suppressAuth: true });
 
@@ -216,6 +382,12 @@ $w("#html2").onMessage(async (event) => {
             await syncProfileAndTasks(); 
         }
     }
+
+    // G. VAULT RENDERING (New handler for renderVault function)
+    else if (data.type === "RENDER_VAULT") {
+        // Trigger a sync to send the latest vault data to frontend
+        await syncProfileAndTasks();
+    }
 });
 
 async function loadStaticData() {
@@ -238,13 +410,30 @@ async function loadStaticData() {
 
 async function syncProfileAndTasks() {
     try {
+        console.log("Synchronize Profile and tasks")
         const statsResults = await wixData.query("Tasks").eq("memberId", currentUserEmail).find({suppressAuth: true});
         if(statsResults.items.length === 0) return;
         let statsItem = statsResults.items[0];
 
-        // --- THE SILHOUETTE FIX ---
-        const silhouette = "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png";
-        const userPic = statsItem.image_fld ? getPublicUrl(statsItem.image_fld) : silhouette;
+        // --- THE MISSING CONNECTION ---
+        // 1. Check which item the slave is currently on (Day 1, Day 2, etc.)
+        // Force the ID to be a Number so the CMS can find it
+        const libIndex = Number(statsItem.libraryProgressIndex || 1);
+
+        const libRes = await wixData.query("DirectivesLibrary")
+            .eq("order", libIndex) // This must match the Number type in your CMS
+            .limit(1)
+            .find({ suppressAuth: true });
+        //console.log("%c LIBRARY CHECK: Found " + libRes.items.length + " items", "color: cyan; font-size: 15px; font-weight: bold;");
+
+        let mediaForGrid = "";
+        if (libRes.items.length > 0) {
+            // Convert the Wix URL to a real web link
+            //console.log("media: ", libRes.items[0].mediaUrl, libRes.items[0].mediaUrl.src)
+            mediaForGrid = getPublicUrl(libRes.items[0].mediaUrl[0].src);
+            //console.log(mediaForGrid)
+        }
+
 
         let history = [];
         if (statsItem.taskdom_history) {
@@ -274,10 +463,16 @@ async function syncProfileAndTasks() {
                 coins: statsItem.wallet || 0, 
                 name: statsItem.title_fld || statsItem.title || "Slave",
                 hierarchy: statsItem.hierarchy || "Newbie",
-                profilePicture: userPic, 
+                profilePicture: statsItem.image_fld ? getPublicUrl(statsItem.image_fld) : "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png",
                 taskQueue: currentQueue,
                 joined: safeJoinedString, 
-                lastWorship: statsItem.lastWorship
+                lastWorship: statsItem.lastWorship,
+                // --- THESE FOUR FIELDS RECONNECT THE REWARD SYSTEM ---
+                activeRevealMap: statsItem.activeRevealMap || "[]",
+                currentLibraryMedia: mediaForGrid, // This is the URL we just fetched
+                libraryProgressIndex: libIndex,
+                // --- ADD VAULT DATA FOR renderVault FUNCTION ---
+                rewardVault: statsItem.rewardVault || "[]"
             }, 
             pendingState: statsItem.taskdom_pending_state || null,
             galleryData: galleryData,
@@ -311,11 +506,54 @@ async function checkDomOnlineStatus() {
     } catch (e) { console.log("Status Error", e); }
 }
 
+/*function getPublicUrl(wixUrl) {
+    if (!wixUrl) return "";
+    if (typeof wixUrl === "object" && wixUrl.src) wixUrl = wixUrl.src;
+    if (wixUrl.startsWith("http")) return wixUrl;
+    
+    // THE FIX: Professional extraction for Wix Images and Videos
+    if (wixUrl.startsWith("wix:image://v1/")) {
+        const parts = wixUrl.split('/');
+        const id = parts[3].split('#')[0];
+        return `https://static.wixstatic.com/media/${id}`;
+    }
+    if (wixUrl.startsWith("wix:video://v1/")) {
+        const parts = wixUrl.split('/');
+        const id = parts[3].split('#')[0];
+        return `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
+    }
+    return wixUrl;
+}*/
+
 function getPublicUrl(wixUrl) {
-  if (!wixUrl) return "";
-  if (typeof wixUrl === "object" && wixUrl.src) return getPublicUrl(wixUrl.src);
-  if (wixUrl.startsWith("http")) return wixUrl;
-  if (wixUrl.startsWith("wix:image://v1/")) return `https://static.wixstatic.com/media/${wixUrl.split('/')[3].split('#')[0]}`;
-  if (wixUrl.startsWith("wix:video://v1/")) return `https://video.wixstatic.com/video/${wixUrl.split('/')[3].split('#')[0]}/mp4/file.mp4`;
-  return wixUrl;
+    if (!wixUrl) return "";
+
+    // If Wix returns a media object (common on member pages)
+    if (typeof wixUrl === "object") {
+        if (wixUrl.src) wixUrl = wixUrl.src;
+        else if (wixUrl.url) wixUrl = wixUrl.url;
+        else return "";
+    }
+
+    // Ensure wixUrl is a string
+    wixUrl = String(wixUrl);
+
+    // Direct external URL
+    if (wixUrl.startsWith("http")) return wixUrl;
+
+    // Wix image format: wix:image://v1/<id>/...
+    if (wixUrl.startsWith("wix:image://v1/")) {
+        const parts = wixUrl.split('/');
+        const id = parts[3].split('#')[0];
+        return `https://static.wixstatic.com/media/${id}`;
+    }
+
+    // Wix video format: wix:video://v1/<id>/...
+    if (wixUrl.startsWith("wix:video://v1/")) {
+        const parts = wixUrl.split('/');
+        const id = parts[3].split('#')[0];
+        return `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
+    }
+
+    return wixUrl;
 }
