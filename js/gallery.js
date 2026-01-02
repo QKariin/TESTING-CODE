@@ -19,7 +19,7 @@ let isInProofMode = false;
 export async function renderGallery() {
     const signingPromises = galleryData.map(async (item) => {
     if (item.proofUrl?.startsWith("https://upcdn.io/")) {
-        item.ProofUrl = await signUpcdnUrl(item.proofUrl);
+        item.proofUrl = await signUpcdnUrl(item.proofUrl);
         console.log("Signed gallery proof URL:", item.proofUrl);
     }
     });
