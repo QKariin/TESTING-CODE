@@ -381,46 +381,138 @@ function filterByBudget(max) {
     showHuntStep(3);
 }
 
+let currentHuntIndex = 0;
+let filteredItems = [];
+
 function renderHuntStore(budget) {
     const grid = document.getElementById('huntStoreGrid');
     if (!grid) return;
-    grid.innerHTML = ''; 
 
+    // 1. Filter items by budget
     const items = window.WISHLIST_ITEMS || [];
-    const affordableItems = items.filter(item => Number(item.price || item.Price || 0) <= budget);
+    filteredItems = items.filter(item => Number(item.price || item.Price || 0) <= budget);
+    currentHuntIndex = 0; // Start at the first item
 
-    if (affordableItems.length === 0) {
-        grid.innerHTML = '<div style="grid-column:span 2; color:#666; text-align:center; padding:20px; font-size:0.7rem;">EMPTY TIER...</div>';
+    if (filteredItems.length === 0) {
+        grid.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">NO TRIBUTES IN THIS TIER...</div>';
         return;
     }
 
-    affordableItems.forEach(item => {
-        const img = item.img || item.image || "";
-        const name = item.name || item.title || "Item";
-        const price = item.price || item.Price || 0;
+    showTinderCard();
+}
 
-        const itemEl = document.createElement('div');
-        itemEl.className = 'store-item';
-        itemEl.style.cssText = "border:1px solid #333; padding:10px; border-radius:8px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.02);";
-        itemEl.innerHTML = `
-            <div style="height:50px; display:flex; align-items:center; justify-content:center; margin-bottom:5px;"><img src="${img}" style="max-height:100%; max-width:100%; border-radius:4px;"></div>
-            <div style="font-size:0.55rem; color:white; font-weight:bold;">${name.toUpperCase()}</div>
-            <div style="font-size:0.6rem; color:var(--neon-yellow);">${price} 🪙</div>
-        `;
+function showTinderCard() {
+    const grid = document.getElementById('huntStoreGrid');
+    const item = filteredItems[currentHuntIndex];
 
-        itemEl.onclick = () => { 
-            selectedItem = item; 
-            const sImg = document.getElementById('huntSelectedImg');
-            const sName = document.getElementById('huntSelectedName');
-            const sPrice = document.getElementById('huntSelectedPrice');
+    if (!item) {
+        grid.innerHTML = `
+            <div style="text-align:center; padding:40px;">
+                <div style="font-size:2rem; margin-bottom:10px;">💨</div>
+                <div style="color:#666; font-size:0.7rem;">NO MORE ITEMS IN THIS TIER</div>
+                <button class="tab-btn" onclick="showHuntStep(2)" style="margin-top:15px; width:auto; padding:5px 15px;">CHANGE BUDGET</button>
+            </div>`;
+        return;
+    }
 
-            if (sImg) sImg.src = img;
-            if (sName) sName.innerText = name.toUpperCase();
-            if (sPrice) sPrice.innerText = price + " 🪙";
-            showHuntStep(4); 
-        };
-        grid.appendChild(itemEl);
-    });
+    grid.style.perspective = "1000px";
+    grid.innerHTML = `
+        <div class="tinder-wrapper" style="position:relative; width:100%; height:300px; display:flex; align-items:center; justify-content:center;">
+            
+            <!-- Instructions Overlay -->
+            <div id="swipeHint" style="position:absolute; top:-20px; width:100%; text-align:center; font-size:0.6rem; color:var(--neon-yellow); opacity:0.8; font-family:'Orbitron';">
+                <i class="fas fa-arrow-left"></i> SKIP | BUY <i class="fas fa-arrow-right"></i>
+            </div>
+
+            <!-- The Card -->
+            <div id="tinderCard" class="tinder-card" style="width:220px; background:#111; border:2px solid #333; border-radius:15px; padding:15px; text-align:center; transition: transform 0.1s ease, opacity 0.1s ease; cursor:grab; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                
+                <!-- Indicators that appear on swipe -->
+                <div id="likeLabel" style="position:absolute; top:20px; left:10px; border:3px solid var(--neon-green); color:var(--neon-green); padding:5px 10px; border-radius:5px; font-weight:900; transform:rotate(-15deg); opacity:0; pointer-events:none;">SACRIFICE</div>
+                <div id="nopeLabel" style="position:absolute; top:20px; right:10px; border:3px solid var(--neon-pink); color:var(--neon-pink); padding:5px 10px; border-radius:5px; font-weight:900; transform:rotate(15deg); opacity:0; pointer-events:none;">SKIP</div>
+
+                <div style="height:140px; display:flex; align-items:center; justify-content:center; margin-bottom:15px;">
+                    <img src="${item.img || item.image}" style="max-height:100%; max-width:100%; border-radius:8px; pointer-events:none;">
+                </div>
+                <div style="font-family:'Orbitron'; color:white; font-size:0.8rem; font-weight:bold; margin-bottom:5px;">${item.name.toUpperCase()}</div>
+                <div style="color:var(--neon-yellow); font-size:1rem; font-weight:bold;">${item.price} 🪙</div>
+                
+                <div style="margin-top:15px; font-size:0.6rem; color:#666;">${currentHuntIndex + 1} / ${filteredItems.length}</div>
+            </div>
+        </div>
+    `;
+
+    initSwipeEvents(document.getElementById('tinderCard'), item);
+}
+
+function initSwipeEvents(card, item) {
+    let startX = 0;
+    let currentX = 0;
+    const threshold = 100; // Pixels needed to trigger a swipe
+
+    const handleStart = (e) => {
+        startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        card.style.transition = 'none';
+    };
+
+    const handleMove = (e) => {
+        if (!startX) return;
+        currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const diff = currentX - startX;
+        const rotation = diff / 10;
+        const opacity = Math.min(Math.abs(diff) / 50, 1);
+
+        card.style.transform = `translateX(${diff}px) rotate(${rotation}deg)`;
+
+        // Show "SACRIFICE" or "SKIP" labels based on direction
+        const likeLabel = document.getElementById('likeLabel');
+        const nopeLabel = document.getElementById('nopeLabel');
+        
+        if (diff > 0) { // Swiping Right
+            likeLabel.style.opacity = opacity;
+            nopeLabel.style.opacity = 0;
+        } else { // Swiping Left
+            nopeLabel.style.opacity = opacity;
+            likeLabel.style.opacity = 0;
+        }
+    };
+
+    const handleEnd = () => {
+        const diff = currentX - startX;
+        card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+
+        if (diff > threshold) {
+            // SWIPE RIGHT: PURCHASE
+            card.style.transform = `translateX(500px) rotate(30deg)`;
+            card.style.opacity = '0';
+            setTimeout(() => {
+                selectedItem = item;
+                showHuntStep(4); // Go to confession/note step
+            }, 300);
+        } else if (diff < -threshold) {
+            // SWIPE LEFT: NEXT
+            card.style.transform = `translateX(-500px) rotate(-30deg)`;
+            card.style.opacity = '0';
+            setTimeout(() => {
+                currentHuntIndex++;
+                showTinderCard();
+            }, 300);
+        } else {
+            // RESET
+            card.style.transform = `translateX(0) rotate(0)`;
+            document.getElementById('likeLabel').style.opacity = 0;
+            document.getElementById('nopeLabel').style.opacity = 0;
+        }
+        startX = 0;
+        currentX = 0;
+    };
+
+    card.addEventListener('mousedown', handleStart);
+    card.addEventListener('touchstart', handleStart);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('touchmove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchend', handleEnd);
 }
 
 function toggleHuntNote(show) {
