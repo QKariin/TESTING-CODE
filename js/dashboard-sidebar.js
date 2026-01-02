@@ -50,10 +50,11 @@ export function renderSidebar() {
         const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
         const lastSoundLS = Number(localStorage.getItem('sound_' + u.memberId) || 0);
         const lastSoundRAM = soundMemory[u.memberId] || 0;
+        const hasMsgCurrent = hasUnreadMessageCurrentUser(u);
 
         const lastSound = Math.max(lastSoundLS, lastSoundRAM);
 
-        const isNewMessage = hasMsg && msgTime > lastSound;
+        const isNewMessage = hasMsgCurrent && msgTime > lastSound;
         //const isNewMessage = msgTime > lastSound;
 
         if (isNewMessage) {
@@ -166,6 +167,15 @@ function hasUnreadMessage(u) {
     // 1. If I am currently viewing this person, the icon must be grey
     if (u.memberId === currId) return false;
 
+    // 2. Otherwise, check the last message time against the last click time
+    const readTime = localStorage.getItem('read_' + u.memberId);
+    if (!readTime) return u.lastMessageTime > 0;
+    
+    // If the message is newer than the last time I clicked the user, light it up
+    return u.lastMessageTime > parseInt(readTime);
+}
+
+function hasUnreadMessageCurrentUser(u) {
     // 2. Otherwise, check the last message time against the last click time
     const readTime = localStorage.getItem('read_' + u.memberId);
     if (!readTime) return u.lastMessageTime > 0;
