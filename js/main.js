@@ -69,7 +69,6 @@ Bridge.listen((data) => {
 // --- 3. THE MESSAGE LISTENER ---
 window.addEventListener("message", (event) => {
     const data = event.data;
-
     if (data.type === "CHAT_ECHO" && data.msgObj) {
         const chatContent = document.getElementById('chatContent');
         if (chatContent) {
@@ -81,7 +80,6 @@ window.addEventListener("message", (event) => {
             forceBottom();
         }
     }
-
     if (data.type === 'UPDATE_RULES') {
         const rules = data.payload || {};
         for (let i = 1; i <= 8; i++) {
@@ -89,7 +87,6 @@ window.addEventListener("message", (event) => {
             if (el && rules['rule' + i]) el.innerHTML = rules['rule' + i];
         }
     }
-
     if (data.type === "INIT_TASKS" || data.dailyTasks) setTaskDatabase(data.dailyTasks || data.tasks || []);
     if (data.type === "INIT_WISHLIST" || data.wishlist) {
         const items = data.wishlist || [];
@@ -99,7 +96,6 @@ window.addEventListener("message", (event) => {
             renderWishlist();
         }
     }
-
     if (data.type === "UPDATE_DOM_STATUS") {
         const badge = document.getElementById('chatStatusBadge');
         const ring = document.getElementById('chatStatusRing');
@@ -108,7 +104,6 @@ window.addEventListener("message", (event) => {
         if(ring) ring.className = data.online ? "dom-status-ring ring-active" : "dom-status-ring ring-inactive";
         if(domBadge) { domBadge.innerHTML = data.online ? '<span class="status-dot"></span> ONLINE' : `<span class="status-dot"></span> ${data.text}`; domBadge.className = data.online ? "dom-status status-online" : "dom-status"; }
     }
-
     if (data.type === "UPDATE_Q_FEED") {
         const feedData = data.domVideos || data.posts || data.feed;
         if (feedData && Array.isArray(feedData)) {
@@ -118,9 +113,7 @@ window.addEventListener("message", (event) => {
             if (pc) pc.innerText = feedData.length;
         }
     }
-
     const payload = data.profile || data.galleryData || data.pendingState ? data : (data.type === "UPDATE_FULL_DATA" ? data : null);
-    
     if (payload) {
         if (data.profile && !ignoreBackendUpdates) {
             setGameStats(data.profile);
@@ -144,7 +137,6 @@ window.addEventListener("message", (event) => {
             if(data.profile.profilePicture) document.getElementById('profilePic').src = getOptimizedUrl(data.profile.profilePicture, 150);
             updateStats();
         }
-
         if (data.type === "INSTANT_REVEAL_SYNC") {
             if (data.currentLibraryMedia) setCurrentLibraryMedia(data.currentLibraryMedia);
             renderRewardGrid(); 
@@ -156,7 +148,6 @@ window.addEventListener("message", (event) => {
                 });
             }, 50); 
         }
-
         if (payload.galleryData) {
             const currentGalleryJson = JSON.stringify(payload.galleryData);
             if (currentGalleryJson !== lastGalleryJson) {
@@ -166,7 +157,6 @@ window.addEventListener("message", (event) => {
                 updateStats();
             }
         }
-
         if (payload.pendingState !== undefined) {
             if (!taskJustFinished && !ignoreBackendUpdates) {
                 setPendingTaskState(payload.pendingState);
@@ -182,10 +172,8 @@ window.addEventListener("message", (event) => {
             }
         }
     }
-
     if (data.type === "UPDATE_CHAT" || data.chatHistory) renderChat(data.chatHistory || data.messages);
     setTimeout(styleTributeMessages, 100); 
-
     if (data.type === "FRAGMENT_REVEALED") {
         const { fragmentNumber, day, totalRevealed, isComplete } = data;
         import('./reward.js').then(({ runTargetingAnimation, renderRewardGrid }) => {
@@ -196,40 +184,6 @@ window.addEventListener("message", (event) => {
         });
     }
 });
-
-let sacrificeHoldTimer = null;
-let sacrificeHoldPercent = 0;
-
-export function startSacrificeHold() {
-    const ring = document.getElementById('sacrificeFill');
-    if (!ring) return;
-
-    sacrificeHoldPercent = 0;
-    sacrificeHoldTimer = setInterval(() => {
-        sacrificeHoldPercent += 2; // Takes 2-3 seconds to fill
-        
-        // Calculate SVG Dash Offset (Circumference is ~283)
-        const offset = 283 - (283 * (sacrificeHoldPercent / 100));
-        ring.style.strokeDashoffset = offset;
-
-        if (sacrificeHoldPercent >= 100) {
-            clearInterval(sacrificeHoldTimer);
-            finalizeSacrifice(); // Trigger the purchase
-        }
-    }, 40); // Smooth update
-}
-
-export function endSacrificeHold() {
-    clearInterval(sacrificeHoldTimer);
-    const ring = document.getElementById('sacrificeFill');
-    if (ring) {
-        ring.style.strokeDashoffset = 283; // Reset the ring
-    }
-}
-
-// Add these to your window global assignments at the bottom of main.js
-window.startSacrificeHold = startSacrificeHold;
-window.endSacrificeHold = endSacrificeHold;
 
 // --- 4. LOGIC FUNCTIONS ---
 function updateStats() {
@@ -260,13 +214,13 @@ function updateStats() {
     updateKneelingStatus(); 
 }
 
-// --- TRIBUTE HUNT LOGIC (ELEGANT MODE) ---
+// --- TRIBUTE HUNT LOGIC ---
 let currentHuntIndex = 0;
 let filteredItems = [];
 let selectedReason = "";
 let selectedItem = null;
 
- function toggleTributeHunt() {
+function toggleTributeHunt() {
     const overlay = document.getElementById('tributeHuntOverlay');
     if (overlay.classList.contains('hidden')) {
         selectedReason = ""; selectedItem = null;
@@ -278,7 +232,7 @@ let selectedItem = null;
     }
 }
 
- function showHuntStep(step) {
+function showHuntStep(step) {
     document.querySelectorAll('.hunt-step').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('huntStep' + step);
     if (target) target.classList.remove('hidden');
@@ -287,12 +241,12 @@ let selectedItem = null;
     if (progressEl) progressEl.innerText = labels[step] || "";
 }
 
- function selectTributeReason(reason) {
+function selectTributeReason(reason) {
     selectedReason = reason;
-    renderHuntStore(999999); // SKIP BUDGET STEP
+    renderHuntStore(999999); 
 }
 
- function renderHuntStore(budget) {
+function renderHuntStore(budget) {
     const items = window.WISHLIST_ITEMS || [];
     filteredItems = items.filter(item => Number(item.price || item.Price || 0) <= budget);
     currentHuntIndex = 0;
@@ -305,7 +259,7 @@ let selectedItem = null;
     showTinderCard();
 }
 
- function showTinderCard() {
+function showTinderCard() {
     const grid = document.getElementById('huntStoreGrid');
     if (!grid) return;
     const item = filteredItems[currentHuntIndex];
@@ -339,30 +293,32 @@ function initSwipeEvents(card, item) {
         if(nope) nope.style.opacity = diff < 0 ? Math.min(Math.abs(diff) / 100, 1) : 0;
     };
     const handleEnd = () => {
-        const diff = currentX - startX;
-        card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
-
-        if (diff > 100) { // SWIPE RIGHT: SACRIFICE
-            card.style.transform = `translateX(600px) rotate(45deg)`;
+        const diff = currentX - startX; card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+        if (diff > 100) { // SACRIFICE
+            card.style.transform = `translateX(600px) rotate(45deg)`; 
             selectedItem = item;
-            document.getElementById('huntSelectedImg').src = item.img || item.image;
-            document.getElementById('huntSelectedName').innerText = item.name.toUpperCase();
-            document.getElementById('huntSelectedPrice').innerText = item.price + " 🪙";
+            if(document.getElementById('huntSelectedImg')) document.getElementById('huntSelectedImg').src = item.img || item.image;
+            if(document.getElementById('huntSelectedName')) document.getElementById('huntSelectedName').innerText = item.name.toUpperCase();
+            if(document.getElementById('huntSelectedPrice')) document.getElementById('huntSelectedPrice').innerText = item.price + " 🪙";
             setTimeout(() => { showHuntStep(4); }, 200);
-        } else if (diff < -100) { // SWIPE LEFT: SKIP (This is the fix you needed)
-            card.style.transform = `translateX(-600px) rotate(-45deg)`;
+        } else if (diff < -100) { // SKIP
+            card.style.transform = `translateX(-600px) rotate(-45deg)`; 
             card.style.opacity = "0";
-            currentHuntIndex++; // Move to next item
-            setTimeout(() => { showTinderCard(); }, 300); // Draw the next one
-        } else { // RESET
+            currentHuntIndex++; 
+            setTimeout(() => { showTinderCard(); }, 300);
+        } else {
             card.style.transform = `translateX(0) rotate(0)`;
             if(document.getElementById('likeLabel')) document.getElementById('likeLabel').style.opacity = 0;
             if(document.getElementById('nopeLabel')) document.getElementById('nopeLabel').style.opacity = 0;
         }
         startX = 0;
     };
+    card.addEventListener('mousedown', handleStart); card.addEventListener('touchstart', handleStart);
+    window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove);
+    window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd);
+}
 
-export function finalizeSacrifice() {
+function finalizeSacrifice() {
     const note = document.getElementById('huntNote') ? document.getElementById('huntNote').value.trim() : "";
     if (!selectedItem || !selectedReason) return;
     if (gameStats.coins < selectedItem.price) { triggerSound('sfx-deny'); alert('Insufficient coins!'); return; }
@@ -371,7 +327,14 @@ export function finalizeSacrifice() {
     triggerSound('sfx-buy'); triggerCoinShower(); toggleTributeHunt();
 }
 
-export function styleTributeMessages() {
+function toggleHuntNote(show) {
+    const container = document.getElementById('huntNoteContainer');
+    const btn = document.getElementById('btnShowNote');
+    if (show) { container.classList.remove('hidden'); btn.classList.add('hidden'); document.getElementById('huntNote').focus(); }
+    else { container.classList.add('hidden'); btn.classList.remove('hidden'); }
+}
+
+function styleTributeMessages() {
     const chatContent = document.getElementById('chatContent'); if (!chatContent) return;
     chatContent.querySelectorAll('.msg').forEach(msg => {
         const text = msg.textContent || msg.innerHTML;
@@ -393,8 +356,7 @@ export function styleTributeMessages() {
     });
 }
 
-// --- UTILS & HANDLERS ---
-export function buyRealCoins(amount) { triggerSound('sfx-buy'); window.parent.postMessage({ type: "INITIATE_STRIPE_PAYMENT", amount: amount }, "*"); }
+function buyRealCoins(amount) { triggerSound('sfx-buy'); window.parent.postMessage({ type: "INITIATE_STRIPE_PAYMENT", amount: amount }, "*"); }
 function triggerCoinShower() {
     for (let i = 0; i < 40; i++) {
         const coin = document.createElement('div'); coin.className = 'coin-particle';
@@ -403,18 +365,20 @@ function triggerCoinShower() {
         document.body.appendChild(coin); setTimeout(() => coin.remove(), 2000);
     }
 }
-export function breakGlass(e) { if (e && e.stopPropagation) e.stopPropagation(); const overlay = document.getElementById('specialGlassOverlay'); if (overlay) overlay.classList.remove('active'); window.parent.postMessage({ type: "GLASS_BROKEN" }, "*"); }
-export function submitSessionRequest() { const checked = document.querySelector('input[name="sessionType"]:checked'); if (!checked) return; window.parent.postMessage({ type: "SESSION_REQUEST", sessionType: checked.value, cost: checked.getAttribute('data-cost') }, "*"); }
-export function resetTributeFlow() { selectedReason = ""; selectedItem = null; if (document.getElementById('huntNote')) document.getElementById('huntNote').value = ""; showHuntStep(1); }
+function breakGlass(e) { if (e && e.stopPropagation) e.stopPropagation(); const overlay = document.getElementById('specialGlassOverlay'); if (overlay) overlay.classList.remove('active'); window.parent.postMessage({ type: "GLASS_BROKEN" }, "*"); }
+function submitSessionRequest() { const checked = document.querySelector('input[name="sessionType"]:checked'); if (!checked) return; window.parent.postMessage({ type: "SESSION_REQUEST", sessionType: checked.value, cost: checked.getAttribute('data-cost') }, "*"); }
+function resetTributeFlow() { selectedReason = ""; selectedItem = null; if (document.getElementById('huntNote')) document.getElementById('huntNote').value = ""; showHuntStep(1); }
 
 setInterval(updateKneelingStatus, 1000);
 setInterval(() => { window.parent.postMessage({ type: "heartbeat", view: currentView }, "*"); }, 5000);
 
+// --- GLOBAL ATTACHMENTS ---
 window.toggleTributeHunt = toggleTributeHunt;
 window.selectTributeReason = selectTributeReason;
 window.showHuntStep = showHuntStep;
 window.finalizeSacrifice = finalizeSacrifice;
 window.resetTributeFlow = resetTributeFlow;
+window.toggleHuntNote = toggleHuntNote;
 window.switchTab = switchTab;
 window.toggleStats = toggleStats;
 window.toggleSection = toggleSection;
