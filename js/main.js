@@ -318,14 +318,14 @@ function showTributeStep(step) {
 function selectTributeReason(reason) {
     console.log("Selected reason:", reason);
     selectedReason = reason;
-    renderHuntStore(max); 
+    renderHuntStore(gameStats.coins); 
     showTributeStep(2);
 }
 
 function setTributeNote(note) {
     //console.log("Note:", note);
     //selectedNote = note;
-    //showTributeStep(3);
+    showTributeStep(3);
 }
 
 function filterByBudget(max) {
