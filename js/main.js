@@ -318,13 +318,14 @@ function showTributeStep(step) {
 function selectTributeReason(reason) {
     console.log("Selected reason:", reason);
     selectedReason = reason;
+    renderHuntStore(max); 
     showTributeStep(2);
 }
 
 function setTributeNote(note) {
-    console.log("Note:", note);
-    selectedNote = note;
-    showTributeStep(3);
+    //console.log("Note:", note);
+    //selectedNote = note;
+    //showTributeStep(3);
 }
 
 function filterByBudget(max) {
