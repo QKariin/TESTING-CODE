@@ -302,6 +302,7 @@ function toggleTributeHunt() {
 }
 
 function showTributeStep(step) {
+    console.log("Showing tribute step:", step);
     document.querySelectorAll('.tribute-step').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('tributeStep' + step);
     if (target) {
