@@ -271,57 +271,44 @@
                         </div>
                                         
                         <!-- NEW: TRIBUTE HUNT OVERLAY (FIXED LAYERING & STEPS) -->
-                        <div id="tributeHuntOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 2000; backdrop-filter: blur(20px); padding: 20px; display: flex; flex-direction: column;">
-                            <div id="huntProgress" style="font-family:'Orbitron'; font-size:0.8rem; color:var(--neon-yellow); letter-spacing:4px; margin-bottom:20px; text-align: center; text-transform: uppercase;">INTENTION</div>
-                        
-                            <!-- STEP 1: REASON -->
-                            <div id="huntStep1" class="hunt-step">
-                                <div style="display: flex; flex-direction: column; gap: 10px;">
-                                    <button class="tab-btn" onclick="selectTributeReason('Love & Adoration')">LOVE & ADORATION</button>
-                                    <button class="tab-btn" onclick="selectTributeReason('Seeking Forgiveness')">FORGIVENESS</button>
-                                    <button class="tab-btn" onclick="selectTributeReason('Pure Devotion')">PURE DEVOTION</button>
-                                </div>
-                            </div>
-                        
-                            <!-- STEP 2: BUDGET -->
-                            <div id="huntStep2" class="hunt-step hidden">
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                                    <button class="tab-btn" onclick="filterByBudget(1000)">1,000 🪙</button>
-                                    <button class="tab-btn" onclick="filterByBudget(3000)">3,000 🪙</button>
-                                    <button class="tab-btn" onclick="filterByBudget(5000)">5,000 🪙</button>
-                                    <button class="tab-btn" onclick="filterByBudget(10000)">10,000 🪙</button>
-                                </div>
-                                <button onclick="showHuntStep(1)" style="background:transparent; border:none; color:#555; margin-top:30px; width:100%; cursor:pointer; font-size:0.7rem;">BACK</button>
-                            </div>
-                        
-                            <!-- STEP 3: ITEMS (THIS WAS MISSING!) -->
-                            <div id="huntStep3" class="hunt-step hidden" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
-                                <div id="huntStoreGrid" class="store-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; flex-grow: 1; padding-bottom: 10px;">
-                                    <!-- Items injected via JS -->
-                                </div>
-                                <button onclick="showHuntStep(2)" style="background:transparent; border:none; color:#555; margin-top:10px; width:100%; cursor:pointer; font-size:0.7rem; flex-shrink: 0;">BACK TO BUDGET</button>
-                            </div>
-                        
-                            <!-- STEP 4: MESSAGE & SUMMARY -->
-                            <div id="huntStep4" class="hunt-step hidden">
-                                <div id="huntSummary" style="text-align:center; margin-bottom:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; border: 1px solid #222;">
-                                    <img id="huntSelectedImg" src="" style="height:60px; border-radius:5px; margin-bottom:5px; object-fit: contain;">
-                                    <div id="huntSelectedName" style="font-size:0.65rem; font-weight:bold; color:white; text-transform:uppercase;">ITEM NAME</div>
-                                    <div id="huntSelectedPrice" style="font-size:0.75rem; color:var(--neon-yellow);">0 🪙</div>
-                                </div>
-                        
-                                <div id="huntNoteContainer" class="hidden" style="margin-bottom:10px;">
-                                    <textarea id="huntNote" placeholder="Write your words..." style="width:100%; background:rgba(0,0,0,0.6); border:1px solid var(--neon-pink); border-radius:12px; color:white; padding:15px; font-family:'Rajdhani'; min-height:100px; outline:none; resize:none; font-size:0.9rem;"></textarea>
-                                </div>
-                        
-                                <button id="btnShowNote" onclick="toggleHuntNote(true)" style="background:transparent; border:1px solid #444; color:#666; border-radius:15px; font-size:0.6rem; padding:6px 15px; margin: 0 auto 15px; display:block; cursor:pointer;">
-                                    + ADD A NOTE
-                                </button>
-                        
-                                <button class="action-btn" onclick="finalizeSacrifice()" style="background:var(--neon-pink); color:black; font-weight:900; width:100%;">SUBMIT SACRIFICE</button>
-                                <button onclick="showHuntStep(3)" style="background:transparent; border:none; color:#555; margin-top:10px; width:100%; cursor:pointer; font-size:0.7rem;">BACK TO ITEMS</button>
-                            </div>
-                        </div>
+                        <div id="tributeHuntOverlay" class="hidden">
+                          <!-- ELEGANT HEADER -->
+                          <div class="tribute-moment-header">
+                              <div id="huntProgress">INTENTION</div>
+                              <div onclick="toggleTributeHunt()" class="close-tribute">&times;</div>
+                          </div>
+                      
+                          <div class="tribute-moment-body">
+                              <!-- STEP 1: REASON -->
+                              <div id="huntStep1" class="hunt-step">
+                                  <h2 class="tribute-title">SELECT INTENT</h2>
+                                  <div class="tribute-options">
+                                      <button class="tab-btn" onclick="selectTributeReason('Love & Adoration')">LOVE & ADORATION</button>
+                                      <button class="tab-btn" onclick="selectTributeReason('Seeking Forgiveness')">FORGIVENESS</button>
+                                      <button class="tab-btn" onclick="selectTributeReason('Pure Devotion')">PURE DEVOTION</button>
+                                  </div>
+                              </div>
+                      
+                              <!-- STEP 3: THE HUNT (Step 2 Budget is DELETED) -->
+                              <div id="huntStep3" class="hunt-step hidden">
+                                  <div id="huntStoreGrid">
+                                      <!-- Tinder Card Injected Here -->
+                                  </div>
+                              </div>
+                      
+                              <!-- STEP 4: CONFESSION -->
+                              <div id="huntStep4" class="hunt-step hidden">
+                                  <h2 class="tribute-title">CONFESSION</h2>
+                                  <div id="huntSummary">
+                                      <img id="huntSelectedImg" src="">
+                                      <div id="huntSelectedName">ITEM NAME</div>
+                                      <div id="huntSelectedPrice">0 🪙</div>
+                                  </div>
+                                  <textarea id="huntNote" placeholder="Your words to the Queen..." maxlength="200"></textarea>
+                                  <button class="action-btn finalize-btn" onclick="finalizeSacrifice()">SUBMIT SACRIFICE</button>
+                              </div>
+                          </div>
+                      </div>
                 
                         <!-- Messages Area -->
                         <div class="chat-area" id="chatBox" style="flex-grow: 1; overflow-y: auto; padding: 15px;">
