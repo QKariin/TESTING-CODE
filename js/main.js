@@ -284,6 +284,7 @@ function updateStats() {
 let currentHuntIndex = 0;
 let filteredItems = [];
 let selectedReason = "";
+let selectedNote = "";
 let selectedItem = null;
 
 function toggleTributeHunt() {
@@ -536,6 +537,7 @@ function submitSessionRequest() {
 
 function resetTributeFlow() {
     selectedReason = "";
+    selectedNote = "";
     selectedItem = null;
     const note = document.getElementById('huntNote');
     if (note) note.value = "";
