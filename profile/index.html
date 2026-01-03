@@ -294,7 +294,14 @@
                                     <button class="tab-btn" onclick="selectTributeReason('Pure Devotion')">PURE DEVOTION</button>
                                 </div>
                             </div>
-                
+
+                            <div id="tributeStep2" class="tribute-step hidden">
+                                <p style="text-align:center; color:#888; font-family:'Rajdhani'; margin-bottom:20px; text-transform: uppercase;">Step 2: Your words to Queen Karin</p>
+                                <textarea id="tributeNote" placeholder="Write your confession or worship here..." style="width:100%; background:rgba(0,0,0,0.6); border:1px solid var(--neon-pink); border-radius:12px; color:white; padding:15px; font-family:'Rajdhani'; min-height:120px; outline:none; margin-bottom:15px; font-size: 1rem; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);"></textarea>
+                                <button class="action-btn" onclick="setTributeNote()" style="background: var(--neon-pink); color: black;">CONTINUE</button>
+                                <button onclick="showTributeStep(1)" style="background:transparent; border:none; color:#555; margin-top:10px; width:100%; cursor:pointer; font-size: 0.7rem;">BACK</button>
+                            </div>
+
                             <!-- STEP 3: THE HUNT -->
                             <div id="tributeStep3" class="tribute-step hidden" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
                                 <div id="huntStoreGrid"></div>
