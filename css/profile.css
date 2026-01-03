@@ -89,28 +89,6 @@ html, body {
     border: none !important;
 }
 
-.blessing-orb:hover {
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.1) !important;
-}
-
-.coin-presets-row {
-    padding: 10px;
-    display: flex;
-    justify-content: center;
-    background: rgba(0,0,0,0.3); /* Subtle background for the button area */
-}
-
-.blessing-orb.orb-yellow:hover {
-    border-color: var(--neon-yellow) !important;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
-}
-
-.blessing-orb.orb-pink:hover {
-    border-color: var(--neon-pink) !important;
-    box-shadow: 0 0 20px rgba(255, 0, 222, 0.2);
-}
-
 #kneelRewardOverlay.hidden {
     opacity: 0;
     pointer-events: none;
@@ -158,13 +136,6 @@ html, body {
     margin-bottom: 5px;
 }
 
-.m-points-val {
-    color: var(--neon-yellow);
-    font-size: 1.2rem;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(255,215,0,0.5);
-}
-
 .sub-view {
     flex: 1;
     display: flex;
@@ -175,15 +146,6 @@ html, body {
 
 .hidden { display: none !important; }
 
-.feedback-text-bubble, .task-text-bubble {
-    background: rgba(255,255,255,0.1);
-    padding: 20px;
-    border-radius: 15px;
-    border: 1px solid rgba(255,255,255,0.2);
-    font-family: 'Rajdhani';
-    font-size: 1.1rem;
-    width: 100%;
-}
 
 .modal-footer-menu {
     display: grid;
@@ -259,38 +221,6 @@ html, body {
 
 .hidden-input {
   display: none;
-}
-
-.menu-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  background: transparent;
-  border: none;
-  color: #ccc;
-  font-family: 'Rajdhani';
-  font-weight: bold;
-  font-size: 0.9rem;
-  cursor: pointer;
-  border-radius: 4px;
-  text-align: left;
-  width: 100%;
-}
-
-.menu-btn:hover {
-  background: rgba(255,255,255,0.1);
-  color: white;
-}
-
-.menu-btn svg {
-  width: 16px;
-  height: 16px;
-  fill: #ccc;
-}
-
-.menu-btn:hover svg {
-  fill: white;
 }
 
 .btn-plus {
@@ -1176,32 +1106,6 @@ html, body {
   cursor: pointer;
 }
 
-.cat-scroll {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  margin-bottom: 5px;
-}
-
-.cat-pill {
-  white-space: nowrap;
-  padding: 5px 12px;
-  border-radius: 15px;
-  border: 1px solid #333;
-  background: #0a0a0a;
-  color: #666;
-  font-size: 0.65rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.cat-pill.active {
-  border-color: var(--neon-yellow);
-  color: var(--neon-yellow);
-  background: rgba(255,215,0,0.1);
-}
-
 .social-header {
   display: flex;
   flex-direction: column;
@@ -1671,40 +1575,6 @@ html, body {
   margin-left: 5px;
 }
 
-.global-ticker {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: black;
-  border-top: 1px solid #333;
-  color: var(--neon-green);
-  font-family: 'Rajdhani';
-  font-weight: bold;
-  font-size: 0.75rem;
-  padding: 5px 0;
-  z-index: 99999;
-  overflow: hidden;
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-.ticker-content {
-  display: inline-block;
-  padding-left: 100%;
-  animation: tickerScroll 25s linear infinite;
-}
-
-@keyframes tickerScroll {
-  0% {
-    transform: translate3d(0,0,0);
-  }
-
-  100% {
-    transform: translate3d(-100%,0,0);
-  }
-}
-
 .gi-sticker {
   position: absolute;
   top: 4px;
@@ -1777,13 +1647,6 @@ html, body {
     position: relative;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     margin-bottom: 60px; /* Leaves room for the main buttons at the bottom */
-}
-
-.m-status-badge-big {
-    font-size: 2rem;
-    font-weight: 900;
-    letter-spacing: 4px;
-    text-shadow: 0 0 15px currentColor;
 }
 
 .m-reward-row { display: flex; align-items: center; gap: 20px; }
