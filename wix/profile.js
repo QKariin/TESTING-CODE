@@ -272,7 +272,8 @@ async function syncProfileAndTasks() {
             profile: {
                 taskdom_total_tasks: statsItem.taskdom_total_tasks || 0,
                 taskdom_completed_tasks: statsItem.taskdom_completed_tasks || 0,
-                taskdom_streak: statsItem.taskdom_current_streak || 0,
+                taskdom_streak: statsItem.taskdom_streak || 0,
+                taskdom_skipped_tasks: statsItem.taskdom_skipped_tasks || 0,
                 points: statsItem.score || 0,
                 kneelCount: statsItem.kneelCount || 0,
                 coins: statsItem.wallet || 0, 
