@@ -339,28 +339,28 @@ function initSwipeEvents(card, item) {
         if(nope) nope.style.opacity = diff < 0 ? Math.min(Math.abs(diff) / 100, 1) : 0;
     };
     const handleEnd = () => {
-        const diff = currentX - startX; card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
-        if (diff > 120) { // PURCHASE - POPULATE STEP 4 SUMMARY
-            card.style.transform = `translateX(600px) rotate(45deg)`; 
+        const diff = currentX - startX;
+        card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+
+        if (diff > 100) { // SWIPE RIGHT: SACRIFICE
+            card.style.transform = `translateX(600px) rotate(45deg)`;
             selectedItem = item;
-            if(document.getElementById('huntSelectedImg')) document.getElementById('huntSelectedImg').src = item.img || item.image;
-            if(document.getElementById('huntSelectedName')) document.getElementById('huntSelectedName').innerText = item.name.toUpperCase();
-            if(document.getElementById('huntSelectedPrice')) document.getElementById('huntSelectedPrice').innerText = item.price + " 🪙";
+            document.getElementById('huntSelectedImg').src = item.img || item.image;
+            document.getElementById('huntSelectedName').innerText = item.name.toUpperCase();
+            document.getElementById('huntSelectedPrice').innerText = item.price + " 🪙";
             setTimeout(() => { showHuntStep(4); }, 200);
-        } else if (diff < -120) {
-            card.style.transform = `translateX(-600px) rotate(-45deg)`; currentHuntIndex++;
-            setTimeout(() => { showTinderCard(); }, 200);
-        } else {
+        } else if (diff < -100) { // SWIPE LEFT: SKIP (This is the fix you needed)
+            card.style.transform = `translateX(-600px) rotate(-45deg)`;
+            card.style.opacity = "0";
+            currentHuntIndex++; // Move to next item
+            setTimeout(() => { showTinderCard(); }, 300); // Draw the next one
+        } else { // RESET
             card.style.transform = `translateX(0) rotate(0)`;
             if(document.getElementById('likeLabel')) document.getElementById('likeLabel').style.opacity = 0;
             if(document.getElementById('nopeLabel')) document.getElementById('nopeLabel').style.opacity = 0;
         }
         startX = 0;
     };
-    card.addEventListener('mousedown', handleStart); card.addEventListener('touchstart', handleStart);
-    window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove);
-    window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd);
-}
 
 export function finalizeSacrifice() {
     const note = document.getElementById('huntNote') ? document.getElementById('huntNote').value.trim() : "";
