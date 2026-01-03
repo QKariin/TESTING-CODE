@@ -486,6 +486,7 @@ html, body {
   margin-top: 20px;
   padding: 0;
   width: 75% !important;
+  flex-wrap: wrap;
 }
 
 .tab-btn {
