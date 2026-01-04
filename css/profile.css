@@ -459,7 +459,7 @@ html, body {
   font-weight: 900;
   letter-spacing: 2px;
   text-transform: uppercase;
-  border-bottom: 1px solid rgba(255,0,222,0.3);
+  border-bottom: 1px solid #222;
   padding-bottom: 3px;
   margin-bottom: 3px;
 }
