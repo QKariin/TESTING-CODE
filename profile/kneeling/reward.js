@@ -70,9 +70,12 @@ export function buyRewardFragment(cost) {
     const rewardMenu = document.getElementById('kneelRewardOverlay');
     if (rewardMenu) rewardMenu.classList.add('hidden');
     
-    // 4. Force the grid view to open
+    // 4. Force the grid view to open and render the grid
     const section = document.getElementById('revealSection');
     if (section) section.style.display = 'flex';
+    
+    // 5. Render the grid with current media
+    renderRewardGrid();
 
     triggerSound('coinSound');
 }
@@ -107,12 +110,15 @@ export function toggleRewardGrid() {
 export function handleRevealFragment() {
     // 1. Force the grid to open so they see the result
     const section = document.getElementById('revealSection');
-    if (section) section.style.display = 'block';
+    if (section) section.style.display = 'flex';
     
-    // 2. Tell Wix to pick a square
+    // 2. Render the grid with current media
+    renderRewardGrid();
+    
+    // 3. Tell Wix to pick a square
     window.parent.postMessage({ type: "REVEAL_FRAGMENT" }, "*");
     
-    // 3. Close the choice menu
+    // 4. Close the choice menu
     const rewardMenu = document.getElementById('kneelRewardOverlay');
     if (rewardMenu) rewardMenu.classList.add('hidden');
     
