@@ -57,73 +57,8 @@
     <div class="top-section-split">
         <!-- LEFT COLUMN: PROFILE -->
         <div class="layout-left">
-            <div class="glass-card profile-card">
-                <div class="pc-avatar-section">
-                    <div class="pc-avatar-box" onclick="document.getElementById('profileUploadInput').click()">
-                        <img id="profilePic" src="" class="pc-avatar-img">
-                        <div class="pc-avatar-edit-overlay"><span style="font-size:1.5rem; color:white;">✎</span></div>
-                    </div>
-                    <div class="pc-info-wrapper">
-                        <div id="subName" class="pc-name">SLAVE</div>
-                        <div id="subHierarchy" class="pc-rank">LOADING...</div>
-                        <div class="level-progress-container">
-                            <div class="lp-labels">
-                                <span>NEXT: <span id="nextLevelName">-</span></span>
-                                <span id="pointsNeeded">0 to go</span>
-                            </div>
-                            <div class="lp-bar-bg"><div id="progressBar" class="lp-bar-fill"></div></div>
-                        </div>
-                        <div class="devotion-wrapper">
-                            <div id="btn" class="kneel-btn-bar" 
-                                  onmousedown="handleHoldStart(event)" 
-                                  onmouseup="handleHoldEnd(event)" 
-                                  onmouseleave="handleHoldEnd(event)" 
-                                  ontouchstart="handleHoldStart(event)" 
-                                  ontouchend="handleHoldEnd(event)"
-                                 style="position: relative; display: block; cursor: pointer; user-select: none; overflow: hidden; height: 45px; background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 20px;">
-                                
-                                <span id="fill" class="bar-fill" style="display: block; position: absolute; top: 0; left: 0; height: 100%; width: 0%; z-index: 1; background: linear-gradient(90deg, #8a2be2, #00f2ff); transition: none;"></span> 
-
-                                <div class="bar-text" style="position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; pointer-events: none;">
-                                    <span id="txt-main" style="font-size: 0.85rem; font-weight: 900; color: white;">KNEEL</span>
-                                    <span id="txt-sub" style="font-size: 0.35rem; color: #888; font-family: 'Rajdhani';">HOLD FOR 2 SECONDS</span>
-                                </div>
-                            </div>
-                      </div>
-                   </div>
-                </div>
-                <div class="pc-stats-grid">
-                    <div class="stat-single-row row-score"><div id="points" class="ssr-val">0</div><div class="ssr-lbl">POINTS</div></div>
-                    <div class="stat-single-row row-coins"><div id="coins" class="ssr-val">0</div><svg style="width:20px; height:20px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg></div>
-                </div>
-                <div class="stats-toggle-btn" onclick="toggleStats()">STATS ▾</div>
-                <!-- NEW LOCATION: CENTERED AT TOP -->
-                <div style="text-align: center; padding: 10px 0; color: #888; text-shadow: none !important; font-size: 0.75rem; border-bottom: 1px solid #222;">
-                    DAILY ID: <span id="dailyRandomId" style="color: #888; text-shadow: none !important;">#----</span>
-                </div>
-                <div id="statsContent">
-                  <div class="stat-row-group">
-                      <div class="stat-line"><span>Task Streak</span> <strong id="statStreak">0</strong></div>
-                      <div class="stat-line"><span>Total Tasks</span> <strong id="statTotal">0</strong></div>
-                      <div class="stat-line"><span>Completed</span> <strong id="statCompleted">0</strong></div>
-                      <div class="stat-line"><span>Skipped</span> <strong id="statSkipped">0</strong></div>
-                      <div class="stat-line"><span>Total Kneeling</span> <strong id="statTotalKneels">0</strong></div>
-                      <div style="text-align: center; border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
-                          <div class="stat-header">SLAVE SINCE</div>
-                          <strong id="slaveSinceDate">--/--/--</strong>
-                      </div>
-                  </div>
-              </div>
-            </div>
-
-            <div class="nav-tabs">
-                <button class="tab-btn active" onclick="switchTab('serve')">HOME</button>
-                <button class="tab-btn" onclick="switchTab('news')">QKARIN</button>
-                <button class="tab-btn" onclick="switchTab('session')">BOOK SESSION</button>
-                <button class="tab-btn" onclick="switchTab('rewards')">REWARDS</button>
-                <button class="tab-btn" onclick="switchTab('protocol')">PROTOCOL</button>
-                <button class="tab-btn btn-foot-bank" onclick="switchTab('buy')">BUY COINS</button>
-            </div>
+            <div data-include="/profile/profileCard.html"></div>
+            <div data-include="/profile/navigation.html"></div>
         </div>
 
         <!-- RIGHT COLUMN: DYNAMIC CONTENT -->
