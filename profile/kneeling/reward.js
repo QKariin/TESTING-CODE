@@ -108,19 +108,22 @@ export function toggleRewardGrid() {
 
 // --- 2. THE REVEAL FRAGMENT BUTTON (The 3rd Option) ---
 export function handleRevealFragment() {
-    // 1. Force the grid to open so they see the result
+    // 1. Close the first overlay (sliders page)
+    const rewardMenu = document.getElementById('kneelRewardOverlay');
+    if (rewardMenu) rewardMenu.classList.add('hidden');
+    
+    // 2. Show the reveal section with only the buy menu visible
     const section = document.getElementById('revealSection');
     if (section) section.style.display = 'flex';
     
-    // 2. Render the grid with current media
-    renderRewardGrid();
+    // 3. Show the buy menu and hide the main menu
+    toggleRewardSubMenu(true);
     
-    // 3. Tell Wix to pick a square
-    window.parent.postMessage({ type: "REVEAL_FRAGMENT" }, "*");
+    // 4. Don't render grid yet - wait for purchase
+    // renderRewardGrid(); // Remove this - only render after purchase
     
-    // 4. Close the choice menu
-    const rewardMenu = document.getElementById('kneelRewardOverlay');
-    if (rewardMenu) rewardMenu.classList.add('hidden');
+    // 5. Don't tell Wix yet - wait for actual purchase
+    // window.parent.postMessage({ type: "REVEAL_FRAGMENT" }, "*");
     
     triggerSound('coinSound');
 }
