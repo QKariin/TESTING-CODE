@@ -21,7 +21,7 @@ import { getRandomTask, restorePendingUI, finishTask, cancelPendingTask, resetTa
 import { renderChat, sendChatMessage, handleChatKey, sendCoins, loadMoreChat, openChatPreview, closeChatPreview, forceBottom } from './chat.js';
 import { renderGallery, loadMoreHistory, initModalSwipeDetection, closeModal, toggleHistoryView, openHistoryModal, openModal } from './gallery.js';
 import { handleEvidenceUpload, handleProfileUpload, handleAdminUpload } from './uploads.js';
-import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from '../kneeling/kneeling.js';
+import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from '../profile/kneeling/kneeling.js';
 import { Bridge } from './bridge.js';
 import { scanExisting, observeNewElements } from './bytescale.js';
 
