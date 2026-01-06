@@ -35,13 +35,7 @@ export function switchTab(mode) {
         });
     }
     
-    // 4. For modal tabs, open full-screen modals instead of inline content
-    if (['session', 'protocol', 'buy'].includes(mode)) {
-        openTabModal(mode);
-        return;
-    }
-    
-    // 5. Hide all views - Including the old ones for safety, but removing from logic
+    // 4. Hide all views - Including the old ones for safety, but removing from logic
     const allViews = [
         'viewServingTop', 'viewNews', 'viewSession', 
         'viewVault', 'viewProtocol', 'viewBuy', 
@@ -53,20 +47,48 @@ export function switchTab(mode) {
         if (el) el.classList.add('hidden');
     });
 
-    // 6. THE CLEAN VIEW MAP (only for non-modal tabs)
+    // 5. THE CLEAN VIEW MAP
     const viewMap = {
         'serve': 'viewServingTop',
         'news': 'viewNews',
-        'rewards': 'viewVault'    // MAPS TO THE NEW VAULT
+        'session': 'viewSession',
+        'rewards': 'viewVault',    // MAPS TO THE NEW VAULT
+        'protocol': 'viewProtocol',
+        'buy': 'viewBuy'
     };
 
-    const targetId = viewMap[mode];
-    if (targetId) {
+    // Tabs that should use the modal system for full-screen display
+    const modalTabs = ['session', 'protocol', 'buy', 'rewards'];
+    
+    if (modalTabs.includes(mode)) {
+        // Use modal system for these tabs
+        const modal = document.getElementById('glassModal');
+        const modalContent = document.getElementById('modalGlassOverlay');
+        const targetId = viewMap[mode];
         const targetEl = document.getElementById(targetId);
-        if (targetEl) targetEl.classList.remove('hidden');
+        
+        if (modal && modalContent && targetEl) {
+            // Clear modal content and add the view
+            modalContent.innerHTML = `
+                <div id="modalCloseX" onclick="closeModal(null)">×</div>
+                <div style="width: 100%; height: 100%; overflow-y: auto; padding: 20px;">
+                    ${targetEl.outerHTML}
+                </div>
+            `;
+            
+            // Show modal
+            modal.classList.add('active');
+        }
+    } else {
+        // Regular view switching for serve/news
+        const targetId = viewMap[mode];
+        if (targetId) {
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) targetEl.classList.remove('hidden');
+        }
     }
        
-    // 7. TRIGGER RENDERS & MESSAGES
+    // 6. TRIGGER RENDERS & MESSAGES
     if (mode === 'news') {
         window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
     }
@@ -78,45 +100,6 @@ export function switchTab(mode) {
     if (mode === 'serve') {
         renderGallery(); // Draws the history/pending
     }
-}
-
-function openTabModal(mode) {
-    const modal = document.getElementById('glassModal');
-    const overlay = document.getElementById('modalGlassOverlay');
-    const mediaContainer = document.getElementById('modalMediaContainer');
-    
-    if (!modal || !overlay || !mediaContainer) return;
-    
-    // Clear media container
-    mediaContainer.innerHTML = '';
-    
-    // Set modal content based on mode
-    let content = '';
-    
-    if (mode === 'buy') {
-        const buyContent = document.getElementById('viewBuy');
-        content = buyContent ? buyContent.innerHTML : '<div class="gm-content"><h2>Buy content not found</h2></div>';
-    } else if (mode === 'session') {
-        const sessionContent = document.getElementById('viewSession');
-        content = sessionContent ? sessionContent.innerHTML : '<div class="gm-content"><h2>Session content not found</h2></div>';
-    } else if (mode === 'protocol') {
-        const protocolContent = document.getElementById('viewProtocol');
-        content = protocolContent ? protocolContent.innerHTML : '<div class="gm-content"><h2>Protocol content not found</h2></div>';
-    }
-    
-    // Wrap content in gm-content if it's not already wrapped
-    if (!content.includes('gm-content')) {
-        content = `<div class="gm-content">${content}</div>`;
-    }
-    
-    // Set the modal content
-    overlay.innerHTML = `
-        <div id="modalCloseX" onclick="closeModal(null)">×</div>
-        ${content}
-    `;
-    
-    // Show the modal
-    modal.classList.add('active');
 }
 
 // --- THE WISHLIST RENDERER ---
