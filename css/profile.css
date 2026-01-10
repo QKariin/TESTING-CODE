@@ -529,17 +529,16 @@ html, body {
 
 /* --- THE COMMAND DOSSIER --- */
 #taskContent {
-    /* BREATHE ROOM */
-    padding-top: 45px !important; /* Push down away from the timer */
-    padding-bottom: 30px !important; /* Push away from the buttons */
+    /* PUSH DOWN */
+    margin-top: 40px !important; 
+    padding-top: 10px !important;
+    padding-bottom: 20px !important;
     
-    /* THE GOLD LINE LOOK */
+    /* RESTORE THE GOLD LINE DESIGN */
     border-left: 3px solid var(--gold) !important;
     padding-left: 25px !important;
     text-align: left !important;
-    
-    /* MARGINS */
-    margin: 0 0 10px 10px !important;
+    position: relative !important;
 }
 
 /* Ensure the Header is big and left-aligned */
@@ -2140,46 +2139,48 @@ html, body {
 }
 
 #activeBadge {
-    /* POSITIONING */
+    /* LOCK THE POSITION */
     position: absolute;
-    top: -15px !important; /* Sits tight on the line */
+    top: -25px !important; /* Moves it higher so it sits ON the line */
     left: 50%;
     transform: translateX(-50%);
-    z-index: 20;
-    
-    /* SQUASH THE HEIGHT */
-    padding: 3px 40px !important; /* Minimal vertical, wide horizontal */
-    height: auto !important;
-    line-height: 1 !important; /* Kill the extra height */
+    z-index: 99;
+
+    /* LOCK THE SHAPE (Stops the moving frame) */
+    width: 200px !important; /* Fixed width = No jitter */
+    height: 50px !important; /* Fixed height */
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
     
     /* VISUALS */
     background-color: #000 !important;
     border: 1px solid var(--gold) !important;
     border-radius: 50px !important;
-    box-shadow: 0 0 15px rgba(0,0,0,1) !important;
-    
-    /* HIDDEN DEFAULT */
-    display: none;
+    box-shadow: 0 0 20px rgba(0,0,0,1) !important; /* Hides the line behind it */
+    padding: 0 !important; /* Reset padding since we have fixed width */
 }
 
-/* Ensure the text inside doesn't push it open */
+/* THE NUMBERS */
 #activeBadge #timerDisplay {
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1 !important;
-    font-size: 1.1rem !important; /* Keep text visible size */
-    font-family: 'Cinzel', serif !important;
+    /* MONOSPACE IS CRITICAL TO STOP JITTER */
+    font-family: 'Courier Prime', 'Courier New', monospace !important; 
+    font-size: 1.5rem !important; /* Bigger, readable size */
     font-weight: 700 !important;
     color: var(--gold) !important;
+    letter-spacing: 2px !important;
+    margin: 0 !important;
+    line-height: 1 !important;
 }
 
 /* SHOW RULE */
 #activeBadge.show {
-    display: block !important;
+    display: flex !important;
 }
 
 /* ENSURE THE CARD CAN HOLD THE BADGE */
 #taskCard {
     position: relative !important;
-    overflow: visible !important;
+    overflow: visible !important; /* Allows badge to hang out */
+    margin-top: 25px !important; /* Space above card for the badge */
 }
