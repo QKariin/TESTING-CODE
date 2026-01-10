@@ -529,10 +529,9 @@ html, body {
 
 /* --- THE COMMAND DOSSIER --- */
 #taskContent {
-    border-left: 2px solid var(--gold) !important; /* The Law Line */
-    padding-left: 25px !important;
-    margin: 20px 0 40px 10px !important; /* Massive gap before the button */
-    text-align: left !important; /* No more weak centered text */
+    padding-top: 40px !important; /* Clears space for the badge */
+    padding-bottom: 20px !important;
+    text-align: center !important;
 }
 
 /* THE DOMINANT HEADER */
@@ -580,6 +579,30 @@ html, body {
 #newTaskBtn:hover {
     background: var(--gold) !important;
     color: #000 !important;
+}
+
+#btnSkip {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    
+    /* TEXT STYLE */
+    color: #444 !important; /* Very dark grey (barely seen) */
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.65rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    
+    /* POSITION */
+    display: block !important;
+    margin: 15px auto 0 auto !important;
+    cursor: pointer !important;
+    transition: color 0.3s ease;
+}
+
+#btnSkip:hover {
+    color: #8b0000 !important; /* Turns Red on Hover */
+    text-decoration: underline;
 }
 
 #chatBadge {
@@ -2102,32 +2125,49 @@ html, body {
   transform: rotate(15deg); 
 }
 
-/* --- ACTIVE TASK BADGE (Restored) --- */
+/* THE PILL BADGE CONTAINER */
 #activeBadge {
-    display: none; /* Hidden until JS triggers it */
+    display: none; /* Hidden until active */
     position: absolute;
-    top: -12px; /* Sits on the top border */
+    top: -18px !important; /* Move up to sit on the line */
     left: 50%;
     transform: translateX(-50%);
     
-    /* Luxury Terminal Style */
-    background-color: #000;
-    border: 1px solid var(--gold);
-    color: var(--gold);
-    font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    padding: 3px 20px;
-    border-radius: 20px;
-    z-index: 99;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.9);
-    white-space: nowrap;
+    /* SHAPE: Wider and Shorter */
+    width: auto !important;
+    min-width: 180px !important; /* Force it wider */
+    padding: 6px 30px !important; /* Padding creates the "Bugle" look */
+    border-radius: 50px !important; /* Perfect Pill Roundness */
+    
+    /* COLORS */
+    background-color: #000 !important;
+    border: 1px solid var(--gold) !important;
+    box-shadow: 0 0 20px rgba(0,0,0,1) !important; /* Hides the line behind it */
+    z-index: 20;
+    
+    /* CENTER CONTENT */
+    text-align: center !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* REQUIRED TO MAKE IT VISIBLE */
+/* THE TIMER TEXT INSIDE */
+#activeBadge #timerDisplay {
+    font-family: 'Cinzel', serif !important;
+    font-size: 1.2rem !important; /* Much Smaller */
+    font-weight: 700 !important;
+    letter-spacing: 4px !important;
+    color: var(--gold) !important;
+    margin: 0 !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--gold) !important;
+    filter: none !important;
+}
+
+/* SHOW RULE */
 #activeBadge.show {
-    display: block !important;
+    display: flex !important; /* Flex ensures centering */
 }
 
 /* ENSURE THE CARD CAN HOLD THE BADGE */
