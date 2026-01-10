@@ -1,26 +1,50 @@
-<!-- 1. TOP SECTION: AVATAR LEFT - NAME/RANK RIGHT -->
+<div class="glass-card profile-card">
+    
+    <!-- 1. TOP SECTION: AVATAR LEFT - INFO RIGHT -->
     <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
         
-        <!-- LEFT: AVATAR + BADGES -->
+        <!-- LEFT: AVATAR + LOGIC BADGES -->
         <div class="pc-avatar-box" onclick="document.getElementById('profileUploadInput').click()" style="flex-shrink: 0; margin: 0; position: relative;">
             <img id="profilePic" src="" class="pc-avatar-img">
             <div class="pc-avatar-edit-overlay"><span style="font-size:1.5rem; color:white;">✎</span></div>
             
-            <!-- BADGES -->
+            <!-- LOGIC BADGES (Restored for JS compatibility) -->
             <div id="activeBadge" style="display: none; position: absolute; top: -5px; left: 50%; transform: translateX(-50%); background: #8b0000; color: #fff; font-size: 0.5rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ff0000; white-space: nowrap; font-family: 'Cinzel', serif; z-index: 10;">ACTIVE TASK</div>
             <div id="chatBadge" style="display: none; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; font-size: 0.5rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #fff; white-space: nowrap; font-family: 'Cinzel', serif; z-index: 10;">NEW MSG</div>
         </div>
 
-        <!-- RIGHT: NAME & RANK (Handwritten) -->
+        <!-- RIGHT: NAME, RANK, LOADING BAR -->
         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-            <div id="subName" class="pc-name" style="text-align: left; letter-spacing: 4px; font-size: 1.1rem; margin-bottom: 0;">SLAVE</div>
             
-            <!-- HANDWRITTEN RANK -->
-            <div id="subHierarchy" class="pc-rank" style="text-align: left; color: #c5a059; font-family: 'Italianno', cursive; font-size: 2rem; line-height: 0.8; letter-spacing: 0; text-transform: none; margin-left: -5px;">Loading...</div>
+            <!-- NAME -->
+            <div id="subName" class="pc-name" style="text-align: left; letter-spacing: 4px; font-size: 1.1rem; line-height: 1; margin-bottom: 0;">SLAVE</div>
+            
+            <!-- RANK (Handwritten Style) -->
+            <div id="subHierarchy" class="pc-rank" style="text-align: left; color: #c5a059; font-family: 'Italianno', cursive; font-size: 2rem; line-height: 0.8; margin-left: -4px; margin-bottom: 5px; text-transform: none; letter-spacing: 0;">Loading...</div>
+            
+            <!-- PROGRESS BAR UNIT -->
+            <div class="level-progress-container" style="width: 100%; margin: 0;">
+                <!-- Next Level Label -->
+                <div style="display: flex; justify-content: flex-start; margin-bottom: 2px;">
+                    <span style="font-family: 'Cinzel', serif; font-size: 0.55rem; color: #666; letter-spacing: 1px;">
+                        NEXT: <span id="nextLevelName" style="color: #c5a059; font-weight: 800;">-</span>
+                    </span>
+                </div>
+                
+                <!-- The Bar (Black to Gold) -->
+                <div class="lp-bar-bg" style="background: #111; border: 1px solid #333; height: 6px; border-radius: 4px;">
+                    <div id="progressBar" class="lp-bar-fill" style="width: 0%; background: linear-gradient(90deg, #000, #c5a059);"></div>
+                </div>
+
+                <!-- To Go Label -->
+                <div style="text-align: right; margin-top: 2px;">
+                    <span id="pointsNeeded" style="font-family: 'Inter', sans-serif; font-size: 0.5rem; color: #555; font-weight: 600;">0 to go</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 2. KNEEL BUTTON (GOLD Border - RED Fill) -->
+    <!-- 2. KNEEL BUTTON (Functional) -->
     <div class="devotion-wrapper" style="margin-bottom: 15px;">
         <div id="btn" class="kneel-btn-bar" 
                 onmousedown="handleHoldStart(event)" 
@@ -30,65 +54,47 @@
                 ontouchend="handleHoldEnd(event)"
                 style="position: relative; display: block; cursor: pointer; user-select: none; overflow: hidden; height: 60px; background: rgba(0,0,0,0.6); border: 1px solid #c5a059; border-radius: 50px; box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);">
             
-            <!-- FILL: BLACK TO RED (Active) -->
+            <!-- FILL: Red Gradient (Matches "Active" state) -->
             <span id="fill" class="bar-fill" style="display: block; position: absolute; top: 0; left: 0; height: 100%; width: 0%; z-index: 1; background: linear-gradient(90deg, #8b0000, #ff0000); transition: none;"></span> 
 
-            <!-- TEXT: GOLD (Calm) - NOW CENTERED ALONE -->
+            <!-- TEXT: Gold (Matches "Idle" state) -->
             <div class="bar-text" style="position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; pointer-events: none;">
                 <span id="txt-main" style="font-family: 'Cinzel', serif; font-size: 1.8rem; font-weight: 900; color: #c5a059; letter-spacing: 5px; text-shadow: 0 0 10px rgba(0,0,0,0.8);">KNEEL</span>
-                <!-- SUB TEXT REMOVED -->
+                
+                <!-- SUB TEXT: Empty but present so JS logic doesn't break -->
+                <span id="txt-sub" style="font-family: 'Inter', monospace; font-size: 0.6rem; color: #666; margin-top: -2px;"></span>
             </div>
         </div>
     </div>
 
-    <!-- 3. STATS STACKED (Reverted to Main Body) -->
+    <!-- 3. STATS STACKED (Points Red / Coins Gold) -->
     <div class="pc-stats-grid" style="display: flex; flex-direction: column; gap: 8px;">
         
-        <!-- POINTS (Red Accent Left) -->
-        <div class="stat-single-row" style="margin-bottom: 0; border-left: 3px solid #ff0000; background: rgba(20,0,0,0.4);">
+        <!-- POINTS: Red Number & Left Border -->
+        <div class="stat-single-row row-score" style="margin-bottom: 0; border-left: 3px solid #ff0000; background: rgba(20,0,0,0.4); justify-content: space-between;">
             <div id="points" class="ssr-val" style="color: #ff4444;">0</div>
-            <div class="ssr-lbl">POINTS</div>
+            <div class="ssr-lbl" style="color: #aa4444;">POINTS</div>
         </div>
         
-        <!-- COINS (Gold Accent Left) -->
-        <div class="stat-single-row row-coins" style="margin-bottom: 0;">
+        <!-- COINS: Gold Standard -->
+        <div class="stat-single-row row-coins" style="margin-bottom: 0; justify-content: space-between;">
             <div id="coins" class="ssr-val">0</div>
-            <svg style="width:16px; height:16px; fill:var(--gold); margin-left: 5px;"><use href="#icon-coin"></use></svg>
+            <svg style="width:16px; height:16px; fill:var(--gold);"><use href="#icon-coin"></use></svg>
         </div>
     </div>
 
-    <!-- 4. STATS BUTTON (Silver) -->
+    <!-- 4. TOGGLE BUTTON -->
     <div class="stats-toggle-btn" onclick="toggleStats()" style="border: 1px solid #444; color: #c0c0c0; background: rgba(40,40,40,0.4); margin-top: 15px;">
         STATS ▾
     </div>
 
-    <!-- DAILY ID -->
+    <!-- 5. DAILY ID -->
     <div style="text-align: center; padding: 10px 0; color: #444; font-size: 0.7rem; border-bottom: 1px solid #222; font-family: monospace;">
         DAILY ID: <span id="dailyRandomId" style="color: #666;">#----</span>
     </div>
 
-    <!-- 5. HIDDEN STATS DRAWER (Bar Moved Here) -->
+    <!-- 6. STATS DRAWER (Hidden) -->
     <div id="statsContent">
-        
-        <!-- MOVED SECTION: LEVEL PROGRESS (Centered at Top of Stats) -->
-        <div class="level-progress-container" style="width: 100%; margin: 0 auto 15px auto; padding-bottom: 15px; border-bottom: 1px solid #333;">
-            <!-- Next Level -->
-            <div style="text-align: center; margin-bottom: 4px;">
-                 <span style="font-family: 'Cinzel', serif; font-size: 0.6rem; color: #666; letter-spacing: 1px;">
-                    NEXT: <span id="nextLevelName" style="color: #c5a059; font-weight: 800;">LOADING...</span>
-                </span>
-            </div>
-            <!-- Bar -->
-            <div class="lp-bar-bg" style="background: #111; border: 1px solid #333; height: 6px; border-radius: 4px;">
-                <div id="progressBar" class="lp-bar-fill" style="width: 0%; background: linear-gradient(90deg, #000, #c5a059);"></div>
-            </div>
-            <!-- To Go -->
-            <div style="text-align: center; margin-top: 4px;">
-                <span id="pointsNeeded" style="font-family: 'Inter', sans-serif; font-size: 0.55rem; color: #555; font-weight: 600;">LOADING...</span>
-            </div>
-        </div>
-
-        <!-- The Rest of the Stats -->
         <div class="stat-row-group">
             <div class="stat-line"><span>Task Streak</span> <strong id="statStreak" style="color:#ccc;">0</strong></div>
             <div class="stat-line"><span>Total Tasks</span> <strong id="statTotal" style="color:#ccc;">0</strong></div>
