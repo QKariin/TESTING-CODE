@@ -9,71 +9,28 @@
 
     <!-- 1. IDENTITY HEADER -->
     <div style="display: flex; align-items: center; gap: 25px; margin-bottom: 20px;">
-        
-        <!-- AVATAR -->
         <div class="pc-avatar-box" onclick="document.getElementById('profileUploadInput').click()" style="
             flex-shrink: 0; margin: 0; width: 70px; height: 70px; 
-            border-radius: 50%; 
-            border: 1px solid #333; 
-            position: relative;
-            background: #000;">
-            
+            border-radius: 50%; border: 1px solid #333; position: relative; background: #000;">
             <img id="profilePic" src="" class="pc-avatar-img" style="filter: grayscale(100%) contrast(1.2);">
             <div class="pc-avatar-edit-overlay"><span style="font-size:1rem; color:white; opacity: 0.5;">+</span></div>
-            
-            <!-- BADGES -->
             <div id="activeBadge" style="display: none; position: absolute; top: -5px; left: 50%; transform: translateX(-50%); background: #8b0000; color: #fff; font-size: 0.5rem; padding: 2px 6px; border-radius: 2px; border: 1px solid #ff0000; z-index: 10;">ACTIVE</div>
             <div id="chatBadge" style="display: none; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; font-size: 0.5rem; padding: 2px 6px; border-radius: 2px; z-index: 10;">MSG</div>
         </div>
 
-        <!-- IDENTITY DETAILS -->
         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-            
-            <!-- NAME: Bigger & Wider -->
-            <div id="subName" class="pc-name" style="
-                text-align: left; 
-                letter-spacing: 6px; 
-                font-size: 1.5rem; 
-                color: #e0e0e0; 
-                margin-bottom: 2px;
-                line-height: 1;">
-                SLAVE
-            </div>
-            
-            <!-- RANK: Handwritten Signature -->
-            <div id="subHierarchy" class="pc-rank" style="
-                text-align: left; 
-                color: #c5a059; 
-                font-family: 'Italianno', cursive; 
-                font-size: 2rem; 
-                line-height: 0.8; 
-                margin-left: -5px; 
-                letter-spacing: 0;
-                text-transform: none;">
-                Loading...
-            </div>
+            <div id="subName" class="pc-name" style="text-align: left; letter-spacing: 6px; font-size: 1.5rem; color: #e0e0e0; margin-bottom: 2px; line-height: 1;">SLAVE</div>
+            <div id="subHierarchy" class="pc-rank" style="text-align: left; color: #c5a059; font-family: 'Italianno', cursive; font-size: 2rem; line-height: 0.8; margin-left: -5px; letter-spacing: 0; text-transform: none;">Loading...</div>
         </div>
     </div>
 
-    <!-- 2. THE LEDGER (Assets Section) -->
-    <div class="pc-stats-grid" style="
-        display: grid; 
-        grid-template-columns: 1fr 1px 1fr; 
-        align-items: center; 
-        border-top: 1px solid #222; 
-        padding-top: 15px; 
-        margin-bottom: 25px;">
-        
-        <!-- COLUMN 1: MERIT -->
+    <!-- 2. ASSETS (Points/Coins) -->
+    <div class="pc-stats-grid" style="display: grid; grid-template-columns: 1fr 1px 1fr; align-items: center; border-top: 1px solid #222; padding-top: 15px; margin-bottom: 25px;">
         <div style="text-align: center;">
             <div style="font-family: 'Cinzel', serif; font-size: 0.5rem; letter-spacing: 1px; color: #555; text-transform: uppercase; margin-bottom: 4px;">Net Merit</div>
             <div id="points" class="ssr-val" style="font-size: 1.1rem; color: #f0f0f0; font-family: 'Cinzel', serif; letter-spacing: 1px;">0</div>
         </div>
-
-        <!-- DIVIDER -->
         <div style="width: 1px; height: 30px; background: #222;"></div>
-
-        <!-- COLUMN 2: CAPITAL -->
         <div style="text-align: center;">
             <div style="font-family: 'Cinzel', serif; font-size: 0.5rem; letter-spacing: 1px; color: #555; text-transform: uppercase; margin-bottom: 4px;">Liquid Capital</div>
             <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
@@ -83,34 +40,14 @@
         </div>
     </div>
 
-    <!-- 3. PROTOCOL INTERFACE (The Button) -->
+    <!-- 3. PROTOCOL BUTTON -->
     <div class="devotion-wrapper" style="margin-bottom: 20px;">
         <div id="btn" class="kneel-btn-bar" 
-                onmousedown="handleHoldStart(event)" 
-                onmouseup="handleHoldEnd(event)" 
-                onmouseleave="handleHoldEnd(event)" 
-                ontouchstart="handleHoldStart(event)" 
-                ontouchend="handleHoldEnd(event)"
-                style="position: relative; display: block; cursor: pointer; user-select: none; overflow: hidden; height: 50px; 
-                       background: linear-gradient(180deg, #141414 0%, #050505 100%); 
-                       border: 1px solid #333; 
-                       border-radius: 2px;
-                       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
-            
-            <!-- FILL -->
+                onmousedown="handleHoldStart(event)" onmouseup="handleHoldEnd(event)" onmouseleave="handleHoldEnd(event)" ontouchstart="handleHoldStart(event)" ontouchend="handleHoldEnd(event)"
+                style="position: relative; display: block; cursor: pointer; user-select: none; overflow: hidden; height: 50px; background: linear-gradient(180deg, #141414 0%, #050505 100%); border: 1px solid #333; border-radius: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
             <span id="fill" class="bar-fill" style="display: block; position: absolute; top: 0; left: 0; height: 100%; width: 0%; z-index: 1; background: linear-gradient(90deg, #300000, #600000); transition: none;"></span> 
-
-            <!-- TEXT -->
             <div class="bar-text" style="position: relative; z-index: 2; display: flex; flex-direction: row; align-items: center; justify-content: center; height: 100%; pointer-events: none; gap: 10px;">
-                <span id="txt-main" style="
-                    font-family: 'Cinzel', serif; 
-                    font-size: 0.9rem; 
-                    font-weight: 700; 
-                    color: #c5a059; 
-                    letter-spacing: 3px; 
-                    text-transform: uppercase;">
-                    INITIATE PROTOCOL
-                </span>
+                <span id="txt-main" style="font-family: 'Cinzel', serif; font-size: 0.9rem; font-weight: 700; color: #c5a059; letter-spacing: 3px; text-transform: uppercase;">INITIATE PROTOCOL</span>
                 <span id="txt-sub" style="display: none !important;"></span>
             </div>
         </div>
@@ -122,38 +59,30 @@
     </div>
 
     <!-- 5. FOOTER TOGGLE -->
-    <div class="stats-toggle-btn" onclick="toggleStats()" style="
-        color: #444; 
-        background: transparent; 
-        font-family: 'Inter', sans-serif; 
-        font-size: 0.6rem; 
-        letter-spacing: 2px; 
-        text-transform: uppercase;
-        border: none;
-        cursor: pointer;">
+    <div class="stats-toggle-btn" onclick="toggleStats()" style="color: #444; background: transparent; font-family: 'Inter', sans-serif; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; border: none; cursor: pointer;">
         View Full Record ▾
     </div>
 
-    <!-- 6. HIDDEN DRAWER (Stats & Progress) -->
+    <!-- 6. HIDDEN DRAWER (With Progress Bar Inside) -->
     <div id="statsContent">
         
-        <!-- PROGRESS BAR SECTION (New Layout) -->
+        <!-- PROGRESS SECTION -->
         <div class="level-progress-container" style="width: 100%; margin: 15px auto 25px auto;">
             
-            <!-- ROW 1: "TARGET" (Left) - NAME (Right) -->
+            <!-- ROW 1: TARGET (Left) - NAME (Right) -->
             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-family: 'Inter', sans-serif; font-size: 0.5rem; letter-spacing: 1px; color: #444; text-transform: uppercase;">
                 <span>TARGET</span>
                 <span id="nextLevelName" style="color: #c5a059; font-weight: 700;">-</span>
             </div>
             
-            <!-- ROW 2: Bar (Black/Gold) -->
-            <div class="lp-bar-bg" style="background: #111; border-bottom: 1px solid #333; height: 2px; border-radius: 0;">
-                <div id="progressBar" class="lp-bar-fill" style="width: 0%; height: 100%; background: #c5a059; box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);"></div>
+            <!-- ROW 2: BAR (Visibly Thicker & Lighter Track) -->
+            <div class="lp-bar-bg" style="background: #222; border: 1px solid #333; height: 4px; border-radius: 0;">
+                <div id="progressBar" class="lp-bar-fill" style="width: 0%; height: 100%; background: #c5a059; box-shadow: 0 0 10px rgba(197, 160, 89, 0.4);"></div>
             </div>
             
-            <!-- ROW 3: To Go (Under) -->
-            <div style="text-align: right; margin-top: 4px;">
-                <span id="pointsNeeded" style="font-family: 'Inter', monospace; font-size: 0.5rem; color: #555;">CALCULATING...</span>
+            <!-- ROW 3: TO GO (Strictly Centered) -->
+            <div style="text-align: center; margin-top: 6px;">
+                <span id="pointsNeeded" style="font-family: 'Inter', monospace; font-size: 0.5rem; color: #666;">CALCULATING...</span>
             </div>
         </div>
 
@@ -165,7 +94,7 @@
             <div class="stat-line"><span>Skipped</span> <strong id="statSkipped" style="color:#666;">0</strong></div>
             <div class="stat-line"><span>Total Submissions</span> <strong id="statTotalKneels" style="color:#666;">0</strong></div>
             
-            <!-- REGISTRATION DATE (Clean) -->
+            <!-- REGISTRATION DATE -->
             <div style="text-align: center; margin-top: 20px;">
                 <div class="stat-header" style="color: #333; font-size: 0.5rem; border: none; margin-bottom: 2px;">REGISTRATION DATE</div>
                 <strong id="slaveSinceDate" style="color: #555; font-family: 'Inter', monospace; font-size: 0.7rem;">--/--/--</strong>
