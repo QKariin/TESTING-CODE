@@ -266,6 +266,22 @@ html, body {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .pc-avatar-edit-overlay {
   position: absolute;
   inset: 0;
@@ -509,39 +525,54 @@ html, body {
   opacity: 0.7;
 }
 
-/* --- FIXED TASK TEXT & COLORS --- */
-#taskContent p, .inter, #taskContent div {
-    font-family: 'Inter', sans-serif !important;
-    color: #cccccc !important;      /* Light Grey */
-    font-weight: 400 !important;
-    font-size: 0.95rem !important;
-    line-height: 1.8 !important;
-    white-space: pre-wrap !important; /* Reads Enters/Spaces from CMS */
+/* --- 1. THE CONTAINER (Structure Only) --- */
+#taskContent {
+    /* PUSH DOWN (Keeps text away from timer) */
+    margin-top: 40px !important; 
+    padding-top: 5px !important;
+    padding-bottom: 20px !important;
+    
+    /* RESTORE THE GOLD LINE DESIGN */
+    border-left: 3px solid var(--gold) !important;
+    padding-left: 20px !important;
     text-align: left !important;
+    position: relative !important;
+    width: 100% !important;
 }
 
+/* --- 2. THE HEADER (RESTORED TO WHITE) --- */
 #readyText {
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
-    color: #ffffff !important;      /* Pure White */
-    font-size: 1.5rem !important;
+    
+    /* COLOR RESTORED: Bright White */
+    color: #ffffff !important; 
+    
+    font-size: 1.4rem !important;
     letter-spacing: 3px !important;
     text-transform: uppercase !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 5px !important;
+    display: block;
     text-shadow: 0 0 10px rgba(0,0,0,0.8) !important;
-    text-align: left !important;
+    line-height: 1.2 !important;
 }
 
-/* --- FIXED CONTAINER (Gold Line on Left) --- */
-#taskContent {
-    border-left: 3px solid var(--gold) !important;
-    padding-left: 20px !important;
-    margin: 20px 0 30px 10px !important; /* Space below text */
-    text-align: left !important;
-    width: auto !important;
+/* --- 3. THE DESCRIPTION (RESTORED TO LIGHT GREY) --- */
+#taskContent p, .inter {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 400 !important;
+    
+    /* COLOR RESTORED: Light Readable Grey */
+    color: #cccccc !important; 
+    
+    font-size: 0.9rem !important;
+    letter-spacing: 1px !important;
+    text-transform: none !important; /* Easier to read */
+    line-height: 1.5 !important;
+    opacity: 1 !important;
 }
 
-/* --- FIXED BUTTON (Small & Centered) --- */
+/* --- 4. THE BUTTON (Full Width & Symmetrical) --- */
 #newTaskBtn {
     background: transparent !important;
     border: 1px solid var(--gold) !important;
@@ -551,47 +582,17 @@ html, body {
     letter-spacing: 4px !important;
     text-transform: uppercase !important;
     
-    /* SIZE FIXES */
-    width: auto !important;  /* STOPS IT FROM BEING HUGE */
-    min-width: 250px !important;
-    padding: 15px 30px !important;
+    /* SYMMETRY FIX */
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 15px 0 !important;
     
-    /* CENTERING */
-    display: block !important;
-    margin: 0 auto !important; 
-    
+    display: block;
     border-radius: 2px !important;
     transition: all 0.4s ease;
 }
 
-/* ENSURE CONTAINER CENTERS THE BUTTON */
-#mainButtonsArea {
-    width: 100% !important;
-    text-align: center !important;
-    display: block !important;
-}
-
-.btn-upload {
-    background: transparent !important;
-    border: 1px solid var(--gold) !important;
-    color: var(--gold) !important;
-    font-family: 'Cinzel', serif !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 4px !important; /* Increased spacing for luxury look */
-    
-    /* WIDTH & SPACING FIX */
-    width: auto !important;         /* Stop full width */
-    min-width: 280px !important;    /* Solid, fixed size */
-    padding: 18px 40px !important;  /* Massive internal spacing */
-    margin: 40px auto 10px auto !important; /* Huge space above the button */
-    
-    display: block !important;
-    border-radius: 0 !important;    /* Keep sharp corners */
-    transition: all 0.4s ease !important;
-}
-
-.btn-upload:hover {
+#newTaskBtn:hover {
     background: var(--gold) !important;
     color: #000 !important;
 }
@@ -2004,71 +2005,55 @@ html, body {
     z-index: 30; 
   }
 
-/* --- DESKTOP REPAIR BLOCK --- */
+  /* --- NEW MOBILE SYMMETRY & COLOR FIXES --- */
 
-/* 1. Reset the Card Layout (Left Aligned, Gold Line) */
-#taskCard {
-    display: block !important;
-    text-align: left !important;
-    padding: 25px !important;
-    height: auto !important;
+  /* 1. Card Symmetry (Balanced Padding) */
+  #taskCard {
+      padding: 20px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+  }
+
+  /* 2. Text Colors Restored (White Title / Grey Text) */
+  #readyText {
+      color: #ffffff !important;
+      font-size: 1.3rem !important;
+      text-shadow: 0 0 10px rgba(0,0,0,0.8) !important;
+      margin-bottom: 5px !important;
+  }
+
+  #taskContent div, #taskContent p, .inter {
+      color: #cccccc !important;
+      font-size: 0.9rem !important;
+      line-height: 1.5 !important;
+      font-weight: 300 !important;
+      opacity: 1 !important;
+  }
+
+  /* 3. Task Alignment (Gold Line & Spacing) */
+  #taskContent {
+      border-left: 3px solid var(--gold) !important;
+      padding-left: 15px !important;
+      margin: 15px 0 25px 0 !important; /* Clean vertical spacing */
+      width: 100% !important;
+      text-align: left !important;
+  }
+
+  /* 4. Button Full Width & Centered */
+  #mainButtonsArea {
+      width: 100% !important;
+      display: block !important;
+  }
+
+  #newTaskBtn {
+      width: 100% !important; /* Full width on mobile */
+      min-width: 0 !important; /* Remove desktop constraints */
+      margin: 0 !important;
+      padding: 12px 0 !important;
+  }
 }
 
-#taskContent {
-    border-left: 3px solid var(--gold) !important;
-    padding-left: 20px !important;
-    margin: 20px 0 30px 10px !important;
-    text-align: left !important;
-    width: auto !important;
-}
-
-/* 2. Force Fonts & Colors (White Title, Grey Text) */
-#readyText {
-    font-family: 'Cinzel', serif !important;
-    font-weight: 700 !important;
-    color: #ffffff !important; /* Pure White */
-    font-size: 1.6rem !important;
-    letter-spacing: 3px !important;
-    text-transform: uppercase !important;
-    margin-bottom: 5px !important;
-    text-shadow: 0 0 10px rgba(0,0,0,0.8) !important;
-    line-height: 1.2 !important;
-}
-
-#taskContent p, .inter, #taskContent div {
-    font-family: 'Inter', sans-serif !important;
-    color: #cccccc !important; /* Light Grey */
-    font-weight: 400 !important;
-    font-size: 0.9rem !important;
-    line-height: 1.6 !important;
-    text-align: left !important;
-    opacity: 1 !important;
-    white-space: pre-wrap !important;
-}
-
-/* 3. Fix the Button (Small & Centered) */
-#mainButtonsArea {
-    width: 100% !important;
-    text-align: center !important;
-    display: block !important;
-    margin-top: 20px !important;
-}
-
-#newTaskBtn {
-    width: auto !important; /* STOP 100% WIDTH */
-    min-width: 250px !important;
-    display: inline-block !important;
-    margin: 0 auto !important;
-    padding: 15px 30px !important;
-    
-    background: transparent !important;
-    border: 1px solid var(--gold) !important;
-    color: var(--gold) !important;
-    font-family: 'Cinzel', serif !important;
-    font-weight: 700 !important;
-    letter-spacing: 4px !important;
-    border-radius: 2px !important;
-}
 /* ==========================================================================
    TRIBUTE TINDER - FULL HEIGHT & CENTERED
    ========================================================================== */
