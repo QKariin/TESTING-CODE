@@ -1422,19 +1422,24 @@ html, body {
 }
 
 .timer-overlay {
-    font-family: 'Inter', monospace !important; /* Technical feel */
-    font-weight: 600;
-    color: var(--elegant-white);
-    letter-spacing: 2px;
-    font-size: 1.2rem;
-    text-shadow: none !important; /* Clean and sharp */
+    font-family: 'Orbitron', sans-serif !important; /* Technical high-end feel */
+    font-weight: 900 !important;
+    color: var(--gold-bright) !important; /* Change from white to Gold */
+    letter-spacing: 6px !important;       /* Wide spacing looks like a Rolex or a safe */
+    font-size: 2.2rem !important;        /* Make it huge and dominant */
+    text-shadow: 0 0 15px var(--gold-dim) !important; /* Subtle "Power" glow */
+    margin: 20px 0 !important;
+    display: block;
+    text-align: center;
 }
 
 .timer-icon {
-  width: 32px;
-  height: 32px;
-  fill: var(--gold-bright);
-  filter: drop-shadow(0 0 5px black);
+    width: 18px !important;  /* Half the size - looks more precise */
+    height: 18px !important;
+    fill: var(--gold);
+    margin-bottom: 8px;      /* Position it above the numbers */
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.8));
+    opacity: 0.8;
 }
 
 .gallery-grid {
