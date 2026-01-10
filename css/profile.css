@@ -485,52 +485,53 @@ html, body {
   font-weight: 600;
 }
 
-/* --- LUXURY GLASS MENU (OVERRIDES NAVIGATION.HTML) --- */
+/* --- LUXURY BOTTOM MENU RE-DESIGN --- */
 
+/* 1. THE FLOATING GLASS BAR */
 .nav-tabs {
-    /* 1. DETACH & FLOAT AT BOTTOM */
+    /* Position Fixed at Bottom */
     position: fixed !important;
-    bottom: 20px !important;
+    bottom: 25px !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
-    z-index: 2147483647 !important; /* Max Z-Index to stay on top */
+    z-index: 9999 !important;
 
-    /* 2. THE GLASS PILL SHAPE */
-    width: 95% !important;
+    /* Sizing */
+    width: 90% !important;
     max-width: 450px !important;
-    height: 55px !important;
+    height: 60px !important;
     padding: 0 !important;
     margin: 0 !important;
-    
-    background: rgba(8, 8, 8, 0.95) !important; /* Deep Black Glass */
-    backdrop-filter: blur(15px) !important;
-    -webkit-backdrop-filter: blur(15px) !important;
-    border: 1px solid var(--gold) !important;
-    border-radius: 50px !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.9) !important;
 
-    /* 3. LAYOUT (Horizontal Row) */
+    /* Layout: Force Row */
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: space-evenly !important;
     gap: 0 !important;
+
+    /* The Look: Frosted Glass & Gold Border */
+    background: rgba(10, 10, 12, 0.9) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(197, 160, 89, 0.3) !important;
+    border-radius: 50px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.9) !important;
 }
 
-/* 4. THE BUTTONS (Text Only, Cinzel Font) */
+/* 2. THE BUTTONS (Text Only) */
 .tab-btn {
-    /* Reset Boxy Styles */
+    /* Reset Old Box Styles */
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     width: auto !important;
     margin: 0 !important;
-    padding: 10px 5px !important;
-
-    /* Luxury Typography */
+    
+    /* Typography */
     font-family: 'Cinzel', serif !important;
-    font-size: 0.6rem !important;
+    font-size: 0.65rem !important;
     font-weight: 700 !important;
     letter-spacing: 2px !important;
     color: #666 !important; /* Inactive Color */
@@ -540,34 +541,35 @@ html, body {
     transition: all 0.3s ease !important;
 }
 
-/* 5. ACTIVE / HOVER (Gold Glow) */
+/* 3. ACTIVE / HOVER STATE (Gold) */
 .tab-btn.active, .tab-btn:hover {
-    color: var(--gold) !important;
-    text-shadow: 0 0 12px rgba(197, 160, 89, 0.6) !important;
+    color: #c5a059 !important;
+    text-shadow: 0 0 15px rgba(197, 160, 89, 0.5) !important;
+    
+    /* Ensure no background/border appears on click */
     background: transparent !important;
     border: none !important;
+    box-shadow: none !important;
 }
 
-/* 6. GOLD DIVIDERS (The Jewelry Detail) */
-/* Adds a thin gold line between buttons */
+/* 4. THE VERTICAL DIVIDERS (Jewelry Detail) */
+/* Adds a thin gold line between items */
 .tab-btn:not(:last-child)::after {
     content: '' !important;
     position: absolute !important;
-    right: -2px !important;
+    right: -10px !important; /* Adjust spacing between text and line */
     top: 50% !important;
     transform: translateY(-50%) !important;
     width: 1px !important;
     height: 12px !important;
     background: rgba(197, 160, 89, 0.4) !important;
+    opacity: 0.6 !important;
 }
 
-/* 7. "BUY COINS" SPECIAL HIGHLIGHT */
 .btn-foot-bank {
-    color: #e0e0e0 !important; /* Silver/Platinum look */
-}
-.btn-foot-bank:hover {
-    color: #fff !important;
-    text-shadow: 0 0 15px rgba(255,255,255,0.8) !important;
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+  opacity: 0.7;
 }
 
 /* Moves Skip/Cancel lower and dims it significantly */
