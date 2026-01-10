@@ -112,6 +112,8 @@
 
             <!-- TEXT -->
             <div class="bar-text" style="position: relative; z-index: 2; display: flex; flex-direction: row; align-items: center; justify-content: center; height: 100%; pointer-events: none; gap: 10px;">
+                
+                <!-- MAIN TEXT ONLY -->
                 <span id="txt-main" style="
                     font-family: 'Cinzel', serif; 
                     font-size: 0.9rem; 
@@ -121,15 +123,8 @@
                     text-transform: uppercase;">
                     INITIATE PROTOCOL
                 </span>
-                <span id="txt-sub-time" style="
-                    font-family: 'Inter', monospace; 
-                    font-size: 0.6rem; 
-                    color: #444; 
-                    border: 1px solid #333; 
-                    padding: 2px 6px; 
-                    border-radius: 2px;">
-                    READY
-                </span>
+
+                <!-- HIDDEN SUBTEXT (Essential for your Lock Timer logic, but invisible otherwise) -->
                 <span id="txt-sub" style="display: none !important;"></span>
             </div>
         </div>
