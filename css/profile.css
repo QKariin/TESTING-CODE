@@ -856,40 +856,29 @@ html, body {
   box-shadow: none !important;                   /* Remove the cheap glow */
 }
 
-/* Base Style for all Task Evaluations */
-/* Small, tight evaluation cards */
-.m-approve, .m-reject {
-  background: rgba(10, 10, 10, 0.8) !important; 
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 0px !important; /* Sharp technical edge */
-  padding: 8px 12px !important;  /* Much smaller padding */
-  margin: 5px 0 !important;
-  width: auto !important;        /* Only as wide as the text */
-  max-width: 85% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
+/* Fix for the small verification cards */
+.m-approve .msg-avatar, 
+.m-reject .msg-avatar,
+.m-queen .msg-avatar {
+    display: none !important; /* Remove clutter */
 }
 
-/* Approval Accent */
-.m-approve { border-left: 2px solid var(--gold-bright) !important; }
-
-/* Rejection Accent */
-.m-reject { border-left: 2px solid #8b4513 !important; }
-
-/* Task Failed Text in Cinzel */
+/* Force Rejection text to be small Cinzel */
 .m-reject {
-  font-family: 'Cinzel', serif !important;
-  text-transform: uppercase !important;
-  letter-spacing: 1px !important;
-  font-size: 0.75rem !important; /* Small and sharp */
+    font-family: 'Cinzel', serif !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    font-size: 0.75rem !important;
+    color: #8b4513 !important;
 }
 
-.m-slave {
-  background: #141414;
-  color: #ddd;
-  border-radius: 12px 12px 0 12px;
-  border: 1px solid #333;
+/* Tighten the message rows to look like a log, not a chat */
+.msg-row {
+    margin-bottom: 5px !important;
+}
+
+.msg-col {
+    max-width: 100% !important;
 }
 
 .msg-time {
@@ -975,45 +964,36 @@ html, body {
   fill: var(--bg-dark);
 }
 
-.chat-input-row {
-  display: flex;
-  gap: 6px;
-  border-top: 1px solid #333;
-  padding-top: 8px;
-  background: transparent;
-  padding: 8px;
+.m-slave {
+  background: transparent !important;
+  color: #888;
+  border-left: 1px solid #333 !important; /* Simple vertical thread */
+  padding-left: 10px !important;
+  border-radius: 0 !important;
 }
 
 .chat-input {
   flex: 1;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid var(--glass-border);
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--glass-border) !important; /* Minimalist line */
   color: var(--elegant-white);
-  padding: 8px;
-  border-radius: 20px;
+  padding: 8px 0;
+  border-radius: 0 !important;
   font-family: 'Inter', sans-serif;
   outline: none;
   font-size: 16px;
 }
 
 .chat-send {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background: var(--gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--bg-dark);
-  font-weight: bold;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
   cursor: pointer;
-  font-size: 1.2rem;
-  border: none;
   transition: var(--transition);
-}
-
-.chat-send:hover {
-  box-shadow: 0 0 20px var(--gold-dim);
+  border-radius: 0 !important; /* Sharp corners */
 }
 
 #chatMediaOverlay {
