@@ -21,17 +21,26 @@
             <img id="profilePic" src="" class="pc-avatar-img" style="filter: grayscale(100%) contrast(1.2);">
             <div class="pc-avatar-edit-overlay"><span style="font-size:1rem; color:white; opacity: 0.5;">+</span></div>
             
-            <!-- BADGES (Logic Restored) -->
+            <!-- BADGES -->
             <div id="activeBadge" style="display: none; position: absolute; top: -5px; left: 50%; transform: translateX(-50%); background: #8b0000; color: #fff; font-size: 0.5rem; padding: 2px 6px; border-radius: 2px; border: 1px solid #ff0000; z-index: 10;">ACTIVE</div>
             <div id="chatBadge" style="display: none; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; font-size: 0.5rem; padding: 2px 6px; border-radius: 2px; z-index: 10;">MSG</div>
         </div>
 
         <!-- IDENTITY DETAILS -->
         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-            <div style="font-family: 'Inter', sans-serif; font-size: 0.5rem; letter-spacing: 2px; color: #555; text-transform: uppercase;">Unit Identifier</div>
-            <div id="subName" class="pc-name" style="text-align: left; letter-spacing: 2px; font-size: 1.2rem; color: #e0e0e0; margin: 2px 0;">SLAVE</div>
             
-            <!-- RANK: HANDWRITTEN (Reverted) -->
+            <!-- NAME: Bigger & Wider -->
+            <div id="subName" class="pc-name" style="
+                text-align: left; 
+                letter-spacing: 6px; 
+                font-size: 1.5rem; 
+                color: #e0e0e0; 
+                margin-bottom: 2px;
+                line-height: 1;">
+                SLAVE
+            </div>
+            
+            <!-- RANK: Handwritten -->
             <div id="subHierarchy" class="pc-rank" style="
                 text-align: left; 
                 color: #c5a059; 
@@ -53,47 +62,28 @@
         align-items: center; 
         border-top: 1px solid #222; 
         padding-top: 15px; 
-        margin-bottom: 15px;">
+        margin-bottom: 25px;">
         
-        <!-- COLUMN 1: MERIT (Points) -->
+        <!-- COLUMN 1: MERIT -->
         <div style="text-align: center;">
-            <div style="font-family: 'Inter', sans-serif; font-size: 0.5rem; letter-spacing: 2px; color: #555; text-transform: uppercase; margin-bottom: 4px;">Net Merit</div>
-            <div id="points" class="ssr-val" style="font-size: 1.1rem; color: #f0f0f0; font-family: 'Cinzel', serif;">0</div>
+            <div style="font-family: 'Cinzel', serif; font-size: 0.5rem; letter-spacing: 1px; color: #555; text-transform: uppercase; margin-bottom: 4px;">Net Merit</div>
+            <div id="points" class="ssr-val" style="font-size: 1.1rem; color: #f0f0f0; font-family: 'Cinzel', serif; letter-spacing: 1px;">0</div>
         </div>
 
         <!-- DIVIDER -->
         <div style="width: 1px; height: 30px; background: #222;"></div>
 
-        <!-- COLUMN 2: CAPITAL (Coins) -->
+        <!-- COLUMN 2: CAPITAL -->
         <div style="text-align: center;">
-            <div style="font-family: 'Inter', sans-serif; font-size: 0.5rem; letter-spacing: 2px; color: #555; text-transform: uppercase; margin-bottom: 4px;">Liquid Capital</div>
+            <div style="font-family: 'Cinzel', serif; font-size: 0.5rem; letter-spacing: 1px; color: #555; text-transform: uppercase; margin-bottom: 4px;">Liquid Capital</div>
             <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-                <div id="coins" class="ssr-val" style="font-size: 1.1rem; color: #c5a059; font-family: 'Cinzel', serif;">0</div>
+                <div id="coins" class="ssr-val" style="font-size: 1.1rem; color: #c5a059; font-family: 'Cinzel', serif; letter-spacing: 1px;">0</div>
                 <svg style="width:10px; height:10px; fill:#c5a059;"><rect width="10" height="10" transform="rotate(45 5 5)" /></svg>
             </div>
         </div>
     </div>
 
-    <!-- 3. PROGRESS BAR (Restored Position: Under Stats) -->
-    <div class="level-progress-container" style="width: 100%; margin: 0 auto 25px auto;">
-        <!-- Labels -->
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-family: 'Inter', sans-serif; font-size: 0.5rem; letter-spacing: 1px; color: #444; text-transform: uppercase;">
-            <span>Standing Projection</span>
-            <span>Target: <span id="nextLevelName" style="color: #666;">-</span></span>
-        </div>
-        
-        <!-- Bar -->
-        <div class="lp-bar-bg" style="background: #111; border-bottom: 1px solid #333; height: 2px; border-radius: 0;">
-            <div id="progressBar" class="lp-bar-fill" style="width: 0%; height: 100%; background: #c5a059; box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);"></div>
-        </div>
-        
-        <!-- To Go -->
-        <div style="text-align: right; margin-top: 4px;">
-            <span id="pointsNeeded" style="font-family: 'Inter', monospace; font-size: 0.5rem; color: #444;">CALCULATING...</span>
-        </div>
-    </div>
-
-    <!-- 4. PROTOCOL INTERFACE (The Button) -->
+    <!-- 3. PROTOCOL INTERFACE (The Button) -->
     <div class="devotion-wrapper" style="margin-bottom: 20px;">
         <div id="btn" class="kneel-btn-bar" 
                 onmousedown="handleHoldStart(event)" 
@@ -112,8 +102,6 @@
 
             <!-- TEXT -->
             <div class="bar-text" style="position: relative; z-index: 2; display: flex; flex-direction: row; align-items: center; justify-content: center; height: 100%; pointer-events: none; gap: 10px;">
-                
-                <!-- MAIN TEXT ONLY -->
                 <span id="txt-main" style="
                     font-family: 'Cinzel', serif; 
                     font-size: 0.9rem; 
@@ -123,19 +111,17 @@
                     text-transform: uppercase;">
                     INITIATE PROTOCOL
                 </span>
-
-                <!-- HIDDEN SUBTEXT (Essential for your Lock Timer logic, but invisible otherwise) -->
                 <span id="txt-sub" style="display: none !important;"></span>
             </div>
         </div>
     </div>
 
-    <!-- 5. DAILY ID (Reverted Position) -->
+    <!-- 4. DAILY ID -->
     <div style="text-align: center; padding: 10px 0; color: #333; font-size: 0.6rem; border-bottom: 1px solid #222; font-family: 'Inter', monospace; margin-bottom: 10px;">
         SESSION ID: <span id="dailyRandomId" style="color: #555;">#----</span>
     </div>
 
-    <!-- 6. FOOTER TOGGLE -->
+    <!-- 5. FOOTER TOGGLE -->
     <div class="stats-toggle-btn" onclick="toggleStats()" style="
         color: #444; 
         background: transparent; 
@@ -148,17 +134,38 @@
         View Full Record ▾
     </div>
 
-    <!-- HIDDEN DRAWER -->
+    <!-- 6. HIDDEN DRAWER -->
     <div id="statsContent">
-        <div class="stat-row-group" style="padding-top: 10px;">
+        
+        <!-- PROGRESS BAR (Moved Inside Here) -->
+        <div class="level-progress-container" style="width: 100%; margin: 15px auto 25px auto;">
+            <!-- Target Label Only -->
+            <div style="text-align: left; margin-bottom: 5px; font-family: 'Inter', sans-serif; font-size: 0.5rem; letter-spacing: 1px; color: #444; text-transform: uppercase;">
+                Target: <span id="nextLevelName" style="color: #666;">-</span>
+            </div>
+            
+            <!-- Bar (Black/Gold) -->
+            <div class="lp-bar-bg" style="background: #111; border-bottom: 1px solid #333; height: 2px; border-radius: 0;">
+                <div id="progressBar" class="lp-bar-fill" style="width: 0%; height: 100%; background: #c5a059; box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);"></div>
+            </div>
+            
+            <!-- To Go -->
+            <div style="text-align: right; margin-top: 4px;">
+                <span id="pointsNeeded" style="font-family: 'Inter', monospace; font-size: 0.5rem; color: #444;">CALCULATING...</span>
+            </div>
+        </div>
+
+        <!-- STATS LIST -->
+        <div class="stat-row-group">
             <div class="stat-line"><span>Adherence Streak</span> <strong id="statStreak" style="color:#666;">0</strong></div>
             <div class="stat-line"><span>Tasks Issued</span> <strong id="statTotal" style="color:#666;">0</strong></div>
             <div class="stat-line"><span>Tasks Executed</span> <strong id="statCompleted" style="color:#666;">0</strong></div>
             <div class="stat-line"><span>Skipped</span> <strong id="statSkipped" style="color:#666;">0</strong></div>
             <div class="stat-line"><span>Total Submissions</span> <strong id="statTotalKneels" style="color:#666;">0</strong></div>
             
-            <div style="text-align: center; border-top: 1px solid #222; margin-top: 15px; padding-top: 10px;">
-                <div class="stat-header" style="color: #333; font-size: 0.5rem;">REGISTRATION DATE</div>
+            <!-- REGISTRATION DATE (No Line) -->
+            <div style="text-align: center; margin-top: 20px;">
+                <div class="stat-header" style="color: #333; font-size: 0.5rem; border: none; margin-bottom: 2px;">REGISTRATION DATE</div>
                 <strong id="slaveSinceDate" style="color: #555; font-family: 'Inter', monospace; font-size: 0.7rem;">--/--/--</strong>
             </div>
         </div>
