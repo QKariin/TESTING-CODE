@@ -24,7 +24,7 @@
         </div>
     </div>
 
-    <!-- 2. ASSETS (The Ledger) -->
+    <!-- 2. ASSETS (Points/Coins) -->
     <div class="pc-stats-grid" style="display: grid; grid-template-columns: 1fr 1px 1fr; align-items: center; border-top: 1px solid #222; padding-top: 15px; margin-bottom: 25px;">
         <div style="text-align: center;">
             <div style="font-family: 'Cinzel', serif; font-size: 0.5rem; letter-spacing: 1px; color: #555; text-transform: uppercase; margin-bottom: 4px;">Net Merit</div>
@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <!-- 3. THE PROTOCOL STACK (Action -> Daily -> Streak) -->
+    <!-- 3. THE PROTOCOL STACK -->
     <div class="devotion-wrapper" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
         
         <!-- TOP: ACTION BUTTON -->
@@ -50,22 +50,21 @@
             <span id="fill" class="bar-fill" style="display: block; position: absolute; top: 0; left: 0; height: 100%; width: 0%; z-index: 1; background: linear-gradient(90deg, #300000, #600000); transition: none;"></span> 
             <div class="bar-text" style="position: relative; z-index: 2; display: flex; flex-direction: row; align-items: center; justify-content: center; height: 100%; pointer-events: none; gap: 10px;">
                 <span id="txt-main" style="font-family: 'Cinzel', serif; font-size: 0.9rem; font-weight: 700; color: #c5a059; letter-spacing: 3px; text-transform: uppercase;">INITIATE PROTOCOL</span>
-                <!-- Hidden Safety Span -->
                 <span id="txt-sub" style="display: none !important;"></span>
             </div>
         </div>
 
-        <!-- MIDDLE: DAILY METRIC (Small & Grey) -->
+        <!-- MIDDLE: TODAY KNEELING (ID: todayKneels) -->
         <div style="text-align: center; border-bottom: 1px solid #111; padding-bottom: 8px;">
             <span style="font-family: 'Inter', sans-serif; font-size: 0.6rem; color: #444; letter-spacing: 1px; text-transform: uppercase;">
-                SESSION SUBMISSIONS: <span id="todayKneels" style="color: #666;">0</span>
+                TODAY KNEELING: <span id="todayKneels" style="color: #666;">0</span>
             </span>
         </div>
 
-        <!-- BOTTOM: STREAK RECORD (Gold & Serif) -->
+        <!-- BOTTOM: TASK STREAK (ID: statStreak) -->
         <div style="text-align: center;">
             <span style="font-family: 'Cinzel', serif; font-size: 0.8rem; color: #c5a059; letter-spacing: 2px; font-weight: 700; text-transform: uppercase;">
-                COMPLIANCE STREAK: <span id="statStreak">0</span>
+                TASK STREAK: <span id="statStreak">0</span>
             </span>
         </div>
     </div>
@@ -97,7 +96,7 @@
             </div>
         </div>
 
-        <!-- REMAINING STATS (Streak Moved Up) -->
+        <!-- STATS LIST (Streak removed from here as it is on main card) -->
         <div class="stat-row-group">
             
             <div class="stat-line">
