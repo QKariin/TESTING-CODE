@@ -7,7 +7,7 @@
     padding: 25px;
     font-family: 'Cinzel', serif;">
 
-    <!-- 1. IDENTITY HEADER (Avatar + Name + Signature Rank) -->
+    <!-- 1. IDENTITY HEADER -->
     <div style="display: flex; align-items: center; gap: 25px; margin-bottom: 20px;">
         
         <!-- AVATAR -->
@@ -40,7 +40,7 @@
                 SLAVE
             </div>
             
-            <!-- RANK: Handwritten -->
+            <!-- RANK: Handwritten Signature -->
             <div id="subHierarchy" class="pc-rank" style="
                 text-align: left; 
                 color: #c5a059; 
@@ -134,24 +134,26 @@
         View Full Record ▾
     </div>
 
-    <!-- 6. HIDDEN DRAWER -->
+    <!-- 6. HIDDEN DRAWER (Stats & Progress) -->
     <div id="statsContent">
         
-        <!-- PROGRESS BAR (Moved Inside Here) -->
+        <!-- PROGRESS BAR SECTION (New Layout) -->
         <div class="level-progress-container" style="width: 100%; margin: 15px auto 25px auto;">
-            <!-- Target Label Only -->
-            <div style="text-align: left; margin-bottom: 5px; font-family: 'Inter', sans-serif; font-size: 0.5rem; letter-spacing: 1px; color: #444; text-transform: uppercase;">
-                Target: <span id="nextLevelName" style="color: #666;">-</span>
+            
+            <!-- ROW 1: "TARGET" (Left) - NAME (Right) -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-family: 'Inter', sans-serif; font-size: 0.5rem; letter-spacing: 1px; color: #444; text-transform: uppercase;">
+                <span>TARGET</span>
+                <span id="nextLevelName" style="color: #c5a059; font-weight: 700;">-</span>
             </div>
             
-            <!-- Bar (Black/Gold) -->
+            <!-- ROW 2: Bar (Black/Gold) -->
             <div class="lp-bar-bg" style="background: #111; border-bottom: 1px solid #333; height: 2px; border-radius: 0;">
                 <div id="progressBar" class="lp-bar-fill" style="width: 0%; height: 100%; background: #c5a059; box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);"></div>
             </div>
             
-            <!-- To Go -->
+            <!-- ROW 3: To Go (Under) -->
             <div style="text-align: right; margin-top: 4px;">
-                <span id="pointsNeeded" style="font-family: 'Inter', monospace; font-size: 0.5rem; color: #444;">CALCULATING...</span>
+                <span id="pointsNeeded" style="font-family: 'Inter', monospace; font-size: 0.5rem; color: #555;">CALCULATING...</span>
             </div>
         </div>
 
@@ -163,7 +165,7 @@
             <div class="stat-line"><span>Skipped</span> <strong id="statSkipped" style="color:#666;">0</strong></div>
             <div class="stat-line"><span>Total Submissions</span> <strong id="statTotalKneels" style="color:#666;">0</strong></div>
             
-            <!-- REGISTRATION DATE (No Line) -->
+            <!-- REGISTRATION DATE (Clean) -->
             <div style="text-align: center; margin-top: 20px;">
                 <div class="stat-header" style="color: #333; font-size: 0.5rem; border: none; margin-bottom: 2px;">REGISTRATION DATE</div>
                 <strong id="slaveSinceDate" style="color: #555; font-family: 'Inter', monospace; font-size: 0.7rem;">--/--/--</strong>
