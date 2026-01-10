@@ -1,6 +1,6 @@
 <div class="glass-card profile-card">
     
-    <!-- TOP SECTION: AVATAR LEFT - INFO RIGHT -->
+    <!-- 1. TOP SECTION: AVATAR LEFT - INFO RIGHT -->
     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
         
         <!-- LEFT: AVATAR -->
@@ -14,7 +14,7 @@
             <div id="subName" class="pc-name" style="text-align: left; letter-spacing: 4px; margin-bottom: 2px;">SLAVE</div>
             <div id="subHierarchy" class="pc-rank" style="text-align: left; color: #666; font-size: 0.7rem;">LOADING...</div>
             
-            <!-- BAR ON THE RIGHT -->
+            <!-- BAR -->
             <div class="level-progress-container" style="width: 100%; margin: 5px 0 0 0;">
                 <div class="lp-bar-bg" style="background: #111; border: 1px solid #333; height: 6px; border-radius: 4px;">
                     <div id="progressBar" class="lp-bar-fill" style="width: 0%; background: linear-gradient(90deg, #000, #c5a059);"></div>
@@ -26,44 +26,44 @@
         </div>
     </div>
 
-    <!-- KNEEL BUTTON (RED ACCENT) -->
-    <div class="devotion-wrapper" style="margin-bottom: 20px;">
+    <!-- 2. KNEEL BUTTON (BIG RED ACCENT) -->
+    <div class="devotion-wrapper" style="margin-bottom: 15px;">
         <div id="btn" class="kneel-btn-bar" 
                 onmousedown="handleHoldStart(event)" 
                 onmouseup="handleHoldEnd(event)" 
                 onmouseleave="handleHoldEnd(event)" 
                 ontouchstart="handleHoldStart(event)" 
                 ontouchend="handleHoldEnd(event)"
-                style="position: relative; display: block; cursor: pointer; user-select: none; overflow: hidden; height: 55px; background: rgba(0,0,0,0.6); border: 1px solid #8b0000; border-radius: 50px; box-shadow: 0 0 15px rgba(139, 0, 0, 0.3);">
+                style="position: relative; display: block; cursor: pointer; user-select: none; overflow: hidden; height: 60px; background: rgba(0,0,0,0.6); border: 1px solid #8b0000; border-radius: 50px; box-shadow: 0 0 20px rgba(139, 0, 0, 0.2);">
             
             <!-- FILL: BLACK TO RED -->
             <span id="fill" class="bar-fill" style="display: block; position: absolute; top: 0; left: 0; height: 100%; width: 0%; z-index: 1; background: linear-gradient(90deg, #000, #8b0000); transition: none;"></span> 
 
             <div class="bar-text" style="position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; pointer-events: none;">
-                <span id="txt-main" style="font-family: 'Cinzel', serif; font-size: 1.6rem; font-weight: 900; color: #ff4444; letter-spacing: 5px; text-shadow: 0 0 5px rgba(0,0,0,0.8);">KNEEL</span>
-                <span id="txt-sub" style="font-family: 'Cinzel', serif; font-size: 0.55rem; color: #aaa; letter-spacing: 1px; margin-top: -2px;">TODAY KNEELING: <span id="todayKneels">0</span></span>
+                <span id="txt-main" style="font-family: 'Cinzel', serif; font-size: 1.8rem; font-weight: 900; color: #ff4444; letter-spacing: 5px; text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);">KNEEL</span>
+                <span id="txt-sub" style="font-family: 'Cinzel', serif; font-size: 0.6rem; color: #aaa; letter-spacing: 1px; margin-top: -4px;">TODAY KNEELING: <span id="todayKneels">0</span></span>
             </div>
         </div>
     </div>
 
-    <!-- STATS GRID: POINTS (RED) - COINS (GOLD) -->
-    <div class="pc-stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <!-- 3. STATS STACKED (POINTS RED - COINS GOLD) -->
+    <div class="pc-stats-grid" style="display: flex; flex-direction: column; gap: 8px;">
         
         <!-- POINTS (RED) -->
-        <div class="stat-single-row" style="border: 1px solid #500000; background: rgba(20,0,0,0.6); border-left: 3px solid #ff0000;">
+        <div class="stat-single-row" style="border: 1px solid #500000; background: rgba(20,0,0,0.6); border-left: 3px solid #ff0000; margin-bottom: 0;">
             <div id="points" class="ssr-val" style="color: #ff4444;">0</div>
-            <div class="ssr-lbl" style="color: #884444;">POINTS</div>
+            <div class="ssr-lbl" style="color: #aa4444;">POINTS</div>
         </div>
         
         <!-- COINS (GOLD) -->
-        <div class="stat-single-row row-coins">
+        <div class="stat-single-row row-coins" style="margin-bottom: 0;">
             <div id="coins" class="ssr-val">0</div>
             <svg style="width:16px; height:16px; fill:var(--gold); margin-left: 5px;"><use href="#icon-coin"></use></svg>
         </div>
     </div>
 
-    <!-- STATS TOGGLE (SILVER) -->
-    <div class="stats-toggle-btn" onclick="toggleStats()" style="border: 1px solid #666; color: #c0c0c0; background: rgba(50,50,50,0.3); margin-top: 10px;">
+    <!-- 4. STATS BUTTON (SILVER) -->
+    <div class="stats-toggle-btn" onclick="toggleStats()" style="border: 1px solid #444; color: #c0c0c0; background: rgba(40,40,40,0.4); margin-top: 15px;">
         STATS ▾
     </div>
 
@@ -72,7 +72,7 @@
         DAILY ID: <span id="dailyRandomId" style="color: #666;">#----</span>
     </div>
 
-    <!-- HIDDEN STATS DRAWER -->
+    <!-- HIDDEN STATS DRAWER (SILVER ACCENTS) -->
     <div id="statsContent">
         <div class="stat-row-group">
             <div class="stat-line"><span>Task Streak</span> <strong id="statStreak" style="color:#ccc;">0</strong></div>
