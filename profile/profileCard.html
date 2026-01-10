@@ -1,10 +1,10 @@
 <div class="glass-card profile-card">
     
-    <!-- TOP SECTION: AVATAR LEFT - ALL INFO/STATS RIGHT -->
-    <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px;">
+    <!-- 1. TOP SECTION: AVATAR LEFT - NAME/RANK RIGHT -->
+    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
         
-        <!-- LEFT: AVATAR -->
-        <div class="pc-avatar-box" onclick="document.getElementById('profileUploadInput').click()" style="flex-shrink: 0; margin: 0; width: 80px; height: 80px; position: relative;">
+        <!-- LEFT: AVATAR + BADGES -->
+        <div class="pc-avatar-box" onclick="document.getElementById('profileUploadInput').click()" style="flex-shrink: 0; margin: 0; position: relative;">
             <img id="profilePic" src="" class="pc-avatar-img">
             <div class="pc-avatar-edit-overlay"><span style="font-size:1.5rem; color:white;">✎</span></div>
             
@@ -13,49 +13,14 @@
             <div id="chatBadge" style="display: none; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; font-size: 0.5rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #fff; white-space: nowrap; font-family: 'Cinzel', serif; z-index: 10;">NEW MSG</div>
         </div>
 
-        <!-- RIGHT: NAME -> POINTS/COINS -> BAR -->
-        <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
-            
-            <!-- 1. NAME & RANK -->
-            <div style="text-align: center;">
-                <div id="subName" class="pc-name" style="letter-spacing: 4px; font-size: 1rem; line-height: 1;">SLAVE</div>
-                <div id="subHierarchy" class="pc-rank" style="color: #666; font-size: 0.65rem; margin-top: 2px;">LOADING...</div>
-            </div>
-
-            <!-- 2. STATS GRID (MOVED TO TOP) -->
-            <div class="pc-stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 0;">
-                
-                <!-- POINTS (Red Accent) -->
-                <div class="stat-single-row" style="padding: 4px; margin-bottom: 0; border-left: 3px solid #ff0000; background: rgba(0,0,0,0.3); justify-content: space-between;">
-                    <div id="points" class="ssr-val" style="color: #ff4444; font-size: 0.9rem;">0</div>
-                    <div class="ssr-lbl" style="font-size: 0.45rem;">PTS</div>
-                </div>
-                
-                <!-- COINS (Gold Accent) -->
-                <div class="stat-single-row row-coins" style="padding: 4px; margin-bottom: 0; background: rgba(0,0,0,0.3); justify-content: space-between;">
-                    <div id="coins" class="ssr-val" style="font-size: 0.9rem;">0</div>
-                    <svg style="width:12px; height:12px; fill:var(--gold);"><use href="#icon-coin"></use></svg>
-                </div>
-            </div>
-
-            <!-- 3. PROGRESS BAR (MOVED INTO STATS SECTION) -->
-            <div class="level-progress-container" style="width: 100%; margin: 0;">
-                <!-- Bar -->
-                <div class="lp-bar-bg" style="background: #111; border: 1px solid #333; height: 5px; border-radius: 4px;">
-                    <div id="progressBar" class="lp-bar-fill" style="width: 0%; background: linear-gradient(90deg, #000, #c5a059);"></div>
-                </div>
-                
-                <!-- Labels (Next & To Go) -->
-                <div style="display: flex; justify-content: space-between; margin-top: 2px;">
-                    <span style="font-family: 'Cinzel', serif; font-size: 0.45rem; color: #666;">NEXT: <span id="nextLevelName" style="color: #c5a059;">...</span></span>
-                    <span id="pointsNeeded" style="font-family: 'Inter', sans-serif; font-size: 0.45rem; color: #555;">LOADING...</span>
-                </div>
-            </div>
-
+        <!-- RIGHT: NAME & RANK (Vertically Centered) -->
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+            <div id="subName" class="pc-name" style="text-align: left; letter-spacing: 4px; font-size: 1.1rem; margin-bottom: 4px;">SLAVE</div>
+            <div id="subHierarchy" class="pc-rank" style="text-align: left; color: #666; font-size: 0.75rem;">LOADING...</div>
         </div>
     </div>
 
-    <!-- KNEEL BUTTON (BOTTOM - FULL WIDTH) -->
+    <!-- 2. KNEEL BUTTON (GOLD Border - RED Fill) -->
     <div class="devotion-wrapper" style="margin-bottom: 15px;">
         <div id="btn" class="kneel-btn-bar" 
                 onmousedown="handleHoldStart(event)" 
@@ -65,10 +30,10 @@
                 ontouchend="handleHoldEnd(event)"
                 style="position: relative; display: block; cursor: pointer; user-select: none; overflow: hidden; height: 60px; background: rgba(0,0,0,0.6); border: 1px solid #c5a059; border-radius: 50px; box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);">
             
-            <!-- FILL -->
+            <!-- FILL: BLACK TO RED (Active) -->
             <span id="fill" class="bar-fill" style="display: block; position: absolute; top: 0; left: 0; height: 100%; width: 0%; z-index: 1; background: linear-gradient(90deg, #8b0000, #ff0000); transition: none;"></span> 
 
-            <!-- TEXT -->
+            <!-- TEXT: GOLD (Calm) -->
             <div class="bar-text" style="position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; pointer-events: none;">
                 <span id="txt-main" style="font-family: 'Cinzel', serif; font-size: 1.8rem; font-weight: 900; color: #c5a059; letter-spacing: 5px; text-shadow: 0 0 10px rgba(0,0,0,0.8);">KNEEL</span>
                 <span id="txt-sub" style="font-family: 'Cinzel', serif; font-size: 0.6rem; color: #888; letter-spacing: 1px; margin-top: -4px;">TODAY KNEELING: <span id="todayKneels">0</span></span>
@@ -76,7 +41,23 @@
         </div>
     </div>
 
-    <!-- STATS DRAWER BUTTON (Silver) -->
+    <!-- 3. STATS STACKED (Reverted to Main Body) -->
+    <div class="pc-stats-grid" style="display: flex; flex-direction: column; gap: 8px;">
+        
+        <!-- POINTS (Red Accent Left) -->
+        <div class="stat-single-row" style="margin-bottom: 0; border-left: 3px solid #ff0000; background: rgba(20,0,0,0.4);">
+            <div id="points" class="ssr-val" style="color: #ff4444;">0</div>
+            <div class="ssr-lbl">POINTS</div>
+        </div>
+        
+        <!-- COINS (Gold Accent Left) -->
+        <div class="stat-single-row row-coins" style="margin-bottom: 0;">
+            <div id="coins" class="ssr-val">0</div>
+            <svg style="width:16px; height:16px; fill:var(--gold); margin-left: 5px;"><use href="#icon-coin"></use></svg>
+        </div>
+    </div>
+
+    <!-- 4. STATS BUTTON (Silver) -->
     <div class="stats-toggle-btn" onclick="toggleStats()" style="border: 1px solid #444; color: #c0c0c0; background: rgba(40,40,40,0.4); margin-top: 15px;">
         STATS ▾
     </div>
@@ -86,8 +67,28 @@
         DAILY ID: <span id="dailyRandomId" style="color: #666;">#----</span>
     </div>
 
-    <!-- HIDDEN STATS CONTENT -->
+    <!-- 5. HIDDEN STATS DRAWER (Bar Moved Here) -->
     <div id="statsContent">
+        
+        <!-- MOVED SECTION: LEVEL PROGRESS (Centered at Top of Stats) -->
+        <div class="level-progress-container" style="width: 100%; margin: 0 auto 15px auto; padding-bottom: 15px; border-bottom: 1px solid #333;">
+            <!-- Next Level -->
+            <div style="text-align: center; margin-bottom: 4px;">
+                 <span style="font-family: 'Cinzel', serif; font-size: 0.6rem; color: #666; letter-spacing: 1px;">
+                    NEXT: <span id="nextLevelName" style="color: #c5a059; font-weight: 800;">LOADING...</span>
+                </span>
+            </div>
+            <!-- Bar -->
+            <div class="lp-bar-bg" style="background: #111; border: 1px solid #333; height: 6px; border-radius: 4px;">
+                <div id="progressBar" class="lp-bar-fill" style="width: 0%; background: linear-gradient(90deg, #000, #c5a059);"></div>
+            </div>
+            <!-- To Go -->
+            <div style="text-align: center; margin-top: 4px;">
+                <span id="pointsNeeded" style="font-family: 'Inter', sans-serif; font-size: 0.55rem; color: #555; font-weight: 600;">LOADING...</span>
+            </div>
+        </div>
+
+        <!-- The Rest of the Stats -->
         <div class="stat-row-group">
             <div class="stat-line"><span>Task Streak</span> <strong id="statStreak" style="color:#ccc;">0</strong></div>
             <div class="stat-line"><span>Total Tasks</span> <strong id="statTotal" style="color:#ccc;">0</strong></div>
