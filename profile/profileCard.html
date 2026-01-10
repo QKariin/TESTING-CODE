@@ -1,4 +1,4 @@
-<!-- PRIVATE BANKING STYLE CARD -->
+<!-- PRIVATE WEALTH / AUDIT LOG CARD -->
 <div class="glass-card profile-card" style="
     background: #050505; 
     border: 1px solid rgba(197, 160, 89, 0.2); 
@@ -24,7 +24,7 @@
         </div>
     </div>
 
-    <!-- 2. ASSETS -->
+    <!-- 2. ASSETS (The Ledger) -->
     <div class="pc-stats-grid" style="display: grid; grid-template-columns: 1fr 1px 1fr; align-items: center; border-top: 1px solid #222; padding-top: 15px; margin-bottom: 25px;">
         <div style="text-align: center;">
             <div style="font-family: 'Cinzel', serif; font-size: 0.5rem; letter-spacing: 1px; color: #555; text-transform: uppercase; margin-bottom: 4px;">Net Merit</div>
@@ -40,16 +40,33 @@
         </div>
     </div>
 
-    <!-- 3. PROTOCOL BUTTON -->
-    <div class="devotion-wrapper" style="margin-bottom: 20px;">
+    <!-- 3. THE PROTOCOL STACK (Action -> Daily -> Streak) -->
+    <div class="devotion-wrapper" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
+        
+        <!-- TOP: ACTION BUTTON -->
         <div id="btn" class="kneel-btn-bar" 
                 onmousedown="handleHoldStart(event)" onmouseup="handleHoldEnd(event)" onmouseleave="handleHoldEnd(event)" ontouchstart="handleHoldStart(event)" ontouchend="handleHoldEnd(event)"
-                style="position: relative; display: block; cursor: pointer; user-select: none; overflow: hidden; height: 50px; background: linear-gradient(180deg, #141414 0%, #050505 100%); border: 1px solid #333; border-radius: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+                style="position: relative; display: block; cursor: pointer; user-select: none; overflow: hidden; height: 50px; background: linear-gradient(180deg, #141414 0%, #050505 100%); border: 1px solid #c5a059; border-radius: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
             <span id="fill" class="bar-fill" style="display: block; position: absolute; top: 0; left: 0; height: 100%; width: 0%; z-index: 1; background: linear-gradient(90deg, #300000, #600000); transition: none;"></span> 
             <div class="bar-text" style="position: relative; z-index: 2; display: flex; flex-direction: row; align-items: center; justify-content: center; height: 100%; pointer-events: none; gap: 10px;">
                 <span id="txt-main" style="font-family: 'Cinzel', serif; font-size: 0.9rem; font-weight: 700; color: #c5a059; letter-spacing: 3px; text-transform: uppercase;">INITIATE PROTOCOL</span>
+                <!-- Hidden Safety Span -->
                 <span id="txt-sub" style="display: none !important;"></span>
             </div>
+        </div>
+
+        <!-- MIDDLE: DAILY METRIC (Small & Grey) -->
+        <div style="text-align: center; border-bottom: 1px solid #111; padding-bottom: 8px;">
+            <span style="font-family: 'Inter', sans-serif; font-size: 0.6rem; color: #444; letter-spacing: 1px; text-transform: uppercase;">
+                SESSION SUBMISSIONS: <span id="todayKneels" style="color: #666;">0</span>
+            </span>
+        </div>
+
+        <!-- BOTTOM: STREAK RECORD (Gold & Serif) -->
+        <div style="text-align: center;">
+            <span style="font-family: 'Cinzel', serif; font-size: 0.8rem; color: #c5a059; letter-spacing: 2px; font-weight: 700; text-transform: uppercase;">
+                COMPLIANCE STREAK: <span id="statStreak">0</span>
+            </span>
         </div>
     </div>
 
@@ -80,13 +97,8 @@
             </div>
         </div>
 
-        <!-- UNIFIED STATS LIST (All Gold Numbers, All Cinzel Labels) -->
+        <!-- REMAINING STATS (Streak Moved Up) -->
         <div class="stat-row-group">
-            
-            <div class="stat-line">
-                <span style="font-family: 'Cinzel', serif; color: #555;">STREAK</span> 
-                <strong id="statStreak" style="color:#c5a059;">0</strong>
-            </div>
             
             <div class="stat-line">
                 <span style="font-family: 'Cinzel', serif; color: #555;">GIVEN TASKS:</span> 
