@@ -791,7 +791,7 @@ html, body {
 .msg-row {
   display: flex;
   flex-direction: row;
-  margin-bottom: 12px;
+  margin-bottom: 5px; /* Change this from 12px to 5px to tighten everything */
   max-width: 100%;
   align-items: flex-end;
 }
@@ -844,17 +844,19 @@ html, body {
 }
 
 .m-queen {
-  background: rgba(15, 15, 18, 0.8) !important; /* Flat, dark glass */
-  border: 1px solid var(--gold) !important;       /* Solid gold frame */
-  border-radius: 2px !important;                 /* Sharp corners */
-  padding: 20px !important;
-  margin: 15px 0 !important;
-  font-family: 'Cinzel', serif !important;       /* Your elite header font */
+  background: rgba(15, 15, 18, 0.8) !important;
+  border: 1px solid var(--gold) !important;
+  border-radius: 2px !important;
+  
+  /* CHANGE THESE TWO LINES: */
+  padding: 10px 15px !important; /* Reduced from 20px */
+  margin: 5px 0 !important;      /* Reduced from 15px */
+  
+  font-family: 'Cinzel', serif !important;
   font-size: 0.95rem !important;
   letter-spacing: 1px;
-  box-shadow: none !important;                   /* Remove the cheap glow */
+  box-shadow: none !important;
 }
-
 /* Tight, small audit cards */
 .m-approve, .m-reject {
     width: fit-content !important; /* Card only grows as wide as the text */
@@ -1887,8 +1889,8 @@ html, body {
 /* STOP THE SVG FROM HOLDING THE CARD HOSTAGE */
 .gi-status-sticker, .m-status-sticker-lg {
     position: relative !important; /* Stop it from floating over text */
-    width: 40px !important;       /* Make it a small icon, not a giant logo */
-    height: 40px !important;
+    width: 10px !important;       /* Make it a small icon, not a giant logo */
+    height: 10px !important;
     margin: 0 auto 5px auto !important;
     display: block !important;
     transform: none !important;    /* Remove the weird centering */
