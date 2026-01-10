@@ -40,8 +40,8 @@
         </div>
     </div>
 
-    <!-- 3. THE PROTOCOL STACK -->
-    <div class="devotion-wrapper" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
+    <!-- 3. THE PROTOCOL STACK (Button -> Streak) -->
+    <div class="devotion-wrapper" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px;">
         
         <!-- TOP: ACTION BUTTON -->
         <div id="btn" class="kneel-btn-bar" 
@@ -54,14 +54,10 @@
             </div>
         </div>
 
-        <!-- MIDDLE: TODAY KNEELING (ID: todayKneels) -->
-        <div style="text-align: center; border-bottom: 1px solid #111; padding-bottom: 8px;">
-            <span style="font-family: 'Inter', sans-serif; font-size: 0.6rem; color: #444; letter-spacing: 1px; text-transform: uppercase;">
-                TODAY KNEELING: <span id="todayKneels" style="color: #666;">0</span>
-            </span>
-        </div>
+        <!-- HIDDEN DAILY COUNTER (So Logic Doesn't Break) -->
+        <span id="todayKneels" style="display: none;">0</span>
 
-        <!-- BOTTOM: TASK STREAK (ID: statStreak) -->
+        <!-- BOTTOM: TASK STREAK (Gold & Serif) -->
         <div style="text-align: center;">
             <span style="font-family: 'Cinzel', serif; font-size: 0.8rem; color: #c5a059; letter-spacing: 2px; font-weight: 700; text-transform: uppercase;">
                 TASK STREAK: <span id="statStreak">0</span>
@@ -96,7 +92,7 @@
             </div>
         </div>
 
-        <!-- STATS LIST (Streak removed from here as it is on main card) -->
+        <!-- STATS LIST (Total Kneeling Remains Here) -->
         <div class="stat-row-group">
             
             <div class="stat-line">
