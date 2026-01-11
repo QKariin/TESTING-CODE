@@ -1929,8 +1929,17 @@ html, body {
     gap: 12px;
   }
   .app-container { width: 80%; max-width: 1600px; padding-top: 60px; }
-  .top-section-split { flex-direction: row; align-items: flex-start; }
-  .layout-left { width: 30%; min-width: 280px; position: sticky; top: 20px; }
+  .top-section-split { 
+    flex-direction: row; 
+    align-items: flex-start; 
+    gap: 30px; 
+  }
+
+  /* Anchors the profile card */
+  .layout-left { 
+    width: 320px; 
+    flex-shrink: 0; 
+  }
   .layout-right { 
     flex: 1; /* This fills the remaining space perfectly */
     margin-top: 0 !important; /* Aligns the headers horizontally */
