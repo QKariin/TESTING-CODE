@@ -10,7 +10,7 @@
   <script type="module" src="../js/main.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600&family=Italianno&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&family=Rubik+Glitch&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 </head>
 <body>
@@ -70,29 +70,20 @@
               
                 <!-- Task Card -->
                 <div id="taskCard" class="glass-card">
-    
-                    <div id="activeBadge" class="task-badge-top">
-                        <span id="timerDisplay">00:00:00</span>
+                    <div id="activeBadge">ACTIVE TASK</div>
+                    <div id="taskContent" style="width: 100%; padding: 10px 0; text-align: center;">
+                        <h2 id="readyText" style="font-weight:bold; color:white; font-size:1.5rem;">Ready?</h2>
+                        <p class="rajdhani" style="color:#aaa;">Waiting for orders.</p>
                     </div>
-                
-                    <div id="taskContent">
-                        <h2 id="readyText">VACANT ASSET</h2>
-                        <p class="inter">
-                            Current status: Unproductive. <br>
-                            Standby for mandatory labor assignment.
-                        </p>
-                    </div>
-                
                     <div id="cooldownSection" class="hidden" style="width: 100%; text-align:center; padding-bottom: 10px;">
+                        <div id="timerDisplay" style="font-size:1.5rem; font-weight:bold; margin:5px 0; color:white;">24:00:00</div>
                         <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="handleEvidenceUpload(this)">
                         <button onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
-                        <button onclick="cancelPendingTask()" id="btnSkip">Skip / Cancel</button>
+                        <button onclick="cancelPendingTask()" id="btnSkip" style="background:transparent; border:none; color:#ddd; font-size:0.7rem; cursor:pointer;">Skip / Cancel</button>
                     </div>
-                
                     <div id="mainButtonsArea" style="width:100%;">
-                        <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
+                        <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn" style="width: 50%; margin: 0 auto; display: block;">REQUEST TASK</button>
                     </div>
-                
                 </div>
 
                 <!-- Chat Card (CLEAN VERSION) -->
@@ -197,7 +188,7 @@
           </div>
 
             <!-- THE VAULT -->
-            <div id="viewVault" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
+            <div id="viewVault" class="hidden">
                 <div class="glass-card">
                     <h2 style="text-align:center; color:white; font-family:'Orbitron'; font-size:1.5rem; margin-bottom:20px; letter-spacing:3px;">THE QUEEN'S VAULT</h2>
                     <p style="text-align:center; color:#666; font-family:'Rajdhani'; font-size:0.8rem; margin-bottom:20px;">YOUR PERMANENT COLLECTION OF UNLOCKED DIRECTIVES.</p>
@@ -207,7 +198,7 @@
                 </div>
             </div>
                         
-            <div id="viewSession" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
+            <div id="viewSession" class="hidden">
                 <div class="glass-card" style="text-align:center; padding: 50px;">
                     <h2 style="font-size:2rem; color:var(--neon-pink); text-shadow:0 0 10px var(--neon-pink);">PRIVATE SESSIONS</h2>
                     <p style="color:#aaa; font-family:'Rajdhani'; margin-top:10px;">Currently offline. Check back later.</p>
@@ -215,7 +206,7 @@
                 </div>
             </div>
             
-            <div id="viewProtocol" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
+            <div id="viewProtocol" class="hidden">
                 <div class="glass-card">
                     <h2 style="text-align:center; color:white; font-family:'Orbitron'; font-size:1.8rem; margin-bottom:20px; letter-spacing:2px;">OPERATIONAL PROTOCOL</h2>
 
@@ -332,7 +323,7 @@
                 </div>
             </div>
 
-            <div id="viewBuy" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
+            <div id="viewBuy" class="hidden">
                 <div class="glass-card">
                     <h2 style="text-align:center; color:var(--neon-yellow); font-family:'Rubik Glitch', sans-serif; font-size:2rem; margin-bottom:5px; text-shadow:0 0 10px rgba(255,215,0,0.3);">BUY COINS</h2>
                     <p style="text-align:center; color:#888; font-family:'Rajdhani'; font-size:0.8rem; margin-bottom:15px;">Purchase coins to pay tribute.</p>
@@ -363,54 +354,54 @@
     <!-- THE HISTORY SECTION -->
     <div id="historySection" style="display:none; position: relative; min-height: 50px;">
         <div class="section-header">EVIDENCE LOG / HISTORY</div>
+    
+        <!-- THE JAILED THEATER MODAL -->
+        <div id="glassModal" class="glass-modal" onclick="closeModal(event)">
+            <div id="modalMediaContainer" class="modal-bg-photo"></div>
+            
+            <div id="modalGlassOverlay" class="modal-glass-overlay">
+                <div id="modalCloseX" onclick="closeModal(null)">×</div>
+        
+                <!-- MAIN CONTENT AREA -->
+                <div class="theater-content">
+                    <div id="modalInfoView" class="sub-view">
+                        <div class="stamp-container">
+                            <img id="modalStatusSticker" src="" class="m-status-sticker-lg">
+                        </div>
+                        <div class="reward-container">
+                            <div id="modalPoints" class="m-points-lg">+0 PTS</div>
+                            <div id="modalSticker"></div>
+                        </div>
+                    </div>
+        
+                    <div id="modalFeedbackView" class="sub-view hidden">
+                        <h3 class="view-label">QUEEN'S FEEDBACK</h3>
+                        <div id="modalFeedbackMedia" class="fb-media-theater"></div>
+                        <div id="modalFeedbackText" class="theater-text-box"></div>
+                    </div>
+        
+                    <div id="modalTaskView" class="sub-view hidden">
+                        <h3 class="view-label">THE ASSIGNMENT</h3>
+                        <div id="modalOrderText" class="theater-text-box"></div>
+                    </div>
+                </div>
+        
+                <!-- BOTTOM ACTIONS -->
+                <div class="modal-footer-menu">
+                    <button onclick="toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
+                    <button onclick="toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
+                    <button onclick="event.stopPropagation(); toggleHistoryView('proof')" class="history-action-btn">SEE PROOF</button>
+                    <button onclick="toggleHistoryView('info')" class="history-action-btn">STATUS</button>
+                    <button onclick="closeModal(null)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE</button>
+                </div>
+            </div>
+        </div>
   
         <!-- THE ACTUAL HISTORY GRID -->
         <div id="historyGrid" class="gallery-grid"></div>
         <button id="loadMoreBtn" onclick="loadMoreHistory()" class="action-btn" style="display:none; margin-top:20px;">LOAD MORE...</button>
     </div>
 </div> <!-- END app-container -->
-
-<!-- THE JAILED THEATER MODAL (MOVED OUTSIDE ALL CONTAINERS) -->
-<div id="glassModal" class="glass-modal" onclick="closeModal(event)">
-    <div id="modalMediaContainer" class="modal-bg-photo"></div>
-    
-    <div id="modalGlassOverlay" class="modal-glass-overlay">
-        <div id="modalCloseX" onclick="closeModal(null)">×</div>
-
-        <!-- MAIN CONTENT AREA -->
-        <div class="theater-content">
-            <div id="modalInfoView" class="sub-view">
-                <div class="stamp-container">
-                    <img id="modalStatusSticker" src="" class="m-status-sticker-lg">
-                </div>
-                <div class="reward-container">
-                    <div id="modalPoints" class="m-points-lg">+0 PTS</div>
-                    <div id="modalSticker"></div>
-                </div>
-            </div>
-
-            <div id="modalFeedbackView" class="sub-view hidden">
-                <h3 class="view-label">QUEEN'S FEEDBACK</h3>
-                <div id="modalFeedbackMedia" class="fb-media-theater"></div>
-                <div id="modalFeedbackText" class="theater-text-box"></div>
-            </div>
-
-            <div id="modalTaskView" class="sub-view hidden">
-                <h3 class="view-label">THE ASSIGNMENT</h3>
-                <div id="modalOrderText" class="theater-text-box"></div>
-            </div>
-        </div>
-
-        <!-- BOTTOM ACTIONS -->
-        <div class="modal-footer-menu">
-            <button onclick="toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
-            <button onclick="toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
-            <button onclick="event.stopPropagation(); toggleHistoryView('proof')" class="history-action-btn">SEE PROOF</button>
-            <button onclick="toggleHistoryView('info')" class="history-action-btn">STATUS</button>
-            <button onclick="closeModal(null)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE</button>
-        </div>
-    </div>
-</div>
 
 <!--Load extra files-->
 <script>
