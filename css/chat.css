@@ -1,169 +1,128 @@
-/* =========================================
-   LUXURY TACTICAL CHAT (DASHBOARD INTEGRATED)
-   ========================================= */
-
-/* CORE THEME PORTED FROM DASHBOARD */
-:root { 
-    --bg: #050505; 
-    --panel: #0a0a0a; 
-    --border: #333; 
-    --pink: #ff00de; 
-    --green: #39ff14; 
-    --red: #ff003c; 
-    --blue: #00f3ff; 
-    --yellow: #ffd700; 
+/* --- LUXURY TACTICAL CHAT DNA --- */
+:root {
+    --pink: #ff00de;
+    --gold: #ffd700;
+    --gold-dim: rgba(255, 215, 0, 0.3);
+    --panel-bg: rgba(10, 10, 10, 0.95);
+    --border: #333;
 }
 
-/* 1. CONTAINER PRISON (DASHBOARD SPLIT STYLE) */
+/* Container Prison */
 .chat-container {
-    background: var(--panel) !important;
+    background: var(--panel-bg) !important;
     border: 1px solid var(--border) !important;
+    height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    height: 100% !important;
     overflow: hidden !important;
-    position: relative !important;
-    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    box-shadow: inset 0 0 40px #000;
 }
 
-/* 2. SCROLL AREA */
 .chat-body-frame {
     flex: 1 !important;
     overflow-y: auto !important;
-    padding: 20px !important;
+    padding: 25px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 12px !important;
-    background: radial-gradient(circle at center, #111 0%, #000 100%);
+    gap: 15px !important;
 }
 
-/* 3. MESSAGE ROWS */
+/* Avatar Fix - The "Shit" look stopper */
+.chat-av {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    border: 1.5px solid var(--border) !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+}
+
+/* Row Alignment */
 .msg-row {
     display: flex !important;
-    gap: 10px !important;
+    gap: 12px !important;
     max-width: 100% !important;
     align-items: flex-end !important;
+    margin-bottom: 10px !important;
 }
 
-/* Pin to sides like Dashboard */
-.mr-out { flex-direction: row-reverse !important; } /* Slave - Right */
-.mr-in { flex-direction: row !important; }        /* Admin - Left */
+.mr-in { flex-direction: row !important; }
+.mr-out { flex-direction: row-reverse !important; }
 
-/* 4. THE BUBBLES (DASHBOARD DNA) */
+/* The Luxury Bubbles */
 .msg {
-    max-width: 80% !important;
-    padding: 8px 12px !important;
+    max-width: 75% !important;
+    padding: 10px 14px !important;
     font-family: 'Rajdhani', sans-serif !important;
-    font-size: 0.95rem !important;
-    line-height: 1.35 !important;
+    font-size: 1rem !important;
+    line-height: 1.3 !important;
+    letter-spacing: 0.5px !important;
     position: relative !important;
-    overflow-wrap: break-word !important;
-    white-space: pre-wrap !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.5) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
 }
 
-/* Admin (The Queen - Dashboard Blue/Dark style) */
+/* Queen/Admin (Incoming) */
 .mr-in .msg {
-    background: #222 !important;
-    color: #e0e0e0 !important;
-    border-radius: 12px 12px 12px 2px !important;
+    background: #1a1a1a !important;
+    color: #eee !important;
     border: 1px solid var(--border) !important;
+    border-radius: 12px 12px 12px 2px !important;
 }
 
+/* The "COMMAND" Label Fix */
 .mr-in .msg::before {
     content: "COMMAND";
     display: block;
-    font-family: 'Orbitron';
-    font-size: 0.55rem;
-    color: var(--pink);
-    letter-spacing: 2px;
-    margin-bottom: 4px;
-    font-weight: 900;
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 0.55rem !important;
+    font-weight: 900 !important;
+    color: var(--pink) !important;
+    letter-spacing: 3px !important;
+    margin-bottom: 5px !important;
+    text-shadow: 0 0 8px var(--pink);
 }
 
-/* Slave (The User - Dashboard Pink style) */
+/* Slave (Outgoing) */
 .mr-out .msg {
     background: var(--pink) !important;
-    color: black !important;
+    color: #000 !important;
     border-radius: 12px 12px 2px 12px !important;
     font-weight: 600 !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
-/* 5. AVATARS (DASHBOARD SIZING) */
-.chat-av {
-    width: 30px !important;
-    height: 30px !important;
-    border-radius: 50% !important;
-    object-fit: cover !important;
-    flex-shrink: 0 !important;
-    border: 1px solid var(--border) !important;
-}
-
-/* 6. SYSTEM MESSAGES (DASHBOARD GRADIENTS) */
+/* System/Reward Messages */
 .msg-system {
-    width: 90%;
-    align-self: center;
+    width: 100%;
     text-align: center;
-    margin: 10px 0;
-    padding: 10px;
-    border-radius: 6px;
-    font-family: 'Orbitron';
-    font-size: 0.8rem;
-    font-weight: 900;
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    padding: 8px !important;
+    margin: 10px 0 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
 }
 
 .sys-gold {
-    background: linear-gradient(90deg, rgba(255,215,0,0.1) 0%, rgba(0,0,0,0.5) 50%, rgba(255,215,0,0.1) 100%);
-    border: 1px solid var(--yellow);
-    color: var(--yellow);
+    color: var(--gold) !important;
+    border: 1px solid var(--gold-dim) !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.05), transparent) !important;
 }
 
-.sys-red {
-    background: linear-gradient(90deg, rgba(255,0,60,0.1) 0%, rgba(0,0,0,0.5) 50%, rgba(255,0,60,0.1) 100%);
-    border: 1px solid var(--red);
-    color: var(--red);
-}
-
-/* 7. THE TRIBUTE CARD (GILDED DASHBOARD STYLE) */
-.tribute-card {
-    background: rgba(10, 10, 10, 0.95) !important;
-    border: 1px solid var(--yellow) !important;
-    padding: 15px !important;
-    text-align: center !important;
-    border-radius: 8px !important;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2) !important;
-}
-
-.tribute-card-title {
-    font-family: 'Orbitron';
-    font-size: 0.6rem;
-    color: var(--yellow);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    border-bottom: 1px solid #333;
-    padding-bottom: 5px;
-    margin-bottom: 10px;
-}
-
-/* 8. INPUT AREA (DASHBOARD FOOTER) */
+/* Input Terminal */
 .chat-footer {
-    padding: 10px !important;
+    background: #050505 !important;
     border-top: 1px solid var(--border) !important;
-    display: flex !important;
-    gap: 8px !important;
-    background: #111 !important;
-    align-items: center !important;
+    padding: 15px !important;
 }
 
 .chat-input {
-    flex: 1 !important;
-    background: black !important;
-    border: 1px solid var(--border) !important;
-    color: white !important;
-    padding: 10px !important;
-    border-radius: 4px !important;
-    font-family: 'Rajdhani' !important;
+    background: #000 !important;
+    border: 1px solid #222 !important;
+    color: #fff !important;
+    font-family: 'Rajdhani', sans-serif !important;
     font-size: 0.9rem !important;
-    outline: none !important;
+    padding: 10px 15px !important;
+    border-radius: 4px !important;
 }
