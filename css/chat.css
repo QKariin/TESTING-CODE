@@ -1,0 +1,77 @@
+/* --- LUXURY TERMINAL CHAT --- */
+
+/* The Main Box */
+.chat-container {
+    background: rgba(5, 5, 5, 0.8) !important;
+    border: 1px solid rgba(197, 160, 89, 0.15) !important;
+    backdrop-filter: blur(15px);
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
+}
+
+/* Scroll Area */
+.chat-body-frame {
+    padding: 30px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Admin: The Royal Decree */
+.msg-row.mr-in .msg {
+    background: linear-gradient(135deg, rgba(15, 15, 15, 0.95) 0%, rgba(10, 10, 10, 0.8) 100%);
+    border: 1px solid rgba(197, 160, 89, 0.3);
+    border-left: 4px solid var(--gold);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    padding: 18px 22px;
+    position: relative;
+    max-width: 85%;
+    box-shadow: 10px 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Queen's Name Tag */
+.msg-row.mr-in .msg::before {
+    content: "COMMAND";
+    display: block;
+    font-family: 'Orbitron';
+    font-size: 0.6rem;
+    color: var(--gold);
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+/* Slave: The Tactical Log */
+.msg-row.mr-out .msg {
+    background: transparent;
+    border-right: 2px solid rgba(255, 255, 255, 0.1);
+    color: #888;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    text-align: right;
+    padding: 10px 15px;
+    max-width: 70%;
+    font-size: 0.9rem;
+}
+
+/* The Luxury Tribute Card */
+.tribute-card {
+    background: rgba(10, 10, 12, 0.98);
+    border: 1px solid var(--gold);
+    padding: 20px;
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
+}
+
+.tribute-card-title {
+    font-family: 'Cinzel';
+    color: var(--gold);
+    letter-spacing: 3px;
+    font-size: 0.7rem;
+    border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
