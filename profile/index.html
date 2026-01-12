@@ -178,17 +178,21 @@
             </div>
 
             <!-- VIEW 3: SLAVE RECORD (PENDING + HISTORY) -->
+            <!-- Logic: IDs pendingSection and historyGrid are critical -->
             <div id="historySection" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
                 <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">SLAVE RECORD</h2></div>
                 
-                <!-- PENDING SECTION -->
-                <div id="pendingSection" style="width: 100%; margin-bottom: 30px;">
+                <!-- PENDING TASKS (Limbo) -->
+                <!-- Main logic toggles this section directly via ID -->
+                <div id="pendingSection" class="hidden" style="width: 100%; margin-bottom: 30px;">
                     <div style="font-family:'Cinzel'; color: var(--neon-yellow); margin-bottom: 15px; text-align: center; border-bottom:1px solid var(--neon-yellow); padding-bottom:5px;">PENDING REVIEW</div>
+                    <!-- The Grid logic injects into #pendingGrid -->
                     <div id="pendingGrid" class="gallery-grid"></div>
                 </div>
 
-                <!-- HISTORY LOG -->
+                <!-- HISTORY LOG (Record) -->
                 <div style="font-family:'Cinzel'; color: #666; margin-bottom: 15px; text-align: center; border-bottom:1px solid #333; padding-bottom:5px;">HISTORY LOG</div>
+                <!-- The Grid logic injects into #historyGrid -->
                 <div id="historyGrid" class="gallery-grid"></div>
                 
                 <button id="loadMoreBtn" onclick="loadMoreHistory()" class="action-btn" style="display:none; margin:20px auto;">LOAD MORE...</button>
@@ -241,85 +245,61 @@
     </div>
 </div>
 
+<!-- SCRIPT: APPLYING THE LOGIC FIX -->
 <script>
-    // 1. Handle Includes
     document.querySelectorAll("[data-include]").forEach(async el => {
         const file = el.getAttribute("data-include");
-        try { 
-            const html = await fetch(file).then(r => r.text()); 
-            el.innerHTML = html; 
-        } catch (err) {
-            console.error("Include failed:", file, err);
-        }
+        try { const html = await fetch(file).then(r => r.text()); el.innerHTML = html; } catch (err) {}
     });
 
-    // 2. Main Tab Switching Logic
     window.switchTab = function(viewId) {
-        // Update navigation button states
-        document.querySelectorAll('.nav-btn').forEach(item => {
-            const onClickAttr = item.getAttribute('onclick') || "";
-            if(onClickAttr.includes(`'${viewId}'`) || onClickAttr.includes(`"${viewId}"`)) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
+        // Update Active Button
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            if(btn.getAttribute('onclick').includes(viewId)) btn.classList.add('active');
+            else btn.classList.remove('active');
         });
 
-        // Define all possible view IDs
-        const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy', 'historySection', 'viewRewards', 'viewHierarchy', 'viewSession'];
-        
-        // Hide ALL views first
+        // 1. MAPPING KEYS TO IDs
+        const mapping = {
+            'serve': 'viewServingTop',
+            'news': 'viewNews',
+            'buy': 'viewBuy',
+            'vault': 'viewVault',
+            'protocol': 'viewProtocol',
+            'history': 'historySection'
+        };
+
+        const targetId = mapping[viewId] || viewId;
+
+        // 2. HIDE ALL VIEWS
+        const views = Object.values(mapping).concat(['viewRewards', 'viewHierarchy', 'viewSession']);
         views.forEach(id => {
             const el = document.getElementById(id);
-            if(el) {
+            if (el) {
                 el.classList.add('hidden');
                 el.style.display = 'none';
             }
         });
 
-        // Map short keywords to actual Element IDs
-        let targetId = viewId;
-        if(viewId === 'serve')    targetId = 'viewServingTop';
-        if(viewId === 'news')     targetId = 'viewNews';
-        if(viewId === 'buy')      targetId = 'viewBuy';
-        if(viewId === 'vault')    targetId = 'viewVault';
-        if(viewId === 'protocol') targetId = 'viewProtocol';
-        if(viewId === 'history')  targetId = 'historySection';
-
+        // 3. SHOW TARGET
         const target = document.getElementById(targetId);
-        if(target) {
-            // Reveal the target
+        if (target) {
             target.classList.remove('hidden');
             
-            // Set correct display mode
-            const flexViews = ['viewNews', 'viewVault', 'viewServingTop', 'historySection'];
-            if (flexViews.includes(targetId)) {
-                 target.style.display = 'flex'; 
-                 target.style.flexDirection = 'column';
-            } else {
-                 target.style.display = 'block';
+            // Set correct display type (flex for grids/layout, block for others if needed)
+            const isGridContainer = ['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId);
+            target.style.display = isGridContainer ? 'flex' : 'block';
+            if (isGridContainer) target.style.flexDirection = 'column';
+
+            // 4. TRIGGER MAIN JS DATA LOAD
+            if (typeof window.showView === 'function') {
+                window.showView(targetId);
             }
             
-            // 3. EXECUTION FIX (Retry Logic)
-            // This waits for the module to finish loading if the user clicks too fast
-            const executeLogic = () => {
-                // Trigger standard view logic
-                if (typeof window.showView === 'function') {
-                    window.showView(targetId);
-                }
-
-                // Trigger data load specifically for the Slave Record
-                if (targetId === 'historySection') {
-                    if (typeof window.loadMoreHistory === 'function') {
-                        window.loadMoreHistory();
-                    } else {
-                        // Module not ready, try again in 100ms
-                        setTimeout(executeLogic, 100);
-                    }
-                }
-            };
-
-            executeLogic();
+            // 5. FORCE HISTORY RELOAD (The Critical Fix)
+            if (targetId === 'historySection' && typeof window.loadMoreHistory === 'function') {
+                window.loadMoreHistory();
+            }
         }
     };
 </script>
