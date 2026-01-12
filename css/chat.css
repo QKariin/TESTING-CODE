@@ -47,8 +47,35 @@
 }
 
 /* --- ALIGNMENT --- */
-.mr-out { flex-direction: row !important; justify-content: flex-start !important; }
-.mr-in  { flex-direction: row-reverse !important; justify-content: flex-start !important; }
+/* --- ALIGNMENT: SLAVE RIGHT / QUEEN LEFT --- */
+.mr-out { 
+    flex-direction: row-reverse !important; 
+    justify-content: flex-start !important; 
+} /* Slave Messages */
+
+.mr-in { 
+    flex-direction: row !important; 
+    justify-content: flex-start !important; 
+} /* Queen Messages */
+
+/* --- KILL THE PINK BUBBLES --- */
+.m-slave {
+    background: rgba(20, 20, 20, 0.9) !important; /* Deep Dark Glass */
+    color: #ff00de !important; /* Retain pink only for text/glow */
+    border: 1px solid rgba(255, 0, 222, 0.2) !important; /* Subtle pink border glow */
+    border-radius: 12px 12px 2px 12px !important; /* Tactical tail on right */
+    box-shadow: 0 0 15px rgba(255, 0, 222, 0.05) !important;
+    font-weight: 500 !important;
+    text-shadow: 0 0 5px rgba(255, 0, 222, 0.2) !important;
+}
+
+/* Queen's Obsidian Bubble */
+.m-queen {
+    background: rgba(15, 15, 15, 0.95) !important;
+    border: 1px solid #333 !important;
+    color: #fff !important;
+    border-radius: 12px 12px 12px 2px !important; /* Tactical tail on left */
+}
 
 /* Kill the Circus Avatars */
 .chat-av, .msg-avatar, .chat-av-placeholder { display: none !important; }
