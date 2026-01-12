@@ -6,6 +6,7 @@
     --glass: rgba(10, 10, 10, 0.9);
     --neon-green: #00ff00;
     --neon-yellow: #ffd700;
+    --red-grad: linear-gradient(135deg, #8b0000 0%, #ff0000 100%);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
@@ -20,17 +21,16 @@ body {
     overflow: hidden;
 }
 
-/* APP CONTAINER - FORCED ROW */
+/* CONTAINER */
 .app-container {
     display: flex;
-    flex-direction: row; /* Strict Left/Right */
-    flex-wrap: nowrap;   /* No dropping down */
+    flex-direction: row;
+    flex-wrap: nowrap;
     width: 100%;
     height: 100%;
     overflow: hidden;
 }
 
-/* UTILS */
 .hidden { display: none !important; }
 .glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--gold-dim); }
 
@@ -43,31 +43,47 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px;
-    background: rgba(0,0,0,0.2);
-    flex-shrink: 0; /* Prevents squishing */
+    padding: 30px;
+    background: rgba(0,0,0,0.4);
+    flex-shrink: 0;
     z-index: 10;
 }
 
+/* 1. Hierarchy (Top) */
+.hierarchy-top {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #555; /* Grey as requested */
+    letter-spacing: 8px; /* Huge Spacing */
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 40px;
+    width: 100%;
+}
+
+/* 2. Avatar */
 .avatar-container {
-    width: 120px; height: 120px; border-radius: 50%; border: 1px solid var(--gold);
-    overflow: hidden; cursor: pointer; margin-bottom: 15px;
+    width: 130px; height: 130px; border-radius: 50%; border: 1px solid var(--gold);
+    overflow: hidden; cursor: pointer; margin-bottom: 10px;
 }
 #profilePic { width: 100%; height: 100%; object-fit: cover; filter: grayscale(0.2); }
+.identity-name { font-family: 'Cinzel'; font-size: 1.2rem; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px; }
 
-#subName { font-family: 'Cinzel'; font-size: 1.5rem; letter-spacing: 3px; color: #fff; text-transform: uppercase; }
-#subHierarchy { font-family: 'Inter'; font-size: 0.7rem; color: var(--gold); letter-spacing: 2px; margin-bottom: 40px; }
+/* 3. Stats (Stacked) */
+.stats-stack {
+    display: flex; flex-direction: column; gap: 25px; width: 100%; align-items: center; margin-bottom: 40px;
+}
+.stat-row { display: flex; flex-direction: column; align-items: center; }
+.stat-val { font-family: 'Orbitron'; font-size: 2rem; color: #fff; }
+.stat-lbl { font-size: 0.6rem; color: #666; letter-spacing: 2px; margin-top: 2px; }
 
-.stats-box { width: 100%; display: flex; justify-content: space-around; margin-bottom: 60px; }
-.stat-item { text-align: center; }
-.stat-val { font-family: 'Orbitron'; font-size: 1.5rem; color: #fff; display: block; }
-.stat-lbl { font-size: 0.6rem; color: #666; letter-spacing: 1px; }
-
-.nav-menu { display: flex; flex-direction: column; gap: 20px; width: 100%; padding-left: 20px; }
+/* 4. Navigation */
+.nav-menu { display: flex; flex-direction: column; gap: 15px; width: 100%; margin-top: auto; padding-left: 20px; }
 .nav-btn {
-    background: transparent; border: none; color: #888; text-align: left;
-    font-family: 'Inter'; font-size: 0.8rem; letter-spacing: 2px; cursor: pointer;
-    transition: 0.3s; padding: 10px; border-left: 2px solid transparent;
+    background: transparent; border: none; color: #666; text-align: left;
+    font-family: 'Inter'; font-size: 0.75rem; letter-spacing: 3px; cursor: pointer;
+    transition: 0.3s; padding: 10px; border-left: 2px solid transparent; text-transform: uppercase;
 }
 .nav-btn:hover, .nav-btn.active { color: var(--gold); border-left-color: var(--gold); padding-left: 15px; }
 
@@ -75,64 +91,88 @@ body {
 
 /* --- RIGHT STAGE --- */
 .layout-right {
-    flex-grow: 1; /* Takes remaining space */
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: hidden;
+    flex-grow: 1; height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden;
 }
 
-/* Header */
+/* Header (Big Centered Kneel Button) */
 .right-header {
-    height: 80px; width: 100%;
+    height: 100px; width: 100%;
     border-bottom: 1px solid var(--gold-dim);
-    display: flex; align-items: center; justify-content: flex-end;
-    padding: 0 40px; flex-shrink: 0;
-    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; background: rgba(0,0,0,0.5);
 }
 
-.kneel-container { width: 200px; height: 40px; position: relative; }
-#btn {
-    width: 100%; height: 100%; border: 1px solid var(--gold); border-radius: 4px;
+.kneel-center-wrapper { width: 300px; height: 50px; }
+.kneel-bar-graphic {
+    width: 100%; height: 100%; border: none; border-radius: 4px;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    background: rgba(197, 160, 89, 0.05); overflow: hidden; position: relative;
+    background: rgba(50, 0, 0, 0.5); overflow: hidden; position: relative;
+    border: 1px solid #ff0000;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
 }
-#fill {
+.graphic-fill {
     position: absolute; top: 0; left: 0; height: 100%; width: 0%;
-    background: linear-gradient(90deg, rgba(197, 160, 89, 0.2), var(--gold)); z-index: 0;
+    background: var(--red-grad); /* Red Graphic */
+    z-index: 0; transition: none;
 }
-.btn-text { position: relative; z-index: 2; font-family: 'Orbitron'; font-size: 0.8rem; color: var(--gold); letter-spacing: 2px; }
+.graphic-text { position: relative; z-index: 2; font-family: 'Orbitron'; font-size: 1rem; color: #fff; letter-spacing: 4px; font-weight: 900; }
 
 /* Content Stage */
-.content-stage {
-    flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column;
-}
-
+.content-stage { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
 .view-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; }
 
 /* Task Ribbon */
 .task-ribbon {
     flex-shrink: 0; margin: 20px; display: flex; align-items: center; justify-content: space-between; padding: 15px 30px;
+    background: rgba(10,10,10,0.8);
 }
-.ribbon-timer { font-family: 'Orbitron'; font-size: 1.5rem; color: #e0e0e0; min-width: 120px; }
+.ribbon-timer { font-family: 'Orbitron'; font-size: 2rem; color: #fff; min-width: 140px; }
 .ribbon-center { flex: 1; text-align: center; }
 .ribbon-title { display: block; font-size: 0.6rem; color: var(--gold); letter-spacing: 2px; margin-bottom: 5px; }
 .ribbon-text { margin: 0; font-family: 'Cinzel'; font-size: 1.2rem; color: white; text-transform: uppercase; }
-.action-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 8px 20px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; }
+.action-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 10px 25px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; }
 .action-btn:hover { background: var(--gold); color: #000; }
 .btn-dim { border-color: #444; color: #666; padding: 8px 20px; background: transparent; cursor: pointer; }
 
-/* Chat Container */
+/* --- NEW CHAT DESIGN --- */
 .chat-container {
     flex: 1; margin: 0 20px 20px 20px; display: flex; flex-direction: column; padding: 0; overflow: hidden;
-    background: rgba(0,0,0,0.3); border: 1px solid var(--gold-dim);
+    background: transparent; border: 1px solid var(--gold-dim);
 }
-.chat-area { flex: 1; overflow-y: auto; padding: 20px; }
+.chat-body-frame { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+
+/* Messages */
+.msg-row { display: flex; width: 100%; margin-bottom: 10px; }
+.mr-in { justify-content: flex-start; } /* Queen */
+.mr-out { justify-content: flex-end; }  /* Slave */
+
+.msg { padding: 12px 18px; max-width: 70%; line-height: 1.5; font-size: 0.95rem; }
+
+/* QUEEN STYLE */
+.m-queen {
+    background: rgba(20, 20, 20, 0.9);
+    border-left: 3px solid var(--gold);
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+/* SLAVE STYLE */
+.m-slave {
+    background: transparent;
+    color: #888;
+    font-family: 'Inter', sans-serif;
+    text-align: right;
+    border-right: 1px solid #333;
+}
+
+.msg-time { font-size: 0.6rem; color: #444; margin-top: 5px; opacity: 0.7; }
+
+/* Chat Footer */
 .chat-footer {
     padding: 15px; border-top: 1px solid var(--gold-dim); display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.8);
 }
-.chat-input { flex: 1; background: transparent; border: none; color: white; font-family: 'Inter'; font-size: 1rem; }
+.chat-input { flex: 1; background: transparent; border: none; color: white; font-family: 'Inter'; font-size: 1rem; outline: none; }
 .icon-btn { background: transparent; border: none; color: var(--gold); font-size: 1.2rem; cursor: pointer; }
 
 .overlay-center { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: flex; align-items: center; justify-content: center; }
