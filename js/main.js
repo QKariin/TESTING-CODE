@@ -73,7 +73,6 @@ initDomProfile();
 Bridge.listen((data) => {
     const ignoreList = [
         "CHAT_ECHO", 
-        "UPDATE_CHAT", 
         "UPDATE_FULL_DATA", 
         "UPDATE_DOM_STATUS", 
         "instantUpdate", 
@@ -91,15 +90,7 @@ window.addEventListener("message", (event) => {
     const data = event.data;
 
     if (data.type === "CHAT_ECHO" && data.msgObj) {
-        const chatContent = document.getElementById('chatContent');
-        if (chatContent) {
-            const m = data.msgObj;
-            const contentHtml = `<div class="msg m-slave">${m.message}</div>`;
-            const timeDiv = `<div class="msg-time">${new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
-            const rowContent = `<div class="msg-col" style="justify-content: flex-end;">${contentHtml} ${timeDiv}</div>`;
-            chatContent.innerHTML += `<div class="msg-row mr-out">${rowContent}</div>`;
-            forceBottom();
-        }
+        renderChat([data.msgObj], true);
     }
 
     if (data.type === 'UPDATE_RULES') {
@@ -215,17 +206,15 @@ window.addEventListener("message", (event) => {
                     setCurrentTask(pendingTaskState.task);
                     restorePendingUI();
                 } else if (!resetUiTimer) {
-                    // RESET UI TO IDLE STATE
                     document.getElementById('cooldownSection').classList.add('hidden');
                     document.getElementById('activeBadge').classList.remove('show');
                     document.getElementById('mainButtonsArea').classList.remove('hidden');
                     
-                    // --- THE FIX IS HERE ---
                     document.getElementById('taskContent').innerHTML = `
                         <h2 id="readyText">VACANT ASSET</h2>
-                        <p class="inter">
-                            Current status: Unproductive. <br>
-                            Standby for mandatory labor assignment.
+                        <p class="inter" style="color: var(--gold); opacity: 0.6; font-family: 'Orbitron'; font-size: 0.7rem; letter-spacing: 2px;">
+                            STATUS: UNPRODUCTIVE <br>
+                            SYSTEM: AWAITING ROYAL DECREE
                         </p>
                     `;
                 }
@@ -234,7 +223,6 @@ window.addEventListener("message", (event) => {
     }
 
     if (data.type === "UPDATE_CHAT" || data.chatHistory) renderChat(data.chatHistory || data.messages);
-    setTimeout(styleTributeMessages, 100); 
 
     if (data.type === "FRAGMENT_REVEALED") {
         const { fragmentNumber, day, totalRevealed, isComplete } = data;
@@ -254,20 +242,16 @@ window.addEventListener("message", (event) => {
 // GLOBAL UI HELPERS (ATTACHED TO WINDOW)
 // ==========================================
 
-// 1. LOADING BUTTON ANIMATION
-// Update your HTML to: onchange="handleUploadStart(this)"
 window.handleUploadStart = function(inputElement) {
     if (inputElement.files && inputElement.files.length > 0) {
         const btn = document.getElementById('btnUpload');
         if (btn) {
             btn.innerHTML = 'TRANSMITTING...';
             btn.style.background = '#333';
-            btn.style.color = '#ffd700'; // Gold
+            btn.style.color = '#ffd700'; 
             btn.style.cursor = 'wait';
         }
         
-        // Now call the actual logic function
-        // (Assuming handleEvidenceUpload is imported or defined in this file)
         if (typeof handleEvidenceUpload === 'function') {
             handleEvidenceUpload(inputElement);
         } else {
@@ -276,10 +260,7 @@ window.handleUploadStart = function(inputElement) {
     }
 };
 
-// 2. TAB SWITCHING LOGIC
-// Update your HTML nav buttons to: onclick="switchTab('serve')" etc.
 window.switchTab = function(viewId) {
-    // A. Highlight the correct button
     document.querySelectorAll('.nav-btn').forEach(item => {
         if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(viewId)) {
             item.classList.add('active');
@@ -288,17 +269,15 @@ window.switchTab = function(viewId) {
         }
     });
 
-    // B. Hide ALL views
     const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy', 'historySection', 'viewRewards', 'viewHierarchy', 'viewSession'];
     views.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.classList.add('hidden');
-            el.style.display = 'none'; // Force hide
+            el.style.display = 'none'; 
         }
     });
 
-    // C. Show TARGET view
     let targetId = viewId;
     if (viewId === 'serve') targetId = 'viewServingTop';
     if (viewId === 'news') targetId = 'viewNews';
@@ -311,7 +290,6 @@ window.switchTab = function(viewId) {
     if (target) {
         target.classList.remove('hidden');
         
-        // Flex vs Block handling
         if (['viewNews', 'viewVault', 'viewServingTop', 'historySection'].includes(targetId)) {
              target.style.display = 'flex'; 
              target.style.flexDirection = 'column';
@@ -319,7 +297,6 @@ window.switchTab = function(viewId) {
              target.style.display = 'block';
         }
         
-        // Trigger history load if needed
         if (targetId === 'historySection' && typeof loadMoreHistory === 'function') {
             loadMoreHistory();
         }
@@ -387,28 +364,23 @@ function toggleTributeHunt() {
 }
 
 function showTributeStep(step) {
-    console.log("Showing tribute step:", step);
     document.querySelectorAll('.tribute-step').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('tributeStep' + step);
     if (target) {
         target.classList.remove('hidden');
     }
     const labels = ["", "INTENTION", "THE HUNT", "CONFESSION"];
-    //const labels = ["", "INTENTION", "CONFESSION", "SACRIFICE", "GIFT"];
     const progressEl = document.getElementById('huntProgress');
     if (progressEl) progressEl.innerText = labels[step] || "";
 }
 
 function selectTributeReason(reason) {
-    console.log("Selected reason:", reason);
     selectedReason = reason;
     renderHuntStore(gameStats.coins); 
     showTributeStep(2);
 }
 
 function setTributeNote(note) {
-    //console.log("Note:", note);
-    //selectedNote = note;
     showTributeStep(3);
 }
 
@@ -543,51 +515,6 @@ function finalizeSacrifice() {
     triggerSound('sfx-buy');
     triggerCoinShower();
     toggleTributeHunt();
-}
-
-function styleTributeMessages() {
-    const chatContent = document.getElementById('chatContent');
-    if (!chatContent) return;
-    const messages = chatContent.querySelectorAll('.msg');
-    messages.forEach(msg => {
-        const text = msg.textContent || msg.innerHTML;
-        if (text.includes('💝 TRIBUTE:') && !msg.classList.contains('tribute-styled')) {
-            msg.classList.add('tribute-styled');
-            const lines = text.split('\n');
-            const tributeLine = lines.find(line => line.includes('💝 TRIBUTE:'));
-            const messageLine = lines.find(line => line.includes('💌'));
-            if (tributeLine && messageLine) {
-                const reason = tributeLine.replace('💝 TRIBUTE:', '').trim();
-                const message = messageLine.replace('💌', '').replace(/"/g, '').trim();
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const msgRow = msg.closest('.msg-row');
-                if (msgRow) {
-                    msgRow.innerHTML = `
-                        <div class="tribute-system-container">
-                            <div class="tribute-timestamp">${timeStr}</div>
-                            <div class="tribute-card">
-                                <svg class="tribute-card-icon"><use href="#icon-gift"></use></svg>
-                                <div class="tribute-card-content">
-                                    <div class="tribute-card-left">
-                                        <div class="tribute-card-title">TRIBUTE SENT</div>
-                                        <div class="tribute-card-reason">${reason}</div>
-                                        <div class="tribute-card-message">"${message}"</div>
-                                    </div>
-                                    <div class="tribute-card-right">
-                                        <div class="tribute-card-footer">For Queen Karin</div>
-                                        <svg class="tribute-card-footer-icon"><use href="#icon-crown"></use></svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    msgRow.style.justifyContent = 'center';
-                    msgRow.style.margin = '15px 0';
-                    msgRow.classList.add('tribute-system-row');
-                }
-            }
-        }
-    });
 }
 
 function buyRealCoins(amount) {
