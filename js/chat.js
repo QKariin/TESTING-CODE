@@ -137,15 +137,15 @@ export async function renderChat(messages) {
             }
         }
 
-       // Inside the visibleMessages.map loop:
-        return `
-            <div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">
-                <div class="msg-col" style="align-items: ${isMe ? 'flex-end' : 'flex-start'};">
-                    ${contentHtml}
-                    <div class="msg-time">${timeStr}</div>
-                </div>
-            </div>`;
-    }).join('');
+      // Ensure this part of the map function matches:
+             return `
+                <div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">
+                    <div class="msg-col" style="align-items: ${isMe ? 'flex-end' : 'flex-start'}; width: 100%;">
+                        <div class="msg">${txt}</div>
+                        <div class="msg-time">${timeStr}</div>
+                    </div>
+                </div>`;
+        }).join(''); // DO NOT REMOVE THIS
 
     // Load Listeners
     chatContent.querySelectorAll("img").forEach(img => {
