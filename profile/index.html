@@ -8,9 +8,6 @@
   <!-- LOGIC IMPORTS (DO NOT CHANGE) -->
   <script type="module" src="../js/main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
-  
-  <!-- CHAT -->
-  <link rel="stylesheet" href="shared-chat.css">
 
   <!-- FONTS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -150,10 +147,22 @@
                 </div>
 
                 <!-- CHAT -->
-                <div class="profile-pillar-body">
-                    <div id="sharedChatContainer"></div>
-                </div>
+                <div id="chatCard" class="chat-container">
+                    <div id="chatBadge" class="hidden"></div>
+                    <div id="chatBox" class="chat-body-frame">
+                        <div id="kneelRewardOverlay" class="hidden overlay-center"><div style="text-align: center;"><h2 style="color:white; margin-bottom: 20px; font-family:'Orbitron';">DEVOTION RECOGNIZED</h2><div style="display:flex; gap:10px;"><button onclick="claimKneelReward('coins')" class="action-btn">COINS</button><button onclick="claimKneelReward('points')" class="action-btn">POINTS</button></div></div></div>
+                        <div id="chatMediaOverlay" class="hidden overlay-center"><div id="mediaOverlayClose" onclick="closeChatPreview()" style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer;">X</div><div id="chatMediaOverlayContent"></div></div>
+                        <div id="tributeHuntOverlay" class="hidden overlay-center" style="background:#000; padding:20px; flex-direction:column;"><button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer;">CLOSE</button><div id="huntStoreGrid" class="store-grid" style="margin-top: 20px;"></div><textarea id="huntNote" class="hidden"></textarea><div id="huntProgress" class="hidden"></div></div>
 
+                        <div id="chatContent" class="chat-area"></div>
+                    </div>
+                    <div class="chat-footer">
+                        <button id="tributeHuntBtn" onclick="toggleTributeHunt()" class="icon-btn">🎁</button>
+                        <input type="text" id="chatMsgInput" class="chat-input" placeholder="Type..." onkeypress="handleChatKey(event)">
+                        <button class="chat-send" onclick="sendChatMessage()" class="icon-btn">></button>
+                    </div>
+                </div>
+            </div>
 
             <!-- VIEW 2: STORE -->
             <div id="viewBuy" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
@@ -195,60 +204,53 @@
     LOAD MORE...
 </button>
 
-            <!-- THE JAILED MODAL (Exact Old Logic) -->
-          <div id="glassModal" class="glass-modal">
-              
-              <!-- Layer 1: The Photo (Always in back) -->
-              <div id="modalMediaContainer" class="modal-bg-photo"></div>
-              
-              <!-- Layer 2: The Overlay (Clicking it restores the view if hidden) -->
-              <div id="modalGlassOverlay" class="modal-glass-overlay" onclick="restoreOverlay(event)">
-                  
-                  <div id="modalCloseX" onclick="closeModal(null)" style="position:absolute; top:10px; right:20px; font-size:2rem; cursor:pointer; color:white; z-index:100;">×</div>
-          
-                  <!-- CONTENT AREA -->
-                  <div class="theater-content">
-                      
-                      <!-- VIEW A: STATUS/POINTS -->
-                      <div id="modalInfoView" class="sub-view">
-                          <div class="stamp-container">
-                              <img id="modalStatusSticker" src="" class="m-status-sticker-lg" style="height:120px; width:auto; margin-bottom:15px;">
-                          </div>
-                          <div class="reward-container">
-                              <div id="modalPoints" class="m-points-lg" style="font-size:2rem; color:var(--neon-yellow);">+0 PTS</div>
-                              <div id="modalSticker"></div>
-                          </div>
-                      </div>
-          
-                      <!-- VIEW B: FEEDBACK -->
-                      <div id="modalFeedbackView" class="sub-view hidden">
-                          <h3 class="view-label">QUEEN'S FEEDBACK</h3>
-                          <div id="modalFeedbackMedia" class="fb-media-theater"></div>
-                          <div id="modalFeedbackText" class="theater-text-box"></div>
-                      </div>
-          
-                      <!-- VIEW C: TASK -->
-                      <div id="modalTaskView" class="sub-view hidden">
-                          <h3 class="view-label">THE ASSIGNMENT</h3>
-                          <div id="modalOrderText" class="theater-text-box"></div>
-                      </div>
-                  </div>
-          
-                  <!-- FOOTER MENU -->
-                  <div class="modal-footer-menu" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; margin-top:auto;">
-                      <!-- stopPropagation ensures clicking buttons doesn't trigger the "Restore" background click -->
-                      <button onclick="event.stopPropagation(); toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
-                      <button onclick="event.stopPropagation(); toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
-                      
-                      <!-- THIS BUTTON TRIGGERS THE PROOF VIEW -->
-                      <button onclick="event.stopPropagation(); toggleHistoryView('proof')" class="history-action-btn" style="border-color:var(--neon-yellow); color:var(--neon-yellow);">SEE PROOF</button>
-                      
-                      <button onclick="event.stopPropagation(); toggleHistoryView('info')" class="history-action-btn">STATUS</button>
-                      <button onclick="event.stopPropagation(); closeModal(null)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE</button>
-                  </div>
-              </div>
-          </div>
-
+    <!-- 3. THE MODAL (TRAP) - Covers this specific view only -->
+    <div id="glassModal" class="glass-modal" onclick="closeModal(event)">
+        
+        <!-- Layer 1: Photo Background -->
+        <div id="modalMediaContainer" class="modal-bg-photo"></div>
+        
+        <!-- Layer 2: Interface Overlay -->
+        <div id="modalGlassOverlay" class="modal-glass-overlay">
+            <div id="modalCloseX" onclick="closeModal(null)" style="position:absolute; top:10px; right:20px; font-size:2rem; cursor:pointer; color:white; z-index:100;">×</div>
+    
+            <div class="theater-content">
+                <!-- VIEW A: STATUS/POINTS -->
+                <div id="modalInfoView" class="sub-view">
+                    <div class="stamp-container">
+                        <img id="modalStatusSticker" src="" class="m-status-sticker-lg" style="height:120px; width:auto; margin-bottom:15px;">
+                    </div>
+                    <div class="reward-container">
+                        <div id="modalPoints" class="m-points-lg" style="font-size:2rem; color:var(--neon-yellow);">+0 PTS</div>
+                        <div id="modalSticker"></div>
+                    </div>
+                </div>
+    
+                <!-- VIEW B: FEEDBACK -->
+                <div id="modalFeedbackView" class="sub-view hidden">
+                    <h3 class="view-label">QUEEN'S FEEDBACK</h3>
+                    <div id="modalFeedbackMedia" class="fb-media-theater"></div>
+                    <div id="modalFeedbackText" class="theater-text-box"></div>
+                </div>
+    
+                <!-- VIEW C: TASK -->
+                <div id="modalTaskView" class="sub-view hidden">
+                    <h3 class="view-label">THE ASSIGNMENT</h3>
+                    <div id="modalOrderText" class="theater-text-box"></div>
+                </div>
+            </div>
+    
+            <!-- FOOTER NAVIGATION -->
+            <div class="modal-footer-menu" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; margin-top:auto;">
+                <button onclick="toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
+                <button onclick="toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
+                <button onclick="event.stopPropagation(); toggleHistoryView('proof')" class="history-action-btn">SEE PROOF</button>
+                <button onclick="toggleHistoryView('info')" class="history-action-btn">STATUS</button>
+                <button onclick="closeModal(null)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE</button>
+            </div>
+        </div>
+    </div>
+</div>
             <!-- VIEW 4: GALLERY -->
             <div id="viewNews" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
                 <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">GALLERY</h2></div>
