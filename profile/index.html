@@ -54,21 +54,19 @@
 <input type="file" id="profileUploadInput" accept="image/*" class="hidden" onchange="handleProfileUpload(this)">
 
 <div class="app-container">
+    
     <!-- THE CROWN PROFILE HEADER -->
     <div class="profile-crown-header">
         <div class="profile-crown-avatar">
             <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" alt="Profile Avatar">
         </div>
-        <div class="profile-crown-stats">
-            <div class="profile-crown-stat">
-                <div class="profile-crown-stat-val gold" id="crownCoins">0</div>
-                <div class="profile-crown-stat-lbl">MERIT</div>
-            </div>
-            <div class="profile-crown-stat">
-                <div class="profile-crown-stat-val blue" id="crownPoints">0</div>
-                <div class="profile-crown-stat-lbl">CAPITAL</div>
-            </div>
+        
+        <!-- NEW HEADER TITLE: Hierarchy Rank + Queen Karin -->
+        <div class="profile-crown-info" style="text-align: left; display:flex; flex-direction:column;">
+            <div id="headerRankDisplay" class="crown-rank" style="font-family: 'Cinzel', serif; color: var(--gold); font-size: 0.8rem; letter-spacing: 2px;">HIERARCHY RANK</div>
+            <div class="crown-name" style="font-family: 'Orbitron', sans-serif; color: white; font-weight: 900; letter-spacing: 1px;">of QUEEN KARIN</div>
         </div>
+
         <div class="profile-crown-navigation">
             <span class="profile-crown-nav-item active" onclick="showView('viewServingTop')">HOME</span>
             <span class="profile-crown-nav-item" onclick="showView('viewProtocol')">PROTOCOL</span>
@@ -81,103 +79,119 @@
     <!-- THE UNIFICATION LINE -->
     <div class="profile-unification-line"></div>
 
-    <!-- THE 50/50 COMMAND CENTER SPLIT -->
-    <div class="profile-command-center">
-        <!-- LEFT PILLAR: CHAT/COMMUNICATIONS -->
-        <div class="profile-command-pillar">
-            <div class="profile-pillar-header">COMMUNICATIONS PORTAL</div>
-            <div class="profile-pillar-body">
-                <div id="chatCard" class="glass-card" style="display: flex; flex-direction: column; height: 600px; padding: 0; overflow: hidden; position: relative;">
-                    <div id="chatBadge">CHAT</div>
-                                                        
-                    <div class="chat-header-row" style="position: relative; z-index: 1001; background: rgba(15,15,15,0.9); backdrop-filter: blur(10px); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <div class="chat-avatar-container" style="position: relative; width: 50px; height: 50px;">
-                                <div id="chatStatusRing" class="dom-status-ring ring-inactive"></div>
-                                <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" style="width: 100%; border-radius: 50%;">
-                            </div>
-                            <div class="chat-header-info">
-                                <div class="chat-header-title">QUEEN KARIN</div>
-                                <div id="chatStatusBadge" class="chat-status-text">LAST SEEN: TODAY</div>
-                            </div>
-                        </div>
-                        
-                        <div id="toggleGridBtn" onclick="toggleRewardGrid()" style="cursor:pointer; opacity: 0.8; transition: 0.3s;" title="Toggle Reward View">
-                            <svg style="width:22px; height:22px; fill:var(--neon-green); filter: drop-shadow(0 0 5px var(--neon-green));">
-                                <use href="#icon-sparkles"></use>
-                            </svg>
-                        </div>
-                    </div>
+    <!-- DYNAMIC CONTENT VIEWS -->
+    <div class="profile-content-views" style="margin-top: 20px;">
+        
+        <!-- MAIN VIEW (HOME) - WRAPPED IN viewServingTop -->
+        <div id="viewServingTop">
+            <div class="profile-command-center">
+                
+                <!-- LEFT PILLAR: PROFILE CARD + TASK COMMAND CENTER -->
+                <div class="profile-command-pillar">
                     
-                    <div id="chatBody" style="position: relative; flex-grow: 1; overflow: hidden; display: flex; flex-direction: column;">
-                        <div data-include="/profile/kneeling/kneelingRewardOverlay.html"></div>
-                        <div id="chatMediaOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center;">
-                            <div id="mediaOverlayClose" onclick="closeChatPreview()" style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:2rem; color:white; font-weight:300;">&times;</div>
-                            <div id="chatMediaOverlayContent" style="width: 100%; max-width: 90%; max-height: 90%; display:flex; align-items:center; justify-content:center;"></div>
-                        </div>
-                        <div class="chat-area" id="chatBox" style="flex-grow: 1; overflow-y: auto; padding: 15px;">
-                            <div id="chatContent"></div>
-                        </div>
-                    </div>
-                
-                    <div class="chat-footer" style="background: transparent; flex-shrink: 0; position: relative; z-index: 1005;">
-                        <div class="chat-input-row" style="padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #333;">
-                            <button id="tributeHuntBtn" class="tab-btn" onclick="window.toggleTributeHunt()" style="border: 1px solid var(--neon-yellow); color: var(--neon-yellow); background: transparent; width: auto; padding: 0 15px; height: 40px; border-radius: 20px; font-family: 'Orbitron'; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <svg style="width:16px; height:16px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg>TRIBUTE
-                            </button>
-                            <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden-input" onchange="handleAdminUpload(this)">
-                            <button class="btn-plus" onclick="document.getElementById('adminMediaInput').click()" style="width: 40px; height: 40px; border-radius: 50%;">+</button>
-                            <input type="text" id="chatMsgInput" class="chat-input" placeholder="Message..." onkeypress="handleChatKey(event)" style="flex-grow: 1;">
-                            <button class="chat-send" onclick="sendChatMessage()"><svg style="width:20px; height:20px; fill:black;"><use href="#icon-send"></use></svg></button>
-                        </div>
-                    </div>
-                    <div data-include="/profile/tributeOverlay.html"></div>
-                </div>
-            </div>
-        </div>
+                    <!-- 1. PROFILE CARD (Top of Left Column) -->
+                    <div data-include="/profile/profileCard.html" style="margin-bottom: 20px;"></div>
 
-        <!-- THE VERTICAL HAIRLINE SEPARATOR -->
-        <div class="profile-command-separator"></div>
-
-        <!-- RIGHT PILLAR: TASKS & OPERATIONS -->
-        <div class="profile-command-pillar">
-            <div class="profile-pillar-header">TASK COMMAND CENTER</div>
-            <div class="profile-pillar-body">
-                <div id="taskCard" class="glass-card">
-                    <div id="activeBadge" class="task-badge-top">
-                        <span id="timerDisplay">00:00:00</span>
-                    </div>
-                
-                    <div id="taskContent">
-                        <h2 id="readyText">VACANT ASSET</h2>
-                        <p class="inter">
-                            Current status: Unproductive. <br>
-                            Standby for mandatory labor assignment.
-                        </p>
-                    </div>
-                
-                    <div id="cooldownSection" class="hidden" style="width: 100%; text-align:center; padding-bottom: 10px;">
-                        <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="handleEvidenceUpload(this)">
-                        <button onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
-                        <button onclick="cancelPendingTask()" id="btnSkip">Skip / Cancel</button>
-                    </div>
-                
-                    <div id="mainButtonsArea" style="width:100%;">
-                        <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
+                    <!-- 2. TASK CARD (Bottom of Left Column) -->
+                    <div class="profile-pillar-header">TASK COMMAND CENTER</div>
+                    <div id="taskCard" class="glass-card">
+                        <div id="activeBadge" class="task-badge-top">
+                            <span id="timerDisplay">00:00:00</span>
+                        </div>
+                    
+                        <div id="taskContent">
+                            <h2 id="readyText">VACANT ASSET</h2>
+                            <p class="inter">
+                                Current status: Unproductive. <br>
+                                Standby for mandatory labor assignment.
+                            </p>
+                        </div>
+                    
+                        <div id="cooldownSection" class="hidden" style="width: 100%; text-align:center; padding-bottom: 10px;">
+                            <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="handleEvidenceUpload(this)">
+                            <button onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
+                            <button onclick="cancelPendingTask()" id="btnSkip">Skip / Cancel</button>
+                        </div>
+                    
+                        <div id="mainButtonsArea" style="width:100%;">
+                            <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- PROFILE CARD INTEGRATION -->
-                <div data-include="/profile/profileCard.html" style="margin-top: 20px;"></div>
-                <div data-include="/profile/navigation.html" style="margin-top: 15px;"></div>
-            </div>
-        </div>
-    </div>
+                <!-- THE VERTICAL HAIRLINE SEPARATOR -->
+                <div class="profile-command-separator"></div>
 
-    <!-- DYNAMIC CONTENT VIEWS (HIDDEN BY DEFAULT) -->
-    <div class="profile-content-views" style="margin-top: 30px;">
-        <div id="viewServingTop" style="display:none;">
-            <!-- Original serving content moved here -->
+                <!-- RIGHT PILLAR: COMMUNICATIONS PORTAL -->
+                <div class="profile-command-pillar">
+                    <div class="profile-pillar-header">COMMUNICATIONS PORTAL</div>
+                    <div class="profile-pillar-body">
+                        <div id="chatCard" class="glass-card" style="display: flex; flex-direction: column; height: 600px; padding: 0; overflow: hidden; position: relative;">
+                            <div id="chatBadge">CHAT</div>
+                                                                
+                            <div class="chat-header-row" style="position: relative; z-index: 1001; background: rgba(15,15,15,0.9); backdrop-filter: blur(10px); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="chat-avatar-container" style="position: relative; width: 50px; height: 50px;">
+                                        <div id="chatStatusRing" class="dom-status-ring ring-inactive"></div>
+                                        <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" style="width: 100%; border-radius: 50%;">
+                                    </div>
+                                    <div class="chat-header-info">
+                                        <div class="chat-header-title">QUEEN KARIN</div>
+                                        <div id="chatStatusBadge" class="chat-status-text">LAST SEEN: TODAY</div>
+                                    </div>
+                                </div>
+                                
+                                <div id="toggleGridBtn" onclick="toggleRewardGrid()" style="cursor:pointer; opacity: 0.8; transition: 0.3s;" title="Toggle Reward View">
+                                    <svg style="width:22px; height:22px; fill:var(--neon-green); filter: drop-shadow(0 0 5px var(--neon-green));">
+                                        <use href="#icon-sparkles"></use>
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <div id="chatBody" style="position: relative; flex-grow: 1; overflow: hidden; display: flex; flex-direction: column;">
+                                <div data-include="/profile/kneeling/kneelingRewardOverlay.html"></div>
+                                <div id="chatMediaOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center;">
+                                    <div id="mediaOverlayClose" onclick="closeChatPreview()" style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:2rem; color:white; font-weight:300;">&times;</div>
+                                    <div id="chatMediaOverlayContent" style="width: 100%; max-width: 90%; max-height: 90%; display:flex; align-items:center; justify-content:center;"></div>
+                                </div>
+                                <div class="chat-area" id="chatBox" style="flex-grow: 1; overflow-y: auto; padding: 15px;">
+                                    <div id="chatContent"></div>
+                                </div>
+                            </div>
+                        
+                            <div class="chat-footer" style="background: transparent; flex-shrink: 0; position: relative; z-index: 1005;">
+                                <div class="chat-input-row" style="padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #333;">
+                                    <button id="tributeHuntBtn" class="tab-btn" onclick="window.toggleTributeHunt()" style="border: 1px solid var(--neon-yellow); color: var(--neon-yellow); background: transparent; width: auto; padding: 0 15px; height: 40px; border-radius: 20px; font-family: 'Orbitron'; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <svg style="width:16px; height:16px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg>TRIBUTE
+                                    </button>
+                                    <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden-input" onchange="handleAdminUpload(this)">
+                                    <button class="btn-plus" onclick="document.getElementById('adminMediaInput').click()" style="width: 40px; height: 40px; border-radius: 50%;">+</button>
+                                    <input type="text" id="chatMsgInput" class="chat-input" placeholder="Message..." onkeypress="handleChatKey(event)" style="flex-grow: 1;">
+                                    <button class="chat-send" onclick="sendChatMessage()"><svg style="width:20px; height:20px; fill:black;"><use href="#icon-send"></use></svg></button>
+                                </div>
+                            </div>
+                            <div data-include="/profile/tributeOverlay.html"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- EVIDENCE LOG (FULL WIDTH BELOW COLUMNS) -->
+            <div style="display:flex; align-items:center; gap:8px; margin: 20px 0 10px 0; font-size:0.8rem; color:#fff; font-weight:bold; padding-left: 5px;">
+                <div style="width:6px; height:6px; background:var(--neon-yellow); border-radius:50%;"></div> EVIDENCE LOG
+            </div>
+
+            <div id="pendingSection" style="display:none; width:100%;">
+                <div class="section-header">PENDING REVIEW</div>
+                <div id="pendingGrid" class="pending-grid"></div>
+            </div>
+
+            <!-- THE HISTORY SECTION -->
+            <div id="historySection" style="display:none; position: relative; min-height: 50px;">
+                <div class="section-header">EVIDENCE LOG / HISTORY</div>
+                <div id="historyGrid" class="gallery-grid"></div>
+                <button id="loadMoreBtn" onclick="loadMoreHistory()" class="action-btn" style="display:none; margin-top:20px;">LOAD MORE...</button>
+            </div>
         </div>
             
         <div id="viewNews" class="hidden">
@@ -273,307 +287,9 @@
             </div>
         </div>
     </div>
-            
-    <div id="viewServingTop" style="display:flex; flex-direction:column; gap:15px;">
-        
-        <div id="chatCard" class="glass-card" style="display: flex; flex-direction: column; height: 600px; padding: 0; overflow: hidden; position: relative;">
-          <div id="chatBadge">CHAT</div>
-                                            
-        <div class="chat-header-row" style="position: relative; z-index: 1001; background: rgba(15,15,15,0.9); backdrop-filter: blur(10px); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="chat-avatar-container" style="position: relative; width: 50px; height: 50px;">
-                    <div id="chatStatusRing" class="dom-status-ring ring-inactive"></div>
-                    <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" style="width: 100%; border-radius: 50%;">
-                </div>
-                <div class="chat-header-info">
-                    <div class="chat-header-title">QUEEN KARIN</div>
-                    <div id="chatStatusBadge" class="chat-status-text">LAST SEEN: TODAY</div>
-                </div>
-            </div>
-            
-          <div id="toggleGridBtn" onclick="toggleRewardGrid()" style="cursor:pointer; opacity: 0.8; transition: 0.3s;" title="Toggle Reward View">
-              <svg style="width:22px; height:22px; fill:var(--neon-green); filter: drop-shadow(0 0 5px var(--neon-green));">
-                  <use href="#icon-sparkles"></use>
-              </svg>
-          </div>
-        </div>
-        
-            <div id="chatBody" style="position: relative; flex-grow: 1; overflow: hidden; display: flex; flex-direction: column;">
-
-                <div data-include="/profile/kneeling/kneelingRewardOverlay.html"></div>
-
-                <div id="chatMediaOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center;">
-
-                    <div id="mediaOverlayClose"
-                        onclick="closeChatPreview()"
-                        style="position:absolute; top:20px; right:20px; cursor:pointer;
-                                font-size:2rem; color:white; font-weight:300;">
-                        &times;
-                    </div>
-
-                    <div id="chatMediaOverlayContent"
-                        style="width: 100%; max-width: 90%; max-height: 90%;
-                                display:flex; align-items:center; justify-content:center;">
-                    </div>
-                </div>
-                                        
-                <div class="chat-area" id="chatBox" style="flex-grow: 1; overflow-y: auto; padding: 15px;">
-                    <div id="chatContent"></div>
-                </div>
-            </div>
-        
-            <div class="chat-footer" style="background: transparent; flex-shrink: 0; position: relative; z-index: 1005;">
-                <div class="chat-input-row" style="padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #333;">
-                    <button id="tributeHuntBtn" class="tab-btn" onclick="window.toggleTributeHunt()" style="border: 1px solid var(--neon-yellow); color: var(--neon-yellow); background: transparent; width: auto; padding: 0 15px; height: 40px; border-radius: 20px; font-family: 'Orbitron'; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <svg style="width:16px; height:16px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg>TRIBUTE
-                    </button>
-                    <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden-input" onchange="handleAdminUpload(this)">
-                    <button class="btn-plus" onclick="document.getElementById('adminMediaInput').click()" style="width: 40px; height: 40px; border-radius: 50%;">+</button>
-                    <input type="text" id="chatMsgInput" class="chat-input" placeholder="Message..." onkeypress="handleChatKey(event)" style="flex-grow: 1;">
-                    <button class="chat-send" onclick="sendChatMessage()"><svg style="width:20px; height:20px; fill:black;"><use href="#icon-send"></use></svg></button>
-                </div>
-            </div>
-
-            <div data-include="/profile/tributeOverlay.html"></div>
-
-        </div> <div id="taskCard" class="glass-card">
-
-            <div id="activeBadge" class="task-badge-top">
-                <span id="timerDisplay">00:00:00</span>
-            </div>
-        
-            <div id="taskContent">
-                <h2 id="readyText">VACANT ASSET</h2>
-                <p class="inter">
-                    Current status: Unproductive. <br>
-                    Standby for mandatory labor assignment.
-                </p>
-            </div>
-        
-            <div id="cooldownSection" class="hidden" style="width: 100%; text-align:center; padding-bottom: 10px;">
-                <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="handleEvidenceUpload(this)">
-                <button onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
-                <button onclick="cancelPendingTask()" id="btnSkip">Skip / Cancel</button>
-            </div>
-        
-            <div id="mainButtonsArea" style="width:100%;">
-                <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
-            </div>
-        
-        </div>
-
-    </div> ```
-
-Would you like me to adjust the height of the Chat Card so the Task Card is more visible on smaller screens?
-              
-            <div id="viewNews" class="hidden">
-                <div class="glass-card" style="height: 100%; padding:0; overflow:hidden; background:#000;">
-                    
-                    <div class="social-header">
-                        <div class="sh-avatar-frame">
-                            <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" class="sh-avatar">
-                        </div>
-                        <div class="sh-info">
-                            <div class="sh-name">QUEEN KARIN</div>
-                            <div class="sh-bio">Time to serve.</div>
-                            <div class="sh-stats">
-                                <div class="sh-stat-item"><span class="sh-val" id="cntPosts">0</span><span class="sh-lbl">POSTS</span></div>
-                                <div class="sh-stat-item"><span class="sh-val">∞</span><span class="sh-lbl">OWNER</span></div>
-                                <div id="domStatusBadge" class="sh-stat-item"><span class="sh-val" style="color:var(--neon-green)">ONLINE</span><span class="sh-lbl">STATUS</span></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="domVideoReel" class="highlights-rail"></div>
-
-                    <div class="feed-nav"><div class="fn-btn active">GRID</div></div>
-
-                    <div id="newsGrid" class="social-grid"></div>
-
-                    <div id="streamContainer" class="video-container hidden" style="margin-top:20px;">
-                        <iframe id="twitchFrame" class="twitch-iframe" src="" allowfullscreen></iframe>
-                        <div id="streamLockOverlay" class="glass-lock-overlay">...</div>
-                    </div>
-
-                </div>
-            </div>
-          </div>
-
-            <!-- THE VAULT -->
-            <div id="viewVault" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
-                <div class="glass-card">
-                    <h2 style="text-align:center; color:white; font-family:'Orbitron'; font-size:1.5rem; margin-bottom:20px; letter-spacing:3px;">THE QUEEN'S VAULT</h2>
-                    <p style="text-align:center; color:#666; font-family:'Rajdhani'; font-size:0.8rem; margin-bottom:20px;">YOUR PERMANENT COLLECTION OF UNLOCKED DIRECTIVES.</p>
-                    
-                    <div id="vaultGrid" class="gallery-grid">
-                    </div>
-                </div>
-            </div>
-                        
-            <div id="viewSession" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
-                <div class="glass-card" style="text-align:center; padding: 50px;">
-                    <h2 style="font-size:2rem; color:var(--neon-pink); text-shadow:0 0 10px var(--neon-pink);">PRIVATE SESSIONS</h2>
-                    <p style="color:#aaa; font-family:'Rajdhani'; margin-top:10px;">Currently offline. Check back later.</p>
-                    <button class="action-btn" style="margin-top:20px; opacity:0.5; cursor:not-allowed;">CHECK AVAILABILITY</button>
-                </div>
-            </div>
-            
-            <div id="viewProtocol" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
-                <div class="glass-card">
-                    <h2 style="text-align:center; color:white; font-family:'Orbitron'; font-size:1.8rem; margin-bottom:20px; letter-spacing:2px;">OPERATIONAL PROTOCOL</h2>
-
-                    <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid var(--neon-yellow);">
-                            <h3 class="protocol-header" style="color:var(--neon-yellow);">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg> 
-                                    THE ECONOMY
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <p style="margin-bottom:10px;"><strong style="color:white;">COINS (Currency):</strong> Your physical worth. Used to buy gifts from the <strong>Wishlist</strong>, pay mandatory tributes, or purchase your freedom from a task via the <strong>Skip</strong> function.</p>
-                                <p><strong style="color:white;">POINTS (Status):</strong> Your spiritual worth. Earned strictly through <strong>Kneeling</strong> and completing <strong>Duties</strong>. Points determine your rank in the <strong>Hierarchy</strong>.</p>
-                            </div>
-                        </div>
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid var(--neon-green);">
-                            <h3 class="protocol-header" style="color:var(--neon-green);">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:var(--neon-green);"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg> 
-                                    DUTY & TASKS
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <p style="margin-bottom:10px;">Click <strong>"REQUEST TASK"</strong> to receive your orders.</p>
-                                <ul style="list-style: none; padding-left: 0; color: #ccc;">
-                                    <li style="margin-bottom:5px;"><strong style="color:white;">- 24h Deadline:</strong> Proof must be uploaded within 24 hours.</li>
-                                    <li><strong style="color:white;">- Failure:</strong> A <strong>300 COIN FINE</strong> is applied automatically if the timer expires.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid var(--neon-pink);">
-                            <h3 class="protocol-header" style="color:var(--neon-pink);">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:var(--neon-pink);"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 
-                                    DEVOTION
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <p>Kneel once every <strong>1 minute</strong> via the profile bar. Consistency prevents rank degradation.</p>
-                            </div>
-                        </div>
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid #fff;">
-                            <h3 class="protocol-header" style="color:#fff;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:#fff;"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg> 
-                                    ROYAL HIERARCHY
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <p style="margin-bottom:15px; font-size:0.8rem; color:#aaa;">Ranks are earned through total Points. Higher ranks unlock private session slots.</p>
-                                <div id="hierarchyGrid" class="grid gap-4"></div>
-                            </div>
-                        </div>
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid #ff003c;">
-                            <h3 class="protocol-header" style="color:#ff003c;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:#ff003c;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg> 
-                                    COMMANDS
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <p><strong style="color:white;">Glass Break:</strong> Click the broken glass overlay immediately to read urgent commands.</p>
-                            </div>
-                        </div>
-
-                        <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid #666;">
-                            <h3 class="protocol-header" style="color:#ccc;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:18px; height:18px; fill:#ccc;"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg> 
-                                    LAWS & REGULATIONS
-                                </div>
-                                <span class="protocol-arrow">▼</span>
-                            </h3>
-                            <div class="protocol-content">
-                                <ul style="list-style: none; padding: 0; margin: 0; color: #ccc;">
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 1:</strong> <span id="r1">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 2:</strong> <span id="r2">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 3:</strong> <span id="r3">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 4:</strong> <span id="r4">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 5:</strong> <span id="r5">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 6:</strong> <span id="r6">Loading...</span></li>
-                                    <li style="margin-bottom: 8px;"><strong style="color:white;">Section 7:</strong> <span id="r7">Loading...</span></li>
-                                    <li style="margin-bottom: 0px;"><strong style="color:white;">Section 8:</strong> <span id="r8">Loading...</span></li>
-                                </ul>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-            <div id="viewRewards" class="hidden">
-                <div class="glass-card" style="text-align:center; padding: 50px;">
-                    <h2 style="font-size:2rem; color:var(--neon-yellow); text-shadow:0 0 10px var(--neon-yellow);">REWARDS</h2>
-                    <p style="color:#aaa; font-family:'Rajdhani'; margin-top:10px;">Unlock perks as you level up.</p>
-                    <div style="margin-top:20px; font-size: 3rem;">🎁</div>
-                </div>
-            </div>
-
-            <div id="viewHierarchy" class="hidden">
-                <div class="glass-card">
-                    <div class="text-center mb-4"><h1 class="accent text-2xl md:text-4xl font-bold mb-1">ROYAL HIERARCHY</h1><p class="text-gray-400 text-xs">Slave devotion ranks</p></div>
-                    <div class="grid gap-4" id="hierarchyGrid"></div>
-                </div>
-            </div>
-
-            <div id="viewBuy" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
-                <div class="glass-card">
-                    <h2 style="text-align:center; color:var(--neon-yellow); font-family:'Rubik Glitch', sans-serif; font-size:2rem; margin-bottom:5px; text-shadow:0 0 10px rgba(255,215,0,0.3);">BUY COINS</h2>
-                    <p style="text-align:center; color:#888; font-family:'Rajdhani'; font-size:0.8rem; margin-bottom:15px;">Purchase coins to pay tribute.</p>
-                    <div class="store-grid">
-                        <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><svg style="width:40px; height:40px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg></div><div class="si-info"><div class="si-name" style="color:white;">1.000 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(1000)">€10.00</button></div></div>
-                        <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><svg style="width:50px; height:50px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg></div><div class="si-info"><div class="si-name" style="color:white;">5.500 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(5500)">€50.00</button></div></div>
-                        <div class="store-item" style="border-color: var(--neon-yellow); box-shadow: 0 0 10px rgba(255,215,0,0.2);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">💰</div></div><div class="si-info"><div class="si-name" style="color:white;">12.000 COINS</div><button class="si-btn" style="background:var(--neon-yellow); border-color:var(--neon-yellow); color:black; font-weight:bold;" onclick="buyRealCoins(12000)">€100.00</button></div></div>
-                        <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">💎</div></div><div class="si-info"><div class="si-name" style="color:white;">30.000 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(30000)">€250.00</button></div></div>
-                        <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">👑</div></div><div class="si-info"><div class="si-name" style="color:white;">70.000 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(70000)">€500.00</button></div></div>
-                        <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">🏦</div></div><div class="si-info"><div class="si-name" style="color:white;">150.000 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(150000)">€1000.00</button></div></div>
-                      </div> <!-- closes store-grid -->
-                </div> <!-- closes glass-card -->
-            </div> <!-- closes viewBuy -->
-
-        </div> <!-- This now correctly closes layout-right -->
-    </div>
-
-    <!-- EVIDENCE LOG (FULL WIDTH) -->
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:0.8rem; color:#fff; font-weight:bold; padding-left: 5px;">
-        <div style="width:6px; height:6px; background:var(--neon-yellow); border-radius:50%;"></div> EVIDENCE LOG
-    </div>
-
-    <div id="pendingSection" style="display:none; width:100%;">
-        <div class="section-header">PENDING REVIEW</div>
-        <div id="pendingGrid" class="pending-grid"></div>
-    </div>
-
-    <!-- THE HISTORY SECTION -->
-    <div id="historySection" style="display:none; position: relative; min-height: 50px;">
-        <div class="section-header">EVIDENCE LOG / HISTORY</div>
-  
-        <!-- THE ACTUAL HISTORY GRID -->
-        <div id="historyGrid" class="gallery-grid"></div>
-        <button id="loadMoreBtn" onclick="loadMoreHistory()" class="action-btn" style="display:none; margin-top:20px;">LOAD MORE...</button>
-    </div>
 </div> <!-- END app-container -->
 
-<!-- THE JAILED THEATER MODAL (MOVED OUTSIDE ALL CONTAINERS) -->
+<!-- THE JAILED THEATER MODAL -->
 <div id="glassModal" class="glass-modal" onclick="closeModal(event)">
     <div id="modalMediaContainer" class="modal-bg-photo"></div>
     
