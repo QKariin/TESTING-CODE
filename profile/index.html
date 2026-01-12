@@ -197,7 +197,12 @@
     <div class="section-header">HISTORY LOG</div>
     <div id="historyGrid" class="gallery-grid"></div>
     
-    <button id="loadMoreBtn" onclick="loadMoreHistory()" class="action-btn" style="display:none; margin:20px auto;">LOAD MORE...</button>
+    <button id="loadMoreBtn" 
+        onclick="document.getElementById('historyGrid').style.maxHeight='none'; if(typeof loadMoreHistory === 'function') loadMoreHistory();" 
+        class="action-btn" 
+        style="display:block; margin:20px auto;">
+    LOAD MORE...
+</button>
 
     <!-- 3. THE MODAL (TRAP) - Covers this specific view only -->
     <div id="glassModal" class="glass-modal" onclick="closeModal(event)">
