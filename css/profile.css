@@ -105,8 +105,6 @@ body {
 }
 .graphic-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--red-grad); z-index: 0; transition: none; }
 .graphic-text { position: relative; z-index: 2; font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--gold); letter-spacing: 5px; font-weight: 700; }
-
-/* Active state for Kneel Button (Text turns black, BG red) */
 .kneel-bar-graphic:active .graphic-text { color: #000; }
 
 .content-stage { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
@@ -140,15 +138,8 @@ body {
 .chat-input:focus { border-bottom-color: var(--gold); }
 .icon-btn { background: transparent; border: none; color: var(--gold); font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
 
-/* SLAVE RECORD STYLING */
-.altar-limbo-title {
-    font-family: 'Cinzel', serif; color: var(--neon-yellow); text-align: center; letter-spacing: 3px; font-size: 1rem; margin-bottom: 15px; text-shadow: 0 0 10px rgba(255,215,0,0.2);
-}
-.altar-history-title {
-    font-family: 'Cinzel', serif; color: #666; text-align: center; letter-spacing: 3px; font-size: 1rem; margin-bottom: 15px; margin-top: 30px;
-}
-
 .overlay-center { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; }
+
 .store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .store-item { border: 1px solid var(--gold-dim); padding: 20px; text-align: center; background: rgba(20,20,20,0.5); display: flex; flex-direction: column; gap: 10px; }
 .si-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 8px; width: 100%; cursor: pointer; font-family: 'Orbitron'; }
