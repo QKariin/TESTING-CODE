@@ -3,6 +3,215 @@
     --gold: #c5a059;
     --gold-dim: rgba(197, 160, 89, 0.2);
     --text-white: #e0e0e0;
+    --glass: rgba(15, 15, 15, 0.95);
+    --neon-green: #00ff00;
+    --neon-yellow: #ffd700;
+    --red-grad: linear-gradient(135deg, #500000 0%, #ff0000 100%); /* Crimson Red */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+
+body {
+    background-color: var(--bg-void);
+    background: radial-gradient(circle at 80% 20%, #111 0%, var(--bg-void) 80%);
+    color: var(--text-white);
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* CONTAINER */
+.app-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.hidden { display: none !important; }
+.glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--gold-dim); }
+
+/* --- LEFT PILLAR --- */
+.layout-left {
+    width: 25%;
+    min-width: 280px;
+    height: 100%;
+    border-right: 1px solid var(--gold-dim);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+    background: rgba(0,0,0,0.4);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+/* 1. Hierarchy (Fixed Top, Grey, Cinzel) */
+.hierarchy-top {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #444; /* Grey */
+    letter-spacing: 10px; /* Huge spacing */
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 30px;
+    width: 100%;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+
+/* 2. Avatar */
+.avatar-container {
+    width: 140px; height: 140px; border-radius: 50%; border: 2px solid var(--gold);
+    overflow: hidden; cursor: pointer; margin-bottom: 15px;
+}
+#profilePic { width: 100%; height: 100%; object-fit: cover; filter: grayscale(0.2); }
+.identity-name { font-family: 'Cinzel'; font-size: 1.4rem; color: #fff; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px; }
+
+/* 3. Stats (Stacked Vertical) */
+.stats-stack {
+    display: flex; flex-direction: column; gap: 20px; width: 100%; align-items: center; margin-bottom: 20px;
+}
+.stat-row { display: flex; flex-direction: column; align-items: center; }
+.stat-val { font-family: 'Orbitron'; font-size: 2.2rem; color: #fff; font-weight: 700; }
+.stat-lbl { font-family: 'Cinzel'; font-size: 0.7rem; color: var(--gold); letter-spacing: 3px; margin-top: 5px; }
+
+/* 4. Expanded Stats (Logic Restored) */
+.stats-toggle-btn {
+    background: transparent; border: none; color: #666; font-family: 'Inter'; font-size: 0.7rem; cursor: pointer; margin-bottom: 20px;
+}
+.stats-panel {
+    display: none; width: 100%; padding: 15px; border-top: 1px solid var(--gold-dim); border-bottom: 1px solid var(--gold-dim);
+    margin-bottom: 20px; font-family: 'Inter'; font-size: 0.8rem; color: #aaa;
+}
+#statsContent.open { display: block; }
+.stat-line { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.stat-footer { margin-top: 10px; text-align: center; border-top: 1px solid #333; padding-top: 5px; }
+
+/* 5. Navigation (Pulled up) */
+.nav-menu { display: flex; flex-direction: column; gap: 10px; width: 100%; padding-left: 20px; }
+.nav-btn {
+    background: transparent; border: none; color: #666; text-align: left;
+    font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 2px; cursor: pointer;
+    transition: 0.3s; padding: 10px; border-left: 2px solid transparent; text-transform: uppercase;
+}
+.nav-btn:hover, .nav-btn.active { color: var(--gold); border-left-color: var(--gold); padding-left: 20px; text-shadow: 0 0 10px rgba(197, 160, 89, 0.4); }
+
+.logic-only { display: none; }
+
+/* --- RIGHT STAGE --- */
+.layout-right {
+    flex-grow: 1; height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden;
+}
+
+/* Header (Red Graphic Kneel Button) */
+.right-header {
+    height: 100px; width: 100%;
+    border-bottom: 1px solid var(--gold-dim);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; background: rgba(0,0,0,0.5);
+}
+
+.kneel-center-wrapper { width: 350px; height: 60px; }
+.kneel-bar-graphic {
+    width: 100%; height: 100%; border: none; border-radius: 4px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    background: rgba(50, 0, 0, 0.3); overflow: hidden; position: relative;
+    border: 2px solid #ff0000;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+}
+.graphic-fill {
+    position: absolute; top: 0; left: 0; height: 100%; width: 0%;
+    background: var(--red-grad); /* RED */
+    z-index: 0; transition: none;
+}
+.graphic-text { position: relative; z-index: 2; font-family: 'Orbitron'; font-size: 1.2rem; color: #fff; letter-spacing: 5px; font-weight: 900; text-shadow: 0 0 5px black; }
+
+/* Content Stage */
+.content-stage { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.view-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; }
+
+/* Task Ribbon (Consistent, Sharp) */
+.task-ribbon {
+    flex-shrink: 0; margin: 20px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px;
+    height: 100px; background: rgba(10,10,10,0.8); border: 1px solid var(--gold-dim);
+}
+.ribbon-left { width: 150px; text-align: left; }
+.ribbon-timer { font-family: 'Orbitron'; font-size: 2.5rem; color: #fff; font-weight: 900; }
+
+.ribbon-center { flex: 1; text-align: center; border-left: 1px solid var(--gold-dim); border-right: 1px solid var(--gold-dim); height: 70%; display: flex; flex-direction: column; justify-content: center; }
+.ribbon-label { display: block; font-family: 'Inter'; font-size: 0.6rem; color: var(--gold); letter-spacing: 3px; margin-bottom: 5px; }
+.ribbon-status { margin: 0; font-family: 'Cinzel'; font-size: 1.4rem; color: white; text-transform: uppercase; }
+
+.ribbon-right { width: 180px; display: flex; justify-content: flex-end; }
+.action-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 25px; font-family: 'Orbitron'; font-weight: 700; cursor: pointer; transition: 0.3s; }
+.action-btn:hover { background: var(--gold); color: #000; box-shadow: 0 0 15px var(--gold); }
+.btn-dim { border-color: #444; color: #666; padding: 12px 25px; background: transparent; cursor: pointer; }
+
+/* --- CHAT DESIGN --- */
+.chat-container {
+    flex: 1; margin: 0 20px 20px 20px; display: flex; flex-direction: column; padding: 0; overflow: hidden;
+    background: transparent; border: 1px solid var(--gold-dim);
+}
+.chat-body-frame { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+
+/* Chat Messages */
+.msg-row { display: flex; width: 100%; margin-bottom: 10px; }
+.mr-in { justify-content: flex-start; } /* Queen */
+.mr-out { justify-content: flex-end; }  /* Slave */
+
+.msg { padding: 15px 20px; max-width: 70%; line-height: 1.6; font-size: 0.95rem; }
+
+/* QUEEN STYLE */
+.m-queen {
+    background: rgba(10, 10, 10, 0.9);
+    border: 1px solid var(--gold-dim);
+    border-left: 4px solid var(--gold);
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+}
+
+/* SLAVE STYLE */
+.m-slave {
+    background: transparent;
+    color: #888;
+    font-family: 'Inter', sans-serif;
+    text-align: right;
+    border-right: 2px solid #333;
+}
+
+.msg-time { font-size: 0.6rem; color: #444; margin-top: 5px; opacity: 0.7; font-family: 'Orbitron'; }
+
+/* Chat Footer */
+.chat-footer {
+    padding: 20px; border-top: 1px solid var(--gold-dim); display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.8);
+}
+.chat-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid #444; color: white; font-family: 'Inter'; font-size: 1rem; padding: 10px; }
+.chat-input:focus { border-bottom-color: var(--gold); }
+.icon-btn { background: transparent; border: none; color: var(--gold); font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
+.icon-btn:hover { transform: scale(1.1); text-shadow: 0 0 10px var(--gold); }
+
+.overlay-center { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; }
+
+/* Store Grid */
+.store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.store-item {
+    border: 1px solid var(--gold-dim); padding: 20px; text-align: center; background: rgba(20,20,20,0.5);
+    display: flex; flex-direction: column; gap: 10px;
+}
+.si-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 8px; width: 100%; cursor: pointer; font-family: 'Orbitron'; }
+.si-btn:hover { background: var(--gold); color: #000; }
+
+.gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.gallery-item { aspect-ratio: 1; background: #222; border: 1px solid #333; }:root {
+    --bg-void: #050505;
+    --gold: #c5a059;
+    --gold-dim: rgba(197, 160, 89, 0.2);
+    --text-white: #e0e0e0;
     --glass: rgba(10, 10, 10, 0.9);
     --neon-green: #00ff00;
     --neon-yellow: #ffd700;
