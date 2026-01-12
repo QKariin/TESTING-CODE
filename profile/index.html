@@ -1,44 +1,35 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Command Console</title>
-  
-  <!-- LOGIC IMPORTS -->
-  <script type="module" src="../js/main.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
-
-  <!-- FONTS -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@200;300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet" />
-
-  <!-- CSS LINKS -->
+  <title>Task Dom 🖤 Slave UI</title>
   <link rel="stylesheet" href="../css/profile.css">
   <link rel="stylesheet" href="../css/reward.css">
+  <script type="module" src="../js/main.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&family=Rubik+Glitch&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 </head>
 <body>
 
-<!-- 1. AUDIO ENGINE (Crucial for Logic) -->
+<!-- SOUNDS -->
 <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
 <audio id="coinSound" src="/audio/2019-preview1.mp3"></audio>
 <audio id="skipSound" src="https://static.wixstatic.com/mp3/ce3e5b_3b5b34d4083847e2b123b6fd9a8551fd.mp3"></audio>
 <audio id="sfx-buy" src="/audio/2019-preview1.mp3"></audio>
 <audio id="sfx-deny" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3"></audio>
 
-<!-- 2. HIDDEN INPUTS (Crucial for Logic) -->
-<input type="file" id="profileUploadInput" accept="image/*" class="hidden" onchange="handleProfileUpload(this)">
-<input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="handleEvidenceUpload(this)">
-<input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden" onchange="handleAdminUpload(this)">
-
-<!-- 3. CELEBRATION OVERLAY -->
+<!-- CELEBRATION OVERLAY -->
 <div id="celebrationOverlay" style="position:fixed;inset:0;pointer-events:none;z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.3s;">
     <div class="glass-card" style="border: 2px solid var(--neon-green); text-align:center;">
         <div style="font-size:1.8rem;font-weight:900;color:var(--neon-green);text-shadow:0 0 20px var(--neon-green);">TASK<br>SUBMITTED</div>
     </div>
 </div>
 
-<!-- 4. ICONS (Used by logic) -->
+<!-- ICONS -->
 <svg style="display:none;">
     <symbol id="icon-coin" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.69 1.64 1.83 1.64 1.22 0 1.6-.64 1.6-1.26 0-.81-.42-1.22-2.34-1.67-2.37-.59-3.54-1.7-3.54-3.41 0-1.68 1.29-2.94 3.28-3.29V4h2.66v1.93c1.61.27 2.87 1.28 3.01 3.05h-1.95c-.14-.99-.68-1.55-1.7-1.55-1.04 0-1.55.56-1.55 1.15 0 .75.46 1.2 2.37 1.65 2.51.6 3.58 1.74 3.58 3.52 0 1.82-1.46 3.09-3.28 3.34z"/></symbol>
     <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
@@ -50,222 +41,334 @@
     <symbol id="icon-sparkles" viewBox="0 0 24 24"><path d="M9.5 1L8 4.5L4.5 6L8 7.5L9.5 11L11 7.5L14.5 6L11 4.5L9.5 1zm0 0"/><path d="M19 8.5L17.5 11L15 12.5L17.5 14L19 16.5L20.5 14L23 12.5L20.5 11L19 8.5zm0 0"/><path d="M16.5 18L15.5 20L13.5 21L15.5 22L16.5 24L17.5 22L19.5 21L17.5 20L16.5 18zm0 0"/></symbol>
 </svg>
 
-<div class="hud-container">
+<input type="file" id="profileUploadInput" accept="image/*" class="hidden" onchange="handleProfileUpload(this)">
+
+<div class="app-container">
     
-    <!-- LEFT PILLAR: IDENTITY (30%) -->
-    <aside class="pillar-identity">
+    <!-- HEADER -->
+    <div class="profile-crown-header">
+        <div class="profile-crown-avatar">
+            <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" alt="Profile Avatar">
+        </div>
         
-        <!-- TOP: CROWN (Avatar + Kneel) -->
-        <div class="crown-zone">
-            <!-- Avatar Logic -->
-            <div class="avatar-frame" onclick="document.getElementById('profileUploadInput').click()">
-                <img id="profilePic" src="" class="pc-avatar-img">
-            </div>
-            
-            <!-- Kneel Logic -->
-            <div id="btn" class="kneel-btn-bar" 
-                 onmousedown="handleHoldStart(event)" 
-                 onmouseup="handleHoldEnd(event)" 
-                 onmouseleave="handleHoldEnd(event)" 
-                 ontouchstart="handleHoldStart(event)" 
-                 ontouchend="handleHoldEnd(event)">
-                <span id="fill" class="bar-fill"></span>
-                <span id="txt-main" class="bar-text">KNEEL</span>
-            </div>
-            
-            <div id="subName" class="identity-name">SLAVE</div>
+        <div class="profile-crown-info" style="text-align: left; display:flex; flex-direction:column;">
+            <div id="headerRankDisplay" class="crown-rank" style="font-family: 'Cinzel', serif; color: var(--gold); font-size: 0.8rem; letter-spacing: 2px;">HIERARCHY RANK</div>
+            <div class="crown-name" style="font-family: 'Orbitron', sans-serif; color: white; font-weight: 900; letter-spacing: 1px;">of QUEEN KARIN</div>
         </div>
 
-        <!-- MIDDLE: WATERMARK (Rank) -->
-        <div id="subHierarchy" class="rank-watermark">LOADING...</div>
-
-        <!-- BOTTOM: LEDGER (Stats) -->
-        <div class="ledger-zone">
-            <div class="stat-block">
-                <span class="stat-lbl">MERIT</span>
-                <span id="points" class="stat-val">0</span>
-            </div>
-            <div class="stat-thread"></div>
-            <div class="stat-block">
-                <span class="stat-lbl">CAPITAL</span>
-                <span id="coins" class="stat-val">0</span>
-            </div>
+        <!-- MENU: Using YOUR logic keywords ('serve', 'buy', etc.) -->
+        <div class="profile-crown-navigation">
+            <span class="profile-crown-nav-item active" onclick="switchTab('serve')">HOME</span>
+            <span class="profile-crown-nav-item" onclick="switchTab('protocol')">PROTOCOL</span>
+            <span class="profile-crown-nav-item" onclick="switchTab('news')">GALLERY</span>
+            <span class="profile-crown-nav-item" onclick="switchTab('vault')">VAULT</span>
+            <span class="profile-crown-nav-item" onclick="switchTab('buy')">STORE</span>
         </div>
+    </div>
 
-        <!-- CORNER: NAV -->
-        <nav class="nav-corner">
-            <div class="nav-link active" onclick="switchTab('serve')">CONSOLE</div>
-            <div class="nav-link" onclick="switchTab('news')">GALLERY</div>
-            <div class="nav-link" onclick="switchTab('vault')">VAULT</div>
-            <div class="nav-link" onclick="switchTab('buy')">STORE</div>
-            <div class="nav-link" onclick="switchTab('protocol')">PROTOCOL</div>
-        </nav>
+    <!-- SEPARATOR -->
+    <div class="profile-unification-line"></div>
 
-        <!-- Hidden toggles for logic completeness -->
-        <div class="hidden" onclick="toggleStats()">STATS</div> 
-    </aside>
-
-    <!-- RIGHT STAGE: OPERATION (70%) -->
-    <main class="operation-stage">
+    <!-- DYNAMIC CONTENT -->
+    <div class="profile-content-views" style="margin-top: 20px;">
         
-        <!-- VIEW 1: HOME (SERVE) -->
-        <div id="viewServingTop" class="view-wrapper">
-            
-            <!-- A. DIRECTIVE RIBBON (Task Logic) -->
-            <div id="taskCard" class="directive-ribbon">
-                <div id="activeBadge" class="hidden"></div> <!-- Prevents JS error -->
+        <!-- HOME VIEW (ID mapped from 'serve') -->
+        <div id="viewServingTop">
+            <div class="profile-command-center">
                 
-                <!-- Timer -->
-                <div id="timerDisplay" class="ribbon-timer">00:00:00</div>
-                
-                <!-- Text -->
-                <div id="taskContent" class="ribbon-center">
-                    <span class="ribbon-title">CURRENT DIRECTIVE</span>
-                    <h2 id="readyText" class="ribbon-text">AWAITING ORDERS</h2>
-                </div>
-
-                <!-- Action -->
-                <div id="mainButtonsArea">
-                    <button id="newTaskBtn" onclick="getRandomTask()" class="ribbon-action">[ REQUEST TASK ]</button>
-                </div>
-
-                <!-- Cooldown (Hidden Logic) -->
-                <div id="cooldownSection" class="hidden" style="display: flex; gap: 10px;">
-                    <button onclick="document.getElementById('evidenceInput').click()" class="ribbon-action">[ UPLOAD ]</button>
-                    <button id="btnSkip" onclick="cancelPendingTask()" class="ribbon-action" style="border-color: #444; color: #666;">SKIP</button>
-                </div>
-            </div>
-
-            <!-- B. CONNECTION VOID (Chat Logic) -->
-            <div id="chatCard" class="connection-void">
-                <div id="chatBadge" class="hidden"></div>
-                
-                <!-- Gallery Rail (Visual Header) -->
-                <div class="media-rail-header">
-                    <div style="font-family:'Inter'; font-size:0.7rem; color:var(--gold); letter-spacing:2px;">RECENT UPLOADS</div>
-                    <div class="rail-thumb"></div>
-                    <div class="rail-thumb"></div>
-                    <div class="rail-thumb"></div>
-                </div>
-
-                <!-- Chat Body -->
-                <div id="chatBody" style="flex: 1; display:flex; flex-direction:column; overflow:hidden;">
+                <!-- LEFT PILLAR: PROFILE + TASK -->
+                <div class="profile-command-pillar">
                     
-                    <!-- Overlays inside Chat (Logic requires this nesting) -->
-                    <div id="kneelRewardOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 100; display: flex; align-items: center; justify-content: center;">
-                        <div style="text-align: center;">
-                            <h2 style="color:var(--gold);">DEVOTION RECOGNIZED</h2>
-                            <div style="display:flex; gap:10px; margin-top:20px;">
-                                <button onclick="claimKneelReward('coins')" class="si-btn">COINS</button>
-                                <button onclick="claimKneelReward('points')" class="si-btn">POINTS</button>
+                    <!-- Profile Card -->
+                    <div data-include="/profile/profileCard.html" style="margin-bottom: 20px;"></div>
+
+                    <!-- Task Card -->
+                    <div class="profile-pillar-header">TASK COMMAND CENTER</div>
+                    <div id="taskCard" class="glass-card">
+                        <div id="activeBadge" class="task-badge-top">
+                            <span id="timerDisplay">00:00:00</span>
+                        </div>
+                        <div id="taskContent">
+                            <h2 id="readyText">VACANT ASSET</h2>
+                            <p class="inter">Current status: Unproductive.<br>Standby for mandatory labor assignment.</p>
+                        </div>
+                        <div id="cooldownSection" class="hidden" style="width: 100%; text-align:center; padding-bottom: 10px;">
+                            <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="handleEvidenceUpload(this)">
+                            <button onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
+                            <button onclick="cancelPendingTask()" id="btnSkip">Skip / Cancel</button>
+                        </div>
+                        <div id="mainButtonsArea" style="width:100%;">
+                            <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEPARATOR -->
+                <div class="profile-command-separator"></div>
+
+                <!-- RIGHT PILLAR: CHAT -->
+                <div class="profile-command-pillar">
+                    <div class="profile-pillar-header">COMMUNICATIONS PORTAL</div>
+                    <div class="profile-pillar-body">
+                        <div id="chatCard" class="glass-card" style="display: flex; flex-direction: column; height: 600px; padding: 0; overflow: hidden; position: relative;">
+                            <div id="chatBadge">CHAT</div>
+                                                                
+                            <div class="chat-header-row" style="position: relative; z-index: 1001; background: rgba(15,15,15,0.9); backdrop-filter: blur(10px); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="chat-avatar-container" style="position: relative; width: 50px; height: 50px;">
+                                        <div id="chatStatusRing" class="dom-status-ring ring-inactive"></div>
+                                        <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" style="width: 100%; border-radius: 50%;">
+                                    </div>
+                                    <div class="chat-header-info">
+                                        <div class="chat-header-title">QUEEN KARIN</div>
+                                        <div id="chatStatusBadge" class="chat-status-text">LAST SEEN: TODAY</div>
+                                    </div>
+                                </div>
+                                <div id="toggleGridBtn" onclick="toggleRewardGrid()" style="cursor:pointer; opacity: 0.8; transition: 0.3s;" title="Toggle Reward View">
+                                    <svg style="width:22px; height:22px; fill:var(--neon-green); filter: drop-shadow(0 0 5px var(--neon-green));"><use href="#icon-sparkles"></use></svg>
+                                </div>
+                            </div>
+                            
+                            <div id="chatBody" style="position: relative; flex-grow: 1; overflow: hidden; display: flex; flex-direction: column;">
+                                <div data-include="/profile/kneeling/kneelingRewardOverlay.html"></div>
+                                <div id="chatMediaOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center;">
+                                    <div id="mediaOverlayClose" onclick="closeChatPreview()" style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:2rem; color:white; font-weight:300;">&times;</div>
+                                    <div id="chatMediaOverlayContent" style="width: 100%; max-width: 90%; max-height: 90%; display:flex; align-items:center; justify-content:center;"></div>
+                                </div>
+                                
+                                <div id="tributeHuntOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 2000; backdrop-filter: blur(20px); padding: 20px; display: flex; flex-direction: column;">
+                                    <div id="huntProgress" style="font-family:'Orbitron'; font-size:0.8rem; color:var(--neon-yellow); letter-spacing:4px; margin-bottom:20px; text-align: center; text-transform: uppercase;">INTENTION</div>
+                                    <div id="huntStep1" class="hunt-step">
+                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                            <button class="tab-btn" onclick="selectTributeReason('Love & Adoration')">LOVE & ADORATION</button>
+                                            <button class="tab-btn" onclick="selectTributeReason('Seeking Forgiveness')">FORGIVENESS</button>
+                                            <button class="tab-btn" onclick="selectTributeReason('Pure Devotion')">PURE DEVOTION</button>
+                                        </div>
+                                    </div>
+                                    <div id="huntStep2" class="hunt-step hidden">
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                            <button class="tab-btn" onclick="filterByBudget(1000)">1,000 🪙</button>
+                                            <button class="tab-btn" onclick="filterByBudget(3000)">3,000 🪙</button>
+                                            <button class="tab-btn" onclick="filterByBudget(5000)">5,000 🪙</button>
+                                            <button class="tab-btn" onclick="filterByBudget(10000)">10,000 🪙</button>
+                                        </div>
+                                        <button onclick="showHuntStep(1)" style="background:transparent; border:none; color:#555; margin-top:30px; width:100%; cursor:pointer; font-size:0.7rem;">BACK</button>
+                                    </div>
+                                    <div id="huntStep3" class="hunt-step hidden" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
+                                        <div id="huntStoreGrid" class="store-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; flex-grow: 1; padding-bottom: 10px;"></div>
+                                        <button onclick="showHuntStep(2)" style="background:transparent; border:none; color:#555; margin-top:10px; width:100%; cursor:pointer; font-size:0.7rem; flex-shrink: 0;">BACK TO BUDGET</button>
+                                    </div>
+                                    <div id="huntStep4" class="hunt-step hidden">
+                                        <div id="huntSummary" style="text-align:center; margin-bottom:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; border: 1px solid #222;">
+                                            <img id="huntSelectedImg" src="" style="height:60px; border-radius:5px; margin-bottom:5px; object-fit: contain;">
+                                            <div id="huntSelectedName" style="font-size:0.65rem; font-weight:bold; color:white; text-transform:uppercase;">ITEM NAME</div>
+                                            <div id="huntSelectedPrice" style="font-size:0.75rem; color:var(--neon-yellow);">0 🪙</div>
+                                        </div>
+                                        <div id="huntNoteContainer" class="hidden" style="margin-bottom:10px;">
+                                            <textarea id="huntNote" placeholder="Write your words..." style="width:100%; background:rgba(0,0,0,0.6); border:1px solid var(--neon-pink); border-radius:12px; color:white; padding:15px; font-family:'Rajdhani'; min-height:100px; outline:none; resize:none; font-size:0.9rem;"></textarea>
+                                        </div>
+                                        <button id="btnShowNote" onclick="toggleHuntNote(true)" style="background:transparent; border:1px solid #444; color:#666; border-radius:15px; font-size:0.6rem; padding:6px 15px; margin: 0 auto 15px; display:block; cursor:pointer;">+ ADD A NOTE</button>
+                                        <button class="action-btn" onclick="finalizeSacrifice()" style="background:var(--neon-pink); color:black; font-weight:900; width:100%;">SUBMIT SACRIFICE</button>
+                                        <button onclick="showHuntStep(3)" style="background:transparent; border:none; color:#555; margin-top:10px; width:100%; cursor:pointer; font-size:0.7rem;">BACK TO ITEMS</button>
+                                    </div>
+                                </div>
+        
+                                <div class="chat-area" id="chatBox" style="flex-grow: 1; overflow-y: auto; padding: 15px;">
+                                    <div id="chatContent"></div>
+                                </div>
+                            </div>
+                        
+                            <div class="chat-footer" style="background: transparent; flex-shrink: 0; position: relative; z-index: 1005;">
+                                <div class="chat-input-row" style="padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #333;">
+                                    <button id="tributeHuntBtn" class="tab-btn" onclick="window.toggleTributeHunt()" style="border: 1px solid var(--neon-yellow); color: var(--neon-yellow); background: transparent; width: auto; padding: 0 15px; height: 40px; border-radius: 20px; font-family: 'Orbitron'; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <svg style="width:16px; height:16px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg>TRIBUTE
+                                    </button>
+                                    <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden-input" onchange="handleAdminUpload(this)">
+                                    <button class="btn-plus" onclick="document.getElementById('adminMediaInput').click()" style="width: 40px; height: 40px; border-radius: 50%;">+</button>
+                                    <input type="text" id="chatMsgInput" class="chat-input" placeholder="Message..." onkeypress="handleChatKey(event)" style="flex-grow: 1;">
+                                    <button class="chat-send" onclick="sendChatMessage()"><svg style="width:20px; height:20px; fill:black;"><use href="#icon-send"></use></svg></button>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div id="chatMediaOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: flex; align-items: center; justify-content: center;">
-                        <div id="mediaOverlayClose" onclick="closeChatPreview()" style="position:absolute; top:20px; right:20px; color:white; font-size:2rem; cursor:pointer;">X</div>
-                        <div id="chatMediaOverlayContent"></div>
+                </div>
+            </div>
+            
+            <!-- EVIDENCE LOG & HISTORY -->
+            <div style="display:flex; align-items:center; gap:8px; margin: 20px 0 10px 0; font-size:0.8rem; color:#fff; font-weight:bold; padding-left: 5px;">
+                <div style="width:6px; height:6px; background:var(--neon-yellow); border-radius:50%;"></div> EVIDENCE LOG
+            </div>
+            <div id="pendingSection" style="display:none; width:100%;">
+                <div class="section-header">PENDING REVIEW</div>
+                <div id="pendingGrid" class="pending-grid"></div>
+            </div>
+            <div id="historySection" style="display:none; position: relative; min-height: 50px;">
+                <div class="section-header">EVIDENCE LOG / HISTORY</div>
+                <div id="historyGrid" class="gallery-grid"></div>
+                <button id="loadMoreBtn" onclick="loadMoreHistory()" class="action-btn" style="display:none; margin-top:20px;">LOAD MORE...</button>
+            </div>
+        </div>
+            
+        <!-- OTHER VIEWS (Mapped from IDs) -->
+        <div id="viewNews" class="hidden">
+            <div class="glass-card" style="height: 100%; padding:0; overflow:hidden; background:#000;">
+                <div class="social-header">
+                    <div class="sh-avatar-frame"><img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" class="sh-avatar"></div>
+                    <div class="sh-info">
+                        <div class="sh-name">QUEEN KARIN</div>
+                        <div class="sh-bio">Time to serve.</div>
+                        <div class="sh-stats">
+                            <div class="sh-stat-item"><span class="sh-val" id="cntPosts">0</span><span class="sh-lbl">POSTS</span></div>
+                            <div class="sh-stat-item"><span class="sh-val">∞</span><span class="sh-lbl">OWNER</span></div>
+                            <div id="domStatusBadge" class="sh-stat-item"><span class="sh-val" style="color:var(--neon-green)">ONLINE</span><span class="sh-lbl">STATUS</span></div>
+                        </div>
                     </div>
+                </div>
+                <div id="domVideoReel" class="highlights-rail"></div>
+                <div class="feed-nav"><div class="fn-btn active">GRID</div></div>
+                <div id="newsGrid" class="social-grid"></div>
+                <div id="streamContainer" class="video-container hidden" style="margin-top:20px;">
+                    <iframe id="twitchFrame" class="twitch-iframe" src="" allowfullscreen></iframe>
+                    <div id="streamLockOverlay" class="glass-lock-overlay">...</div>
+                </div>
+            </div>
+        </div>
 
-                    <div id="tributeHuntOverlay" class="hidden" style="position: absolute; inset: 0; background: #000; z-index: 150; padding: 20px;">
-                        <button onclick="toggleTributeHunt()" style="color:white; float:right;">CLOSE</button>
-                        <div id="huntStoreGrid" class="store-grid"></div>
-                        <!-- Inputs for tribute logic -->
-                        <textarea id="huntNote" class="hidden"></textarea>
-                        <div id="huntProgress" class="hidden"></div>
+        <div id="viewVault" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
+            <div class="glass-card">
+                <h2 style="text-align:center; color:white; font-family:'Orbitron'; font-size:1.5rem; margin-bottom:20px; letter-spacing:3px;">THE QUEEN'S VAULT</h2>
+                <div id="vaultGrid" class="gallery-grid"></div>
+            </div>
+        </div>
+        
+        <div id="viewProtocol" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
+            <div class="glass-card">
+                <h2 style="text-align:center; color:white; font-family:'Orbitron'; font-size:1.8rem; margin-bottom:20px; letter-spacing:2px;">OPERATIONAL PROTOCOL</h2>
+                <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
+                    <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid var(--neon-yellow);">
+                        <h3 class="protocol-header" style="color:var(--neon-yellow);">
+                            <div style="display:flex; align-items:center; gap:10px;"><svg style="width:18px; height:18px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg>THE ECONOMY</div>
+                            <span class="protocol-arrow">▼</span>
+                        </h3>
+                        <div class="protocol-content"><p style="margin-bottom:10px;">Coins are used for gifts and tributes.</p></div>
                     </div>
-
-                    <!-- Messages -->
-                    <div id="chatContent" class="chat-stream"></div>
-                </div>
-
-                <!-- Input Line -->
-                <div class="input-line-container">
-                    <input type="text" id="chatMsgInput" class="void-input" placeholder="Speak..." onkeypress="handleChatKey(event)">
-                    <button class="void-send" onclick="sendChatMessage()">→</button>
-                    <!-- Tribute Button (Small icon) -->
-                    <button id="tributeHuntBtn" onclick="toggleTributeHunt()" style="background:transparent; border:none; color:var(--gold); margin-right:10px;">🎁</button>
+                    <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid var(--neon-green);">
+                        <h3 class="protocol-header" style="color:var(--neon-green);">
+                            <div style="display:flex; align-items:center; gap:10px;"><svg style="width:18px; height:18px; fill:var(--neon-green);"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg> DUTY & TASKS</div>
+                            <span class="protocol-arrow">▼</span>
+                        </h3>
+                        <div class="protocol-content">
+                            <p style="margin-bottom:10px;">Click <strong>"REQUEST TASK"</strong> to receive your orders.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- VIEW 2: STORE (Mapped ID) -->
-        <div id="viewBuy" class="view-wrapper hidden">
-            <div class="directive-ribbon"><div class="ribbon-text" style="color:var(--gold);">ACQUIRE CAPITAL</div></div>
-            <div class="store-grid">
-                <div class="store-item"><div style="font-size:2rem; color:var(--gold);">1K</div><button class="si-btn" onclick="buyRealCoins(1000)">€10.00</button></div>
-                <div class="store-item"><div style="font-size:2rem; color:var(--gold);">5.5K</div><button class="si-btn" onclick="buyRealCoins(5500)">€50.00</button></div>
-                <div class="store-item"><div style="font-size:2rem; color:var(--gold);">12K</div><button class="si-btn" onclick="buyRealCoins(12000)">€100.00</button></div>
-                <div class="store-item"><div style="font-size:2rem; color:var(--gold);">30K</div><button class="si-btn" onclick="buyRealCoins(30000)">€250.00</button></div>
-                <div class="store-item"><div style="font-size:2rem; color:var(--gold);">70K</div><button class="si-btn" onclick="buyRealCoins(70000)">€500.00</button></div>
-                <div class="store-item"><div style="font-size:2rem; color:var(--gold);">150K</div><button class="si-btn" onclick="buyRealCoins(150000)">€1000.00</button></div>
-            </div>
-        </div>
-
-        <!-- VIEW 3: GALLERY -->
-        <div id="viewNews" class="view-wrapper hidden">
-            <div class="directive-ribbon"><div class="ribbon-text" style="color:var(--gold);">THE QUEEN'S IMAGE</div></div>
-            <div id="newsGrid" class="gallery-grid"></div>
-        </div>
-
-        <!-- VIEW 4: VAULT -->
-        <div id="viewVault" class="view-wrapper hidden">
-            <div class="directive-ribbon"><div class="ribbon-text" style="color:var(--gold);">UNLOCKED ASSETS</div></div>
-            <div id="vaultGrid" class="gallery-grid"></div>
-        </div>
-
-        <!-- VIEW 5: PROTOCOL -->
-        <div id="viewProtocol" class="view-wrapper hidden">
-            <div class="directive-ribbon"><div class="ribbon-text" style="color:var(--gold);">LAW</div></div>
-            <div class="protocol-container">
-                <div class="protocol-item">
-                    <div class="protocol-header">OBEDIENCE</div>
-                    <p>Your worth is determined solely by your submission.</p>
+        <!-- STORE: ID mapped from 'buy' -->
+        <div id="viewBuy" class="hidden" style="display:flex; flex-direction:column; gap:15px;">
+            <div class="glass-card">
+                <h2 style="text-align:center; color:var(--neon-yellow); font-family:'Rubik Glitch', sans-serif; font-size:2rem; margin-bottom:5px;">BUY COINS</h2>
+                <div class="store-grid">
+                    <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><svg style="width:40px; height:40px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg></div><div class="si-info"><div class="si-name" style="color:white;">1.000 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(1000)">€10.00</button></div></div>
+                    <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><svg style="width:50px; height:50px; fill:var(--neon-yellow);"><use href="#icon-coin"></use></svg></div><div class="si-info"><div class="si-name" style="color:white;">5.500 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(5500)">€50.00</button></div></div>
+                    <div class="store-item" style="border-color: var(--neon-yellow); box-shadow: 0 0 10px rgba(255,215,0,0.2);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">💰</div></div><div class="si-info"><div class="si-name" style="color:white;">12.000 COINS</div><button class="si-btn" style="background:var(--neon-yellow); border-color:var(--neon-yellow); color:black; font-weight:bold;" onclick="buyRealCoins(12000)">€100.00</button></div></div>
+                    <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">💎</div></div><div class="si-info"><div class="si-name" style="color:white;">30.000 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(30000)">€250.00</button></div></div>
+                    <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">👑</div></div><div class="si-info"><div class="si-name" style="color:white;">70.000 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(70000)">€500.00</button></div></div>
+                    <div class="store-item" style="border-color: var(--neon-yellow);"><div class="si-img-box"><div style="position:absolute; font-size:2rem;">🏦</div></div><div class="si-info"><div class="si-name" style="color:white;">150.000 COINS</div><button class="si-btn" style="background:rgba(255,215,0,0.1); border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="buyRealCoins(150000)">€1000.00</button></div></div>
                 </div>
             </div>
         </div>
-
-        <!-- HIDDEN LOGIC PLACEHOLDERS -->
-        <div id="viewRewards" class="hidden"></div>
-        <div id="viewHierarchy" class="hidden"></div>
-        <div id="viewSession" class="hidden"></div>
-        <div id="pendingSection" class="hidden"></div>
-        <div id="historySection" class="hidden"></div>
-
-    </main>
+    </div>
 </div>
 
-<!-- SCRIPT: The Brain (Restored Logic) -->
+<!-- JAILED THEATER MODAL -->
+<div id="glassModal" class="glass-modal" onclick="closeModal(event)">
+    <div id="modalMediaContainer" class="modal-bg-photo"></div>
+    <div id="modalGlassOverlay" class="modal-glass-overlay">
+        <div id="modalCloseX" onclick="closeModal(null)">×</div>
+        <div class="theater-content">
+            <div id="modalInfoView" class="sub-view">
+                <div class="stamp-container"><img id="modalStatusSticker" src="" class="m-status-sticker-lg"></div>
+                <div class="reward-container"><div id="modalPoints" class="m-points-lg">+0 PTS</div><div id="modalSticker"></div></div>
+            </div>
+            <div id="modalFeedbackView" class="sub-view hidden">
+                <h3 class="view-label">QUEEN'S FEEDBACK</h3>
+                <div id="modalFeedbackMedia" class="fb-media-theater"></div>
+                <div id="modalFeedbackText" class="theater-text-box"></div>
+            </div>
+            <div id="modalTaskView" class="sub-view hidden">
+                <h3 class="view-label">THE ASSIGNMENT</h3>
+                <div id="modalOrderText" class="theater-text-box"></div>
+            </div>
+        </div>
+        <div class="modal-footer-menu">
+            <button onclick="toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
+            <button onclick="toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
+            <button onclick="event.stopPropagation(); toggleHistoryView('proof')" class="history-action-btn">SEE PROOF</button>
+            <button onclick="toggleHistoryView('info')" class="history-action-btn">STATUS</button>
+            <button onclick="closeModal(null)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE</button>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT: COPIED EXACTLY FROM YOUR WORKING CODE -->
 <script>
     document.querySelectorAll("[data-include]").forEach(async el => {
-        const file = el.getAttribute("data-include");
-        try { const html = await fetch(file).then(r => r.text()); el.innerHTML = html; } catch (err) {}
+    const file = el.getAttribute("data-include");
+    try {
+        const html = await fetch(file).then(r => r.text());
+        el.innerHTML = html;
+    } catch (err) {
+        console.error("Include failed:", file, err);
+    }
     });
 
+    // CUSTOM MENU LOGIC: COPIED FROM YOUR WORKING CODE
+    // This correctly maps 'buy' to 'viewBuy' and triggers the system
     window.switchTab = function(viewId) {
-        document.querySelectorAll('.nav-link').forEach(item => {
-            if(item.getAttribute('onclick').includes(viewId)) item.classList.add('active');
-            else item.classList.remove('active');
+        // 1. Update the Header Menu Active State
+        document.querySelectorAll('.profile-crown-nav-item').forEach(item => {
+            // Check if this item's onclick matches the viewId
+            if(item.getAttribute('onclick').includes(viewId)) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
         });
 
-        const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy'];
+        // 2. Hide all Views
+        const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy', 'viewRewards', 'viewHierarchy', 'viewSession'];
         views.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.classList.add('hidden');
+            const v = document.getElementById(id);
+            if(v) {
+                v.classList.add('hidden');
+                v.style.display = 'none';
+            }
         });
 
+        // 3. Map keys to IDs (Logic from your code)
         let targetId = viewId;
         if(viewId === 'serve') targetId = 'viewServingTop';
-        if(viewId === 'news') targetId = 'viewNews';
-        if(viewId === 'buy') targetId = 'viewBuy';
-        if(viewId === 'vault') targetId = 'viewVault';
         if(viewId === 'protocol') targetId = 'viewProtocol';
+        if(viewId === 'news') targetId = 'viewNews';
+        if(viewId === 'vault') targetId = 'viewVault';
+        if(viewId === 'buy') targetId = 'viewBuy';
 
+        // 4. Show the Target View
         const target = document.getElementById(targetId);
-        if(target) target.classList.remove('hidden');
-
-        if(typeof window.showView === 'function') {
-            window.showView(targetId);
+        if(target) {
+            target.classList.remove('hidden');
+            if (targetId === 'viewNews' || targetId === 'viewVault' || targetId === 'viewServingTop') {
+                 target.style.display = 'block'; 
+            } else {
+                 target.style.display = 'flex';
+            }
+            
+            // 5. TRIGGER THE LOGIC (This makes the store buttons work)
+            if (typeof window.showView === 'function') {
+                window.showView(targetId);
+            }
         }
     }
 </script>
