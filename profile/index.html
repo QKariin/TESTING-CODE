@@ -14,7 +14,7 @@
 </head>
 <body>
 
-<!-- SOUND ASSETS -->
+<!-- SOUNDS -->
 <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
 <audio id="coinSound" src="/audio/2019-preview1.mp3"></audio>
 <audio id="skipSound" src="https://static.wixstatic.com/mp3/ce3e5b_3b5b34d4083847e2b123b6fd9a8551fd.mp3"></audio>
@@ -28,7 +28,7 @@
     </div>
 </div>
 
-<!-- ICONS (Hidden) -->
+<!-- ICONS -->
 <svg style="display:none;">
     <symbol id="icon-coin" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.69 1.64 1.83 1.64 1.22 0 1.6-.64 1.6-1.26 0-.81-.42-1.22-2.34-1.67-2.37-.59-3.54-1.7-3.54-3.41 0-1.68 1.29-2.94 3.28-3.29V4h2.66v1.93c1.61.27 2.87 1.28 3.01 3.05h-1.95c-.14-.99-.68-1.55-1.7-1.55-1.04 0-1.55.56-1.55 1.15 0 .75.46 1.2 2.37 1.65 2.51.6 3.58 1.74 3.58 3.52 0 1.82-1.46 3.09-3.28 3.34z"/></symbol>
     <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
@@ -48,7 +48,7 @@
 
 <div class="app-container">
     
-    <!-- 1. HEADER: HIERARCHY RANK + QUEEN KARIN + MENU -->
+    <!-- 1. HEADER: HIERARCHY RANK + MENU -->
     <div class="profile-crown-header">
         <div class="profile-crown-avatar">
             <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" alt="Profile Avatar">
@@ -60,7 +60,7 @@
             <div class="crown-name" style="font-family: 'Orbitron', sans-serif; color: white; font-weight: 900; letter-spacing: 1px;">of QUEEN KARIN</div>
         </div>
 
-        <!-- MENU: THIS NOW CONTROLS THE VIEWS -->
+        <!-- MENU: FUNCTIONAL - CLICKING SWITCHES TABS -->
         <div class="profile-crown-navigation">
             <span class="profile-crown-nav-item active" onclick="switchMainTab(this, 'viewServingTop')">HOME</span>
             <span class="profile-crown-nav-item" onclick="switchMainTab(this, 'viewProtocol')">PROTOCOL</span>
@@ -77,6 +77,7 @@
     <div class="profile-content-views" style="margin-top: 20px;">
         
         <!-- 2. HOME VIEW (SPLIT LAYOUT) -->
+        <!-- ID: viewServingTop -> This is what shows when you click HOME -->
         <div id="viewServingTop">
             <div class="profile-command-center">
                 
@@ -170,7 +171,7 @@
                 </div>
             </div>
             
-            <!-- EVIDENCE LOG & HISTORY -->
+            <!-- EVIDENCE LOG & HISTORY (Always visible in Home) -->
             <div style="display:flex; align-items:center; gap:8px; margin: 20px 0 10px 0; font-size:0.8rem; color:#fff; font-weight:bold; padding-left: 5px;">
                 <div style="width:6px; height:6px; background:var(--neon-yellow); border-radius:50%;"></div> EVIDENCE LOG
             </div>
@@ -187,7 +188,8 @@
             </div>
         </div>
             
-        <!-- OTHER VIEWS (PROTOCOL, GALLERY, ETC) -->
+        <!-- OTHER VIEWS: PROTOCOL, GALLERY, VAULT, BUY -->
+        
         <div id="viewNews" class="hidden">
             <div class="glass-card" style="height: 100%; padding:0; overflow:hidden; background:#000;">
                 <div class="social-header">
@@ -247,6 +249,23 @@
                             <p><strong style="color:white;">POINTS (Status):</strong> Your spiritual worth. Earned strictly through <strong>Kneeling</strong> and completing <strong>Duties</strong>. Points determine your rank in the <strong>Hierarchy</strong>.</p>
                         </div>
                     </div>
+                    <!-- Added missing protocols -->
+                    <div class="protocol-item" onclick="toggleSection(this)" style="border:1px solid var(--neon-green);">
+                        <h3 class="protocol-header" style="color:var(--neon-green);">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <svg style="width:18px; height:18px; fill:var(--neon-green);"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg> 
+                                DUTY & TASKS
+                            </div>
+                            <span class="protocol-arrow">▼</span>
+                        </h3>
+                        <div class="protocol-content">
+                            <p style="margin-bottom:10px;">Click <strong>"REQUEST TASK"</strong> to receive your orders.</p>
+                            <ul style="list-style: none; padding-left: 0; color: #ccc;">
+                                <li style="margin-bottom:5px;"><strong style="color:white;">- 24h Deadline:</strong> Proof must be uploaded within 24 hours.</li>
+                                <li><strong style="color:white;">- Failure:</strong> A <strong>300 COIN FINE</strong> is applied automatically if the timer expires.</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -283,7 +302,7 @@
     </div>
 </div> <!-- END app-container -->
 
-<!-- JAILED THEATER MODAL -->
+<!-- THE JAILED THEATER MODAL -->
 <div id="glassModal" class="glass-modal" onclick="closeModal(event)">
     <div id="modalMediaContainer" class="modal-bg-photo"></div>
     <div id="modalGlassOverlay" class="modal-glass-overlay">
@@ -313,52 +332,10 @@
     </div>
 </div>
 
-<!-- SCRIPTS -->
+<!-- SCRIPT: This restores the Functionality -->
 <script>
+    // 1. Load HTML Includes
     document.querySelectorAll("[data-include]").forEach(async el => {
-    const file = el.getAttribute("data-include");
-    try {
-        const html = await fetch(file).then(r => r.text());
-        el.innerHTML = html;
-    } catch (err) {
-        console.error("Include failed:", file, err);
-    }
-    });
-
-    // CUSTOM MENU LOGIC: Handles the Header Menu Clicks
-    function switchMainTab(el, viewId) {
-        // 1. Update the Header Menu Active State
-        document.querySelectorAll('.profile-crown-nav-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        el.classList.add('active');
-
-        // 2. Hide all Views
-        const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy', 'viewRewards', 'viewHierarchy', 'viewSession'];
-        views.forEach(id => {
-            const v = document.getElementById(id);
-            if(v) {
-                v.classList.add('hidden');
-                v.style.display = 'none';
-            }
-        });
-
-        // 3. Show the Target View
-        const target = document.getElementById(viewId);
-        if(target) {
-            target.classList.remove('hidden');
-            // Restore display: 'viewServingTop' needs specific handling if it was flex, otherwise standard logic
-            if (viewId === 'viewServingTop') {
-                target.style.display = 'block'; 
-            } else if (viewId === 'viewNews' || viewId === 'viewVault') {
-                 target.style.display = 'block'; 
-            } else {
-                 target.style.display = 'flex';
-            }
-        }
-    }
-
-   document.querySelectorAll("[data-include]").forEach(async el => {
         const file = el.getAttribute("data-include");
         try {
             const html = await fetch(file).then(r => r.text());
@@ -368,8 +345,8 @@
         }
     });
 
-    // 2. FIXED MENU LOGIC
-    // This highlights the header tab AND calls the system's data loader
+    // 2. RESTORED MENU FUNCTIONALITY
+    // This connects the new header buttons to the views (Gallery, Vault, etc.)
     window.switchMainTab = function(el, viewId) {
         
         // A. Visual Highlight (The Underline)
@@ -378,29 +355,32 @@
         });
         el.classList.add('active');
 
-        // B. Call the Original System Function (loads Gallery/Vault data)
-        // We check if the main.js function exists, then call it.
-        if (typeof window.showView === 'function') {
-            window.showView(viewId);
-        } else {
-            // Fallback: Manually toggle if main.js isn't ready
-            const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy', 'viewRewards', 'viewHierarchy', 'viewSession'];
-            views.forEach(id => {
-                const v = document.getElementById(id);
-                if(v) {
-                    v.classList.add('hidden');
-                    v.style.display = 'none';
-                }
-            });
-            const target = document.getElementById(viewId);
-            if(target) {
-                target.classList.remove('hidden');
-                // Ensure Gallery gets block display, others get flex
-                if (viewId === 'viewNews' || viewId === 'viewVault' || viewId === 'viewServingTop') {
-                    target.style.display = 'block';
-                } else {
-                    target.style.display = 'flex';
-                }
+        // B. Logic: Hide all views, Show the clicked one
+        const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy', 'viewRewards', 'viewHierarchy', 'viewSession'];
+        
+        views.forEach(id => {
+            const v = document.getElementById(id);
+            if(v) {
+                v.classList.add('hidden');
+                v.style.display = 'none'; // Force hide
+            }
+        });
+
+        const target = document.getElementById(viewId);
+        if(target) {
+            target.classList.remove('hidden');
+            
+            // Layout Fix: Grid views (Gallery/Vault) need block, Layout needs flex
+            if (viewId === 'viewNews' || viewId === 'viewVault' || viewId === 'viewServingTop') {
+                target.style.display = 'block';
+            } else {
+                target.style.display = 'flex';
+            }
+
+            // CRITICAL: Trigger data loading for Gallery/Vault
+            // This calls the main.js function if it exists
+            if (typeof window.showView === 'function') {
+                window.showView(viewId);
             }
         }
     }
