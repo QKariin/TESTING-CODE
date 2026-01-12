@@ -42,10 +42,10 @@
 
 <div class="app-container">
     
-    <!-- === LEFT PILLAR: IDENTITY (30%) === -->
+    <!-- === LEFT PILLAR: IDENTITY === -->
     <div class="layout-left">
         
-        <!-- 1. HIERARCHY RANK (Top, Grey, Cinzel) -->
+        <!-- 1. HIERARCHY RANK (Cinzel) -->
         <div id="subHierarchy" class="hierarchy-top">LOADING...</div>
 
         <!-- 2. AVATAR -->
@@ -54,7 +54,7 @@
         </div>
         <div id="subName" class="identity-name">SLAVE</div>
 
-        <!-- 3. BASIC STATS (Vertical Stack) -->
+        <!-- 3. STATS (Cinzel Font) -->
         <div class="stats-stack">
             <div class="stat-row">
                 <span class="stat-lbl">MERIT</span>
@@ -66,39 +66,43 @@
             </div>
         </div>
 
-        <!-- 4. EXPANDED STATS (Restored) -->
-        <button class="stats-toggle-btn" onclick="toggleStats()">EXPAND STATS ▾</button>
+        <!-- 4. EXPANDED STATS & PROGRESS (Restored) -->
+        <div class="progress-section">
+            <div class="prog-labels">
+                <span>NEXT: <span id="nextLevelName">-</span></span>
+                <span id="pointsNeeded">0 to go</span>
+            </div>
+            <div class="prog-bg"><div id="progressBar" class="prog-fill"></div></div>
+        </div>
+
+        <button class="stats-toggle-btn" onclick="toggleStats()">FULL RECORD ▾</button>
         <div id="statsContent" class="stats-panel">
-            <div class="stat-line"><span>Task Streak</span> <strong id="statStreak">0</strong></div>
+            <div class="stat-line"><span>Streak</span> <strong id="statStreak">0</strong></div>
             <div class="stat-line"><span>Total Tasks</span> <strong id="statTotal">0</strong></div>
             <div class="stat-line"><span>Completed</span> <strong id="statCompleted">0</strong></div>
             <div class="stat-line"><span>Skipped</span> <strong id="statSkipped">0</strong></div>
-            <div class="stat-line"><span>Total Kneeling</span> <strong id="statTotalKneels">0</strong></div>
+            <div class="stat-line"><span>Kneels</span> <strong id="statTotalKneels">0</strong></div>
             <div class="stat-footer">
-                <span>SLAVE SINCE</span>
+                <span>OWNED SINCE</span>
                 <strong id="slaveSinceDate">--/--/--</strong>
             </div>
         </div>
 
-        <!-- 5. NAVIGATION (Fixed Position, Not at bottom) -->
+        <!-- 5. NAVIGATION (Added Slave Record) -->
         <div class="nav-menu">
             <button class="nav-btn active" onclick="switchTab('serve')">CONSOLE</button>
+            <button class="nav-btn" onclick="switchTab('history')">SLAVE RECORD</button>
             <button class="nav-btn" onclick="switchTab('news')">GALLERY</button>
             <button class="nav-btn" onclick="switchTab('vault')">VAULT</button>
             <button class="nav-btn" onclick="switchTab('buy')">STORE</button>
             <button class="nav-btn" onclick="switchTab('protocol')">PROTOCOL</button>
         </div>
-
-        <!-- Logic placeholders (Hidden but necessary) -->
-        <div class="logic-only">
-            <div id="progressBar"></div> <span id="nextLevelName"></span> <span id="pointsNeeded"></span>
-        </div>
     </div>
 
-    <!-- === RIGHT STAGE: OPERATIONS (70%) === -->
+    <!-- === RIGHT STAGE: OPERATIONS === -->
     <div class="layout-right">
         
-        <!-- HEADER: CENTERED HUGE KNEEL BUTTON (Red Graphic) -->
+        <!-- HEADER: CENTERED KNEEL BUTTON (Restored Design) -->
         <div class="right-header">
             <div class="kneel-center-wrapper">
                 <div id="btn" class="kneel-bar-graphic" 
@@ -108,7 +112,7 @@
                      ontouchstart="handleHoldStart(event)" 
                      ontouchend="handleHoldEnd(event)">
                     <div id="fill" class="graphic-fill"></div>
-                    <span id="txt-main" class="graphic-text">HOLD TO KNEEL</span>
+                    <span id="txt-main" class="graphic-text">KNEEL</span>
                 </div>
             </div>
         </div>
@@ -116,25 +120,21 @@
         <!-- CONTENT STAGE -->
         <div class="content-stage">
             
-            <!-- VIEW 1: CONSOLE (Task + Chat) -->
+            <!-- VIEW 1: CONSOLE -->
             <div id="viewServingTop" class="view-wrapper">
-                
-                <!-- TOP: TASK RIBBON (Consistent Look) -->
-                <div id="taskCard" class="task-ribbon">
+                <!-- TOP: TASK RIBBON -->
+                <div id="taskCard" class="glass-card task-ribbon">
                     <div id="activeBadge" class="hidden"></div>
                     
-                    <!-- Timer Left -->
                     <div class="ribbon-left">
                         <div id="timerDisplay" class="ribbon-timer">00:00:00</div>
                     </div>
                     
-                    <!-- Text Center -->
                     <div id="taskContent" class="ribbon-center">
                         <span class="ribbon-label">CURRENT DIRECTIVE</span>
                         <h2 id="readyText" class="ribbon-status">AWAITING ORDERS</h2>
                     </div>
 
-                    <!-- Action Right -->
                     <div class="ribbon-right">
                         <div id="mainButtonsArea">
                             <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
@@ -151,7 +151,7 @@
                     <div id="chatBadge" class="hidden"></div>
                     
                     <div id="chatBody" class="chat-body-frame">
-                        <div id="kneelRewardOverlay" class="hidden overlay-center"><div style="text-align: center;"><h2 style="color:white; margin-bottom: 20px; font-family:'Orbitron';">DEVOTION RECOGNIZED</h2><div style="display:flex; gap:10px;"><button onclick="claimKneelReward('coins')" class="action-btn">COINS</button><button onclick="claimKneelReward('points')" class="action-btn">POINTS</button></div></div></div>
+                        <div id="kneelRewardOverlay" class="hidden overlay-center"><div style="text-align: center;"><h2 style="color:white; margin-bottom: 20px; font-family:'Cinzel';">DEVOTION RECOGNIZED</h2><div style="display:flex; gap:10px;"><button onclick="claimKneelReward('coins')" class="action-btn">COINS</button><button onclick="claimKneelReward('points')" class="action-btn">POINTS</button></div></div></div>
                         <div id="chatMediaOverlay" class="hidden overlay-center"><div id="mediaOverlayClose" onclick="closeChatPreview()" style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer;">X</div><div id="chatMediaOverlayContent"></div></div>
                         <div id="tributeHuntOverlay" class="hidden overlay-center" style="background:#000; padding:20px; flex-direction:column;"><button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer;">CLOSE</button><div id="huntStoreGrid" class="store-grid" style="margin-top: 20px;"></div><textarea id="huntNote" class="hidden"></textarea><div id="huntProgress" class="hidden"></div></div>
 
@@ -179,29 +179,36 @@
                 </div>
             </div>
 
-            <!-- VIEW 3: GALLERY -->
+            <!-- VIEW 3: SLAVE RECORD (HISTORY) -->
+            <div id="historySection" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
+                <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">EVIDENCE LOG</h2></div>
+                <div id="pendingSection" class="hidden"></div>
+                <div id="historyGrid" class="gallery-grid"></div>
+                <button id="loadMoreBtn" onclick="loadMoreHistory()" class="action-btn" style="display:none; margin:20px auto;">LOAD MORE...</button>
+            </div>
+
+            <!-- VIEW 4: GALLERY -->
             <div id="viewNews" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
                 <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">GALLERY</h2></div>
                 <div id="newsGrid" class="gallery-grid"></div>
             </div>
 
-            <!-- VIEW 4: VAULT -->
+            <!-- VIEW 5: VAULT -->
             <div id="viewVault" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
                 <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">VAULT</h2></div>
                 <div id="vaultGrid" class="gallery-grid"></div>
             </div>
 
-            <!-- VIEW 5: PROTOCOL -->
+            <!-- VIEW 6: PROTOCOL -->
             <div id="viewProtocol" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
                 <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">PROTOCOL</h2></div>
-                <div style="color: #ccc; text-align: center; font-family:'Inter';">Obedience is the only currency.</div>
+                <div style="color: #ccc; text-align: center; font-family:'Cinzel';">Obedience is the only currency.</div>
             </div>
 
+            <!-- HIDDEN PLACEHOLDERS -->
             <div id="viewRewards" class="hidden"></div>
             <div id="viewHierarchy" class="hidden"></div>
             <div id="viewSession" class="hidden"></div>
-            <div id="pendingSection" class="hidden"></div>
-            <div id="historySection" class="hidden"></div>
 
         </div> 
     </div>
@@ -239,7 +246,8 @@
             else item.classList.remove('active');
         });
 
-        const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy', 'viewRewards', 'viewHierarchy', 'viewSession'];
+        // Add historySection to hide list
+        const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy', 'historySection'];
         views.forEach(id => {
             const el = document.getElementById(id);
             if(el) {
@@ -254,11 +262,12 @@
         if(viewId === 'buy') targetId = 'viewBuy';
         if(viewId === 'vault') targetId = 'viewVault';
         if(viewId === 'protocol') targetId = 'viewProtocol';
+        if(viewId === 'history') targetId = 'historySection';
 
         const target = document.getElementById(targetId);
         if(target) {
             target.classList.remove('hidden');
-            if (targetId === 'viewNews' || targetId === 'viewVault' || targetId === 'viewServingTop') {
+            if (targetId === 'viewNews' || targetId === 'viewVault' || targetId === 'viewServingTop' || targetId === 'historySection') {
                  target.style.display = 'flex'; 
                  target.style.flexDirection = 'column';
             } else {
