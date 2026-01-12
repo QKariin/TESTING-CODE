@@ -28,7 +28,6 @@
 
 <!-- HIDDEN INPUTS (Preserved for main.js uploads) -->
 <input type="file" id="profileUploadInput" accept="image/*" class="hidden" onchange="handleProfileUpload(this)">
-<input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="handleEvidenceUpload(this)">
 <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden" onchange="handleAdminUpload(this)">
 
 <!-- CELEBRATION OVERLAY -->
@@ -145,10 +144,11 @@
                         <div id="mainButtonsArea">
                             <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
                         </div>
-                        <div id="cooldownSection" class="hidden" style="display: flex; gap: 10px;">
-                            <button onclick="document.getElementById('evidenceInput').click()" class="action-btn">UPLOAD</button>
-                            <button id="btnSkip" onclick="cancelPendingTask()" class="btn-dim">SKIP</button>
-                        </div>
+                        <div id="cooldownSection" class="hidden" style="display: flex; gap: 10px; align-items: center;">
+                        <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="handleEvidenceUpload(this)">
+                        <button onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
+                        <button id="btnSkip" onclick="cancelPendingTask()" class="btn-dim" style="background:transparent; border: 1px solid #444; color: #666; padding: 8px 20px; cursor: pointer;">SKIP</button>
+                    </div>
                     </div>
                 </div>
 
