@@ -84,36 +84,33 @@
 .msg {
     background: none !important;
     border: none !important;
-    border-radius: 0 !important;
-    max-width: 70% !important; /* Your strict limit */
-    padding: 10px 0 !important;
+    max-width: 70% !important;
+    padding: 8px 0 !important;
     
-    /* THE FONT FIX */
-    font-family: 'Rajdhani', sans-serif !important;
-    font-optical-sizing: auto;
-    font-weight: 500 !important;
-    font-size: 1.1rem !important;
-    line-height: 1.2 !important;
-    letter-spacing: 1px !important;
-    text-transform: none !important;
+    /* THE NEW FONT: Cleaner and easier to read */
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.95rem !important;
+    font-weight: 400 !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.2px !important;
 }
 
 /* SLAVE MESSAGE: Anchor Right, Silver Strip on Right */
 .mr-out .msg {
-    color: #cccccc !important;
+    color: #bbbbbb !important;
     text-align: right !important;
-    border-right: 2px solid #555555 !important; /* Silver strip */
+    border-right: 2px solid #444444 !important; 
     padding-right: 15px !important;
-    margin-left: auto !important; /* Forces it to stay on the right */
+    margin-left: auto !important;
 }
 
-/* QUEEN MESSAGE: Anchor Left, Gold Strip on Left */
+/* QUEEN: Gold side-strip stays */
 .mr-in .msg {
     color: #ffffff !important;
     text-align: left !important;
-    border-left: 2px solid var(--gold) !important; /* Gold strip */
+    border-left: 2px solid var(--gold) !important;
     padding-left: 15px !important;
-    margin-right: auto !important; /* Forces it to stay on the left */
+    margin-right: auto !important;
 }
 
 /* --- TIME STAMP POSITIONING --- */
