@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,7 +88,9 @@
                 <!-- Chat Card (CLEAN VERSION) -->
                 <div id="chatCard" class="glass-card" style="display: flex; flex-direction: column; height: 600px; padding: 0; overflow: hidden; position: relative;">
                   <div id="chatBadge">CHAT</div>
-                                    
+                  
+                  <div data-include="/profile/kneeling/kneelingRewardOverlay.html"></div>
+                  
                 <!-- CHAT HEADER -->
                 <div class="chat-header-row" style="position: relative; z-index: 1001; background: rgba(15,15,15,0.9); backdrop-filter: blur(10px); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -112,8 +113,37 @@
                 
                     <!-- Chat Body -->
                     <div id="chatBody" style="position: relative; flex-grow: 1; overflow: hidden; display: flex; flex-direction: column;">
-
-                        <div data-include="/profile/kneeling/kneelingRewardOverlay.html"></div>
+                        
+                        <!-- BLESSING REWARD OVERLAY -->                      
+                        <div id="kneelRewardOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center;">
+                            <div style="text-align: center; width: 100%; padding: 20px;">
+                                <h2 style="font-family:'Orbitron'; font-weight: 900; color: white; font-size: 1.1rem; letter-spacing: 5px; margin-bottom: 30px;">RECOGNITION GRANTED</h2>
+                                
+                                <div class="reward-slider-container">
+                                    <!-- OPTION 1: STATUS SLIDER -->
+                                    <div class="iphone-slider slider-pink" onmousedown="initSlider(event, 'points')" ontouchstart="initSlider(event, 'points')">
+                                        <div class="slider-fill"></div>
+                                        <div class="slider-track-text">SLIDE TO RISE (+50 PTS)</div>
+                                        <div class="slider-knob"><svg style="width:20px;height:20px;fill:black;"><use href="#icon-star"></use></svg></div>
+                                    </div>
+                        
+                                    <!-- OPTION 2: WEALTH SLIDER -->
+                                    <div class="iphone-slider slider-gold" onmousedown="initSlider(event, 'coins')" ontouchstart="initSlider(event, 'coins')">
+                                        <div class="slider-fill"></div>
+                                        <div class="slider-track-text">SLIDE TO PROFIT (+10 COINS)</div>
+                                        <div class="slider-knob"><svg style="width:20px;height:20px;fill:black;"><use href="#icon-coin"></use></svg></div>
+                                    </div>
+                        
+                                    <div style="margin: 15px 0; color: #444; font-size: 0.6rem; letter-spacing: 2px;">— OR —</div>
+                        
+                                    <div style="display:flex; flex-direction:column; gap:10px; width:100%; margin-top:10px;">
+                                        <button onclick="handleRevealFragment()" class="action-btn" style="background:transparent; border:1px solid var(--neon-blue); color:var(--neon-blue); font-size:0.7rem;">
+                                            REVEAL GIFT
+                                        </button>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <div id="chatMediaOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 500; backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center;">
 
