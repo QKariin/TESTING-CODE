@@ -250,6 +250,82 @@ window.addEventListener("message", (event) => {
 
 });
 
+// ==========================================
+// GLOBAL UI HELPERS (ATTACHED TO WINDOW)
+// ==========================================
+
+// 1. LOADING BUTTON ANIMATION
+// Update your HTML to: onchange="handleUploadStart(this)"
+window.handleUploadStart = function(inputElement) {
+    if (inputElement.files && inputElement.files.length > 0) {
+        const btn = document.getElementById('btnUpload');
+        if (btn) {
+            btn.innerHTML = 'TRANSMITTING...';
+            btn.style.background = '#333';
+            btn.style.color = '#ffd700'; // Gold
+            btn.style.cursor = 'wait';
+        }
+        
+        // Now call the actual logic function
+        // (Assuming handleEvidenceUpload is imported or defined in this file)
+        if (typeof handleEvidenceUpload === 'function') {
+            handleEvidenceUpload(inputElement);
+        } else {
+            console.error("handleEvidenceUpload function is missing!");
+        }
+    }
+};
+
+// 2. TAB SWITCHING LOGIC
+// Update your HTML nav buttons to: onclick="switchTab('serve')" etc.
+window.switchTab = function(viewId) {
+    // A. Highlight the correct button
+    document.querySelectorAll('.nav-btn').forEach(item => {
+        if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(viewId)) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+
+    // B. Hide ALL views
+    const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy', 'historySection', 'viewRewards', 'viewHierarchy', 'viewSession'];
+    views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.add('hidden');
+            el.style.display = 'none'; // Force hide
+        }
+    });
+
+    // C. Show TARGET view
+    let targetId = viewId;
+    if (viewId === 'serve') targetId = 'viewServingTop';
+    if (viewId === 'news') targetId = 'viewNews';
+    if (viewId === 'buy') targetId = 'viewBuy';
+    if (viewId === 'vault') targetId = 'viewVault';
+    if (viewId === 'protocol') targetId = 'viewProtocol';
+    if (viewId === 'history') targetId = 'historySection';
+
+    const target = document.getElementById(targetId);
+    if (target) {
+        target.classList.remove('hidden');
+        
+        // Flex vs Block handling
+        if (['viewNews', 'viewVault', 'viewServingTop', 'historySection'].includes(targetId)) {
+             target.style.display = 'flex'; 
+             target.style.flexDirection = 'column';
+        } else {
+             target.style.display = 'block';
+        }
+        
+        // Trigger history load if needed
+        if (targetId === 'historySection' && typeof loadMoreHistory === 'function') {
+            loadMoreHistory();
+        }
+    }
+};
+
 function updateStats() {
     const subName = document.getElementById('subName');
     if (!subName || !userProfile || !gameStats) return; 
