@@ -292,11 +292,28 @@ body {
 
 /* Modal Overlay Interface */
 .modal-glass-overlay {
-    position: absolute; inset: 0; z-index: 2; background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px); display: flex; flex-direction: column; padding: 20px; transition: 0.3s;
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.85); /* Dark Glass */
+    backdrop-filter: blur(10px);
+    opacity: 1;
 }
-.modal-glass-overlay.clean { background: transparent; backdrop-filter: none; }
-.modal-glass-overlay.clean > *:not(#modalCloseX) { opacity: 0; pointer-events: none; }
+.modal-glass-overlay.clean {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    pointer-events: auto; /* Keep clickable so we can click to bring it back */
+}
+
+/* 3. Hide ALL content inside the overlay when clean */
+.modal-glass-overlay.clean > * {
+    opacity: 0 !important;
+    pointer-events: none; /* Prevent clicking buttons while hidden */
+    transition: opacity 0.2s;
+}
+
+/* 4. Ensure the Photo is always behind */
+.modal-bg-photo {
+    z-index: 0;
+}
 .modal-glass-overlay.clean #modalCloseX { opacity: 0.5; }
 
 /* Theater Content */
