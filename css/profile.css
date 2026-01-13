@@ -553,3 +553,45 @@ body {
     color: #666;
 }
 .filter-circle.active .filter-all-text { color: var(--gold); }
+
+/* --- THE MERIT PLAQUE --- */
+.merit-plaque {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.85);
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 2px 8px;
+    border-top-left-radius: 4px;
+    border-top: 1px solid var(--gold);
+    border-left: 1px solid var(--gold);
+    z-index: 20;
+    box-shadow: -2px -2px 10px rgba(0,0,0,0.5);
+}
+
+/* Pending "Ghost" Styling */
+.gallery-item.is-pending img.gi-thumb,
+.gallery-item.is-pending video.gi-thumb {
+    filter: grayscale(100%) brightness(0.6); /* Dimmed */
+}
+
+.pending-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10;
+}
+
+.pending-icon {
+    font-size: 1.5rem;
+    text-shadow: 0 0 10px var(--neon-yellow);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.5; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0.5; transform: scale(0.9); }
+}
