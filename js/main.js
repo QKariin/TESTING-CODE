@@ -1,3 +1,5 @@
+// main.js - UPDATED WITH NEW TASK UI LOGIC
+
 // --- 1. FULL IMPORTS ---
 import { CONFIG, URLS, LEVELS, FUNNY_SAYINGS, STREAM_PASSWORDS } from './config.js';
 import { 
@@ -69,6 +71,68 @@ function initDomProfile() {
     }
 }
 initDomProfile();
+
+// --- 3. NEW TASK UI HELPERS (Collapsible Logic) ---
+
+// Toggle the slide-down panel
+window.toggleTaskDetails = function(show) {
+    const panel = document.getElementById('taskDetailPanel');
+    const link = document.querySelector('.see-task-link'); // The "SEE DIRECTIVE" text
+    
+    if (show) {
+        if(panel) panel.classList.add('open');
+        if(link) link.style.opacity = '0'; // Hide the "See" button when open
+    } else {
+        if(panel) panel.classList.remove('open');
+        if(link) link.style.opacity = '1';
+    }
+};
+
+// Handle Switching between "Unproductive" and "Working" states
+function updateTaskUIState(isActive) {
+    const statusLabel = document.getElementById('taskStatusLabel');
+    const timerRow = document.getElementById('activeTimerRow');
+    const reqBtn = document.getElementById('newTaskBtn');
+    const upContainer = document.getElementById('uploadBtnContainer');
+
+    if (isActive) {
+        // --- WORKING STATE ---
+        if(statusLabel) {
+            statusLabel.innerHTML = "STATUS: <span style='color:var(--neon-green)'>WORKING</span>";
+            statusLabel.className = "status-text-lg status-working";
+        }
+        if(timerRow) timerRow.classList.remove('hidden');
+        if(reqBtn) reqBtn.classList.add('hidden');
+        if(upContainer) upContainer.classList.remove('hidden');
+        
+    } else {
+        // --- UNPRODUCTIVE STATE ---
+        if(statusLabel) {
+            statusLabel.innerHTML = "STATUS: UNPRODUCTIVE";
+            statusLabel.className = "status-text-lg status-unproductive";
+        }
+        if(timerRow) timerRow.classList.add('hidden');
+        if(reqBtn) reqBtn.classList.remove('hidden');
+        if(upContainer) upContainer.classList.add('hidden');
+        
+        // Always close the panel when finishing/skipping
+        window.toggleTaskDetails(false);
+    }
+}
+
+// Auto-Collapse when clicking outside
+document.addEventListener('click', function(event) {
+    const card = document.getElementById('taskCard');
+    const panel = document.getElementById('taskDetailPanel');
+    
+    // If panel is open AND click is OUTSIDE the card
+    if (panel && panel.classList.contains('open') && card && !card.contains(event.target)) {
+        window.toggleTaskDetails(false);
+    }
+});
+
+
+// --- 4. BACKEND LISTENER ---
 
 Bridge.listen((data) => {
     const ignoreList = [
@@ -199,24 +263,30 @@ window.addEventListener("message", (event) => {
             }
         }
 
+        // --- TASK UI LOGIC INTEGRATION ---
         if (payload.pendingState !== undefined) {
             if (!taskJustFinished && !ignoreBackendUpdates) {
                 setPendingTaskState(payload.pendingState);
                 if (pendingTaskState) {
                     setCurrentTask(pendingTaskState.task);
                     restorePendingUI();
+                    
+                    // NEW: Update UI to "Working" mode
+                    updateTaskUIState(true);
+                    
+                    // OPTIONAL: If it's a fresh load (not initial), auto-expand
+                    if (!isInitialLoad) {
+                         // window.toggleTaskDetails(true); // Uncomment if you want auto-expand on every update
+                    }
+
                 } else if (!resetUiTimer) {
-                    document.getElementById('cooldownSection').classList.add('hidden');
-                    document.getElementById('activeBadge').classList.remove('show');
-                    document.getElementById('mainButtonsArea').classList.remove('hidden');
+                    // NEW: Update UI to "Unproductive" mode
+                    updateTaskUIState(false);
                     
                     document.getElementById('taskContent').innerHTML = `
-                        <h2 id="readyText">VACANT ASSET</h2>
-                        <p class="inter" style="color: var(--gold); opacity: 0.6; font-family: 'Orbitron'; font-size: 0.7rem; letter-spacing: 2px;">
-                            STATUS: UNPRODUCTIVE <br>
-                            SYSTEM: AWAITING ROYAL DECREE
-                        </p>
+                         <!-- Content handled by HTML structure now, text injected into readyText -->
                     `;
+                    document.getElementById('readyText').innerText = "AWAITING ORDERS";
                 }
             }
         }
