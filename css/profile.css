@@ -152,10 +152,10 @@ body {
 .view-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; }
 
 /* =========================================
-   4. TASK RIBBON & CONTROLS (FLEXBOX RESTORED)
+   4. TASK RIBBON & CONTROLS (FLEXBOX + SPLIT ACTIONS)
    ========================================= */
 
-/* The Header Bar (Flexbox like original) */
+/* The Header Bar */
 .task-ribbon {
     display: flex; 
     align-items: center; 
@@ -165,29 +165,28 @@ body {
     background: rgba(10,10,10,0.95); 
     border: 1px solid var(--gold-dim);
     position: relative;
-    z-index: 100; /* Stays on top of drawer */
+    z-index: 100; /* Stays on top */
 }
 
-/* Left: Status */
+/* --- COLUMNS --- */
 .ribbon-left {
     width: 30%; 
     border-right: 1px solid rgba(255,255,255,0.1); 
     display: flex; flex-direction: column; justify-content: center; align-items: center;
 }
 
-/* Center: Timer/Text */
 .ribbon-center {
     width: 40%; border: none; 
     display: flex; flex-direction: column; justify-content: center; align-items: center;
 }
 
-/* Right: Buttons */
 .ribbon-right {
     width: 30%; 
     display: flex; justify-content: center; align-items: center;
+    padding: 0 10px; /* Slight padding for the buttons */
 }
 
-/* Typography (Rajdhani Update) */
+/* --- TYPOGRAPHY --- */
 .ribbon-label { font-family: 'Cinzel', serif; font-size: 0.65rem; color: #444; letter-spacing: 3px; font-weight: 700; margin-bottom: 5px; }
 .status-text-lg { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; }
 .status-unproductive { color: #666; }
@@ -196,7 +195,7 @@ body {
 .ribbon-status { font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 0.95rem; color: #aaa; letter-spacing: 1px; text-transform: uppercase; }
 .ribbon-timer { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 2.2rem; color: white; line-height: 1; letter-spacing: 1px; }
 
-/* The Toggle Link */
+/* The Toggle Link (Hidden in favor of Ghost Button, but kept for safety) */
 .see-task-link {
     font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 0.8rem; color: var(--gold); 
     cursor: pointer; margin-top: 5px; letter-spacing: 2px; text-transform: uppercase; padding: 5px;
@@ -208,7 +207,6 @@ body {
 .task-detail-panel {
     position: relative;
     width: 100%;
-    /* Matches header margins if needed */
     background: #000;
     border: 1px solid #333;
     border-top: none;
@@ -221,7 +219,7 @@ body {
 }
 
 .task-detail-panel.open {
-    display: flex; /* Shows up */
+    display: flex; 
     animation: slideDown 0.3s ease-out;
 }
 
@@ -230,7 +228,6 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- TASK TEXT & DRAWER CONTROLS --- */
 .drawer-task-text, #readyText {
     font-family: 'Rajdhani', sans-serif; 
     font-weight: 600; 
@@ -239,58 +236,49 @@ body {
     text-align: center; 
     line-height: 1.5; 
     max-width: 90%;
+    text-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+/* DRAWER FOOTER (Fixes the Skip/Hide layout) */
+.panel-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .text-btn { 
-    background: transparent; 
-    border: none; 
-    color: #666; 
-    font-family: 'Cinzel', serif; 
-    font-size: 0.8rem; 
-    cursor: pointer; 
-    letter-spacing: 2px; 
+    background: transparent; border: none; color: #666; 
+    font-family: 'Cinzel', serif; font-size: 0.8rem; cursor: pointer; letter-spacing: 2px; 
 }
 .text-btn:hover { color: white; }
 
 .btn-skip-small {
-    background: transparent; 
-    border: 1px solid #333; 
-    color: #666; 
-    padding: 10px 25px; 
-    font-family: 'Orbitron'; 
-    font-size: 0.75rem; 
-    cursor: pointer; 
-    transition: 0.2s;
+    background: transparent; border: 1px solid #333; color: #666; 
+    padding: 10px 25px; font-family: 'Orbitron'; font-size: 0.75rem; 
+    cursor: pointer; transition: 0.2s;
 }
 .btn-skip-small:hover { 
-    color: var(--neon-red); 
-    border-color: var(--neon-red); 
+    color: var(--neon-red); border-color: var(--neon-red); 
     box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); 
 }
 
 /* --- MAIN ACTION BUTTONS --- */
 
-/* Base Style (Request Task) */
+/* Base Style */
 .action-btn { 
-    background: transparent; 
-    border: 1px solid var(--gold); 
-    color: var(--gold); 
-    padding: 12px 25px; 
-    font-family: 'Cinzel'; 
-    font-weight: 700; 
-    cursor: pointer; 
-    transition: 0.3s; 
-    width: 100%;
+    background: transparent; border: 1px solid var(--gold); color: var(--gold); 
+    padding: 12px 25px; font-family: 'Cinzel'; font-weight: 700; 
+    cursor: pointer; transition: 0.3s; width: 100%;
 }
 .action-btn:hover { 
-    background: var(--gold); 
-    color: #000; 
-    box-shadow: 0 0 15px var(--gold); 
+    background: var(--gold); color: #000; box-shadow: 0 0 15px var(--gold); 
 }
 
-/* --- SPLIT ACTION DECK (Right Side) --- */
-
-/* Container for side-by-side buttons */
+/* Split Action Container */
 #uploadBtnContainer {
     width: 100%;
     display: flex;
@@ -298,7 +286,7 @@ body {
     align-items: center;
 }
 
-/* 1. The Ghost Button (See Task) */
+/* 1. Ghost Button (See Task) */
 .btn-ghost {
     background: transparent;
     border: 1px solid rgba(197, 160, 89, 0.4); 
@@ -306,23 +294,21 @@ body {
     font-family: 'Cinzel', serif;
     font-weight: 700;
     font-size: 0.7rem; 
-    padding: 12px 5px; /* Tighter padding for split */
+    padding: 12px 5px; 
     cursor: pointer;
-    flex: 1; /* Force 50% width */
+    flex: 1; /* 50% width */
     transition: all 0.3s ease;
     white-space: nowrap;
 }
 .btn-ghost:hover {
-    border-color: #fff;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.05);
+    border-color: #fff; color: #fff; background: rgba(255, 255, 255, 0.05);
 }
 
-/* 2. The Upload Button (Override for split layout) */
+/* 2. Upload Button (Split Style) */
 .btn-upload { 
     background: rgba(255, 215, 0, 0.15); 
-    flex: 1; /* Force 50% width */
-    padding: 12px 5px; /* Match ghost padding */
+    flex: 1; /* 50% width */
+    padding: 12px 5px; 
     white-space: nowrap;
 }
 
