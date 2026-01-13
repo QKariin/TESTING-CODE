@@ -188,104 +188,87 @@ body {
 
 /* --- CINEMA MODE DRAWER (Glass Overlay) --- */
 
-#viewServingTop { position: relative; }
+/* =========================================
+   FIXED DRAWER (SOLID CURTAIN)
+   ========================================= */
 
-.task-detail-panel {
-    /* POSITIONING */
-    position: absolute;
-    top: 130px; /* Header (100px) + Margin (20px) + Gap (10px) */
-    left: 20px;
-    right: 20px;
-    bottom: 20px; /* Stretches to bottom */
-    
-    /* GLASS STYLE */
-    background: rgba(0, 0, 0, 0.85); 
-    backdrop-filter: blur(20px); 
-    border: 1px solid rgba(255, 215, 0, 0.1); 
-    box-shadow: 0 0 50px rgba(0,0,0,0.8); 
-    
-    /* BEHAVIOR */
-    z-index: 50; /* Above Chat (1), Below Header (100) */
-    opacity: 0;
-    pointer-events: none; 
-    transform: scale(0.95);
-    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    
-    /* LAYOUT */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+/* 1. UNLOCK THE PARENT CONTAINER */
+.task-card-container {
+    /* Critical: Allows the drawer to hang out of the box */
+    overflow: visible !important; 
+    position: relative;
+    z-index: 50; /* Above chat */
 }
 
+/* 2. THE DRAWER PANEL */
+.task-detail-panel {
+    /* Position relative to the Header Card */
+    position: absolute;
+    top: 100%; /* Start exactly at the bottom edge */
+    left: 0;
+    right: 0;
+    
+    /* Height calculation: Fill screen minus header(100px) & margins */
+    height: 60vh; 
+    
+    /* VISUALS - SOLID BLACK WALL */
+    background: #000 !important;
+    border: 1px solid #333;
+    border-top: none;
+    box-shadow: 0 50px 50px #000; /* Shadow to blend bottom */
+    
+    /* BEHAVIOR */
+    z-index: 100; /* Sit on top of Chat */
+    opacity: 0;
+    pointer-events: none;
+    
+    /* Animation: Slide down slightly */
+    transform: translateY(-10px);
+    transition: all 0.3s ease-in-out;
+    
+    /* Content Layout */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+/* OPEN STATE */
 .task-detail-panel.open {
     opacity: 1;
     pointer-events: auto;
-    transform: scale(1);
+    transform: translateY(0);
 }
 
-/* Task Text inside Drawer */
+/* TASK TEXT */
 .drawer-task-text, #readyText {
     font-family: 'Rajdhani', sans-serif !important;
-    font-weight: 600;
-    font-size: 1.5rem; 
+    font-size: 1.4rem;
     color: #fff;
     text-align: center;
-    max-width: 80%;
-    line-height: 1.4;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    line-height: 1.5;
+    max-width: 90%;
+    margin-bottom: 30px;
+    text-shadow: 0 0 10px rgba(0,0,0,1); /* Shadow to pop against black */
 }
 
-/* Footer Buttons inside Drawer */
-.panel-footer {
-    margin-top: 40px;
-    display: flex;
-    gap: 20px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    padding-top: 20px;
-    width: 60%;
-    justify-content: center;
-}
-
-.text-btn {
-    background: transparent; border: none;
-    color: #666; font-family: 'Cinzel', serif; font-size: 0.8rem;
-    cursor: pointer; transition: 0.3s; letter-spacing: 2px;
-}
-.text-btn:hover { color: var(--gold); }
-
-/* The Skip Button (Red Hover Effect) */
-.btn-dim {
-    background: rgba(255, 0, 0, 0.05);
+/* SKIP BUTTON */
+.btn-skip-small {
+    background: transparent;
     border: 1px solid #333;
-    color: #555;
-    padding: 10px 20px;
-    font-family: 'Orbitron'; font-size: 0.7rem;
-    cursor: pointer; transition: 0.3s;
+    color: #666;
+    padding: 10px 30px;
+    font-family: 'Orbitron';
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: 0.2s;
 }
-.btn-dim:hover {
-    border-color: var(--neon-red);
+.btn-skip-small:hover {
     color: var(--neon-red);
-    box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
+    border-color: var(--neon-red);
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.2);
 }
-
-/* Main Ribbon Buttons (Request/Upload) */
-.action-btn { 
-    background: transparent; 
-    border: 1px solid var(--gold); 
-    color: var(--gold); 
-    padding: 12px 10px; 
-    font-family: 'Cinzel'; font-weight: 700; 
-    cursor: pointer; transition: 0.3s; 
-}
-.action-btn:hover { 
-    background: var(--gold); color: #000; 
-    box-shadow: 0 0 15px var(--gold); 
-}
-.btn-upload { background: rgba(255, 215, 0, 0.1); }
-
-/* Utility */
-.hidden { display: none !important; }
 
 /* =========================================
    5. CHAT, STORE, GALLERY & MODAL (UNCHANGED)
