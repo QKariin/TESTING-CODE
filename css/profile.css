@@ -217,10 +217,25 @@ body {
     font-family: 'Cinzel', serif; font-weight: 600; font-size: 0.8rem; 
     color: #666; letter-spacing: 2px; font-style: italic;
 }
-.ribbon-timer { 
-    font-family: 'Cinzel', serif; font-weight: 700; font-size: 2.2rem; 
-    color: #888; /* Grey */
-    line-height: 1; letter-spacing: 2px; 
+/* 3. The Timer (Fixed Width Numbers) */
+.ribbon-timer {
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 700;
+    font-size: 2.2rem; 
+    color: white; 
+    line-height: 1;
+    letter-spacing: 1px;
+    
+    /* THE FIX: Forces numbers to act like a Monospace font */
+    font-variant-numeric: tabular-nums;
+    -moz-font-feature-settings: "tnum";
+    -webkit-font-feature-settings: "tnum";
+    font-feature-settings: "tnum";
+
+    /* Centering */
+    text-align: center;
+    width: 100%;
+    display: block;
 }
 
 /* RIGHT: Actions */
