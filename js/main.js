@@ -1,5 +1,3 @@
-// main.js - 30/40/30 GRID LOGIC
-
 // --- 1. FULL IMPORTS ---
 import { CONFIG, URLS, LEVELS, FUNNY_SAYINGS, STREAM_PASSWORDS } from './config.js';
 import { 
@@ -26,68 +24,7 @@ import { handleEvidenceUpload, handleProfileUpload, handleAdminUpload } from './
 import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from '../profile/kneeling/kneeling.js';
 import { Bridge } from './bridge.js';
 
-// --- 2. DRAWER LOGIC (The Only Interactive Part) ---
-
-window.toggleTaskDetails = function(forceOpen = null) {
-    const drawer = document.getElementById('taskDetailPanel');
-    const link = document.querySelector('.see-task-link');
-    if (!drawer) return;
-
-    const isOpen = drawer.classList.contains('open');
-    const shouldOpen = (forceOpen === true) || (forceOpen === null && !isOpen);
-
-    if (shouldOpen) {
-        drawer.classList.add('open');
-        if(link) link.innerText = "▲ HIDE ASSIGNMENT";
-    } else {
-        drawer.classList.remove('open');
-        if(link) link.innerText = "▼ SEE ASSIGNMENT";
-    }
-};
-
-function updateTaskUIState(isActive) {
-    // Left (Status)
-    const statusInd = document.getElementById('statusIndicator');
-    
-    // Center (Text vs Timer)
-    const idleMsg = document.getElementById('idleMessage');
-    const timerRow = document.getElementById('activeTimerRow');
-    
-    // Right (Buttons)
-    const btnNew = document.getElementById('newTaskBtn');
-    const btnUploadContainer = document.getElementById('uploadBtnContainer');
-
-    if (isActive) {
-        // ACTIVE STATE
-        if(statusInd) {
-            statusInd.innerText = "WORKING";
-            statusInd.className = "status-text-lg status-working";
-        }
-        if(idleMsg) idleMsg.classList.add('hidden');
-        if(timerRow) timerRow.classList.remove('hidden'); // Show Timer + Toggle
-        
-        if(btnNew) btnNew.classList.add('hidden');
-        if(btnUploadContainer) btnUploadContainer.classList.remove('hidden'); // Show Upload
-        
-    } else {
-        // IDLE STATE
-        if(statusInd) {
-            statusInd.innerText = "UNPRODUCTIVE";
-            statusInd.className = "status-text-lg status-unproductive";
-        }
-        if(idleMsg) idleMsg.classList.remove('hidden');
-        if(timerRow) timerRow.classList.add('hidden'); // Hide Timer
-        
-        if(btnNew) btnNew.classList.remove('hidden');
-        if(btnUploadContainer) btnUploadContainer.classList.add('hidden');
-        
-        // Auto Close Drawer
-        window.toggleTaskDetails(false);
-    }
-}
-
-// --- 4. INITIALIZATION ---
-
+// --- 2. INITIALIZATION ---
 document.addEventListener('click', () => {
     if (!window.audioUnlocked) {
         ['msgSound', 'coinSound', 'skipSound', 'sfx-buy', 'sfx-deny'].forEach(id => {
@@ -114,7 +51,17 @@ resizer.observe(document.body);
 function initDomProfile() {
     const frame = document.getElementById('twitchFrame');
     if(frame && !frame.src) {
-        const parents = ["qkarin.com", "www.qkarin.com", "entire-ecosystem.vercel.app", "html-components.wixusercontent.com", "filesusr.com", "editor.wix.com", "manage.wix.com", "localhost"];
+        const parents = [
+            "qkarin.com", 
+            "www.qkarin.com", 
+            "entire-ecosystem.vercel.app", 
+            "html-components.wixusercontent.com", 
+            "filesusr.com", 
+            "editor.wix.com", 
+            "manage.wix.com", 
+            "localhost"
+        ];
+        
         let parentString = "";
         parents.forEach(p => parentString += `&parent=${p}`);
         frame.src = `https://player.twitch.tv/?channel=${CONFIG.TWITCH_CHANNEL}${parentString}&muted=true&autoplay=true`;
@@ -122,11 +69,17 @@ function initDomProfile() {
 }
 initDomProfile();
 
-// --- 5. BRIDGE ---
-
+// --- 3. BRIDGE LISTENER ---
 Bridge.listen((data) => {
-    const ignoreList = ["CHAT_ECHO", "UPDATE_FULL_DATA", "UPDATE_DOM_STATUS", "instantUpdate", "instantReviewSuccess"];
-    if (ignoreList.includes(data.type)) return; 
+    const ignoreList = [
+        "CHAT_ECHO", 
+        "UPDATE_FULL_DATA", 
+        "UPDATE_DOM_STATUS", 
+        "instantUpdate", 
+        "instantReviewSuccess"
+    ];
+
+    if (ignoreList.includes(data.type)) return;
     window.postMessage(data, "*"); 
 });
 
@@ -145,7 +98,6 @@ window.addEventListener("message", (event) => {
         }
 
         if (data.type === "INIT_TASKS" || data.dailyTasks) setTaskDatabase(data.dailyTasks || data.tasks || []);
-        
         if (data.type === "INIT_WISHLIST" || data.wishlist) {
             setWishlistItems(data.wishlist || []);
             window.WISHLIST_ITEMS = data.wishlist || []; 
@@ -203,10 +155,7 @@ window.addEventListener("message", (event) => {
                 renderRewardGrid();
                 if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
                 setStats(migrateGameStatsToStats(data.profile, stats));
-                if(data.profile.profilePicture) {
-                    const picEl = document.getElementById('profilePic');
-                    if(picEl) picEl.src = getOptimizedUrl(data.profile.profilePicture, 150);
-                }
+                if(data.profile.profilePicture) document.getElementById('profilePic').src = getOptimizedUrl(data.profile.profilePicture, 150);
                 updateStats(); 
             }
 
@@ -214,13 +163,11 @@ window.addEventListener("message", (event) => {
                 if (data.currentLibraryMedia) setCurrentLibraryMedia(data.currentLibraryMedia);
                 renderRewardGrid(); 
                 setTimeout(() => {
-                    if(data.activeRevealMap) {
-                        const winnerId = data.activeRevealMap[data.activeRevealMap.length - 1];
-                        runTargetingAnimation(winnerId, () => {
-                            setActiveRevealMap(data.activeRevealMap || []);
-                            renderRewardGrid(); 
-                        });
-                    }
+                    const winnerId = data.activeRevealMap[data.activeRevealMap.length - 1];
+                    runTargetingAnimation(winnerId, () => {
+                        setActiveRevealMap(data.activeRevealMap || []);
+                        renderRewardGrid(); 
+                    });
                 }, 50); 
             }
 
@@ -240,16 +187,18 @@ window.addEventListener("message", (event) => {
                     if (pendingTaskState) {
                         setCurrentTask(pendingTaskState.task);
                         restorePendingUI();
-                        updateTaskUIState(true); // Active
-                        
-                        // Optional: Auto open drawer on reload
-                        if (!isInitialLoad) {
-                             window.toggleTaskDrawer(true);
-                        }
                     } else if (!resetUiTimer) {
-                        updateTaskUIState(false); // Idle
-                        const rt = document.getElementById('readyText');
-                        if(rt) rt.innerText = "AWAITING ORDERS";
+                        document.getElementById('cooldownSection').classList.add('hidden');
+                        document.getElementById('activeBadge').classList.remove('show');
+                        document.getElementById('mainButtonsArea').classList.remove('hidden');
+                        
+                        document.getElementById('taskContent').innerHTML = `
+                            <h2 id="readyText">VACANT ASSET</h2>
+                            <p class="inter" style="color: var(--gold); opacity: 0.6; font-family: 'Orbitron'; font-size: 0.7rem; letter-spacing: 2px;">
+                                STATUS: UNPRODUCTIVE <br>
+                                SYSTEM: AWAITING ROYAL DECREE
+                            </p>
+                        `;
                     }
                 }
             }
@@ -266,102 +215,78 @@ window.addEventListener("message", (event) => {
                 });
             });
         }
-    } catch(err) {
-        console.error("Main Loop Error:", err);
-    }
+    } catch(err) { console.error("Main error:", err); }
 });
 
-// ==========================================
-// HELPERS
-// ==========================================
+// --- 4. EXPOSE FUNCTIONS TO WINDOW (THE FIX) ---
+// This connects the imported functions to your HTML buttons
+window.getRandomTask = getRandomTask;
+window.cancelPendingTask = cancelPendingTask;
+window.handleEvidenceUpload = handleEvidenceUpload;
+window.handleProfileUpload = handleProfileUpload;
+window.handleAdminUpload = handleAdminUpload;
+window.switchTab = switchTab;
+window.toggleStats = toggleStats;
+window.openSessionUI = openSessionUI;
+window.closeSessionUI = closeSessionUI;
+window.updateSessionCost = updateSessionCost;
+window.submitSessionRequest = submitSessionRequest;
+window.sendChatMessage = sendChatMessage;
+window.handleChatKey = handleChatKey;
+window.loadMoreChat = loadMoreChat;
+window.openChatPreview = openChatPreview;
+window.closeChatPreview = closeChatPreview;
+window.breakGlass = breakGlass;
+window.openHistoryModal = openHistoryModal;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.toggleHistoryView = toggleHistoryView;
+window.loadMoreHistory = loadMoreHistory;
+window.handleHoldStart = handleHoldStart;
+window.handleHoldEnd = handleHoldEnd;
+window.claimKneelReward = claimKneelReward;
+window.updateKneelingStatus = updateKneelingStatus;
+window.toggleTributeHunt = toggleTributeHunt;
+window.selectTributeReason = selectTributeReason;
+window.setTributeNote = setTributeNote;
+window.filterByBudget = filterByBudget;
+window.showTributeStep = showTributeStep;
+window.toggleHuntNote = toggleHuntNote;
+window.finalizeSacrifice = finalizeSacrifice;
+window.resetTributeFlow = resetTributeFlow;
+window.buyRealCoins = buyRealCoins;
+window.WISHLIST_ITEMS = WISHLIST_ITEMS;
+window.gameStats = gameStats;
 
-window.handleUploadStart = function(inputElement) {
-    if (inputElement.files && inputElement.files.length > 0) {
-        const btn = document.getElementById('btnUpload');
-        if (btn) {
-            btn.innerHTML = '...';
-            btn.style.background = '#333';
-            btn.style.color = '#ffd700'; 
-            btn.style.cursor = 'wait';
-        }
-        if (typeof handleEvidenceUpload === 'function') handleEvidenceUpload(inputElement);
-    }
-};
-
-window.switchTab = function(viewId) {
-    document.querySelectorAll('.nav-btn').forEach(item => {
-        if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(viewId)) {
-            item.classList.add('active');
-        } else {
-            item.classList.remove('active');
-        }
-    });
-
-    const views = ['viewServingTop', 'viewProtocol', 'viewNews', 'viewVault', 'viewBuy', 'historySection', 'viewRewards', 'viewHierarchy', 'viewSession'];
-    views.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.classList.add('hidden');
-            el.style.display = 'none'; 
-        }
-    });
-
-    let targetId = viewId;
-    if (viewId === 'serve') targetId = 'viewServingTop';
-    if (viewId === 'news') targetId = 'viewNews';
-    if (viewId === 'buy') targetId = 'viewBuy';
-    if (viewId === 'vault') targetId = 'viewVault';
-    if (viewId === 'protocol') targetId = 'viewProtocol';
-    if (viewId === 'history') targetId = 'historySection';
-
-    const target = document.getElementById(targetId);
-    if (target) {
-        target.classList.remove('hidden');
-        if (['viewNews', 'viewVault', 'viewServingTop', 'historySection'].includes(targetId)) {
-             target.style.display = 'flex'; 
-             target.style.flexDirection = 'column';
-        } else {
-             target.style.display = 'block';
-        }
-        if (targetId === 'historySection' && typeof loadMoreHistory === 'function') loadMoreHistory();
-    }
-};
-
+// Legacy updateStats needed for UI sync
 function updateStats() {
     const subName = document.getElementById('subName');
     const subHierarchy = document.getElementById('subHierarchy');
     const coinsEl = document.getElementById('coins');
     const pointsEl = document.getElementById('points');
 
-    const name = (userProfile && userProfile.name) ? userProfile.name : "Slave";
-    const hierarchy = (userProfile && userProfile.hierarchy) ? userProfile.hierarchy : "HallBoy";
-    const coins = (gameStats && gameStats.coins) ? gameStats.coins : 0;
-    const points = (gameStats && gameStats.points) ? gameStats.points : 0;
+    if (!subName || !userProfile || !gameStats) return; 
 
-    if (subName) subName.textContent = name;
-    if (subHierarchy) subHierarchy.textContent = hierarchy;
-    if (coinsEl) coinsEl.textContent = coins;
-    if (pointsEl) pointsEl.textContent = points;
+    subName.textContent = userProfile.name || "Slave";
+    if (subHierarchy) subHierarchy.textContent = userProfile.hierarchy || "HallBoy";
+    if (coinsEl) coinsEl.textContent = gameStats.coins ?? 0;
+    if (pointsEl) pointsEl.textContent = gameStats.points ?? 0;
 
     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? 0; };
-    if (gameStats) {
+    if(gameStats) {
         setVal('statStreak', gameStats.taskdom_streak || gameStats.currentStreak);
         setVal('statTotal', gameStats.taskdom_total_tasks || gameStats.totalTasks);
         setVal('statCompleted', gameStats.taskdom_completed_tasks || gameStats.completedTasks);
-        setVal('statSkipped', gameStats.skippedTasks || (stats ? stats.skippedTasks : 0));
+        setVal('statSkipped', gameStats.skippedTasks || stats.skippedTasks);
         setVal('statTotalKneels', gameStats.kneelCount || gameStats.totalKneels);
     }
 
     const sinceEl = document.getElementById('slaveSinceDate');
-    if (sinceEl) {
-        if (userProfile && userProfile.joined) {
-            try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch(e) { sinceEl.textContent = "--/--/--"; }
-        } else {
-            sinceEl.textContent = "--/--/--";
-        }
+    if (sinceEl && userProfile.joined) {
+        try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch(e) { sinceEl.textContent = "--/--/--"; }
     }
 
-    if (typeof LEVELS !== 'undefined' && LEVELS.length > 0 && gameStats) {
+    if (typeof LEVELS !== 'undefined' && LEVELS.length > 0) {
         let nextLevel = LEVELS.find(l => l.min > gameStats.points) || LEVELS[LEVELS.length - 1];
         const nln = document.getElementById('nextLevelName');
         const pnd = document.getElementById('pointsNeeded');
@@ -377,156 +302,41 @@ function updateStats() {
     updateKneelingStatus(); 
 }
 
-// ... (Rest of legacy handlers) ...
-let currentHuntIndex = 0;
-let filteredItems = [];
-let selectedReason = "";
-let selectedNote = "";
-let selectedItem = null;
-
+// Tribute UI Helpers
+let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
 function toggleTributeHunt() {
     const overlay = document.getElementById('tributeHuntOverlay');
-    if (overlay.classList.contains('hidden')) {
-        selectedReason = ""; selectedItem = null;
-        if(document.getElementById('huntNote')) document.getElementById('huntNote').value = "";
-        overlay.classList.remove('hidden'); showTributeStep(1);
-    } else {
-        overlay.classList.add('hidden'); resetTributeFlow();
-    }
+    if (overlay.classList.contains('hidden')) { selectedReason = ""; selectedItem = null; if(document.getElementById('huntNote')) document.getElementById('huntNote').value = ""; overlay.classList.remove('hidden'); showTributeStep(1); } else { overlay.classList.add('hidden'); resetTributeFlow(); }
 }
-function showTributeStep(step) {
-    document.querySelectorAll('.tribute-step').forEach(el => el.classList.add('hidden'));
-    const target = document.getElementById('tributeStep' + step);
-    if (target) target.classList.remove('hidden');
-    const labels = ["", "INTENTION", "THE HUNT", "CONFESSION"];
-    const progressEl = document.getElementById('huntProgress');
-    if (progressEl) progressEl.innerText = labels[step] || "";
-}
+function showTributeStep(step) { document.querySelectorAll('.tribute-step').forEach(el => el.classList.add('hidden')); const target = document.getElementById('tributeStep' + step); if (target) target.classList.remove('hidden'); const progressEl = document.getElementById('huntProgress'); if (progressEl) progressEl.innerText = ["", "INTENTION", "THE HUNT", "CONFESSION"][step] || ""; }
 function selectTributeReason(reason) { selectedReason = reason; renderHuntStore(gameStats.coins); showTributeStep(2); }
 function setTributeNote(note) { showTributeStep(3); }
 function filterByBudget(max) { renderHuntStore(max); showTributeStep(3); }
 function renderHuntStore(budget) {
-    const grid = document.getElementById('huntStoreGrid');
-    if (!grid) return;
-    const items = window.WISHLIST_ITEMS || [];
-    filteredItems = items.filter(item => Number(item.price || item.Price || 0) <= budget);
-    currentHuntIndex = 0; 
-    if (filteredItems.length === 0) { grid.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">NO TRIBUTES IN THIS TIER...</div>'; return; }
+    const grid = document.getElementById('huntStoreGrid'); if (!grid) return;
+    filteredItems = (window.WISHLIST_ITEMS || []).filter(item => Number(item.price || item.Price || 0) <= budget);
+    currentHuntIndex = 0; if (filteredItems.length === 0) { grid.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">NO TRIBUTES IN THIS TIER...</div>'; return; }
     showTinderCard();
 }
 function showTinderCard() {
-    const grid = document.getElementById('huntStoreGrid');
-    const item = filteredItems[currentHuntIndex];
-    if (!item) {
-        grid.innerHTML = `<div style="text-align:center; padding:40px;"><div style="font-size:2rem; margin-bottom:10px;">💨</div><div style="color:#666; font-size:0.7rem;">NO MORE ITEMS IN THIS TIER</div><button class="tab-btn" onclick="showTributeStep(2)" style="margin-top:15px; width:auto; padding:5px 15px;">CHANGE BUDGET</button></div>`;
-        return;
-    }
-    grid.style.perspective = "1000px";
-    grid.innerHTML = `<div id="tinderCard" class="tinder-card-main"><div id="likeLabel" class="swipe-indicator like">SACRIFICE</div><div id="nopeLabel" class="swipe-indicator nope">SKIP</div><img src="${item.img || item.image}" draggable="false"><div class="tinder-card-info"><div style="color:var(--neon-yellow); font-size:1.8rem; font-weight:900;">${item.price} 🪙</div><div style="color:white; letter-spacing:2px; font-weight:bold; font-size:0.8rem;">${item.name.toUpperCase()}</div></div></div>`;
+    const grid = document.getElementById('huntStoreGrid'); const item = filteredItems[currentHuntIndex];
+    if (!item) { grid.innerHTML = `<div style="text-align:center; padding:40px;"><div style="font-size:2rem; margin-bottom:10px;">💨</div><div style="color:#666; font-size:0.7rem;">NO MORE ITEMS IN THIS TIER</div><button class="tab-btn" onclick="showTributeStep(2)" style="margin-top:15px; width:auto; padding:5px 15px;">CHANGE BUDGET</button></div>`; return; }
+    grid.style.perspective = "1000px"; grid.innerHTML = `<div id="tinderCard" class="tinder-card-main"><div id="likeLabel" class="swipe-indicator like">SACRIFICE</div><div id="nopeLabel" class="swipe-indicator nope">SKIP</div><img src="${item.img || item.image}" draggable="false"><div class="tinder-card-info"><div style="color:var(--neon-yellow); font-size:1.8rem; font-weight:900;">${item.price} 🪙</div><div style="color:white; letter-spacing:2px; font-weight:bold; font-size:0.8rem;">${item.name.toUpperCase()}</div></div></div>`;
     initSwipeEvents(document.getElementById('tinderCard'), item);
 }
 function initSwipeEvents(card, item) {
     let startX = 0; let currentX = 0;
     const handleStart = (e) => { startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; card.style.transition = 'none'; };
-    const handleMove = (e) => {
-        if (!startX) return;
-        currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const diff = currentX - startX;
-        card.style.transform = `translateX(${diff}px) rotate(${diff / 15}deg)`;
-        const likeLabel = document.getElementById('likeLabel');
-        const nopeLabel = document.getElementById('nopeLabel');
-        if(likeLabel) likeLabel.style.opacity = diff > 0 ? (diff / 100) : 0;
-        if(nopeLabel) nopeLabel.style.opacity = diff < 0 ? (Math.abs(diff) / 100) : 0;
-    };
-    const handleEnd = () => {
-        const diff = currentX - startX;
-        card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
-        if (diff > 120) {
-            card.style.transform = `translateX(600px) rotate(45deg)`;
-            selectedItem = item;
-            if(document.getElementById('huntSelectedImg')) document.getElementById('huntSelectedImg').src = item.img || item.image;
-            if(document.getElementById('huntSelectedName')) document.getElementById('huntSelectedName').innerText = item.name.toUpperCase();
-            if(document.getElementById('huntSelectedPrice')) document.getElementById('huntSelectedPrice').innerText = item.price + " 🪙";
-            setTimeout(() => { showTributeStep(4); }, 200);
-        } else if (diff < -120) {
-            card.style.transform = `translateX(-600px) rotate(-45deg)`; card.style.opacity = "0"; currentHuntIndex++; setTimeout(() => { showTinderCard(); }, 300);
-        } else {
-            card.style.transform = `translateX(0) rotate(0)`;
-            if(document.getElementById('likeLabel')) document.getElementById('likeLabel').style.opacity = 0;
-            if(document.getElementById('nopeLabel')) document.getElementById('nopeLabel').style.opacity = 0;
-        }
-        startX = 0;
-    };
-    card.addEventListener('mousedown', handleStart); card.addEventListener('touchstart', handleStart);
-    window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove);
-    window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd);
+    const handleMove = (e) => { if (!startX) return; currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const diff = currentX - startX; card.style.transform = `translateX(${diff}px) rotate(${diff / 15}deg)`; const likeLabel = document.getElementById('likeLabel'); const nopeLabel = document.getElementById('nopeLabel'); if(likeLabel) likeLabel.style.opacity = diff > 0 ? (diff / 100) : 0; if(nopeLabel) nopeLabel.style.opacity = diff < 0 ? (Math.abs(diff) / 100) : 0; };
+    const handleEnd = () => { const diff = currentX - startX; card.style.transition = 'transform 0.4s ease, opacity 0.4s ease'; if (diff > 120) { card.style.transform = `translateX(600px) rotate(45deg)`; selectedItem = item; if(document.getElementById('huntSelectedImg')) document.getElementById('huntSelectedImg').src = item.img || item.image; if(document.getElementById('huntSelectedName')) document.getElementById('huntSelectedName').innerText = item.name.toUpperCase(); if(document.getElementById('huntSelectedPrice')) document.getElementById('huntSelectedPrice').innerText = item.price + " 🪙"; setTimeout(() => { showTributeStep(4); }, 200); } else if (diff < -120) { card.style.transform = `translateX(-600px) rotate(-45deg)`; card.style.opacity = "0"; currentHuntIndex++; setTimeout(() => { showTinderCard(); }, 300); } else { card.style.transform = `translateX(0) rotate(0)`; if(document.getElementById('likeLabel')) document.getElementById('likeLabel').style.opacity = 0; if(document.getElementById('nopeLabel')) document.getElementById('nopeLabel').style.opacity = 0; } startX = 0; };
+    card.addEventListener('mousedown', handleStart); card.addEventListener('touchstart', handleStart); window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove); window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd);
 }
-function toggleHuntNote(show) {
-    const container = document.getElementById('huntNoteContainer'); const btn = document.getElementById('btnShowNote');
-    if (!container || !btn) return;
-    if (show) { container.classList.remove('hidden'); btn.classList.add('hidden'); document.getElementById('huntNote').focus(); } 
-    else { container.classList.add('hidden'); btn.classList.remove('hidden'); }
-}
-function finalizeSacrifice() {
-    const noteEl = document.getElementById('huntNote'); const note = noteEl ? noteEl.value.trim() : "";
-    if (!selectedItem || !selectedReason) return;
-    if (gameStats.coins < selectedItem.price) { triggerSound('sfx-deny'); alert('Insufficient coins!'); return; }
-    const tributeMessage = `💝 TRIBUTE: ${selectedReason}\n🎁 ITEM: ${selectedItem.name}\n💰 COST: ${selectedItem.price}\n💌 "${note || "A silent tribute."}"`;
-    window.parent.postMessage({ type: "PURCHASE_ITEM", itemName: selectedItem.name, cost: selectedItem.price, messageToDom: tributeMessage }, "*");
-    triggerSound('sfx-buy'); triggerCoinShower(); toggleTributeHunt();
-}
+function toggleHuntNote(show) { const container = document.getElementById('huntNoteContainer'); const btn = document.getElementById('btnShowNote'); if (!container || !btn) return; if (show) { container.classList.remove('hidden'); btn.classList.add('hidden'); document.getElementById('huntNote').focus(); } else { container.classList.add('hidden'); btn.classList.remove('hidden'); } }
+function finalizeSacrifice() { const noteEl = document.getElementById('huntNote'); const note = noteEl ? noteEl.value.trim() : ""; if (!selectedItem || !selectedReason) return; if (gameStats.coins < selectedItem.price) { triggerSound('sfx-deny'); alert('Insufficient coins!'); return; } const tributeMessage = `💝 TRIBUTE: ${selectedReason}\n🎁 ITEM: ${selectedItem.name}\n💰 COST: ${selectedItem.price}\n💌 "${note || "A silent tribute."}"`; window.parent.postMessage({ type: "PURCHASE_ITEM", itemName: selectedItem.name, cost: selectedItem.price, messageToDom: tributeMessage }, "*"); triggerSound('sfx-buy'); triggerCoinShower(); toggleTributeHunt(); }
 function buyRealCoins(amount) { triggerSound('sfx-buy'); window.parent.postMessage({ type: "INITIATE_STRIPE_PAYMENT", amount: amount }, "*"); }
-function triggerCoinShower() {
-    for (let i = 0; i < 40; i++) {
-        const coin = document.createElement('div'); coin.className = 'coin-particle';
-        coin.innerHTML = `<svg style="width:100%; height:100%; fill:gold;"><use href="#icon-coin"></use></svg>`;
-        coin.style.setProperty('--tx', `${Math.random() * 200 - 100}vw`); coin.style.setProperty('--ty', `${-(Math.random() * 80 + 20)}vh`);
-        document.body.appendChild(coin); setTimeout(() => coin.remove(), 2000);
-    }
-}
+function triggerCoinShower() { for (let i = 0; i < 40; i++) { const coin = document.createElement('div'); coin.className = 'coin-particle'; coin.innerHTML = `<svg style="width:100%; height:100%; fill:gold;"><use href="#icon-coin"></use></svg>`; coin.style.setProperty('--tx', `${Math.random() * 200 - 100}vw`); coin.style.setProperty('--ty', `${-(Math.random() * 80 + 20)}vh`); document.body.appendChild(coin); setTimeout(() => coin.remove(), 2000); } }
 function breakGlass(e) { if (e && e.stopPropagation) e.stopPropagation(); const overlay = document.getElementById('specialGlassOverlay'); if (overlay) overlay.classList.remove('active'); window.parent.postMessage({ type: "GLASS_BROKEN" }, "*"); }
 function submitSessionRequest() { const checked = document.querySelector('input[name="sessionType"]:checked'); if (!checked) return; window.parent.postMessage({ type: "SESSION_REQUEST", sessionType: checked.value, cost: checked.getAttribute('data-cost') }, "*"); }
 function resetTributeFlow() { selectedReason = ""; selectedNote = ""; selectedItem = null; const note = document.getElementById('huntNote'); if (note) note.value = ""; showTributeStep(1); }
 
-setInterval(updateKneelingStatus, 1000);
-setInterval(() => { window.parent.postMessage({ type: "heartbeat", view: currentView }, "*"); }, 5000);
-
-window.toggleTributeHunt = toggleTributeHunt;
-window.selectTributeReason = selectTributeReason;
-window.setTributeNote = setTributeNote;
-window.filterByBudget = filterByBudget;
-window.showTributeStep = showTributeStep;
-window.toggleHuntNote = toggleHuntNote;
-window.finalizeSacrifice = finalizeSacrifice;
-window.resetTributeFlow = resetTributeFlow;
-window.switchTab = switchTab;
-window.toggleStats = toggleStats;
-window.toggleSection = toggleSection;
-window.handleHoldStart = handleHoldStart;
-window.handleHoldEnd = handleHoldEnd;
-window.claimKneelReward = claimKneelReward;
-window.updateKneelingStatus = updateKneelingStatus;
-window.getRandomTask = getRandomTask;
-window.cancelPendingTask = cancelPendingTask;
-window.handleEvidenceUpload = handleEvidenceUpload;
-window.sendChatMessage = sendChatMessage;
-window.handleChatKey = handleChatKey;
-window.loadMoreChat = loadMoreChat;
-window.openChatPreview = openChatPreview;
-window.closeChatPreview = closeChatPreview;
-window.breakGlass = breakGlass;
-window.openHistoryModal = openHistoryModal;
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.toggleHistoryView = toggleHistoryView;
-window.loadMoreHistory = loadMoreHistory;
-window.handleProfileUpload = handleProfileUpload;
-window.openSessionUI = openSessionUI;
-window.closeSessionUI = closeSessionUI;
-window.updateSessionCost = updateSessionCost;
-window.submitSessionRequest = submitSessionRequest;
-window.handleAdminUpload = handleAdminUpload;
-window.WISHLIST_ITEMS = WISHLIST_ITEMS;
-window.gameStats = gameStats;
-window.buyRealCoins = buyRealCoins;
 window.parent.postMessage({ type: "UI_READY" }, "*");
