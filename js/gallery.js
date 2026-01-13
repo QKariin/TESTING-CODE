@@ -1,4 +1,4 @@
-// gallery.js - FIXED SORTING & CLICK HANDLERS
+// gallery.js - ADDED DENIED FILTER
 
 import { 
     galleryData, pendingLimit, historyLimit, currentHistoryIndex, touchStartX, 
@@ -13,18 +13,22 @@ const STICKER_DENIED = "https://static.wixstatic.com/media/ce3e5b_63a0c8320e2941
 let activeStickerFilter = "ALL"; 
 
 // --- SHARED HELPER: GET THE EXACT LIST DISPLAYED ---
-// This ensures the Grid and the Click Handler see the same data in the same order
 function getGalleryList() {
     if (!galleryData) return [];
 
-    // 1. Filter Approved/Rejected
+    // 1. Base Filter (Approved or Rejected + Has Image)
     let items = galleryData.filter(i => {
         const s = (i.status || "").toLowerCase();
         return (s.includes('app') || s.includes('rej')) && i.proofUrl;
     });
 
-    // 2. Apply Sticker Filter
-    if (activeStickerFilter !== "ALL" && activeStickerFilter !== "PENDING") {
+    // 2. Apply Filters
+    if (activeStickerFilter === "DENIED") {
+        // Show ONLY Rejected items
+        items = items.filter(item => (item.status || "").toLowerCase().includes('rej'));
+    } 
+    else if (activeStickerFilter !== "ALL" && activeStickerFilter !== "PENDING") {
+        // Show Specific Sticker
         items = items.filter(item => item.sticker === activeStickerFilter);
     }
 
@@ -45,18 +49,34 @@ function renderStickerFilters() {
 
     const stickers = new Set();
     galleryData.forEach(item => {
+        // Only collect stickers from Approved items usually, or just all unique ones
         if (item.sticker && item.sticker.length > 10) stickers.add(item.sticker);
     });
 
+    // 1. ALL
     let html = `
         <div class="filter-circle ${activeStickerFilter === 'ALL' ? 'active' : ''}" onclick="window.setGalleryFilter('ALL')">
             <span class="filter-all-text">ALL</span>
-        </div>
-        <div class="filter-circle ${activeStickerFilter === 'PENDING' ? 'active' : ''}" onclick="window.setGalleryFilter('PENDING')" style="${activeStickerFilter === 'PENDING' ? 'border-color:var(--neon-yellow);' : ''}">
+        </div>`;
+
+    // 2. WAIT (Pending)
+    html += `
+        <div class="filter-circle ${activeStickerFilter === 'PENDING' ? 'active' : ''}" onclick="window.setGalleryFilter('PENDING')" style="${activeStickerFilter === 'PENDING' ? 'border-color:var(--neon-yellow); box-shadow:0 0 10px rgba(255,215,0,0.2);' : ''}">
             <span class="filter-all-text" style="color:var(--neon-yellow); font-size:0.5rem;">WAIT</span>
         </div>`;
 
+    // 3. DENY (Rejected) - NEW
+    html += `
+        <div class="filter-circle ${activeStickerFilter === 'DENIED' ? 'active' : ''}" onclick="window.setGalleryFilter('DENIED')" style="${activeStickerFilter === 'DENIED' ? 'border-color:var(--neon-red); box-shadow:0 0 10px rgba(255,0,60,0.2);' : ''}">
+            <span class="filter-all-text" style="color:var(--neon-red); font-size:0.5rem;">DENY</span>
+        </div>`;
+
+    // 4. STICKERS
     stickers.forEach(url => {
+        // Don't show the Denied Sticker in the generic list if we have a dedicated button, 
+        // but usually stickers are rewards.
+        if(url === STICKER_DENIED) return; 
+
         const isActive = (activeStickerFilter === url) ? 'active' : '';
         html += `
             <div class="filter-circle ${isActive}" onclick="window.setGalleryFilter('${url}')">
@@ -80,6 +100,7 @@ export function renderGallery() {
     renderStickerFilters();
 
     // 1. PENDING VIEW
+    // Show Pending ONLY if "ALL" or "PENDING" is selected
     const showPending = (activeStickerFilter === 'ALL' || activeStickerFilter === 'PENDING');
     const pItems = galleryData.filter(i => (i.status || "").toLowerCase() === 'pending' && i.proofUrl);
     
@@ -87,11 +108,13 @@ export function renderGallery() {
     if (pSection) pSection.style.display = (showPending && pItems.length > 0) ? 'block' : 'none';
     
     // 2. HISTORY VIEW
+    // Show History if NOT "PENDING"
     const showHistory = (activeStickerFilter !== 'PENDING');
-    const hItems = getGalleryList(); // Get sorted/filtered list
+    const hItems = getGalleryList(); // Uses the new DENIED logic
 
     if (hGrid) {
         hGrid.innerHTML = hItems.slice(0, historyLimit).map((item, index) => createGalleryItemHTML(item, index)).join('');
+        // Hide grid if empty (unless filter is active, but empty grid looks better than hidden div sometimes)
         hGrid.style.display = showHistory ? 'grid' : 'none';
     }
     
@@ -145,14 +168,9 @@ function createGalleryItemHTML(item, index) {
 // --- MODAL CLICK HANDLERS ---
 
 export function openHistoryModal(index) {
-    // RE-FETCH the sorted list so the index matches what the user clicked
     const historyItems = getGalleryList();
 
-    if (!historyItems[index]) {
-        console.error("Gallery item not found at index:", index);
-        return;
-    }
-
+    if (!historyItems[index]) return;
     setCurrentHistoryIndex(index);
     const item = historyItems[index];
 
@@ -211,8 +229,7 @@ export function toggleHistoryView(view) {
     const overlay = document.getElementById('modalGlassOverlay');
     if (!modal || !overlay) return;
 
-    // isInProofMode = (view === 'proof'); // Using CSS classes instead of global var now
-
+    isInProofMode = (view === 'proof');
     const views = ['modalInfoView', 'modalFeedbackView', 'modalTaskView'];
     views.forEach(id => {
         const el = document.getElementById(id);
@@ -234,14 +251,11 @@ export function toggleHistoryView(view) {
 }
 
 export function closeModal(e) {
-    // Priority: Close button or X
     if (e && (e.target.id === 'modalCloseX' || e.target.classList.contains('btn-close-red'))) {
         document.getElementById('glassModal').classList.remove('active');
         document.getElementById('modalMediaContainer').innerHTML = "";
         return;
     }
-    
-    // Background click logic: Restore menu if in proof mode
     const overlay = document.getElementById('modalGlassOverlay');
     if (overlay && overlay.classList.contains('clean')) {
         toggleHistoryView('info'); 
@@ -297,9 +311,13 @@ export function initModalSwipeDetection() {
     }, { passive: true });
 }
 
-// FORCE EXPORT TO WINDOW (Fixes the "Function Not Found" error)
+// FORCE EXPORT TO WINDOW
 window.renderGallery = renderGallery;
 window.openHistoryModal = openHistoryModal;
 window.toggleHistoryView = toggleHistoryView;
 window.closeModal = closeModal;
 window.openModal = openModal;
+window.setGalleryFilter = function(filterType) {
+    activeStickerFilter = filterType;
+    renderGallery(); 
+};
