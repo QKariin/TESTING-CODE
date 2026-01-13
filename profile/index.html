@@ -91,80 +91,91 @@
       </div>
     </div>
 
-    <div class="layout-right">
-        
-        <div class="right-header">
-            <div class="kneel-center-wrapper">
-                <div id="btn" class="kneel-bar-graphic" 
-                     onmousedown="handleHoldStart(event)" 
-                     onmouseup="handleHoldEnd(event)" 
-                     onmouseleave="handleHoldEnd(event)" 
-                     ontouchstart="handleHoldStart(event)" 
-                     ontouchend="handleHoldEnd(event)">
-                    <div id="fill" class="graphic-fill"></div>
-                    <span id="txt-main" class="graphic-text">HOLD TO KNEEL</span>
-                </div>
+<div class="layout-right">
+    
+    <div class="right-header">
+        <div class="kneel-center-wrapper">
+            <div id="btn" class="kneel-bar-graphic" 
+                 onmousedown="handleHoldStart(event)" 
+                 onmouseup="handleHoldEnd(event)" 
+                 onmouseleave="handleHoldEnd(event)" 
+                 ontouchstart="handleHoldStart(event)" 
+                 ontouchend="handleHoldEnd(event)">
+                <div id="fill" class="graphic-fill"></div>
+                <span id="txt-main" class="graphic-text">HOLD TO KNEEL</span>
             </div>
         </div>
-    
-        <div class="content-stage">
+    </div>
+
+    <div class="content-stage">
+        
+        <div id="viewServingTop" class="view-wrapper">
             
-            <div id="viewServingTop" class="view-wrapper">
-    
-    <!-- TASK CARD -->
-    <div id="taskCard" class="task-ribbon-container">
-        
-        <!-- HEADER -->
-        <div class="task-header-row">
-            <div class="task-info-block">
-                <!-- Status Text -->
-                <div id="taskStatusLabel" class="status-text-lg">STATUS: UNPRODUCTIVE</div>
+            <div id="taskCard" class="glass-card task-ribbon">
+                <div class="ribbon-left">
+                    <div id="activeBadge" class="hidden">
+                        <span id="timerDisplay" class="ribbon-timer">00:00:00</span>
+                    </div>
+                </div>
                 
-                <!-- Timer & Toggle Button -->
-                <div id="activeTimerRow" class="hidden">
-                    <span id="timerDisplay" class="ribbon-timer">00:00:00</span>
-                    <div class="see-task-link" onclick="window.toggleTaskDetails(null)">▼ SEE DIRECTIVE ▼</div>
+                <div id="taskContent" class="ribbon-center">
+                    <span class="ribbon-label">CURRENT DIRECTIVE</span>
+                    <h2 id="readyText" class="ribbon-status">AWAITING ORDERS</h2>
+                </div>
+
+                <div class="ribbon-right">
+                    <div id="mainButtonsArea">
+                        <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
+                    </div>
+                    
+                    <div id="cooldownSection" class="hidden" style="display: flex; gap: 10px; align-items: center;">
+                        <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" 
+                               onchange="this.files.length > 0 ? (document.getElementById('btnUpload').innerHTML = 'TRANSMITTING...', document.getElementById('btnUpload').classList.add('btn-loading'), handleEvidenceUpload(this)) : null">
+                        
+                        <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
+                        <button id="btnSkip" onclick="cancelPendingTask()" class="btn-dim" style="background:transparent; border: 1px solid #444; color: #666; padding: 8px 20px; cursor: pointer;">SKIP</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Controls -->
-            <div class="task-controls-block">
-                <div id="mainButtonsArea">
-                    <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn">REQUEST TASK</button>
+            <div id="chatCard" class="chat-container">
+                <div id="chatBox" class="chat-body-frame">
+                    <div id="kneelRewardOverlay" class="hidden overlay-center">
+                        <div style="text-align: center;">
+                            <h2 style="color:white; margin-bottom: 20px; font-family:'Orbitron';">DEVOTION RECOGNIZED</h2>
+                            <div style="display:flex; gap:10px;">
+                                <button onclick="claimKneelReward('coins')" class="action-btn">COINS</button>
+                                <button onclick="claimKneelReward('points')" class="action-btn">POINTS</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="chatMediaOverlay" class="hidden overlay-center">
+                        <div id="mediaOverlayClose" onclick="closeChatPreview()" style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer;">X</div>
+                        <div id="chatMediaOverlayContent"></div>
+                    </div>
+                    
+                    <div id="tributeHuntOverlay" class="hidden overlay-center" style="background:#000; padding:20px; flex-direction:column;">
+                        <button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer;">CLOSE</button>
+                        <div id="huntStoreGrid" class="store-grid" style="margin-top: 20px;"></div>
+                        <textarea id="huntNote" class="hidden"></textarea>
+                        <div id="huntProgress" class="hidden"></div>
+                    </div>
+
+                    <div id="chatContent" class="chat-area"></div>
                 </div>
-                <div id="uploadBtnContainer" class="hidden" style="display:flex; gap:10px;">
-                    <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="window.handleUploadStart(this)">
-                    <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
+                
+                <div class="chat-footer">
+                    <button id="tributeHuntBtn" onclick="toggleTributeHunt()" class="icon-btn">🎁</button>
+                    <input type="text" id="chatMsgInput" class="chat-input" placeholder="AWAITING INPUT..." onkeypress="handleChatKey(event)">
+                    <button class="chat-send" onclick="sendChatMessage()" class="icon-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                             <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
-
-        <!-- DETAILS PANEL -->
-        <div id="taskDetailPanel" class="task-detail-panel">
-            <div class="detail-content">
-                <div style="font-family:'Cinzel'; font-size:0.7rem; color:var(--gold); margin-bottom:10px;">CURRENT ORDERS</div>
-                <h2 id="readyText" class="ribbon-status">AWAITING ORDERS</h2>
-                <div class="panel-footer">
-                    <button onclick="window.toggleTaskDetails(false)" class="text-btn">▲ HIDE DETAILS</button>
-                    <button id="btnSkip" onclick="window.cancelPendingTask()" class="text-btn btn-skip">SKIP TASK</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CHAT (Stays same) -->
-    <div id="chatCard" class="chat-container">
-        <div id="chatBox" class="chat-body-frame">
-            <div id="chatContent" class="chat-area"></div>
-        </div>
-        <div class="chat-footer">
-            <button id="tributeHuntBtn" onclick="toggleTributeHunt()" class="icon-btn">🎁</button>
-            <input type="text" id="chatMsgInput" class="chat-input" placeholder="AWAITING INPUT..." onkeypress="handleChatKey(event)">
-            <button class="chat-send" onclick="sendChatMessage()" class="icon-btn">Send</button>
-        </div>
-    </div>
-
-</div>
 
         <div id="viewBuy" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
             <div class="glass-card" style="margin-bottom: 20px;"><h2 style="text-align: center; color: var(--neon-yellow); font-family:'Cinzel';">EXCHEQUER</h2></div>
