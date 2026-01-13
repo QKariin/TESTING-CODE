@@ -91,52 +91,65 @@
       </div>
     </div>
 
-<div class="layout-right">
+    <div class="layout-right">
+        
+        <div class="right-header">
+            <div class="kneel-center-wrapper">
+                <div id="btn" class="kneel-bar-graphic" 
+                     onmousedown="handleHoldStart(event)" 
+                     onmouseup="handleHoldEnd(event)" 
+                     onmouseleave="handleHoldEnd(event)" 
+                     ontouchstart="handleHoldStart(event)" 
+                     ontouchend="handleHoldEnd(event)">
+                    <div id="fill" class="graphic-fill"></div>
+                    <span id="txt-main" class="graphic-text">HOLD TO KNEEL</span>
+                </div>
+            </div>
+        </div>
     
-    <div class="right-header">
-        <div class="kneel-center-wrapper">
-            <div id="btn" class="kneel-bar-graphic" 
-                 onmousedown="handleHoldStart(event)" 
-                 onmouseup="handleHoldEnd(event)" 
-                 onmouseleave="handleHoldEnd(event)" 
-                 ontouchstart="handleHoldStart(event)" 
-                 ontouchend="handleHoldEnd(event)">
-                <div id="fill" class="graphic-fill"></div>
-                <span id="txt-main" class="graphic-text">HOLD TO KNEEL</span>
+        <div class="content-stage">
+            
+            <div id="viewServingTop" class="view-wrapper">
+                
+                <div id="taskCard" class="glass-card task-ribbon-container">
+        <!-- TOP ROW: Status, Timer, Primary Actions -->
+        <div class="task-header-row">
+            
+            <!-- LEFT: STATUS & TIMER -->
+            <div class="task-info-block">
+                <div id="taskStatusLabel" class="status-text-lg">STATUS: UNPRODUCTIVE</div>
+                <div id="activeTimerRow" class="hidden">
+                    <span id="timerDisplay" class="ribbon-timer">00:00:00</span>
+                    <div onclick="toggleTaskDetails(true)" class="see-task-link">▼ SEE DIRECTIVE ▼</div>
+                </div>
+            </div>
+    
+            <!-- RIGHT: BUTTONS -->
+            <div class="task-controls-block">
+                <!-- State 1: Request -->
+                <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
+                
+                <!-- State 2: Upload (Hidden by default) -->
+                <div id="uploadBtnContainer" class="hidden">
+                    <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" 
+                           onchange="window.handleUploadStart(this)">
+                    <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()" 
+                            class="action-btn btn-upload">UPLOAD PROOF</button>
+                </div>
+            </div>
+        </div>
+    
+        <!-- BOTTOM ROW: The Task Text (Hidden/Collapsed by default) -->
+        <div id="taskDetailPanel" class="task-detail-panel">
+            <div class="detail-content">
+                <h2 id="readyText" class="ribbon-status">AWAITING ORDERS</h2>
+                <div class="panel-footer">
+                    <button onclick="toggleTaskDetails(false)" class="text-btn">▲ HIDE DETAILS</button>
+                    <button id="btnSkip" onclick="cancelPendingTask()" class="text-btn btn-skip">SKIP TASK</button>
+                </div>
             </div>
         </div>
     </div>
-
-    <div class="content-stage">
-        
-        <div id="viewServingTop" class="view-wrapper">
-            
-            <div id="taskCard" class="glass-card task-ribbon">
-                <div class="ribbon-left">
-                    <div id="activeBadge" class="hidden">
-                        <span id="timerDisplay" class="ribbon-timer">00:00:00</span>
-                    </div>
-                </div>
-                
-                <div id="taskContent" class="ribbon-center">
-                    <span class="ribbon-label">CURRENT DIRECTIVE</span>
-                    <h2 id="readyText" class="ribbon-status">AWAITING ORDERS</h2>
-                </div>
-
-                <div class="ribbon-right">
-                    <div id="mainButtonsArea">
-                        <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
-                    </div>
-                    
-                    <div id="cooldownSection" class="hidden" style="display: flex; gap: 10px; align-items: center;">
-                        <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" 
-                               onchange="this.files.length > 0 ? (document.getElementById('btnUpload').innerHTML = 'TRANSMITTING...', document.getElementById('btnUpload').classList.add('btn-loading'), handleEvidenceUpload(this)) : null">
-                        
-                        <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
-                        <button id="btnSkip" onclick="cancelPendingTask()" class="btn-dim" style="background:transparent; border: 1px solid #444; color: #666; padding: 8px 20px; cursor: pointer;">SKIP</button>
-                    </div>
-                </div>
-            </div>
 
             <div id="chatCard" class="chat-container">
                 <div id="chatBox" class="chat-body-frame">
