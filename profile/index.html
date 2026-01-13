@@ -109,46 +109,47 @@
 
     <div class="content-stage">
         
-       <div id="viewServingTop" class="view-wrapper">
+     <div id="viewServingTop" class="view-wrapper">
     
-    <!-- WRAPPER to hold Ribbon + Drawer -->
+    <!-- MAIN CONTAINER -->
     <div style="position: relative; margin: 20px; z-index: 10;">
         
-        <!-- 1. THE HEADER (Original Design, Fixed on Top) -->
+        <!-- HEADER (Fixed Top) -->
         <div id="taskCard" class="glass-card task-ribbon" style="margin: 0; position: relative; z-index: 20; justify-content: space-between;">
             
-            <!-- LEFT (30%): Status Label -->
+            <!-- LEFT: STATUS -->
             <div class="ribbon-left" style="width: 30%; border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center;">
                 <div class="ribbon-label">STATUS</div>
                 <div id="statusIndicator" class="status-text-lg status-unproductive" style="font-size: 0.9rem;">UNPRODUCTIVE</div>
             </div>
             
-            <!-- CENTER (40%): Trash Talk OR Timer -->
+            <!-- CENTER: TIMER & TOGGLE -->
             <div class="ribbon-center" style="width: 40%; border: none; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                 
-                <!-- IDLE TEXT -->
+                <!-- IDLE MESSAGE -->
                 <div id="idleMessage" class="ribbon-status" style="font-size: 0.8rem; opacity: 0.7;">
                     AWAITING DIRECTIVE...
                 </div>
 
-                <!-- ACTIVE TIMER & BUTTON (Hidden by default) -->
+                <!-- ACTIVE TIMER (Hidden by default) -->
                 <div id="activeTimerRow" class="hidden" style="display: flex; flex-direction: column; align-items: center;">
                     <span id="timerDisplay" class="ribbon-timer" style="font-size: 1.8rem; line-height: 1;">00:00:00</span>
-                    <div class="see-task-link" onclick="window.toggleTaskDetails()" style="margin-top: 5px; cursor: pointer; color: var(--gold); font-size: 0.7rem; letter-spacing: 2px; font-weight: bold; padding: 5px;">
-                        ▼ SEE ASSIGNMENT
-                    </div>
+                    <!-- TOGGLE BUTTON -->
+                    <div class="see-task-link" onclick="window.toggleTaskDetails(null)">▼ SEE DIRECTIVE ▼</div>
                 </div>
 
             </div>
 
-            <!-- RIGHT (30%): Action Buttons -->
+            <!-- RIGHT: ACTIONS -->
             <div class="ribbon-right" style="width: 30%; display: flex; justify-content: center; align-items: center;">
                 
-                <!-- Request Button -->
-                <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn" style="font-size: 0.8rem; padding: 10px 15px; width: 100%;">REQUEST TASK</button>
+                <!-- REQUEST BUTTON -->
+                <div id="mainButtonsArea">
+                    <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn" style="font-size: 0.8rem; padding: 10px 15px; width: 100%;">REQUEST TASK</button>
+                </div>
                 
-                <!-- Upload Container (Hidden) -->
-                <div id="uploadBtnContainer" class="hidden" style="width: 100%;">
+                <!-- UPLOAD BUTTON (Hidden) -->
+                <div id="uploadBtnContainer" class="hidden" style="width: 100%; display: flex; justify-content: center;">
                     <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="window.handleUploadStart(this)">
                     <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload" style="font-size: 0.8rem; padding: 10px 15px; width: 100%;">UPLOAD PROOF</button>
                 </div>
@@ -156,21 +157,23 @@
             </div>
         </div>
 
-        <!-- 2. THE DRAWER (Slides out from under header) -->
+        <!-- DRAWER (Slides Down) -->
         <div id="taskDetailPanel" class="task-detail-panel">
             <div class="detail-content">
                 <div style="color: #666; font-size: 0.7rem; margin-bottom: 10px; font-family: 'Cinzel';">CURRENT ORDERS</div>
+                
+                <!-- TASK TEXT -->
                 <h2 id="readyText" class="ribbon-status" style="margin-bottom: 20px;">LOADING...</h2>
                 
                 <div style="border-top: 1px solid #333; padding-top: 10px; display: flex; justify-content: space-between;">
                     <button onclick="window.toggleTaskDetails(false)" class="text-btn">▲ HIDE</button>
-                    <button onclick="window.cancelPendingTask()" class="btn-dim" style="font-size: 0.7rem;">SKIP TASK</button>
+                    <!-- SKIP BUTTON -->
+                    <button id="btnSkip" onclick="window.cancelPendingTask()" class="btn-dim" style="font-size: 0.7rem;">SKIP TASK</button>
                 </div>
             </div>
         </div>
 
     </div>
-
             <div id="chatCard" class="chat-container">
                 <div id="chatBox" class="chat-body-frame">
                     <div id="kneelRewardOverlay" class="hidden overlay-center">
