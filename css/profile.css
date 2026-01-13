@@ -230,24 +230,101 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* --- TASK TEXT & DRAWER CONTROLS --- */
 .drawer-task-text, #readyText {
-    font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 1.4rem; color: #fff; text-align: center; line-height: 1.5; max-width: 90%;
+    font-family: 'Rajdhani', sans-serif; 
+    font-weight: 600; 
+    font-size: 1.4rem; 
+    color: #fff; 
+    text-align: center; 
+    line-height: 1.5; 
+    max-width: 90%;
 }
 
-.text-btn { background: transparent; border: none; color: #666; font-family: 'Cinzel', serif; font-size: 0.8rem; cursor: pointer; letter-spacing: 2px; }
+.text-btn { 
+    background: transparent; 
+    border: none; 
+    color: #666; 
+    font-family: 'Cinzel', serif; 
+    font-size: 0.8rem; 
+    cursor: pointer; 
+    letter-spacing: 2px; 
+}
 .text-btn:hover { color: white; }
 
 .btn-skip-small {
-    background: transparent; border: 1px solid #333; color: #666; padding: 10px 25px; font-family: 'Orbitron'; font-size: 0.75rem; cursor: pointer; transition: 0.2s;
+    background: transparent; 
+    border: 1px solid #333; 
+    color: #666; 
+    padding: 10px 25px; 
+    font-family: 'Orbitron'; 
+    font-size: 0.75rem; 
+    cursor: pointer; 
+    transition: 0.2s;
 }
-.btn-skip-small:hover { color: var(--neon-red); border-color: var(--neon-red); box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); }
+.btn-skip-small:hover { 
+    color: var(--neon-red); 
+    border-color: var(--neon-red); 
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); 
+}
 
-/* --- BUTTONS --- */
+/* --- MAIN ACTION BUTTONS --- */
+
+/* Base Style (Request Task) */
 .action-btn { 
-    background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 25px; font-family: 'Cinzel'; font-weight: 700; cursor: pointer; transition: 0.3s; 
+    background: transparent; 
+    border: 1px solid var(--gold); 
+    color: var(--gold); 
+    padding: 12px 25px; 
+    font-family: 'Cinzel'; 
+    font-weight: 700; 
+    cursor: pointer; 
+    transition: 0.3s; 
+    width: 100%;
 }
-.action-btn:hover { background: var(--gold); color: #000; box-shadow: 0 0 15px var(--gold); }
-.btn-upload { background: rgba(255, 215, 0, 0.1); }
+.action-btn:hover { 
+    background: var(--gold); 
+    color: #000; 
+    box-shadow: 0 0 15px var(--gold); 
+}
+
+/* --- SPLIT ACTION DECK (Right Side) --- */
+
+/* Container for side-by-side buttons */
+#uploadBtnContainer {
+    width: 100%;
+    display: flex;
+    gap: 8px; /* Space between buttons */
+    align-items: center;
+}
+
+/* 1. The Ghost Button (See Task) */
+.btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(197, 160, 89, 0.4); 
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.7rem; 
+    padding: 12px 5px; /* Tighter padding for split */
+    cursor: pointer;
+    flex: 1; /* Force 50% width */
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+.btn-ghost:hover {
+    border-color: #fff;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* 2. The Upload Button (Override for split layout) */
+.btn-upload { 
+    background: rgba(255, 215, 0, 0.15); 
+    flex: 1; /* Force 50% width */
+    padding: 12px 5px; /* Match ghost padding */
+    white-space: nowrap;
+}
 
 .hidden { display: none !important; }
 
