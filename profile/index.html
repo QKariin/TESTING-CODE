@@ -292,38 +292,53 @@
 
         <!-- MODAL (RESTORED) -->
         <div id="glassModal" class="glass-modal">
-            <div id="modalMediaContainer" class="modal-bg-photo"></div>
-            <div id="modalGlassOverlay" class="modal-glass-overlay" onclick="restoreOverlay(event)">
-                <div id="modalCloseX" onclick="closeModal(null)" style="position:absolute; top:10px; right:20px; font-size:2rem; cursor:pointer; color:white; z-index:100;">×</div>
-                <div class="theater-content">
-                    <div id="modalInfoView" class="sub-view">
-                        <div class="stamp-container">
-                            <img id="modalStatusSticker" src="" class="m-status-sticker-lg" style="height:120px; width:auto; margin-bottom:15px;">
-                        </div>
-                        <div class="reward-container">
-                            <div id="modalPoints" class="m-points-lg" style="font-size:2rem; color:var(--neon-yellow);">+0 PTS</div>
-                            <div id="modalSticker"></div>
-                        </div>
-                    </div>
-                    <div id="modalFeedbackView" class="sub-view hidden">
-                        <h3 class="view-label">QUEEN'S FEEDBACK</h3>
-                        <div id="modalFeedbackMedia" class="fb-media-theater"></div>
-                        <div id="modalFeedbackText" class="theater-text-box"></div>
-                    </div>
-                    <div id="modalTaskView" class="sub-view hidden">
-                        <h3 class="view-label">THE ASSIGNMENT</h3>
-                        <div id="modalOrderText" class="theater-text-box"></div>
-                    </div>
-                </div>
-                <div class="modal-footer-menu" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; margin-top:auto;">
-                    <button onclick="event.stopPropagation(); toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
-                    <button onclick="event.stopPropagation(); toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
-                    <button onclick="event.stopPropagation(); toggleHistoryView('proof')" class="history-action-btn" style="border-color:var(--neon-yellow); color:var(--neon-yellow);">SEE PROOF</button>
-                    <button onclick="event.stopPropagation(); toggleHistoryView('info')" class="history-action-btn">STATUS</button>
-                    <button onclick="event.stopPropagation(); closeModal(null)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE</button>
-                </div>
-            </div>
-        </div>
+          <div id="modalMediaContainer" class="modal-bg-photo"></div>
+      
+          <div id="modalGlassOverlay" class="modal-glass-overlay">
+              
+              <div id="modalCloseX" onclick="closeModal(null)" style="position:absolute; top:20px; right:20px; font-size:2rem; cursor:pointer; color:white; z-index:110;">×</div>
+              
+              <div class="theater-content dossier-layout">
+                  
+                  <div class="dossier-sidebar">
+                      
+                      <div class="dossier-block">
+                          <div class="dossier-label">SYSTEM VERDICT</div>
+                          <div class="stamp-container">
+                              <img id="modalStatusSticker" src="" class="m-status-sticker-lg">
+                          </div>
+                      </div>
+      
+                      <div class="dossier-block">
+                          <div class="dossier-label">MERIT ACQUIRED</div>
+                          <div class="reward-container">
+                              <div id="modalPoints" class="m-points-lg">+0</div>
+                              <div id="modalSticker"></div>
+                          </div>
+                      </div>
+      
+                      <div id="modalFeedbackView" class="sub-view">
+                          <div class="dossier-label">QUEEN'S FEEDBACK</div>
+                          <div id="modalFeedbackText" class="theater-text-box"></div>
+                      </div>
+      
+                      <div id="modalTaskView" class="sub-view hidden">
+                          <div class="dossier-label">ORIGINAL ASSIGNMENT</div>
+                          <div id="modalOrderText" class="theater-text-box"></div>
+                      </div>
+      
+                  </div>
+              </div>
+      
+              <div class="modal-footer-menu dossier-footer">
+                  <button onclick="event.stopPropagation(); toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
+                  <button onclick="event.stopPropagation(); toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
+                  <button onclick="event.stopPropagation(); toggleHistoryView('proof')" class="history-action-btn gold-border">SEE PROOF</button>
+                  <button onclick="event.stopPropagation(); toggleHistoryView('info')" class="history-action-btn">STATUS</button>
+                  <button onclick="event.stopPropagation(); closeModal(null)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE ARCHIVE</button>
+              </div>
+          </div>
+      </div>
 
     </div> 
 </div>
