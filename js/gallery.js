@@ -1,10 +1,10 @@
-// gallery.js - FIXED PENDING VISIBILITY
+// gallery.js - POINTS DISPLAY FIXED
 
 import { 
     galleryData, pendingLimit, historyLimit, currentHistoryIndex, touchStartX, 
     setCurrentHistoryIndex, setHistoryLimit, setTouchStartX 
 } from './state.js';
-import { getOptimizedUrl, cleanHTML, triggerSound } from './utils.js';
+import { getOptimizedUrl, cleanHTML } from './utils.js';
 
 // STICKERS
 const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
@@ -12,7 +12,7 @@ const STICKER_DENIED = "https://static.wixstatic.com/media/ce3e5b_63a0c8320e2941
 
 let activeStickerFilter = "ALL"; 
 
-// --- 1. DATA NORMALIZER ---
+// --- HELPER: DATA NORMALIZER ---
 function normalizeGalleryItem(item) {
     if (item.proofUrl) return; 
     const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src'];
@@ -24,17 +24,22 @@ function normalizeGalleryItem(item) {
     }
 }
 
-// --- 2. LIST HELPER (SORT & FILTER) ---
+// --- HELPER: SMART POINTS FINDER (THE FIX) ---
+function getPoints(item) {
+    // Check all possible database field names
+    let val = item.points || item.score || item.value || item.amount || item.reward || 0;
+    return Number(val);
+}
+
+// --- HELPER: GET SORTED LIST ---
 function getGalleryList() {
     if (!galleryData) return [];
 
-    // Filter History Items
     let items = galleryData.filter(i => {
         const s = (i.status || "").toLowerCase();
         return (s.includes('app') || s.includes('rej')) && i.proofUrl;
     });
 
-    // Apply Active Filter
     if (activeStickerFilter === "DENIED") {
         items = items.filter(item => (item.status || "").toLowerCase().includes('rej'));
     } 
@@ -42,16 +47,17 @@ function getGalleryList() {
         items = items.filter(item => item.sticker === activeStickerFilter);
     }
 
-    // Sort: Points (Desc) -> Date (Newest)
+    // Sort by Points (Desc) -> Date
     return items.sort((a, b) => {
-        const pointsA = Number(a.points) || 0;
-        const pointsB = Number(b.points) || 0;
+        const pointsA = getPoints(a);
+        const pointsB = getPoints(b);
         if (pointsB !== pointsA) return pointsB - pointsA;
         return new Date(b._createdDate) - new Date(a._createdDate);
     });
 }
 
-// --- 3. FILTER BAR RENDERER ---
+// --- RENDERERS ---
+
 function renderStickerFilters() {
     const filterBar = document.getElementById('stickerFilterBar');
     if (!filterBar || !galleryData) return;
@@ -84,18 +90,10 @@ function renderStickerFilters() {
     filterBar.innerHTML = html;
 }
 
-// Global Setter
 window.setGalleryFilter = function(filterType) {
     activeStickerFilter = filterType;
     renderGallery(); 
 };
-
-// --- 4. RENDER GALLERY (FIXED VISIBILITY) ---
-
-export function loadMoreHistory() {
-    setHistoryLimit(historyLimit + 25);
-    renderGallery();
-}
 
 export function renderGallery() {
     if (!galleryData) return;
@@ -104,17 +102,15 @@ export function renderGallery() {
     const pGrid = document.getElementById('pendingGrid');
     const hGrid = document.getElementById('historyGrid');
     const pSection = document.getElementById('pendingSection');
-    const hSection = document.getElementById('historySection');
     
     renderStickerFilters();
 
-    // 1. PENDING ITEMS
+    // PENDING
     const showPending = (activeStickerFilter === 'ALL' || activeStickerFilter === 'PENDING');
     const pItems = galleryData.filter(i => (i.status || "").toLowerCase() === 'pending' && i.proofUrl);
     
     if (pGrid) pGrid.innerHTML = pItems.slice(0, pendingLimit).map(createPendingCardHTML).join('');
     
-    // FIX: Force remove 'hidden' class if items exist
     if (pSection) {
         if (showPending && pItems.length > 0) {
             pSection.classList.remove('hidden');
@@ -125,13 +121,12 @@ export function renderGallery() {
         }
     }
     
-    // 2. HISTORY ITEMS
+    // HISTORY
     const showHistory = (activeStickerFilter !== 'PENDING');
     const hItems = getGalleryList(); 
 
     if (hGrid) {
         hGrid.innerHTML = hItems.slice(0, historyLimit).map((item, index) => createGalleryItemHTML(item, index)).join('');
-        // We only hide the grid, not the whole section (so filters stay visible)
         hGrid.style.display = (showHistory && hItems.length > 0) ? 'grid' : 'none';
     }
     
@@ -161,45 +156,28 @@ function createPendingCardHTML(item) {
 function createGalleryItemHTML(item, index) {
     let thumbUrl = getOptimizedUrl(item.proofUrl, 300);
     const s = (item.status || "").toLowerCase();
-    
-    // Visual Logic
-    const isPending = s === 'pending';
-    const statusSticker = isPending ? "" : (s.includes('app') ? STICKER_APPROVE : STICKER_DENIED);
+    const statusSticker = s.includes('app') ? STICKER_APPROVE : STICKER_DENIED;
     const isVideo = (item.proofUrl || "").match(/\.(mp4|webm|mov)($|\?)/i);
-
-    // Points Logic
-    const pts = item.points || 0;
-    
-    // THE MERIT PLAQUE HTML (Only show if > 0)
-    const pointsBadge = (pts > 0) 
-        ? `<div class="merit-plaque">+${pts}</div>` 
-        : ``;
-
-    // Pending Overlay (The "Ghost" look)
-    const pendingOverlay = isPending 
-        ? `<div class="pending-overlay"><div class="pending-icon">⏳</div></div>` 
-        : ``;
 
     let safeSticker = item.sticker;
     if (safeSticker && (safeSticker.includes("profile") || safeSticker.includes("avatar"))) safeSticker = null;
+    
+    // FIX: Use the smart helper
+    const pts = getPoints(item);
 
     return `
-        <div class="gallery-item ${isPending ? 'is-pending' : ''}" onclick='window.openHistoryModal(${index})'>
+        <div class="gallery-item" onclick='window.openHistoryModal(${index})'>
             ${isVideo 
-                ? `<video src="${thumbUrl}" class="gi-thumb" muted style="object-fit:cover;"></video>` 
-                : `<img src="${thumbUrl}" class="gi-thumb" loading="lazy">`
+                ? `<video src="${thumbUrl}" class="gi-thumb" muted style="width:100%; height:100%; object-fit:cover; opacity: ${s.includes('rej') ? '0.3' : '0.7'};"></video>` 
+                : `<img src="${thumbUrl}" class="gi-thumb" loading="lazy" style="opacity: ${s.includes('rej') ? '0.3' : '0.7'};">`
             }
+            <img src="${statusSticker}" class="gi-status-sticker" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:60%; height:60%; z-index:10; pointer-events:none;">
+            ${safeSticker ? `<img src="${safeSticker}" class="gi-reward-sticker" style="position:absolute; bottom:5px; left:5px; width:30px; height:30px; z-index:10;">` : ''}
             
-            ${pendingOverlay}
-            
-            <!-- Status Sticker (Approved/Denied) -->
-            ${!isPending ? `<img src="${statusSticker}" class="gi-status-sticker">` : ''}
-            
-            <!-- Reward Sticker (The Icon) -->
-            ${safeSticker ? `<img src="${safeSticker}" class="gi-reward-sticker">` : ''}
-            
-            <!-- THE FIX: POINTS DISPLAY -->
-            ${pointsBadge}
+            ${pts > 0 ? `
+            <div style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.8); color:var(--gold); font-size:0.6rem; padding:2px 5px; border-radius:2px; font-family:'Orbitron'; font-weight:bold; z-index:20;">
+                +${pts}
+            </div>` : ''}
         </div>`;
 }
 
@@ -229,6 +207,9 @@ export function openHistoryModal(index) {
         const s = (item.status || "").toLowerCase();
         const statusImg = s.includes('app') ? STICKER_APPROVE : STICKER_DENIED;
         const statusHTML = `<img src="${statusImg}" style="width:100px; height:100px; object-fit:contain; margin-bottom:15px; opacity:0.8;">`;
+        
+        // FIX: Use the smart helper
+        const pts = getPoints(item);
 
         overlay.innerHTML = `
             <div id="modalCloseX" onclick="window.closeModal(event)" style="position:absolute; top:20px; right:20px; font-size:2.5rem; cursor:pointer; color:white; z-index:9999;">×</div>
@@ -236,7 +217,7 @@ export function openHistoryModal(index) {
             <div class="theater-content">
                 <div id="modalInfoView" class="sub-view">
                     ${statusHTML}
-                    <div class="m-points-lg">+${item.points || 0} PTS</div>
+                    <div class="m-points-lg">+${pts} PTS</div>
                     ${stickerHTML}
                 </div>
                 <div id="modalFeedbackView" class="sub-view hidden">
@@ -323,6 +304,11 @@ export function openModal(url, status, text, isVideo) {
     document.getElementById('glassModal').classList.add('active');
 }
 
+export function loadMoreHistory() {
+    setHistoryLimit(historyLimit + 25);
+    renderGallery();
+}
+
 export function initModalSwipeDetection() {
     const modalEl = document.getElementById('glassModal');
     if (!modalEl) return;
@@ -343,7 +329,7 @@ export function initModalSwipeDetection() {
     }, { passive: true });
 }
 
-// WINDOW EXPORTS
+// FORCE EXPORT TO WINDOW
 window.renderGallery = renderGallery;
 window.openHistoryModal = openHistoryModal;
 window.toggleHistoryView = toggleHistoryView;
