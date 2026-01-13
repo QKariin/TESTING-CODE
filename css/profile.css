@@ -177,12 +177,29 @@ body {
     font-family: 'Orbitron'; font-size: 2rem; color: white; font-weight: 700; line-height: 1;
 }
 
+/* FORCE BUTTON VISIBILITY */
 .see-task-link {
-    font-family: 'Cinzel', serif; font-size: 0.7rem; color: var(--gold); 
-    font-weight: 700; letter-spacing: 2px; cursor: pointer; margin-top: 5px; 
-    padding: 15px 0; width: 100%; text-align: left;
-    position: relative; z-index: 20; pointer-events: auto !important;
+    opacity: 1 !important; /* Never let JS hide it */
+    visibility: visible !important;
+    display: block !important;
+    pointer-events: auto !important;
+    z-index: 9999 !important;
+    cursor: pointer !important;
+    color: var(--gold) !important;
+    background: rgba(0,0,0,0.5); /* Semi-transparent bg to ensure it pops */
+    margin-top: 5px;
+    padding: 10px;
+    text-align: left;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    border: 1px solid rgba(197, 160, 89, 0.3); /* Gold border to see boundaries */
 }
+
+/* Ensure the container doesn't hide it */
+#activeTimerRow {
+    overflow: visible !important;
+}
+
 .see-task-link:hover { color: #fff; transform: translateX(5px); }
 
 /* RIGHT: CONTROLS & BUTTONS */
