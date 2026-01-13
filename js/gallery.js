@@ -1,10 +1,10 @@
-// gallery.js - FIXED PENDING TASKS & NORMALIZATION
+// gallery.js - FIXED EXPORTS & FILTERING
 
 import { 
     galleryData, pendingLimit, historyLimit, currentHistoryIndex, touchStartX, 
     setCurrentHistoryIndex, setHistoryLimit, setTouchStartX 
 } from './state.js';
-import { getOptimizedUrl, cleanHTML, triggerSound } from './utils.js';
+import { getOptimizedUrl, cleanHTML } from './utils.js';
 
 // STICKERS
 const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
@@ -12,14 +12,10 @@ const STICKER_DENIED = "https://static.wixstatic.com/media/ce3e5b_63a0c8320e2941
 
 let activeStickerFilter = "ALL"; 
 
-// --- 1. DATA NORMALIZER (THE FIX) ---
-// Ensures 'proofUrl' exists even if backend sends 'media' or 'file'
+// --- 1. DATA NORMALIZER ---
 function normalizeGalleryItem(item) {
-    if (item.proofUrl) return; // Already good
-
-    // Look for common Wix field names
+    if (item.proofUrl) return; 
     const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src'];
-    
     for (let key of candidates) {
         if (item[key] && typeof item[key] === 'string') {
             item.proofUrl = item[key];
@@ -28,17 +24,17 @@ function normalizeGalleryItem(item) {
     }
 }
 
-// --- SHARED HELPER: GET SORTED HISTORY ---
+// --- 2. LIST HELPER (SORT & FILTER) ---
 function getGalleryList() {
     if (!galleryData) return [];
 
-    // Filter History Items (Approve/Reject)
+    // Filter History Items
     let items = galleryData.filter(i => {
         const s = (i.status || "").toLowerCase();
         return (s.includes('app') || s.includes('rej')) && i.proofUrl;
     });
 
-    // Apply Filters
+    // Apply Active Filter
     if (activeStickerFilter === "DENIED") {
         items = items.filter(item => (item.status || "").toLowerCase().includes('rej'));
     } 
@@ -46,7 +42,7 @@ function getGalleryList() {
         items = items.filter(item => item.sticker === activeStickerFilter);
     }
 
-    // Sort by Points -> Date
+    // Sort: Points (Desc) -> Date (Newest)
     return items.sort((a, b) => {
         const pointsA = Number(a.points) || 0;
         const pointsB = Number(b.points) || 0;
@@ -55,8 +51,7 @@ function getGalleryList() {
     });
 }
 
-// --- RENDERERS ---
-
+// --- 3. FILTER BAR RENDERER ---
 function renderStickerFilters() {
     const filterBar = document.getElementById('stickerFilterBar');
     if (!filterBar || !galleryData) return;
@@ -78,9 +73,7 @@ function renderStickerFilters() {
         </div>`;
 
     stickers.forEach(url => {
-        // Don't show the denied sticker in the list if we have a button for it
         if(url === STICKER_DENIED) return;
-        
         const isActive = (activeStickerFilter === url) ? 'active' : '';
         html += `
             <div class="filter-circle ${isActive}" onclick="window.setGalleryFilter('${url}')">
@@ -91,15 +84,22 @@ function renderStickerFilters() {
     filterBar.innerHTML = html;
 }
 
+// Global Setter
 window.setGalleryFilter = function(filterType) {
     activeStickerFilter = filterType;
     renderGallery(); 
 };
 
+// --- 4. EXPORTED FUNCTIONS ---
+
+// ** THIS WAS THE MISSING LINK **
+export function loadMoreHistory() {
+    setHistoryLimit(historyLimit + 25);
+    renderGallery();
+}
+
 export function renderGallery() {
     if (!galleryData) return;
-
-    // 1. RUN NORMALIZATION (Fixes missing images)
     galleryData.forEach(normalizeGalleryItem);
 
     const pGrid = document.getElementById('pendingGrid');
@@ -108,24 +108,19 @@ export function renderGallery() {
     
     renderStickerFilters();
 
-    // 2. PENDING VIEW
+    // PENDING
     const showPending = (activeStickerFilter === 'ALL' || activeStickerFilter === 'PENDING');
     const pItems = galleryData.filter(i => (i.status || "").toLowerCase() === 'pending' && i.proofUrl);
     
     if (pGrid) pGrid.innerHTML = pItems.slice(0, pendingLimit).map(createPendingCardHTML).join('');
+    if (pSection) pSection.style.display = (showPending && pItems.length > 0) ? 'block' : 'none';
     
-    if (pSection) {
-        // Only show section if filter allows AND there are items
-        pSection.style.display = (showPending && pItems.length > 0) ? 'block' : 'none';
-    }
-    
-    // 3. HISTORY VIEW
+    // HISTORY
     const showHistory = (activeStickerFilter !== 'PENDING');
     const hItems = getGalleryList(); 
 
     if (hGrid) {
         hGrid.innerHTML = hItems.slice(0, historyLimit).map((item, index) => createGalleryItemHTML(item, index)).join('');
-        // Hide grid if filtered out or empty
         hGrid.style.display = (showHistory && hItems.length > 0) ? 'grid' : 'none';
     }
     
@@ -176,8 +171,6 @@ function createGalleryItemHTML(item, index) {
         </div>`;
 }
 
-// --- MODAL CLICK HANDLERS ---
-
 export function openHistoryModal(index) {
     const historyItems = getGalleryList();
     if (!historyItems[index]) return;
@@ -205,7 +198,6 @@ export function openHistoryModal(index) {
 
         overlay.innerHTML = `
             <div id="modalCloseX" onclick="window.closeModal(event)" style="position:absolute; top:20px; right:20px; font-size:2.5rem; cursor:pointer; color:white; z-index:9999;">×</div>
-            
             <div class="theater-content">
                 <div id="modalInfoView" class="sub-view">
                     ${statusHTML}
@@ -221,7 +213,6 @@ export function openHistoryModal(index) {
                     <div class="theater-text-box">${(item.text || "No description.").replace(/\n/g, '<br>')}</div>
                 </div>
             </div>
-
             <div class="modal-footer-menu">
                 <button onclick="event.stopPropagation(); window.toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
                 <button onclick="event.stopPropagation(); window.toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
@@ -240,7 +231,6 @@ export function toggleHistoryView(view) {
     const overlay = document.getElementById('modalGlassOverlay');
     if (!modal || !overlay) return;
 
-    isInProofMode = (view === 'proof');
     const views = ['modalInfoView', 'modalFeedbackView', 'modalTaskView'];
     views.forEach(id => {
         const el = document.getElementById(id);
@@ -317,7 +307,7 @@ export function initModalSwipeDetection() {
     }, { passive: true });
 }
 
-// EXPORT TO WINDOW
+// WINDOW EXPORTS
 window.renderGallery = renderGallery;
 window.openHistoryModal = openHistoryModal;
 window.toggleHistoryView = toggleHistoryView;
