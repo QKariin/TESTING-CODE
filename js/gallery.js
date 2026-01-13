@@ -154,30 +154,37 @@ function createPendingCardHTML(item) {
 }
 
 function createGalleryItemHTML(item, index) {
-    let thumbUrl = getOptimizedUrl(item.proofUrl, 300);
-    const s = (item.status || "").toLowerCase();
-    const statusSticker = s.includes('app') ? STICKER_APPROVE : STICKER_DENIED;
-    const isVideo = (item.proofUrl || "").match(/\.(mp4|webm|mov)($|\?)/i);
+    let thumbUrl = getOptimizedUrl(item.proofUrl, 300); //
+    const s = (item.status || "").toLowerCase(); //
+    const statusSticker = s.includes('app') ? STICKER_APPROVE : STICKER_DENIED; //
+    const isVideo = (item.proofUrl || "").match(/\.(mp4|webm|mov)($|\?)/i); //
 
-    let safeSticker = item.sticker;
-    if (safeSticker && (safeSticker.includes("profile") || safeSticker.includes("avatar"))) safeSticker = null;
+    let safeSticker = item.sticker; //
+    if (safeSticker && (safeSticker.includes("profile") || safeSticker.includes("avatar"))) safeSticker = null; //
     
-    // FIX: Use the smart helper
-    const pts = getPoints(item);
+    const pts = getPoints(item); //
 
     return `
         <div class="gallery-item" onclick='window.openHistoryModal(${index})'>
             ${isVideo 
-                ? `<video src="${thumbUrl}" class="gi-thumb" muted style="width:100%; height:100%; object-fit:cover; opacity: ${s.includes('rej') ? '0.3' : '0.7'};"></video>` 
-                : `<img src="${thumbUrl}" class="gi-thumb" loading="lazy" style="opacity: ${s.includes('rej') ? '0.3' : '0.7'};">`
+                ? `<video src="${thumbUrl}" class="gi-thumb" muted style="opacity: ${s.includes('rej') ? '0.3' : '0.8'};"></video>` 
+                : `<img src="${thumbUrl}" class="gi-thumb" loading="lazy" style="opacity: ${s.includes('rej') ? '0.3' : '0.8'};">`
             }
-            <img src="${statusSticker}" class="gi-status-sticker" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:60%; height:60%; z-index:10; pointer-events:none;">
+
+            <img src="${statusSticker}" class="gi-status-overlay">
+
             ${safeSticker ? `<img src="${safeSticker}" class="gi-reward-sticker" style="position:absolute; bottom:5px; left:5px; width:30px; height:30px; z-index:10;">` : ''}
             
             ${pts > 0 ? `
-            <div style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.8); color:var(--gold); font-size:0.6rem; padding:2px 5px; border-radius:2px; font-family:'Orbitron'; font-weight:bold; z-index:20;">
-                +${pts}
+            <div class="merit-tag">
+                <div class="tag-label">MERIT</div>
+                <div class="tag-val">+${pts}</div>
             </div>` : ''}
+
+            <div class="corner-target tl"></div>
+            <div class="corner-target tr"></div>
+            <div class="corner-target bl"></div>
+            <div class="corner-target br"></div>
         </div>`;
 }
 
