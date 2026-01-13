@@ -109,63 +109,67 @@
 
     <div class="content-stage">
         
-        <div id="viewServingTop" class="view-wrapper">
+       <div id="viewServingTop" class="view-wrapper">
+    
+    <!-- WRAPPER to hold Ribbon + Drawer -->
+    <div style="position: relative; margin: 20px; z-index: 10;">
+        
+        <!-- 1. THE HEADER (Original Design, Fixed on Top) -->
+        <div id="taskCard" class="glass-card task-ribbon" style="margin: 0; position: relative; z-index: 20; justify-content: space-between;">
             
-            <!-- TASK CARD: 30/40/30 GRID LAYOUT -->
-            <div id="taskCard" class="task-card-container">
-                
-                <!-- THE COMMAND RIBBON (Fixed Grid) -->
-                <div class="task-header-grid">
-                    
-                    <!-- 30% LEFT: STATIC LABEL -->
-                    <div class="th-col th-left">
-                        <div class="static-label">STATUS</div>
-                    </div>
-            
-                    <!-- 40% CENTER: DYNAMIC INFO -->
-                    <div class="th-col th-center">
-                        
-                        <!-- STATE A: IDLE (Trash Talk) -->
-                        <div id="stateIdle" class="state-block">
-                            <div class="status-val-idle">UNPRODUCTIVE</div>
-                            <div class="trash-talk">Wasting Oxygen...</div>
-                        </div>
-            
-                        <!-- STATE B: ACTIVE (Timer + Toggle) -->
-                        <div id="stateActive" class="state-block hidden">
-                            <div class="status-val-working">WORKING</div>
-                            <div id="timerDisplay" class="grid-timer">00:00:00</div>
-                            <div class="drawer-toggle" onclick="window.toggleTaskDrawer()">▼ SEE ASSIGNMENT</div>
-                        </div>
-            
-                    </div>
-            
-                    <!-- 30% RIGHT: ACTION BUTTON -->
-                    <div class="th-col th-right">
-                        <!-- Request Button -->
-                        <div id="btnAreaRequest">
-                            <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn">REQUEST</button>
-                        </div>
-                        
-                        <!-- Upload Button (Hidden by default) -->
-                        <div id="btnAreaUpload" class="hidden">
-                            <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" 
-                                   onchange="window.handleUploadStart(this)">
-                            <button onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD</button>
-                        </div>
-                    </div>
-            
-                </div>
-            
-                <!-- THE DRAWER (Hidden Task Details) -->
-                <div id="taskDrawer" class="task-drawer">
-                    <div class="drawer-content">
-                        <h2 id="readyText" class="drawer-task-text">AWAITING ORDERS</h2>
-                        <button id="btnSkip" onclick="window.cancelPendingTask()" class="btn-skip-small">SKIP / CANCEL</button>
-                    </div>
-                </div>
-            
+            <!-- LEFT (30%): Status Label -->
+            <div class="ribbon-left" style="width: 30%; border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <div class="ribbon-label">STATUS</div>
+                <div id="statusIndicator" class="status-text-lg status-unproductive" style="font-size: 0.9rem;">UNPRODUCTIVE</div>
             </div>
+            
+            <!-- CENTER (40%): Trash Talk OR Timer -->
+            <div class="ribbon-center" style="width: 40%; border: none; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                
+                <!-- IDLE TEXT -->
+                <div id="idleMessage" class="ribbon-status" style="font-size: 0.8rem; opacity: 0.7;">
+                    AWAITING DIRECTIVE...
+                </div>
+
+                <!-- ACTIVE TIMER & BUTTON (Hidden by default) -->
+                <div id="activeTimerRow" class="hidden" style="display: flex; flex-direction: column; align-items: center;">
+                    <span id="timerDisplay" class="ribbon-timer" style="font-size: 1.8rem; line-height: 1;">00:00:00</span>
+                    <div class="see-task-link" onclick="window.toggleTaskDetails()" style="margin-top: 5px; cursor: pointer; color: var(--gold); font-size: 0.7rem; letter-spacing: 2px; font-weight: bold; padding: 5px;">
+                        ▼ SEE ASSIGNMENT
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT (30%): Action Buttons -->
+            <div class="ribbon-right" style="width: 30%; display: flex; justify-content: center; align-items: center;">
+                
+                <!-- Request Button -->
+                <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn" style="font-size: 0.8rem; padding: 10px 15px; width: 100%;">REQUEST TASK</button>
+                
+                <!-- Upload Container (Hidden) -->
+                <div id="uploadBtnContainer" class="hidden" style="width: 100%;">
+                    <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="window.handleUploadStart(this)">
+                    <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload" style="font-size: 0.8rem; padding: 10px 15px; width: 100%;">UPLOAD PROOF</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 2. THE DRAWER (Slides out from under header) -->
+        <div id="taskDetailPanel" class="task-detail-panel">
+            <div class="detail-content">
+                <div style="color: #666; font-size: 0.7rem; margin-bottom: 10px; font-family: 'Cinzel';">CURRENT ORDERS</div>
+                <h2 id="readyText" class="ribbon-status" style="margin-bottom: 20px;">LOADING...</h2>
+                
+                <div style="border-top: 1px solid #333; padding-top: 10px; display: flex; justify-content: space-between;">
+                    <button onclick="window.toggleTaskDetails(false)" class="text-btn">▲ HIDE</button>
+                    <button onclick="window.cancelPendingTask()" class="btn-dim" style="font-size: 0.7rem;">SKIP TASK</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
 
             <div id="chatCard" class="chat-container">
                 <div id="chatBox" class="chat-body-frame">
