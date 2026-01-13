@@ -1,4 +1,4 @@
-// main.js - FIXED BUTTONS & AUTO-EXPAND
+// main.js - FIXED: ROBUST CLICK HANDLING
 
 // --- 1. FULL IMPORTS ---
 import { CONFIG, URLS, LEVELS, FUNNY_SAYINGS, STREAM_PASSWORDS } from './config.js';
@@ -26,20 +26,27 @@ import { handleEvidenceUpload, handleProfileUpload, handleAdminUpload } from './
 import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from '../profile/kneeling/kneeling.js';
 import { Bridge } from './bridge.js';
 
-// --- 2. CRITICAL UI FUNCTIONS (Defined Early) ---
+// --- 2. CRITICAL UI FUNCTIONS (Defined Globally) ---
 
 // Toggle the slide-down panel
-window.toggleTaskDetails = function(show) {
+window.toggleTaskDetails = function(forceOpen = null) {
     const panel = document.getElementById('taskDetailPanel');
     const link = document.querySelector('.see-task-link'); 
     
-    if (!panel) return; // Safety
+    if (!panel) return;
 
-    if (show) {
+    // Determine state: if forceOpen is boolean use it, otherwise toggle
+    const shouldOpen = (forceOpen === true) || (forceOpen === null && !panel.classList.contains('open'));
+
+    if (shouldOpen) {
         panel.classList.add('open');
+        panel.style.maxHeight = "500px"; // Force CSS override if class fails
+        panel.style.opacity = "1";
         if(link) link.style.opacity = '0'; // Hide the "See" button
     } else {
         panel.classList.remove('open');
+        panel.style.maxHeight = "0px";
+        panel.style.opacity = "0";
         if(link) link.style.opacity = '1';
     }
 };
@@ -71,26 +78,39 @@ function updateTaskUIState(isActive) {
         if(reqBtn) reqBtn.classList.remove('hidden');
         if(upContainer) upContainer.classList.add('hidden');
         
-        // Force close details when task ends
+        // Close panel when finished
         window.toggleTaskDetails(false);
     }
 }
 
-// Auto-Collapse when clicking outside
+// --- 3. ROBUST EVENT LISTENERS ---
+
+// Global Click Listener (Fixes the "Button doesn't work" issue)
 document.addEventListener('click', function(event) {
+    // 1. Handle "See Directive" Click (Anywhere in the info block)
+    const infoBlock = event.target.closest('.task-info-block');
+    const seeLink = event.target.closest('.see-task-link');
+    
+    if (infoBlock || seeLink) {
+        // Only toggle if we are in "Working" mode (timer row is visible)
+        const timerRow = document.getElementById('activeTimerRow');
+        if (timerRow && !timerRow.classList.contains('hidden')) {
+            window.toggleTaskDetails(null); // Toggle
+        }
+    }
+
+    // 2. Auto-Collapse when clicking outside
     const card = document.getElementById('taskCard');
     const panel = document.getElementById('taskDetailPanel');
     
-    // Ignore clicks if they are inside the "See Task" link itself
-    if (event.target.classList.contains('see-task-link')) return;
-
+    // If clicking outside the card AND panel is open
     if (panel && panel.classList.contains('open') && card && !card.contains(event.target)) {
         window.toggleTaskDetails(false);
     }
 });
 
 
-// --- 3. INITIALIZATION & LISTENERS ---
+// --- 4. INITIALIZATION ---
 
 document.addEventListener('click', () => {
     if (!window.audioUnlocked) {
@@ -148,7 +168,7 @@ window.addEventListener("message", (event) => {
 
     if (data.type === "INIT_TASKS" || data.dailyTasks) setTaskDatabase(data.dailyTasks || data.tasks || []);
     if (data.type === "INIT_WISHLIST" || data.wishlist) {
-        setWishlistItems(data.wishlist || []);
+        setWishlistItems(data.wishlist || [];
         window.WISHLIST_ITEMS = data.wishlist || []; 
         renderWishlist();
     }
@@ -241,8 +261,8 @@ window.addEventListener("message", (event) => {
                     // 1. Switch UI to "Working" Mode
                     updateTaskUIState(true);
 
-                    // 2. AUTO-EXPAND FIX (The logic you asked for)
-                    // If it is NOT the first page load, expand the window automatically
+                    // 2. AUTO-EXPAND FIX
+                    // Automatically open the task details if the user has a task
                     if (!isInitialLoad) {
                          window.toggleTaskDetails(true);
                     }
@@ -271,7 +291,7 @@ window.addEventListener("message", (event) => {
 });
 
 // ==========================================
-// GLOBAL UI HELPERS
+// GLOBAL EXPORTS & HELPERS
 // ==========================================
 
 window.handleUploadStart = function(inputElement) {
@@ -368,8 +388,7 @@ function updateStats() {
     updateKneelingStatus(); 
 }
 
-// ... (Rest of existing code: Tribute, Coins, etc. - unchanged) ...
-// Ensure window assignments remain
+// ... (Rest of existing code: Tribute, Coins, etc.) ...
 let currentHuntIndex = 0;
 let filteredItems = [];
 let selectedReason = "";
