@@ -42,7 +42,9 @@
 <div class="app-container">
     
     <!-- LEFT SIDEBAR -->
+    <!-- LEFT SIDEBAR -->
     <div class="layout-left">
+        <!-- HIERARCHY STAMP (Reverted Design in CSS) -->
         <div id="subHierarchy" class="hierarchy-top">LOADING...</div>
 
         <div class="avatar-container" onclick="document.getElementById('profileUploadInput').click()">
@@ -50,7 +52,7 @@
         </div>
         <div id="subName" class="identity-name">SLAVE</div>
 
-        <!-- STATS -->
+        <!-- STATS ROW -->
         <div class="stats-stack-row">
             <div class="stat-item">
                 <span class="stat-lbl">MERIT</span>
@@ -63,7 +65,7 @@
             </div>
         </div>
 
-        <!-- KNEEL BUTTON (IDs MATCH KNEELING.JS) -->
+        <!-- KNEEL BUTTON -->
         <div class="kneel-sidebar-wrapper">
             <div id="btn" class="kneel-bar-graphic" 
                  onmousedown="handleHoldStart(event)" 
@@ -71,33 +73,44 @@
                  onmouseleave="handleHoldEnd(event)" 
                  ontouchstart="handleHoldStart(event)" 
                  ontouchend="handleHoldEnd(event)">
-                
-                <!-- The Fill Bar (Absolute Position) -->
                 <div id="fill" class="graphic-fill"></div>
-                
-                <!-- The Text (On Top) -->
                 <span id="txt-main" class="graphic-text">HOLD TO KNEEL</span>
             </div>
         </div>
 
-        <div class="progress-section">
-            <div class="prog-labels">
-                <span>NEXT: <span id="nextLevelName">-</span></span>
-                <span id="pointsNeeded">0 to go</span>
-            </div>
-            <div class="prog-bg"><div id="progressBar" class="prog-fill"></div></div>
-        </div>
-
+        <!-- EXPANDABLE STATS (Progress Bar Moved Here) -->
         <button class="stats-toggle-btn" onclick="toggleStats()">EXPAND STATS ▾</button>
+        
         <div id="statsContent" class="stats-panel">
+            
+            <!-- PROGRESS SECTION (Inside Drawer) -->
+            <div class="progress-section">
+                <!-- 1. Next Level (Right Aligned) -->
+                <div class="prog-top-row" style="text-align: right; margin-bottom: 5px;">
+                    <span style="color:#666; font-size:0.7rem;">NEXT:</span> 
+                    <span id="nextLevelName" style="color:var(--gold); font-weight:700;">-</span>
+                </div>
+                
+                <!-- 2. Bar -->
+                <div class="prog-bg"><div id="progressBar" class="prog-fill"></div></div>
+                
+                <!-- 3. To Go (Centered) -->
+                <div class="prog-bot-row" style="text-align: center; margin-top: 5px;">
+                    <span id="pointsNeeded" style="color:#888; font-size:0.7rem;">0 to go</span>
+                </div>
+            </div>
+
+            <!-- Stats List -->
             <div class="stat-line"><span>Streak</span> <strong id="statStreak">0</strong></div>
             <div class="stat-line"><span>Total Tasks</span> <strong id="statTotal">0</strong></div>
             <div class="stat-line"><span>Completed</span> <strong id="statCompleted">0</strong></div>
             <div class="stat-line"><span>Skipped</span> <strong id="statSkipped">0</strong></div>
             <div class="stat-line"><span>Total Kneeling</span> <strong id="statTotalKneels">0</strong></div>
+            
+            <!-- Footer (Centered) -->
             <div class="stat-footer">
-                <span>SLAVE SINCE</span>
-                <strong id="slaveSinceDate">--/--/--</strong>
+                <div style="color:#666; font-size:0.7rem; letter-spacing:2px; margin-bottom:5px;">SLAVE SINCE</div>
+                <strong id="slaveSinceDate" style="color:#ccc; font-size:0.9rem;">--/--/--</strong>
             </div>
         </div>
 
