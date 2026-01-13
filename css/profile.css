@@ -116,10 +116,10 @@ body {
 .view-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; }
 
 /* =========================================
-   4. TASK RIBBON & CONTROLS (FINAL POLISHED)
+   4. TASK RIBBON & CONTROLS (FINAL SOLID CURTAIN)
    ========================================= */
 
-/* The Header Bar */
+/* The Header Bar (Fixed Top) */
 .task-ribbon {
     display: flex; 
     align-items: center; 
@@ -129,7 +129,7 @@ body {
     background: rgba(10,10,10,0.95); 
     border: 1px solid var(--gold-dim);
     position: relative;
-    z-index: 100; /* High priority to stay above the drawer */
+    z-index: 200; /* Highest priority: Always on top of drawer */
 }
 
 /* --- RAJDHANI FONT STYLING --- */
@@ -146,7 +146,7 @@ body {
 .status-unproductive { color: #666; }
 .status-working { color: var(--neon-green); text-shadow: 0 0 10px rgba(0,255,0,0.4); }
 
-/* 2. Main Text */
+/* 2. Main Text (Idle) */
 .ribbon-status {
     font-family: 'Rajdhani', sans-serif !important;
     font-weight: 600;
@@ -179,54 +179,41 @@ body {
     padding: 5px;
     border-bottom: 1px solid transparent;
     transition: 0.3s;
-    pointer-events: auto; /* Ensure clickable */
+    pointer-events: auto !important; /* Force Clickable */
 }
 .see-task-link:hover {
     color: #fff;
     border-bottom-color: var(--gold);
 }
 
-/* --- CINEMA MODE DRAWER (Glass Overlay) --- */
+/* --- SOLID DRAWER (Curtain Mode) --- */
 
-/* =========================================
-   FIXED DRAWER (SOLID CURTAIN)
-   ========================================= */
-
-/* 1. UNLOCK THE PARENT CONTAINER */
-.task-card-container {
-    /* Critical: Allows the drawer to hang out of the box */
-    overflow: visible !important; 
-    position: relative;
-    z-index: 50; /* Above chat */
-}
-
-/* 2. THE DRAWER PANEL */
 .task-detail-panel {
-    /* Position relative to the Header Card */
+    /* POSITIONING: Hangs directly below the header */
     position: absolute;
-    top: 100%; /* Start exactly at the bottom edge */
+    top: 100%; /* Starts exactly at bottom edge of ribbon */
     left: 0;
     right: 0;
     
-    /* Height calculation: Fill screen minus header(100px) & margins */
-    height: 60vh; 
+    /* SIZE: Covers the chat area */
+    height: 65vh; /* Enough to cover the chat box */
     
-    /* VISUALS - SOLID BLACK WALL */
-    background: #000 !important;
+    /* VISUALS: Solid Black Wall */
+    background: #000 !important; 
     border: 1px solid #333;
-    border-top: none;
-    box-shadow: 0 50px 50px #000; /* Shadow to blend bottom */
+    border-top: none; 
+    box-shadow: 0 50px 50px #000;
     
     /* BEHAVIOR */
-    z-index: 100; /* Sit on top of Chat */
+    z-index: 100; /* Above Chat (1), Below Header (200) */
     opacity: 0;
-    pointer-events: none;
+    pointer-events: none; /* Click through to chat when closed */
     
-    /* Animation: Slide down slightly */
-    transform: translateY(-10px);
-    transition: all 0.3s ease-in-out;
+    /* ANIMATION */
+    transform: translateY(-20px); 
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     
-    /* Content Layout */
+    /* CONTENT LAYOUT */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -234,14 +221,13 @@ body {
     padding: 30px;
 }
 
-/* OPEN STATE */
 .task-detail-panel.open {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
 }
 
-/* TASK TEXT */
+/* Task Text inside Drawer */
 .drawer-task-text, #readyText {
     font-family: 'Rajdhani', sans-serif !important;
     font-size: 1.4rem;
@@ -250,11 +236,29 @@ body {
     line-height: 1.5;
     max-width: 90%;
     margin-bottom: 30px;
-    text-shadow: 0 0 10px rgba(0,0,0,1); /* Shadow to pop against black */
+    text-shadow: 0 0 10px rgba(0,0,0,1);
 }
 
-/* SKIP BUTTON */
-.btn-skip-small {
+/* Footer Buttons inside Drawer */
+.panel-footer {
+    width: 80%;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #333;
+    padding-top: 20px;
+    margin-top: 10px;
+}
+
+/* Hide Button */
+.text-btn {
+    background: transparent; border: none;
+    color: #666; font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 0.8rem; cursor: pointer; letter-spacing: 2px;
+}
+.text-btn:hover { color: white; }
+
+/* Skip Button */
+.btn-skip-small, .btn-dim {
     background: transparent;
     border: 1px solid #333;
     color: #666;
@@ -264,11 +268,31 @@ body {
     cursor: pointer;
     transition: 0.2s;
 }
-.btn-skip-small:hover {
+.btn-skip-small:hover, .btn-dim:hover {
     color: var(--neon-red);
     border-color: var(--neon-red);
     box-shadow: 0 0 15px rgba(255, 0, 60, 0.2);
 }
+
+/* Main Buttons (Request/Upload) */
+.action-btn { 
+    background: transparent; 
+    border: 1px solid var(--gold); 
+    color: var(--gold); 
+    padding: 12px 15px; 
+    font-family: 'Cinzel'; font-weight: 700; 
+    cursor: pointer; transition: 0.3s; 
+    /* Fix Z-Index */
+    position: relative; z-index: 201; 
+}
+.action-btn:hover { 
+    background: var(--gold); color: #000; 
+    box-shadow: 0 0 15px var(--gold); 
+}
+.btn-upload { background: rgba(255, 215, 0, 0.1); }
+
+/* Utility */
+.hidden { display: none !important; }
 
 /* =========================================
    5. CHAT, STORE, GALLERY & MODAL (UNCHANGED)
