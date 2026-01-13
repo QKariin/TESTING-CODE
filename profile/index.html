@@ -36,235 +36,226 @@
 
 <svg style="display:none;">
     <symbol id="icon-coin" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.69 1.64 1.83 1.64 1.22 0 1.6-.64 1.6-1.26 0-.81-.42-1.22-2.34-1.67-2.37-.59-3.54-1.7-3.54-3.41 0-1.68 1.29-2.94 3.28-3.29V4h2.66v1.93c1.61.27 2.87 1.28 3.01 3.05h-1.95c-.14-.99-.68-1.55-1.7-1.55-1.04 0-1.55.56-1.55 1.15 0 .75.46 1.2 2.37 1.65 2.51.6 3.58 1.74 3.58 3.52 0 1.82-1.46 3.09-3.28 3.34z"/></symbol>
+    <symbol id="icon-sparkles" viewBox="0 0 24 24"><path d="M9.5 1L8 4.5L4.5 6L8 7.5L9.5 11L11 7.5L14.5 6L11 4.5L9.5 1zm0 0"/><path d="M19 8.5L17.5 11L15 12.5L17.5 14L19 16.5L20.5 14L23 12.5L20.5 11L19 8.5zm0 0"/><path d="M16.5 18L15.5 20L13.5 21L15.5 22L16.5 24L17.5 22L19.5 21L17.5 20L16.5 18zm0 0"/></symbol>
 </svg>
 
 <div class="app-container">
     
     <div class="layout-left">
-        
-        <div class="glass-card profile-card" style="
-            background: #050505; 
-            border: 1px solid rgba(197, 160, 89, 0.2); 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9); 
-            border-radius: 4px; 
-            padding: 25px;
-            font-family: 'Cinzel', serif;">
+        <div id="subHierarchy" class="hierarchy-top">LOADING...</div>
 
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px;">
-                
-                <div id="subHierarchy" class="pc-rank" style="text-align: center; color: #c5a059; font-family: 'La Belle Aurore', cursive; font-size: 2.2rem; line-height: 1; text-transform: none;">
-                    Loading...
-                </div>
+        <div class="avatar-container" onclick="document.getElementById('profileUploadInput').click()">
+            <img id="profilePic" src="" alt="Avatar">
+        </div>
+        <div id="subName" class="identity-name">SLAVE</div>
 
-                <div class="pc-avatar-box" onclick="document.getElementById('profileUploadInput').click()" style="
-                    flex-shrink: 0; margin: 0; width: 80px; height: 80px; 
-                    border-radius: 50%; border: 1px solid #333; position: relative; background: #000;">
-                    <img id="profilePic" src="" class="pc-avatar-img" style="filter: grayscale(100%) contrast(1.2);">
-                    <div class="pc-avatar-edit-overlay"><span style="font-size:1rem; color:white; opacity: 0.5;">+</span></div>
-                </div>
-
-                <div id="subName" class="pc-name" style="text-align: center; letter-spacing: 4px; font-size: 1rem; color: #777; margin-top: 5px; line-height: 1;">
-                    SLAVE
-                </div>
+        <div class="stats-stack">
+            <div class="stat-row">
+                <span class="stat-lbl">MERIT</span>
+                <span id="points" class="stat-val">0</span>
             </div>
-
-            <div class="pc-stats-grid" style="display: grid; grid-template-columns: 1fr 1px 1fr; align-items: center; border-top: 1px solid #222; padding-top: 15px; margin-bottom: 25px;">
-                <div style="text-align: center;">
-                    <div style="font-family: 'Cinzel', serif; font-size: 0.5rem; letter-spacing: 1px; color: #555; text-transform: uppercase; margin-bottom: 4px;">Net Merit</div>
-                    <div id="points" class="ssr-val" style="font-size: 1.1rem; color: #f0f0f0; font-family: 'Cinzel', serif; letter-spacing: 1px;">0</div>
-                </div>
-                <div style="width: 1px; height: 30px; background: #222;"></div>
-                <div style="text-align: center;">
-                    <div style="font-family: 'Cinzel', serif; font-size: 0.5rem; letter-spacing: 1px; color: #555; text-transform: uppercase; margin-bottom: 4px;">Liquid Capital</div>
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-                        <div id="coins" class="ssr-val" style="font-size: 1.1rem; color: #c5a059; font-family: 'Cinzel', serif; letter-spacing: 1px;">0</div>
-                        <svg style="width:10px; height:10px; fill:#c5a059;"><rect width="10" height="10" transform="rotate(45 5 5)" /></svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="devotion-wrapper" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px;">
-                <div id="btn" class="kneel-btn-bar" 
-                        onmousedown="handleHoldStart(event)" onmouseup="handleHoldEnd(event)" 
-                        style="position: relative; display: block; cursor: pointer; height: 50px; background: #050505; border: 1px solid #c5a059; border-radius: 2px;">
-                    <span id="fill" class="bar-fill" style="display: block; position: absolute; top: 0; left: 0; height: 100%; width: 0%; z-index: 1; background: #300000;"></span> 
-                    <div class="bar-text" style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; height: 100%;">
-                        <span id="txt-main" style="font-family: 'Cinzel', serif; font-size: 0.9rem; font-weight: 700; color: #c5a059; letter-spacing: 3px;">INITIATE PROTOCOL</span>
-                    </div>
-                </div>
-
-                <div style="text-align: center;">
-                    <span style="font-family: 'Cinzel', serif; font-size: 0.8rem; color: #c5a059; letter-spacing: 2px; font-weight: 700; text-transform: uppercase;">
-                        TASK STREAK: <span id="statStreak">0</span>
-                    </span>
-                </div>
-            </div>
-
-            <div class="stats-toggle-btn" onclick="toggleStats()" style="color: #444; background: transparent; font-family: 'Inter', sans-serif; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; border: none; cursor: pointer; text-align: center; width: 100%;">
-                View Full Record ▾
+            <div class="stat-row">
+                <span class="stat-lbl">CAPITAL</span>
+                <span id="coins" class="stat-val">0</span>
             </div>
         </div>
-        <div class="nav-menu" style="margin-top: 20px;">
+
+        <div class="progress-section">
+            <div class="prog-labels">
+                <span>NEXT: <span id="nextLevelName">-</span></span>
+                <span id="pointsNeeded">0 to go</span>
+            </div>
+            <div class="prog-bg"><div id="progressBar" class="prog-fill"></div></div>
+        </div>
+
+        <button class="stats-toggle-btn" onclick="toggleStats()">EXPAND STATS ▾</button>
+        <div id="statsContent" class="stats-panel">
+            <div class="stat-line"><span>Streak</span> <strong id="statStreak">0</strong></div>
+            <div class="stat-line"><span>Total Tasks</span> <strong id="statTotal">0</strong></div>
+            <div class="stat-line"><span>Completed</span> <strong id="statCompleted">0</strong></div>
+            <div class="stat-line"><span>Skipped</span> <strong id="statSkipped">0</strong></div>
+            <div class="stat-line"><span>Total Kneeling</span> <strong id="statTotalKneels">0</strong></div>
+            <div class="stat-footer">
+                <span>SLAVE SINCE</span>
+                <strong id="slaveSinceDate">--/--/--</strong>
+            </div>
+        </div>
+
+        <div class="nav-menu">
           <button class="nav-btn active" onclick="switchTab('serve')">CONSOLE</button>
           <button class="nav-btn" onclick="switchTab('history')">SLAVE RECORD</button>
           <button class="nav-btn" onclick="switchTab('news')">QUEEN KARIN</button>
           <button class="nav-btn" onclick="switchTab('vault')">VAULT</button>
           <button class="nav-btn" onclick="switchTab('protocol')">PROTOCOL</button>
           <button class="nav-btn" onclick="switchTab('buy')">EXCHEQUER</button>
+      </div>
+    </div>
+
+<div class="layout-right">
+    
+    <div class="right-header">
+        <div class="kneel-center-wrapper">
+            <div id="btn" class="kneel-bar-graphic" 
+                 onmousedown="handleHoldStart(event)" 
+                 onmouseup="handleHoldEnd(event)" 
+                 onmouseleave="handleHoldEnd(event)" 
+                 ontouchstart="handleHoldStart(event)" 
+                 ontouchend="handleHoldEnd(event)">
+                <div id="fill" class="graphic-fill"></div>
+                <span id="txt-main" class="graphic-text">HOLD TO KNEEL</span>
+            </div>
         </div>
     </div>
-    <div class="layout-right">
+
+    <div class="content-stage">
         
-        <div class="right-header">
-            <div class="kneel-center-wrapper">
-                <div id="btn" class="kneel-bar-graphic" 
-                     onmousedown="handleHoldStart(event)" 
-                     onmouseup="handleHoldEnd(event)" 
-                     onmouseleave="handleHoldEnd(event)" 
-                     ontouchstart="handleHoldStart(event)" 
-                     ontouchend="handleHoldEnd(event)">
-                    <div id="fill" class="graphic-fill"></div>
-                    <span id="txt-main" class="graphic-text">HOLD TO KNEEL</span>
+        <div id="viewServingTop" class="view-wrapper">
+            
+            <div id="taskCard" class="glass-card task-ribbon">
+                <div class="ribbon-left">
+                    <div id="activeBadge" class="hidden">
+                        <span id="timerDisplay" class="ribbon-timer">00:00:00</span>
+                    </div>
+                </div>
+                
+                <div id="taskContent" class="ribbon-center">
+                    <span class="ribbon-label">CURRENT DIRECTIVE</span>
+                    <h2 id="readyText" class="ribbon-status">AWAITING ORDERS</h2>
+                </div>
+
+                <div class="ribbon-right">
+                    <div id="mainButtonsArea">
+                        <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
+                    </div>
+                    
+                    <div id="cooldownSection" class="hidden" style="display: flex; gap: 10px; align-items: center;">
+                        <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" 
+                               onchange="this.files.length > 0 ? (document.getElementById('btnUpload').innerHTML = 'TRANSMITTING...', document.getElementById('btnUpload').classList.add('btn-loading'), handleEvidenceUpload(this)) : null">
+                        
+                        <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
+                        <button id="btnSkip" onclick="cancelPendingTask()" class="btn-dim" style="background:transparent; border: 1px solid #444; color: #666; padding: 8px 20px; cursor: pointer;">SKIP</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="chatCard" class="chat-container">
+                <div id="chatBox" class="chat-body-frame">
+                    <div id="kneelRewardOverlay" class="hidden overlay-center">
+                        <div style="text-align: center;">
+                            <h2 style="color:white; margin-bottom: 20px; font-family:'Orbitron';">DEVOTION RECOGNIZED</h2>
+                            <div style="display:flex; gap:10px;">
+                                <button onclick="claimKneelReward('coins')" class="action-btn">COINS</button>
+                                <button onclick="claimKneelReward('points')" class="action-btn">POINTS</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="chatMediaOverlay" class="hidden overlay-center">
+                        <div id="mediaOverlayClose" onclick="closeChatPreview()" style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer;">X</div>
+                        <div id="chatMediaOverlayContent"></div>
+                    </div>
+                    
+                    <div id="tributeHuntOverlay" class="hidden overlay-center" style="background:#000; padding:20px; flex-direction:column;">
+                        <button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer;">CLOSE</button>
+                        <div id="huntStoreGrid" class="store-grid" style="margin-top: 20px;"></div>
+                        <textarea id="huntNote" class="hidden"></textarea>
+                        <div id="huntProgress" class="hidden"></div>
+                    </div>
+
+                    <div id="chatContent" class="chat-area"></div>
+                </div>
+                
+                <div class="chat-footer">
+                    <button id="tributeHuntBtn" onclick="toggleTributeHunt()" class="icon-btn">🎁</button>
+                    <input type="text" id="chatMsgInput" class="chat-input" placeholder="AWAITING INPUT..." onkeypress="handleChatKey(event)">
+                    <button class="chat-send" onclick="sendChatMessage()" class="icon-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                             <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="content-stage">
-            
-            <div id="viewServingTop" class="view-wrapper">
-                
-                <div id="taskCard" class="glass-card task-ribbon">
-                    <div class="ribbon-left">
-                        <div id="activeBadge" class="hidden">
-                            <span id="timerDisplay" class="ribbon-timer">00:00:00</span>
+        <div id="viewBuy" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
+            <div class="glass-card" style="margin-bottom: 20px;"><h2 style="text-align: center; color: var(--neon-yellow); font-family:'Cinzel';">EXCHEQUER</h2></div>
+            <div class="store-grid">
+                <div class="store-item"><div>1K</div><button class="si-btn" onclick="buyRealCoins(1000)">€10.00</button></div>
+                <div class="store-item"><div>5.5K</div><button class="si-btn" onclick="buyRealCoins(5500)">€50.00</button></div>
+                <div class="store-item"><div>12K</div><button class="si-btn" onclick="buyRealCoins(12000)">€100.00</button></div>
+                <div class="store-item"><div>30K</div><button class="si-btn" onclick="buyRealCoins(30000)">€250.00</button></div>
+                <div class="store-item"><div>70K</div><button class="si-btn" onclick="buyRealCoins(70000)">€500.00</button></div>
+                <div class="store-item"><div>150K</div><button class="si-btn" onclick="buyRealCoins(150000)">€1000.00</button></div>
+            </div>
+        </div>
+
+        <div id="historySection" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto; position: relative; min-height: 500px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:15px; padding-left:5px;">
+                <div style="width:6px; height:6px; background:var(--neon-yellow); border-radius:50%;"></div> 
+                <span style="font-family:'Orbitron'; font-weight:bold; font-size:0.9rem; color:white;">EVIDENCE LOG</span>
+            </div>
+            <div id="pendingSection" class="hidden" style="width:100%; margin-bottom: 25px;">
+                <div class="section-header" style="color:var(--neon-yellow); border-color:rgba(255,215,0,0.3);">PENDING REVIEW</div>
+                <div id="pendingGrid" class="pending-grid"></div>
+            </div>
+            <div class="section-header">HISTORY LOG</div>
+            <div id="historyGrid" class="gallery-grid"></div>
+            <button id="loadMoreBtn" onclick="document.getElementById('historyGrid').style.maxHeight='none'; if(typeof loadMoreHistory === 'function') loadMoreHistory();" class="action-btn" style="display:block; margin:20px auto;">LOAD MORE...</button>
+        </div>
+
+        <div id="viewNews" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
+            <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">QUEEN KARIN</h2></div>
+            <div id="newsGrid" class="gallery-grid"></div>
+        </div>
+
+        <div id="viewVault" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
+            <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">VAULT</h2></div>
+            <div id="vaultGrid" class="gallery-grid"></div>
+        </div>
+
+        <div id="viewProtocol" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
+            <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">PROTOCOL</h2></div>
+            <div style="color: #ccc; text-align: center; font-family:'Cinzel';">Obedience is the only currency.</div>
+        </div>
+
+        <div id="viewRewards" class="hidden"></div>
+        <div id="viewHierarchy" class="hidden"></div>
+        <div id="viewSession" class="hidden"></div>
+
+        <div id="glassModal" class="glass-modal">
+            <div id="modalMediaContainer" class="modal-bg-photo"></div>
+            <div id="modalGlassOverlay" class="modal-glass-overlay" onclick="restoreOverlay(event)">
+                <div id="modalCloseX" onclick="closeModal(null)" style="position:absolute; top:10px; right:20px; font-size:2rem; cursor:pointer; color:white; z-index:100;">×</div>
+                <div class="theater-content">
+                    <div id="modalInfoView" class="sub-view">
+                        <div class="stamp-container">
+                            <img id="modalStatusSticker" src="" class="m-status-sticker-lg" style="height:120px; width:auto; margin-bottom:15px;">
+                        </div>
+                        <div class="reward-container">
+                            <div id="modalPoints" class="m-points-lg" style="font-size:2rem; color:var(--neon-yellow);">+0 PTS</div>
+                            <div id="modalSticker"></div>
                         </div>
                     </div>
-                    
-                    <div id="taskContent" class="ribbon-center">
-                        <span class="ribbon-label">CURRENT DIRECTIVE</span>
-                        <h2 id="readyText" class="ribbon-status">AWAITING ORDERS</h2>
+                    <div id="modalFeedbackView" class="sub-view hidden">
+                        <h3 class="view-label">QUEEN'S FEEDBACK</h3>
+                        <div id="modalFeedbackMedia" class="fb-media-theater"></div>
+                        <div id="modalFeedbackText" class="theater-text-box"></div>
                     </div>
-
-                    <div class="ribbon-right">
-                        <div id="mainButtonsArea">
-                            <button id="newTaskBtn" onclick="getRandomTask()" class="action-btn">REQUEST TASK</button>
-                        </div>
-                        
-                        <div id="cooldownSection" class="hidden" style="display: flex; gap: 10px; align-items: center;">
-                            <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" 
-                                   onchange="this.files.length > 0 ? (document.getElementById('btnUpload').innerHTML = 'TRANSMITTING...', document.getElementById('btnUpload').classList.add('btn-loading'), handleEvidenceUpload(this)) : null">
-                            
-                            <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD PROOF</button>
-                            <button id="btnSkip" onclick="cancelPendingTask()" class="btn-dim" style="background:transparent; border: 1px solid #444; color: #666; padding: 8px 20px; cursor: pointer;">SKIP</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="chatCard" class="chat-container">
-                    <div id="chatBox" class="chat-body-frame">
-                        <div id="kneelRewardOverlay" class="hidden overlay-center">
-                            <div style="text-align: center;">
-                                <h2 style="color:white; margin-bottom: 20px; font-family:'Orbitron';">DEVOTION RECOGNIZED</h2>
-                                <div style="display:flex; gap:10px;">
-                                    <button onclick="claimKneelReward('coins')" class="action-btn">COINS</button>
-                                    <button onclick="claimKneelReward('points')" class="action-btn">POINTS</button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div id="chatMediaOverlay" class="hidden overlay-center">
-                            <div id="mediaOverlayClose" onclick="closeChatPreview()" style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer;">X</div>
-                            <div id="chatMediaOverlayContent"></div>
-                        </div>
-                        
-                        <div id="tributeHuntOverlay" class="hidden overlay-center" style="background:#000; padding:20px; flex-direction:column;">
-                            <button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer;">CLOSE</button>
-                            <div id="huntStoreGrid" class="store-grid" style="margin-top: 20px;"></div>
-                            <textarea id="huntNote" class="hidden"></textarea>
-                            <div id="huntProgress" class="hidden"></div>
-                        </div>
-
-                        <div id="chatContent" class="chat-area"></div>
-                    </div>
-                    
-                    <div class="chat-footer">
-                        <button id="tributeHuntBtn" onclick="toggleTributeHunt()" class="icon-btn">🎁</button>
-                        <input type="text" id="chatMsgInput" class="chat-input" placeholder="AWAITING INPUT..." onkeypress="handleChatKey(event)">
-                        <button class="chat-send" onclick="sendChatMessage()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                 <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="viewBuy" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                <div class="glass-card" style="margin-bottom: 20px;"><h2 style="text-align: center; color: var(--neon-yellow); font-family:'Cinzel';">EXCHEQUER</h2></div>
-                <div class="store-grid">
-                    <div class="store-item"><div>1K</div><button class="si-btn" onclick="buyRealCoins(1000)">€10.00</button></div>
-                    <div class="store-item"><div>5.5K</div><button class="si-btn" onclick="buyRealCoins(5500)">€50.00</button></div>
-                    <div class="store-item"><div>12K</div><button class="si-btn" onclick="buyRealCoins(12000)">€100.00</button></div>
-                    <div class="store-item"><div>30K</div><button class="si-btn" onclick="buyRealCoins(30000)">€250.00</button></div>
-                    <div class="store-item"><div>70K</div><button class="si-btn" onclick="buyRealCoins(70000)">€500.00</button></div>
-                    <div class="store-item"><div>150K</div><button class="si-btn" onclick="buyRealCoins(150000)">€1000.00</button></div>
-                </div>
-            </div>
-
-            <div id="historySection" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto; position: relative; min-height: 500px;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:15px; padding-left:5px;">
-                    <div style="width:6px; height:6px; background:var(--neon-yellow); border-radius:50%;"></div> 
-                    <span style="font-family:'Orbitron'; font-weight:bold; font-size:0.9rem; color:white;">EVIDENCE LOG</span>
-                </div>
-                <div id="pendingSection" class="hidden" style="width:100%; margin-bottom: 25px;">
-                    <div class="section-header" style="color:var(--neon-yellow); border-color:rgba(255,215,0,0.3);">PENDING REVIEW</div>
-                    <div id="pendingGrid" class="pending-grid"></div>
-                </div>
-                <div class="section-header">HISTORY LOG</div>
-                <div id="historyGrid" class="gallery-grid"></div>
-                <button id="loadMoreBtn" onclick="document.getElementById('historyGrid').style.maxHeight='none'; if(typeof loadMoreHistory === 'function') loadMoreHistory();" class="action-btn" style="display:block; margin:20px auto;">LOAD MORE...</button>
-            </div>
-
-            <div id="viewNews" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">QUEEN KARIN</h2></div>
-                <div id="newsGrid" class="gallery-grid"></div>
-            </div>
-
-            <div id="viewVault" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">VAULT</h2></div>
-                <div id="vaultGrid" class="gallery-grid"></div>
-            </div>
-
-            <div id="viewProtocol" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">PROTOCOL</h2></div>
-                <div style="color: #ccc; text-align: center; font-family:'Cinzel';">Obedience is the only currency.</div>
-            </div>
-
-            <div id="glassModal" class="glass-modal">
-                <div id="modalMediaContainer" class="modal-bg-photo"></div>
-                <div id="modalGlassOverlay" class="modal-glass-overlay">
-                    <div id="modalCloseX" onclick="closeModal(null)" style="position:absolute; top:10px; right:20px; font-size:2rem; cursor:pointer; color:white; z-index:100;">×</div>
-                    <div class="theater-content">
-                        <div id="modalInfoView" class="sub-view">
-                            <div class="stamp-container">
-                                <img id="modalStatusSticker" src="" class="m-status-sticker-lg" style="height:120px; width:auto; margin-bottom:15px;">
-                            </div>
-                            <div class="reward-container">
-                                <div id="modalPoints" class="m-points-lg" style="font-size:2rem; color:var(--neon-yellow);">+0 PTS</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer-menu" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; margin-top:auto;">
-                        <button onclick="event.stopPropagation(); toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
-                        <button onclick="event.stopPropagation(); toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
-                        <button onclick="event.stopPropagation(); toggleHistoryView('proof')" class="history-action-btn" style="border-color:var(--neon-yellow); color:var(--neon-yellow);">SEE PROOF</button>
-                        <button onclick="event.stopPropagation(); toggleHistoryView('info')" class="history-action-btn">STATUS</button>
-                        <button onclick="event.stopPropagation(); closeModal(null)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE</button>
+                    <div id="modalTaskView" class="sub-view hidden">
+                        <h3 class="view-label">THE ASSIGNMENT</h3>
+                        <div id="modalOrderText" class="theater-text-box"></div>
                     </div>
                 </div>
+                <div class="modal-footer-menu" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; margin-top:auto;">
+                    <button onclick="event.stopPropagation(); toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
+                    <button onclick="event.stopPropagation(); toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
+                    <button onclick="event.stopPropagation(); toggleHistoryView('proof')" class="history-action-btn" style="border-color:var(--neon-yellow); color:var(--neon-yellow);">SEE PROOF</button>
+                    <button onclick="event.stopPropagation(); toggleHistoryView('info')" class="history-action-btn">STATUS</button>
+                    <button onclick="event.stopPropagation(); closeModal(null)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE</button>
+                </div>
             </div>
+        </div>
 
-        </div> 
     </div> 
 </div>
 </body>
