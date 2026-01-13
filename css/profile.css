@@ -116,7 +116,7 @@ body {
 .view-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; }
 
 /* =========================================
-   4. TASK RIBBON & CONTROLS (CINZEL FONT UPDATE)
+   4. TASK RIBBON & CONTROLS (RAJDHANI TACTICAL)
    ========================================= */
 
 /* The Header Bar */
@@ -132,14 +132,15 @@ body {
     z-index: 20; 
 }
 
-/* --- THE FONT UPDATE IS HERE --- */
+/* --- THE FONT UPDATE (RAJDHANI) --- */
 
 /* 1. The "UNPRODUCTIVE" / "WORKING" Text */
 .status-text-lg {
-    font-family: 'Cinzel', serif !important; /* CHANGED FROM ORBITRON */
+    font-family: 'Rajdhani', sans-serif !important;
     font-weight: 700; 
-    font-size: 0.9rem;
-    letter-spacing: 3px; /* Wider spacing looks more expensive */
+    font-size: 1.1rem; /* Slightly larger for readability */
+    letter-spacing: 2px; 
+    text-transform: uppercase;
     margin-top: 5px;
 }
 
@@ -149,13 +150,14 @@ body {
 
 .status-working { 
     color: var(--neon-green); 
-    text-shadow: 0 0 15px rgba(0,255,0,0.4); 
+    text-shadow: 0 0 10px rgba(0,255,0,0.4); 
 }
 
 /* 2. The "AWAITING DIRECTIVE..." Text */
 .ribbon-status {
-    font-family: 'Cinzel', serif !important; /* CHANGED FROM INTER */
-    font-size: 0.85rem; 
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 600;
+    font-size: 0.95rem; 
     color: #aaa; 
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -163,23 +165,24 @@ body {
 
 /* 3. The Timer (00:00:00) */
 .ribbon-timer {
-    font-family: 'Cinzel', serif !important; /* CHANGED FROM ORBITRON */
-    font-size: 2rem; 
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 700;
+    font-size: 2.2rem; /* Big and clear */
     color: white; 
-    font-weight: 700; 
     line-height: 1;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
 }
 
 /* 4. The "See Directive" Button */
 .see-task-link {
-    font-family: 'Cinzel', serif !important;
-    font-size: 0.65rem; 
+    font-family: 'Rajdhani', sans-serif !important;
+    font-size: 0.8rem; /* Easier to read */
+    font-weight: 700;
     color: var(--gold); 
     cursor: pointer; 
-    margin-top: 8px; 
+    margin-top: 5px; 
     letter-spacing: 2px; 
-    font-weight: 700; 
+    text-transform: uppercase;
     padding: 5px;
     border-bottom: 1px solid transparent;
     transition: 0.3s;
@@ -189,7 +192,7 @@ body {
     border-bottom-color: var(--gold);
 }
 
-/* --- DRAWER & REST OF CSS STAYS THE SAME --- */
+/* --- DRAWER & LAYOUT --- */
 .task-detail-panel {
     background: #000;
     border: 1px solid #333;
@@ -217,10 +220,13 @@ body {
 /* Text Button (Hide/Show) */
 .text-btn {
     background: none; border: none; 
-    color: #666; font-family: 'Cinzel', serif; /* Updated to match */
-    font-size: 0.7rem; 
+    color: #666; 
+    font-family: 'Rajdhani', sans-serif; /* Consistent font */
+    font-weight: 700;
+    font-size: 0.8rem; 
     cursor: pointer;
     letter-spacing: 1px;
+    text-transform: uppercase;
 }
 .text-btn:hover { color: white; }
 
