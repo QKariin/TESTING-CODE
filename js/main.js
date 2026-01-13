@@ -28,10 +28,9 @@ import { Bridge } from './bridge.js';
 
 // --- 2. DRAWER LOGIC (The Only Interactive Part) ---
 
-window.toggleTaskDrawer = function(forceOpen = null) {
-    const drawer = document.getElementById('taskDrawer');
-    const btn = document.querySelector('.drawer-toggle');
-    
+window.toggleTaskDetails = function(forceOpen = null) {
+    const drawer = document.getElementById('taskDetailPanel');
+    const link = document.querySelector('.see-task-link');
     if (!drawer) return;
 
     const isOpen = drawer.classList.contains('open');
@@ -39,42 +38,51 @@ window.toggleTaskDrawer = function(forceOpen = null) {
 
     if (shouldOpen) {
         drawer.classList.add('open');
-        if(btn) btn.innerHTML = "▲ HIDE ASSIGNMENT";
+        if(link) link.innerText = "▲ HIDE ASSIGNMENT";
     } else {
         drawer.classList.remove('open');
-        if(btn) btn.innerHTML = "▼ SEE ASSIGNMENT";
+        if(link) link.innerText = "▼ SEE ASSIGNMENT";
     }
 };
 
-// --- 3. UI STATE MACHINE (30/40/30 Logic) ---
-
 function updateTaskUIState(isActive) {
-    // Middle Column Elements
-    const idleState = document.getElementById('stateIdle');
-    const activeState = document.getElementById('stateActive');
+    // Left (Status)
+    const statusInd = document.getElementById('statusIndicator');
     
-    // Right Column Elements
-    const btnRequest = document.getElementById('btnAreaRequest');
-    const btnUpload = document.getElementById('btnAreaUpload');
+    // Center (Text vs Timer)
+    const idleMsg = document.getElementById('idleMessage');
+    const timerRow = document.getElementById('activeTimerRow');
+    
+    // Right (Buttons)
+    const btnNew = document.getElementById('newTaskBtn');
+    const btnUploadContainer = document.getElementById('uploadBtnContainer');
 
     if (isActive) {
-        // --- SWITCH TO WORKING MODE ---
-        if(idleState) idleState.classList.add('hidden');
-        if(activeState) activeState.classList.remove('hidden');
+        // ACTIVE STATE
+        if(statusInd) {
+            statusInd.innerText = "WORKING";
+            statusInd.className = "status-text-lg status-working";
+        }
+        if(idleMsg) idleMsg.classList.add('hidden');
+        if(timerRow) timerRow.classList.remove('hidden'); // Show Timer + Toggle
         
-        if(btnRequest) btnRequest.classList.add('hidden');
-        if(btnUpload) btnUpload.classList.remove('hidden');
+        if(btnNew) btnNew.classList.add('hidden');
+        if(btnUploadContainer) btnUploadContainer.classList.remove('hidden'); // Show Upload
         
     } else {
-        // --- SWITCH TO IDLE MODE ---
-        if(idleState) idleState.classList.remove('hidden');
-        if(activeState) activeState.classList.add('hidden');
+        // IDLE STATE
+        if(statusInd) {
+            statusInd.innerText = "UNPRODUCTIVE";
+            statusInd.className = "status-text-lg status-unproductive";
+        }
+        if(idleMsg) idleMsg.classList.remove('hidden');
+        if(timerRow) timerRow.classList.add('hidden'); // Hide Timer
         
-        if(btnRequest) btnRequest.classList.remove('hidden');
-        if(btnUpload) btnUpload.classList.add('hidden');
+        if(btnNew) btnNew.classList.remove('hidden');
+        if(btnUploadContainer) btnUploadContainer.classList.add('hidden');
         
-        // Auto-close drawer when finished
-        window.toggleTaskDrawer(false);
+        // Auto Close Drawer
+        window.toggleTaskDetails(false);
     }
 }
 
