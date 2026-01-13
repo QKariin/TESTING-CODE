@@ -1,4 +1,4 @@
-// main.js - FIXED TOGGLE LOGIC & SAFETY CHECKS
+// main.js - FIXED: DRAWER ONLY OPENS ON COMMAND
 
 import { CONFIG, URLS, LEVELS, FUNNY_SAYINGS, STREAM_PASSWORDS } from './config.js';
 import { 
@@ -27,7 +27,7 @@ import { Bridge } from './bridge.js';
 
 // --- 2. CRITICAL UI FUNCTIONS ---
 
-// FIXED: Explicit logic to handle null/true/false correctly
+// Toggle the slide-down panel
 window.toggleTaskDetails = function(forceOpen = null) {
     if (window.event) window.event.stopPropagation();
 
@@ -44,30 +44,35 @@ window.toggleTaskDetails = function(forceOpen = null) {
     } else if (forceOpen === false) {
         shouldOpen = false;
     } else {
-        shouldOpen = !isOpen; // Standard Toggle
+        shouldOpen = !isOpen; 
     }
 
     if (shouldOpen) {
         panel.classList.add('open');
         panel.style.maxHeight = "500px";
         panel.style.opacity = "1";
-        if(link) link.innerHTML = "▲ HIDE DIRECTIVE ▲";
+        if(link) {
+            link.innerHTML = "▲ HIDE DIRECTIVE ▲";
+            link.style.opacity = "1"; 
+        }
     } else {
         panel.classList.remove('open');
         panel.style.maxHeight = "0px";
         panel.style.opacity = "0";
-        if(link) link.innerHTML = "▼ SEE DIRECTIVE ▼";
+        if(link) {
+            link.innerHTML = "▼ SEE DIRECTIVE ▼";
+            link.style.opacity = "1";
+        }
     }
 };
 
-// FIXED: Added safety checks (?) to prevent crashing if ID is missing
+// Update Buttons & Status Text
 window.updateTaskUIState = function(isActive) {
     const statusLabel = document.getElementById('taskStatusLabel');
     const timerRow = document.getElementById('activeTimerRow');
-    const reqBtn = document.getElementById('mainButtonsArea'); // Changed to match HTML container
+    const reqBtn = document.getElementById('mainButtonsArea'); 
     const uploadArea = document.getElementById('uploadBtnContainer');
     
-    // Middle Column Status Logic (For 30/40/30 layout compatibility)
     const statusInd = document.getElementById('statusIndicator');
     const idleMsg = document.getElementById('idleMessage');
 
@@ -107,7 +112,7 @@ window.updateTaskUIState = function(isActive) {
     }
 };
 
-// Global Click Listener
+// Global Click Listener (Handles Outside Clicks Only)
 document.addEventListener('click', function(event) {
     const card = document.getElementById('taskCard');
     const panel = document.getElementById('taskDetailPanel');
@@ -154,6 +159,8 @@ function initDomProfile() {
     }
 }
 initDomProfile();
+
+// --- 4. BRIDGE LISTENER ---
 
 Bridge.listen((data) => {
     const ignoreList = ["CHAT_ECHO", "UPDATE_FULL_DATA", "UPDATE_DOM_STATUS", "instantUpdate", "instantReviewSuccess"];
@@ -268,12 +275,10 @@ window.addEventListener("message", (event) => {
                     if (pendingTaskState) {
                         setCurrentTask(pendingTaskState.task);
                         restorePendingUI();
-                        // Call the FIXED helper
+                        
+                        // FIXED: UPDATE UI BUT DO NOT FORCE OPEN DRAWER
                         window.updateTaskUIState(true);
                         
-                        if (!isInitialLoad) {
-                             window.toggleTaskDetails(true);
-                        }
                     } else if (!resetUiTimer) {
                         window.updateTaskUIState(false);
                         const rt = document.getElementById('readyText');
