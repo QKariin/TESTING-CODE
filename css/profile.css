@@ -4,13 +4,12 @@
 :root {
     --bg-void: #050505;
     --gold: #c5a059;
-    --gold-dim: rgba(197, 160, 89, 0.2);
+    --silver: #888888; /* New Standard */
+    --silver-dim: rgba(136, 136, 136, 0.2);
     --text-white: #e0e0e0;
     --glass: rgba(15, 15, 15, 0.95);
-    --neon-green: #00ff00;
-    --neon-yellow: #ffd700;
+    --neon-green: #00ff00; 
     --neon-red: #ff003c;
-    --red-grad: linear-gradient(135deg, #500000 0%, #ff0000 100%); 
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
@@ -19,7 +18,7 @@ body {
     background-color: var(--bg-void);
     background: radial-gradient(circle at 80% 20%, #111 0%, var(--bg-void) 80%);
     color: var(--text-white);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Cinzel', serif; /* GLOBAL FONT CHANGE */
     height: 100vh;
     width: 100vw;
     overflow: hidden;
@@ -37,7 +36,7 @@ body {
 .hidden { display: none !important; }
 
 /* =========================================
-   2. LEFT PILLAR (FIXED FUNCTIONALITY)
+   2. LEFT PILLAR (THE DOSSIER)
    ========================================= */
 
 .layout-left {
@@ -46,7 +45,7 @@ body {
     height: 100%;
     background: linear-gradient(145deg, #1a1a1a 0%, #0a0a0a 100%);
     box-shadow: inset 20px 0 50px rgba(0,0,0,0.8);
-    border-right: 1px solid rgba(197, 160, 89, 0.1);
+    border-right: 1px solid rgba(255,255,255,0.05);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -72,38 +71,48 @@ body {
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
     filter: sepia(30%) contrast(1.1) brightness(0.9); z-index: 1;
 }
+
+/* HIERARCHY (Grey Cinzel) */
 .hierarchy-top {
-    font-family: 'Black Ops One', 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700;
-    color: rgba(197, 160, 89, 0.6); text-transform: uppercase; letter-spacing: 4px;
-    border: 2px solid rgba(197, 160, 89, 0.3); padding: 5px 15px;
-    transform: rotate(-3deg); margin-bottom: 30px; background: rgba(0,0,0,0.4);
+    font-family: 'Cinzel', serif; 
+    font-size: 1rem; font-weight: 700;
+    color: #666; /* Grey */
+    text-transform: uppercase; letter-spacing: 4px;
+    margin-bottom: 30px; 
+    text-shadow: 0 2px 5px black;
 }
+
+/* NAME (White Cinzel) */
 .identity-name { 
-    font-family: 'Cinzel', serif; font-size: 1.6rem; color: #fff; letter-spacing: 6px; 
+    font-family: 'Cinzel', serif; 
+    font-size: 1.6rem; color: #fff; letter-spacing: 6px; 
     text-transform: uppercase; margin-bottom: 30px; text-align: center; z-index: 2;
 }
 
-/* STATS ROW */
+/* STATS ROW (Cinzel) */
 .stats-stack-row {
     display: flex; flex-direction: row; justify-content: space-between; align-items: center;
     width: 100%; margin-bottom: 30px; padding: 15px 0;
     border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .stat-item { flex: 1; display: flex; flex-direction: column; align-items: center; }
-.stat-divider { width: 1px; height: 40px; background: linear-gradient(to bottom, transparent, var(--gold), transparent); opacity: 0.5; }
-.stat-lbl { font-family: 'Rajdhani', sans-serif; font-size: 0.7rem; color: #888; letter-spacing: 2px; text-transform: uppercase; }
-.stat-val { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--gold); font-weight: 700; }
+.stat-divider { width: 1px; height: 40px; background: linear-gradient(to bottom, transparent, #444, transparent); opacity: 0.5; }
 
-/* KNEEL BUTTON */
-.kneel-sidebar-wrapper {
-    width: 100%; height: 50px; margin-bottom: 30px;
+.stat-lbl { 
+    font-family: 'Cinzel', serif; 
+    font-size: 0.7rem; color: #666; letter-spacing: 2px; text-transform: uppercase; 
 }
+.stat-val { 
+    font-family: 'Cinzel', serif; 
+    font-size: 1.4rem; color: #ccc; font-weight: 700; 
+}
+
+/* KNEEL BUTTON (Cinzel) */
+.kneel-sidebar-wrapper { width: 100%; height: 50px; margin-bottom: 30px; }
 .kneel-bar-graphic {
-    width: 100%; height: 100%;
-    border: 1px solid var(--gold);
+    width: 100%; height: 100%; border: 1px solid var(--gold);
     display: flex; align-items: center; justify-content: center;
-    position: relative; overflow: hidden;
-    cursor: pointer; background: rgba(0,0,0,0.3);
+    position: relative; overflow: hidden; cursor: pointer; background: rgba(0,0,0,0.3);
 }
 .graphic-fill {
     position: absolute; top: 0; left: 0; bottom: 0; width: 0%; 
@@ -111,35 +120,48 @@ body {
     transition: width 0.1s linear;
 }
 .graphic-text {
-    position: relative; z-index: 2; font-family: 'Cinzel', serif; color: var(--gold);
+    position: relative; z-index: 2; 
+    font-family: 'Cinzel', serif; color: var(--gold);
     letter-spacing: 4px; font-size: 0.9rem; pointer-events: none; text-shadow: 0 0 5px black;
 }
 
-/* PROGRESS BAR */
+/* PROGRESS BAR (Grey Cinzel) */
 .progress-section { width: 100%; margin-bottom: 25px; position: relative; z-index: 5; padding: 0 5px; }
-.prog-labels { display: flex; justify-content: space-between; font-family: 'Cinzel', serif; font-size: 0.65rem; color: var(--gold); margin-bottom: 6px; letter-spacing: 1px; }
-.prog-bg { width: 100%; height: 6px; background: #111; border: 1px solid #444; border-radius: 3px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
-.prog-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #8B6508, var(--gold), #fff); box-shadow: 0 0 10px rgba(197, 160, 89, 0.5); transition: width 0.5s ease-out; }
+.prog-labels { 
+    display: flex; justify-content: space-between; 
+    font-family: 'Cinzel', serif; font-size: 0.65rem; 
+    color: #666; /* Grey */
+    margin-bottom: 6px; letter-spacing: 1px; 
+}
+/* Highlight the "Secretary" in Gold if needed, otherwise inherit grey */
+#nextLevelName { color: var(--gold); }
 
-/* STATS PANEL */
+.prog-bg { width: 100%; height: 4px; background: #111; border: 1px solid #333; }
+.prog-fill { height: 100%; width: 0%; background: #666; box-shadow: 0 0 10px rgba(255,255,255,0.1); transition: width 0.5s ease-out; }
+
+/* EXPAND STATS (Untouched) */
 .stats-toggle-btn { background: transparent; border: none; color: #444; font-family: 'Orbitron'; font-size: 0.6rem; cursor: pointer; margin-bottom: 10px; transition:0.3s; width: 100%; }
 .stats-toggle-btn:hover { color: var(--gold); }
-.stats-panel { display: none; width: 100%; padding: 15px; background: rgba(0,0,0,0.3); border: 1px solid #222; margin-bottom: 20px; font-family: 'Rajdhani'; font-size: 0.85rem; color: #888; }
+.stats-panel { display: none; width: 100%; padding: 15px; background: rgba(0,0,0,0.3); border: 1px solid #222; margin-bottom: 20px; font-family: 'Cinzel', serif; font-size: 0.85rem; color: #888; }
 #statsContent.open { display: block !important; animation: fadeIn 0.3s ease; }
 .stat-line { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 2px;}
 
-/* NAV MENU */
-.nav-menu { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+/* NAV MENU (Grey Cinzel + Spacing) */
+.nav-menu { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .nav-btn {
-    background: transparent; border: none; color: #555; text-align: left;
-    font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; font-weight: 600;
-    letter-spacing: 2px; cursor: pointer;
+    background: transparent; border: none; 
+    color: #555; text-align: left;
+    font-family: 'Cinzel', serif; /* Cinzel */
+    font-size: 0.85rem; font-weight: 600;
+    letter-spacing: 3px; /* Spacing */
+    cursor: pointer;
     transition: 0.3s; padding: 12px 10px; 
     border-left: 1px solid transparent; 
 }
 .nav-btn:hover, .nav-btn.active { 
-    color: #fff; border-left-color: var(--gold); 
-    background: linear-gradient(90deg, rgba(197, 160, 89, 0.05), transparent);
+    color: #ccc; /* Lighter Grey */
+    border-left-color: #888; 
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), transparent);
     padding-left: 20px; 
 }
 
@@ -147,244 +169,171 @@ body {
    3. RIGHT STAGE
    ========================================= */
 .layout-right { flex-grow: 1; height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-.glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--gold-dim); }
+.glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid #333; }
 .content-stage { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
 .view-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; }
 
 /* =========================================
-   4. TASK RIBBON & CONTROLS (FINAL FIX)
+   4. TASK RIBBON (GREY CINZEL / SILVER FRAMES)
    ========================================= */
 
 .task-ribbon {
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between; 
-    padding: 0; 
-    height: 100px; 
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 0 10px; height: 100px; 
     background: rgba(10,10,10,0.95); 
-    border: 1px solid var(--gold-dim);
-    position: relative;
-    z-index: 100;
+    border: 1px solid #333; /* Dark Grey Border */
+    position: relative; z-index: 100;
 }
 
-/* --- TYPOGRAPHY HIERARCHY --- */
+/* LEFT: Status (Grey Cinzel) */
+.ribbon-left {
+    width: 30%; border-right: 1px solid rgba(255,255,255,0.05); 
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
+.ribbon-label { 
+    font-family: 'Cinzel', serif; font-size: 0.6rem; color: #444; 
+    letter-spacing: 4px; font-weight: 700; margin-bottom: 5px; 
+}
+.status-text-lg { 
+    font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.1rem; 
+    letter-spacing: 3px; text-transform: uppercase; color: #888; /* Grey */
+}
+/* Override colors only if strictly needed, but base is grey */
+.status-unproductive { color: #666; }
+.status-working { color: #aaa; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
-.ribbon-label {
-    font-family: 'Cinzel', serif;
-    font-size: 0.6rem;
-    color: #555;
-    letter-spacing: 4px;
-    font-weight: 400;
-    margin-bottom: 5px;
-    text-transform: uppercase;
+/* CENTER: Timer (Grey Cinzel) */
+.ribbon-center {
+    width: 40%; border: none; 
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
+.ribbon-status { 
+    font-family: 'Cinzel', serif; font-weight: 600; font-size: 0.8rem; 
+    color: #666; letter-spacing: 2px; font-style: italic;
+}
+.ribbon-timer { 
+    font-family: 'Cinzel', serif; font-weight: 700; font-size: 2.2rem; 
+    color: #888; /* Grey */
+    line-height: 1; letter-spacing: 2px; 
 }
 
-/* The Status Text (Rajdhani = Technical Look) */
-.status-text-lg {
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700; 
-    font-size: 1.4rem; /* Larger and thinner than Orbitron */
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    line-height: 1;
+/* RIGHT: Actions */
+.ribbon-right {
+    width: 30%; display: flex; justify-content: center; align-items: center; padding: 0 10px;
 }
 
-.status-unproductive { color: #666; text-shadow: none; }
-.status-working { 
-    color: var(--neon-green); 
-    text-shadow: 0 0 15px rgba(0, 255, 0, 0.4); 
+/* --- SILVER FRAME BUTTONS (No Background) --- */
+.action-btn, .btn-ghost, .btn-upload { 
+    background: transparent !important; 
+    border: 1px solid #666 !important; /* Silver Frame */
+    color: #aaa !important; /* Silver Text */
+    padding: 12px 10px; 
+    font-family: 'Cinzel', serif !important; font-weight: 700; 
+    font-size: 0.75rem; 
+    cursor: pointer; transition: 0.3s; width: 100%;
+    box-shadow: none !important;
+}
+.action-btn:hover, .btn-ghost:hover, .btn-upload:hover { 
+    border-color: #fff !important; 
+    color: #fff !important; 
+    box-shadow: 0 0 10px rgba(255,255,255,0.1) !important;
 }
 
-.ribbon-status {
-    font-family: 'Cinzel', serif;
-    font-size: 0.75rem;
-    color: #666;
-    letter-spacing: 1px;
+/* Split Container */
+#uploadBtnContainer {
+    width: 100%; display: flex; gap: 8px; align-items: center;
 }
+.btn-ghost { flex: 1; }
+.btn-upload { flex: 1; }
 
-/* The Timer (Clean Numbers) */
-.ribbon-timer {
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 600; 
-    font-size: 2.8rem; 
-    color: white; 
-    line-height: 1;
-    letter-spacing: 1px;
-    font-variant-numeric: tabular-nums;
-}
-
-/* --- BUTTONS --- */
-
-/* Primary */
-.action-btn { 
-    background: transparent; 
-    border: 1px solid var(--gold); 
-    color: var(--gold); 
-    padding: 12px 0; 
-    font-family: 'Cinzel', serif; 
-    font-weight: 700; 
-    font-size: 0.75rem;
-    letter-spacing: 1px;
-    cursor: pointer; 
-    transition: all 0.3s ease; 
-    width: 100%;
-}
-.action-btn:hover { 
-    background: var(--gold); 
-    color: #000; 
-    box-shadow: 0 0 20px rgba(197, 160, 89, 0.3); 
-}
-
-/* Secondary Ghost */
-.btn-ghost {
-    background: transparent;
-    border: 1px solid rgba(197, 160, 89, 0.3);
-    color: #aaa;
-    font-family: 'Cinzel', serif;
-    font-weight: 400;
-    font-size: 0.65rem;
-    padding: 12px 0;
-    cursor: pointer;
-    flex: 1;
-    transition: all 0.3s ease;
-}
-.btn-ghost:hover {
-    color: var(--gold);
-    border-color: var(--gold);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.btn-upload { flex: 1; background: rgba(255, 215, 0, 0.1); border-color: var(--gold); }
-
-/* --- DRAWER (Keep existing) --- */
+/* DRAWER */
 .task-detail-panel {
-    /* (Use previous drawer CSS here) */
-    position: relative;
-    width: 100%;
-    background: #000;
-    border: 1px solid #333;
-    border-top: none;
-    z-index: 50;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 30px;
+    position: relative; width: 100%; background: #000; border: 1px solid #333; border-top: none;
+    z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px;
 }
 .task-detail-panel.open { display: flex; animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 .drawer-task-text, #readyText {
-    font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 1.4rem; color: #fff; text-align: center; line-height: 1.5; max-width: 90%;
+    font-family: 'Cinzel', serif; font-weight: 600; font-size: 1.4rem; color: #ccc; 
+    text-align: center; line-height: 1.5; max-width: 90%;
 }
-.panel-footer {
-    display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-.text-btn { background: transparent; border: none; color: #666; font-family: 'Cinzel', serif; font-size: 0.8rem; cursor: pointer; letter-spacing: 2px; }
-.btn-skip-small { background: transparent; border: 1px solid #333; color: #666; padding: 10px 25px; font-family: 'Orbitron'; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
-.btn-skip-small:hover { color: var(--neon-red); border-color: var(--neon-red); box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); }
 
-.hidden { display: none !important; }
+.panel-footer {
+    display: flex; justify-content: space-between; align-items: center; width: 100%;
+    margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.text-btn { background: transparent; border: none; color: #666; font-family: 'Cinzel', serif; font-size: 0.7rem; cursor: pointer; letter-spacing: 2px; }
+.text-btn:hover { color: white; }
+.btn-skip-small { background: transparent; border: 1px solid #333; color: #666; padding: 8px 20px; font-family: 'Cinzel', serif; font-size: 0.7rem; cursor: pointer; transition: 0.2s; }
+.btn-skip-small:hover { color: var(--neon-red); border-color: var(--neon-red); }
 
 /* =========================================
-   5. CHAT SYSTEM
+   5. CHAT SYSTEM (CINZEL UPDATE)
    ========================================= */
-.chat-container { flex: 1; margin: 0 20px 20px 20px; display: flex; flex-direction: column; padding: 0; overflow: hidden; background: transparent; border: 1px solid var(--gold-dim); }
+.chat-container { flex: 1; margin: 0 20px 20px 20px; display: flex; flex-direction: column; padding: 0; overflow: hidden; background: transparent; border: 1px solid #333; }
 .chat-body-frame { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-.chat-footer { padding: 20px; border-top: 1px solid var(--gold-dim); display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.8); position: relative; z-index: 200; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); }
-.chat-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid #444; color: white; font-family: 'Inter'; font-size: 1rem; padding: 10px; }
-.chat-input:focus { border-bottom-color: var(--gold); }
+.chat-footer { padding: 20px; border-top: 1px solid #333; display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.8); position: relative; z-index: 200; }
+.chat-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid #444; color: #aaa; font-family: 'Cinzel', serif; font-size: 0.9rem; padding: 10px; }
+.chat-input:focus { border-bottom-color: #888; }
 
-/* Chat Focus Mode */
 #chatBox { transition: filter 0.5s ease, opacity 0.5s ease; will-change: filter, opacity; }
 #chatBox.focused-task { filter: blur(12px) grayscale(80%); opacity: 0.2; pointer-events: none; user-select: none; }
 
 .msg-row { display: flex; width: 100%; margin-bottom: 10px; }
 .mr-in { justify-content: flex-start; } 
 .mr-out { justify-content: flex-end; }
-.msg { padding: 15px 20px; max-width: 70%; line-height: 1.6; font-size: 0.95rem; }
-.m-queen { background: rgba(10, 10, 10, 0.9); border: 1px solid var(--gold-dim); border-left: 4px solid var(--gold); color: #fff; font-family: 'Cinzel', serif; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
-.m-slave { background: transparent; color: #888; font-family: 'Inter', sans-serif; text-align: right; border-right: 2px solid #333; }
-.msg-time { font-size: 0.6rem; color: #444; margin-top: 5px; opacity: 0.7; font-family: 'Orbitron'; }
-.overlay-center { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; }
+
+/* CHAT FONT: CINZEL */
+.msg { 
+    padding: 15px 20px; max-width: 70%; line-height: 1.6; font-size: 0.95rem; 
+    font-family: 'Cinzel', serif !important; /* Update */
+}
+.m-queen { background: rgba(20, 20, 20, 0.9); border: 1px solid #444; border-left: 4px solid var(--gold); color: #ccc; }
+.m-slave { background: transparent; color: #666; text-align: right; border-right: 2px solid #333; }
+.msg-time { font-family: 'Cinzel', serif; font-size: 0.55rem; color: #444; margin-top: 5px; opacity: 0.7; }
+
+/* System Messages (Service Messages) - Untouched Structure, just font alignment */
+.msg-system {
+    font-family: 'Orbitron', sans-serif !important; /* Kept Orbitron for System/Error as requested */
+    letter-spacing: 2px;
+}
 
 /* =========================================
    6. OTHER VIEWS (Store, Gallery, etc)
    ========================================= */
 .store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.store-item { border: 1px solid var(--gold-dim); padding: 20px; text-align: center; background: rgba(20,20,20,0.5); display: flex; flex-direction: column; gap: 10px; }
-.si-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 8px; width: 100%; cursor: pointer; font-family: 'Orbitron'; }
-.si-btn:hover { background: var(--gold); color: #000; }
+.store-item { border: 1px solid #333; padding: 20px; text-align: center; background: rgba(20,20,20,0.5); display: flex; flex-direction: column; gap: 10px; }
+.si-btn { background: transparent; border: 1px solid #666; color: #888; padding: 8px; width: 100%; cursor: pointer; font-family: 'Cinzel'; }
+.si-btn:hover { border-color: #fff; color: #fff; }
 
 #historySection { position: relative !important; min-height: 500px; overflow: hidden !important; }
 .pending-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; margin-bottom: 30px; }
 .pending-card { background: #000; border: 1px solid #333; border-radius: 4px; overflow: hidden; position: relative; aspect-ratio: 16 / 9; cursor: pointer; transition: transform 0.2s; }
-.pending-card:hover { border-color: var(--neon-yellow); transform: translateY(-2px); }
-.pc-media { position: absolute; inset: 0; z-index: 0; }
-.pc-thumb { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) brightness(0.5); }
-.pc-gradient { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.4) 100%); z-index: 1; }
 .pc-content { position: relative; z-index: 2; margin-top: auto; padding: 12px; }
-.pc-badge { font-family: 'Orbitron'; font-size: 0.6rem; font-weight: 900; color: var(--neon-yellow); border: 1px solid var(--neon-yellow); padding: 2px 6px; background: rgba(0,0,0,0.8); border-radius: 4px; display: inline-block; margin-bottom: 4px; }
-.pc-title { font-family: 'Rajdhani'; font-size: 0.95rem; color: white; line-height: 1.1; font-weight: bold; }
+.pc-badge { font-family: 'Cinzel'; font-size: 0.6rem; color: var(--gold); border: 1px solid var(--gold); padding: 2px 6px; background: #000; border-radius: 0; display: inline-block; margin-bottom: 4px; }
+.pc-title { font-family: 'Cinzel'; font-size: 0.95rem; color: #ccc; line-height: 1.1; font-weight: bold; }
 
 .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 5px; width: 100%; padding-bottom: 50px; }
 .gallery-item { position: relative; aspect-ratio: 1 / 1; background: #111; border: 1px solid #222; overflow: hidden; cursor: pointer; }
-.gallery-item:hover { border-color: var(--gold); }
-.gallery-item img, .gallery-item video { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: opacity 0.2s; }
+.gallery-item:hover { border-color: #666; }
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: opacity 0.2s; }
 .gallery-item:hover img { opacity: 1; }
-.gi-status-sticker { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 60%; object-fit: contain; z-index: 5; pointer-events: none; filter: drop-shadow(0 0 5px black); }
 
+/* MODALS */
 .glass-modal { display: none; position: absolute; inset: 0; z-index: 999; background: #000; flex-direction: column; overflow: hidden; }
 .glass-modal.active { display: flex; animation: fadeIn 0.3s; }
-.modal-bg-photo { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; background: #000; transition: filter 0.4s ease; filter: blur(8px); }
-.glass-modal.proof-mode-active .modal-bg-photo { filter: blur(0px); }
-.modal-bg-photo img, .modal-bg-photo video { width: 100%; height: 100%; object-fit: contain; }
-.modal-glass-overlay { position: absolute; inset: 0; z-index: 100; display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.6); transition: opacity 0.3s; }
-.modal-glass-overlay.clean { background: transparent; pointer-events: auto; }
-.modal-glass-overlay.clean .theater-content, .modal-glass-overlay.clean .modal-footer-menu { opacity: 0; pointer-events: none; }
-.modal-glass-overlay.clean #modalCloseX { opacity: 1 !important; pointer-events: auto !important; text-shadow: 0 0 5px black; }
-
+.modal-bg-photo { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; background: #000; filter: blur(8px); }
+.modal-glass-overlay { position: absolute; inset: 0; z-index: 100; display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.8); transition: opacity 0.3s; }
 .theater-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
 .m-points-lg { font-family: 'Cinzel', serif; font-size: 2.5rem; color: #888; font-weight: 700; letter-spacing: 2px; margin-bottom: 20px; }
-.theater-text-box { background: rgba(20, 20, 20, 0.8); border: 1px solid #333; padding: 25px; border-radius: 4px; width: 90%; max-width: 400px; font-family: 'Inter', sans-serif; font-size: 1rem; line-height: 1.5; color: #ccc; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.view-label { font-family: 'Cinzel'; color: #666; margin-bottom: 10px; letter-spacing: 2px; }
+.theater-text-box { background: rgba(20, 20, 20, 0.8); border: 1px solid #333; padding: 25px; border-radius: 4px; width: 90%; max-width: 400px; font-family: 'Cinzel', serif; font-size: 1rem; line-height: 1.5; color: #ccc; }
 .modal-footer-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #333; border-top: 1px solid #333; margin-top: auto; width: 100%; }
-.history-action-btn { background: #0a0a0a; border: none; color: #888; padding: 15px; font-family: 'Cinzel', serif; font-size: 0.8rem; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
-.history-action-btn:hover { background: #151515; color: white; }
 .btn-close-red { color: #ff003c !important; font-weight: 900; }
 
-img[src=""], img[src="undefined"], img[src="null"] { display: none !important; }
-img:not([src]) { display: none !important; }
+/* Reward Overlays (Z-Index Fix) */
+#kneelRewardOverlay { background: rgba(0, 0, 0, 0.95) !important; z-index: 99999 !important; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#kneelRewardOverlay .action-btn { border-color: var(--gold); color: var(--gold); margin: 0 10px; background: black; position: relative; z-index: 100000; }
+#kneelRewardOverlay h2 { color: white !important; font-family: 'Cinzel', serif; z-index: 100000; }
 
-/* =========================================
-   7. KNEEL REWARD OVERLAY (FIXED)
-   ========================================= */
-#kneelRewardOverlay {
-    background: rgba(0, 0, 0, 0.95) !important;
-    z-index: 99999 !important;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-#kneelRewardOverlay .action-btn {
-    border-color: var(--gold); color: var(--gold); margin: 0 10px; background: black; position: relative; z-index: 100000;
-}
-#kneelRewardOverlay h2 {
-    color: white !important; text-shadow: 0 0 10px rgba(255,255,255,0.5); z-index: 100000;
-}
-
-/* =========================================
-   8. PUNISHMENT OVERLAY STYLES
-   ========================================= */
-.glass-card.punishment {
-    border-color: #ff003c !important;
-    box-shadow: 0 0 50px rgba(255, 0, 60, 0.4) !important;
-}
-.punish-title {
-    font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.5rem;
-    color: #ff003c; text-shadow: 0 0 10px #ff003c; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px;
-}
-.punish-cost {
-    font-family: 'Rajdhani', sans-serif; font-size: 2.5rem; font-weight: 700; color: #fff; margin-bottom: 15px;
-}
-.punish-trash {
-    font-family: 'Cinzel', serif; font-size: 0.9rem; color: #ccc; font-style: italic; max-width: 300px; margin: 0 auto; line-height: 1.4;
-}
+.glass-card.punishment { border-color: #ff003c !important; box-shadow: 0 0 50px rgba(255, 0, 60, 0.4) !important; }
