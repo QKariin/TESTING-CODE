@@ -478,7 +478,7 @@ body {
 .si-btn:hover { border-color: #fff; color: #fff; }
 
 /* =========================================
-   7. HISTORY: THE TRILOGY DISPLAY
+   7. HISTORY: THE MECHANICAL TRILOGY
    ========================================= */
 
 /* --- GLOBAL LAYOUT --- */
@@ -490,282 +490,219 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border-bottom: 2px solid #000;
+    /* NO BACKGROUNDS - One continuous void */
+    background: transparent;
+    border-bottom: 1px solid #111;
 }
 
 .horizontal-scroll-track {
     display: flex;
-    flex-direction: row; /* Horizontal List */
+    flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
     height: 100%;
     align-items: center;
-    padding: 0 40px; /* Breathing room */
-    gap: 30px;
-    
-    /* Hide Scrollbar */
+    padding: 0 40px;
+    gap: 40px; /* Wider gaps for these large items */
     scrollbar-width: none; 
-    -ms-overflow-style: none;
 }
 .horizontal-scroll-track::-webkit-scrollbar { display: none; }
 
-/* Labels for each section */
 .trilogy-label {
     position: absolute;
     top: 10px; left: 20px;
     z-index: 100;
     font-family: 'Cinzel', serif;
     font-size: 0.7rem;
+    color: #444;
     letter-spacing: 3px;
     pointer-events: none;
 }
 
 /* =========================================
-   TOP SECTION: THE HANGING PERGAMENT (Perfect)
+   TOP: THE NOIR MINIMALIST (Perfect > 145)
    ========================================= */
-.section-pergament {
-    /* Ancient Wall Texture */
-    background: radial-gradient(circle, #2a2520 0%, #110e0c 100%);
-    box-shadow: inset 0 -20px 50px rgba(0,0,0,0.8);
-}
-.label-pergament { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
-
-/* The Scroll Item */
-.item-scroll {
-    position: relative;
-    width: 140px; 
-    height: 200px; /* Tall */
+.item-noir {
+    width: 200px; 
+    height: 200px;
     flex-shrink: 0;
-    cursor: pointer;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
-    animation: sway 6s ease-in-out infinite alternate;
-}
-
-/* The Paper */
-.scroll-paper {
-    width: 100%; height: 100%;
-    background: #dcd0b9; /* Parchment Color */
-    overflow: hidden;
     position: relative;
-    /* Curved shadow effect */
-    box-shadow: inset 10px 0 20px rgba(0,0,0,0.2), inset -10px 0 20px rgba(0,0,0,0.2);
+    background: #0D0D0D; /* Deep Charcoal */
+    border: 1px solid #666; /* Silver hairline */
+    
+    /* THE MAT BOARD EFFECT */
+    padding: 40px; /* Start wide */
+    transition: padding 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+    
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
-.scroll-paper img {
-    width: 100%; height: 100%; object-fit: cover;
-    mix-blend-mode: multiply; /* Blends into paper */
-    filter: sepia(0.4) contrast(1.1);
+.item-noir img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%); /* Dead */
+    transition: all 0.8s ease;
 }
 
-/* The Rollers (Wood & Gold) */
-.roller-top, .roller-bot {
-    position: absolute; left: -10%; width: 120%; height: 12px;
-    background: linear-gradient(to right, #3d2b1f, #8b5a2b, #3d2b1f); /* Mahogany */
-    border-radius: 6px;
-    z-index: 10;
-    box-shadow: 0 2px 5px black;
-    border-left: 2px solid var(--gold);
-    border-right: 2px solid var(--gold);
+/* Signature */
+.noir-sig {
+    position: absolute;
+    bottom: 8px; right: 12px;
+    font-family: 'La Belle Aurore', cursive; /* Handwritten font */
+    font-size: 0.7rem;
+    color: #666;
+    opacity: 0.6;
 }
-.roller-top { top: -6px; }
-.roller-bot { bottom: -6px; }
 
-@keyframes sway {
-    0% { transform: rotate(1deg); }
-    100% { transform: rotate(-1deg); }
+/* Interaction: Grow & Color */
+.item-noir:hover {
+    padding: 10px; /* Image grows */
+    border-color: #fff;
+}
+.item-noir:hover img {
+    filter: grayscale(0%) contrast(1.1);
 }
 
 /* =========================================
-   MIDDLE SECTION: THE INDUSTRIAL VAULT (Failed)
+   MIDDLE: THE INDUSTRIAL VAULT (Failed)
    ========================================= */
-.section-vault {
-    /* Pitted Metal Texture */
-    background: repeating-linear-gradient(45deg, #111, #111 2px, #151515 2px, #151515 4px);
-    box-shadow: inset 0 0 50px #000;
-}
-.label-vault { color: #555; font-family:'Orbitron'; font-weight:900; }
-
-/* The Safe Door */
-.item-safe {
-    width: 160px; height: 160px; /* Square */
+.item-vault {
+    width: 180px; height: 180px;
     flex-shrink: 0;
-    background: #222;
-    border: 4px solid #333; /* Raised Frame */
-    border-bottom-color: #111; /* Bevel */
-    border-right-color: #111;
     position: relative;
-    cursor: pointer;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.8);
-    display: flex; align-items: center; justify-content: center;
-}
-
-/* The Bolts */
-.item-safe::before {
-    content: ''; position: absolute; inset: 5px;
-    border: 1px dashed #444; /* Bolt holes */
-    pointer-events: none;
-}
-
-/* The Image (Behind Glass) */
-.safe-glass {
-    width: 85%; height: 85%;
     background: #000;
-    overflow: hidden;
-    position: relative;
-    border: 1px solid #111;
-    box-shadow: inset 0 0 10px #000;
+    cursor: pointer;
+    
+    /* THE HEAVY FRAME */
+    border: 15px solid #222;
+    outline: 1px solid #000;
+    box-shadow: 
+        inset 2px 2px 5px rgba(255,255,255,0.1),
+        inset -2px -2px 5px rgba(0,0,0,0.8),
+        5px 10px 20px black;
 }
-.safe-glass img {
-    width: 100%; height: 100%; object-fit: cover;
-    opacity: 0.4; 
-    filter: blur(2px) grayscale(100%); /* Hidden behind dirty glass */
-    transition: 0.4s;
+
+/* The Image (Behind the door) */
+.vault-image {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.4;
+    filter: brightness(0.4) contrast(1.2) blur(1px);
+    transition: 0.4s ease;
+}
+
+/* The Bolts (Corners) */
+.bolt {
+    position: absolute; width: 8px; height: 8px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #888, #222);
+    box-shadow: 1px 1px 3px black;
+    z-index: 20;
+}
+.b-tl { top: -10px; left: -10px; }
+.b-tr { top: -10px; right: -10px; }
+.b-bl { bottom: -10px; left: -10px; }
+.b-br { bottom: -10px; right: -10px; }
+
+/* The Locking Mechanism (The Bar) */
+.vault-lock {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%; height: 30px;
+    background: repeating-linear-gradient(
+        90deg, 
+        #333, #333 2px, #444 2px, #444 4px
+    ); /* Brushed texture */
+    border: 1px solid #000;
+    box-shadow: 0 5px 10px black;
+    transition: transform 0.5s cubic-bezier(0.5, -0.5, 0.2, 1.5);
+    z-index: 10;
+    display: flex; align-items: center;
 }
 
 /* The Handle */
-.safe-handle {
-    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    width: 8px; height: 40px;
-    background: linear-gradient(to bottom, #444, #888, #444);
-    border-radius: 4px;
+.vault-handle {
+    width: 10px; height: 50px;
+    background: #666;
+    margin-left: 20px;
+    border-radius: 2px;
     box-shadow: 2px 2px 5px black;
-    transition: 0.3s;
 }
 
 /* Interaction: Unlock */
-.item-safe:hover .safe-glass img { opacity: 1; filter: blur(0px) grayscale(0%); }
-.item-safe:hover .safe-handle { transform: translateY(-50%) rotate(90deg); }
-
+.item-vault:hover .vault-lock {
+    transform: translate(100%, -50%); /* Slide away */
+}
+.item-vault:hover .vault-image {
+    opacity: 1; filter: brightness(1) contrast(1);
+}
 
 /* =========================================
-   BOTTOM SECTION: THE NEON BLUEPRINT (Okay)
+   BOTTOM: THE APERTURE (Okay/Standard)
    ========================================= */
-.section-blueprint {
-    /* Blueprint Grid */
-    background: #00050a;
-    background-image: 
-        linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-    background-size: 20px 20px;
-    border-top: 1px solid rgba(0, 255, 255, 0.1);
-}
-.label-blueprint { color: cyan; font-family:'Rajdhani'; letter-spacing:1px; }
-
-/* The Data Cell */
-.item-blueprint {
-    width: 160px; height: 120px; /* Wide */
+.item-aperture {
+    width: 160px; height: 160px;
     flex-shrink: 0;
     position: relative;
+    border-radius: 50%;
+    background: #000;
+    overflow: hidden; /* Circular Mask */
     cursor: pointer;
-    border: 1px solid rgba(0, 255, 255, 0.2);
-    overflow: hidden;
-    background: rgba(0, 20, 30, 0.5);
+    border: 2px solid #222;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
-.item-blueprint img {
-    width: 100%; height: 100%; object-fit: cover;
-    opacity: 0.6;
-    mix-blend-mode: luminosity; /* Blue tint */
-    transition: 0.2s;
+.aperture-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scale(1.1);
 }
 
-/* Corner Brackets */
-.bp-corner {
-    position: absolute; width: 10px; height: 10px;
-    border: 1px solid cyan;
-    transition: 0.3s;
-}
-.bl-tl { top: 2px; left: 2px; border-right: none; border-bottom: none; }
-.bl-tr { top: 2px; right: 2px; border-left: none; border-bottom: none; }
-.bl-bl { bottom: 2px; left: 2px; border-right: none; border-top: none; }
-.bl-br { bottom: 2px; right: 2px; border-left: none; border-top: none; }
-
-/* The Laser Scan */
-.item-blueprint::after {
-    content: ''; position: absolute; top: 0; bottom: 0; left: -100%; width: 5px;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 10px cyan;
-    animation: scan 4s infinite linear;
-    opacity: 0.3;
+/* Lens Flare */
+.aperture-flare {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(100,100,255,0.1), transparent 60%);
+    pointer-events: none; z-index: 1;
 }
 
-@keyframes scan { 0% { left: -10%; } 100% { left: 110%; } }
-
-.item-blueprint:hover img { opacity: 1; mix-blend-mode: normal; }
-.item-blueprint:hover .bp-corner { width: 100%; height: 100%; opacity: 0.5; } /* Brackets close in */
-
-/* --- TRILOGY LAYOUT --- */
-.trilogy-section {
-    height: 33.33vh; /* Exact 1/3 split */
-    width: 100%;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border-bottom: 2px solid #000;
-}
-.horizontal-scroll-track {
-    display: flex;
-    flex-direction: row;
-    overflow-x: auto;
-    height: 100%;
-    align-items: center;
-    padding: 0 40px;
-    gap: 30px;
-    scrollbar-width: none; 
-}
-.horizontal-scroll-track::-webkit-scrollbar { display: none; }
-.trilogy-label {
-    position: absolute; top: 10px; left: 20px; z-index: 100;
-    font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 3px; pointer-events: none;
+/* The Blades (6 Blades created via CSS rotations) */
+.blade {
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: #111;
+    border-right: 1px solid #444;
+    transform-origin: 50% 50%;
+    transition: transform 0.6s cubic-bezier(0.1, 0.7, 0.1, 1);
+    z-index: 5;
+    
+    /* Create the pie slice shape */
+    clip-path: polygon(50% 50%, 100% 50%, 100% 0);
 }
 
-/* TOP: PERGAMENT */
-.section-pergament { background: radial-gradient(circle, #2a2520 0%, #110e0c 100%); }
-.label-pergament { color: var(--gold); }
-.item-scroll {
-    position: relative; width: 140px; height: 200px; flex-shrink: 0; cursor: pointer;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
-}
-.scroll-paper { width: 100%; height: 100%; background: #dcd0b9; overflow: hidden; }
-.scroll-paper img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; }
-.roller-top, .roller-bot {
-    position: absolute; left: -10%; width: 120%; height: 12px;
-    background: linear-gradient(to right, #3d2b1f, #8b5a2b, #3d2b1f);
-    border-radius: 6px; z-index: 10; border: 1px solid var(--gold);
-}
-.roller-top { top: -6px; } .roller-bot { bottom: -6px; }
+/* Positioning the 6 blades */
+.b1 { transform: rotate(0deg); }
+.b2 { transform: rotate(60deg); }
+.b3 { transform: rotate(120deg); }
+.b4 { transform: rotate(180deg); }
+.b5 { transform: rotate(240deg); }
+.b6 { transform: rotate(300deg); }
 
-/* MIDDLE: VAULT */
-.section-vault { background: repeating-linear-gradient(45deg, #111, #111 2px, #151515 2px, #151515 4px); }
-.label-vault { color: #555; font-family:'Orbitron'; font-weight:900; }
-.item-safe {
-    width: 160px; height: 160px; flex-shrink: 0; background: #222;
-    border: 4px solid #333; position: relative; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
+/* Interaction: Open Shutter */
+.item-aperture:hover .blade {
+    /* Spin them out of the way */
+    transform: rotate(var(--r)) scale(0);
 }
-.safe-glass { width: 85%; height: 85%; background: #000; overflow: hidden; border: 1px solid #111; }
-.safe-glass img { width: 100%; height: 100%; object-fit: cover; opacity: 0.4; filter: blur(2px) grayscale(100%); }
-.safe-handle {
-    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    width: 8px; height: 40px; background: #888; border-radius: 4px;
-}
+.item-aperture:hover .b1 { --r: 45deg; }
+.item-aperture:hover .b2 { --r: 105deg; }
+.item-aperture:hover .b3 { --r: 165deg; }
+.item-aperture:hover .b4 { --r: 225deg; }
+.item-aperture:hover .b5 { --r: 285deg; }
+.item-aperture:hover .b6 { --r: 345deg; }
 
-/* BOTTOM: BLUEPRINT */
-.section-blueprint { background: #00050a; border-top: 1px solid rgba(0, 255, 255, 0.1); }
-.label-blueprint { color: cyan; font-family:'Rajdhani'; }
-.item-blueprint {
-    width: 160px; height: 120px; flex-shrink: 0; position: relative; cursor: pointer;
-    border: 1px solid rgba(0, 255, 255, 0.2); background: rgba(0, 20, 30, 0.5);
-}
-.item-blueprint img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; mix-blend-mode: luminosity; }
-.bp-corner { position: absolute; width: 10px; height: 10px; border: 1px solid cyan; }
-.bl-tl { top: 2px; left: 2px; border-right: none; border-bottom: none; }
-.bl-tr { top: 2px; right: 2px; border-left: none; border-bottom: none; }
-.bl-bl { bottom: 2px; left: 2px; border-right: none; border-top: none; }
-.bl-br { bottom: 2px; right: 2px; border-left: none; border-top: none; }
-
+.item-aperture:hover { border-color: cyan; box-shadow: 0 0 20px rgba(0,255,255,0.2); }
 
 /* MODALS */
 .glass-modal { display: none; position: absolute; inset: 0; z-index: 999; background: #000; flex-direction: column; overflow: hidden; }
