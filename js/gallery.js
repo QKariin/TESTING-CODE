@@ -125,49 +125,49 @@ export function renderGallery() {
 function createGalleryItemHTML(item, index) {
     let thumbUrl = getOptimizedUrl(item.proofUrl, 300);
     const s = (item.status || "").toLowerCase();
-    
-    // Check Status
-    const isPending = s.includes('pending');
-    const isRejected = s.includes('rej');
-
-    const statusSticker = isPending ? "" : (s.includes('app') ? STICKER_APPROVE : STICKER_DENIED);
+    const statusSticker = s.includes('app') ? STICKER_APPROVE : STICKER_DENIED;
     const isVideo = (item.proofUrl || "").match(/\.(mp4|webm|mov)($|\?)/i);
 
     let safeSticker = item.sticker;
     if (safeSticker && (safeSticker.includes("profile") || safeSticker.includes("avatar"))) safeSticker = null;
     
     const pts = getPoints(item);
+    
+    // Logic for Pending vs History
+    const isPending = s.includes('pending');
+    
+    const pendingHTML = isPending ? 
+        `<div class="pending-overlay">
+            <div class="pending-icon">⏳</div>
+            <div class="pending-text">REVIEWING</div>
+         </div>` : '';
 
-    // --- PENDING VISUALS ---
-    // If pending, show a Clock overlay and dim the image
-    const pendingOverlay = isPending 
-        ? `<div class="pending-overlay"><div class="pending-icon">⏳</div></div>` 
-        : ``;
-
-    const extraClass = isPending ? 'is-pending' : (isRejected ? 'is-rejected' : '');
+    const footerHTML = isPending ? 
+        `<div class="merit-tag" style="border-color:var(--neon-yellow);">
+            <div class="tag-label" style="color:var(--neon-yellow);">STATUS</div>
+            <div class="tag-val" style="color:#fff;">WAIT</div>
+         </div>` 
+        : 
+        (pts > 0 ? 
+        `<div class="merit-tag">
+            <div class="tag-label">MERIT</div>
+            <div class="tag-val">+${pts}</div>
+         </div>` : '');
 
     return `
-        <div class="gallery-item ${extraClass}" onclick='window.openHistoryModal(${index})'>
+        <div class="gallery-item ${isPending ? 'is-pending' : ''}" onclick='window.openHistoryModal(${index})'>
             ${isVideo 
                 ? `<video src="${thumbUrl}" class="gi-thumb" muted style="object-fit:cover;"></video>` 
                 : `<img src="${thumbUrl}" class="gi-thumb" loading="lazy">`
             }
 
-            <!-- Pending Overlay (Only if pending) -->
-            ${pendingOverlay}
+            ${pendingHTML}
 
-            <!-- Status Sticker (Only if NOT pending) -->
-            ${!isPending ? `<img src="${statusSticker}" class="gi-status-sticker">` : ''}
+            ${!isPending ? `<img src="${statusSticker}" class="gi-status-overlay">` : ''}
 
-            <!-- Reward Sticker -->
             ${safeSticker ? `<img src="${safeSticker}" class="gi-reward-sticker">` : ''}
             
-            <!-- Merit Plaque (Only if points exist) -->
-            ${pts > 0 ? `
-            <div class="merit-tag">
-                <div class="tag-label">MERIT</div>
-                <div class="tag-val">+${pts}</div>
-            </div>` : ''}
+            ${footerHTML}
         </div>`;
 }
 
