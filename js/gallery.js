@@ -11,7 +11,9 @@ function getPoints(item) {
     return Number(val);
 }
 
-// --- HELPER: SORTED ---
+// ... (Imports & Helper functions remain the same) ...
+
+// --- HELPER: GET SORTED LIST ---
 function getSortedGallery() {
     if (!galleryData) return [];
     return [...galleryData].sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
@@ -21,10 +23,9 @@ function getSortedGallery() {
 export function renderGallery() {
     if (!galleryData) return;
 
-    // Get Containers
-    const gridPerfect = document.getElementById('gridPerfect'); // Top (Noir)
-    const gridFailed = document.getElementById('gridFailed');   // Middle (Vault)
-    const gridOkay = document.getElementById('gridOkay');       // Bottom (Aperture)
+    const gridPerfect = document.getElementById('gridPerfect');
+    const gridFailed = document.getElementById('gridFailed');
+    const gridOkay = document.getElementById('gridOkay');
 
     if (!gridPerfect || !gridFailed || !gridOkay) return;
 
@@ -33,7 +34,11 @@ export function renderGallery() {
     gridOkay.innerHTML = "";
 
     const sortedData = getSortedGallery();
+    
+    // Arrays to hold items for the Top Section Clustering
+    let perfectItems = [];
 
+    // 1. DISTRIBUTE ITEMS
     sortedData.forEach((item, index) => {
         let url = item.proofUrl || item.media || item.file;
         if (!url) return;
@@ -42,49 +47,78 @@ export function renderGallery() {
         let pts = getPoints(item);
         let status = (item.status || "").toLowerCase();
         let isRejected = status.includes('rej') || status.includes('fail');
-        let isPending = status.includes('pending');
+        
+        // Pass index for modal opening
+        item.globalIndex = index; 
 
-        let html = "";
-        let targetGrid = null;
-
-        // 1. FAILED = MIDDLE (VAULT)
         if (isRejected) {
-            targetGrid = gridFailed;
-            html = `
-                <div class="item-vault" onclick="window.openHistoryModal(${index})">
-                    <div class="bolt b-tl"></div><div class="bolt b-tr"></div>
-                    <div class="bolt b-bl"></div><div class="bolt b-br"></div>
-                    <div class="vault-lock"><div class="vault-handle"></div></div>
-                    <img src="${thumb}" class="vault-image">
+            // BOTTOM: REINFORCED CONTAINER
+            gridFailed.innerHTML += `
+                <div class="item-reinforced" onclick="window.openHistoryModal(${index})">
+                    <div class="rivet rv-tl"></div><div class="rivet rv-tr"></div>
+                    <div class="rivet rv-bl"></div><div class="rivet rv-br"></div>
+                    <div class="status-led"></div>
+                    <div class="lock-bar"><div class="lock-cog"></div></div>
+                    <img src="${thumb}" class="reinforced-img">
                 </div>`;
-        }
-        // 2. PERFECT = TOP (NOIR) -> Points > 145
+        } 
         else if (pts > 145) {
-            targetGrid = gridPerfect;
-            html = `
-                <div class="item-noir" onclick="window.openHistoryModal(${index})">
-                    <img src="${thumb}">
-                    <div class="noir-sig">Verified</div>
-                </div>`;
-        }
-        // 3. OKAY / PENDING = BOTTOM (APERTURE)
+            // Add to Perfect Array for Clustering later
+            perfectItems.push({ ...item, thumb });
+        } 
         else {
-            targetGrid = gridOkay;
-            html = `
-                <div class="item-aperture" onclick="window.openHistoryModal(${index})">
-                    <div class="aperture-flare"></div>
-                    <img src="${thumb}" class="aperture-img">
-                    <!-- 6 Blades -->
-                    <div class="blade b1"></div><div class="blade b2"></div>
-                    <div class="blade b3"></div><div class="blade b4"></div>
-                    <div class="blade b5"></div><div class="blade b6"></div>
-                    
-                    ${isPending ? '<div style="position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; color:cyan; font-family:Orbitron; font-size:0.6rem;">WAIT</div>' : ''}
+            // MIDDLE: NOIR VAULT
+            gridOkay.innerHTML += `
+                <div class="item-noir" onclick="window.openHistoryModal(${index})">
+                    <img src="${thumb}" class="noir-img">
+                    <div class="noir-seal">VERIFIED</div>
                 </div>`;
         }
-
-        if (targetGrid) targetGrid.innerHTML += html;
     });
+
+    // 2. RENDER TOP SECTION (COLLAGE CLUSTERS)
+    // We group them into chunks of 3 (1 Anchor + 2 Satellites)
+    for (let i = 0; i < perfectItems.length; i += 3) {
+        let group = perfectItems.slice(i, i + 3);
+        let clusterHTML = `<div class="collage-cluster">
+            <div class="collage-line"></div>
+            <div class="collage-ghost-num">0${Math.floor(i/3) + 1}</div>`;
+        
+        // Item 1: Anchor (Tall)
+        if (group[0]) {
+            clusterHTML += `
+                <div class="img-anchor" onclick="window.openHistoryModal(${group[0].globalIndex})">
+                    <img src="${group[0].thumb}" class="collage-img">
+                </div>`;
+        }
+        
+        // Items 2 & 3: Satellites (Stack)
+        if (group[1] || group[2]) {
+            clusterHTML += `<div class="collage-stack">`;
+            if (group[1]) {
+                clusterHTML += `<div class="img-satellite sat-top" onclick="window.openHistoryModal(${group[1].globalIndex})"><img src="${group[1].thumb}" class="collage-img"></div>`;
+            }
+            if (group[2]) {
+                clusterHTML += `<div class="img-satellite sat-bot" onclick="window.openHistoryModal(${group[2].globalIndex})"><img src="${group[2].thumb}" class="collage-img"></div>`;
+            }
+            clusterHTML += `</div>`;
+        }
+        
+        clusterHTML += `</div>`;
+        gridPerfect.innerHTML += clusterHTML;
+    }
+    
+    // Add Parallax Listener
+    const perfContainer = document.getElementById('gridPerfect');
+    if(perfContainer) {
+        perfContainer.addEventListener('scroll', () => {
+            const numbers = perfContainer.querySelectorAll('.collage-ghost-num');
+            numbers.forEach(num => {
+                // Move numbers slower than the scroll (Parallax)
+                num.style.transform = `translateX(${perfContainer.scrollLeft * 0.5}px)`;
+            });
+        });
+    }
 }
 
 // --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
