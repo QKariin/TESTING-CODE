@@ -246,25 +246,20 @@
         </div>
 
         <!-- 3. EVIDENCE LOG (RESTORED) -->
-       <div id="historySection" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto; position: relative; min-height: 500px;">
-    
+       <!-- 3. EVIDENCE LOG (UNIFIED) -->
+        <div id="historySection" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto; position: relative; min-height: 500px;">
+            
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:15px; padding-left:5px;">
                 <div style="width:6px; height:6px; background:var(--neon-yellow); border-radius:50%;"></div> 
                 <span style="font-family:'Orbitron'; font-weight:bold; font-size:0.9rem; color:white;">EVIDENCE LOG</span>
             </div>
-        
-            <!-- PENDING SECTION (Unchanged) -->
-            <div id="pendingSection" class="hidden" style="width:100%; margin-bottom: 25px;">
-                <div class="section-header" style="color:var(--neon-yellow); border-color:rgba(255,215,0,0.3);">PENDING REVIEW</div>
-                <div id="pendingGrid" class="pending-grid"></div>
-            </div>
-        
-            <div class="section-header">HISTORY LOG</div>
             
-            <!-- *** NEW: STICKER FILTER BAR *** -->
+            <!-- STICKER FILTER BAR -->
             <div id="stickerFilterBar" class="filter-row"></div>
             
+            <!-- UNIFIED GRID -->
             <div id="historyGrid" class="gallery-grid"></div>
+            
             <button id="loadMoreBtn" onclick="document.getElementById('historyGrid').style.maxHeight='none'; if(typeof loadMoreHistory === 'function') loadMoreHistory();" class="action-btn" style="display:block; margin:20px auto;">LOAD MORE...</button>
         </div>
 
