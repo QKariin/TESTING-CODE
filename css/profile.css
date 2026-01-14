@@ -478,188 +478,221 @@ body {
 .si-btn:hover { border-color: #fff; color: #fff; }
 
 /* =========================================
-   7. HISTORY: THE THREE WORLDS
+   7. HISTORY: THE TRILOGY DISPLAY
    ========================================= */
 
-#historySection {
-    padding: 20px;
-    height: 100%;
-    overflow-y: auto;
-    background: #050505;
-}
-
-.gallery-grid { 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 20px; /* Wider gap for distinct styles */
-    width: 100%; 
-    padding-bottom: 50px; 
-}
-
-/* --- BASE ITEM SETUP --- */
-.gallery-item { 
-    position: relative; 
+/* --- GLOBAL LAYOUT --- */
+.trilogy-section {
+    height: 33.33vh; /* Exact 1/3 split */
     width: 100%;
-    height: 100%;
-    cursor: pointer; 
-}
-
-/* ---------------------------------------------------------
-   STYLE 1: DARK MINIMALIST (Standard Approved)
-   "High Fashion / Luxury Architecture"
-   Square, Monochrome, Ghost Typography.
---------------------------------------------------------- */
-.style-minimal {
-    aspect-ratio: 1 / 1;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    overflow: hidden;
-    background: #000;
-}
-
-.style-minimal .gi-thumb {
-    width: 100%; height: 100%; object-fit: cover;
-    filter: grayscale(100%) contrast(1.2) brightness(0.6);
-    transition: all 0.6s ease;
-}
-
-/* Ghost Typography Overlay */
-.minimal-overlay {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 2;
-    pointer-events: none;
-}
-.minimal-text {
-    font-family: 'Cinzel', serif;
-    font-weight: 400;
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.6);
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    mix-blend-mode: overlay; /* The "Ghost" effect */
-}
-
-.style-minimal:hover .gi-thumb {
-    filter: grayscale(0%) contrast(1.1) brightness(0.9);
-    transform: scale(1.05);
-}
-.style-minimal:hover .minimal-text {
-    opacity: 0; /* Text vanishes to reveal image */
-    transition: opacity 0.3s;
-}
-
-/* ---------------------------------------------------------
-   STYLE 11: THE BLUEPRINT (Elite > 145)
-   "Glowing Technical Display"
-   Radar lines, Coordinates, Neon Glow.
---------------------------------------------------------- */
-.style-blueprint {
-    aspect-ratio: 1 / 1;
-    background: #000;
-    /* Grid Paper Texture */
-    background-image: 
-        linear-gradient(rgba(197, 160, 89, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(197, 160, 89, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-    border: 1px solid var(--gold);
-    box-shadow: 0 0 15px rgba(197, 160, 89, 0.2); /* Inner Glow */
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-bottom: 2px solid #000;
 }
 
-.style-blueprint .gi-thumb {
+.horizontal-scroll-track {
+    display: flex;
+    flex-direction: row; /* Horizontal List */
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 100%;
+    align-items: center;
+    padding: 0 40px; /* Breathing room */
+    gap: 30px;
+    
+    /* Hide Scrollbar */
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+}
+.horizontal-scroll-track::-webkit-scrollbar { display: none; }
+
+/* Labels for each section */
+.trilogy-label {
+    position: absolute;
+    top: 10px; left: 20px;
+    z-index: 100;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    pointer-events: none;
+}
+
+/* =========================================
+   TOP SECTION: THE HANGING PERGAMENT (Perfect)
+   ========================================= */
+.section-pergament {
+    /* Ancient Wall Texture */
+    background: radial-gradient(circle, #2a2520 0%, #110e0c 100%);
+    box-shadow: inset 0 -20px 50px rgba(0,0,0,0.8);
+}
+.label-pergament { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+
+/* The Scroll Item */
+.item-scroll {
+    position: relative;
+    width: 140px; 
+    height: 200px; /* Tall */
+    flex-shrink: 0;
+    cursor: pointer;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+    animation: sway 6s ease-in-out infinite alternate;
+}
+
+/* The Paper */
+.scroll-paper {
+    width: 100%; height: 100%;
+    background: #dcd0b9; /* Parchment Color */
+    overflow: hidden;
+    position: relative;
+    /* Curved shadow effect */
+    box-shadow: inset 10px 0 20px rgba(0,0,0,0.2), inset -10px 0 20px rgba(0,0,0,0.2);
+}
+
+.scroll-paper img {
     width: 100%; height: 100%; object-fit: cover;
-    opacity: 0.8;
-    mix-blend-mode: luminosity; /* Merges image with grid */
+    mix-blend-mode: multiply; /* Blends into paper */
+    filter: sepia(0.4) contrast(1.1);
+}
+
+/* The Rollers (Wood & Gold) */
+.roller-top, .roller-bot {
+    position: absolute; left: -10%; width: 120%; height: 12px;
+    background: linear-gradient(to right, #3d2b1f, #8b5a2b, #3d2b1f); /* Mahogany */
+    border-radius: 6px;
+    z-index: 10;
+    box-shadow: 0 2px 5px black;
+    border-left: 2px solid var(--gold);
+    border-right: 2px solid var(--gold);
+}
+.roller-top { top: -6px; }
+.roller-bot { bottom: -6px; }
+
+@keyframes sway {
+    0% { transform: rotate(1deg); }
+    100% { transform: rotate(-1deg); }
+}
+
+/* =========================================
+   MIDDLE SECTION: THE INDUSTRIAL VAULT (Failed)
+   ========================================= */
+.section-vault {
+    /* Pitted Metal Texture */
+    background: repeating-linear-gradient(45deg, #111, #111 2px, #151515 2px, #151515 4px);
+    box-shadow: inset 0 0 50px #000;
+}
+.label-vault { color: #555; font-family:'Orbitron'; font-weight:900; }
+
+/* The Safe Door */
+.item-safe {
+    width: 160px; height: 160px; /* Square */
+    flex-shrink: 0;
+    background: #222;
+    border: 4px solid #333; /* Raised Frame */
+    border-bottom-color: #111; /* Bevel */
+    border-right-color: #111;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.8);
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* The Bolts */
+.item-safe::before {
+    content: ''; position: absolute; inset: 5px;
+    border: 1px dashed #444; /* Bolt holes */
+    pointer-events: none;
+}
+
+/* The Image (Behind Glass) */
+.safe-glass {
+    width: 85%; height: 85%;
+    background: #000;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #111;
+    box-shadow: inset 0 0 10px #000;
+}
+.safe-glass img {
+    width: 100%; height: 100%; object-fit: cover;
+    opacity: 0.4; 
+    filter: blur(2px) grayscale(100%); /* Hidden behind dirty glass */
+    transition: 0.4s;
+}
+
+/* The Handle */
+.safe-handle {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    width: 8px; height: 40px;
+    background: linear-gradient(to bottom, #444, #888, #444);
+    border-radius: 4px;
+    box-shadow: 2px 2px 5px black;
     transition: 0.3s;
 }
 
-/* Technical Data Overlays */
-.tech-data {
-    position: absolute;
-    font-family: 'Rajdhani', monospace;
-    font-size: 0.5rem;
-    color: var(--gold);
-    letter-spacing: 1px;
-    z-index: 5;
-    background: #000;
-    padding: 1px 3px;
-}
-.td-tl { top: 5px; left: 5px; border-left: 2px solid var(--gold); }
-.td-br { bottom: 5px; right: 5px; border-right: 2px solid var(--gold); }
+/* Interaction: Unlock */
+.item-safe:hover .safe-glass img { opacity: 1; filter: blur(0px) grayscale(0%); }
+.item-safe:hover .safe-handle { transform: translateY(-50%) rotate(90deg); }
 
-.style-blueprint:hover {
-    box-shadow: 0 0 25px rgba(197, 160, 89, 0.5);
-}
-.style-blueprint:hover .gi-thumb {
-    opacity: 1; mix-blend-mode: normal;
-}
 
-/* ---------------------------------------------------------
-   STYLE 12: THE HANGING SCROLL (Fail)
-   "Tactile, Ancient, Raw"
-   Vertical, Rollers, Depth.
---------------------------------------------------------- */
-.style-scroll {
-    aspect-ratio: 2 / 3; /* Tall and narrow */
-    margin: 0 auto; /* Center in grid cell */
-    width: 90%;
+/* =========================================
+   BOTTOM SECTION: THE NEON BLUEPRINT (Okay)
+   ========================================= */
+.section-blueprint {
+    /* Blueprint Grid */
+    background: #00050a;
+    background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    border-top: 1px solid rgba(0, 255, 255, 0.1);
+}
+.label-blueprint { color: cyan; font-family:'Rajdhani'; letter-spacing:1px; }
+
+/* The Data Cell */
+.item-blueprint {
+    width: 160px; height: 120px; /* Wide */
+    flex-shrink: 0;
     position: relative;
-    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); /* Depth shadow */
-    transition: transform 0.3s ease;
-}
-
-.scroll-body {
-    width: 100%; height: 100%;
+    cursor: pointer;
+    border: 1px solid rgba(0, 255, 255, 0.2);
     overflow: hidden;
-    background: #111;
-    position: relative;
+    background: rgba(0, 20, 30, 0.5);
 }
 
-.style-scroll .gi-thumb {
+.item-blueprint img {
     width: 100%; height: 100%; object-fit: cover;
-    filter: sepia(50%) contrast(0.8) brightness(0.6); /* Old fabric look */
+    opacity: 0.6;
+    mix-blend-mode: luminosity; /* Blue tint */
+    transition: 0.2s;
 }
 
-/* The Rollers */
-.scroll-roller-top, .scroll-roller-bottom {
-    position: absolute;
-    left: -5%; width: 110%; height: 8px;
-    background: linear-gradient(to right, #222, #666, #222); /* Metallic */
-    border-radius: 4px;
-    z-index: 10;
-    box-shadow: 0 2px 5px black;
+/* Corner Brackets */
+.bp-corner {
+    position: absolute; width: 10px; height: 10px;
+    border: 1px solid cyan;
+    transition: 0.3s;
 }
-.scroll-roller-top { top: -4px; }
-.scroll-roller-bottom { bottom: -4px; }
+.bl-tl { top: 2px; left: 2px; border-right: none; border-bottom: none; }
+.bl-tr { top: 2px; right: 2px; border-left: none; border-bottom: none; }
+.bl-bl { bottom: 2px; left: 2px; border-right: none; border-top: none; }
+.bl-br { bottom: 2px; right: 2px; border-left: none; border-top: none; }
 
-/* The "Failed" Stamp on the scroll */
-.scroll-stamp {
-    position: absolute; top: 50%; left: 50%; 
-    transform: translate(-50%, -50%) rotate(-10deg);
-    border: 2px solid var(--neon-red);
-    color: var(--neon-red);
-    font-family: 'Black Ops One', sans-serif;
-    font-size: 0.8rem;
-    padding: 5px;
-    opacity: 0.7;
+/* The Laser Scan */
+.item-blueprint::after {
+    content: ''; position: absolute; top: 0; bottom: 0; left: -100%; width: 5px;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 10px cyan;
+    animation: scan 4s infinite linear;
+    opacity: 0.3;
 }
 
-.style-scroll:hover {
-    transform: translateY(-5px) scale(1.02); /* Swings forward */
-}
+@keyframes scan { 0% { left: -10%; } 100% { left: 110%; } }
 
-/* --- PENDING (Ghost) --- */
-.style-pending {
-    aspect-ratio: 1 / 1;
-    border: 1px dashed #444;
-    display: flex; align-items: center; justify-content: center;
-}
-.style-pending .gi-thumb { opacity: 0.1; }
-.pending-text { font-family: 'Orbitron'; color: var(--neon-yellow); font-size: 0.7rem; letter-spacing: 2px; }
-
-/* Utility */
-.hidden { display: none !important; }
+.item-blueprint:hover img { opacity: 1; mix-blend-mode: normal; }
+.item-blueprint:hover .bp-corner { width: 100%; height: 100%; opacity: 0.5; } /* Brackets close in */
 /* MODALS */
 .glass-modal { display: none; position: absolute; inset: 0; z-index: 999; background: #000; flex-direction: column; overflow: hidden; }
 .glass-modal.active { display: flex; animation: fadeIn 0.3s; }
