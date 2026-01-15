@@ -521,7 +521,7 @@ body {
 
 .altar-halo {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 350px; height: 350px;
+    width: 550px; height: 350px;
     background: radial-gradient(closest-side, rgba(255, 215, 0, 0.15), transparent);
     z-index: 0; pointer-events: none;
 }
