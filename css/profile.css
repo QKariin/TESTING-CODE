@@ -478,7 +478,7 @@ body {
 .si-btn:hover { border-color: #fff; color: #fff; }
 
 /* =========================================
-   7. HISTORY: THE STRUCTURAL TRILOGY
+   7. HISTORY: THE MECHANICAL TRILOGY
    ========================================= */
 
 /* --- GLOBAL SECTION LAYOUT --- */
@@ -490,9 +490,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border-bottom: 1px solid #111;
-    /* No background - floating in void */
-    background: transparent; 
+    border-bottom: 1px solid #000;
 }
 
 .horizontal-scroll-track {
@@ -503,7 +501,7 @@ body {
     height: 100%;
     align-items: center;
     padding: 0 40px;
-    gap: 40px;
+    gap: 30px;
     scrollbar-width: none; 
 }
 .horizontal-scroll-track::-webkit-scrollbar { display: none; }
@@ -515,286 +513,198 @@ body {
     font-family: 'Cinzel', serif;
     font-size: 0.6rem;
     letter-spacing: 4px;
-    color: #444;
     pointer-events: none;
 }
 
 /* =========================================
-   TOP: THE ELITE COLLAGE (Style 15)
-   "Asymmetrical, Parallax, Ghost Identity"
+   TOP: THE HANGING SCROLLS (Perfect > 145)
+   Ref: Image 2 - Vertical, Rollers, Swaying
    ========================================= */
+.section-pergament {
+    background: radial-gradient(circle, #1a1510 0%, #050403 100%); /* Ancient Wall */
+}
+.label-pergament { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
 
-/* The Container for a Group of 3 Images */
-.collage-cluster {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+.item-scroll {
     position: relative;
-    padding-left: 60px; /* Space for the Gold Line */
+    width: 140px; 
+    height: 200px;
     flex-shrink: 0;
-}
-
-/* The Gold Vertical Line */
-.collage-line {
-    position: absolute;
-    left: 15px; /* 15px to the left of the anchor */
-    top: 10%; bottom: 10%;
-    width: 1px;
-    background: var(--gold);
-    box-shadow: 0 0 10px var(--gold);
-    opacity: 0.8;
-}
-
-/* The Ghost Number (Parallax Target) */
-.collage-ghost-num {
-    position: absolute;
-    left: -20px; bottom: -20px;
-    font-family: 'Cinzel', serif;
-    font-size: 8rem;
-    font-weight: 700;
-    color: var(--gold);
-    opacity: 0.1;
-    z-index: 0;
-    pointer-events: none;
-    transition: transform 0.1s linear; /* For JS Parallax */
-}
-
-/* 1. The Anchor (Tall Vertical) */
-.img-anchor {
-    width: 160px; height: 220px;
-    position: relative;
-    z-index: 10;
     cursor: pointer;
-    transition: transform 0.3s;
-}
-.img-anchor:hover { transform: scale(1.02); z-index: 20; }
-
-/* 2. The Satellites (Stacked Landscape) */
-.collage-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 10;
+    filter: drop-shadow(0 15px 20px rgba(0,0,0,0.9));
+    transform-origin: top center;
+    animation: sway 6s ease-in-out infinite alternate;
 }
 
-.img-satellite {
-    width: 140px; height: 100px;
+/* The Paper */
+.scroll-paper {
+    width: 100%; height: 100%;
+    background: #dcd0b9; 
+    overflow: hidden;
     position: relative;
-    cursor: pointer;
-    transition: transform 0.3s;
+    box-shadow: inset 5px 0 10px rgba(0,0,0,0.3), inset -5px 0 10px rgba(0,0,0,0.3);
 }
-/* Shift offsets */
-.sat-top { transform: translateY(-15px); }
-.sat-bot { transform: translateY(15px); }
 
-.img-satellite:hover { transform: scale(1.05); z-index: 20; }
-
-/* Shared Image Style */
-.collage-img {
+.scroll-paper img {
     width: 100%; height: 100%; object-fit: cover;
-    filter: sepia(20%) contrast(1.1);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    mix-blend-mode: multiply; /* Blends image into paper texture */
+    filter: sepia(0.3) contrast(1.1);
 }
+
+/* The Rollers */
+.roller-top, .roller-bot {
+    position: absolute; left: -8%; width: 116%; height: 10px;
+    background: linear-gradient(to bottom, #8b5a2b, #3d2b1f); /* Wood */
+    border-radius: 5px;
+    z-index: 10;
+    box-shadow: 0 2px 4px black;
+    border: 1px solid #111;
+}
+/* Gold Caps */
+.roller-top::after, .roller-top::before, 
+.roller-bot::after, .roller-bot::before {
+    content: ''; position: absolute; top: 0; width: 6px; height: 100%;
+    background: linear-gradient(to right, #ffd700, #b8860b);
+    border-radius: 2px;
+}
+.roller-top::before { left: 0; } .roller-top::after { right: 0; }
+.roller-bot::before { left: 0; } .roller-bot::after { right: 0; }
+
+.roller-top { top: -6px; }
+.roller-bot { bottom: -6px; }
+
+@keyframes sway {
+    0% { transform: rotate(1.5deg); }
+    100% { transform: rotate(-1.5deg); }
+}
+
+/* =========================================
+   MIDDLE: THE APERTURE (Okay / Pending)
+   Ref: Image 3 - Circular, Blades, Tech
+   ========================================= */
+.section-blueprint {
+    background: #080808;
+    background-image: radial-gradient(circle, #111 1px, transparent 1px);
+    background-size: 20px 20px;
+    border-top: 1px solid #222;
+}
+.label-blueprint { color: cyan; font-family:'Rajdhani'; }
+
+.item-aperture {
+    width: 150px; height: 150px;
+    flex-shrink: 0;
+    position: relative;
+    border-radius: 50%;
+    background: #000;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid #222;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8), inset 0 0 20px #000;
+    transition: 0.3s;
+}
+
+.aperture-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scale(1.2);
+    transition: 0.4s ease-out;
+}
+
+/* The Blades Container */
+.shutter-mech {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The 6 Blades */
+.blade {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 100%; height: 100%;
+    background: #151515;
+    transform-origin: 0% 0%;
+    border-left: 1px solid #333;
+    /* Create triangular blade shape */
+    clip-path: polygon(0 0, 100% 0, 100% 50%);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Arrange the 6 blades in a circle */
+.b1 { transform: rotate(0deg) skewX(30deg); }
+.b2 { transform: rotate(60deg) skewX(30deg); }
+.b3 { transform: rotate(120deg) skewX(30deg); }
+.b4 { transform: rotate(180deg) skewX(30deg); }
+.b5 { transform: rotate(240deg) skewX(30deg); }
+.b6 { transform: rotate(300deg) skewX(30deg); }
+
+/* Interaction: Open the Shutter */
+.item-aperture:hover .blade {
+    transform: rotate(var(--r)) skewX(30deg) translate(15px, -15px);
+    opacity: 0;
+}
+/* Recalculate rotations for hover state to slide them out */
+.item-aperture:hover .b1 { --r: 0deg; }
+.item-aperture:hover .b2 { --r: 60deg; }
+.item-aperture:hover .b3 { --r: 120deg; }
+.item-aperture:hover .b4 { --r: 180deg; }
+.item-aperture:hover .b5 { --r: 240deg; }
+.item-aperture:hover .b6 { --r: 300deg; }
+
+.item-aperture:hover { border-color: cyan; box-shadow: 0 0 20px cyan; }
+.item-aperture:hover .aperture-img { transform: scale(1); }
 
 
 /* =========================================
-   MIDDLE: THE NOIR VAULT (Style 1)
-   "Strict, Beveled, Light Sweep"
+   BOTTOM: THE SHADOW CELLS (Failed)
+   Ref: Image 1 - Dark, Recessed, No Borders
    ========================================= */
+.section-vault {
+    background: #020202;
+    border-top: 1px solid #111;
+}
+.label-vault { color: #555; font-family:'Orbitron'; font-weight:900; }
 
-.item-noir {
-    width: 160px; height: 160px;
+.item-shadow {
+    width: 140px; height: 140px;
     flex-shrink: 0;
     position: relative;
     background: #000;
-    cursor: pointer;
     overflow: hidden;
-
-    /* The Matte Black Bezel (45deg Slope) */
-    box-shadow: 
-        inset 10px 10px 20px #000, 
-        inset -10px -10px 20px #000,
-        0 0 0 10px #111; /* Outer thick frame */
+    cursor: pointer;
+    
+    /* THE INSET LOOK */
+    box-shadow: inset 0 0 40px #000;
+    border: 1px solid #111;
 }
 
-/* Inner Hairline */
-.item-noir::after {
-    content: ''; position: absolute; inset: 10px; /* Inside the bezel */
-    border: 1px solid rgba(255,255,255,0.3);
-    pointer-events: none;
-    z-index: 5;
-}
-
-.noir-img {
+.shadow-img {
     width: 100%; height: 100%;
     object-fit: cover;
-    filter: grayscale(100%) contrast(1.2);
-    transition: filter 0.5s ease;
-}
-
-/* The Metal Seal */
-.noir-seal {
-    position: absolute;
-    bottom: 12px; left: 50%; transform: translateX(-50%);
-    background: linear-gradient(to bottom, #ccc, #888); /* Brushed Silver */
-    color: #000;
-    font-family: 'Courier Prime', monospace;
-    font-size: 6px;
-    font-weight: 700;
-    padding: 2px 6px;
-    letter-spacing: 1px;
-    box-shadow: 0 2px 5px black;
-    z-index: 10;
-}
-
-/* The Light Sweep Interaction */
-.item-noir::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%; width: 50%; height: 100%;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
-    transform: skewX(-25deg);
-    z-index: 6;
-    pointer-events: none;
-}
-
-.item-noir:hover .noir-img { filter: grayscale(0%) contrast(1); }
-.item-noir:hover::before { animation: sweep 0.6s linear; }
-
-@keyframes sweep {
-    0% { left: -100%; } 100% { left: 200%; }
-}
-/* =========================================
-   THE INDUSTRIAL VAULT (Category: FAILED)
-   ========================================= */
-
-.item-vault {
-    width: 200px; 
-    height: 200px;
-    flex-shrink: 0;
-    position: relative;
-    cursor: pointer;
-    margin: 0 10px; /* Spacing in scroll */
-    
-    /* 1. THE CHASSIS (Hammered Cast Iron) */
-    background-color: #1a1a1a;
-    /* Noise texture via gradient overlap */
-    background-image: 
-        radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 100%),
-        repeating-radial-gradient(#222 0, #1a1a1a 2px);
-    
-    /* 2. THE BEVELED FRAME */
-    border: 20px solid #1a1a1a; /* Fallback */
-    border-image: linear-gradient(145deg, #444, #111) 1;
-    box-shadow: 
-        inset 0 0 20px #000, /* Inner depth */
-        10px 10px 30px rgba(0,0,0,0.8); /* Outer heavy shadow */
-        
-    overflow: hidden;
-}
-
-/* --- THE BOLTS (Rivets) --- */
-.vault-bolt {
-    position: absolute;
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    /* Metallic Head */
-    background: radial-gradient(circle at 30% 30%, #aaa, #333);
-    box-shadow: 2px 2px 3px rgba(0,0,0,0.9); /* Drop shadow */
-    z-index: 20;
-}
-
-/* Bolt Positions (Relative to padding box) */
-.vb-tl { top: -14px; left: -14px; }
-.vb-tr { top: -14px; right: -14px; }
-.vb-bl { bottom: -14px; left: -14px; }
-.vb-br { bottom: -14px; right: -14px; }
-
-/* --- THE STATUS LED --- */
-.vault-led {
-    position: absolute;
-    top: -12px; right: 8px; /* Nestled inside top-right bolt area */
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background-color: #ff0000;
-    box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
-    z-index: 25;
-    transition: all 0.1s ease;
-    animation: ledPulse 2s infinite ease-in-out;
-}
-
-@keyframes ledPulse {
-    0% { opacity: 0.4; }
-    50% { opacity: 1; }
-    100% { opacity: 0.4; }
-}
-
-/* --- THE LOCKING BAR --- */
-.vault-bar {
-    position: absolute;
-    top: 50%; left: 0;
-    transform: translateY(-50%);
-    width: 100%; height: 25%; /* Covers middle 25% */
-    
-    /* Brushed Steel Texture */
-    background: repeating-linear-gradient(
-        90deg,
-        #444 0px,
-        #555 1px,
-        #444 2px,
-        #333 4px
-    );
-    
-    border-top: 1px solid #666;
-    border-bottom: 1px solid #222;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.9); /* Shadow on image */
-    z-index: 10;
-    
-    transition: transform 0.6s cubic-bezier(0.6, -0.28, 0.735, 0.045); /* Heavy Slide */
-    display: flex;
-    align-items: center;
-}
-
-/* --- THE COG (Handle) --- */
-.vault-cog {
-    width: 30px; height: 30px;
-    margin-left: 10px;
-    background: radial-gradient(circle, #666, #222);
-    border-radius: 50%;
-    border: 2px solid #111;
-    position: relative;
-    /* Gear Teeth Simulation */
-    border-style: dashed; 
-    transition: transform 0.6s ease-out;
-}
-
-/* --- THE IMAGE (Prisoner) --- */
-.vault-img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    opacity: 0.6;
-    filter: brightness(0.2) contrast(1.2) grayscale(100%); /* Hidden/Dark */
+    opacity: 0.3; /* Very dark */
+    filter: grayscale(100%) contrast(1.5);
     transition: all 0.5s ease;
+    transform: scale(0.9); /* Pushed back */
 }
 
-/* --- INTERACTION (UNLOCKING) --- */
-.item-vault:hover .vault-bar {
-    transform: translate(100%, -50%); /* Slide Right */
+/* Verdict Overlay */
+.shadow-stamp {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #333; font-family: 'Black Ops One'; font-size: 1.5rem;
+    transform: rotate(-15deg);
+    opacity: 0.5;
+    pointer-events: none;
 }
 
-.item-vault:hover .vault-cog {
-    transform: rotate(360deg); /* Spin */
+.item-shadow:hover .shadow-img {
+    opacity: 1; 
+    filter: grayscale(0%) contrast(1);
+    transform: scale(1); /* Comes forward */
 }
-
-.item-vault:hover .vault-img {
-    opacity: 1;
-    filter: brightness(1.0) contrast(1.2) grayscale(0%); /* Reveal */
-}
-
-.item-vault:hover .vault-led {
-    background-color: #ffffff; /* Cold White */
-    box-shadow: 0 0 8px #ffffff, 0 0 15px #ffffff;
-    animation: none; /* Solid light */
+.item-shadow:hover {
+    border-color: var(--neon-red);
+    box-shadow: inset 0 0 10px #000;
 }
 
 /* MODALS */
