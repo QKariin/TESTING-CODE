@@ -1,10 +1,11 @@
-// gallery.js - FIXED & ROBUST
+// gallery.js - RESTORED PROFILE CONNECTION + IMAGE FIX
+
 import { 
-    galleryData, historyLimit, currentHistoryIndex, touchStartX, 
+    galleryData, pendingLimit, historyLimit, currentHistoryIndex, touchStartX, 
     setCurrentHistoryIndex, setHistoryLimit, setTouchStartX,
-    gameStats, setGameStats, setCurrentTask, setPendingTaskState
+    gameStats, setGameStats, setCurrentTask, setPendingTaskState, setIgnoreBackendUpdates
 } from './state.js';
-import { getOptimizedUrl, triggerSound } from './utils.js';
+import { getOptimizedUrl, cleanHTML, triggerSound } from './utils.js';
 
 // STICKERS
 const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
@@ -19,12 +20,10 @@ function getPoints(item) {
     return Number(val);
 }
 
-// --- HELPER: NORMALIZE DATA ---
+// --- HELPER: NORMALIZE DATA (The URL Hunter) ---
 function normalizeGalleryItem(item) {
-    // If proofUrl exists and is valid, keep it
     if (item.proofUrl && typeof item.proofUrl === 'string' && item.proofUrl.length > 5) return item;
 
-    // Search for any possible image key
     const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src', 'attachment', 'photo'];
     for (let key of candidates) {
         if (item[key] && typeof item[key] === 'string' && item[key].length > 5) {
@@ -39,16 +38,12 @@ function normalizeGalleryItem(item) {
 function getGalleryList() {
     if (!galleryData || !Array.isArray(galleryData)) return [];
 
-    // Normalize everything first so we have proofUrl ready
     let items = galleryData.map(normalizeGalleryItem).filter(i => {
         const s = (i.status || "").toLowerCase();
         const hasUrl = i.proofUrl && i.proofUrl.length > 5;
-        
-        // Return only items that have an image and a valid status
         return hasUrl && (s.includes('pending') || s.includes('app') || s.includes('rej') || s === "");
     });
 
-    // Apply Filters
     if (activeStickerFilter === "DENIED") {
         items = items.filter(item => (item.status || "").toLowerCase().includes('rej'));
     } 
@@ -77,11 +72,11 @@ function renderStickerFilters() {
         <div class="filter-circle ${activeStickerFilter === 'ALL' ? 'active' : ''}" onclick="window.setGalleryFilter('ALL')">
             <span class="filter-all-text">ALL</span>
         </div>
-        <div class="filter-circle ${activeStickerFilter === 'PENDING' ? 'active' : ''}" onclick="window.setGalleryFilter('PENDING')" style="${activeStickerFilter === 'PENDING' ? 'border-color:cyan;' : ''}">
-            <span class="filter-all-text" style="color:cyan; font-size:0.5rem;">WAIT</span>
+        <div class="filter-circle ${activeStickerFilter === 'PENDING' ? 'active' : ''}" onclick="window.setGalleryFilter('PENDING')" style="${activeStickerFilter === 'PENDING' ? 'border-color:var(--neon-yellow);' : ''}">
+            <span class="filter-all-text" style="color:var(--neon-yellow); font-size:0.5rem;">WAIT</span>
         </div>
-        <div class="filter-circle ${activeStickerFilter === 'DENIED' ? 'active' : ''}" onclick="window.setGalleryFilter('DENIED')" style="${activeStickerFilter === 'DENIED' ? 'border-color:red;' : ''}">
-            <span class="filter-all-text" style="color:red; font-size:0.5rem;">DENY</span>
+        <div class="filter-circle ${activeStickerFilter === 'DENIED' ? 'active' : ''}" onclick="window.setGalleryFilter('DENIED')" style="${activeStickerFilter === 'DENIED' ? 'border-color:var(--neon-red);' : ''}">
+            <span class="filter-all-text" style="color:var(--neon-red); font-size:0.5rem;">DENY</span>
         </div>`;
 
     stickers.forEach(url => {
@@ -97,18 +92,19 @@ function renderStickerFilters() {
 }
 
 export function renderGallery() {
+    if (!galleryData) return;
+
     const hGrid = document.getElementById('historyGrid');
-    if (!hGrid || !galleryData) return;
+    if (!hGrid) return;
 
     renderStickerFilters();
-
     const items = getGalleryList(); 
 
     if (items.length > 0) {
         hGrid.innerHTML = items.slice(0, historyLimit).map((item, index) => createGalleryItemHTML(item, index)).join('');
         hGrid.style.display = 'grid';
     } else {
-        hGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#444;">NO RECORDS FOUND</div>';
+        hGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#444; font-family:Cinzel;">NO RECORDS FOUND</div>';
     }
     
     const loadBtn = document.getElementById('loadMoreBtn');
@@ -142,7 +138,7 @@ function createGalleryItemHTML(item, index) {
                 ? `<video src="${thumbUrl}" class="gi-thumb" muted loop></video>` 
                 : `<img src="${thumbUrl}" class="gi-thumb" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">`
             }
-            ${isPending ? `<div class="pending-overlay">⏳</div>` : ''}
+            ${isPending ? `<div class="pending-overlay"><div class="pending-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div></div>` : ''}
             <div class="merit-tag">
                 <div class="tag-label">MERIT</div>
                 <div class="tag-val">${barText}</div>
@@ -150,36 +146,58 @@ function createGalleryItemHTML(item, index) {
         </div>`;
 }
 
-// --- MODAL & ACTIONS ---
-
+// --- REDEMPTION LOGIC ---
 window.atoneForTask = function(index) {
     const items = getGalleryList();
     const task = items[index];
-    if (!task || gameStats.coins < 100) return;
+    if (!task) return;
+
+    if (gameStats.coins < 100) {
+        triggerSound('sfx-deny');
+        return;
+    }
 
     triggerSound('coinSound');
     setGameStats({ ...gameStats, coins: gameStats.coins - 100 });
+    const coinEl = document.getElementById('coins');
+    if(coinEl) coinEl.innerText = gameStats.coins;
+
+    const restoredTask = { text: task.text, category: 'redemption', timestamp: Date.now() };
+    setCurrentTask(restoredTask);
     
-    const newPendingState = { 
-        task: { text: task.text, category: 'redemption', timestamp: Date.now() }, 
-        endTime: Date.now() + 86400000, 
-        status: "PENDING" 
-    };
-    
+    const endTimeVal = Date.now() + 86400000; 
+    const newPendingState = { task: restoredTask, endTime: endTimeVal, status: "PENDING" };
     setPendingTaskState(newPendingState);
-    window.closeModal();
-    renderGallery();
+    
+    window.closeModal(); 
+    
+    if(window.restorePendingUI) window.restorePendingUI();
+    if(window.updateTaskUIState) window.updateTaskUIState(true);
+    if(window.toggleTaskDetails) window.toggleTaskDetails(true);
+
+    window.parent.postMessage({ 
+        type: "PURCHASE_ITEM", 
+        itemName: "Redemption",
+        cost: 100
+    }, "*");
+    
+    window.parent.postMessage({ 
+        type: "savePendingState", 
+        pendingState: newPendingState, 
+        consumeQueue: false 
+    }, "*");
 };
 
+// --- MODAL ---
 export function openHistoryModal(index) {
     const items = getGalleryList();
-    const item = items[index];
-    if (!item) return;
+    if (!items[index]) return;
     
     setCurrentHistoryIndex(index);
+    const item = items[index];
     let url = item.proofUrl;
-    const isVideo = url.match(/\.(mp4|webm|mov)($|\?)/i);
     
+    const isVideo = url.match(/\.(mp4|webm|mov)($|\?)/i);
     const mediaContainer = document.getElementById('modalMediaContainer');
     if (mediaContainer) {
         mediaContainer.innerHTML = isVideo 
@@ -194,31 +212,97 @@ export function openHistoryModal(index) {
         const isRejected = s.includes('rej') || s.includes('fail');
         const isPending = s.includes('pending') || s === "";
         
-        let statusImg = s.includes('app') ? STICKER_APPROVE : (isRejected ? STICKER_DENIED : "");
-        let statusDisplay = isPending ? `<div style="font-size:3rem;">⏳</div>` : `<img src="${statusImg}" style="width:100px;">`;
+        let statusImg = "";
+        let statusText = "SYSTEM VERDICT";
+        
+        if (isPending) {
+            statusText = "AWAITING REVIEW";
+        } else {
+            statusImg = s.includes('app') ? STICKER_APPROVE : (isRejected ? STICKER_DENIED : "");
+        }
+
+        const statusDisplay = isPending 
+            ? `<div style="font-size:3rem;"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="cyan" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>` 
+            : `<img src="${statusImg}" style="width:100px; height:100px; object-fit:contain; margin-bottom:15px; opacity:0.8;">`;
+
+        let footerAction = `<button onclick="event.stopPropagation(); window.closeModal(event)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE FILE</button>`;
+        if (isRejected) {
+            footerAction = `<button onclick="event.stopPropagation(); window.atoneForTask(${index})" class="btn-dim" style="grid-column: span 2; border-color:var(--neon-red); color:var(--neon-red); width:100%;">ATONE (-100)</button>`;
+        }
 
         overlay.innerHTML = `
-            <div id="modalCloseX" onclick="window.closeModal(event)">×</div>
-            <div class="theater-content">
-                <div class="dossier-block">
-                    <div class="dossier-label">STATUS</div>
-                    ${statusDisplay}
-                </div>
-                <div class="dossier-block">
-                    <div class="dossier-label">POINTS</div>
-                    <div class="m-points-lg">${pts}</div>
+            <div id="modalCloseX" onclick="window.closeModal(event)" style="position:absolute; top:20px; right:20px; font-size:2.5rem; cursor:pointer; color:white; z-index:110;">×</div>
+            <div class="theater-content dossier-layout">
+                <div class="dossier-sidebar">
+                    <div id="modalInfoView" class="sub-view">
+                        <div class="dossier-block">
+                            <div class="dossier-label">${statusText}</div>
+                            ${statusDisplay}
+                        </div>
+                        <div class="dossier-block">
+                            <div class="dossier-label">MERIT VALUE</div>
+                            <div class="m-points-lg" style="color:${isRejected ? 'red' : (isPending ? 'cyan' : 'gold')}">
+                                ${isPending ? "CALC" : "+" + pts}
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modalFeedbackView" class="sub-view hidden">
+                        <div class="dossier-label">OFFICER NOTES</div>
+                        <div class="theater-text-box">${(item.adminComment || "No notes.").replace(/\n/g, '<br>')}</div>
+                    </div>
+                    <div id="modalTaskView" class="sub-view hidden">
+                         <div class="dossier-label">DIRECTIVE</div>
+                         <div class="theater-text-box">${(item.text || "").replace(/\n/g, '<br>')}</div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer-menu">
-                <button onclick="window.closeModal(event)" class="history-action-btn">CLOSE</button>
-                ${isRejected ? `<button onclick="window.atoneForTask(${index})" class="history-action-btn">ATONE (-100)</button>` : ''}
-            </div>`;
+                <button onclick="event.stopPropagation(); window.toggleHistoryView('feedback')" class="history-action-btn">NOTES</button>
+                <button onclick="event.stopPropagation(); window.toggleHistoryView('task')" class="history-action-btn">ORDER</button>
+                <button onclick="event.stopPropagation(); window.toggleHistoryView('proof')" class="history-action-btn">EVIDENCE</button>
+                <button onclick="event.stopPropagation(); window.toggleHistoryView('info')" class="history-action-btn">DATA</button>
+                ${footerAction}
+            </div>
+        `;
     }
+
+    toggleHistoryView('info');
     document.getElementById('glassModal').classList.add('active');
 }
 
+export function toggleHistoryView(view) {
+    const modal = document.getElementById('glassModal');
+    const overlay = document.getElementById('modalGlassOverlay');
+    if (!modal || !overlay) return;
+
+    ['modalInfoView', 'modalFeedbackView', 'modalTaskView'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.add('hidden');
+    });
+
+    if (view === 'proof') {
+        modal.classList.add('proof-mode-active');
+        overlay.classList.add('clean');
+    } else {
+        modal.classList.remove('proof-mode-active');
+        overlay.classList.remove('clean');
+        let targetId = view === 'feedback' ? 'modalFeedbackView' : (view === 'task' ? 'modalTaskView' : 'modalInfoView');
+        const target = document.getElementById(targetId);
+        if(target) target.classList.remove('hidden');
+    }
+}
+
 export function closeModal(e) {
-    document.getElementById('glassModal').classList.remove('active');
+    if (e && (e.target.id === 'modalCloseX' || e.target.classList.contains('btn-close-red'))) {
+        document.getElementById('glassModal').classList.remove('active');
+        document.getElementById('modalMediaContainer').innerHTML = "";
+        return;
+    }
+    const overlay = document.getElementById('modalGlassOverlay');
+    if (overlay && overlay.classList.contains('clean')) {
+        toggleHistoryView('info'); 
+        return;
+    }
 }
 
 export function loadMoreHistory() {
@@ -226,9 +310,29 @@ export function loadMoreHistory() {
     renderGallery();
 }
 
-// --- WINDOW EXPORTS ---
+export function initModalSwipeDetection() {
+    const modalEl = document.getElementById('glassModal');
+    if (!modalEl) return;
+    modalEl.addEventListener('touchstart', e => setTouchStartX(e.changedTouches[0].screenX), { passive: true });
+    modalEl.addEventListener('touchend', e => {
+        const touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 80) {
+            let historyItems = getGalleryList();
+            let nextIndex = (diff > 0) ? currentHistoryIndex + 1 : currentHistoryIndex - 1;
+            if (nextIndex >= 0 && nextIndex < historyItems.length) openHistoryModal(nextIndex);
+        }
+    }, { passive: true });
+}
+
+// FORCE WINDOW EXPORTS
 window.renderGallery = renderGallery;
 window.openHistoryModal = openHistoryModal;
+window.toggleHistoryView = toggleHistoryView;
 window.closeModal = closeModal;
-window.setGalleryFilter = (type) => { activeStickerFilter = type; renderGallery(); };
+window.atoneForTask = window.atoneForTask;
 window.loadMoreHistory = loadMoreHistory;
+window.setGalleryFilter = function(filterType) {
+    activeStickerFilter = filterType;
+    renderGallery(); 
+};
