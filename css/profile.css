@@ -605,73 +605,88 @@ body {
 
 
 /* =========================================
-   MIDDLE: THE ARCHIVE (Transparent Glass)
+   MIDDLE SECTION: THE ARCHIVE (9:16 Portrait)
    ========================================= */
-.section-archive {
-    flex: 1; /* Take remaining space */
-    background: transparent !important;
-}
-.label-archive { color: #888; font-family:'Rajdhani'; }
 
+/* The Container */
+.section-archive {
+    flex: 1; /* Fills available space naturally */
+    position: relative;
+    /* No borders, no background */
+}
+
+/* The Card (Portrait 9:16) */
 .item-archive {
-    min-width: 140px; height: 140px;
-    margin-right: 15px;
+    min-width: 120px;       /* Width */
+    height: 210px;          /* Height (~9:16 ratio) */
+    margin-right: 15px;     /* Spacing */
     position: relative;
     cursor: pointer;
-    background: rgba(0, 0, 0, 0.4); /* Glass */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    
+    /* Transparent / Glass base */
+    background: rgba(0, 0, 0, 0.2); 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
     overflow: hidden;
 }
+
+/* The Image (Grey Overlay Effect) */
 .archive-img {
-    width: 100%; height: 100%; object-fit: cover;
-    opacity: 0.8; transition: all 0.3s ease;
-}
-.item-archive:hover .archive-img { opacity: 1; transform: scale(1.05); }
-
-
-/* =========================================
-   BOTTOM: THE HEAP (Overlapping Stack)
-   ========================================= */
-.section-heap {
-    flex: 1;
-    background: transparent !important;
-}
-.label-heap { color: #444; font-family:'Orbitron'; font-weight:900; }
-
-.item-trash {
-    min-width: 120px; height: 160px;
-    margin-right: -50px !important; /* FORCE OVERLAP */
-    position: relative;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    transform-origin: bottom center;
-    filter: grayscale(100%) brightness(0.6);
-    border: 1px solid #333;
-    background: rgba(20, 0, 0, 0.6);
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover;
+    
+    /* THE GREY OVERLAY LOOK */
+    opacity: 0.5;           /* Dimmed */
+    filter: grayscale(100%); /* Black & White */
+    transition: all 0.4s ease;
 }
 
-.item-trash:hover {
-    margin-right: 10px !important; /* Spread out */
-    transform: translateY(-20px) scale(1.1) rotate(0deg) !important;
-    z-index: 100;
-    filter: grayscale(0%) brightness(1);
-    box-shadow: 0 0 30px rgba(255, 0, 60, 0.3);
-    border-color: var(--neon-red);
-    background: #000;
-}
-.trash-img { width: 100%; height: 100%; object-fit: cover; }
-
-.trash-stamp {
-    position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg);
-    border: 3px solid var(--neon-red); color: var(--neon-red);
-    font-family: 'Black Ops One'; font-size: 1rem;
-    padding: 5px; opacity: 0.8;
+/* Hover: Bring back color */
+.item-archive:hover .archive-img {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: scale(1.05);
 }
 
-/* Rotation randomization */
-.item-trash:nth-child(odd) { transform: rotate(3deg); }
-.item-trash:nth-child(even) { transform: rotate(-2deg); }
+/* --- STICKERS & OVERLAYS --- */
+
+/* 1. PENDING (Sandglass/Wait) */
+.pending-overlay {
+    position: absolute; 
+    inset: 0;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    background: rgba(0,0,0,0.6); /* Darker dim for pending */
+    z-index: 5;
+}
+.pending-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 0 5px cyan);
+    animation: pulse 2s infinite;
+}
+
+/* 2. APPROVED (Automatic Sticker via CSS) */
+/* This adds a subtle "stamped" look to non-pending items */
+.item-archive:not(:has(.pending-overlay))::after {
+    content: 'LOGGED'; /* Or 'APPROVED' */
+    position: absolute;
+    bottom: 10px; right: 10px;
+    font-family: 'Black Ops One', cursive; /* Stencil font */
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 2px 5px;
+    transform: rotate(-10deg);
+    pointer-events: none;
+    z-index: 4;
+}
+
+.item-archive:hover::after {
+    color: var(--gold);
+    border-color: var(--gold);
+    opacity: 1;
+}
 
 
 /* =========================================
