@@ -3,7 +3,7 @@
 
 import { currId, lastChatJson, setLastChatJson, ACCOUNT_ID, API_KEY, users } from './dashboard-state.js';
 import { forceBottom, isAtBottom } from './dashboard-utils.js';
-import { getPrivateFile, fileType } from './mediaBytescale.js';
+import { getPrivateFile } from './mediaBytescale.js';
 import { getOptimizedUrl, mediaType, fileType } from './media.js';
 
 let lastNotifiedMessageId = null;

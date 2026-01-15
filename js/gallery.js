@@ -1,5 +1,5 @@
 // gallery.js - TRILOGY LAYOUT (FIXED)
-import { mediaType } from './mediaBytescale.js';
+import { mediaType } from './media.js';
 import { 
     galleryData, 
     historyLimit,
