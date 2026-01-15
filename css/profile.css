@@ -527,151 +527,107 @@ body {
 }
 
 /* =========================================
-   TOP SECTION ONLY: THE GOLDEN TRIPTYCH
+   TOP SECTION: COMPACT & CLEAN
    ========================================= */
 
-/* The Stage - Forces "Static" Mode (No Scroll) */
+/* 1. HANDCUFF THE HEIGHT (Fixes the "50% Screen" issue) */
 .section-altar.triptych-stage {
+    flex: 0 0 260px !important;    /* FORCE fixed size. Do not grow. */
+    height: 260px !important;      /* Strictly 260px tall */
+    min-height: 260px !important;  /* No shrinking */
+    
     position: relative;
     width: 100%;
-    height: 100%; /* Fills strictly the top container */
     background: radial-gradient(circle at 50% 40%, #1a1510 0%, #000 80%);
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden !important; /* CRITICAL: Kills the old scroll */
-    perspective: 1000px; /* Creates 3D depth for the sides */
+    overflow: hidden !important;
+    perspective: 1000px;
     z-index: 10;
+    border-bottom: 1px solid #222; /* Clean separation from Middle Section */
 }
 
-/* The Halo (Glowing Background) */
-.altar-halo {
-    position: absolute;
-    top: 50%; 
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%; 
-    height: 150%; /* Tall glow */
-    background: radial-gradient(closest-side, rgba(197, 160, 89, 0.2), transparent);
-    z-index: 1;
-    pointer-events: none;
+/* 2. REMOVE THE POINTS (Clean Look) */
+.altar-plaque {
+    display: none !important;
 }
 
-/* --- THE CARDS (Shared Styles) --- */
-.altar-card {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    background: #000;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-    transition: transform 0.3s ease, filter 0.3s ease;
-}
+/* 3. RESIZE CARDS TO FIT NEW COMPACT HEIGHT */
 
-/* Image Fit */
-.altar-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-/* --- THE DECORATION (Frame & Gold) --- */
-.gold-bar {
-    width: 100%;
-    height: 6px; /* Heavy Top/Bottom Bar */
-    background: linear-gradient(90deg, #5e4b25, #fddb92, #c5a059, #5e4b25);
-    z-index: 10;
-    flex-shrink: 0;
-}
-
-.inner-hairline {
-    position: absolute;
-    top: 10px; bottom: 10px; left: 10px; right: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    z-index: 15;
-    pointer-events: none;
-    box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
-}
-
-/* --- POSITIONS & HIERARCHY --- */
-
-/* 1. CENTER IDOL (Rank 1) */
+/* Center Idol */
 .center-idol {
-    width: 180px;  /* Adjust width to fit your screen */
-    height: 240px; /* Adjust height to fit your screen */
-    z-index: 20;   /* On Top */
+    width: 150px;   /* Narrower */
+    height: 200px;  /* Fits perfectly inside 260px container */
     top: 50%; 
     left: 50%;
-    transform: translate(-50%, -55%); /* Centered, slightly up */
-    border-left: 1px solid #222;
-    border-right: 1px solid #222;
+    transform: translate(-50%, -50%); /* Dead Center */
+    z-index: 20;
+    border-left: 1px solid #111;
+    border-right: 1px solid #111;
 }
 
-/* 2. LEFT OFFERING (Rank 2) */
+/* Side Offerings */
+.left-offering, .right-offering {
+    width: 120px;
+    height: 160px;
+    top: 50%;
+    z-index: 10;
+    filter: brightness(0.4) sepia(0.2);
+    opacity: 0.8;
+}
+
 .left-offering {
-    width: 140px;
-    height: 190px;
-    z-index: 10;   /* Behind Center */
-    top: 50%;
     left: 50%;
-    transform: translate(-130%, -50%) scale(0.9); /* Left & Small */
-    filter: brightness(0.5) sepia(0.3); /* Dimmed */
-    opacity: 0.8;
+    transform: translate(-140%, -50%) scale(0.9);
 }
 
-/* 3. RIGHT OFFERING (Rank 3) */
 .right-offering {
-    width: 140px;
-    height: 190px;
-    z-index: 10;   /* Behind Center */
-    top: 50%;
     left: 50%;
-    transform: translate(30%, -50%) scale(0.9); /* Right & Small */
-    filter: brightness(0.5) sepia(0.3); /* Dimmed */
-    opacity: 0.8;
+    transform: translate(40%, -50%) scale(0.9);
 }
 
-/* --- REFLECTION (Under Center Only) --- */
+/* 4. ADJUST REFLECTION */
 .reflection-mask {
     position: absolute;
-    top: 100%; /* Directly below */
+    top: 100%;
     left: 0; 
     width: 100%;
-    height: 60px; /* Fade out height */
+    height: 40px; /* Short fade */
     overflow: hidden;
-    transform: scaleY(-1); /* Flip Vertical */
-    opacity: 0.5;
+    transform: scaleY(-1);
+    opacity: 0.3; /* Subtle */
     mask-image: linear-gradient(to top, transparent 0%, black 100%);
     -webkit-mask-image: linear-gradient(to top, transparent 0%, black 100%);
     pointer-events: none;
-    margin-top: 6px; /* Gap for gold bar */
+    margin-top: 4px;
 }
 
-/* --- TEXT PLAQUES --- */
-.altar-plaque {
-    position: absolute;
-    bottom: -35px;
-    width: 100%;
-    text-align: center;
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
-    letter-spacing: 2px;
+/* 5. DECORATION */
+.altar-halo {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 350px; height: 350px; /* Smaller Halo */
+    background: radial-gradient(closest-side, rgba(197, 160, 89, 0.15), transparent);
+    z-index: 1; pointer-events: none;
 }
 
-/* Side Text */
-.side-card .altar-plaque {
-    font-size: 0.8rem;
-    color: #666;
+.gold-bar {
+    width: 100%; height: 5px; 
+    background: linear-gradient(90deg, #5e4b25, #fddb92, #c5a059, #5e4b25);
+    z-index: 10;
 }
 
-/* Center Text */
-.main-plaque {
-    bottom: -55px; /* Push lower below reflection */
-    font-size: 1.5rem;
-    color: var(--gold);
-    text-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
-    z-index: 30;
+.inner-hairline {
+    position: absolute; inset: 5px; 
+    border: 1px solid rgba(255,255,255,0.3); 
+    pointer-events: none; z-index: 15;
 }
+
+.altar-card {
+    position: absolute; display: flex; flex-direction: column;
+    background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+.altar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* =========================================
    MIDDLE: THE ARCHIVE (Recessed, Clean)
    Ref: Dark squares, thin borders
