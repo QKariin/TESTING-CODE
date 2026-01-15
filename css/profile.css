@@ -182,7 +182,7 @@ body {
    3. RIGHT STAGE
    ========================================= */
 .layout-right { flex-grow: 1; height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden; background: transparent; }
-.glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid #333; }
+.glass-card { background: var(--glass); backdrop-filter: blur(2px); border: 1px solid #333; }
 .content-stage { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
 .view-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; }
 
