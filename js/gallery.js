@@ -297,122 +297,83 @@ window.atoneForTask = function(index) {
     }, "*");
 };
 
-// REPLACE YOUR openHistoryModal FUNCTION:
-
+// --- MODAL ---
 export function openHistoryModal(index) {
     const items = getGalleryList();
     if (!items[index]) return;
 
-    // 1. Setup Data
+    setCurrentHistoryIndex(index);
     const item = items[index];
-    const pts = getPoints(item);
-    const status = (item.status || "").toLowerCase();
-    const isRejected = status.includes('rej') || status.includes('fail');
-    
-    // 2. Setup Background Media (Blurred)
-    let url = item.proofUrl || item.media;
+
+    let url = item.proofUrl;
     const isVideo = url.match(/\.(mp4|webm|mov)($|\?)/i);
+
     const mediaContainer = document.getElementById('modalMediaContainer');
-    
     if (mediaContainer) {
         mediaContainer.innerHTML = isVideo ? 
             `<video src="${url}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:contain;"></video>` :
             `<img src="${url}" style="width:100%; height:100%; object-fit:contain;">`;
     }
 
-    // 3. Build The "Throne Room" UI
     const overlay = document.getElementById('modalGlassOverlay');
     if (overlay) {
-        // Prepare Verdict Text
-        let verdictText = item.adminComment || "Logged without commentary.";
-        if(isRejected && !item.adminComment) verdictText = "Submission rejected. Standards not met.";
+        const pts = getPoints(item);
+        const s = (item.status || "").toLowerCase();
+        const isRejected = s.includes('rej') || s.includes('fail');
+        const isPending = s.includes('pending') || s === "";
 
-        // Prepare Redemption Button (Only if Rejected)
-        let redemptionBtn = '';
+        let statusImg = "";
+        let statusText = "SYSTEM VERDICT";
+
+        if (isPending) {
+            statusText = "AWAITING REVIEW";
+        } else {
+            statusImg = s.includes('app') ? STICKER_APPROVE : (isRejected ? STICKER_DENIED : "");
+        }
+
+        const statusDisplay = isPending ? 
+            `<div style="font-size:3rem;">⏳</div>` : 
+            `<img src="${statusImg}" style="width:100px; height:100px; object-fit:contain; margin-bottom:15px; opacity:0.8;">`;
+
+        let footerAction = `<button onclick="event.stopPropagation(); window.closeModal(event)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE FILE</button>`;
+
         if (isRejected) {
-            redemptionBtn = `<button onclick="event.stopPropagation(); window.atoneForTask(${index})" class="btn-glass-silver" style="border-color:var(--neon-red); color:var(--neon-red);">SEEK REDEMPTION (-100 🪙)</button>`;
+            footerAction = `<button onclick="event.stopPropagation(); window.atoneForTask(${index})" class="btn-dim" style="grid-column: span 2; border-color:var(--neon-red); color:var(--neon-red); width:100%;">ATONE (-100 🪙)</button>`;
         }
 
         overlay.innerHTML = `
-            <div class="modal-center-col" id="modalUI" onclick="event.stopPropagation()">
-                
-                <!-- 1. MERIT HEADER -->
-                <div class="modal-merit-title">${isRejected ? "CAPITAL DEDUCTED" : "MERIT ACQUIRED"}</div>
-                <div class="modal-merit-value" style="color:${isRejected ? '#ff003c' : 'var(--gold)'}">
-                    ${isRejected ? "0" : "+" + pts}
+            <div id="modalCloseX" onclick="window.closeModal(event)" style="position:absolute; top:20px; right:20px; font-size:2.5rem; cursor:pointer; color:white; z-index:110;">×</div>
+            <div class="theater-content dossier-layout">
+                <div class="dossier-sidebar">
+                    <div id="modalInfoView" class="sub-view">
+                        <div class="dossier-block">
+                            <div class="dossier-label">${statusText}</div>
+                            ${statusDisplay}
+                        </div>
+                        <div class="dossier-block">
+                            <div class="dossier-label">MERIT VALUE</div>
+                            <div class="m-points-lg" style="color:${isRejected ? 'red' : (isPending ? 'cyan' : 'gold')}">${isPending ? "CALCULATING" : "+" + pts}</div>
+                        </div>
+                    </div>
+                    <div id="modalFeedbackView" class="sub-view hidden">
+                        <div class="dossier-label">OFFICER NOTES</div>
+                        <div class="theater-text-box">${(item.adminComment || "No notes.").replace(/\n/g, '<br>')}</div>
+                    </div>
+                    <div id="modalTaskView" class="sub-view hidden">
+                        <div class="dossier-label">DIRECTIVE</div>
+                        <div class="theater-text-box">${(item.text || "").replace(/\n/g, '<br>')}</div>
+                    </div>
                 </div>
-
-                <!-- 2. THE VERDICT (Visible Immediately) -->
-                <div class="modal-verdict-box" id="verdictBox">
-                    "${verdictText}"
-                </div>
-
-                <!-- 3. ACTIONS -->
-                <div class="modal-btn-stack">
-                    <button onclick="window.toggleDirective('${item.text.replace(/'/g, "\\'")}')" class="btn-glass-silver">THE DIRECTIVE</button>
-                    <button onclick="window.toggleInspectMode()" class="btn-glass-silver">INSPECT OFFERING</button>
-                    ${redemptionBtn}
-                    <button onclick="window.closeModal()" class="btn-glass-silver btn-glass-red">DISMISS</button>
-                </div>
-
+            </div>
+            <div class="modal-footer-menu">
+                <button onclick="event.stopPropagation(); window.toggleHistoryView('feedback')" class="history-action-btn">NOTES</button>
+                <button onclick="event.stopPropagation(); window.toggleHistoryView('task')" class="history-action-btn">ORDER</button>
+                <button onclick="event.stopPropagation(); window.toggleHistoryView('proof')" class="history-action-btn">EVIDENCE</button>
+                <button onclick="event.stopPropagation(); window.toggleHistoryView('info')" class="history-action-btn">DATA</button>
+                ${footerAction}
             </div>
         `;
     }
-
-    document.getElementById('glassModal').classList.add('active');
-    document.getElementById('glassModal').classList.remove('inspect-mode'); // Reset mode
-}
-
-// --- HELPER FUNCTIONS (Add these to window or export) ---
-
-window.toggleInspectMode = function() {
-    // Hides the UI, Unblurs the background
-    const modal = document.getElementById('glassModal');
-    modal.classList.add('inspect-mode');
-    
-    // Click anywhere to return
-    setTimeout(() => {
-        const bg = document.querySelector('.modal-bg-photo');
-        bg.onclick = function() {
-            modal.classList.remove('inspect-mode');
-            bg.onclick = null; // Clear listener
-        };
-    }, 100);
-};
-
-window.toggleDirective = function(taskText) {
-    const box = document.getElementById('verdictBox');
-    // Simple toggle between showing Verdict and showing Task
-    if (box.dataset.view === 'task') {
-        // Revert to Verdict logic (requires storing original verdict or just refreshing modal, simpler to just swap text here if we have it, or just re-open modal logic)
-        // Simplest: Just refresh the text content
-        // For now, let's just swap text.
-        // Actually, easiest way is to re-render, but let's just swap text for speed:
-        box.innerText = "Click 'The Directive' again to return to judgment."; 
-        // In a real app, I'd store the original text in a data attribute.
-        // Let's do that in the main function above.
-        // For now, let's simply alert the task text or swap it simply.
-        box.innerText = taskText;
-        box.style.color = "#ccc";
-        box.style.fontStyle = "normal";
-        box.dataset.view = 'task';
-    } else {
-        // To Reset, we need the original text. 
-        // A cleaner way for this interaction:
-        alert("DIRECTIVE:\n\n" + taskText);
-    }
-};
-
-// Update closeModal to handle the click-outside logic
-window.closeModal = function(e) {
-    const modal = document.getElementById('glassModal');
-    // If we are in inspect mode, close inspect mode first (handled by the bg click listener above)
-    // If normal mode, close modal.
-    if(e && e.target.id === 'modalUI') return; // Don't close if clicking the card itself (handled by stopPropagation, but double check)
-    
-    modal.classList.remove('active');
-    document.getElementById('modalMediaContainer').innerHTML = ""; // Clear memory
-};
 
     toggleHistoryView('info');
     document.getElementById('glassModal').classList.add('active');
