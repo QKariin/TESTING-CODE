@@ -1,4 +1,4 @@
-// gallery.js - NUCLEAR IMAGE FINDER + SINGLE GRID
+// gallery.js - ROBUST SINGLE GRID (SHOWS EVERYTHING)
 
 import { 
     galleryData, pendingLimit, historyLimit, currentHistoryIndex, touchStartX, 
@@ -22,37 +22,22 @@ function getPoints(item) {
 
 // --- HELPER: FIND IMAGE (BRUTE FORCE) ---
 function getValidImage(item) {
-    // Check every possible field Wix uses
-    const candidates = [
-        item.proofUrl, 
-        item.media, 
-        item.file, 
-        item.image, 
-        item.src, 
-        item.url, 
-        item.attachment
-    ];
-    
+    // Check every possible field
+    const candidates = [item.proofUrl, item.media, item.file, item.image, item.src, item.url, item.attachment];
     for (let c of candidates) {
         if (c && typeof c === 'string' && c.length > 5) return c;
     }
-    
-    return null; // No image found
+    return null; 
 }
 
 // --- HELPER: GET SORTED LIST ---
 function getGalleryList() {
     if (!galleryData || !Array.isArray(galleryData)) return [];
 
-    let items = galleryData.filter(i => {
-        const s = (i.status || "").toLowerCase();
-        const hasImage = getValidImage(i) !== null; // Use the brute force checker
-        
-        // Show Pending, Approved, and Rejected if they have an image
-        return (s.includes('pending') || s.includes('app') || s.includes('rej')) && hasImage;
-    });
+    // 1. FILTER: Show ANYTHING with a picture.
+    let items = galleryData.filter(i => getValidImage(i) !== null);
 
-    // Apply Filter
+    // 2. APPLY UI FILTERS
     if (activeStickerFilter === "DENIED") {
         items = items.filter(item => (item.status || "").toLowerCase().includes('rej'));
     } 
@@ -63,7 +48,7 @@ function getGalleryList() {
         items = items.filter(item => item.sticker === activeStickerFilter);
     }
 
-    // Sort by Date (Newest First)
+    // 3. SORT: Date (Newest First)
     return items.sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
 }
 
@@ -107,17 +92,15 @@ window.setGalleryFilter = function(filterType) {
 };
 
 export function renderGallery() {
-    if (!galleryData) return;
-
     const hGrid = document.getElementById('historyGrid');
     
-    // Safety check
+    // Safety check - if HTML is missing, stop silently
     if (!hGrid) return;
 
     renderStickerFilters();
 
     const items = getGalleryList(); 
-    
+
     if (items.length > 0) {
         hGrid.innerHTML = items.slice(0, historyLimit).map((item, index) => createGalleryItemHTML(item, index)).join('');
         hGrid.style.display = 'grid';
@@ -130,14 +113,13 @@ export function renderGallery() {
 }
 
 function createGalleryItemHTML(item, index) {
-    // USE THE BRUTE FORCE FINDER
     let rawUrl = getValidImage(item) || PLACEHOLDER_IMG;
     let thumbUrl = getOptimizedUrl(rawUrl, 300);
-    
     const s = (item.status || "").toLowerCase();
     
+    // Loose Logic for Status
     const isPending = s.includes('pending') || s === "";
-    const isRejected = s.includes('rej') || s.includes('fail');
+    const isRejected = s.includes('rej') || s.includes('fail') || s.includes('denied');
     const pts = getPoints(item);
 
     // --- TIER LOGIC ---
@@ -147,7 +129,7 @@ function createGalleryItemHTML(item, index) {
     else if (pts >= 50) tierClass = "item-tier-gold";
     else if (pts < 10) tierClass = "item-tier-bronze";
 
-    // --- TEXT ---
+    // --- TEXT LABEL ---
     let barText = `+${pts}`;
     if (isPending) barText = "WAIT";
     if (isRejected) barText = "DENIED";
@@ -178,7 +160,7 @@ window.atoneForTask = function(index) {
 
     if (gameStats.coins < 100) {
         triggerSound('sfx-deny');
-        alert("Insufficient Capital. You need 100 coins to atone.");
+        alert("Insufficient Capital.");
         return;
     }
 
@@ -196,6 +178,7 @@ window.atoneForTask = function(index) {
     
     window.closeModal(); 
     
+    // Switch to Active UI
     if(window.restorePendingUI) window.restorePendingUI();
     if(window.updateTaskUIState) window.updateTaskUIState(true);
     if(window.toggleTaskDetails) window.toggleTaskDetails(true);
@@ -221,13 +204,9 @@ export function openHistoryModal(index) {
     
     setCurrentHistoryIndex(index);
     const item = items[index];
-    const s = (item.status || "").toLowerCase();
-    const isRejected = s.includes('rej') || s.includes('fail');
-    const isPending = s.includes('pending') || s === "";
-    const pts = getPoints(item);
-
     let url = getValidImage(item);
-    const isVideo = (url || "").match(/\.(mp4|webm|mov)($|\?)/i);
+    
+    const isVideo = url.match(/\.(mp4|webm|mov)($|\?)/i);
     const mediaContainer = document.getElementById('modalMediaContainer');
     if (mediaContainer) {
         mediaContainer.innerHTML = isVideo 
@@ -237,9 +216,13 @@ export function openHistoryModal(index) {
 
     const overlay = document.getElementById('modalGlassOverlay');
     if (overlay) {
+        const pts = getPoints(item);
+        const s = (item.status || "").toLowerCase();
+        const isRejected = s.includes('rej') || s.includes('fail');
+        const isPending = s.includes('pending') || s === "";
+        
         let statusImg = "";
         let statusText = "SYSTEM VERDICT";
-        
         if (isPending) {
             statusText = "AWAITING REVIEW";
         } else {
@@ -299,6 +282,7 @@ export function openHistoryModal(index) {
     document.getElementById('glassModal').classList.add('active');
 }
 
+// --- VIEW HELPERS ---
 export function toggleHistoryView(view) {
     const modal = document.getElementById('glassModal');
     const overlay = document.getElementById('modalGlassOverlay');
@@ -325,45 +309,20 @@ export function toggleHistoryView(view) {
 }
 
 export function closeModal(e) {
-    if (e && (e.target.id === 'modalCloseX' || e.target.classList.contains('btn-close-red'))) {
-        document.getElementById('glassModal').classList.remove('active');
-        document.getElementById('modalMediaContainer').innerHTML = "";
-        return;
-    }
-    const overlay = document.getElementById('modalGlassOverlay');
-    if (overlay && overlay.classList.contains('clean')) {
-        toggleHistoryView('info'); 
-        return;
-    }
+    document.getElementById('glassModal').classList.remove('active');
+    document.getElementById('modalMediaContainer').innerHTML = "";
 }
 
-export function openModal() {}
+// REQUIRED EXPORT for main.js
 export function loadMoreHistory() {
     setHistoryLimit(historyLimit + 25);
     renderGallery();
 }
 
-export function initModalSwipeDetection() {
-    const modalEl = document.getElementById('glassModal');
-    if (!modalEl) return;
-    modalEl.addEventListener('touchstart', e => setTouchStartX(e.changedTouches[0].screenX), { passive: true });
-    modalEl.addEventListener('touchend', e => {
-        const touchEndX = e.changedTouches[0].screenX;
-        const diff = touchStartX - touchEndX;
-        if (Math.abs(diff) > 80) {
-            let historyItems = getGalleryList();
-            let nextIndex = currentHistoryIndex;
-            if (diff > 0) nextIndex++; 
-            else nextIndex--; 
-            
-            if (nextIndex >= 0 && nextIndex < historyItems.length) {
-                openHistoryModal(nextIndex);
-            }
-        }
-    }, { passive: true });
-}
+export function openModal() {} 
+export function initModalSwipeDetection() {}
 
-// FORCE EXPORT
+// FORCE WINDOW EXPORTS (CRITICAL FOR BUTTONS)
 window.renderGallery = renderGallery;
 window.openHistoryModal = openHistoryModal;
 window.toggleHistoryView = toggleHistoryView;
