@@ -679,6 +679,30 @@ body {
 #gridOkay .item-placeholder-slot { width: 120px !important; height: 210px !important; } /* Middle */
 #gridFailed .item-placeholder-slot { width: 120px !important; height: 160px !important; } /* Bottom */
 
+/* =========================================
+   SOLO MODE: EMPTY GALLERY STATE
+   ========================================= */
+
+/* Hide Middle & Bottom when Solo Mode is active */
+#historySection.solo-mode .section-archive,
+#historySection.solo-mode .section-heap {
+    display: none !important;
+}
+
+/* Stretch Top Section to Fill Screen */
+#historySection.solo-mode .section-altar.triptych-stage {
+    flex: 1 !important;           /* Take all available space */
+    height: 100% !important;      /* Full Height */
+    min-height: 100% !important;
+    border-bottom: none !important;
+    padding-bottom: 50px; /* Visual balance */
+}
+
+/* Optional: Scale up the Altar slightly in Solo Mode for drama */
+#historySection.solo-mode .center-idol { transform: translate(-50%, -50%) scale(1.2); }
+#historySection.solo-mode .left-offering { transform: translate(-140%, -50%) scale(1.1); }
+#historySection.solo-mode .right-offering { transform: translate(40%, -50%) scale(1.1); }
+
 /* MODALS */
 .glass-modal { display: none; position: absolute; inset: 0; z-index: 999; background: #000; flex-direction: column; overflow: hidden; }
 .glass-modal.active { display: flex; animation: fadeIn 0.3s; }
