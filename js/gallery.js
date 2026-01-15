@@ -164,7 +164,7 @@ export function renderGallery() {
     // Left
     slot2.card.style.display = 'flex';
     if (bestOf[1]) {
-        let thumb = etThumbnail(getOptimizedUrl(bestOf[1].proofUrl || bestOf[1].media, 300));
+        let thumb = getThumbnail(getOptimizedUrl(bestOf[1].proofUrl || bestOf[1].media, 300));
         let realIndex = allItems.indexOf(bestOf[1]);
         slot2.img.src = thumb;
         slot2.card.onclick = () => window.openHistoryModal(realIndex);
