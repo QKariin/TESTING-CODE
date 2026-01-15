@@ -523,10 +523,6 @@ body {
 .altar-card::after { display: none !important; } 
 .altar-img { width: 100%; height: 100%; object-fit: cover; display: block; filter: none !important; }
 
-.center-idol {
-    width: 180px; height: 180px; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    z-index: 20; border: 1px solid rgba(255, 215, 0, 0.5); box-shadow: 0 0 40px rgba(255, 215, 0, 0.25);
-}
 .left-offering, .right-offering {
     width: 130px; height: 130px; top: 50%; z-index: 10; opacity: 0.9;
 }
@@ -540,14 +536,7 @@ body {
     -webkit-mask-image: linear-gradient(to top, transparent 0%, black 100%);
     pointer-events: none; margin-top: 5px; z-index: 0;
 }
-.reflect-img { width: 100%; height: 180px; object-fit: cover; }
-
-.gold-bar {
-    width: 100%; height: 6px; 
-    background: linear-gradient(90deg, #8a6e3c, #ffd700, #fffdd0, #ffd700, #8a6e3c);
-    z-index: 30; position: relative; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
-}
-.inner-hairline { position: absolute; inset: 6px; border: 1px solid rgba(255,255,255,0.4); pointer-events: none; z-index: 26; }
+.reflect-img { width: 200%; height: 180px; object-fit: cover; }
 
 
 /* =========================================
@@ -692,7 +681,6 @@ body {
 }
 
 /* Optional: Scale up the Altar slightly in Solo Mode for drama */
-#historySection.solo-mode .center-idol { transform: translate(-50%, -50%) scale(1.2); }
 #historySection.solo-mode .left-offering { transform: translate(-140%, -50%) scale(1.1); }
 #historySection.solo-mode .right-offering { transform: translate(40%, -50%) scale(1.1); }
 
