@@ -102,76 +102,115 @@ function renderStickerFilters() {
     filterBar.innerHTML = html;
 }
 
-// --- MAIN RENDERER ---
+// REPLACE your renderGallery function with this:
+
 export function renderGallery() {
     if (!galleryData) return;
 
-    const gridPerfect = document.getElementById('gridPerfect');
-    const gridFailed = document.getElementById('gridFailed');
-    const gridOkay = document.getElementById('gridOkay');
+    // 1. Get Containers
+    const gridFailed = document.getElementById('gridFailed'); // Bottom
+    const gridOkay = document.getElementById('gridOkay');     // Middle
+    
+    // Altar Elements
+    const slot1 = { card: document.getElementById('altarSlot1'), img: document.getElementById('imgSlot1'), ref: document.getElementById('reflectSlot1'), txt: document.getElementById('scoreSlot1') };
+    const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2'), txt: document.getElementById('scoreSlot2') };
+    const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3'), txt: document.getElementById('scoreSlot3') };
 
-    // Safety: If HTML hasn't updated yet, don't crash
-    if (!gridPerfect || !gridFailed || !gridOkay) return;
+    // Safety Check
+    if (!gridFailed || !gridOkay || !slot1.card) return;
 
-    gridPerfect.innerHTML = "";
+    // Clear Lists
     gridFailed.innerHTML = "";
     gridOkay.innerHTML = "";
 
-    const sortedData = getSortedGallery();
+    // 2. Get All Items
+    const allItems = getGalleryList(); // Uses your existing filter logic
 
-    sortedData.forEach((item, index) => {
-        // Normalize first
-        normalizeGalleryItem(item);
-        
-        // Validation
+    // 3. Find TOP 3 for the Altar (By Score, Approved Only)
+    // We clone the array to sort by score without messing up the date sort for later
+    let bestOf = [...allItems]
+        .filter(item => {
+            const s = (item.status || "").toLowerCase();
+            return !s.includes('rej') && !s.includes('fail') && !s.includes('pending');
+        })
+        .sort((a, b) => getPoints(b) - getPoints(a))
+        .slice(0, 3); // Take top 3
+
+    // --- RENDER ALTAR (Rank 1) ---
+    if (bestOf[0]) {
+        let item = bestOf[0];
+        let thumb = getOptimizedUrl(item.proofUrl || item.media, 400);
+        let realIndex = allItems.indexOf(item); // Find original index for click
+
+        slot1.card.style.display = 'flex';
+        slot1.img.src = thumb;
+        if(slot1.ref) slot1.ref.src = thumb;
+        slot1.txt.innerText = "+" + getPoints(item);
+        slot1.card.onclick = () => window.openHistoryModal(realIndex);
+    } else { slot1.card.style.display = 'none'; }
+
+    // --- RENDER LEFT (Rank 2) ---
+    if (bestOf[1]) {
+        let item = bestOf[1];
+        let thumb = getOptimizedUrl(item.proofUrl || item.media, 300);
+        let realIndex = allItems.indexOf(item);
+
+        slot2.card.style.display = 'flex';
+        slot2.img.src = thumb;
+        slot2.txt.innerText = "+" + getPoints(item);
+        slot2.card.onclick = () => window.openHistoryModal(realIndex);
+    } else { slot2.card.style.display = 'none'; }
+
+    // --- RENDER RIGHT (Rank 3) ---
+    if (bestOf[2]) {
+        let item = bestOf[2];
+        let thumb = getOptimizedUrl(item.proofUrl || item.media, 300);
+        let realIndex = allItems.indexOf(item);
+
+        slot3.card.style.display = 'flex';
+        slot3.img.src = thumb;
+        slot3.txt.innerText = "+" + getPoints(item);
+        slot3.card.onclick = () => window.openHistoryModal(realIndex);
+    } else { slot3.card.style.display = 'none'; }
+
+
+    // 4. RENDER THE REST (Middle & Bottom)
+    allItems.forEach((item, index) => {
+        // SKIP if it's on the Altar
+        if (bestOf.includes(item)) return;
+
+        // Normal render logic
         let url = item.proofUrl || item.media || item.file;
         if (!url) return;
         
         let thumb = getOptimizedUrl(url, 300);
-        let pts = getPoints(item);
         let status = (item.status || "").toLowerCase();
         let isRejected = status.includes('rej') || status.includes('fail');
         let isPending = status.includes('pending');
 
         let html = "";
-        let targetGrid = null;
 
-        // 1. FAILED -> VAULT (Middle)
+        // BOTTOM: FAILED
         if (isRejected) {
-            targetGrid = gridFailed;
             html = `
-                <div class="item-safe" onclick="window.openHistoryModal(${index})">
-                    <div class="safe-glass"><img src="${thumb}"></div>
-                    <div class="safe-handle"></div>
+                <div class="item-trash" onclick="window.openHistoryModal(${index})">
+                    <img class="trash-img" src="${thumb}">
+                    <div class="trash-stamp">DENIED</div>
                 </div>`;
-        }
-        // 2. ELITE -> PERGAMENT (Top)
-        else if (pts > 145) {
-            targetGrid = gridPerfect;
-            html = `
-                <div class="item-scroll" onclick="window.openHistoryModal(${index})">
-                    <div class="roller-top"></div>
-                    <div class="scroll-paper"><img src="${thumb}"></div>
-                    <div class="roller-bot"></div>
-                </div>`;
-        }
-        // 3. STANDARD -> BLUEPRINT (Bottom)
+            gridFailed.innerHTML += html;
+        } 
+        // MIDDLE: EVERYTHING ELSE (Standard)
         else {
-            targetGrid = gridOkay;
             const overlay = isPending ? 
-                `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:cyan; font-family:'Orbitron'; font-size:0.6rem; background:rgba(0,20,30,0.6);">ANALYZING</div>` 
-                : ``;
+                `<div class="pending-overlay"><div class="pending-icon">⏳</div></div>` : ``;
 
             html = `
-                <div class="item-blueprint" onclick="window.openHistoryModal(${index})">
-                    <img src="${thumb}">
-                    <div class="bp-corner bl-tl"></div><div class="bp-corner bl-tr"></div>
-                    <div class="bp-corner bl-bl"></div><div class="bp-corner bl-br"></div>
+                <div class="item-archive" onclick="window.openHistoryModal(${index})">
+                    <img class="archive-img" src="${thumb}">
                     ${overlay}
                 </div>`;
+            gridOkay.innerHTML += html;
         }
-
-        if (targetGrid) targetGrid.innerHTML += html;
     });
 }
 
