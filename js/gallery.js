@@ -8,6 +8,8 @@ import { getOptimizedUrl, cleanHTML, triggerSound } from './utils.js';
 // STICKERS
 const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
 const STICKER_DENIED = "https://static.wixstatic.com/media/ce3e5b_63a0c8320e29416896d071d5b46541d7~mv2.png";
+const DEFAULT_THUMB = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
+
 
 // --- HELPER: POINTS ---
 function getPoints(item) {
@@ -26,61 +28,56 @@ function getSortedGallery() {
 export function renderGallery() {
     if (!galleryData) return;
 
-    // 1. Get the 3 Containers
     const gridPerfect = document.getElementById('gridPerfect');
     const gridFailed = document.getElementById('gridFailed');
     const gridOkay = document.getElementById('gridOkay');
 
-    // Safety: If these don't exist, the HTML is wrong, so we stop to prevent crash
     if (!gridPerfect || !gridFailed || !gridOkay) return;
 
-    // 2. Clear Previous Content
     gridPerfect.innerHTML = "";
     gridFailed.innerHTML = "";
     gridOkay.innerHTML = "";
 
     const sortedData = getSortedGallery();
     
-    // 3. Distribute Items
     sortedData.forEach((item, index) => {
-        let url = item.proofUrl || item.media || item.file;
-        if (!url) return;
-        
+        // Use fallback if URL is missing/broken
+        let url = item.proofUrl || item.media || item.file || DEFAULT_THUMB;
         let thumb = getOptimizedUrl(url, 300);
+        
         let pts = getPoints(item);
         let status = (item.status || "").toLowerCase();
         let isRejected = status.includes('rej') || status.includes('fail');
         let isPending = status.includes('pending');
         
-        // Save global index for modal
         item.globalIndex = index; 
 
-        // --- ZONE 1: FAILED (BOTTOM) ---
+        // 1. BOTTOM: FAILED (VAULT)
         if (isRejected) {
             gridFailed.innerHTML += `
-                <div class="item-shadow" onclick="window.openHistoryModal(${index})">
-                    <div class="shadow-stamp">VOID</div>
-                    <img src="${thumb}" class="shadow-img">
+                <div class="item-vault" onclick="window.openHistoryModal(${index})">
+                    <div class="vault-stamp">VOID</div>
+                    <img src="${thumb}" class="vault-img" onerror="this.src='${DEFAULT_THUMB}'">
                 </div>`;
         } 
-        // --- ZONE 2: ELITE (TOP) -> Points > 145 ---
+        // 2. TOP: ELITE (HALL OF MERIT)
         else if (pts > 145) {
             gridPerfect.innerHTML += `
                 <div class="item-relic" onclick="window.openHistoryModal(${index})">
-                    <img src="${thumb}" class="relic-img">
+                    <img src="${thumb}" class="relic-img" onerror="this.src='${DEFAULT_THUMB}'">
                     <div class="relic-value">+${pts}</div>
                 </div>`;
         } 
-        // --- ZONE 3: STANDARD/PENDING (MIDDLE) ---
+        // 3. MIDDLE: PROCESSING (BLUEPRINT)
         else {
-            const pendingOverlay = isPending ? 
-                `<div style="position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; color:cyan; font-family:'Orbitron'; font-size:0.6rem; background:rgba(0,20,30,0.6);">ANALYZING</div>` 
+            const label = isPending ? 
+                `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:cyan; font-family:'Orbitron'; font-size:0.6rem;">ANALYZING</div>` 
                 : ``;
 
             gridOkay.innerHTML += `
-                <div class="item-archive" onclick="window.openHistoryModal(${index})">
-                    <img src="${thumb}" class="archive-img">
-                    ${pendingOverlay}
+                <div class="item-blueprint" onclick="window.openHistoryModal(${index})">
+                    <img src="${thumb}" onerror="this.src='${DEFAULT_THUMB}'">
+                    ${label}
                 </div>`;
         }
     });
