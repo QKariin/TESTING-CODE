@@ -1,4 +1,4 @@
-// gallery.js - SINGLE GRID + DATA NORMALIZATION (FIXED)
+// gallery.js - FINAL FIXED SINGLE GRID
 
 import { 
     galleryData, pendingLimit, historyLimit, currentHistoryIndex, touchStartX, 
@@ -20,39 +20,25 @@ function getPoints(item) {
     return Number(val);
 }
 
-// --- HELPER: NORMALIZE DATA (The Fix for Missing Images) ---
-function normalizeGalleryItem(item) {
-    // If proofUrl exists, we are good. If not, hunt for it.
-    if (item.proofUrl) return;
-
-    const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src'];
-    for (let key of candidates) {
-        if (item[key] && typeof item[key] === 'string') {
-            item.proofUrl = item[key];
-            return;
-        }
-    }
-}
-
-// --- HELPER: GET LIST (Loose Filter) ---
+// --- HELPER: GET SORTED LIST ---
 function getGalleryList() {
-    if (!galleryData || !Array.isArray(galleryData)) return [];
+    if (!galleryData) return [];
 
-    // 1. Base Filter: Must have an image (after normalization)
-    let items = galleryData.filter(i => i.proofUrl);
+    let items = galleryData.filter(i => {
+        const s = (i.status || "").toLowerCase();
+        // FIXED LINE: Changed 'item' to 'i'
+        return (s.includes('pending') || s.includes('app') || s.includes('rej')) && (i.proofUrl || i.media || i.file);
+    });
 
-    // 2. Apply UI Filters
+    // Apply Filter
     if (activeStickerFilter === "DENIED") {
         items = items.filter(item => (item.status || "").toLowerCase().includes('rej'));
     } 
-    else if (activeStickerFilter === "PENDING") {
-        items = items.filter(item => (item.status || "").toLowerCase().includes('pending'));
-    }
-    else if (activeStickerFilter !== "ALL") {
+    else if (activeStickerFilter !== "ALL" && activeStickerFilter !== "PENDING") {
         items = items.filter(item => item.sticker === activeStickerFilter);
     }
 
-    // 3. Sort by Date (Newest First)
+    // Sort by Date (Newest First)
     return items.sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
 }
 
@@ -98,8 +84,13 @@ window.setGalleryFilter = function(filterType) {
 export function renderGallery() {
     if (!galleryData) return;
 
-    // 1. EXECUTE NORMALIZATION (Fixes images before rendering)
-    galleryData.forEach(normalizeGalleryItem);
+    // Normalization loop
+    galleryData.forEach(item => {
+         if (!item.proofUrl) {
+            const c = ['media', 'file', 'evidence', 'url', 'image', 'src'];
+            for (let k of c) if (item[k]) item.proofUrl = item[k];
+        }
+    });
 
     const hGrid = document.getElementById('historyGrid');
     
@@ -108,18 +99,23 @@ export function renderGallery() {
 
     renderStickerFilters();
 
+    const showPending = (activeStickerFilter === 'ALL' || activeStickerFilter === 'PENDING');
     const items = getGalleryList(); 
 
-    // Render Grid
-    if (items.length > 0) {
-        hGrid.innerHTML = items.slice(0, historyLimit).map((item, index) => createGalleryItemHTML(item, index)).join('');
-        hGrid.style.display = 'grid';
-    } else {
-        hGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#666; font-family:Cinzel;">NO RECORDS FOUND</div>';
+    // Strict PENDING filter
+    let displayItems = items;
+    if (activeStickerFilter === 'PENDING') {
+        displayItems = items.filter(i => (i.status || "").toLowerCase().includes('pending'));
+    } else if (!showPending) {
+        // If filter is NOT All/Pending, hide pending items
+        displayItems = items.filter(i => !(i.status || "").toLowerCase().includes('pending'));
     }
+
+    hGrid.innerHTML = displayItems.slice(0, historyLimit).map((item, index) => createGalleryItemHTML(item, index)).join('');
+    hGrid.style.display = 'grid';
     
     const loadBtn = document.getElementById('loadMoreBtn');
-    if (loadBtn) loadBtn.style.display = (items.length > historyLimit) ? 'block' : 'none';
+    if (loadBtn) loadBtn.style.display = (displayItems.length > historyLimit) ? 'block' : 'none';
 }
 
 function createGalleryItemHTML(item, index) {
@@ -131,7 +127,7 @@ function createGalleryItemHTML(item, index) {
     const isRejected = s.includes('rej') || s.includes('fail');
     const pts = getPoints(item);
 
-    // --- TIER LOGIC (Border Colors) ---
+    // --- TIER LOGIC ---
     let tierClass = "item-tier-silver";
     if (isPending) tierClass = "item-tier-pending";
     else if (isRejected) tierClass = "item-tier-denied";
@@ -231,12 +227,8 @@ export function openHistoryModal(index) {
     if (overlay) {
         let statusImg = "";
         let statusText = "SYSTEM VERDICT";
-        
-        if (isPending) {
-            statusText = "AWAITING REVIEW";
-        } else {
-            statusImg = s.includes('app') ? STICKER_APPROVE : (isRejected ? STICKER_DENIED : "");
-        }
+        if (isPending) statusText = "AWAITING REVIEW";
+        else statusImg = s.includes('app') ? STICKER_APPROVE : (isRejected ? STICKER_DENIED : "");
 
         const statusDisplay = isPending 
             ? `<div style="font-size:3rem;">⏳</div>` 
@@ -244,7 +236,7 @@ export function openHistoryModal(index) {
 
         let footerAction = `<button onclick="event.stopPropagation(); window.closeModal(event)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE FILE</button>`;
         if (isRejected) {
-            footerAction = `<button onclick="event.stopPropagation(); window.atoneForTask(${index})" class="btn-dim" style="grid-column: span 2; border-color:var(--neon-red); color:var(--neon-red);">ATONE (-100 🪙)</button>`;
+            footerAction = `<button onclick="event.stopPropagation(); window.atoneForTask(${index})" class="btn-dim" style="grid-column: span 2; border-color:var(--neon-red); color:var(--neon-red); width:100%;">ATONE (-100 🪙)</button>`;
         }
 
         overlay.innerHTML = `
@@ -329,14 +321,33 @@ export function closeModal(e) {
     }
 }
 
-export function openModal() {} 
+export function openModal(url, status, text, isVideo) {
+    // Legacy support
+}
+
 export function loadMoreHistory() {
     setHistoryLimit(historyLimit + 25);
     renderGallery();
 }
 
 export function initModalSwipeDetection() {
-    // Basic swipe support
+    const modalEl = document.getElementById('glassModal');
+    if (!modalEl) return;
+    modalEl.addEventListener('touchstart', e => setTouchStartX(e.changedTouches[0].screenX), { passive: true });
+    modalEl.addEventListener('touchend', e => {
+        const touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 80) {
+            let historyItems = getGalleryList();
+            let nextIndex = currentHistoryIndex;
+            if (diff > 0) nextIndex++; 
+            else nextIndex--; 
+            
+            if (nextIndex >= 0 && nextIndex < historyItems.length) {
+                openHistoryModal(nextIndex);
+            }
+        }
+    }, { passive: true });
 }
 
 // FORCE EXPORT
