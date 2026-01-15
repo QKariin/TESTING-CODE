@@ -1,3 +1,4 @@
+
 import { 
     galleryData, pendingLimit, historyLimit, currentHistoryIndex, touchStartX, 
     setCurrentHistoryIndex, setHistoryLimit, setTouchStartX 
@@ -98,55 +99,46 @@ function createGalleryItemHTML(item, index) {
     const isRejected = s.includes('rej');
     const pts = getPoints(item);
 
-    const isVideo = (item.proofUrl || "").match(/\.(mp4|webm|mov)($|\?)/i);
-    const mediaHTML = isVideo 
-        ? `<video src="${thumbUrl}" class="gi-thumb" muted loop></video>` 
-        : `<img src="${thumbUrl}" class="gi-thumb" loading="lazy">`;
+    // --- TEXTURAL HIERARCHY LOGIC ---
+    let styleClass = "style-shadow"; // Default (Design 1)
 
-    // --- LOGIC: CHOOSE THE ARCHITECTURE ---
-    
-    // 1. FAIL = HANGING SCROLL (Style 12)
-    if (isRejected) {
-        return `
-            <div class="gallery-item style-scroll" onclick='window.openHistoryModal(${index})'>
-                <div class="scroll-roller-top"></div>
-                <div class="scroll-body">
-                    ${mediaHTML}
-                    <div class="scroll-stamp">PURGED</div>
-                </div>
-                <div class="scroll-roller-bottom"></div>
-            </div>`;
-    }
-
-    // 2. ELITE = BLUEPRINT (Style 11)
-    if (pts > 145) {
-        return `
-            <div class="gallery-item style-blueprint" onclick='window.openHistoryModal(${index})'>
-                ${mediaHTML}
-                <div class="tech-data td-tl">SEC: ${item._createdDate ? new Date(item._createdDate).getSeconds() : '00'}</div>
-                <div class="tech-data td-br">VAL: ${pts}</div>
-            </div>`;
-    }
-
-    // 3. PENDING = GHOST
     if (isPending) {
-        return `
-            <div class="gallery-item style-pending" onclick='window.openHistoryModal(${index})'>
-                ${mediaHTML}
-                <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
-                    <div class="pending-text">ANALYZING</div>
-                </div>
-            </div>`;
+        styleClass = "style-shadow"; // Pending sits deep in the wall
+    } 
+    else if (isRejected) {
+        styleClass = "style-sealed"; // Denied is sealed shut (Design 12)
+    } 
+    else if (pts > 145) {
+        styleClass = "style-hud"; // Elite gets the Gold Grid (Design 11)
     }
 
-    // 4. NORMAL = DARK MINIMALIST (Style 1)
-    // (Everything else falls here)
+    // --- OVERLAYS ---
+    let overlayHTML = "";
+    
+    // Elite Badge
+    if (pts > 145 && !isRejected) {
+        overlayHTML += `<div style="position:absolute; bottom:5px; right:5px; color:var(--gold); font-family:'Rajdhani'; font-weight:700; background:rgba(0,0,0,0.8); padding:0 4px; border:1px solid var(--gold); z-index:30;">+${pts}</div>`;
+    }
+
+    // Pending Icon
+    if (isPending) {
+        overlayHTML += `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:10;"><div style="font-size:2rem; text-shadow:0 0 10px gold;">⏳</div></div>`;
+    }
+
+    // Denied Stamp
+    if (isRejected) {
+        overlayHTML += `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:10;"><div style="font-family:'Black Ops One'; color:#333; font-size:1.2rem; transform:rotate(-15deg); border:2px solid #333; padding:5px;">SEALED</div></div>`;
+    }
+
+    const isVideo = (item.proofUrl || "").match(/\.(mp4|webm|mov)($|\?)/i);
+
     return `
-        <div class="gallery-item style-minimal" onclick='window.openHistoryModal(${index})'>
-            ${mediaHTML}
-            <div class="minimal-overlay">
-                <span class="minimal-text">EVIDENCE</span>
-            </div>
+        <div class="gallery-item ${styleClass}" onclick='window.openHistoryModal(${index})'>
+            ${isVideo 
+                ? `<video src="${thumbUrl}" class="gi-thumb" muted loop></video>` 
+                : `<img src="${thumbUrl}" class="gi-thumb" loading="lazy">`
+            }
+            ${overlayHTML}
         </div>`;
 }
 
