@@ -153,18 +153,28 @@ observer.observe(document.body, {
 
 export async function signUpcdnUrl(url) {
   if (!url || !url.startsWith("https://upcdn.io/")) return url;
+
   console.log("Signing Upcdn URL:", url);
 
-  //const parts = url.split("/raw/");
+  // Split raw or thumbnail
   const parts = url.split(/\/raw\/|\/thumbnail\//);
   if (parts.length !== 2) return url;
-  console.log("Extracted file path:", parts[1]);
 
-  const filePath = "/" + parts[1];
+  // Extract path + query
+  const [pathWithExt, query = ""] = parts[1].split("?");
+
+  console.log("Extracted file path:", pathWithExt);
+
+  const filePath = "/" + pathWithExt;
 
   try {
-    // Your backend returns the signed URL directly as a string
     const signedUrl = await getPrivateFile(filePath);
+
+    // Re-append query params if they existed
+    if (query) {
+      return `${signedUrl}?${query}`;
+    }
+
     return signedUrl || url;
   } catch (err) {
     console.error("Failed to sign Upcdn URL:", url, err);
