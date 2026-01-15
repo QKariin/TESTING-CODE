@@ -2,9 +2,10 @@
 // User list rendering and sidebar interactions
 
 import { users, currId, setCurrId } from './dashboard-state.js';
-import { getOptimizedUrl, clean } from './dashboard-utils.js';
+import { clean } from './dashboard-utils.js';
 import { triggerSounds } from './sound.js';
 import { triggerSound } from './utils.js';
+import { getOptimizedUrl } from './media.js';
 
 // --- ADD THESE TWO LINES AT THE TOP ---
 let currentVisualOrder = []; 

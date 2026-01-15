@@ -7,7 +7,8 @@ import {
 } from './state.js'; 
 import { URLS } from './config.js';
 import { triggerSound } from './utils.js';
-import { signUpcdnUrl } from './bytescale.js';
+import { signUpcdnUrl } from './mediaBytescale.js';
+import { mediaType } from './media.js';
 
 export async function renderChat(messages) {
     const chatBoxContainer = document.getElementById('chatBox');
@@ -116,8 +117,8 @@ export async function renderChat(messages) {
         if (m.message && (m.message.startsWith('http') || m.mediaUrl)) {
             const originalUrl = m.message.toLowerCase();
             const srcUrl = m.mediaUrl || m.message;
-            const isVideo = originalUrl.match(/\.(mp4|webm|mov)(\?|$)/);
-            const isImage = originalUrl.match(/\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?|$)/);
+            const isVideo = mediaType(srcUrl) === "video";
+            const isImage = mediaType(srcUrl) === "image";
 
             if (isVideo) {
                 contentHtml = `

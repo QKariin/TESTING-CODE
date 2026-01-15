@@ -172,7 +172,7 @@ export async function handleBroadcastFile(input) {
             
             if (d.files && d.files[0]) {
                 let media = d.files[0].fileUrl;
-                if (isVideo) media += "#.mp4";
+                //if (isVideo) media += "#.mp4";
                 setBroadcastMedia(media);
 
                 if (isVideo) {

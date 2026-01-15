@@ -16,7 +16,7 @@ import {
     setCurrentHistoryIndex, setTouchStartX, setIsLocked, setCooldownInterval, setActiveRevealMap, setVaultItems, setCurrentLibraryMedia, setLibraryProgressIndex 
 } from './state.js';
 import { renderRewardGrid, runTargetingAnimation } from '../profile/kneeling/reward.js';
-import { getOptimizedUrl, SafeStorage, triggerSound, migrateGameStatsToStats, cleanHTML } from './utils.js';
+import { triggerSound, migrateGameStatsToStats } from './utils.js';
 import { switchTab, toggleStats, openSessionUI, closeSessionUI, updateSessionCost, toggleSection, renderDomVideos, renderNews, renderWishlist } from './ui.js';
 import { getRandomTask, restorePendingUI, finishTask, cancelPendingTask, resetTaskDisplay } from './tasks.js';
 import { renderChat, sendChatMessage, handleChatKey, sendCoins, loadMoreChat, openChatPreview, closeChatPreview, forceBottom } from './chat.js';
@@ -24,6 +24,7 @@ import { renderGallery, loadMoreHistory, initModalSwipeDetection, closeModal, to
 import { handleEvidenceUpload, handleProfileUpload, handleAdminUpload } from './uploads.js';
 import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from '../profile/kneeling/kneeling.js';
 import { Bridge } from './bridge.js';
+import { getOptimizedUrl } from './media.js';
 
 // --- 2. CRITICAL UI FUNCTIONS ---
 

@@ -2,8 +2,9 @@
 // Chat rendering, message handling, and file uploads
 
 import { currId, lastChatJson, setLastChatJson, ACCOUNT_ID, API_KEY, users } from './dashboard-state.js';
-import { getOptimizedUrl, forceBottom, isAtBottom } from './dashboard-utils.js';
-import { getPrivateFile } from './bytescale.js';
+import { forceBottom, isAtBottom } from './dashboard-utils.js';
+import { getPrivateFile, fileType } from './mediaBytescale.js';
+import { getOptimizedUrl, mediaType, fileType } from './media.js';
 
 let lastNotifiedMessageId = null;
 let isInitialLoad = true;
@@ -48,9 +49,8 @@ export async function renderChat(msgs) {
         // Message content
         // Smarter Media Detection
         if (m.message) {
-            const msgLower = m.message.toLowerCase();
-            const isImage = msgLower.match(/\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)/i) || msgLower.includes("image");
-            const isVideo = msgLower.match(/\.(mp4|mov|webm)/i) || msgLower.includes(".mp4");
+            const isImage = mediaType(m.message) === "image";
+            const isVideo = mediaType(m.message) === "video";
 
             if (isImage) {
                 const srcUrl = m.mediaUrl || getOptimizedUrl(m.message, 300);
@@ -185,7 +185,7 @@ export function sendMsg() {
 export async function handleAdminUpload(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        const isVideo = file.type.startsWith('video') || file.name.match(/\.(mp4|mov|webm)$/i);
+        const isVideo = fileType(file) === "video";
         const fd = new FormData();
         fd.append("file", file);
 
@@ -209,9 +209,10 @@ export async function handleAdminUpload(input) {
 
             if (d.files && d.files[0] && d.files[0].fileUrl) {
                 let finalUrl = d.files[0].fileUrl;
-                if (isVideo) {
+                //Not needed with bytescale
+                /*if (isVideo) {
                     finalUrl = finalUrl + "#.mp4";
-                }
+                }*/
                 window.parent.postMessage({ type: "adminMessage", text: finalUrl }, "*");
             }
             btn.innerText = originalText;

@@ -1,4 +1,5 @@
 // gallery.js - TRILOGY LAYOUT (FIXED)
+import { mediaType } from './mediaBytescale.js';
 import { 
     galleryData, 
     historyLimit,
@@ -12,7 +13,8 @@ import {
     setCurrentTask,
     setPendingTaskState
 } from './state.js';
-import { getOptimizedUrl, triggerSound } from './utils.js';
+import { triggerSound } from './utils.js';
+import { getOptimizedUrl } from './media.js';
 
 // STICKERS
 const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
@@ -306,7 +308,7 @@ export function openHistoryModal(index) {
     const item = items[index];
 
     let url = item.proofUrl;
-    const isVideo = url.match(/\.(mp4|webm|mov)($|\?)/i);
+    const isVideo = mediaType(url) === "video";
 
     const mediaContainer = document.getElementById('modalMediaContainer');
     if (mediaContainer) {

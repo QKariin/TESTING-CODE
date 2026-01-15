@@ -2,7 +2,7 @@
 import { currentView, cmsHierarchyData, setCurrentView, WISHLIST_ITEMS, gameStats } from './state.js';
 import { CMS_HIERARCHY } from './config.js';
 import { renderGallery, loadMoreHistory } from './gallery.js'; // IMPORTED loadMoreHistory
-import { getOptimizedUrl } from './utils.js';
+import { getOptimizedUrl } from './media.js';
 import { renderVault } from '../profile/kneeling/reward.js';
 
 export function switchTab(mode) {

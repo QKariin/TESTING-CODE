@@ -1,6 +1,7 @@
 // js/reward.js - THE REVEAL ENGINE
 import { activeRevealMap, currentLibraryMedia, libraryProgressIndex, gameStats, vaultItems } from '../../js/state.js';
-import { getOptimizedUrl, triggerSound } from '../../js/utils.js';
+import { triggerSound } from '../../js/utils.js';
+import { getOptimizedUrl, mediaType } from './media.js';
 
 // --- 1. THE GRID RENDERER (Draws the 3x3 frosted glass) ---
 // js/reward.js - THE REVEAL ENGINE (REACTIVE VERSION)
@@ -20,7 +21,7 @@ export function renderRewardGrid() {
     }
 
     // A. Detect Media Type
-    const isVideo = currentLibraryMedia.match(/\.(mp4|mov|webm)/i);
+    const isVideo = mediaType(currentLibraryMedia) === "video";
     const mediaHtml = isVideo 
         ? `<video src="${currentLibraryMedia}" autoplay loop muted playsinline class="reveal-bg-media"></video>`
         : `<img src="${getOptimizedUrl(currentLibraryMedia, 800)}" class="reveal-bg-media">`;

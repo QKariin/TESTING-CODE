@@ -9,8 +9,9 @@ import {
     ACCOUNT_ID, API_KEY, dragSrcIndex, setDragSrcIndex,
     armoryTarget, setArmoryTarget // <--- ADD THESE TWO HERE
 } from './dashboard-state.js';
-import { getOptimizedUrl, clean, raw } from './dashboard-utils.js';
+import { clean, raw } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; 
+import { getOptimizedUrl, mediaType } from './media.js';
 
 // --- INTERNAL WORKSHOP STATE ---
 let pendingDirectiveText = ""; 
@@ -68,9 +69,10 @@ export function openModal(taskId, memberId, mediaUrl, mediaType, taskText, isHis
     const textEl = document.getElementById('mText');
     const actionsEl = document.getElementById('modalActions');
     if (!modal || !mediaBox || !textEl) return;
+    const isVideo = mediaType(mediaUrl) === 'video';
 
     if (mediaUrl) {
-        if (mediaType === 'video' || mediaUrl.includes('.mp4') || mediaUrl.includes('.mov')) {
+        if (isVideo) {
             mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls muted autoplay loop></video>`;
         } else {
             mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 800)}" class="m-img">`;
@@ -156,7 +158,8 @@ export async function handleRewardFileUpload(input) {
             const d = await res.json();
             if (d.files?.[0]) {
                 let url = d.files[0].fileUrl;
-                if (file.type.startsWith('video')) url += "#.mp4";
+                //Not needed for bytescale
+                //if (file.type.startsWith('video')) url += "#.mp4";
                 setPendingRewardMedia({ url: url, type: file.type });
                 showRewardPreview(url, file.type);
             }
@@ -187,9 +190,10 @@ export function toggleRewardRecord() {
 
 function showRewardPreview(url, type) {
     const box = document.getElementById('rewardMediaPreview');
+    const isVideo = mediaType(url) === "video";
     if (box) {
         box.classList.remove('d-none');
-        box.innerHTML = (type === 'video' || url.includes('.mp4')) ? `<video src="${url}" muted autoplay loop></video>` : `<img src="${url}">`;
+        box.innerHTML = isVideo? `<video src="${url}" muted autoplay loop></video>` : `<img src="${url}">`;
         box.innerHTML += `<span onclick="clearRewardMedia()" style="position:absolute;top:0;right:0;background:black;cursor:pointer;padding:0 4px;font-size:10px;color:white;z-index:10;">X</span>`;
     }
 }

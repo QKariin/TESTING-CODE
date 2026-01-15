@@ -1,3 +1,5 @@
+import { getThumbnail } from "./media.js";
+
 // Utility functions - FULL LOGIC RESTORED & PROTECTED
 export function getOptimizedUrl(url, width) {
     if (!url) return "";
@@ -7,7 +9,7 @@ export function getOptimizedUrl(url, width) {
 
     // REMOVED THE CLOUDINARY KILL SWITCH THAT WAS BREAKING YOUR LOGS
     if (url.includes("upcdn.io")) {
-        let cleanUrl = url.replace(/\.(mp4|webm|mov)$/i, ".jpg");
+        let cleanUrl = getThumbnail(url);
         const sep = cleanUrl.includes("?") ? "&" : "?";
         return `${cleanUrl}${sep}width=${width}&format=auto&quality=auto&dpr=auto`;
     }

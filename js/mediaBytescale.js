@@ -42,7 +42,7 @@ export async function getPrivateFile(filePath) {
   //return URL.createObjectURL(blob);
 }
 
-function isUpcdnUrl(url) {
+export function isBytescaleUrl(url) {
   if (!url || typeof url !== "string") return false;
   if (!url.includes("upcdn.io")) return false;
   if (!url.includes("/raw/")) return false;
@@ -99,23 +99,11 @@ async function processMediaElement(el) {
 
   for (const attr of attrs) {
     const original = el.getAttribute(attr);
-    if (isUpcdnUrl(original)) {
+    if (isBytescaleUrl(original)) {
       const signed = await signUrl(original);
       el.setAttribute(attr, signed);
     }
   }
-
-  // Handle <video><source></source></video>
-  /*if (el.tagName === "VIDEO") {
-    const sources = el.querySelectorAll("source");
-    for (const source of sources) {
-      const src = source.getAttribute("src");
-      if (isUpcdnUrl(src)) {
-        const signed = await signUrl(src);
-        source.setAttribute("src", signed);
-      }
-    }
-  }*/
 }
 
 export async function scanExisting() {
@@ -180,4 +168,35 @@ export async function signUpcdnUrl(url) {
     console.error("Failed to sign Upcdn URL:", url, err);
     return url;
   }
+}
+
+export function mediaTypeBytescale(url) {
+  if (!url) return "unknown";
+
+  const originalUrl = url.toLowerCase();
+
+  // 1. Thumbnail always means image — even if it ends with .mp4
+  if (originalUrl.includes("/thumbnail/")) {
+    return "image";
+  }
+
+  // 2. Raw keeps the original type — so extension matters
+  //    (If neither raw nor thumbnail is present, treat like raw)
+  const isVideoExt = /\.(mp4|webm|mov)(\?|$)/.test(originalUrl);
+  const isImageExt = /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?|$)/.test(originalUrl);
+
+  if (isImageExt) return "image";
+  if (isVideoExt) return "video";
+
+  return "unknown";
+}
+
+export function getThumbnailBytescale(url) {
+  if (!url) return url;
+
+  // Only operate on Bytescale URLs
+  if (!url.includes("upcdn.io")) return url;
+
+  // Replace /raw/ with /thumbnail/
+  return url.replace("/raw/", "/thumbnail/");
 }
