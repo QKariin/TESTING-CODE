@@ -1,4 +1,3 @@
-
 import { 
     galleryData, pendingLimit, historyLimit, currentHistoryIndex, touchStartX, 
     setCurrentHistoryIndex, setHistoryLimit, setTouchStartX 
@@ -94,51 +93,31 @@ export function renderGallery() {
 function createGalleryItemHTML(item, index) {
     let thumbUrl = getOptimizedUrl(item.proofUrl, 300);
     const s = (item.status || "").toLowerCase();
-    
     const isPending = s.includes('pending');
     const isRejected = s.includes('rej');
     const pts = getPoints(item);
-
-    // --- TEXTURAL HIERARCHY LOGIC ---
-    let styleClass = "style-shadow"; // Default (Design 1)
-
-    if (isPending) {
-        styleClass = "style-shadow"; // Pending sits deep in the wall
-    } 
-    else if (isRejected) {
-        styleClass = "style-sealed"; // Denied is sealed shut (Design 12)
-    } 
-    else if (pts > 145) {
-        styleClass = "style-hud"; // Elite gets the Gold Grid (Design 11)
-    }
-
-    // --- OVERLAYS ---
-    let overlayHTML = "";
     
-    // Elite Badge
-    if (pts > 145 && !isRejected) {
-        overlayHTML += `<div style="position:absolute; bottom:5px; right:5px; color:var(--gold); font-family:'Rajdhani'; font-weight:700; background:rgba(0,0,0,0.8); padding:0 4px; border:1px solid var(--gold); z-index:30;">+${pts}</div>`;
-    }
+    let tierClass = "";
+    if (isPending) tierClass = "item-tier-pending";
+    else if (isRejected) tierClass = "item-tier-denied";
+    else tierClass = "item-tier-gold"; // Default approved
 
-    // Pending Icon
-    if (isPending) {
-        overlayHTML += `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:10;"><div style="font-size:2rem; text-shadow:0 0 10px gold;">⏳</div></div>`;
-    }
-
-    // Denied Stamp
-    if (isRejected) {
-        overlayHTML += `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:10;"><div style="font-family:'Black Ops One'; color:#333; font-size:1.2rem; transform:rotate(-15deg); border:2px solid #333; padding:5px;">SEALED</div></div>`;
-    }
+    // Text for Dossier (Monospace)
+    let barText = isPending ? "WAIT" : (isRejected ? "VOID" : `+${pts}`);
 
     const isVideo = (item.proofUrl || "").match(/\.(mp4|webm|mov)($|\?)/i);
 
     return `
-        <div class="gallery-item ${styleClass}" onclick='window.openHistoryModal(${index})'>
+        <div class="gallery-item ${tierClass}" onclick='window.openHistoryModal(${index})'>
             ${isVideo 
-                ? `<video src="${thumbUrl}" class="gi-thumb" muted loop></video>` 
+                ? `<video src="${thumbUrl}" class="gi-thumb" muted></video>` 
                 : `<img src="${thumbUrl}" class="gi-thumb" loading="lazy">`
             }
-            ${overlayHTML}
+            
+            <!-- Floating Data (Only visible on hover due to sink effect) -->
+            <div class="merit-tag" style="background:transparent; border:none; top:5px; right:5px; bottom:auto; left:auto;">
+                <div class="tag-val" style="font-family:'Courier Prime', monospace; font-size:0.7rem;">${barText}</div>
+            </div>
         </div>`;
 }
 
