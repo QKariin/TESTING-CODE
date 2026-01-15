@@ -14,7 +14,7 @@ import {
     setPendingTaskState
 } from './state.js';
 import { triggerSound } from './utils.js';
-import { getOptimizedUrl } from './media.js';
+import { getOptimizedUrl, getThumbnail } from './media.js';
 
 // STICKERS
 const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
@@ -149,7 +149,7 @@ export function renderGallery() {
     // Center
     slot1.card.style.display = 'flex';
     if (bestOf[0]) {
-        let thumb = getOptimizedUrl(bestOf[0].proofUrl || bestOf[0].media, 400);
+        let thumb = getThumbnail(getOptimizedUrl(bestOf[0].proofUrl || bestOf[0].media, 400));
         let realIndex = allItems.indexOf(bestOf[0]);
         slot1.img.src = thumb;
         if(slot1.ref) slot1.ref.src = thumb;
@@ -164,7 +164,7 @@ export function renderGallery() {
     // Left
     slot2.card.style.display = 'flex';
     if (bestOf[1]) {
-        let thumb = getOptimizedUrl(bestOf[1].proofUrl || bestOf[1].media, 300);
+        let thumb = etThumbnail(getOptimizedUrl(bestOf[1].proofUrl || bestOf[1].media, 300));
         let realIndex = allItems.indexOf(bestOf[1]);
         slot2.img.src = thumb;
         slot2.card.onclick = () => window.openHistoryModal(realIndex);
@@ -175,7 +175,7 @@ export function renderGallery() {
     // Right
     slot3.card.style.display = 'flex';
     if (bestOf[2]) {
-        let thumb = getOptimizedUrl(bestOf[2].proofUrl || bestOf[2].media, 300);
+        let thumb = getThumbnail(getOptimizedUrl(bestOf[2].proofUrl || bestOf[2].media, 300));
         let realIndex = allItems.indexOf(bestOf[2]);
         slot3.img.src = thumb;
         slot3.card.onclick = () => window.openHistoryModal(realIndex);
