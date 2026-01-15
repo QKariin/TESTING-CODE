@@ -18,6 +18,10 @@ import { getOptimizedUrl, triggerSound } from './utils.js';
 const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
 const STICKER_DENIED = "https://static.wixstatic.com/media/ce3e5b_63a0c8320e29416896d071d5b46541d7~mv2.png";
 const PLACEHOLDER_IMG = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
+const IMG_QUEEN_MAIN = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
+const IMG_STATUE_SIDE = "https://static.wixstatic.com/media/ce3e5b_5424edc9928d49e5a3c3a102cb4e3525~mv2.png";
+const IMG_MIDDLE_EMPTY = "https://static.wixstatic.com/media/ce3e5b_1628753a2b5743f1bef739cc392c67b5~mv2.webp";
+const IMG_BOTTOM_EMPTY = "https://static.wixstatic.com/media/ce3e5b_33f53711eece453da8f3d04caddd7743~mv2.png";
 
 let activeStickerFilter = "ALL";
 
@@ -108,110 +112,119 @@ export function renderGallery() {
     if (!galleryData) return;
 
     // 1. Get Containers
-    const gridFailed = document.getElementById('gridFailed'); // Bottom
-    const gridOkay = document.getElementById('gridOkay');     // Middle
+    const gridFailed = document.getElementById('gridFailed'); 
+    const gridOkay = document.getElementById('gridOkay');     
     
     // Altar Elements
-    const slot1 = { card: document.getElementById('altarSlot1'), img: document.getElementById('imgSlot1'), ref: document.getElementById('reflectSlot1'), txt: document.getElementById('scoreSlot1') };
-    const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2'), txt: document.getElementById('scoreSlot2') };
-    const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3'), txt: document.getElementById('scoreSlot3') };
+    const slot1 = { card: document.getElementById('altarSlot1'), img: document.getElementById('imgSlot1'), ref: document.getElementById('reflectSlot1') };
+    const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2') };
+    const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3') };
 
-    // Safety Check
+    // Safety
     if (!gridFailed || !gridOkay || !slot1.card) return;
 
     // Clear Lists
     gridFailed.innerHTML = "";
     gridOkay.innerHTML = "";
 
-    // 2. Get All Items
-    const allItems = getGalleryList(); // Uses your existing filter logic
-
-    // 3. Find TOP 3 for the Altar (By Score, Approved Only)
-    // We clone the array to sort by score without messing up the date sort for later
+    // 2. Get All Items & Find Top 3
+    const allItems = getGalleryList(); 
     let bestOf = [...allItems]
         .filter(item => {
             const s = (item.status || "").toLowerCase();
             return !s.includes('rej') && !s.includes('fail') && !s.includes('pending');
         })
         .sort((a, b) => getPoints(b) - getPoints(a))
-        .slice(0, 3); // Take top 3
+        .slice(0, 3);
 
-    // --- RENDER ALTAR (Rank 1) ---
+    // --- RENDER TOP ALTAR (With Placeholders) ---
+    
+    // CENTER (Queen)
+    slot1.card.style.display = 'flex'; // Always show
     if (bestOf[0]) {
-        let item = bestOf[0];
-        let thumb = getOptimizedUrl(item.proofUrl || item.media, 400);
-        let realIndex = allItems.indexOf(item); // Find original index for click
-
-        slot1.card.style.display = 'flex';
+        let thumb = getOptimizedUrl(bestOf[0].proofUrl || bestOf[0].media, 400);
+        let realIndex = allItems.indexOf(bestOf[0]);
         slot1.img.src = thumb;
         if(slot1.ref) slot1.ref.src = thumb;
-        slot1.txt.innerText = "+" + getPoints(item);
         slot1.card.onclick = () => window.openHistoryModal(realIndex);
-    } else { slot1.card.style.display = 'none'; }
+        slot1.img.style.filter = "none";
+    } else {
+        // Empty State
+        slot1.img.src = IMG_QUEEN_MAIN;
+        if(slot1.ref) slot1.ref.src = IMG_QUEEN_MAIN;
+        slot1.card.onclick = null;
+        slot1.img.style.filter = "grayscale(30%)"; // Slight style for default
+    }
 
-    // --- RENDER LEFT (Rank 2) ---
+    // LEFT (Side Statue)
+    slot2.card.style.display = 'flex';
     if (bestOf[1]) {
-        let item = bestOf[1];
-        let thumb = getOptimizedUrl(item.proofUrl || item.media, 300);
-        let realIndex = allItems.indexOf(item);
-
-        slot2.card.style.display = 'flex';
+        let thumb = getOptimizedUrl(bestOf[1].proofUrl || bestOf[1].media, 300);
+        let realIndex = allItems.indexOf(bestOf[1]);
         slot2.img.src = thumb;
-        slot2.txt.innerText = "+" + getPoints(item);
         slot2.card.onclick = () => window.openHistoryModal(realIndex);
-    } else { slot2.card.style.display = 'none'; }
+    } else {
+        slot2.img.src = IMG_STATUE_SIDE;
+        slot2.card.onclick = null;
+    }
 
-    // --- RENDER RIGHT (Rank 3) ---
+    // RIGHT (Side Statue)
+    slot3.card.style.display = 'flex';
     if (bestOf[2]) {
-        let item = bestOf[2];
-        let thumb = getOptimizedUrl(item.proofUrl || item.media, 300);
-        let realIndex = allItems.indexOf(item);
-
-        slot3.card.style.display = 'flex';
+        let thumb = getOptimizedUrl(bestOf[2].proofUrl || bestOf[2].media, 300);
+        let realIndex = allItems.indexOf(bestOf[2]);
         slot3.img.src = thumb;
-        slot3.txt.innerText = "+" + getPoints(item);
         slot3.card.onclick = () => window.openHistoryModal(realIndex);
-    } else { slot3.card.style.display = 'none'; }
+    } else {
+        slot3.img.src = IMG_STATUE_SIDE;
+        slot3.card.onclick = null;
+    }
 
+    // --- RENDER MIDDLE (Archive) ---
+    const middleItems = allItems.filter(item => {
+        if (bestOf.includes(item)) return false; // Not in top 3
+        const s = (item.status || "").toLowerCase();
+        return !s.includes('rej') && !s.includes('fail'); // Not failed
+    });
 
-    // 4. RENDER THE REST (Middle & Bottom)
-    allItems.forEach((item, index) => {
-        // SKIP if it's on the Altar
-        if (bestOf.includes(item)) return;
+    if (middleItems.length === 0) {
+        // Show Middle Placeholder
+        gridOkay.innerHTML = `<img src="${IMG_MIDDLE_EMPTY}" class="empty-placeholder">`;
+    } else {
+        middleItems.forEach(item => {
+            let thumb = getOptimizedUrl(item.proofUrl || item.media, 300);
+            let realIndex = allItems.indexOf(item);
+            let isPending = (item.status || "").toLowerCase().includes('pending');
+            let overlay = isPending ? `<div class="pending-overlay"><div class="pending-icon">⏳</div></div>` : ``;
 
-        // Normal render logic
-        let url = item.proofUrl || item.media || item.file;
-        if (!url) return;
-        
-        let thumb = getOptimizedUrl(url, 300);
-        let status = (item.status || "").toLowerCase();
-        let isRejected = status.includes('rej') || status.includes('fail');
-        let isPending = status.includes('pending');
-
-        let html = "";
-
-        // BOTTOM: FAILED
-        if (isRejected) {
-            html = `
-                <div class="item-trash" onclick="window.openHistoryModal(${index})">
-                    <img class="trash-img" src="${thumb}">
-                    <div class="trash-stamp">DENIED</div>
-                </div>`;
-            gridFailed.innerHTML += html;
-        } 
-        // MIDDLE: EVERYTHING ELSE (Standard)
-        else {
-            const overlay = isPending ? 
-                `<div class="pending-overlay"><div class="pending-icon">⏳</div></div>` : ``;
-
-            html = `
-                <div class="item-archive" onclick="window.openHistoryModal(${index})">
+            gridOkay.innerHTML += `
+                <div class="item-archive" onclick="window.openHistoryModal(${realIndex})">
                     <img class="archive-img" src="${thumb}">
                     ${overlay}
                 </div>`;
-            gridOkay.innerHTML += html;
-        }
+        });
+    }
+
+    // --- RENDER BOTTOM (Heap/Failed) ---
+    const failedItems = allItems.filter(item => {
+        const s = (item.status || "").toLowerCase();
+        return s.includes('rej') || s.includes('fail');
     });
+
+    if (failedItems.length === 0) {
+        // Show Bottom Placeholder
+        gridFailed.innerHTML = `<img src="${IMG_BOTTOM_EMPTY}" class="empty-placeholder">`;
+    } else {
+        failedItems.forEach(item => {
+            let thumb = getOptimizedUrl(item.proofUrl || item.media, 300);
+            let realIndex = allItems.indexOf(item);
+            gridFailed.innerHTML += `
+                <div class="item-trash" onclick="window.openHistoryModal(${realIndex})">
+                    <img class="trash-img" src="${thumb}">
+                    <div class="trash-stamp">DENIED</div>
+                </div>`;
+        });
+    }
 }
 
 // --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
