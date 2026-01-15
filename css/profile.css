@@ -511,55 +511,111 @@ body {
 }
 
 /* =========================================
-   TOP: THE ALTAR (Glowing, Floating, Gold)
+   TOP: THE 3D ALTAR (ROTATING RELIQUARY)
    ========================================= */
 .section-altar {
-    background: radial-gradient(circle at 50% 0%, #1a1510 0%, #000 70%);
-    z-index: 10;
+    background: radial-gradient(circle at 50% 30%, #1a1510 0%, #000 80%);
+    perspective: 1000px; /* Creates the 3D depth */
+    overflow: hidden;
+    z-index: 50;
 }
-.label-altar { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
-
-/* The God Ray Light */
-.god-ray {
-    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-    width: 60%; height: 100%;
-    background: linear-gradient(to bottom, rgba(197, 160, 89, 0.1), transparent);
-    filter: blur(40px);
-    pointer-events: none;
+.label-altar { 
+    color: var(--gold); 
+    text-shadow: 0 0 15px var(--gold); 
+    z-index: 100;
 }
 
+/* The Rotating Ring */
+.altar-carousel {
+    width: 100%;
+    height: 220px; /* Card Height */
+    position: absolute;
+    top: 55%; /* Vertically centered */
+    transform: translateY(-50%);
+    transform-style: preserve-3d;
+    transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    
+    /* Auto Rotation Logic handled by JS or simple animation */
+    animation: rotateCarousel 20s infinite linear;
+}
+
+/* Pause on Hover so you can click */
+.section-altar:hover .altar-carousel {
+    animation-play-state: paused;
+}
+
+@keyframes rotateCarousel {
+    from { transform: translateY(-50%) rotateY(0deg); }
+    to { transform: translateY(-50%) rotateY(360deg); }
+}
+
+/* The 3D Cards */
 .item-relic {
-    min-width: 160px; height: 220px; /* Tall Portrait */
-    margin-right: 40px;
-    position: relative;
+    position: absolute;
+    width: 160px; height: 220px;
+    left: 50%; margin-left: -80px; /* Center horizontally */
+    top: 0;
+    
+    background: #000;
+    border: 1px solid #444;
     cursor: pointer;
-    /* Levitation Effect */
-    transform: translateY(-5px);
-    transition: all 0.4s ease;
+    overflow: hidden;
+    
+    /* 3D Properties determined by JS, these are defaults */
+    backface-visibility: hidden; /* Hide back if spinning */
+    transition: border-color 0.3s, box-shadow 0.3s;
+    
+    /* Reflection Effect */
+    -webkit-box-reflect: below 10px linear-gradient(transparent, transparent 50%, rgba(0,0,0,0.4));
 }
 
 .relic-img {
     width: 100%; height: 100%; object-fit: cover;
-    border: 1px solid var(--gold);
-    box-shadow: 0 0 20px rgba(197, 160, 89, 0.3), 0 20px 40px rgba(0,0,0,0.8);
+    opacity: 0.6;
+    filter: sepia(50%) contrast(1.2);
+    transition: 0.5s;
 }
 
-/* The Value Watermark (Behind/Over Image) */
-.relic-value {
+/* ACTIVE / HOVER STATE */
+.item-relic:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 30px rgba(197, 160, 89, 0.5);
+    z-index: 1000 !important; /* Force on top */
+}
+
+.item-relic:hover .relic-img {
+    opacity: 1;
+    filter: sepia(0%) contrast(1.1);
+}
+
+/* GOLD SHIMMER ANIMATION */
+.item-relic::after {
+    content: '';
     position: absolute;
-    bottom: -10px; right: -10px;
-    font-family: 'Cinzel', serif;
-    font-size: 3rem;
-    font-weight: 700;
-    color: rgba(255,255,255,0.1);
-    z-index: 2;
+    top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 215, 0, 0.6), transparent);
+    transform: skewX(-25deg);
+    transition: 0.5s;
     pointer-events: none;
 }
+.item-relic:hover::after {
+    left: 200%;
+    transition: 0.8s ease-in-out;
+}
 
-.item-relic:hover { transform: translateY(-15px) scale(1.05); z-index: 20; }
-.item-relic:hover .relic-img { box-shadow: 0 0 40px rgba(197, 160, 89, 0.6); border-color: #fff; }
-.item-relic:hover .relic-value { color: var(--gold); opacity: 1; }
-
+/* Points Badge floating in 3D */
+.relic-badge {
+    position: absolute;
+    bottom: 10px; right: 10px;
+    font-family: 'Rajdhani'; font-weight: 700; font-size: 1.2rem;
+    color: var(--gold);
+    text-shadow: 0 0 10px black;
+    background: rgba(0,0,0,0.8);
+    padding: 2px 6px;
+    border: 1px solid var(--gold);
+    transform: translateZ(20px); /* Pops out 3D */
+}
 
 /* =========================================
    MIDDLE: THE ARCHIVE (Recessed, Clean)
