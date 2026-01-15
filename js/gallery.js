@@ -1,3 +1,4 @@
+
 import { 
     galleryData, pendingLimit, historyLimit, currentHistoryIndex, touchStartX, 
     setCurrentHistoryIndex, setHistoryLimit, setTouchStartX,
@@ -5,30 +6,25 @@ import {
 } from './state.js';
 import { getOptimizedUrl, cleanHTML, triggerSound } from './utils.js';
 
-// STICKERS
 const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
 const STICKER_DENIED = "https://static.wixstatic.com/media/ce3e5b_63a0c8320e29416896d071d5b46541d7~mv2.png";
 
-// --- HELPER: POINTS ---
 function getPoints(item) {
     let val = item.points || item.score || item.value || item.amount || item.reward || 0;
     return Number(val);
 }
 
-// --- HELPER: SORTED ---
 function getSortedGallery() {
     if (!galleryData) return [];
     return [...galleryData].sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
 }
 
-// --- MAIN RENDERER ---
 export function renderGallery() {
     if (!galleryData) return;
 
-    // Get Containers
-    const gridPerfect = document.getElementById('gridPerfect'); // Top (Scrolls)
-    const gridFailed = document.getElementById('gridFailed');   // Bottom (Shadows)
-    const gridOkay = document.getElementById('gridOkay');       // Middle (Aperture)
+    const gridPerfect = document.getElementById('gridPerfect');
+    const gridFailed = document.getElementById('gridFailed');
+    const gridOkay = document.getElementById('gridOkay');
 
     if (!gridPerfect || !gridFailed || !gridOkay) return;
 
@@ -48,47 +44,37 @@ export function renderGallery() {
         let isRejected = status.includes('rej') || status.includes('fail');
         let isPending = status.includes('pending');
 
-        let html = "";
-        let targetGrid = null;
+        item.globalIndex = index; 
 
-        // 1. FAILED = BOTTOM (SHADOW CELL)
+        // 1. THE HEAP (FAILED) - BOTTOM
         if (isRejected) {
-            targetGrid = gridFailed;
-            html = `
-                <div class="item-shadow" onclick="window.openHistoryModal(${index})">
-                    <div class="shadow-stamp">VOID</div>
-                    <img src="${thumb}" class="shadow-img">
+            gridFailed.innerHTML += `
+                <div class="item-trash" onclick="window.openHistoryModal(${index})">
+                    <img src="${thumb}" class="trash-img">
+                    <div class="trash-stamp">DENIED</div>
                 </div>`;
-        }
-        // 2. PERFECT = TOP (HANGING SCROLL) -> Points > 145
+        } 
+        // 2. THE ALTAR (ELITE) - TOP (> 145)
         else if (pts > 145) {
-            targetGrid = gridPerfect;
-            html = `
-                <div class="item-scroll" onclick="window.openHistoryModal(${index})">
-                    <div class="roller-top"></div>
-                    <div class="scroll-paper"><img src="${thumb}"></div>
-                    <div class="roller-bot"></div>
+            gridPerfect.innerHTML += `
+                <div class="item-relic" onclick="window.openHistoryModal(${index})">
+                    <img src="${thumb}" class="relic-img">
+                    <div class="relic-value">+${pts}</div>
                 </div>`;
-        }
-        // 3. OKAY / PENDING = MIDDLE (APERTURE)
+        } 
+        // 3. THE ARCHIVE (OKAY) - MIDDLE
         else {
-            targetGrid = gridOkay;
-            html = `
-                <div class="item-aperture" onclick="window.openHistoryModal(${index})">
-                    <div class="shutter-mech">
-                        <div class="blade b1"></div><div class="blade b2"></div>
-                        <div class="blade b3"></div><div class="blade b4"></div>
-                        <div class="blade b5"></div><div class="blade b6"></div>
-                    </div>
-                    <img src="${thumb}" class="aperture-img">
-                    ${isPending ? '<div style="position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; color:cyan; font-family:Orbitron; font-size:0.6rem; pointer-events:none;">WAIT</div>' : ''}
+            const pendingHTML = isPending ? 
+                `<div class="pending-ghost">⏳ ANALYZING</div>` : ``;
+
+            gridOkay.innerHTML += `
+                <div class="item-archive" onclick="window.openHistoryModal(${index})">
+                    <img src="${thumb}" class="archive-img">
+                    ${pendingHTML}
                 </div>`;
         }
-
-        if (targetGrid) targetGrid.innerHTML += html;
     });
 }
-
 // --- MODAL LOGIC (DOSSIER STYLE) ---
 export function openHistoryModal(index) {
     const items = getSortedGallery();
