@@ -93,7 +93,7 @@ export function switchTab(mode) {
 
     // THE MISSING LINK: Load History Data
     if (mode === 'history') {
-        loadMoreHistory();
+        //loadMoreHistory();
     }
 }
 
