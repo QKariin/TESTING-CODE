@@ -347,7 +347,8 @@ export function openHistoryModal(index) {
         }
 
         overlay.innerHTML = `
-            <div class="modal-center-col" id="modalUI">
+            <!-- FIX 1: Add stopPropagation here so clicks inside the box DON'T close the modal -->
+            <div class="modal-center-col" id="modalUI" onclick="event.stopPropagation()">
                 
                 <div class="modal-merit-title">${isRejected ? "CAPITAL DEDUCTED" : "MERIT ACQUIRED"}</div>
                 <div class="modal-merit-value" style="color:${isRejected ? '#ff003c' : 'var(--gold)'}">
@@ -359,22 +360,26 @@ export function openHistoryModal(index) {
                 </div>
 
                 <div class="modal-btn-stack">
-                    <!-- FIX: Index based toggle to prevent text crashing -->
                     <button onclick="event.stopPropagation(); window.toggleDirective(${index})" class="btn-glass-silver">THE DIRECTIVE</button>
                     
                     <button onclick="event.stopPropagation(); window.toggleInspectMode()" class="btn-glass-silver">INSPECT OFFERING</button>
                     
-                    <!-- REDEMPTION BUTTON (Will only appear if isRejected is true) -->
                     ${redemptionBtn}
                     
+                    <!-- This button forces close specifically -->
                     <button onclick="window.closeModal()" class="btn-glass-silver btn-glass-red">DISMISS</button>
                 </div>
             </div>
         `;
     }
 
-    document.getElementById('glassModal').classList.add('active');
-    document.getElementById('glassModal').classList.remove('inspect-mode');
+    // FIX 2: Activate the background click to close
+    const glassModal = document.getElementById('glassModal');
+    if (glassModal) {
+        glassModal.onclick = (e) => window.closeModal(e);
+        glassModal.classList.add('active');
+        glassModal.classList.remove('inspect-mode');
+    }
 }
 
 // REPLACE OR ADD toggleDirective (Fixes the text swapping)
@@ -441,19 +446,41 @@ export function toggleHistoryView(view) {
 
 // REPLACE YOUR EXISTING closeModal FUNCTION WITH THIS
 export function closeModal(e) {
-    // 1. If called directly via script (!e) OR called via specific buttons
-    if (!e || (e.target && (e.target.id === 'modalCloseX' || e.target.classList.contains('btn-close-red') || e.target.classList.contains('btn-glass-red')))) {
-        document.getElementById('glassModal').classList.remove('active');
-        document.getElementById('modalMediaContainer').innerHTML = "";
+    // 1. If called directly (window.closeModal()) -> CLOSE
+    if (!e) {
+        forceClose();
         return;
     }
 
-    // 2. Logic for tapping the "Clean" overlay to bring text back
+    // 2. Define what things should close the window
+    const target = e.target;
+    const idsToClose = ['glassModal', 'modalGlassOverlay', 'modalMediaContainer', 'modalCloseX'];
+    const classesToClose = ['btn-close-red', 'btn-glass-red'];
+
+    // 3. Check if we clicked one of those things
+    const shouldClose = idsToClose.includes(target.id) || 
+                        classesToClose.some(c => target.classList.contains(c));
+
+    if (shouldClose) {
+        forceClose();
+        return;
+    }
+
+    // 4. Clean Mode Toggle Logic (Keep your existing logic here)
     const overlay = document.getElementById('modalGlassOverlay');
     if (overlay && overlay.classList.contains('clean')) {
         toggleHistoryView('info'); 
         return;
     }
+}
+
+// Helper to keep code clean
+function forceClose() {
+    const modal = document.getElementById('glassModal');
+    if (modal) modal.classList.remove('active');
+    
+    const media = document.getElementById('modalMediaContainer');
+    if (media) media.innerHTML = "";
 }
 
 export function openModal() {}
