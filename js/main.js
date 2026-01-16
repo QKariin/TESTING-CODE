@@ -396,6 +396,70 @@ function updateStats() {
     updateKneelingStatus(); 
 }
 
+// =========================================
+// STEP 3: MOBILE INTERACTION LOGIC
+// =========================================
+
+// 1. PROFILE BUTTON: Toggles the Sidebar Drawer
+window.toggleMobileMenu = function() {
+    const sidebar = document.querySelector('.layout-left');
+    if (sidebar) {
+        sidebar.classList.toggle('mobile-open');
+    }
+};
+
+// 2. KNEEL BUTTON: Opens Drawer & Highlights the Real Button
+window.triggerKneel = function() {
+    const sidebar = document.querySelector('.layout-left');
+    const realBtn = document.querySelector('.kneel-bar-graphic');
+
+    // Open the drawer so they can reach the button
+    if (sidebar) {
+        sidebar.classList.add('mobile-open');
+    }
+
+    // Highlight the button to show them where to press
+    if (realBtn) {
+        realBtn.style.boxShadow = "0 0 20px var(--neon-red)";
+        realBtn.style.borderColor = "var(--neon-red)";
+        
+        // Remove highlight after 1 second
+        setTimeout(() => {
+            realBtn.style.boxShadow = "";
+            realBtn.style.borderColor = "";
+        }, 1000);
+    }
+};
+
+// 3. LOGS BUTTON: Scrolls to Chat
+window.toggleMobileView = function(viewName) {
+    // If we want to show chat, scroll to it
+    if (viewName === 'chat') {
+        const chat = document.querySelector('.chat-container');
+        if (chat) {
+            chat.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }
+    
+    // Close the sidebar if it was open
+    const sidebar = document.querySelector('.layout-left');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+};
+
+// 4. AUTO-CLOSE: Close drawer when clicking a menu link
+document.addEventListener('DOMContentLoaded', () => {
+    const navLinks = document.querySelectorAll('.nav-btn');
+    const sidebar = document.querySelector('.layout-left');
+    
+    if (navLinks && sidebar) {
+        navLinks.forEach(btn => {
+            btn.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-open');
+            });
+        });
+    }
+});
+
 // Tribute logic
 let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
 function toggleTributeHunt() { const overlay = document.getElementById('tributeHuntOverlay'); if (overlay.classList.contains('hidden')) { selectedReason = ""; selectedItem = null; if(document.getElementById('huntNote')) document.getElementById('huntNote').value = ""; overlay.classList.remove('hidden'); showTributeStep(1); } else { overlay.classList.add('hidden'); resetTributeFlow(); } }
