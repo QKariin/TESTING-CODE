@@ -455,57 +455,91 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // =========================================
-// PART 2: FINAL APP MODE ENGINE (ANTI-BOUNCE)
+// PART 2: FINAL APP MODE (WITH SCROLL TRAP)
 // =========================================
 
 (function() {
     // Only run on Mobile
     if (window.innerWidth > 768) return;
 
-    // 1. LOCK BODY SCROLL (The "Stone" Logic)
-    function lockWindowToScreen() {
+    // 1. THE SCROLL TRAP (Kills the "Hop")
+    function initScrollTrap() {
+        let startY = 0;
+
+        // Listen for the start of a touch
+        document.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].pageY;
+        }, { passive: false });
+
+        // Watch the movement
+        document.addEventListener('touchmove', function(e) {
+            // A. Find out what you are touching
+            // We only allow scrolling inside specific areas
+            const scrollTarget = e.target.closest('.content-stage, .chat-body-frame, .layout-left');
+
+            // B. If touching the Background, Header, or Footer -> BLOCK IT
+            if (!scrollTarget) {
+                e.preventDefault();
+                return;
+            }
+
+            // C. If inside the Content, CHECK FOR EDGES
+            const y = e.touches[0].pageY;
+            const scrollTop = scrollTarget.scrollTop;
+            const scrollHeight = scrollTarget.scrollHeight;
+            const height = scrollTarget.clientHeight;
+
+            // Logic:
+            // 1. If at the TOP and pulling DOWN -> BLOCK (Prevents top hop)
+            if (scrollTop === 0 && y > startY) {
+                e.preventDefault();
+            }
+            // 2. If at the BOTTOM and pulling UP -> BLOCK (Prevents bottom hop)
+            else if (scrollTop + height >= scrollHeight && y < startY) {
+                e.preventDefault();
+            }
+            
+            // Otherwise, let it scroll naturally.
+        }, { passive: false });
+    }
+
+    // 2. LOCK THE BODY
+    function lockVisuals() {
         const height = window.innerHeight;
         
-        // KILL THE BOUNCE (Rubber Banding)
-        document.documentElement.style.overscrollBehavior = 'none';
-        document.body.style.overscrollBehavior = 'none';
-        
-        // Lock Dimensions
         document.documentElement.style.height = '100%';
         document.documentElement.style.overflow = 'hidden';
         
+        // This freezes the main window so only the inside parts move
         document.body.style.height = height + 'px';
         document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed'; // Freezes the body in place
+        document.body.style.position = 'fixed'; 
         document.body.style.width = '100%';
-        document.body.style.inset = '0';
+        document.body.style.touchAction = 'none'; // Disables browser gestures
         
-        // Force App Container
         const app = document.querySelector('.app-container');
         if (app) {
             app.style.height = '100%';
             app.style.overflow = 'hidden';
         }
 
-        // Enable Internal Scrolling ONLY for the stage
+        // Enable scrolling on the content stage
         const stage = document.querySelector('.content-stage');
         if (stage) {
             stage.style.height = '100%';
             stage.style.overflowY = 'auto';
             stage.style.paddingBottom = '100px'; 
-            stage.style.webkitOverflowScrolling = 'touch'; // Smooth internal scroll
-            stage.style.overscrollBehavior = 'contain'; // Keep bounce inside, don't pass to body
+            stage.style.webkitOverflowScrolling = 'touch';
         }
     }
 
-    // 2. BUILD THE FOOTER
+    // 3. BUILD THE FOOTER
     function buildAppFooter() {
         if (document.getElementById('app-mode-footer')) return;
         
         const footer = document.createElement('div');
         footer.id = 'app-mode-footer';
         
-        // CSS
         Object.assign(footer.style, {
             display: 'flex',
             justifyContent: 'space-between',
@@ -521,14 +555,12 @@ document.addEventListener('DOMContentLoaded', () => {
             zIndex: '2147483647',
             borderTop: '1px solid rgba(197, 160, 89, 0.3)',
             backdropFilter: 'blur(10px)',
-            pointerEvents: 'auto',
-            touchAction: 'none' // PREVENTS DRAGGING THE FOOTER
+            pointerEvents: 'auto'
         });
 
-        // Prevent Footer from being dragged (Double Lock)
+        // Block touches on the footer itself
         footer.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
-        // HTML Content
         footer.innerHTML = `
             <button onclick="window.toggleMobileMenu()" style="background:none; border:none; color:#666; display:flex; flex-direction:column; align-items:center; gap:4px; font-family:'Cinzel',serif; font-size:0.65rem;">
                 <span style="font-size:1.4rem; color:#888;">◈</span>
@@ -550,32 +582,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(footer);
     }
 
-    // 3. THE SCROLL POLICE (Nuclear Option)
-    // If you try to drag the screen anywhere EXCEPT the middle, stop it.
-    window.addEventListener('touchmove', function(e) {
-        // If the target is NOT inside the scrollable area...
-        const isScrollable = e.target.closest('.content-stage') || e.target.closest('.chat-body-frame');
-        
-        if (!isScrollable) {
-            // STOP THE DRAG
-            e.preventDefault(); 
-        }
-    }, { passive: false });
-
-    // 4. RUN ENGINE
+    // 4. LAUNCH
     window.addEventListener('load', () => {
-        lockWindowToScreen();
+        lockVisuals();
         buildAppFooter();
+        initScrollTrap();
     });
-    window.addEventListener('resize', lockWindowToScreen);
+    window.addEventListener('resize', lockVisuals);
     
-    // Immediate Trigger
-    lockWindowToScreen();
+    // Immediate
+    lockVisuals();
     buildAppFooter();
+    initScrollTrap();
 
 })();
-
-
 // Tribute logic
 let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
 function toggleTributeHunt() { const overlay = document.getElementById('tributeHuntOverlay'); if (overlay.classList.contains('hidden')) { selectedReason = ""; selectedItem = null; if(document.getElementById('huntNote')) document.getElementById('huntNote').value = ""; overlay.classList.remove('hidden'); showTributeStep(1); } else { overlay.classList.add('hidden'); resetTributeFlow(); } }
