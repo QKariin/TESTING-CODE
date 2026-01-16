@@ -88,7 +88,7 @@ export function switchTab(mode) {
     }
 
     if (mode === 'serve') {
-        renderGallery(); 
+        //renderGallery(); 
     }
 
     // THE MISSING LINK: Load History Data
