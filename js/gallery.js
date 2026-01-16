@@ -347,7 +347,7 @@ export function openHistoryModal(index) {
         }
 
         overlay.innerHTML = `
-            <div class="modal-center-col" id="modalUI" onclick="event.stopPropagation()">
+            <div class="modal-center-col" id="modalUI">
                 
                 <div class="modal-merit-title">${isRejected ? "CAPITAL DEDUCTED" : "MERIT ACQUIRED"}</div>
                 <div class="modal-merit-value" style="color:${isRejected ? '#ff003c' : 'var(--gold)'}">
