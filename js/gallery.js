@@ -348,7 +348,7 @@ export function openHistoryModal(index) {
 
         overlay.innerHTML = `
             <!-- FIX 1: Add stopPropagation here so clicks inside the box DON'T close the modal -->
-            <div class="modal-center-col" id="modalUI" onclick="event.stopPropagation()">
+            <div class="modal-center-col" id="modalUI">
                 
                 <div class="modal-merit-title">${isRejected ? "CAPITAL DEDUCTED" : "MERIT ACQUIRED"}</div>
                 <div class="modal-merit-value" style="color:${isRejected ? '#ff003c' : 'var(--gold)'}">
@@ -447,43 +447,39 @@ export function toggleHistoryView(view) {
 export function closeModal(e) {
     const modal = document.getElementById('glassModal');
 
-    // 1. If called manually (clicked DISMISS button), force close immediately.
+    // 1. Manual call (from Dismiss button) -> FORCE CLOSE
     if (!e) {
-        if(modal) modal.classList.remove('active');
-        document.getElementById('modalMediaContainer').innerHTML = "";
+        forceClose();
         return;
     }
 
-    // --- NEW FEATURE STARTS HERE ---
-    // 2. If we are in INSPECT MODE, a click should just bring the menu back.
+    // 2. Inspect Mode (Clicking anywhere brings the menu back)
     if (modal && modal.classList.contains('inspect-mode')) {
         modal.classList.remove('inspect-mode');
-        return; // STOP HERE! Do not close the window.
-    }
-    // --- NEW FEATURE ENDS HERE ---
-
-    // 3. Normal Background Click Logic (Close the Modal)
-    const target = e.target;
-    
-    // List of things that act as "Background"
-    const idsToClose = ['glassModal', 'modalGlassOverlay', 'modalMediaContainer', 'modalCloseX'];
-    const classesToClose = ['btn-close-red', 'btn-glass-red'];
-
-    const shouldClose = idsToClose.includes(target.id) || 
-                        classesToClose.some(c => target.classList.contains(c));
-
-    if (shouldClose) {
-        if(modal) modal.classList.remove('active');
-        document.getElementById('modalMediaContainer').innerHTML = "";
         return;
     }
 
-    // 4. Handle "Clean" overlay (Legacy logic if you still use it)
+    // 3. Clean/Proof Mode (Clicking the empty glass toggles the info back on)
     const overlay = document.getElementById('modalGlassOverlay');
-    if (overlay && overlay.classList.contains('clean')) {
+    // If we clicked strictly on the overlay (not a button) and it's currently clean
+    if (overlay && overlay.classList.contains('clean') && e.target === overlay) {
         toggleHistoryView('info'); 
         return;
     }
+
+    // 4. AGGRESSIVE CLOSE
+    // If the click reached here, it wasn't stopped by a button.
+    // So we assume the user clicked the Background, the Menu Box, or the Dismiss button.
+    forceClose();
+}
+
+// Helper to ensure clean closing
+function forceClose() {
+    const modal = document.getElementById('glassModal');
+    if (modal) modal.classList.remove('active');
+    
+    const media = document.getElementById('modalMediaContainer');
+    if (media) media.innerHTML = "";
 }
 
 // Helper to keep code clean
