@@ -523,6 +523,46 @@ if (window.visualViewport) {
     }
 }
 
+// =========================================
+// STEP 4: THE WIX FORCE FIELD (Resizer)
+// =========================================
+
+function forceMobileLayout() {
+    // 1. Get the App Container
+    const app = document.querySelector('.app-container');
+    const rightLayout = document.querySelector('.layout-right');
+    const contentStage = document.querySelector('.content-stage');
+    
+    if (!app || !rightLayout) return;
+
+    // 2. Calculate the REAL screen height (ignoring Wix)
+    // We use innerHeight which is the size of the glass
+    const height = window.innerHeight;
+
+    // 3. FORCE the container to be that size
+    app.style.height = height + 'px';
+    app.style.overflow = 'hidden'; // Stop the page from scrolling
+    
+    // 4. FORCE the content to scroll internally
+    rightLayout.style.height = '100%';
+    rightLayout.style.position = 'relative';
+    
+    if(contentStage) {
+        contentStage.style.height = '100%';
+        contentStage.style.overflowY = 'auto'; // Scroll here instead
+        contentStage.style.paddingBottom = '100px'; // Room for footer
+    }
+
+    // 5. Scroll the window to the top (Hide Wix Header if any)
+    window.scrollTo(0, 0);
+}
+
+// RUN IT EVERYWHERE
+window.addEventListener('resize', forceMobileLayout);
+window.addEventListener('orientationchange', forceMobileLayout);
+setInterval(forceMobileLayout, 500); // Check every 0.5s in case Wix fights back
+forceMobileLayout(); // Run immediately
+
 // Tribute logic
 let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
 function toggleTributeHunt() { const overlay = document.getElementById('tributeHuntOverlay'); if (overlay.classList.contains('hidden')) { selectedReason = ""; selectedItem = null; if(document.getElementById('huntNote')) document.getElementById('huntNote').value = ""; overlay.classList.remove('hidden'); showTributeStep(1); } else { overlay.classList.add('hidden'); resetTributeFlow(); } }
