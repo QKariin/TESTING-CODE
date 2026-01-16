@@ -532,6 +532,23 @@ window.addEventListener('click', function(e) {
     window.closeModal();
 }, true); // 'true' ensures we catch the click before other listeners stop it
 
+// --- PASTE AT BOTTOM OF gallery.js ---
+
+window.toggleMobileMenu = function() {
+    const sidebar = document.querySelector('.layout-left');
+    if (sidebar) {
+        sidebar.classList.toggle('mobile-open');
+    }
+};
+
+// Auto-close menu when clicking a link inside it
+document.querySelectorAll('.nav-btn, .kneel-bar-graphic').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const sidebar = document.querySelector('.layout-left');
+        if (sidebar) sidebar.classList.remove('mobile-open');
+    });
+});
+
 // FORCE WINDOW EXPORTS
 window.renderGallery = renderGallery;
 window.openHistoryModal = openHistoryModal;
