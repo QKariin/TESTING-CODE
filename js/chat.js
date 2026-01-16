@@ -13,16 +13,16 @@ import { mediaType } from './media.js';
 export async function renderChat(messages) {
     const chatBoxContainer = document.getElementById('chatBox');
     const chatContent = document.getElementById('chatContent');
-    const loadMoreBtn = document.getElementById('chatLoadMoreBtn');
+    const loadMoreBtn = document.getElementById('chatLoadMoreBtn'); // External button (we will hide this)
 
     if (!messages || !chatContent) return;
 
-    // 1. SORTING
+    // 1. SORTING (Untouched)
     const sortedMessages = [...messages].sort(
         (a, b) => new Date(a._createdDate) - new Date(b._createdDate)
     );
 
-    // 2. ANTI-BLINK
+    // 2. ANTI-BLINK (Untouched)
     const currentJson = JSON.stringify(sortedMessages);
     if (currentJson === lastChatJson) return;
 
@@ -32,7 +32,7 @@ export async function renderChat(messages) {
 
     const wasInitialLoad = isInitialLoad;
 
-    // 3. NOTIFICATION LOGIC
+    // 3. NOTIFICATION LOGIC (Untouched)
     if (!isInitialLoad && sortedMessages.length > 0) {
         const lastMsg = sortedMessages[sortedMessages.length - 1];
         const sender = (lastMsg.sender || "").toLowerCase().trim();
@@ -51,14 +51,15 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    if (loadMoreBtn)
-        loadMoreBtn.style.display = sortedMessages.length > chatLimit ? 'block' : 'none';
+    // HIDE EXTERNAL BUTTON (We are moving it inside)
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
 
+    // SLICING (Using your existing chatLimit variable)
     const visibleMessages = sortedMessages.slice(
         Math.max(sortedMessages.length - chatLimit, 0)
     );
 
-    // Proxy Bytescale URLs
+    // Proxy Bytescale URLs (Untouched)
     const signingPromises = visibleMessages.map(async (m) => {
         if (m.message?.startsWith("https://upcdn.io/")) {
             m.mediaUrl = await getSignedUrl(m.message);
@@ -66,8 +67,8 @@ export async function renderChat(messages) {
     });
     await Promise.all(signingPromises);
 
-    // 4. RENDER HTML
-    chatContent.innerHTML = visibleMessages.map(m => {
+    // 4. RENDER HTML (THE CHANGE: Capture HTML first, then Add Button)
+    let messagesHtml = visibleMessages.map(m => {
         let txt = DOMPurify.sanitize(m.message);
         txt = txt.replace(/\n/g, "<br>");
         
@@ -75,14 +76,13 @@ export async function renderChat(messages) {
         const isMe = senderLower === 'user' || senderLower === 'slave';
         const isSystem = senderLower === 'system';
 
-        // TACTICAL SYSTEM MESSAGE LOGIC (Task Verified, Rejected, or Kneeling)
-        // Detects status strings from your Velo logic like "TASK FAILED" or "Verified"
+        // TACTICAL SYSTEM MESSAGE LOGIC
         const isStatusUpdate = txt.includes("Verified") || txt.includes("Rejected") || txt.includes("FAILED") || txt.includes("earned");
 
         if (isSystem || isStatusUpdate) {
-            let sysClass = "sys-gold"; // Default for Kneeling/Verified
+            let sysClass = "sys-gold"; 
             if (txt.includes("Rejected") || txt.includes("FAILED") || txt.includes("Removed")) {
-                sysClass = "sys-red"; // Penalty style
+                sysClass = "sys-red"; 
             }
 
             return `
@@ -91,7 +91,7 @@ export async function renderChat(messages) {
                 </div>`;
         }
 
-        // TRIBUTE CARD LOGIC (Luxury Layout)
+        // TRIBUTE CARD LOGIC
         if (txt.includes("TRIBUTE:")) {
             const lines = txt.split('<br>');
             const item = lines.find(l => l.includes('ITEM:'))?.replace('ITEM:', '').trim() || "Tribute";
@@ -121,7 +121,6 @@ export async function renderChat(messages) {
             const isImage = mediaType(srcUrl) === "image";
 
             if (isVideo) {
-                console.log("is video:", isVideo, srcUrl);
                 contentHtml = `
                     <div class="msg ${msgClass}" style="padding:0; background:black; overflow:hidden;">
                         <video src="${srcUrl}" controls style="max-width:100%; display:block; cursor:pointer;"
@@ -129,7 +128,6 @@ export async function renderChat(messages) {
                         </video>
                     </div>`;
             } else if (isImage) {
-                console.log("is image:", isImage, srcUrl);
                 contentHtml = `
                     <div class="msg ${msgClass}" style="padding:0; overflow:hidden;">
                         <img src="${srcUrl}" style="max-width:100%; display:block; cursor:pointer;"
@@ -148,8 +146,6 @@ export async function renderChat(messages) {
                 </div>`;
         }
         else {
-
-      // Inside your renderChat map function
             return `
                 <div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">
                     <div class="msg-col" style="align-items: ${isMe ? 'flex-end' : 'flex-start'}; width: 100%;">
@@ -158,9 +154,33 @@ export async function renderChat(messages) {
                     </div>
                 </div>`;
         }
-    }).join(''); // Keep the glue
+    }).join(''); 
 
-    // Load Listeners
+    // --- INJECT "ACCESS ARCHIVE" BUTTON IF NEEDED ---
+    // If we have more messages in total than what is visible, show the button
+    if (sortedMessages.length > visibleMessages.length) {
+        messagesHtml = `
+            <div id="historyTrigger" style="width:100%; text-align:center; padding:15px 0;">
+                <button onclick="window.loadMoreChat()" style="
+                    background: transparent; 
+                    border: 1px solid var(--gold); 
+                    color: var(--gold); 
+                    font-family: 'Orbitron', sans-serif; 
+                    font-size: 0.65rem; 
+                    padding: 8px 20px; 
+                    cursor: pointer; 
+                    letter-spacing: 2px;
+                ">
+                    ▲ ACCESS ARCHIVE
+                </button>
+            </div>
+        ` + messagesHtml;
+    }
+
+    // APPLY TO DOM
+    chatContent.innerHTML = messagesHtml;
+
+    // Load Listeners (Untouched)
     chatContent.querySelectorAll("img").forEach(img => {
         img.addEventListener("load", () => setTimeout(forceBottom, 30));
     });
