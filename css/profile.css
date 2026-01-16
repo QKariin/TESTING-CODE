@@ -986,26 +986,26 @@ body {
     #mobileMenuBtn { display: none !important; } /* Hide old hamburger */
 
     /* --- 3. FOOTER (Bottom Bun) --- */
-/* --- 3. FOOTER (THE FIXED FIX) --- */
+/* --- 3. FOOTER (THE VIEWPORT LOCK) --- */
     #mobileGlassFooter {
         display: flex !important;
         justify-content: space-between; 
         align-items: center;
         
-        /* THE CHANGE: "fixed" locks it to the screen glass, not the page */
+        /* NUCLEAR OPTION: Fixed to Viewport */
         position: fixed !important; 
-        bottom: 0; 
-        left: 0; 
-        right: 0; /* Ensures it stretches full width */
-        width: 100%;
+        bottom: 0 !important; 
+        left: 0 !important; 
+        width: 100vw !important; /* Force full viewport width */
         
         height: 80px;
-        background: linear-gradient(to top, #000 30%, rgba(0,0,0,0.8));
+        background: linear-gradient(to top, #000 40%, rgba(0,0,0,0.9));
         padding: 0 30px; 
         padding-bottom: env(safe-area-inset-bottom);
-        z-index: 9999; /* Highest layer */
+        z-index: 2147483647; /* MAX Z-INDEX POSSIBLE */
         backdrop-filter: blur(10px);
-        border-top: 1px solid rgba(255,255,255,0.1); /* Thin line to separate */
+        border-top: 1px solid rgba(255,255,255,0.15);
+        transform: translateZ(0); /* GPU Force */
     }
 
     /* --- 4. CONTENT (The Meat) --- */
