@@ -987,26 +987,34 @@ body {
 
     /* --- 3. FOOTER (Bottom Bun) --- */
 /* --- 3. FOOTER (THE VIEWPORT LOCK) --- */
-    #mobileGlassFooter {
-        display: flex !important;
-        justify-content: space-between; 
-        align-items: center;
-        
-        /* NUCLEAR OPTION: Fixed to Viewport */
-        position: fixed !important; 
-        bottom: 0 !important; 
-        left: 0 !important; 
-        width: 100vw !important; /* Force full viewport width */
-        
-        height: 80px;
-        background: linear-gradient(to top, #000 40%, rgba(0,0,0,0.9));
-        padding: 0 30px; 
-        padding-bottom: env(safe-area-inset-bottom);
-        z-index: 2147483647; /* MAX Z-INDEX POSSIBLE */
-        backdrop-filter: blur(10px);
-        border-top: 1px solid rgba(255,255,255,0.15);
-        transform: translateZ(0); /* GPU Force */
-    }
+  /* --- 3. FOOTER (UNLOCKED FOR JS) --- */
+#mobileGlassFooter {
+    display: flex !important;
+    justify-content: space-between; 
+    align-items: center;
+    
+    /* CHANGED TO ABSOLUTE so JS can grab it and move it */
+    position: absolute !important; 
+    left: 0 !important; 
+    width: 100% !important;
+    
+    height: 80px;
+    background: linear-gradient(to top, #000 40%, rgba(0,0,0,0.9));
+    padding: 0 30px; 
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 2147483647; /* Max Z-Index */
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255,255,255,0.15);
+    
+    /* We start it hidden so it doesn't flash in the wrong spot */
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+/* Helper class to show it once JS calculates the spot */
+#mobileGlassFooter.anchored {
+    opacity: 1;
+}
 
     /* --- 4. CONTENT (The Meat) --- */
     .layout-right { 
