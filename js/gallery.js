@@ -121,6 +121,7 @@ function renderStickerFilters() {
 // REPLACE your renderGallery function with this:
 export async function renderGallery() {
     if (!galleryData) return;
+    console.log("Rendering gallery with", galleryData.length, "items. Active filter:", activeStickerFilter);
 
     const gridFailed = document.getElementById('gridFailed'); 
     const gridOkay = document.getElementById('gridOkay');     
