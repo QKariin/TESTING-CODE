@@ -986,23 +986,24 @@ body {
     #mobileMenuBtn { display: none !important; } /* Hide old hamburger */
 
 /* --- 3. FOOTER (CONTAINED) --- */
+/* --- 3. FOOTER (THE FLEX STACK) --- */
 #mobileGlassFooter {
+    /* 1. Be Visible */
     display: flex !important;
     justify-content: space-between; 
     align-items: center;
     
-    /* Sit at the bottom of the App Container */
-    position: absolute !important; 
-    bottom: 0 !important; 
-    left: 0 !important; 
-    width: 100% !important;
+    /* 2. Be Solid (No floating/absolute garbage) */
+    position: relative !important; 
+    flex-shrink: 0 !important; /* Never shrink */
+    z-index: 9999;
     
+    /* 3. Style */
     height: 80px;
-    background: linear-gradient(to top, #000 30%, rgba(0,0,0,0.9));
+    width: 100% !important;
+    background: linear-gradient(to top, #000 40%, rgba(0,0,0,0.9));
     padding: 0 30px; 
     padding-bottom: env(safe-area-inset-bottom);
-    z-index: 1000;
-    backdrop-filter: blur(10px);
     border-top: 1px solid rgba(255,255,255,0.15);
 }
 
