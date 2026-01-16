@@ -378,6 +378,7 @@ export function openHistoryModal(index) {
 }
 
 // REPLACE OR ADD toggleDirective (Fixes the text swapping)
+// REPLACE YOUR toggleDirective FUNCTION WITH THIS
 window.toggleDirective = function(index) {
     const items = getGalleryList(); 
     const item = items[index];
@@ -387,7 +388,7 @@ window.toggleDirective = function(index) {
     
     // Check current view state
     if (box.dataset.view === 'task') {
-        // Switch back to Verdict
+        // Switch back to Verdict (Admin comments are usually plain text, so innerText is fine here, but you can change to innerHTML if needed)
         let verdictText = item.adminComment || "Logged without commentary.";
         const status = (item.status || "").toLowerCase();
         if((status.includes('rej') || status.includes('fail')) && !item.adminComment) {
@@ -400,7 +401,10 @@ window.toggleDirective = function(index) {
         box.dataset.view = 'verdict';
     } else {
         // Switch to Task/Directive
-        box.innerText = item.text || "No directive data available.";
+        // --- THE FIX IS HERE --- 
+        // We change .innerText to .innerHTML so the <p> and <br> tags render correctly
+        box.innerHTML = item.text || "No directive data available.";
+        
         box.style.color = "#ccc";
         box.style.fontStyle = "normal";
         box.dataset.view = 'task';
