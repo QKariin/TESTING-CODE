@@ -985,30 +985,25 @@ body {
     .ribbon-center { width: 100%; padding: 0; }
     #mobileMenuBtn { display: none !important; } /* Hide old hamburger */
 
-    /* --- 3. FOOTER (Bottom Bun) --- */
-/* --- 3. FOOTER (THE VIEWPORT LOCK) --- */
-  /* --- 3. FOOTER (UNLOCKED FOR JS) --- */
+/* --- 3. FOOTER (CONTAINED) --- */
 #mobileGlassFooter {
     display: flex !important;
     justify-content: space-between; 
     align-items: center;
     
-    /* CHANGED TO ABSOLUTE so JS can grab it and move it */
+    /* Sit at the bottom of the App Container */
     position: absolute !important; 
+    bottom: 0 !important; 
     left: 0 !important; 
     width: 100% !important;
     
     height: 80px;
-    background: linear-gradient(to top, #000 40%, rgba(0,0,0,0.9));
+    background: linear-gradient(to top, #000 30%, rgba(0,0,0,0.9));
     padding: 0 30px; 
     padding-bottom: env(safe-area-inset-bottom);
-    z-index: 2147483647; /* Max Z-Index */
+    z-index: 1000;
     backdrop-filter: blur(10px);
     border-top: 1px solid rgba(255,255,255,0.15);
-    
-    /* We start it hidden so it doesn't flash in the wrong spot */
-    opacity: 0;
-    transition: opacity 0.5s ease;
 }
 
 /* Helper class to show it once JS calculates the spot */
