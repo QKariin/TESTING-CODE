@@ -455,54 +455,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // =========================================
-// PART 2: FINAL APP MODE (UNLOCKED SCROLL)
+// PART 2: FINAL APP MODE (SMART BOUNCER)
 // =========================================
 
 (function() {
     // Only run on Mobile
     if (window.innerWidth > 768) return;
 
-    // 1. LOCK THE FRAME, UNLOCK THE CONTENT
+    // 1. THE SMART BOUNCER (Allows scroll, Kills hop)
+    function addSmartBounceProtection(el) {
+        let startY = 0;
+        
+        el.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].pageY;
+        }, { passive: false });
+
+        el.addEventListener('touchmove', function(e) {
+            const y = e.touches[0].pageY;
+            const movingDown = y > startY; // Dragging down (Scrolling up)
+            const movingUp = y < startY;   // Dragging up (Scrolling down)
+            
+            const atTop = el.scrollTop <= 0;
+            const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1; // -1 buffer
+
+            // RULE 1: If at TOP and dragging DOWN -> STOP (Kills Top Hop)
+            if (atTop && movingDown) {
+                e.preventDefault();
+            }
+            
+            // RULE 2: If at BOTTOM and dragging UP -> STOP (Kills Bottom Hop)
+            if (atBottom && movingUp) {
+                e.preventDefault();
+            }
+            
+            // Otherwise: ALLOW SCROLL
+        }, { passive: false });
+    }
+
+    // 2. LOCK THE FRAME
     function lockVisuals() {
         const height = window.innerHeight;
         
-        // A. FREEZE THE BODY (The Frame)
+        // FREEZE BODY
         Object.assign(document.body.style, {
             height: height + 'px',
             width: '100%',
             position: 'fixed',
             overflow: 'hidden',
             inset: '0',
-            overscrollBehavior: 'none', // STOPS THE BODY HOP
-            touchAction: 'none'         // BLOCKS BODY SWIPES
+            touchAction: 'none' // Stop body gestures
         });
-        
-        document.documentElement.style.overscrollBehavior = 'none';
 
-        // B. FIX THE APP CONTAINER
         const app = document.querySelector('.app-container');
-        if (app) {
-            Object.assign(app.style, {
-                height: '100%',
-                overflow: 'hidden'
-            });
-        }
+        if (app) Object.assign(app.style, { height: '100%', overflow: 'hidden' });
 
-        // C. UNLOCK THE SCROLL STAGE (The Content)
+        // SETUP SCROLL STAGE
         const stage = document.querySelector('.content-stage');
         if (stage) {
             Object.assign(stage.style, {
                 height: '100%',
-                overflowY: 'auto',              // ENABLE SCROLL
-                webkitOverflowScrolling: 'touch', // SMOOTH MOMENTUM
-                overscrollBehavior: 'contain',    // KEEP BOUNCE INSIDE (Don't move body)
+                overflowY: 'auto',
+                webkitOverflowScrolling: 'touch',
                 paddingBottom: '100px',
-                touchAction: 'pan-y'              // EXPLICITLY ALLOW VERTICAL SCROLL
+                touchAction: 'pan-y' // Explicitly allow vertical panning
             });
+            
+            // ACTIVATE THE BOUNCER ON THE CONTENT
+            addSmartBounceProtection(stage);
+        }
+        
+        // Setup Chat scroll too if it exists
+        const chatFrame = document.querySelector('.chat-body-frame');
+        if (chatFrame) {
+             addSmartBounceProtection(chatFrame);
         }
     }
 
-    // 2. BUILD THE FOOTER
+    // 3. BUILD FOOTER
     function buildAppFooter() {
         if (document.getElementById('app-mode-footer')) return;
         
@@ -510,22 +539,12 @@ document.addEventListener('DOMContentLoaded', () => {
         footer.id = 'app-mode-footer';
         
         Object.assign(footer.style, {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            position: 'fixed',
-            bottom: '0',
-            left: '0',
-            width: '100%',
-            height: '80px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            position: 'fixed', bottom: '0', left: '0', width: '100%', height: '80px',
             background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
-            padding: '0 30px',
-            paddingBottom: 'env(safe-area-inset-bottom)',
-            zIndex: '2147483647',
-            borderTop: '1px solid rgba(197, 160, 89, 0.3)',
-            backdropFilter: 'blur(10px)',
-            pointerEvents: 'auto',
-            touchAction: 'none' // Don't let them drag the footer
+            padding: '0 30px', paddingBottom: 'env(safe-area-inset-bottom)',
+            zIndex: '2147483647', borderTop: '1px solid rgba(197, 160, 89, 0.3)',
+            backdropFilter: 'blur(10px)', pointerEvents: 'auto', touchAction: 'none'
         });
 
         // Block footer drags
@@ -536,33 +555,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span style="font-size:1.4rem; color:#888;">◈</span>
                 <span>PROFILE</span>
             </button>
-
             <div style="position:relative; top:-20px;">
                 <button onclick="window.triggerKneel()" style="width:70px; height:70px; border-radius:50%; background:radial-gradient(circle at 30% 30%, #c5a059, #5a4a22); border:2px solid #fff; box-shadow:0 0 20px rgba(197,160,89,0.6); color:#000; font-family:'Cinzel',serif; font-weight:700; font-size:0.7rem; cursor:pointer;">
                     KNEEL
                 </button>
             </div>
-
             <button onclick="window.toggleMobileView('chat')" style="background:none; border:none; color:#666; display:flex; flex-direction:column; align-items:center; gap:4px; font-family:'Cinzel',serif; font-size:0.65rem;">
                 <span style="font-size:1.4rem; color:#888;">❖</span>
                 <span>LOGS</span>
             </button>
         `;
-
         document.body.appendChild(footer);
     }
 
-    // 3. RUN IT
-    window.addEventListener('load', () => {
-        lockVisuals();
-        buildAppFooter();
-    });
+    // 4. RUN
+    window.addEventListener('load', () => { lockVisuals(); buildAppFooter(); });
     window.addEventListener('resize', lockVisuals);
-    
-    // Immediate
-    lockVisuals();
-    buildAppFooter();
-
+    lockVisuals(); buildAppFooter();
 })();
 // Tribute logic
 let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
