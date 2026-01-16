@@ -201,7 +201,9 @@ export async function renderGallery() {
             gridOkay.innerHTML += `<div class="item-placeholder-slot"><img src="${IMG_MIDDLE_EMPTY}"></div>`;
         }
     } else if (middleItems.length > 0) {
-        middleItems.forEach(item => {
+        //middleItems.forEach(item => {
+        for (const item of middleItems) {
+
             let thumb = getOptimizedUrl(item.proofUrl || item.media, 300);
             let realIndex = allItems.indexOf(item);
             let isPending = (item.status || "").toLowerCase().includes('pending');
@@ -216,7 +218,7 @@ export async function renderGallery() {
                     <div class="bp-corner bl-br"></div>
                     ${overlay}
                 </div>`;
-        });
+        };
     }
 
     // --- 3. BOTTOM (HEAP) ---

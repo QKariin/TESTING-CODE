@@ -4,7 +4,7 @@
 import { currId, lastChatJson, setLastChatJson, ACCOUNT_ID, API_KEY, users } from './dashboard-state.js';
 import { forceBottom, isAtBottom } from './dashboard-utils.js';
 import { getPrivateFile } from './mediaBytescale.js';
-import { getOptimizedUrl, mediaType, fileType } from './media.js';
+import { getOptimizedUrl, mediaType, fileType, getSignedUrl } from './media.js';
 
 let lastNotifiedMessageId = null;
 let isInitialLoad = true;
@@ -18,16 +18,17 @@ export async function renderChat(msgs) {
     
     // Proxy Bytescale URLs for private access (in parallel)
     const signingPromises = msgs.map(async (m) => {
-        if (m.message && m.message.startsWith('https://upcdn.io/')) {
-            const parts = m.message.split('/raw/');
-            if (parts.length === 2) {
-                const filePath = '/' + parts[1];
+        if (m.message && m.message.startsWith('https://')) {
+            //const parts = m.message.split('/raw/');
+            //if (parts.length === 2) {
+                //const filePath = '/' + parts[1];
                 try {
-                    m.mediaUrl = await getPrivateFile(filePath);
+                    //m.mediaUrl = await getPrivateFile(filePath);
+                    m.mediaUrl = await getSignedUrl(filePath);
                 } catch (e) {
-                    console.error('Failed to proxy URL', e);
+                    console.error('Failed to sign URL', e);
                 }
-            }
+            //}
         }
     });
     await Promise.all(signingPromises);
