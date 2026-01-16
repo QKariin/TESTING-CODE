@@ -95,15 +95,6 @@ function extractFilePath(url) {
 export async function getBytescaleSignedUrl(url) {
   if (!isBytescaleUrl(url)) return url;
 
-  console.log("Signing Upcdn URL:", url);
-
-  //const filePath = extractFilePath(url);
-  //if (!filePath) return url;
-
-  //const query = extractQueryString(url);
-
-  //const isThumbnail = url.includes("/thumbnail/");
-
   try {
     const result = await getPrivateFile(url);
     const signed = typeof result === "string" ? result : url;
@@ -111,17 +102,6 @@ export async function getBytescaleSignedUrl(url) {
     let finalUrl = signed;
 
     return finalUrl;
-
-    // If original was thumbnail → convert signed raw → thumbnail
-    /*if (isThumbnail) {
-      finalUrl = finalUrl.replace("/raw/", "/thumbnail/");
-    }*/
-
-    // If backend already includes query params, return as-is
-    //if (finalUrl.includes("?")) return finalUrl;
-
-    // Otherwise re-append original transforms
-    //return query ? `${finalUrl}${query}` : finalUrl;
 
   } catch (err) {
     console.error("Failed to sign Upcdn URL:", url, err);
