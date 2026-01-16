@@ -190,53 +190,63 @@
 }
 
 /* =========================================
-   MOBILE CHAT OVERRIDE (CLEAN & COMPACT)
+   MOBILE CHAT FIX (STRICT & COMPACT)
    ========================================= */
 @media screen and (max-width: 768px) {
 
-    /* 1. TIGHTEN THE FRAME */
+    /* 1. CONTAINER: Add breathing room on sides */
     .chat-body-frame {
-        padding: 10px !important; /* Less padding on edges */
-        gap: 8px !important;
+        padding: 10px 15px !important; 
+        width: 100% !important;
     }
 
-    /* 2. REMOVE THE BOXES (Make it Text-Only) */
+    /* 2. MESSAGE BUBBLES: Constrain Width & Size */
     .msg {
-        background: transparent !important; /* No heavy background */
-        border: none !important; /* No full border */
+        max-width: 80% !important; /* NEVER touch both edges */
+        font-size: 0.75rem !important; /* Smaller tactical text */
+        line-height: 1.3 !important; /* Tighter spacing */
+        padding: 6px 10px !important; /* Compact padding */
+        margin: 0 !important;
+        background: rgba(0,0,0,0.3) !important; /* Slight dark tint for readability */
         box-shadow: none !important;
-        padding: 4px 12px !important; /* Tight padding */
-        max-width: 90% !important; /* Use full width */
-        font-size: 0.85rem !important; /* Readable size */
+        border: none !important;
     }
 
-    /* 3. SLAVE MESSAGES (Right Side) */
+    /* 3. ROW SPACING */
+    .msg-row {
+        margin-bottom: 6px !important; /* Tighter gap between messages */
+        width: 100% !important;
+    }
+
+    /* 4. SLAVE (Right Side) */
+    .mr-out { justify-content: flex-end !important; }
     .m-slave {
-        border-right: 2px solid var(--pink) !important; /* Just a pink line */
-        border-radius: 0 !important;
-        text-align: right;
-        color: #ddd !important; /* Brighter text for readability */
+        border-right: 2px solid var(--pink) !important; /* Pink Vertical Line */
+        text-align: right !important;
+        border-radius: 4px 0 0 4px !important;
     }
 
-    /* 4. QUEEN MESSAGES (Left Side) */
+    /* 5. QUEEN (Left Side) */
+    .mr-in { justify-content: flex-start !important; }
     .m-queen {
-        border-left: 2px solid var(--gold) !important; /* Just a gold line */
-        border-radius: 0 !important;
-        text-align: left;
+        border-left: 2px solid var(--gold) !important; /* Gold Vertical Line */
+        text-align: left !important;
+        border-radius: 0 4px 4px 0 !important;
     }
 
-    /* 5. INPUT AREA (Thumb Friendly) */
+    /* 6. INPUT AREA (Anti-Zoom & Compact) */
     .chat-footer {
-        padding: 10px !important;
-        padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important; /* Avoid iPhone swipe bar */
-        background: black !important; /* Solid background so text doesn't overlap */
+        padding: 8px 10px !important;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+        background: #050505 !important;
     }
 
     .chat-input {
-        font-size: 16px !important; /* Prevents iPhone form-zoom */
+        font-size: 16px !important; /* CRITICAL: Prevents iPhone Zoom */
         padding: 8px !important;
+        height: 40px !important;
     }
-
-    /* 6. HIDE TIME ON MOBILE (Too cluttered) */
+    
+    /* Hide the Time on mobile to save space */
     .msg-time { display: none !important; }
 }
