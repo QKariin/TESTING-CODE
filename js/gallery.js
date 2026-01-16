@@ -325,23 +325,23 @@ export function openHistoryModal(index) {
     const pts = getPoints(item);
     const status = (item.status || "").toLowerCase();
     
-    // CRITICAL: Check if Rejected
-    const isRejected = status.includes('rej') || status.includes('fail');
+    // CRITICAL FIX: Add 'deni' and 'refus' to ensure the button shows for "Denied" tasks
+    const isRejected = status.includes('rej') || status.includes('fail') || status.includes('deni') || status.includes('refus');
 
     // 3. Build UI
     const overlay = document.getElementById('modalGlassOverlay');
     if (overlay) {
         let verdictText = item.adminComment || "Logged without commentary.";
+        // If rejected but no comment, show default text
         if(isRejected && !item.adminComment) verdictText = "Submission rejected. Standards not met.";
 
-        // --- THE REDEMPTION BUTTON LOGIC ---
-        // It is defined here. It WILL appear if isRejected is true.
+        // --- REDEMPTION BUTTON GENERATOR ---
         let redemptionBtn = '';
         if (isRejected) {
             redemptionBtn = `
                 <button onclick="event.stopPropagation(); window.atoneForTask(${index})" 
                         class="btn-glass-silver" 
-                        style="border-color:var(--neon-red); color:var(--neon-red);">
+                        style="border-color:var(--neon-red); color:var(--neon-red); box-shadow: 0 0 10px rgba(255,0,60,0.1);">
                     SEEK REDEMPTION (-100 🪙)
                 </button>`;
         }
@@ -359,12 +359,12 @@ export function openHistoryModal(index) {
                 </div>
 
                 <div class="modal-btn-stack">
-                    <!-- FIX: Using Index to prevent quote crashes -->
+                    <!-- FIX: Index based toggle to prevent text crashing -->
                     <button onclick="window.toggleDirective(${index})" class="btn-glass-silver">THE DIRECTIVE</button>
                     
                     <button onclick="window.toggleInspectMode()" class="btn-glass-silver">INSPECT OFFERING</button>
                     
-                    <!-- INSERT REDEMPTION BUTTON HERE -->
+                    <!-- REDEMPTION BUTTON (Will only appear if isRejected is true) -->
                     ${redemptionBtn}
                     
                     <button onclick="window.closeModal()" class="btn-glass-silver btn-glass-red">DISMISS</button>
