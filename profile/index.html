@@ -462,37 +462,24 @@
 <!-- ADD THIS SWITCHER SCRIPT AT THE VERY BOTTOM (Before </body>) -->
 <script>
     function checkDevice() {
-        const isMobile = window.innerWidth <= 768;
-        const desktop = document.getElementById('DESKTOP_APP');
-        const mobile = document.getElementById('MOBILE_APP');
-        const dashboard = document.getElementById('viewMobileHome'); // The inner view
-        
-        if (isMobile) {
-            // 1. Kill Desktop
-            if(desktop) desktop.style.display = 'none';
-            
-            // 2. Activate Mobile Universe
-            if(mobile) mobile.style.display = 'flex';
-            
-            // 3. FORCE THE DASHBOARD OPEN (The Fix)
-            if(dashboard) {
-                dashboard.style.display = 'flex';
-                dashboard.style.opacity = '1';
-                dashboard.style.visibility = 'visible';
-            }
-            
-        } else {
-            if(mobile) mobile.style.display = 'none';
-            if(desktop) desktop.style.display = 'flex'; 
-        }
+    const isMobile = window.innerWidth <= 768;
+    const desktop = document.getElementById('DESKTOP_APP');
+    const mobile = document.getElementById('MOBILE_APP');
+    
+    if (isMobile) {
+        if(desktop) desktop.setAttribute('style', 'display: none !important');
+        if(mobile) mobile.setAttribute('style', 'display: flex !important');
+        // Trigger the sync function from main.js if it exists
+        if(window.syncMobileDashboard) window.syncMobileDashboard();
+    } else {
+        if(mobile) mobile.setAttribute('style', 'display: none !important');
+        if(desktop) desktop.setAttribute('style', 'display: flex !important');
     }
-    
-    // Run immediately
-    checkDevice();
-    
-    // Run continuously to fight any JS that tries to hide it
-    window.addEventListener('resize', checkDevice);
-    window.addEventListener('load', checkDevice);
+}
+
+// Run on load and resize
+window.addEventListener('load', checkDevice);
+window.addEventListener('resize', checkDevice);
 </script>
 </body>
 </html>
