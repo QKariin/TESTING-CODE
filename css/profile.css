@@ -959,3 +959,111 @@ body {
     line-height: 1;
 }
 
+/* =========================================
+   MOBILE UNIVERSE (MERGED)
+   ========================================= */
+
+/* FORCE MOBILE APP TO SIT ON TOP & VISIBLE */
+#MOBILE_APP {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100dvh; /* Dynamic Height */
+    
+    /* CRITICAL FIX: Lifts it off the page flow to prevent black screen */
+    position: fixed; 
+    top: 0; 
+    left: 0;
+    z-index: 9999999; /* Higher than everything */
+    
+    background: #000000;
+    color: white;
+    font-family: 'Cinzel', serif;
+    overflow: hidden;
+}
+
+/* Scrollable Content */
+.mob-frame {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    padding-bottom: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Header Styling */
+.mob-header {
+    margin-top: 20px; margin-bottom: 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.mob-hex-wrap {
+    width: 100px; height: 110px; position: relative;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background: linear-gradient(135deg, #c5a059, #444);
+    padding: 2px;
+}
+.mob-hex-img {
+    width: 100%; height: 100%; object-fit: cover; background: #111;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+.mob-rank-stamp {
+    position: absolute; bottom: 5px; right: -10px;
+    background: #000; border: 1px solid #c5a059; color: #c5a059;
+    font-family: 'Orbitron', sans-serif; font-size: 0.5rem; padding: 2px 6px;
+    transform: rotate(-5deg); box-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+.mob-name { font-size: 1.2rem; letter-spacing: 4px; color: #eee; text-transform: uppercase; }
+
+/* Cards Styling */
+.mob-card {
+    width: 100%; background: rgba(18, 18, 18, 0.95); 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* Devotion Card */
+.devotion-card { display: flex; flex-direction: row; height: 140px; gap: 15px; }
+.mob-kneel-zone {
+    flex: 0 0 35%; background: #080808; border: 1px solid #333;
+    border-radius: 8px; position: relative; overflow: hidden; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.mob-kneel-inner { z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.kneel-icon { font-size: 1.5rem; color: #555; }
+.kneel-label { font-size: 0.6rem; letter-spacing: 2px; color: #555; font-family:'Orbitron'; }
+.mob-kneel-fill {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 0%;
+    background: linear-gradient(to top, #8b0000, #ff003c); z-index: 1; transition: height 0.1s linear;
+}
+
+/* Grid Styling */
+.mob-grid-zone { flex: 1; display: flex; flex-direction: column; }
+.mob-grid-label { font-size: 0.6rem; color: #666; margin-bottom: 8px; letter-spacing: 1px; }
+.mob-streak-grid {
+    display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(3, 1fr);
+    gap: 4px; height: 100%;
+}
+.streak-sq { background: #1a1a1a; border-radius: 2px; }
+.streak-sq.active { background: #c5a059; box-shadow: 0 0 5px #c5a059; }
+
+/* Operations Styling */
+.operations-card { display: flex; flex-direction: column; gap: 15px; border-top: 2px solid #333; }
+.op-status-row { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.status-light { width: 8px; height: 8px; border-radius: 50%; background: #333; }
+.status-light.red { background: #ff003c; box-shadow: 0 0 8px #ff003c; }
+.status-light.green { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+.status-text { font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: #888; letter-spacing: 2px; }
+
+.mob-action-btn {
+    width: 100%; padding: 15px; background: transparent;
+    border: 1px solid #c5a059; color: #c5a059;
+    font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.9rem;
+    letter-spacing: 2px; cursor: pointer;
+}
+.mob-timer {
+    text-align: center; font-family: 'Rajdhani', sans-serif; font-size: 2.5rem;
+    font-weight: 700; color: white;
+}
