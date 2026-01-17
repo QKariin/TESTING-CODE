@@ -569,17 +569,19 @@ window.syncMobileDashboard = function() {
         display: 'flex', 
         justifyContent: 'space-around', 
         
-        // 1. Change center to flex-start to move everything to the top
+        // Snap items to top
         alignItems: 'flex-start', 
         
         position: 'fixed', 
         bottom: '0px', 
         left: '0px',
         width: '100%', 
-        height: '95px', // Make it taller so there is room to move up
         
-        // 2. Add padding to push icons down slightly from the very top edge
-        paddingTop: '5px', 
+        // Exact height you requested
+        height: '70px', 
+        
+        // Push icons down slightly from top edge to avoid touching the border
+        paddingTop: '8px', 
         
         background: 'rgba(10, 10, 10, 0.95)', 
         borderTop: '1px solid rgba(255, 255, 255, 0.15)',
@@ -587,7 +589,9 @@ window.syncMobileDashboard = function() {
         backdropFilter: 'blur(15px)', 
         pointerEvents: 'auto', 
         touchAction: 'none',
-        boxSizing: 'border-box'
+        
+        // Fix for height calculation
+        boxSizing: 'border-box' 
     });
 
         footer.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
