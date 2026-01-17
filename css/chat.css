@@ -40,7 +40,7 @@
 /* Row Alignment */
 .msg-row {
     display: flex !important;
-    gap: 12px !important;
+    gap: 10px !important;
     max-width: 100% !important;
     align-items: flex-end !important;
     margin-bottom: 10px !important;
