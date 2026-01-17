@@ -392,116 +392,53 @@ window.triggerKneel = function() {
 
 // 3. MAIN NAVIGATION CONTROLLER
 window.toggleMobileView = function(viewName) {
-    const home = document.getElementById('viewMobileHome');
-    const chatContainer = document.querySelector('.chat-container');
-    const chatDesktop = document.getElementById('viewServingTop');
-    const history = document.getElementById('historySection');
-    const news = document.getElementById('viewNews');
-    
-    // Hide All
-    if(home) home.style.display = 'none';
-    if(chatContainer) chatContainer.style.display = 'none';
-    if(chatDesktop) chatDesktop.style.display = 'none';
-    if(history) history.style.display = 'none';
-    if(news) news.style.display = 'none';
+    const views = {
+        'home': document.getElementById('viewMobileHome'),
+        'chat': document.querySelector('.chat-container'),
+        'record': document.getElementById('historySection'),
+        'queen': document.getElementById('viewNews')
+    };
 
-    // Show Target
-    if (viewName === 'home') {
-        if(home) {
-            home.style.display = 'flex';
-            // Sync Data immediately
-            if(window.syncMobileDashboard) window.syncMobileDashboard();
-        }
-    }
-    else if (viewName === 'chat') {
-        if(chatContainer) {
-            chatContainer.style.display = 'flex';
-            const chatBox = document.getElementById('chatBox');
-            if (chatBox) setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
-        } else if (chatDesktop) {
-            chatDesktop.style.display = 'flex';
-        }
-    }
-    else if (viewName === 'record') {
-        if(history) {
-            history.style.display = 'flex';
-            if(window.renderGallery) window.renderGallery();
-        }
-    }
-    else if (viewName === 'queen') {
-        if(news) news.style.display = 'block';
+    // Hide everything first using !important logic
+    Object.values(views).forEach(v => {
+        if(v) v.setAttribute('style', 'display: none !important');
+    });
+
+    // Show the target
+    const target = views[viewName];
+    if (target) {
+        target.setAttribute('style', 'display: flex !important; height: calc(100vh - 80px); overflow-y: auto;');
+        if (viewName === 'home') window.syncMobileDashboard();
     }
     
-    // Close sidebar & update icons
+    // Close sidebar
     const sidebar = document.querySelector('.layout-left');
     if (sidebar) sidebar.classList.remove('mobile-open');
-    document.querySelectorAll('.mf-btn').forEach(btn => btn.classList.remove('active'));
 };
 
 // 4. DATA SYNC (CORRECTED IDs)
 window.syncMobileDashboard = function() {
-    // 1. Safety Check
-    if (typeof gameStats === 'undefined' || typeof userProfile === 'undefined') return;
-
-    // 2. Target the EXACT IDs from your HTML
-    const elName = document.getElementById('mob_slaveName');   // Fixed ID
-    const elRank = document.getElementById('mob_rankStamp');   // Fixed ID
-    const elPic = document.getElementById('mob_profilePic');   // Fixed ID
+    // REMOVE the strict "return" check that was killing the load.
+    // Instead, use fallbacks (||) for every value.
     
-    // (Optional: If you add points back later)
-    const elPoints = document.getElementById('mobPoints');
-    const elCoins = document.getElementById('mobCoins');
-
-    // 3. Fill Data
-    if (elName) elName.innerText = userProfile.name || "SLAVE";
-    if (elRank) elRank.innerText = userProfile.hierarchy || "INITIATE";
+    const elName = document.getElementById('mob_slaveName');
+    const elRank = document.getElementById('mob_rankStamp');
+    const elPic = document.getElementById('mob_profilePic');
     
-    if (elPic && userProfile.profilePicture) {
-        // Use the optimizer helper we imported
+    if (elName) elName.innerText = (typeof userProfile !== 'undefined' && userProfile.name) ? userProfile.name : "SYNCHRONIZING...";
+    if (elRank) elRank.innerText = (typeof userProfile !== 'undefined' && userProfile.hierarchy) ? userProfile.hierarchy : "INITIATE";
+    
+    if (elPic && typeof userProfile !== 'undefined' && userProfile.profilePicture) {
         elPic.src = getOptimizedUrl(userProfile.profilePicture, 150); 
     }
 
-    if (elPoints) elPoints.innerText = gameStats.points || 0;
-    if (elCoins) elCoins.innerText = gameStats.coins || 0;
-
-    // 4. Fill the 24-Square Grid (Devotion)
-    const grid = document.getElementById('mob_streakGrid');
-    if(grid) {
-        grid.innerHTML = ''; // Clear it
-        const count = gameStats.kneelCount || 0;
-        const progress = count % 24; // Loop every 24
-        
-        for(let i=0; i<24; i++) {
-            const sq = document.createElement('div');
-            // If i is less than progress, it gets the 'active' class (Gold)
-            sq.className = 'streak-sq' + (i < progress ? ' active' : '');
-            grid.appendChild(sq);
-        }
-    }
-    
-    // 5. Update Operations Card (Working/Idle)
-    const activeRow = document.getElementById('activeTimerRow');
-    if (activeRow) {
-        const isWorking = !activeRow.classList.contains('hidden');
-        const light = document.getElementById('mob_statusLight');
-        const text = document.getElementById('mob_statusText');
-        const timer = document.getElementById('mob_activeTimer');
-        const btn = document.getElementById('mob_btnRequest');
-
-        if (isWorking) {
-            if(light) light.className = 'status-light green';
-            if(text) text.innerText = "WORKING";
-            if(timer) timer.classList.remove('hidden');
-            if(btn) btn.classList.add('hidden');
-        } else {
-            if(light) light.className = 'status-light red';
-            if(text) text.innerText = "UNPRODUCTIVE";
-            if(timer) timer.classList.add('hidden');
-            if(btn) btn.classList.remove('hidden');
-        }
+    // Ensure the home view is actually set to flex
+    const home = document.getElementById('viewMobileHome');
+    if (home) {
+        home.style.display = 'flex';
+        home.style.opacity = '1';
     }
 };
-
 // 5. STATS EXPANDER
 window.toggleMobileStats = function() {
     const drawer = document.getElementById('mobStatsContent');
@@ -535,24 +472,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1. LOCK THE FRAME
     function lockVisuals() {
-        const height = window.innerHeight;
-        
-        Object.assign(document.body.style, {
-            height: height + 'px', width: '100%', position: 'fixed', overflow: 'hidden', inset: '0',
-            overscrollBehavior: 'none', touchAction: 'none'
-        });
+    const height = window.innerHeight;
+    
+    // Force the main containers to fill the screen
+    Object.assign(document.body.style, {
+        height: '100vh', width: '100vw', position: 'fixed', overflow: 'hidden'
+    });
 
-        const app = document.querySelector('.app-container');
-        if (app) Object.assign(app.style, { height: '100%', overflow: 'hidden' });
-
-        const scrollables = document.querySelectorAll('.content-stage, .chat-body-frame, #viewMobileHome, #historySection, #viewNews');
-        scrollables.forEach(el => {
-            Object.assign(el.style, {
-                height: '100%', overflowY: 'auto', webkitOverflowScrolling: 'touch',
-                paddingBottom: '100px', overscrollBehaviorY: 'contain', touchAction: 'pan-y'
-            });
-        });
+    const mobileApp = document.getElementById('MOBILE_APP');
+    if (mobileApp) {
+        mobileApp.style.display = 'flex'; // Force display
+        mobileApp.style.height = '100vh'; 
     }
+
+    const scrollables = document.querySelectorAll('.mob-frame, .chat-body-frame, #viewMobileHome');
+    scrollables.forEach(el => {
+        Object.assign(el.style, {
+            height: 'calc(100vh - 80px)', // Subtract footer height
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column'
+        });
+    });
+}
 
     // 2. BUILD FOOTER
     function buildAppFooter() {
