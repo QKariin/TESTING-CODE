@@ -1,11 +1,13 @@
-// kneeling.js - FIXED SELECTOR (.kneel-label)
+// kneeling.js - FIXED IMPORTS AND MOBILE SELECTORS
+
+// 1. USE ABSOLUTE PATHS (The Fix for the Disconnect)
 import { 
     isLocked, lastWorshipTime, COOLDOWN_MINUTES, gameStats, ignoreBackendUpdates, userProfile
-} from './state.js'; 
+} from '/js/state.js'; 
 import { 
     setIsLocked, setLastWorshipTime, setIgnoreBackendUpdates 
-} from './state.js';
-import { triggerSound } from './utils.js';
+} from '/js/state.js';
+import { triggerSound } from '/js/utils.js';
 
 let holdTimer = null;
 const REQUIRED_HOLD_TIME = 2000;
@@ -14,18 +16,19 @@ const REQUIRED_HOLD_TIME = 2000;
 export function handleHoldStart(e) {
     if (isLocked) return;
     
+    // Stop scrolling/selection
     if (e && e.type === 'touchstart' && e.cancelable) {
         e.preventDefault();
     }
 
-    // DESKTOP
+    // DESKTOP TARGETS
     const fill = document.getElementById('fill');
     const txtMain = document.getElementById('txt-main');
     
-    // MOBILE (MATCHING YOUR HTML)
+    // MOBILE TARGETS
     const mobFill = document.getElementById('mob_kneelFill');
-    const mobText = document.querySelector('.kneel-label'); // FIX: Matches HTML
-    const mobBar = document.querySelector('.mob-kneel-zone');
+    const mobText = document.querySelector('.kneel-label'); // FIXED CLASS
+    const mobBar = document.querySelector('.mob-kneel-zone'); // FIXED CLASS
 
     // ANIMATE DESKTOP
     if (fill) {
@@ -42,6 +45,7 @@ export function handleHoldStart(e) {
     if (mobText) mobText.innerText = "SUBMITTING...";
     if (mobBar) mobBar.style.borderColor = "var(--gold)"; 
 
+    // START TIMER
     holdTimer = setTimeout(() => {
         completeKneelAction();
     }, REQUIRED_HOLD_TIME);
@@ -70,7 +74,7 @@ export function handleHoldEnd() {
 
         // RESET MOBILE
         const mobFill = document.getElementById('mob_kneelFill');
-        const mobText = document.querySelector('.kneel-label'); // FIX
+        const mobText = document.querySelector('.kneel-label');
         const mobBar = document.querySelector('.mob-kneel-zone');
 
         if (mobFill) {
@@ -94,7 +98,7 @@ function completeKneelAction() {
 
     window.parent.postMessage({ type: "FINISH_KNEELING" }, "*");
 
-    updateKneelingStatus(); 
+    updateKneelingStatus(); // Sync both bars
 
     const rewardMenu = document.getElementById('kneelRewardOverlay');
     if (rewardMenu) {
@@ -106,11 +110,11 @@ function completeKneelAction() {
     setTimeout(() => { setIgnoreBackendUpdates(false); }, 15000);
 }
 
-// --- 4. STATUS SYNC (THE DATA READER) ---
+// --- 4. STATUS SYNC ---
 export function updateKneelingStatus() {
     const now = Date.now();
     
-    // Day Code Update
+    // Day Code
     const today = new Date();
     const m = today.getMonth() + 1; 
     const day = today.getDate();
@@ -122,16 +126,17 @@ export function updateKneelingStatus() {
     const btn = document.getElementById('btn');
     const txtMain = document.getElementById('txt-main');
     const fill = document.getElementById('fill');
+    const txtSub = document.getElementById('txt-sub');
     
     // MOBILE ELEMENTS
     const mobFill = document.getElementById('mob_kneelFill');
-    const mobText = document.querySelector('.kneel-label'); // FIX
+    const mobText = document.querySelector('.kneel-label'); 
     const mobBar = document.querySelector('.mob-kneel-zone');
 
     const diffMs = now - lastWorshipTime;
     const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
 
-    // A. LOCKED STATE (Data says: Locked)
+    // A. LOCKED STATE
     if (lastWorshipTime > 0 && diffMs < cooldownMs) {
         setIsLocked(true);
         const minLeft = Math.ceil((cooldownMs - diffMs) / 60000);
@@ -147,18 +152,18 @@ export function updateKneelingStatus() {
 
         // Update Mobile
         if (mobText && mobFill) {
-            mobText.innerText = `${minLeft}m`; // Shows "55m"
+            mobText.innerText = `${minLeft}m`;
             const progress = 100 - ((diffMs / cooldownMs) * 100);
             mobFill.style.transition = "none";
-            mobFill.style.width = Math.max(0, progress) + "%"; // Red bar stays filled
+            mobFill.style.width = Math.max(0, progress) + "%";
             
             if(mobBar) {
-                mobBar.style.borderColor = "#ff003c"; // Turn Border RED
+                mobBar.style.borderColor = "#ff003c"; // Red Border
                 mobBar.style.opacity = "0.7";
             }
         }
     } 
-    // B. UNLOCKED STATE (Data says: Free)
+    // B. UNLOCKED STATE
     else if (!holdTimer) { 
         setIsLocked(false);
         
@@ -176,10 +181,15 @@ export function updateKneelingStatus() {
             mobFill.style.transition = "width 0.3s ease";
             mobFill.style.width = "0%";
             if(mobBar) {
-                mobBar.style.borderColor = "#c5a059"; // Reset Gold
+                mobBar.style.borderColor = "#c5a059"; // Gold
                 mobBar.style.opacity = "1";
             }
         }
+    }
+    
+    // Update daily stats text if it exists
+    if (txtSub && gameStats) {
+        txtSub.innerText = `TODAY KNEELING: ${gameStats.todayKneeling || 0}`;
     }
 }
 
@@ -196,6 +206,17 @@ export function claimKneelReward(choice) {
         rewardType: choice,
         rewardValue: choice === 'coins' ? 10 : 50
     }, "*");
+
+    import('/js/bridge.js').then(({ Bridge }) => {
+        if(userProfile) {
+            Bridge.send("SLAVE_REWARD_CLAIMED", {
+                memberId: userProfile.memberId,
+                choice: choice,
+                value: choice === 'coins' ? 10 : 50,
+                timestamp: Date.now()
+            });
+        }
+    });
 }
 
 function triggerCoinShower() {
@@ -210,7 +231,7 @@ function triggerCoinShower() {
     }
 }
 
-// EXPOSE TO WINDOW
+// SELF-REGISTER
 window.handleHoldStart = handleHoldStart;
 window.handleHoldEnd = handleHoldEnd;
 window.claimKneelReward = claimKneelReward;
