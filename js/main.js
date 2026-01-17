@@ -570,9 +570,9 @@ window.syncMobileDashboard = function() {
             justifyContent: 'space-between', // Changed to space-between for 5 items
             alignItems: 'center',
             position: 'fixed', 
-            bottom: '00px', 
+            bottom: '10px', 
          
-            width: '100%', // Wider to fit 5 icons comfortably
+            width: '110%', // Wider to fit 5 icons comfortably
             height: '70px',
             background: 'rgba(10, 10, 10, 0.95)', 
             border: '1px solid rgba(255, 255, 255, 0.15)',
