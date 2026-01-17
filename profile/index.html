@@ -460,22 +460,28 @@
 </div>
 
 <!-- SWITCHER SCRIPT -->
-<!-- ADD THIS SWITCHER SCRIPT AT THE VERY BOTTOM (Before </body>) -->
 <script>
+(function() {
     function checkDevice() {
         const isMobile = window.innerWidth <= 768;
         const desktop = document.getElementById('DESKTOP_APP');
         const mobile = document.getElementById('MOBILE_APP');
-        const dashboard = document.getElementById('viewMobileHome'); // The inner view
+        const dashboard = document.getElementById('viewMobileHome');
+        
+        console.log('checkDevice running:', { isMobile, desktop: !!desktop, mobile: !!mobile, dashboard: !!dashboard });
         
         if (isMobile) {
-            // 1. Kill Desktop
+            // Kill Desktop
             if(desktop) desktop.style.display = 'none';
             
-            // 2. Activate Mobile Universe
-            if(mobile) mobile.style.display = 'flex';
+            // Activate Mobile - FORCE IT
+            if(mobile) {
+                mobile.style.display = 'flex';
+                mobile.style.visibility = 'visible';
+                mobile.style.opacity = '1';
+            }
             
-            // 3. FORCE THE DASHBOARD OPEN (The Fix)
+            // Force Dashboard
             if(dashboard) {
                 dashboard.style.display = 'flex';
                 dashboard.style.opacity = '1';
@@ -488,12 +494,25 @@
         }
     }
     
+    // Make it global so we can call it from console
+    window.checkDevice = checkDevice;
+    
     // Run immediately
     checkDevice();
     
-    // Run continuously to fight any JS that tries to hide it
-    window.addEventListener('resize', checkDevice);
+    // Run after all scripts load
+    window.addEventListener('DOMContentLoaded', checkDevice);
     window.addEventListener('load', checkDevice);
+    window.addEventListener('resize', checkDevice);
+    
+    // Nuclear option: run every 100ms for the first 3 seconds
+    let attempts = 0;
+    const enforcer = setInterval(() => {
+        checkDevice();
+        attempts++;
+        if (attempts > 30) clearInterval(enforcer);
+    }, 100);
+})();
 </script>
 </body>
 </html>
