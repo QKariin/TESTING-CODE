@@ -566,27 +566,29 @@ window.syncMobileDashboard = function() {
         footer.id = 'app-mode-footer';
         
         Object.assign(footer.style, {
-            display: 'flex', 
-            justifyContent: 'space-between', // Changed to space-between for 5 items
-            alignItems: 'flex-start',
-            paddingTop: '5px',
-            position: 'fixed', 
-            bottom: '0px', // Stick to bottom
-            left: '50%', // Center horizontally
-            paddingBottom: '20px',
-            transform: 'translateX(-50%)', // Correct center offset
-            
-            width: '100%', // Use full width instead of 110%
-            height: '60px', // Slightly taller for the center button
-            background: 'rgba(10, 10, 10, 0.95)', 
-            borderTop: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: '0 -5px 20px rgba(0,0,0,0.5)',
-            zIndex: '2147483647', 
-            backdropFilter: 'blur(15px)', 
-            pointerEvents: 'auto', 
-            touchAction: 'none',
-            padding: '0px'
-        });
+        display: 'flex', 
+        justifyContent: 'space-around', 
+        
+        // 1. Change center to flex-start to move everything to the top
+        alignItems: 'flex-start', 
+        
+        position: 'fixed', 
+        bottom: '0px', 
+        left: '0px',
+        width: '100%', 
+        height: '95px', // Make it taller so there is room to move up
+        
+        // 2. Add padding to push icons down slightly from the very top edge
+        paddingTop: '12px', 
+        
+        background: 'rgba(10, 10, 10, 0.95)', 
+        borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+        zIndex: '2147483647', 
+        backdropFilter: 'blur(15px)', 
+        pointerEvents: 'auto', 
+        touchAction: 'none',
+        boxSizing: 'border-box'
+    });
 
         footer.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
