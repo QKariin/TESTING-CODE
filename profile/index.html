@@ -483,7 +483,13 @@
         const mobile = document.getElementById('MOBILE_APP');
         const dashboard = document.getElementById('viewMobileHome');
         
-        console.log('checkDevice running:', { isMobile, desktop: !!desktop, mobile: !!mobile, dashboard: !!dashboard });
+        console.log('checkDevice running:', { 
+            isMobile, 
+            width: window.innerWidth,
+            desktop: !!desktop, 
+            mobile: !!mobile, 
+            dashboard: !!dashboard 
+        });
         
         if (isMobile) {
             // Kill Desktop
@@ -494,6 +500,24 @@
                 mobile.style.display = 'flex';
                 mobile.style.visibility = 'visible';
                 mobile.style.opacity = '1';
+                mobile.style.position = 'fixed';
+                mobile.style.zIndex = '999999';
+                mobile.style.top = '0';
+                mobile.style.left = '0';
+                mobile.style.right = '0';
+                mobile.style.bottom = '0';
+                mobile.style.width = '100%';
+                mobile.style.height = '100vh';
+                
+                // Log computed styles
+                const computed = window.getComputedStyle(mobile);
+                console.log('MOBILE_APP computed:', {
+                    display: computed.display,
+                    visibility: computed.visibility,
+                    opacity: computed.opacity,
+                    zIndex: computed.zIndex,
+                    position: computed.position
+                });
             }
             
             // Force Dashboard
