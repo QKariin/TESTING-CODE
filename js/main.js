@@ -458,15 +458,24 @@ window.syncMobileDashboard = function() {
     if (elName) elName.innerText = userProfile.name || "SLAVE";
     if (elRank) elRank.innerText = userProfile.hierarchy || "INITIATE";
     
-    // 4. Profile Picture (With Fallback)
-    const defaultPic = "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png";
-    
+    // 4. Profile Picture (The Wix Decrypter)
     if (elPic) {
-        // If we have a user picture, use it. If not, use the silhouette.
-        if (userProfile.profilePicture && userProfile.profilePicture.length > 5) {
-             elPic.src = userProfile.profilePicture;
-        } else {
-             elPic.src = defaultPic;
+        let rawUrl = userProfile.profilePicture;
+        const defaultPic = "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png";
+
+        if (!rawUrl || rawUrl === "" || rawUrl === "undefined") {
+            elPic.src = defaultPic;
+        } 
+        else if (rawUrl.startsWith("wix:image")) {
+            // CONVERT WIX URL MANUALLY
+            // Format: wix:image://v1/<uri>/<filename>#originWidth=...
+            const uri = rawUrl.split('/')[3]; 
+            const cleanUri = uri.split('#')[0]; 
+            elPic.src = `https://static.wixstatic.com/media/${cleanUri}`;
+        } 
+        else {
+            // It's already a normal link
+            elPic.src = rawUrl;
         }
     }
 
