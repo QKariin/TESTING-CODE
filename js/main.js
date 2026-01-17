@@ -395,6 +395,8 @@ function updateStats() {
         if (pb) pb.style.width = Math.min(100, Math.max(0, progress)) + "%";
     }
     updateKneelingStatus(); 
+    syncMobileDashboard();
+
 }
 
 // =========================================
