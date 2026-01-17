@@ -395,111 +395,63 @@ function updateStats() {
         if (pb) pb.style.width = Math.min(100, Math.max(0, progress)) + "%";
     }
     updateKneelingStatus(); 
-    syncMobileDashboard();
-
 }
 
 // =========================================
-// PART 1: MOBILE LOGIC (DASHBOARD & NAVIGATION)
+// PART 1: BUTTON LOGIC (KEEP THIS)
 // =========================================
 
-// 1. STATS TOGGLE (The Expand Button)
-window.toggleMobileStats = function() {
-    const drawer = document.getElementById('mobStatsContent');
-    const btn = document.querySelector('.mob-expand-btn');
-    if(drawer) {
-        drawer.classList.toggle('open');
-        if(drawer.classList.contains('open')) btn.innerText = "▲ COLLAPSE DATA ▲";
-        else btn.innerText = "▼ PERFORMANCE DATA ▼";
+// 1. PROFILE BUTTON
+window.toggleMobileMenu = function() {
+    const sidebar = document.querySelector('.layout-left');
+    if (sidebar) sidebar.classList.toggle('mobile-open');
+};
+
+// 2. KNEEL BUTTON
+window.triggerKneel = function() {
+    const sidebar = document.querySelector('.layout-left');
+    const realBtn = document.querySelector('.kneel-bar-graphic');
+
+    if (sidebar) sidebar.classList.add('mobile-open'); // Open drawer
+
+    if (realBtn) {
+        // Highlight logic
+        realBtn.style.boxShadow = "0 0 20px var(--neon-red)";
+        realBtn.style.borderColor = "var(--neon-red)";
+        setTimeout(() => {
+            realBtn.style.boxShadow = "";
+            realBtn.style.borderColor = "";
+        }, 1000);
     }
 };
 
-// 2. VIEW SWITCHER (Home vs Chat)
+// 3. LOGS BUTTON (With Chat Scroll Fix)
 window.toggleMobileView = function(viewName) {
-    const home = document.getElementById('viewMobileHome');
-    const chat = document.getElementById('viewServingTop'); // Desktop container often holds mobile chat
-    const chatContainer = document.querySelector('.chat-container');
-    
-    // RESET: Hide all mobile views
-    if(home) home.style.display = 'none';
-    if(chat) chat.style.display = 'none'; // Depending on your structure, chat might be here
-    if(chatContainer) chatContainer.style.display = 'none';
-
-    // SHOW: Target View
     if (viewName === 'chat') {
-        if(chatContainer) {
-            chatContainer.style.display = 'flex';
-            // Scroll Fix
-            const chatBox = document.getElementById('chatBox');
-            if (chatBox) setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
-        } else if (chat) {
-            chat.style.display = 'flex';
+        const chatContainer = document.querySelector('.chat-container');
+        if (chatContainer) {
+            chatContainer.scrollIntoView({ behavior: "smooth", block: "center" });
         }
-    } 
-    else if (viewName === 'home') {
-        if(home) home.style.display = 'flex';
+        // Force scroll to bottom of chat history
+        const chatBox = document.getElementById('chatBox');
+        if (chatBox) {
+            setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 300);
+        }
     }
-    
-    // Close sidebar if open
     const sidebar = document.querySelector('.layout-left');
     if (sidebar) sidebar.classList.remove('mobile-open');
 };
 
-// 3. KNEEL BUTTON
-window.triggerKneel = function() {
+// 4. AUTO-CLOSE DRAWER
+document.addEventListener('DOMContentLoaded', () => {
+    const navLinks = document.querySelectorAll('.nav-btn');
     const sidebar = document.querySelector('.layout-left');
-    const realBtn = document.querySelector('.kneel-bar-graphic');
-    
-    // We still open the sidebar for kneeling because it has the physics bar
-    if (sidebar) sidebar.classList.add('mobile-open'); 
-
-    if (realBtn) {
-        realBtn.style.boxShadow = "0 0 20px var(--neon-red)";
-        setTimeout(() => realBtn.style.boxShadow = "", 1000);
+    if (navLinks && sidebar) {
+        navLinks.forEach(btn => {
+            btn.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
+        });
     }
-};
-
-// 4. DATA SYNC (Connects Backend to Mobile Dashboard)
-// *** IMPORTANT: You must find your existing updateStats() function in main.js
-// *** and ADD these lines to the bottom of it. Or just paste this helper at the bottom of the file
-// *** and call it.
-window.syncMobileDashboard = function() {
-    if (!window.gameStats || !window.userProfile) return;
-
-    // Header Data
-    const elName = document.getElementById('mobName');
-    const elHier = document.getElementById('mobHierarchy');
-    const elPoints = document.getElementById('mobPoints');
-    const elCoins = document.getElementById('mobCoins');
-    const elPic = document.getElementById('mobProfilePic');
-
-    if (elName) elName.innerText = window.userProfile.name || "SLAVE";
-    if (elHier) elHier.innerText = window.userProfile.hierarchy || "INITIATE";
-    if (elPoints) elPoints.innerText = window.gameStats.points || 0;
-    if (elCoins) elCoins.innerText = window.gameStats.coins || 0;
-    
-    // Profile Pic
-    if (elPic && window.userProfile.profilePicture) {
-        // Use the optimize function if available, else raw
-        elPic.src = window.userProfile.profilePicture; 
-    }
-
-    // Stats Drawer
-    if (document.getElementById('mobStreak')) document.getElementById('mobStreak').innerText = window.gameStats.taskdom_streak || 0;
-    if (document.getElementById('mobTotal')) document.getElementById('mobTotal').innerText = window.gameStats.taskdom_total_tasks || 0;
-    if (document.getElementById('mobCompleted')) document.getElementById('mobCompleted').innerText = window.gameStats.taskdom_completed_tasks || 0;
-    if (document.getElementById('mobKneels')) document.getElementById('mobKneels').innerText = window.gameStats.kneelCount || 0;
-    
-    // Progress Bar (Simple version)
-    if (document.getElementById('mobNextLevel')) {
-        // Simple mock or grab from your LEVELS array if available
-        document.getElementById('mobNextLevel').innerText = "NEXT RANK"; 
-    }
-};
-
-// 5. UPDATE FOOTER CLICK (Profile -> Home)
-// Go to your 'buildAppFooter' function in Part 2 and change the 
-// PROFILE button onclick to: window.toggleMobileView('home')
+});
 
 
 // =========================================
