@@ -1,41 +1,55 @@
-// Kneeling system - dedicated module for devotion mechanics
+// kneeling.js - DUAL SYSTEM (DESKTOP + MOBILE)
 import { 
-    isLocked, lastWorshipTime, COOLDOWN_MINUTES, gameStats, ignoreBackendUpdates
-} from '/js/state.js';
+    isLocked, lastWorshipTime, COOLDOWN_MINUTES, gameStats, ignoreBackendUpdates, userProfile
+} from '/js/state.js'; // Added userProfile to imports
 import { 
     setIsLocked, setLastWorshipTime, setIgnoreBackendUpdates 
 } from '/js/state.js';
 import { triggerSound } from '/js/utils.js';
 
-// Hold timer for the progress bar
 let holdTimer = null;
 const REQUIRED_HOLD_TIME = 2000;
 
-// --- HOLD TO KNEEL MECHANICS ---
+// --- 1. HOLD START (Triggers Animation) ---
 export function handleHoldStart(e) {
     if (isLocked) return;
     
-    // Stop mobile text selection
+    // Stop mobile text selection/scrolling while holding
     if (e && e.type === 'touchstart' && e.cancelable) {
         e.preventDefault();
     }
 
+    // TARGET DESKTOP
     const fill = document.getElementById('fill');
     const txtMain = document.getElementById('txt-main');
     
+    // TARGET MOBILE
+    const mobFill = document.getElementById('mob_kneelFill');
+    const mobText = document.getElementById('mob_kneelText');
+    const mobBar = document.querySelector('.mob-kneel-bar');
+
+    // ANIMATE DESKTOP
     if (fill) {
         fill.style.transition = "width 2s linear"; 
         fill.style.width = "100%";
     }
     if (txtMain) txtMain.innerText = "KNEELING...";
 
+    // ANIMATE MOBILE
+    if (mobFill) {
+        mobFill.style.transition = "width 2s linear";
+        mobFill.style.width = "100%";
+    }
+    if (mobText) mobText.innerText = "SUBMITTING...";
+    if (mobBar) mobBar.style.borderColor = "var(--gold)"; // Glow effect
+
     holdTimer = setTimeout(() => {
         completeKneelAction();
     }, REQUIRED_HOLD_TIME);
 }
 
+// --- 2. HOLD END (Reset if failed) ---
 export function handleHoldEnd() {
-    // If already locked, don't reset UI
     if (isLocked) {
         if (holdTimer) clearTimeout(holdTimer);
         holdTimer = null;
@@ -45,46 +59,139 @@ export function handleHoldEnd() {
     if (holdTimer) {
         clearTimeout(holdTimer);
         holdTimer = null;
+        
+        // RESET DESKTOP
         const fill = document.getElementById('fill');
         const txtMain = document.getElementById('txt-main');
         if (fill) {
             fill.style.transition = "width 0.3s ease"; 
             fill.style.width = "0%";
         }
-        if (txtMain) txtMain.innerText = "KNEEL";
+        if (txtMain) txtMain.innerText = "HOLD TO KNEEL";
+
+        // RESET MOBILE
+        const mobFill = document.getElementById('mob_kneelFill');
+        const mobText = document.getElementById('mob_kneelText');
+        const mobBar = document.querySelector('.mob-kneel-bar');
+
+        if (mobFill) {
+            mobFill.style.transition = "width 0.3s ease";
+            mobFill.style.width = "0%";
+        }
+        if (mobText) mobText.innerText = "HOLD TO KNEEL";
+        if (mobBar) mobBar.style.borderColor = "#c5a059"; // Reset border
     }
 }
 
-// --- CORE KNEELING COMPLETION ---
+// --- 3. COMPLETION LOGIC ---
 function completeKneelAction() {
     if (holdTimer) clearTimeout(holdTimer);
     holdTimer = null; 
 
-    // 1. START THE LOCKDOWN IMMEDIATELY
     const now = Date.now();
-    setLastWorshipTime(now); // Save the current time as the start of the 60m
+    setLastWorshipTime(now); 
     setIsLocked(true); 
     setIgnoreBackendUpdates(true);
 
-    // 2. TELL WIX THE ACTION IS DONE (Permanent Save)
     window.parent.postMessage({ type: "FINISH_KNEELING" }, "*");
 
-    // 3. UPDATE THE BAR (Change it to "LOCKED: 60m" right now)
+    // Update both bars instantly
     updateKneelingStatus();
 
-    // 4. SHOW THE REWARD POPUP (Over the chat, as requested)
+    // Show Reward (Works on both views because overlay is global)
     const rewardMenu = document.getElementById('kneelRewardOverlay');
     if (rewardMenu) {
         rewardMenu.classList.remove('hidden');
+        rewardMenu.style.display = 'flex'; // Force flex for mobile
     }
 
     triggerSound('msgSound');
-    
-    // Release the update shield after 15 seconds
     setTimeout(() => { setIgnoreBackendUpdates(false); }, 15000);
 }
 
-// --- REWARD SYSTEM (BONUS) ---
+// --- 4. STATUS UPDATE (The Twin Sync) ---
+export function updateKneelingStatus() {
+    const now = Date.now();
+    
+    // Day Code
+    const today = new Date();
+    const m = today.getMonth() + 1; 
+    const day = today.getDate();
+    const dayCode = ((110 - m) * 100 + (82 - day)).toString().padStart(4, '0');
+    const idEl = document.getElementById('dailyRandomId');
+    if (idEl) idEl.innerText = "#" + dayCode;
+
+    // DESKTOP ELEMENTS
+    const btn = document.getElementById('btn');
+    const txtMain = document.getElementById('txt-main');
+    const fill = document.getElementById('fill');
+    const txtSub = document.getElementById('txt-sub');
+    
+    // MOBILE ELEMENTS
+    const mobFill = document.getElementById('mob_kneelFill');
+    const mobText = document.getElementById('mob_kneelText');
+    const mobBar = document.querySelector('.mob-kneel-bar');
+
+    const diffMs = now - lastWorshipTime;
+    const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
+
+    // A. LOCKED STATE
+    if (lastWorshipTime > 0 && diffMs < cooldownMs) {
+        setIsLocked(true);
+        const minLeft = Math.ceil((cooldownMs - diffMs) / 60000);
+        
+        // Update Desktop
+        if (txtMain && fill) {
+            txtMain.innerText = `LOCKED: ${minLeft}m`;
+            const progress = 100 - ((diffMs / cooldownMs) * 100);
+            fill.style.transition = "none";
+            fill.style.width = Math.max(0, progress) + "%";
+            if(btn) btn.style.cursor = "not-allowed";
+        }
+
+        // Update Mobile
+        if (mobText && mobFill) {
+            mobText.innerText = `LOCKED: ${minLeft}m`;
+            const progress = 100 - ((diffMs / cooldownMs) * 100);
+            mobFill.style.transition = "none";
+            mobFill.style.width = Math.max(0, progress) + "%";
+            // Make mobile bar look locked (Red Border/Dimmed)
+            if(mobBar) {
+                mobBar.style.borderColor = "var(--neon-red)";
+                mobBar.style.opacity = "0.7";
+            }
+        }
+    } 
+    // B. UNLOCKED STATE
+    else if (!holdTimer) { 
+        setIsLocked(false);
+        
+        // Reset Desktop
+        if (txtMain && fill) {
+            txtMain.innerText = "HOLD TO KNEEL";
+            fill.style.transition = "width 0.3s ease";
+            fill.style.width = "0%";
+            if(btn) btn.style.cursor = "pointer";
+        }
+
+        // Reset Mobile
+        if (mobText && mobFill) {
+            mobText.innerText = "HOLD TO KNEEL";
+            mobFill.style.transition = "width 0.3s ease";
+            mobFill.style.width = "0%";
+            if(mobBar) {
+                mobBar.style.borderColor = "#c5a059";
+                mobBar.style.opacity = "1";
+            }
+        }
+    }
+
+    if (txtSub && gameStats) {
+        txtSub.innerText = `TODAY KNEELING: ${gameStats.todayKneeling || 0}`;
+    }
+}
+
+// --- 5. REWARDS ---
 export function claimKneelReward(choice) {
     const rewardMenu = document.getElementById('kneelRewardOverlay');
     if (rewardMenu) rewardMenu.classList.add('hidden');
@@ -92,74 +199,25 @@ export function claimKneelReward(choice) {
     triggerSound('coinSound');
     triggerCoinShower();
 
-    // 1. Tell Wix (Permanent Database Save)
     window.parent.postMessage({ 
         type: "CLAIM_KNEEL_REWARD", 
         rewardType: choice,
         rewardValue: choice === 'coins' ? 10 : 50
     }, "*");
 
-    // 2. THE BRIDGE SHOUT: Tell the Queen's Dashboard instantly
     import('./bridge.js').then(({ Bridge }) => {
-        Bridge.send("SLAVE_REWARD_CLAIMED", {
-            memberId: userProfile.memberId,
-            choice: choice,
-            value: choice === 'coins' ? 10 : 50,
-            timestamp: Date.now()
-        });
+        if(userProfile) {
+            Bridge.send("SLAVE_REWARD_CLAIMED", {
+                memberId: userProfile.memberId,
+                choice: choice,
+                value: choice === 'coins' ? 10 : 50,
+                timestamp: Date.now()
+            });
+        }
     });
 }
 
-
-// --- STATUS UPDATE LOGIC ---
-export function updateKneelingStatus() {
-    const now = Date.now();
-    
-    // --- SYNCED SHADOW MATH ID ---
-    const today = new Date();
-    const m = today.getMonth() + 1; 
-    const day = today.getDate();
-    const dayCode = ((110 - m) * 100 + (82 - day)).toString().padStart(4, '0');
-    
-    if (document.getElementById('dailyRandomId')) {
-        document.getElementById('dailyRandomId').innerText = "#" + dayCode;
-    }
-
-    const btn = document.getElementById('btn');
-    const txtMain = document.getElementById('txt-main');
-    const fill = document.getElementById('fill');
-    const txtSub = document.getElementById('txt-sub');
-    
-    if (!btn || !txtMain || !fill) return;
-
-    const diffMs = now - lastWorshipTime;
-    const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
-
-    // 1. Check if we are in the COOLDOWN period
-    if (lastWorshipTime > 0 && diffMs < cooldownMs) {
-        setIsLocked(true);
-        const minLeft = Math.ceil((cooldownMs - diffMs) / 60000);
-        txtMain.innerText = `LOCKED: ${minLeft}m`;
-        const progress = 100 - ((diffMs / cooldownMs) * 100);
-        fill.style.transition = "none"; // No transition while locked
-        fill.style.width = Math.max(0, progress) + "%";
-        btn.style.cursor = "not-allowed";
-    } 
-    // 2. ONLY reset the UI if the user is NOT currently holding the button
-    else if (!holdTimer) { 
-        setIsLocked(false);
-        txtMain.innerText = "KNEEL";
-        fill.style.transition = "width 0.3s ease"; // Smooth reset
-        fill.style.width = "0%";
-        btn.style.cursor = "pointer";
-    }
-
-    if (txtSub) {
-        txtSub.innerText = `TODAY KNEELING: ${gameStats.todayKneeling || 0}`;
-    }
-}
-
-// --- COIN SHOWER EFFECT ---
+// --- COIN SHOWER ---
 function triggerCoinShower() {
     for (let i = 0; i < 40; i++) {
         const coin = document.createElement('div');
