@@ -575,7 +575,7 @@ window.syncMobileDashboard = function() {
             transform: 'translateX(-50%)', // Correct center offset
             
             width: '100%', // Use full width instead of 110%
-            height: '80px', // Slightly taller for the center button
+            height: '60px', // Slightly taller for the center button
             background: 'rgba(10, 10, 10, 0.95)', 
             borderTop: '1px solid rgba(255, 255, 255, 0.15)',
             boxShadow: '0 -5px 20px rgba(0,0,0,0.5)',
