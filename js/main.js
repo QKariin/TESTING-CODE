@@ -641,43 +641,16 @@ window.syncMobileDashboard = function() {
         document.body.appendChild(footer);
     }
 
-    // 3. RUN (WITH FOCUS MODE ADDED)
+    // 3. RUN
     window.addEventListener('load', () => { 
         lockVisuals(); 
         buildAppFooter();
-        
-        // --- FOCUS MODE (The Keyboard Fix) ---
-        const input = document.getElementById('chatMsgInput');
-        if (input) {
-            // WHEN TYPING: Hide Footer, Drop Input
-            input.addEventListener('focus', () => {
-                const footer = document.getElementById('app-mode-footer');
-                const chatBar = document.querySelector('.chat-footer');
-                
-                if (footer) footer.style.display = 'none'; // Hide Menu
-                if (chatBar) chatBar.style.bottom = '0px'; // Drop Chat Bar
-            });
-
-            // WHEN DONE: Show Footer, Raise Input
-            input.addEventListener('blur', () => {
-                const footer = document.getElementById('app-mode-footer');
-                const chatBar = document.querySelector('.chat-footer');
-                
-                // Small delay to prevent UI jumping if you hit Send
-                setTimeout(() => {
-                    if (footer) footer.style.display = 'flex';
-                    if (chatBar) chatBar.style.bottom = '80px';
-                }, 200);
-            });
-        }
-
         // FORCE HOME ON LOAD
         if(window.toggleMobileView) window.toggleMobileView('home'); 
     });
-    
     window.addEventListener('resize', lockVisuals);
-    lockVisuals(); 
-    buildAppFooter();
+    lockVisuals(); buildAppFooter();
+})();
 
 // TIMER SYNC (The Twin System)
 setInterval(() => {
