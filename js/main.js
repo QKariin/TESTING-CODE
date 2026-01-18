@@ -557,7 +557,8 @@ window.syncMobileDashboard = function() {
         });
     }
 
-// 2. BUILD FOOTER (FULL WIDTH 5-SLOT)
+// 2. BUILD FOOTER (FLOATING CAPSULE + RED CHAT)
+   // 2. BUILD FOOTER (5-SLOT COMMAND CENTER)
     function buildAppFooter() {
         if (document.getElementById('app-mode-footer')) return;
         
@@ -565,58 +566,33 @@ window.syncMobileDashboard = function() {
         footer.id = 'app-mode-footer';
         
         Object.assign(footer.style, {
-            display: 'flex', 
-            justifyContent: 'space-around', // Equal spacing
-            alignItems: 'center',
-            
-            // FULL WIDTH STYLE
-            position: 'fixed', 
-            bottom: '0', 
-            left: '0', 
-            width: '100%', 
-            height: '80px',
-            
-            background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
-            paddingBottom: 'env(safe-area-inset-bottom)',
-            zIndex: '2147483647', 
-            borderTop: '1px solid rgba(197, 160, 89, 0.3)', // Gold Border
-            backdropFilter: 'blur(10px)', 
-            pointerEvents: 'auto', 
-            touchAction: 'none'
-        });
-
-        footer.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-
-        // STANDARD BUTTON STYLE (Width = 20% because 100% / 5 buttons)
-        const btnStyle = "background:none; border:none; color:#666; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer;";
+        display: 'flex', 
+        justifyContent: 'space-around', 
         
-        // ACTIVE/HIGHLIGHT STYLE (For the Middle Chat Button)
-        const chatStyle = "background:none; border:none; color:#ff003c; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; text-shadow: 0 0 10px rgba(255,0,60,0.4);";
-
-        footer.innerHTML = `
-            <button onclick="window.toggleMobileView('home')" style="${btnStyle}">
-                <span style="font-size:1.4rem; color:#888;">◈</span><span>PROFILE</span>
-            </button>
-            
-            <button onclick="window.toggleMobileView('record')" style="${btnStyle}">
-                <span style="font-size:1.4rem; color:#888;">▦</span><span>RECORD</span>
-            </button>
-            
-            <!-- MIDDLE: CHAT (Red Highlight) -->
-            <button onclick="window.toggleMobileView('chat')" style="${chatStyle}">
-                <span style="font-size:1.6rem; color:#ff003c;">❖</span><span>LOGS</span>
-            </button>
-
-            <button onclick="window.toggleMobileView('queen')" style="${btnStyle}">
-                <span style="font-size:1.4rem; color:#888;">♛</span><span>QUEEN</span>
-            </button>
-
-            <button onclick="window.toggleMobileView('global')" style="${btnStyle}">
-                <span style="font-size:1.4rem; color:#888;">🌐</span><span>GLOBAL</span>
-            </button>
-        `;
-        document.body.appendChild(footer);
-    }
+        // Push everything to the top of the 70px bar
+        alignItems: 'flex-start', 
+        
+        position: 'fixed', 
+        bottom: '10px', 
+        left: '0px',
+        width: '100%', 
+        
+        // Exact height you want
+        height: '70px', 
+        
+        // This is the specific number to move items up or down from the top edge
+        paddingbottom: '30px', 
+        
+        background: 'rgba(10, 10, 10, 0.95)', 
+        borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+        zIndex: '2147483647', 
+        backdropFilter: 'blur(15px)', 
+        pointerEvents: 'auto', 
+        touchAction: 'none',
+        
+        // Required so the 70px height stays exact
+        boxSizing: 'border-box'
+    });
 
         footer.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
