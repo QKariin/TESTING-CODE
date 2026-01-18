@@ -436,13 +436,14 @@
 <!-- =======================================================
      UNIVERSE B: MOBILE APP (KAIZEN LAYOUT)
      ======================================================= -->
-<!-- 🟢 MOBILE UNIVERSE (RITUAL STACK LAYOUT) -->
-<div id="MOBILE_APP">
+<!-- 🟢 MOBILE UNIVERSE (FINAL INTEGRATED LAYOUT) -->
+<div id="MOBILE_APP" style="display:none;">
     
-    <div id="viewMobileHome" class="mob-frame">
+    <!-- VIEW 1: RITUAL DASHBOARD (The New Stack) -->
+    <div id="viewMobileHome" class="mob-frame" style="display:flex; flex-direction:column;">
         
-        <!-- 1. IDENTITY (The Face) -->
-        <div class="mob-identity-stack">
+        <!-- HEADER -->
+        <div class="mob-header">
             <div class="mob-hex-wrap large">
                 <img id="mob_profilePic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="mob-hex-img">
                 <div id="mob_rankStamp" class="mob-rank-stamp">INITIATE</div>
@@ -450,9 +451,9 @@
             <div id="mob_slaveName" class="mob-name-large">SLAVE</div>
         </div>
 
-        <!-- 2. THE EXECUTION BAR (Wide Kneel Button) -->
+        <!-- CARD 1: THE EXECUTION BAR (Wide Kneel Button) -->
         <div class="mob-section-wrapper">
-            <!-- ADDED CLASS: mob-kneel-zone (So JS finds it) -->
+            <!-- Added mob-kneel-zone class for JS -->
             <div class="mob-kneel-bar mob-kneel-zone" 
                  onmousedown="if(window.handleHoldStart) window.handleHoldStart(event)" 
                  onmouseup="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
@@ -463,13 +464,13 @@
                 <div id="mob_kneelFill" class="mob-bar-fill"></div>
                 <div class="mob-bar-content">
                     <span class="kneel-icon-sm">◈</span>
-                    <!-- ADDED CLASS: kneel-label (So JS finds it) -->
+                    <!-- Added kneel-label class for JS -->
                     <span id="mob_kneelText" class="kneel-text kneel-label">HOLD TO KNEEL</span>
                 </div>
             </div>
         </div>
 
-        <!-- 3. THE HEATMAP (24 Squares) -->
+        <!-- CARD 2: THE HEATMAP (24 Squares) -->
         <div class="mob-section-wrapper">
             <div class="mob-grid-label-center">CYCLE PROGRESS</div>
             <div id="mob_streakGrid" class="mob-streak-strip">
@@ -477,7 +478,7 @@
             </div>
         </div>
 
-        <!-- 4. THE TASK DECK -->
+        <!-- CARD 3: THE TASK DECK -->
         <div class="mob-card operations-card">
             <div class="op-status-row">
                 <div id="mob_statusLight" class="status-light red"></div>
@@ -492,7 +493,7 @@
             </div>
         </div>
 
-      <!-- MOBILE REWARD OVERLAY (Hidden by default) -->
+        <!-- MOBILE REWARD OVERLAY (Twin) -->
         <div id="mobKneelReward" class="mob-reward-overlay hidden">
             <div class="mob-reward-card">
                 <div class="mob-hex-wrap small-reward">
@@ -505,11 +506,64 @@
                 </div>
             </div>
         </div>
+
         <!-- Spacer for Footer -->
         <div style="height: 120px;"></div>
-
     </div>
+
+    <!-- VIEW 2: MOBILE RECORD (Vertical Vault) -->
+    <div id="viewMobileRecord" class="mob-frame" style="display:none; flex-direction:column;">
+        <div class="mob-header">
+            <div class="mob-name" style="margin-top:20px;">SLAVE RECORD</div>
+        </div>
+
+        <!-- Altar (Top 3) -->
+        <div class="mob-altar-container">
+            <div class="mob-grid-label-center">HIGHEST MERIT</div>
+            <div class="mob-pyramid-stage">
+                <div class="mob-idol side"><img id="mobRec_Slot2" src=""><div class="mob-rank-badge">II</div></div>
+                <div class="mob-idol side right"><img id="mobRec_Slot3" src=""><div class="mob-rank-badge">III</div></div>
+                <div class="mob-idol center"><img id="mobRec_Slot1" src=""><div class="mob-rank-badge main">I</div></div>
+            </div>
+        </div>
+
+        <!-- Grid (Archive) -->
+        <div class="mob-section-wrapper" style="margin-top:30px;">
+            <div class="mob-grid-label-center">FULL ARCHIVE</div>
+            <div id="mobRec_Grid" class="mob-archive-grid"></div>
+        </div>
+        
+        <div style="height: 120px;"></div>
+    </div>
+
 </div>
 
+<!-- ADD THIS SWITCHER SCRIPT AT THE VERY BOTTOM (Before </body>) -->
+<script>
+    function checkDevice() {
+        const isMobile = window.innerWidth <= 768;
+        const desktop = document.getElementById('DESKTOP_APP');
+        const mobile = document.getElementById('MOBILE_APP');
+        const dashboard = document.getElementById('viewMobileHome');
+        
+        if (isMobile) {
+            if(desktop) desktop.style.display = 'none';
+            if(mobile) mobile.style.display = 'flex';
+            // Force Dashboard Visible
+            if(dashboard) {
+                dashboard.style.display = 'flex';
+                dashboard.style.visibility = 'visible';
+                dashboard.style.opacity = '1';
+            }
+        } else {
+            if(mobile) mobile.style.display = 'none';
+            if(desktop) desktop.style.display = 'flex'; 
+        }
+    }
+    // Run immediately and on resize
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    window.addEventListener('load', checkDevice);
+</script>
 </body>
 </html>
