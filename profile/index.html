@@ -2,40 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  
+  <!-- 1. VIEWPORT & BLACK STATUS BAR FIXES -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
   <title>Command Console</title>
   
   <script type="module" src="../js/main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
-  <!-- FONTS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@200;300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet" />
 
-  <!-- DESKTOP STYLES -->
   <link rel="stylesheet" href="../css/chat.css">
   <link rel="stylesheet" href="../css/profile.css">
   <link rel="stylesheet" href="../css/reward.css">
 
-  <!-- MOBILE STYLES (INJECTED DIRECTLY TO PREVENT LOADING ERRORS) -->
   <style>
+    /* =========================================
+       THE "BLACK HOLE" FIX (KILLS WHITE GAP)
+       ========================================= */
+    
+    /* 1. PAINT THE ROOT BLACK */
     html {
-        background-color: #000000 !important; /* Paints the browser canvas black */
+        background-color: #000000 !important;
+        background: #000000 !important;
+        
+        /* 2. KILL THE BOUNCE (RUBBER BANDING) */
+        overscroll-behavior: none !important;
+        overflow: hidden; /* Stop the page itself from scrolling */
+        height: 100%;
     }
-    /* CRITICAL MOBILE STYLES */
-    #MOBILE_APP { display: none; }
+
+    body {
+        background-color: #000000 !important;
+        background: #000000 !important;
+        overscroll-behavior: none !important;
+        height: 100%;
+        width: 100%;
+        position: fixed; /* Freezes the body in place */
+    }
+
+    /* 3. MOBILE APP CONTAINER */
+    #MOBILE_APP { 
+        display: none; 
+        background-color: #000000 !important;
+    }
 
     @media screen and (max-width: 768px) {
-        /* Force Body Black */
-        body {
-            background-image: none !important;
-            background-color: #000000 !important;
-            background: #000000 !important;
-            color: #ffffff; /* Default text white */
-        }
-      
+        #DESKTOP_APP { display: none !important; }
+
         #MOBILE_APP {
             display: flex !important;
             flex-direction: column;
@@ -44,136 +63,69 @@
             position: fixed;
             top: 0; left: 0;
             z-index: 999999;
-            background: #000000;
+            background: #000000 !important; /* TRIPLE CHECK BLACK */
             color: white;
             font-family: 'Cinzel', serif;
             overflow: hidden;
         }
-        #DESKTOP_APP { display: none !important; }
 
+        /* The rest of your mobile styles... */
         .mob-frame {
-            flex: 1; overflow-y: auto; padding: 30px 20px; padding-bottom: 120px;
-            display: flex; flex-direction: column; align-items: center; gap: 25px; width: 100%;
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            /* Allow scrolling INSIDE, but don't bounce the parent */
+            overscroll-behavior-y: contain; 
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* 1. IDENTITY STACK */
-        .mob-identity-stack { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 10px; }
-        .mob-hex-wrap.large {
-            width: 130px; height: 145px; position: relative;
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            background: linear-gradient(135deg, #c5a059, #444); padding: 3px;
-        }
-        .mob-hex-img { width: 100%; height: 100%; object-fit: cover; background: #111; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
-        .mob-rank-stamp {
-            position: absolute; bottom: 10px; right: -15px;
-            background: #000; border: 1px solid #c5a059; color: #c5a059;
-            font-family: 'Orbitron', sans-serif; font-size: 0.6rem; padding: 4px 8px;
-            transform: rotate(-5deg); box-shadow: 0 0 15px rgba(0,0,0,0.8);
-        }
-        .mob-name-large { font-size: 1.5rem; letter-spacing: 5px; color: #fff; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
-
-        /* 2. KNEEL BAR */
-        .mob-section-wrapper { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .mob-kneel-bar {
-            width: 100%; height: 60px;
-            background: #080808; border: 1px solid #c5a059; border-radius: 4px;
-            position: relative; overflow: hidden; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
-            transition: 0.2s;
-        }
-        .mob-kneel-bar:active { border-color: #fff; transform: scale(0.98); }
+        /* ... [KEEP THE REST OF YOUR CSS HERE] ... */
+        /* Paste the rest of your Header/Card/Grid CSS below this line if it got cut off */
         
-        .mob-bar-fill {
-            position: absolute; bottom: 0; left: 0; width: 0%; height: 100%; /* Fills Horizontal */
-            background: linear-gradient(90deg, #8b0000, #ff003c); z-index: 1; transition: width 0.1s linear;
-        }
+        /* Header */
+        .mob-header { margin-top: 30px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .mob-hex-wrap { width: 100px; height: 110px; position: relative; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); background: linear-gradient(135deg, #c5a059, #444); padding: 2px; }
+        .mob-hex-img { width: 100%; height: 100%; object-fit: cover; background: #111; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+        .mob-rank-stamp { position: absolute; bottom: 5px; right: -10px; background: #000; border: 1px solid #c5a059; color: #c5a059; font-family: 'Orbitron', sans-serif; font-size: 0.5rem; padding: 2px 6px; transform: rotate(-5deg); box-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        .mob-name { font-size: 1.2rem; letter-spacing: 4px; color: #eee; text-transform: uppercase; }
 
-        .mob-kneel-fill {
-            position: absolute; 
-            bottom: 0; 
-            left: 0; 
-            height: 100%; /* Full Height */
-            width: 0%;    /* Start Empty (Width) */
-            background: linear-gradient(90deg, #8b0000, #ff003c); /* Left-to-Right Gradient */
-            z-index: 1; 
-            transition: width 0.1s linear; /* Allow JS to animate width */
-        }
-        .mob-bar-content { z-index: 2; display: flex; align-items: center; gap: 10px; }
-        .kneel-icon-sm { color: #c5a059; font-size: 1.2rem; }
-        .kneel-text { font-family: 'Orbitron'; font-size: 0.8rem; letter-spacing: 3px; color: #ccc; }
-      
+        /* Cards */
+        .mob-card { width: 100%; background: rgba(18, 18, 18, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .devotion-card { display: flex; flex-direction: row; height: 140px; gap: 15px; }
+        .mob-kneel-zone { flex: 0 0 35%; background: #080808; border: 1px solid #333; border-radius: 8px; position: relative; overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .mob-kneel-inner { z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .kneel-icon { font-size: 1.5rem; color: #555; }
+        .kneel-label { font-size: 0.6rem; letter-spacing: 2px; color: #555; font-family:'Orbitron'; }
+        .mob-kneel-fill { position: absolute; bottom: 0; left: 0; width: 0%; height: 100%; background: linear-gradient(90deg, #8b0000, #ff003c); z-index: 1; transition: width 0.1s linear; }
 
-        /* 3. HEATMAP STRIP */
-        .mob-grid-label-center { font-size: 0.6rem; color: #555; letter-spacing: 2px; margin-bottom: 5px; }
-        .mob-streak-strip {
-            display: grid; grid-template-columns: repeat(12, 1fr); /* 2 Rows of 12 */
-            gap: 4px; width: 100%;
-        }
-        .streak-sq { height: 15px; background: #1a1a1a; border-radius: 2px; }
+        .mob-grid-zone { flex: 1; display: flex; flex-direction: column; }
+        .mob-grid-label { font-size: 0.6rem; color: #666; margin-bottom: 8px; letter-spacing: 1px; }
+        .mob-streak-grid { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(3, 1fr); gap: 4px; height: 100%; }
+        .streak-sq { background: #1a1a1a; border-radius: 2px; }
         .streak-sq.active { background: #c5a059; box-shadow: 0 0 5px #c5a059; }
 
-        /* 4. TASK CARD */
-        .operations-card {
-            width: 100%; background: rgba(20, 20, 20, 0.95); 
-            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 2px solid #333;
-            border-radius: 8px; padding: 20px; margin-top: 10px;
-        }
-        .op-status-row { display: flex; align-items: center; gap: 10px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .status-light { width: 10px; height: 10px; border-radius: 50%; background: #333; }
-        .status-light.red { background: #ff003c; box-shadow: 0 0 10px #ff003c; }
-        .status-light.green { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
-        .status-text { font-family: 'Orbitron', sans-serif; font-size: 1rem; color: #fff; letter-spacing: 2px; }
+        .operations-card { display: flex; flex-direction: column; gap: 15px; border-top: 2px solid #333; }
+        .op-status-row { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .status-light { width: 8px; height: 8px; border-radius: 50%; background: #333; }
+        .status-light.red { background: #ff003c; box-shadow: 0 0 8px #ff003c; }
+        .status-light.green { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+        .status-text { font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: #888; letter-spacing: 2px; }
 
-        .mob-action-btn {
-            width: 100%; padding: 15px; background: transparent; margin-top: 15px;
-            border: 1px solid #c5a059; color: #c5a059;
-            font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.9rem;
-            letter-spacing: 2px; cursor: pointer;
-        }
-        .mob-timer {
-            text-align: center; font-family: 'Rajdhani', sans-serif; font-size: 3rem;
-            font-weight: 700; color: white; margin-top: 10px;
-        }
+        .mob-action-btn { width: 100%; padding: 15px; background: transparent; border: 1px solid #c5a059; color: #c5a059; font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.9rem; letter-spacing: 2px; cursor: pointer; }
+        .mob-timer { text-align: center; font-family: 'Rajdhani', sans-serif; font-size: 2.5rem; font-weight: 700; color: white; }
         .hidden { display: none !important; }
+        
+        .mob-reward-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease; }
+        .mob-reward-card { background: rgba(20, 20, 20, 0.95); border: 1px solid #c5a059; padding: 40px 20px; border-radius: 4px; text-align: center; width: 85%; box-shadow: 0 0 30px rgba(197, 160, 89, 0.2); display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .mob-reward-title { font-family: 'Cinzel', serif; color: white; font-size: 1.2rem; letter-spacing: 2px; }
+        .mob-reward-actions { width: 100%; display: flex; flex-direction: column; gap: 10px; }
     }
-
-    /* MOBILE REWARD OVERLAY */
-    .mob-reward-overlay {
-        position: fixed; /* Floats over the dashboard */
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.9);
-        z-index: 9999; /* Below the footer, above the content */
-        display: flex; align-items: center; justify-content: center;
-        backdrop-filter: blur(8px);
-        animation: fadeIn 0.3s ease;
-    }
-
-    .mob-reward-card {
-        background: rgba(20, 20, 20, 0.95);
-        border: 1px solid var(--mob-gold);
-        padding: 40px 20px;
-        border-radius: 4px;
-        text-align: center;
-        width: 85%;
-        box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
-        display: flex; flex-direction: column; align-items: center; gap: 20px;
-    }
-
-    .mob-reward-title {
-        font-family: 'Cinzel', serif; color: white; 
-        font-size: 1.2rem; letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(255,255,255,0.3);
-    }
-
-    .mob-reward-actions { width: 100%; display: flex; flex-direction: column; gap: 10px; }
-    
-    /* Reuse Hexagon for decor */
-    .mob-hex-wrap.small-reward {
-        width: 60px; height: 65px; background: linear-gradient(135deg, #ffd700, #000);
-        margin-bottom: 10px;
-    }
-    
   </style>
 </head>
 <body>
