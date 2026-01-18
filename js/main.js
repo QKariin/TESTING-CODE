@@ -452,45 +452,28 @@ window.toggleMobileView = function(viewName) {
     if (chatCard) chatCard.style.setProperty('display', 'none', 'important');
 
     // 4. SHOW THE TARGET
-    if (viewName === 'home') {
+        if (viewName === 'home') {
         if(home) {
             home.style.display = 'flex';
             if(window.syncMobileDashboard) window.syncMobileDashboard();
         }
     }
     else if (viewName === 'record') {
-    if (mobRecord) {
-        mobRecord.style.display = 'flex';
+        if (mobRecord) {
+            mobRecord.style.display = 'flex';
 
-        // EXACT FIX: Force the gallery to use mobile IDs
-        if (window.galleryData) {
-            const mobGrid = document.getElementById('mobRec_Grid');
-            const mobHeap = document.getElementById('mobRec_Heap');
+            // --- START OF FIX ---
+            // DELETE the old logic that looked for .accepted or .failed
+            // REPLACE it with this simple call:
             
-            // Map CMS data to Mobile Record Grid
-            if (mobGrid && window.galleryData.accepted) {
-                mobGrid.innerHTML = window.galleryData.accepted.map(item => 
-                    `<div class="mob-scroll-item"><img src="${item.url}" class="mob-scroll-img"></div>`
-                ).join('');
+            if (window.renderGallery) {
+                window.renderGallery();
+            } else {
+                console.error("renderGallery function missing");
             }
-            
-            // Map CMS data to Mobile Heap
-            if (mobHeap && window.galleryData.failed) {
-                mobHeap.innerHTML = window.galleryData.failed.map(item => 
-                    `<div class="mob-scroll-item"><img src="${item.url}" class="mob-scroll-img" style="opacity:0.5;"></div>`
-                ).join('');
-            }
-
-            // Map Altar (Top 3)
-            [1, 2, 3].forEach(num => {
-                const slot = document.getElementById(`mobRec_Slot${num}`);
-                if (slot && window.galleryData.accepted[num-1]) {
-                    slot.src = window.galleryData.accepted[num-1].url;
-                }
-            });
+            // --- END OF FIX ---
         }
     }
-}
     else if (viewName === 'chat') {
         if(chatCard && mobileApp) {
             if (chatCard.parentElement !== mobileApp) {
