@@ -201,6 +201,73 @@
         position: absolute; top: 5px; right: 5px;
         font-size: 1rem; text-shadow: 0 0 5px black;
     }
+
+  /* --- 3D PYRAMID ALTAR (CSS FIX) --- */
+    .mob-pyramid-stage {
+        position: relative;
+        width: 100%;
+        height: 260px; /* Tall enough to fit the stack */
+        margin-top: 15px;
+        perspective: 1000px; /* Adds depth */
+    }
+
+    .mob-idol {
+        position: absolute;
+        background: #000;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .mob-idol img { 
+        width: 100%; 
+        height: 100%; 
+        object-fit: cover; 
+        display: block; 
+    }
+
+    /* RANK 1: CENTER (The King) */
+    .mob-idol.center {
+        width: 160px; 
+        height: 230px;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%); /* Dead Center */
+        z-index: 20; /* On Top */
+        border: 2px solid #c5a059; /* Gold Border */
+        box-shadow: 0 10px 40px rgba(0,0,0,0.9), 0 0 20px rgba(197, 160, 89, 0.2);
+    }
+
+    /* RANK 2: LEFT (The Servant) */
+    .mob-idol.side {
+        width: 130px; 
+        height: 190px;
+        top: 50px; /* Pushed down */
+        left: 10%; /* Pushed Left */
+        z-index: 5; /* Behind */
+        border: 1px solid #444;
+        filter: brightness(0.5) grayscale(50%); /* Dimmed */
+        transform: rotate(-6deg); /* Tilted In */
+    }
+
+    /* RANK 3: RIGHT (The Servant) */
+    .mob-idol.side.right {
+        left: auto; 
+        right: 10%; /* Pushed Right */
+        transform: rotate(6deg); /* Tilted In */
+    }
+    
+    /* Badges */
+    .mob-rank-badge {
+        position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+        background: #000; border: 1px solid #333; color: #888;
+        font-family: 'Cinzel', serif; font-size: 0.6rem; padding: 2px 6px;
+        z-index: 30;
+    }
+    .mob-rank-badge.main { 
+        border-color: #c5a059; color: #c5a059; 
+        bottom: 10px; /* Inside the card for the main one looks cleaner */
+        background: rgba(0,0,0,0.8);
+    }
     
   </style>
 </head>
