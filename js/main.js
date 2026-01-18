@@ -641,6 +641,7 @@ window.syncMobileDashboard = function() {
         document.body.appendChild(footer);
     }
 
+    // 3. RUN
     // 3. RUN (WITH FOCUS MODE ADDED)
     window.addEventListener('load', () => { 
         lockVisuals(); 
