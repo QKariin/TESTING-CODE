@@ -162,39 +162,6 @@
         width: 60px; height: 65px; background: linear-gradient(135deg, #ffd700, #000);
         margin-bottom: 10px;
     }
-
-    /* MOBILE RECORD (ARCHIVE GRID) */
-    .mob-archive-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr); /* 3 Columns */
-        gap: 3px;
-        width: 100%;
-        margin-top: 10px;
-    }
-
-    .mob-archive-item {
-        position: relative;
-        aspect-ratio: 1 / 1; /* Force Square Shape */
-        background: #111;
-        border: 1px solid #333;
-        overflow: hidden;
-    }
-
-    .mob-archive-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0.8;
-        transition: opacity 0.2s;
-    }
-    
-    .mob-archive-item:active .mob-archive-img { opacity: 1; }
-
-    /* Pending Badge for Grid */
-    .mob-pending-badge {
-        position: absolute; top: 5px; right: 5px;
-        font-size: 1rem; text-shadow: 0 0 5px black;
-    }
     
   </style>
 </head>
@@ -538,50 +505,8 @@
                 </div>
             </div>
         </div>
-        <!-- 2. MOBILE RECORD (THE VERTICAL VAULT) -->
-    <div id="viewMobileRecord" class="mob-frame" style="display:none;">
-        
-        <!-- HEADER -->
-        <div class="mob-header">
-            <div class="mob-name" style="margin-top:20px;">SLAVE RECORD</div>
-        </div>
-
-        <!-- TOP SECTION: THE ALTAR (Best 3) -->
-        <div class="mob-altar-container">
-            <div class="mob-grid-label-center">HIGHEST MERIT</div>
-            
-            <div class="mob-pyramid-stage">
-                <!-- Rank 2 (Left) -->
-                <div class="mob-idol side">
-                    <img id="mobRec_Slot2" src="">
-                    <div class="mob-rank-badge">II</div>
-                </div>
-
-                <!-- Rank 3 (Right) -->
-                <div class="mob-idol side right">
-                    <img id="mobRec_Slot3" src="">
-                    <div class="mob-rank-badge">III</div>
-                </div>
-
-                <!-- Rank 1 (Center) -->
-                <div class="mob-idol center">
-                    <img id="mobRec_Slot1" src="">
-                    <div class="mob-rank-badge main">I</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- BOTTOM SECTION: THE ARCHIVE GRID -->
-        <div class="mob-section-wrapper" style="margin-top:30px;">
-            <div class="mob-grid-label-center">FULL ARCHIVE</div>
-            <div id="mobRec_Grid" class="mob-archive-grid">
-                <!-- JS will inject images here -->
-            </div>
-        </div>
-
-        <!-- SPACER -->
+        <!-- Spacer for Footer -->
         <div style="height: 120px;"></div>
-    </div>
 
     </div>
 </div>
