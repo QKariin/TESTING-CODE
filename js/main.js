@@ -136,9 +136,9 @@ window.addEventListener("message", (event) => {
             }
         }
 
-        if (data.type === "INIT_TASKS" || data.dailyTasks) {
-            setTaskDatabase(data.dailyTasks || data.tasks || []);
-            console.log("Task database initialized with", data.dailyTasks );
+        if (data.type === "INIT_TASKS") {
+            setTaskDatabase(data.tasks || []);
+            console.log("Task database initialized with", data.tasks);
         }
         if (data.type === "INIT_WISHLIST" || data.wishlist) {
             setWishlistItems(data.wishlist || []);
