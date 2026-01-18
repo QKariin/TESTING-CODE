@@ -45,105 +45,73 @@
             display: flex; flex-direction: column; align-items: center; gap: 25px; width: 100%;
         }
 
-        /* --- NEW HEADER LAYOUT (Side-by-Side) --- */
+    /* --- TIGHTER HEADER --- */
     .mob-header.side-layout {
         display: flex;
-        flex-direction: row; /* Horizontal */
+        flex-direction: row;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start; /* Align left to reduce gaps */
         width: 100%;
         gap: 20px;
-        margin-top: 30px;
-        margin-bottom: 20px;
+        margin-top: 15px; /* REMOVED DEAD SPACE (Was 30px) */
+        margin-bottom: 5px;
         padding: 0 10px;
     }
 
-    /* LEFT COL: VISUALS */
-    .mob-visual-col {
-        position: relative;
-        flex-shrink: 0;
-    }
+    /* LEFT COL */
+    .mob-visual-col { position: relative; flex-shrink: 0; }
+    .mob-hex-container { width: 90px; height: 105px; position: relative; } /* Slightly smaller */
+    .mob-hex-img { width: 100%; height: 100%; object-fit: cover; background: #111; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); filter: sepia(30%) contrast(1.1); }
     
-    /* Container determines size, but does NOT clip overflow */
-    .mob-hex-container {
-        width: 100px;
-        height: 115px;
-        position: relative;
-        /* No clip-path here! This allows sticker to stick out */
-    }
-
-    /* The Image gets the Hexagon Shape */
-    .mob-hex-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        background: #111;
-        /* The Clip Path applies ONLY to the image */
-        clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-        filter: sepia(30%) contrast(1.1);
-    }
-
-    /* The Sticker floats on top, fully visible */
     .mob-rank-stamp {
-        position: absolute;
-        bottom: 5px;
-        right: -10px; /* Hanging off the edge */
-        background: #000;
-        border: 1px solid #c5a059;
-        color: #c5a059;
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.6rem;
-        padding: 3px 8px;
-        transform: rotate(-10deg);
-        box-shadow: 0 0 10px rgba(0,0,0,1);
-        z-index: 10;
+        position: absolute; bottom: 0; right: -15px;
+        background: #000; border: 1px solid #c5a059; color: #c5a059;
+        font-family: 'Orbitron', sans-serif; font-size: 0.55rem; padding: 2px 6px;
+        transform: rotate(-10deg); box-shadow: 0 0 10px rgba(0,0,0,1); z-index: 10;
         white-space: nowrap;
     }
 
-    /* RIGHT COL: DATA */
+    /* RIGHT COL */
     .mob-data-col {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        gap: 8px;
+        display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 5px;
+        flex: 1;
     }
 
     .mob-name-static {
-        font-family: 'Cinzel', serif;
-        font-size: 1.6rem;
-        color: white;
-        line-height: 1;
-        text-transform: uppercase;
-        text-shadow: 0 0 15px rgba(255,255,255,0.2);
+        font-family: 'Cinzel', serif; font-size: 1.5rem; color: white;
+        line-height: 1; text-transform: uppercase; text-shadow: 0 0 15px rgba(255,255,255,0.2);
     }
 
-    /* Stat Rows */
-    .mob-stat-row {
-        display: flex;
-        gap: 15px;
-    }
+    /* STATS ROW */
+    .mob-stat-row { display: flex; align-items: center; gap: 15px; margin-top: 5px; }
+    .stat-divider-vert { width: 1px; height: 25px; background: rgba(255,255,255,0.2); }
+    .stat-pair { display: flex; flex-direction: column; }
+    .stat-lbl { font-family: 'Orbitron', sans-serif; font-size: 0.5rem; color: #666; letter-spacing: 1px; }
+    .stat-val { font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.1rem; line-height: 1; color: #c5a059; }
 
-    .stat-pair {
-        display: flex;
-        flex-direction: column;
+    /* EXPAND BUTTON */
+    .mob-stats-toggle {
+        font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: #444;
+        cursor: pointer; margin-top: 5px; letter-spacing: 2px; transition: 0.3s;
     }
+    .mob-stats-toggle:active { color: #fff; }
 
-    .stat-lbl {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.5rem;
-        color: #555;
-        letter-spacing: 1px;
+    /* DRAWER ANIMATION */
+    .mob-stats-drawer {
+        width: 100%; background: rgba(255,255,255,0.03);
+        border-radius: 4px; padding: 0 15px;
+        margin-bottom: 10px; overflow: hidden;
+        max-height: 0; opacity: 0;
+        transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
     }
-
-    .stat-val {
-        font-family: 'Cinzel', serif;
-        font-weight: 700;
-        font-size: 1rem;
-        line-height: 1.1;
+    .mob-stats-drawer.open {
+        max-height: 150px; opacity: 1; padding: 10px 15px; /* Expands */
+        border: 1px solid rgba(255,255,255,0.1);
     }
-    .stat-val.gold { color: #c5a059; }
-    .stat-val.gray { color: #888; }
+    
+    .drawer-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .d-lbl { font-size: 0.7rem; color: #888; font-family: 'Cinzel'; }
+    .d-val { font-size: 0.8rem; color: #fff; font-family: 'Orbitron'; }
 
         /* 2. KNEEL BAR */
         .mob-section-wrapper { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; }
@@ -640,82 +608,82 @@
 <!-- 🟢 MOBILE UNIVERSE (FINAL INTEGRATED LAYOUT) -->
 <div id="MOBILE_APP" style="display:none;">
     
-    <!-- VIEW 1: RITUAL DASHBOARD (The New Stack) -->
-    <div id="viewMobileHome" class="mob-frame" style="display:flex; flex-direction:column;">
+   <div id="viewMobileHome" class="mob-frame no-scroll" style="display:flex !important; flex-direction:column;">
         
-        <!-- HEADER -->
+        <!-- HEADER ROW -->
         <div class="mob-header side-layout">
             
-            <!-- LEFT: VISUAL (Face + Sticker) -->
+            <!-- LEFT: VISUAL -->
             <div class="mob-visual-col">
-                <!-- Wrapper is NOT clipped, so sticker can hang out -->
                 <div class="mob-hex-container">
-                    <!-- Image IS clipped -->
                     <img id="mob_profilePic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="mob-hex-img">
-                    <!-- Sticker sits on top, unclipped -->
                     <div id="mob_rankStamp" class="mob-rank-stamp">INITIATE</div>
                 </div>
             </div>
 
-            <!-- RIGHT: DATA STACK -->
+            <!-- RIGHT: DATA & TOGGLE -->
             <div class="mob-data-col">
                 <!-- Name -->
                 <div id="mob_slaveName" class="mob-name-static">SLAVE</div>
                 
-                <!-- Row 1: Wealth -->
+                <!-- Primary Stats (Always Visible) -->
                 <div class="mob-stat-row">
                     <div class="stat-pair">
                         <span class="stat-val gold" id="mobPoints">0</span>
                         <span class="stat-lbl">MERIT</span>
                     </div>
+                    <div class="stat-divider-vert"></div>
                     <div class="stat-pair">
                         <span class="stat-val gold" id="mobCoins">0</span>
                         <span class="stat-lbl">NET</span>
                     </div>
                 </div>
 
-                <!-- Row 2: Performance -->
-                <div class="mob-stat-row">
-                    <div class="stat-pair">
-                        <span class="stat-val gray" id="mobStreak">0</span>
-                        <span class="stat-lbl">STREAK</span>
-                    </div>
-                    <div class="stat-pair">
-                        <span class="stat-val gray" id="mobTotal">0</span>
-                        <span class="stat-lbl">TOTAL</span>
-                    </div>
+                <!-- The Toggle Button -->
+                <div class="mob-stats-toggle" onclick="toggleMobileStats()">
+                    <span id="mobStatsArrow">▼</span> EXPAND DATA
                 </div>
             </div>
         </div>
 
-        <!-- CARD 1: THE EXECUTION BAR (Wide Kneel Button) -->
-        <div class="mob-section-wrapper">
-            <!-- Added mob-kneel-zone class for JS -->
-            <div class="mob-kneel-bar mob-kneel-zone" 
+        <!-- HIDDEN DRAWER (Slides down when toggled) -->
+        <div id="mobStatsContent" class="mob-stats-drawer hidden">
+            <div class="drawer-row">
+                <span class="d-lbl">CURRENT STREAK</span>
+                <span class="d-val" id="mobStreak">0</span>
+            </div>
+            <div class="drawer-row">
+                <span class="d-lbl">TOTAL SERVED</span>
+                <span class="d-val" id="mobTotal">0</span>
+            </div>
+            <div class="drawer-row">
+                <span class="d-lbl">KNEEL COUNT</span>
+                <span class="d-val" id="mobKneels">0</span>
+            </div>
+        </div>
+
+        <!-- CARD 1: DEVOTION -->
+        <div class="mob-card devotion-card">
+            <div class="mob-kneel-zone" 
                  onmousedown="if(window.handleHoldStart) window.handleHoldStart(event)" 
                  onmouseup="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
                  onmouseleave="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
                  ontouchstart="if(window.handleHoldStart) window.handleHoldStart(event)" 
                  ontouchend="if(window.handleHoldEnd) window.handleHoldEnd(event)">
-                
-                <div id="mob_kneelFill" class="mob-bar-fill"></div>
-                <div class="mob-bar-content">
-                    <span class="kneel-icon-sm">◈</span>
-                    <!-- Added kneel-label class for JS -->
+                <div class="mob-kneel-inner">
+                    <span class="kneel-icon">◈</span>
                     <span id="mob_kneelText" class="kneel-text kneel-label">HOLD TO KNEEL</span>
                 </div>
+                <div id="mob_kneelFill" class="mob-kneel-fill"></div>
+            </div>
+
+            <div class="mob-grid-zone">
+                <div class="mob-grid-label">CYCLE PROGRESS</div>
+                <div id="mob_streakGrid" class="mob-streak-grid"></div>
             </div>
         </div>
 
-        <!-- CARD 2: THE HEATMAP (24 Squares) -->
-        <div class="mob-section-wrapper">
-            <div class="mob-grid-label-center">CYCLE PROGRESS</div>
-            <div id="mob_streakGrid" class="mob-streak-strip">
-                <!-- JS Fills this -->
-            </div>
-        </div>
-
-        <!-- CARD 3: THE TASK DECK -->
+        <!-- CARD 2: OPERATIONS -->
         <div class="mob-card operations-card">
             <div class="op-status-row">
                 <div id="mob_statusLight" class="status-light red"></div>
@@ -729,23 +697,10 @@
                 </div>
             </div>
         </div>
-
-        <!-- MOBILE REWARD OVERLAY (Twin) -->
-        <div id="mobKneelReward" class="mob-reward-overlay hidden">
-            <div class="mob-reward-card">
-                <div class="mob-hex-wrap small-reward">
-                    <div class="mob-rank-stamp" style="right: auto; left: -5px; color: #fff; border-color: #fff;">AUTHORIZED</div>
-                </div>
-                <h2 class="mob-reward-title">DEVOTION RECOGNIZED</h2>
-                <div class="mob-reward-actions">
-                    <button onclick="window.claimKneelReward('coins')" class="mob-action-btn" style="border-color: #ffd700; color: #ffd700;">CLAIM COINS</button>
-                    <button onclick="window.claimKneelReward('points')" class="mob-action-btn" style="border-color: #fff; color: #fff;">CLAIM MERIT</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Spacer for Footer -->
+        
+        <!-- SPACER -->
         <div style="height: 120px;"></div>
+
     </div>
 
     <!-- 2. MOBILE RECORD (HEADLESS VAULT) -->
