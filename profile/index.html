@@ -662,7 +662,8 @@
 <!-- 🟢 MOBILE UNIVERSE (FINAL INTEGRATED LAYOUT) -->
 <div id="MOBILE_APP" style="display:none;">
     
-   <div id="viewMobileHome" class="mob-frame">
+   <!-- 1. DASHBOARD (FIXED BUTTON & DRAWER) -->
+    <div id="viewMobileHome" class="mob-frame">
         
         <!-- HEADER: ROYAL CARD -->
         <div class="mob-profile-card">
@@ -697,11 +698,18 @@
             
             </div> <!-- End Top Row -->
 
-            <!-- BOTTOM ROW: BUTTON -->
-            <div id="mobStatsContent" class="mob-stats-drawer">
+            <!-- BOTTOM ROW: THE BUTTON (Restored) -->
+            <div class="mob-stats-toggle-btn" onclick="toggleMobileStats()">
                 SLAVE STATS <span id="mobStatsArrow">▼</span>
             </div>
             
+        </div> <!-- End Profile Card -->
+
+        <!-- THE DRAWER (Restored & Outside) -->
+        <div id="mobStatsContent" class="mob-stats-drawer">
+            <div class="drawer-row"><span class="d-lbl">CURRENT STREAK</span><span class="d-val" id="mobStreak">0</span></div>
+            <div class="drawer-row"><span class="d-lbl">TOTAL SERVED</span><span class="d-val" id="mobTotal">0</span></div>
+            <div class="drawer-row"><span class="d-lbl">KNEEL COUNT</span><span class="d-val" id="mobKneels">0</span></div>
         </div>
      
         <!-- CARD 1: THE EXECUTION BAR (Wide Kneel Button) -->
