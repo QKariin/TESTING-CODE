@@ -268,6 +268,17 @@
         bottom: 10px; /* Inside the card for the main one looks cleaner */
         background: rgba(0,0,0,0.8);
     }
+
+    /* HIDE SCROLLBARS (BUT KEEP SCROLLING) */
+    .mob-frame::-webkit-scrollbar, 
+    .mob-horiz-scroll::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+    
+    .mob-frame, .mob-horiz-scroll {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
     
   </style>
 </head>
