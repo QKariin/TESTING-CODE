@@ -301,6 +301,7 @@ window.WISHLIST_ITEMS = WISHLIST_ITEMS;
 window.gameStats = gameStats;
 
 function updateStats() {
+    // 1. DESKTOP UPDATE (Original Logic - Keep safe)
     const subName = document.getElementById('subName');
     const subHierarchy = document.getElementById('subHierarchy');
     const coinsEl = document.getElementById('coins');
@@ -308,33 +309,75 @@ function updateStats() {
 
     if (!subName || !userProfile || !gameStats) return; 
 
+    // Update Desktop Elements
     subName.textContent = userProfile.name || "Slave";
     if (subHierarchy) subHierarchy.textContent = userProfile.hierarchy || "HallBoy";
     if (coinsEl) coinsEl.textContent = gameStats.coins ?? 0;
     if (pointsEl) pointsEl.textContent = gameStats.points ?? 0;
 
-    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? 0; };
-    if(gameStats) {
-        setVal('statStreak', gameStats.taskdom_streak || gameStats.currentStreak);
-        setVal('statTotal', gameStats.taskdom_total_tasks || gameStats.totalTasks);
-        setVal('statCompleted', gameStats.taskdom_completed_tasks || gameStats.completedTasks);
-        setVal('statSkipped', gameStats.skippedTasks || stats.skippedTasks);
-        setVal('statTotalKneels', gameStats.kneelCount || gameStats.totalKneels);
+    // 2. MOBILE UPDATE (The New Connection)
+    // Header Identity
+    const mobName = document.getElementById('mob_slaveName');
+    const mobRank = document.getElementById('mob_rankStamp');
+    const mobPic = document.getElementById('mob_profilePic');
+    
+    // Header Stats (Visible)
+    const mobPoints = document.getElementById('mobPoints');
+    const mobCoins = document.getElementById('mobCoins');
+
+    // Drawer Stats (Hidden)
+    const mobStreak = document.getElementById('mobStreak');
+    const mobTotal = document.getElementById('mobTotal');
+    const mobKneels = document.getElementById('mobKneels');
+
+    // FILL DATA
+    if (mobName) mobName.innerText = userProfile.name || "SLAVE";
+    if (mobRank) mobRank.innerText = userProfile.hierarchy || "INITIATE";
+    
+    // Merit & Net
+    if (mobPoints) mobPoints.innerText = gameStats.points || 0;
+    if (mobCoins) mobCoins.innerText = gameStats.coins || 0;
+
+    // Drawer Data
+    if (mobStreak) mobStreak.innerText = gameStats.taskdom_streak || 0;
+    if (mobTotal) mobTotal.innerText = gameStats.taskdom_total_tasks || 0;
+    if (mobKneels) mobKneels.innerText = gameStats.kneelCount || 0;
+
+    // Profile Picture Logic (Wix Fix)
+    if (mobPic && userProfile.profilePicture) {
+        let rawUrl = userProfile.profilePicture;
+        if (rawUrl.startsWith("wix:image")) {
+            const uri = rawUrl.split('/')[3].split('#')[0];
+            mobPic.src = `https://static.wixstatic.com/media/${uri}`;
+        } else {
+            mobPic.src = rawUrl;
+        }
     }
 
-    const sinceEl = document.getElementById('slaveSinceDate');
-    if (sinceEl) {
-        if (userProfile && userProfile.joined) {
-            try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch(e) { sinceEl.textContent = "--/--/--"; }
-        } else {
-            sinceEl.textContent = "--/--/--";
+    // 3. MOBILE GRID UPDATE (The 24 Squares)
+    const grid = document.getElementById('mob_streakGrid');
+    if(grid) {
+        grid.innerHTML = '';
+        const progress = (gameStats.kneelCount || 0) % 24;
+        for(let i=0; i<24; i++) {
+            const sq = document.createElement('div');
+            // If i is less than progress, color it Gold
+            sq.className = 'streak-sq' + (i < progress ? ' active' : '');
+            grid.appendChild(sq);
         }
+    }
+
+    // 4. DESKTOP EXTRAS (Progress Bar etc)
+    const sinceEl = document.getElementById('slaveSinceDate');
+    if (sinceEl && userProfile.joined) {
+         try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch(e) { sinceEl.textContent = "--/--/--"; }
     }
 
     if (typeof LEVELS !== 'undefined' && LEVELS.length > 0) {
         let nextLevel = LEVELS.find(l => l.min > gameStats.points) || LEVELS[LEVELS.length - 1];
         const nln = document.getElementById('nextLevelName');
         const pnd = document.getElementById('pointsNeeded');
+        
         if(nln) nln.innerText = nextLevel.name;
         if(pnd) pnd.innerText = Math.max(0, nextLevel.min - gameStats.points) + " to go";
         
@@ -344,8 +387,6 @@ function updateStats() {
     }
     
     updateKneelingStatus();
-    // THE SYNC HOOK FOR MOBILE
-    if(window.syncMobileDashboard) window.syncMobileDashboard();
 }
 
 // =========================================
