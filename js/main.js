@@ -376,11 +376,12 @@ function resetTributeFlow() { selectedReason = ""; selectedNote = ""; selectedIt
 // 1. STATS TOGGLE (The Expand Button)
 window.toggleMobileStats = function() {
     const drawer = document.getElementById('mobStatsContent');
-    const btn = document.querySelector('.mob-expand-btn');
+    const arrow = document.getElementById('mobStatsArrow');
+    
     if(drawer) {
         drawer.classList.toggle('open');
-        if(drawer.classList.contains('open')) btn.innerText = "▲ COLLAPSE DATA ▲";
-        else btn.innerText = "▼ PERFORMANCE DATA ▼";
+        // Rotate arrow if it exists
+        if(arrow) arrow.innerText = drawer.classList.contains('open') ? "▲" : "▼";
     }
 };
 
