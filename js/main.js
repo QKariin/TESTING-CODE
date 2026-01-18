@@ -433,22 +433,23 @@ window.toggleMobileStats = function() {
     }
 };
 
-// 3. MAIN NAVIGATION CONTROLLER (WITH NUCLEAR CHAT FIX)
+// 3. MAIN NAVIGATION CONTROLLER (FIXED FOR MOBILE RECORD)
 window.toggleMobileView = function(viewName) {
     const home = document.getElementById('viewMobileHome');
     const chatCard = document.getElementById('chatCard');
     const mobileApp = document.getElementById('MOBILE_APP');
-    const history = document.getElementById('historySection');
-    const mobRecord = document.getElementById('viewMobileRecord');
+    
+    const history = document.getElementById('historySection'); // Desktop View
+    const mobRecord = document.getElementById('viewMobileRecord'); // Mobile View (The one we want)
+    
     const news = document.getElementById('viewNews');
     const protocol = document.getElementById('viewProtocol');
     
-    // 1. Hide All Standard Mobile Views
+    // 1. Hide All Potential Views
     const views = [home, history, mobRecord, news, protocol];
     views.forEach(el => { if(el) el.style.display = 'none'; });
 
-    // 2. FORCE HIDE CHAT (The Fix)
-    // We use setProperty to override the CSS '!important' that keeps it open
+    // 2. Force Hide Chat (Reset)
     if (chatCard) chatCard.style.setProperty('display', 'none', 'important');
 
     // 3. Show Target
@@ -463,8 +464,7 @@ window.toggleMobileView = function(viewName) {
             if (chatCard.parentElement !== mobileApp) {
                 mobileApp.appendChild(chatCard);
             }
-            // Remove the 'important' none and set to flex
-            chatCard.style.removeProperty('display'); 
+            chatCard.style.removeProperty('display');
             chatCard.style.display = 'flex';
             
             const chatBox = document.getElementById('chatBox');
@@ -472,10 +472,13 @@ window.toggleMobileView = function(viewName) {
         }
     }
     else if (viewName === 'record') {
-        if(mobRecord) {
+        // *** THE FIX: Check for Mobile Record First ***
+        if (mobRecord) {
             mobRecord.style.display = 'flex';
             if(window.renderGallery) window.renderGallery();
-        } else if(history) {
+        } 
+        // Fallback to desktop if mobile missing
+        else if (history) {
             history.style.display = 'flex';
             if(window.renderGallery) window.renderGallery();
         }
