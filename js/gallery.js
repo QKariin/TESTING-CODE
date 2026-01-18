@@ -1,3 +1,4 @@
+
 // gallery.js - TRILOGY LAYOUT (FIXED)
 import { mediaType } from './media.js';
 import { 
@@ -613,9 +614,9 @@ document.addEventListener('click', (e) => {
 // ... inside renderGallery ...
 
     // --- SYNC MOBILE ALTAR ---
-    const mob1 = document.getElementById('mobRec_Slot1'); 
-    const mob2 = document.getElementById('mobRec_Slot2');
-    const mob3 = document.getElementById('mobRec_Slot3');
+    const mob1 = document.getElementById('mobImgSlot1');
+    const mob2 = document.getElementById('mobImgSlot2');
+    const mob3 = document.getElementById('mobImgSlot3');
 
     // Slot 1 (Center)
     if (mob1) {
