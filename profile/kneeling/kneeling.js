@@ -188,12 +188,12 @@ export function updateKneelingStatus() {
 
         // Mobile
         if (mobText && mobFill) {
-            mobText.innerText = "HOLD";
+            mobText.innerText = "HOLD TO KNEEL";
             mobFill.style.transition = "width 0.3s ease";
             mobFill.style.width = "0%";
             if(mobBar) {
                 mobBar.style.borderColor = "#c5a059"; 
-                mobBar.style.opacity = "1";
+                mobBar.style.opacity = "0.7";
             }
         }
     }
