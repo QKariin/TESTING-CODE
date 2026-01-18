@@ -242,65 +242,54 @@
             letter-spacing: 2px; cursor: pointer;
         }
         /* --- GOLD GAUGE TIMER --- */
+        /* --- GOLD GAUGE TIMER (SVG) --- */
         .mob-timer-row {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 10px;
-            width: 100%;
+            display: flex; justify-content: center; gap: 15px;
+            margin-top: 10px; width: 100%;
         }
 
         .timer-gauge {
-            position: relative;
-            width: 70px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: rgba(0,0,0,0.5); /* Inner Dark Circle */
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            position: relative; width: 70px; height: 70px;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        /* The Gold Ring */
-        .gauge-ring {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 50%;
-            border: 2px solid rgba(197, 160, 89, 0.3); /* Dim Gold Base */
-            border-top: 2px solid #c5a059; /* Bright Gold Top */
-            transform: rotate(-45deg);
+        /* The SVG Canvas */
+        .gauge-svg {
+            position: absolute; top: 0; left: 0;
+            transform: rotate(-90deg); /* Start at 12 o'clock */
         }
 
-        /* The Pulse Animation for Seconds */
-        .gauge-ring.active {
-            border-color: #c5a059;
-            border-top-color: #fff;
-            animation: spinPulse 7s linear infinite;
+        /* The Dark Track */
+        .gauge-bg {
+            fill: none;
+            stroke: rgba(197, 160, 89, 0.1); /* Very faint gold */
+            stroke-width: 4;
+        }
+
+        /* The Active Gold Line */
+        .gauge-progress {
+            fill: none;
+            stroke: #c5a059; /* Bright Gold */
+            stroke-width: 4;
+            stroke-linecap: round; /* Nice rounded ends */
+            
+            /* MATH: 2 * Pi * R (30) = 188.5 */
+            stroke-dasharray: 188.5;
+            stroke-dashoffset: 188.5; /* Starts Empty */
+            transition: stroke-dashoffset 0.5s linear; /* Smooth ticking */
         }
 
         .gauge-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            line-height: 1;
-            z-index: 2;
+            display: flex; flex-direction: column; align-items: center;
+            line-height: 1; z-index: 2;
         }
-
         .g-val {
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 700;
-            font-size: 1.6rem;
-            color: #fff;
-            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+            font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.6rem;
+            color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
-
         .g-lbl {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.5rem;
-            color: #c5a059;
-            margin-top: -2px;
-            letter-spacing: 1px;
+            font-family: 'Orbitron', sans-serif; font-size: 0.5rem; color: #c5a059;
+            margin-top: -2px; letter-spacing: 1px;
         }
 
         @keyframes spinPulse {
@@ -827,30 +816,39 @@
                 <!-- Idle State -->
                 <button id="mob_btnRequest" class="mob-action-btn" onclick="if(window.getRandomTask) window.getRandomTask()">REQUEST PROTOCOL</button>
                 
-                <!-- Active State (The 3 Gold Rings) -->
+                <!-- Active State (REAL GAUGE RINGS) -->
                 <div id="mob_activeTimer" class="mob-timer-row hidden">
                     
-                    <!-- HOURS -->
+                    <!-- HOUR (0-24) -->
                     <div class="timer-gauge">
-                        <div class="gauge-ring"></div>
+                        <svg class="gauge-svg" width="70" height="70">
+                            <circle class="gauge-bg" cx="35" cy="35" r="30"></circle>
+                            <circle id="ring_H" class="gauge-progress" cx="35" cy="35" r="30"></circle>
+                        </svg>
                         <div class="gauge-content">
                             <span id="m_timerH" class="g-val">00</span>
                             <span class="g-lbl">HRS</span>
                         </div>
                     </div>
 
-                    <!-- MINUTES -->
+                    <!-- MINUTE (0-60) -->
                     <div class="timer-gauge">
-                        <div class="gauge-ring"></div>
+                        <svg class="gauge-svg" width="70" height="70">
+                            <circle class="gauge-bg" cx="35" cy="35" r="30"></circle>
+                            <circle id="ring_M" class="gauge-progress" cx="35" cy="35" r="30"></circle>
+                        </svg>
                         <div class="gauge-content">
                             <span id="m_timerM" class="g-val">00</span>
                             <span class="g-lbl">MIN</span>
                         </div>
                     </div>
 
-                    <!-- SECONDS (Spinning) -->
+                    <!-- SECOND (0-60) -->
                     <div class="timer-gauge">
-                        <div class="gauge-ring active"></div>
+                        <svg class="gauge-svg" width="70" height="70">
+                            <circle class="gauge-bg" cx="35" cy="35" r="30"></circle>
+                            <circle id="ring_S" class="gauge-progress" cx="35" cy="35" r="30"></circle>
+                        </svg>
                         <div class="gauge-content">
                             <span id="m_timerS" class="g-val">00</span>
                             <span class="g-lbl">SEC</span>
@@ -858,8 +856,6 @@
                     </div>
 
                 </div>
-            </div>
-        </div>
 
         <!-- MOBILE REWARD OVERLAY (Twin) -->
         <div id="mobKneelReward" class="mob-reward-overlay hidden">
