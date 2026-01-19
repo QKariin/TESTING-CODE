@@ -223,16 +223,19 @@ window.selectRoutineItem = function(el, value) {
     costDisplay.innerText = currentActionCost;
 };
 
-// 4. EXECUTE ACTION (UPDATED FOR CMS FIELDS)
+// 4. EXECUTE ACTION (WITH FEEDBACK NOTIFICATION)
 window.confirmLobbyAction = function() {
     if (gameStats.coins < currentActionCost) {
         alert("INSUFFICIENT FUNDS");
         return;
     }
 
-    // A. ROUTINE (Update 'routine' field)
+    let payload = "";
+    let notifyTitle = "SYSTEM UPDATE";
+    let notifyText = "Changes saved.";
+
+    // A. ROUTINE
     if (currentActionType === 'routine') {
-        // Get value from our hidden holder or input
         let taskName = document.getElementById('routineDropdown').value; 
         if (taskName === 'custom') {
             taskName = document.getElementById('routineCustomInput').value;
@@ -240,16 +243,20 @@ window.confirmLobbyAction = function() {
         
         if(!taskName) return;
 
-        // SEND TO WIX: Update 'routine' field
+        // Message Logic
+        notifyTitle = "PROTOCOL ASSIGNED";
+        notifyText = "Daily Routine set to: " + taskName;
+
+        // Send to Wix
         window.parent.postMessage({ 
-            type: "UPDATE_CMS_FIELD", // New Type
+            type: "UPDATE_CMS_FIELD", 
             field: "routine", 
             value: taskName,
             cost: currentActionCost,
             message: "Routine set to: " + taskName
         }, "*");
         
-        // UI Update
+        // Dashboard Update
         const btn = document.getElementById('btnDailyRoutine');
         if(btn) {
             btn.classList.remove('hidden');
@@ -258,13 +265,14 @@ window.confirmLobbyAction = function() {
         }
     } 
     
-    // B. PHOTO (Update 'image_fld' - Already handled by UPDATE_PROFILE_PIC)
+    // B. PHOTO
     else if (currentActionType === 'photo') {
         const fileInput = document.getElementById('lobbyFile');
         if (fileInput.files.length > 0) {
-            // This relies on your existing handleProfileUpload logic
-            // You might need to deduct coins separately if handleProfileUpload doesn't
-             window.parent.postMessage({ 
+            notifyTitle = "VISUALS LOGGED";
+            notifyText = "Profile image uploaded for review.";
+
+            window.parent.postMessage({ 
                 type: "PROCESS_PAYMENT", 
                 cost: 500, 
                 note: "Photo Change" 
@@ -274,12 +282,14 @@ window.confirmLobbyAction = function() {
         } else { return; }
     }
     
-    // C. NAME (Update 'title_fld')
+    // C. NAME
     else if (currentActionType === 'name') {
         const text = document.getElementById('lobbyInputText').value;
         if(!text) return;
         
-        // SEND TO WIX: Update 'title_fld'
+        notifyTitle = "IDENTITY REWRITTEN";
+        notifyText = "Designation changed to: " + text.toUpperCase();
+
         window.parent.postMessage({ 
             type: "UPDATE_CMS_FIELD", 
             field: "title_fld", 
@@ -288,16 +298,19 @@ window.confirmLobbyAction = function() {
             message: "Designation changed to: " + text
         }, "*");
 
-        // Optimistic UI Update
         const el = document.getElementById('mob_slaveName');
         if(el) el.innerText = text;
         userProfile.name = text;
     }
     
-    // D. KINKS/LIMITS (Generic Purchase)
+    // D. KINKS/LIMITS
     else {
         const text = document.getElementById('lobbyInputText').value;
         if(!text) return;
+
+        notifyTitle = "DATA APPENDEED";
+        notifyText = currentActionType.toUpperCase() + " updated in file.";
+
         window.parent.postMessage({ 
             type: "PURCHASE_ITEM", 
             itemName: currentActionType.toUpperCase() + ": " + text, 
@@ -306,8 +319,35 @@ window.confirmLobbyAction = function() {
         }, "*");
     }
 
+    // Close Menu & Trigger Notification
     window.closeLobby();
+    window.showSystemNotification(notifyTitle, notifyText);
 };
+
+// --- NOTIFICATION SYSTEM ---
+window.showSystemNotification = function(title, detail) {
+    const overlay = document.getElementById('celebrationOverlay');
+    if(!overlay) return;
+
+    // Inject Dynamic HTML
+    overlay.innerHTML = `
+        <div class="glass-card" style="border: 1px solid var(--neon-green); text-align:center; padding: 30px; background: rgba(0,0,0,0.95); box-shadow: 0 0 30px rgba(0,255,0,0.2);">
+            <div style="font-family:'Orbitron'; font-size:1.2rem; color:var(--neon-green); margin-bottom:10px; letter-spacing:2px;">${title}</div>
+            <div style="font-family:'Cinzel'; font-size:0.9rem; color:#fff;">${detail}</div>
+        </div>
+    `;
+
+    // Show
+    overlay.style.pointerEvents = "auto";
+    overlay.style.opacity = '1';
+
+    // Hide after 3 seconds
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        overlay.style.pointerEvents = "none";
+    }, 3000);
+};
+
 
 
 window.addEventListener("message", (event) => {
