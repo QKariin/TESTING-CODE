@@ -206,8 +206,7 @@ async function updateHistory(u) {
             console.log("RAW:", h.proofUrl);
             h.thumbSigned = await getSignedUrl(getOptimizedUrl(h.proofUrl, 150));
             h.fullSigned  = await getSignedUrl(h.proofUrl);
-            console.log("thumb:", thumbSigned);
- 
+            console.log("thumb:", h.thumbSigned);
         });
         await Promise.all(signingPromises);
 
