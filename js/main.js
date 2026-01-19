@@ -1075,7 +1075,7 @@ window.syncMobileDashboard = function() {
     lockVisuals(); buildAppFooter();
 })();
 
-// TIMER SYNC & VISUALIZATION
+// TIMER SYNC & VISUALIZATION (GOLD RINGS)
 setInterval(() => {
     const desktopH = document.getElementById('timerH');
     const desktopM = document.getElementById('timerM');
@@ -1085,41 +1085,38 @@ setInterval(() => {
     const mobileM = document.getElementById('m_timerM');
     const mobileS = document.getElementById('m_timerS');
     
-    // SVG RINGS
+    // Ring Elements (Conic Gradient Targets)
     const ringH = document.getElementById('ring_H');
     const ringM = document.getElementById('ring_M');
     const ringS = document.getElementById('ring_S');
-    const CIRCUMFERENCE = 188.5; // 2 * Pi * 30
 
     if (desktopH && mobileH) {
-        // 1. Update Text
+        // 1. Get Values
         const hVal = parseInt(desktopH.innerText) || 0;
         const mVal = parseInt(desktopM.innerText) || 0;
         const sVal = parseInt(desktopS.innerText) || 0;
 
+        // 2. Update Text
         mobileH.innerText = desktopH.innerText;
         mobileM.innerText = desktopM.innerText;
         mobileS.innerText = desktopS.innerText;
 
-        // 2. Update Gauge Rings
+        // 3. Update Visual Rings (Conic Gradient)
         if(ringH) {
-            // Hours (Max 24)
-            const hOffset = CIRCUMFERENCE - (hVal / 24) * CIRCUMFERENCE;
-            ringH.style.strokeDashoffset = hOffset;
+            const hDeg = (hVal / 24) * 360;
+            ringH.style.background = `conic-gradient(#c5a059 ${hDeg}deg, rgba(197, 160, 89, 0.1) ${hDeg}deg)`;
         }
         if(ringM) {
-            // Minutes (Max 60)
-            const mOffset = CIRCUMFERENCE - (mVal / 60) * CIRCUMFERENCE;
-            ringM.style.strokeDashoffset = mOffset;
+            const mDeg = (mVal / 60) * 360;
+            ringM.style.background = `conic-gradient(#c5a059 ${mDeg}deg, rgba(197, 160, 89, 0.1) ${mDeg}deg)`;
         }
         if(ringS) {
-            // Seconds (Max 60)
-            const sOffset = CIRCUMFERENCE - (sVal / 60) * CIRCUMFERENCE;
-            ringS.style.strokeDashoffset = sOffset;
+            const sDeg = (sVal / 60) * 360;
+            ringS.style.background = `conic-gradient(#c5a059 ${sDeg}deg, rgba(197, 160, 89, 0.1) ${sDeg}deg)`;
         }
     }
     
-    // Sync Visibility Logic
+    // Sync Visibility Logic (Unchanged)
     const activeRow = document.getElementById('activeTimerRow');
     const mobTimer = document.getElementById('mob_activeTimer');
     const mobRequestBtn = document.getElementById('mob_btnRequest');
