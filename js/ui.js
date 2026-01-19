@@ -20,7 +20,7 @@ export function switchTab(mode) {
         }
     });
 
-    // 3. Mobile Navigation Logic
+    // 3. Mobile Navigation Logic - Call toggleMobileView for mobile views
     if (window.innerWidth < 768) {
         allBtns.forEach(btn => {
             const cmd = btn.getAttribute('onclick') || "";
@@ -34,22 +34,15 @@ export function switchTab(mode) {
             }
         });
         
-        // 3a. Handle mobile-specific views
-        const mobileViews = ['viewMobileHome', 'viewMobileRecord'];
-        mobileViews.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.style.display = 'none';
-            }
-        });
+        // Call toggleMobileView for mobile-specific handling
+        const mobileViewMap = {
+            'serve': 'home',
+            'history': 'record'
+        };
         
-        // Show the appropriate mobile view
-        if (mode === 'serve' || mode === 'history') {
-            const mobileViewId = mode === 'history' ? 'viewMobileRecord' : 'viewMobileHome';
-            const mobileView = document.getElementById(mobileViewId);
-            if (mobileView) {
-                mobileView.style.display = 'flex';
-            }
+        if (mobileViewMap[mode] && window.toggleMobileView) {
+            window.toggleMobileView(mobileViewMap[mode]);
+            return; // Exit early to avoid desktop view logic
         }
     }
     
