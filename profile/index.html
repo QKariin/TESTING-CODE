@@ -966,7 +966,7 @@
             <div class="mob-kneel-bar" style="border-color:#fff;" onclick="document.getElementById('routineUpload').click()">
                 <input type="file" id="routineUpload" hidden onchange="handleRoutineUpload(this)">
                 <div class="mob-bar-content">
-                    <span style="font-size:1.2rem;">📝</span>
+                    
                     <span class="kneel-text" style="color:#fff;">SUBMIT DAILY ROUTINE</span>
                 </div>
             </div>
@@ -1001,16 +1001,12 @@
 
                    <!-- 3. ROUTINE SELECTOR (The Tile List) -->
                     <div id="routineSelectionArea" class="hidden" style="width:100%; display:flex; flex-direction:column; gap:10px;">
-                        
-                        <div class="lobby-label">SELECT PROTOCOL:</div>
-
                         <!-- The Grid of Options -->
                         <div class="routine-grid">
                             <div class="routine-tile" onclick="selectRoutineItem(this, 'Morning Kneel')">Morning Kneel</div>
                             <div class="routine-tile" onclick="selectRoutineItem(this, 'Chastity Check')">Chastity Check</div>
                             <div class="routine-tile" onclick="selectRoutineItem(this, 'Hydration Report')">Hydration Report</div>
                             <div class="routine-tile" onclick="selectRoutineItem(this, 'Cleanliness Check')">Cleanliness Check</div>
-                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Sleep Position')">Sleep Position</div>
                             <div class="routine-tile special" onclick="selectRoutineItem(this, 'custom')">CREATE OWN (+1000)</div>
                         </div>
 
