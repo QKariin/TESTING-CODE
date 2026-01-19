@@ -123,87 +123,154 @@ Bridge.listen((data) => {
 });
 
 // =========================================
-// NEW: SLAVE SETTINGS & HUD LOGIC
+// NEW: THE QUEEN'S LOBBY (LOGIC)
 // =========================================
 
-// 1. OPEN SETTINGS
-window.openSlaveSettings = function() {
-    document.getElementById('slaveSettingsOverlay').classList.remove('hidden');
-    // Sync current coins to settings panel
-    if(gameStats) document.getElementById('settingsCoins').innerText = gameStats.coins;
+let currentActionType = "";
+let currentActionCost = 0;
+
+// 1. NAVIGATION
+window.openLobby = function() {
+    document.getElementById('lobbyOverlay').classList.remove('hidden');
+    window.backToLobbyMenu();
 };
 
-window.closeSlaveSettings = function() {
-    document.getElementById('slaveSettingsOverlay').classList.add('hidden');
+window.closeLobby = function() {
+    document.getElementById('lobbyOverlay').classList.add('hidden');
 };
 
-// 2. BUY NAME
-window.buyNameChange = function() {
-    const input = document.getElementById('inputNewName');
-    const newName = input.value.trim();
-    if(!newName) return;
-    
-    if(gameStats.coins < 100) { alert("Insufficient Capital (100)"); return; }
-    
-    // Process Transaction via existing Bridge logic
-    window.parent.postMessage({ 
-        type: "PURCHASE_ITEM", 
-        itemName: "Identity Rename", 
-        cost: 100, 
-        messageToDom: "Slave changed designation to: " + newName 
-    }, "*");
-    
-    // Optimistic Update
-    userProfile.name = newName;
-    updateStats(); 
-    closeSlaveSettings();
+window.backToLobbyMenu = function() {
+    document.getElementById('lobbyMenu').classList.remove('hidden');
+    document.getElementById('lobbyActionView').classList.add('hidden');
+    // Reset inputs
+    document.getElementById('lobbyInputText').value = "";
+    document.getElementById('lobbyInputFileBtn').innerText = "CHOOSE FILE";
 };
 
-// 3. BUY PHOTO
-window.buyPhotoChange = function() {
-    const fileInput = document.getElementById('settingPhotoInput');
-    if(fileInput.files.length === 0) return;
+// 2. SETUP ACTION SCREEN
+window.showLobbyAction = function(type) {
+    currentActionType = type;
     
-    if(gameStats.coins < 500) { alert("Insufficient Capital (500)"); return; }
-    
-    // Use existing upload handler but tag it differently? 
-    // Actually, we use the existing handleProfileUpload but charge for it manually first.
-    window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: "SYSTEM: 500 Coins deducted for Profile Update." }, "*");
-    
-    // Trigger the upload
-    if(window.handleProfileUpload) window.handleProfileUpload(fileInput);
-    
-    closeSlaveSettings();
-};
+    const prompt = document.getElementById('lobbyPrompt');
+    const input = document.getElementById('lobbyInputText');
+    const fileBtn = document.getElementById('lobbyInputFileBtn');
+    const routineBtns = document.getElementById('lobbyRoutineBtns');
+    const confirmBtn = document.getElementById('btnLobbyConfirm');
+    const costDisplay = document.getElementById('lobbyCostDisplay');
 
-// 4. BUY ROUTINE
-window.buyRoutine = function(type) {
-    const cost = type === 'standard' ? 1000 : 2000;
-    if(gameStats.coins < cost) { alert("Insufficient Capital ("+cost+")"); return; }
-    
-    window.parent.postMessage({ 
-        type: "PURCHASE_ITEM", 
-        itemName: "Daily Routine: " + type, 
-        cost: cost, 
-        messageToDom: "Slave initiated " + type + " daily protocol." 
-    }, "*");
-    
-    // Show the button on dashboard
-    document.getElementById('btnDailyRoutine').classList.remove('hidden');
-    closeSlaveSettings();
-};
+    // Hide all inputs first
+    input.classList.add('hidden');
+    fileBtn.classList.add('hidden');
+    routineBtns.classList.add('hidden');
+    confirmBtn.classList.remove('hidden'); // Show submit by default
 
-// 5. UPLOAD ROUTINE PROOF
-window.handleRoutineUpload = function(input) {
-    if(input.files.length > 0) {
-        // Send to backend
-        if(window.handleEvidenceUpload) window.handleEvidenceUpload(input);
-        
-        // Hide button
-        document.getElementById('btnDailyRoutine').classList.add('hidden');
-        alert("Routine Submitted.");
+    document.getElementById('lobbyMenu').classList.add('hidden');
+    document.getElementById('lobbyActionView').classList.remove('hidden');
+
+    // CONFIGURE UI BASED ON TYPE
+    if (type === 'name') {
+        prompt.innerHTML = "State your desired designation.<br>The Queen must approve.";
+        input.classList.remove('hidden');
+        currentActionCost = 100;
+    } 
+    else if (type === 'photo') {
+        prompt.innerHTML = "Present your visage for inspection.";
+        fileBtn.classList.remove('hidden');
+        currentActionCost = 500;
     }
+    else if (type === 'kinks') {
+        prompt.innerHTML = "Confess your perversions.<br>Be explicit.";
+        input.classList.remove('hidden');
+        currentActionCost = 200;
+    }
+    else if (type === 'limits') {
+        prompt.innerHTML = "State your hard limits.<br>Do not show weakness.";
+        input.classList.remove('hidden');
+        currentActionCost = 200;
+    }
+    else if (type === 'routine') {
+        prompt.innerHTML = "Select a Protocol Level.";
+        routineBtns.classList.remove('hidden');
+        confirmBtn.classList.add('hidden'); // Hide default submit, buttons handle it
+        currentActionCost = 0; // Handled by buttons
+    }
+
+    costDisplay.innerText = currentActionCost + " COINS";
 };
+
+// 3. EXECUTE ACTION
+window.confirmLobbyAction = function(subType) {
+    // Handle Routine Special Case
+    if (currentActionType === 'routine' && subType) {
+        currentActionCost = subType === 'standard' ? 1000 : 2000;
+    }
+
+    // CHECK FUNDS
+    if (gameStats.coins < currentActionCost) {
+        // FAIL STATE
+        const btn = document.getElementById('btnLobbyConfirm');
+        btn.innerText = "INSUFFICIENT FUNDS - BUY COINS";
+        btn.style.borderColor = "#ff003c";
+        btn.style.color = "#ff003c";
+        
+        // Redirect to Exchequer on next click
+        btn.onclick = function() {
+            window.closeLobby();
+            window.toggleMobileView('buy'); // Go to Store
+            // Reset button
+            setTimeout(() => {
+                btn.innerText = "SUBMIT REQUEST";
+                btn.style.borderColor = ""; 
+                btn.style.color = "";
+                btn.onclick = () => window.confirmLobbyAction();
+            }, 1000);
+        };
+        return;
+    }
+
+    // SUCCESS - SEND TO CMS
+    let payload = "";
+    
+    if (currentActionType === 'photo') {
+        const fileInput = document.getElementById('lobbyFile');
+        if (fileInput.files.length > 0) {
+            // Use existing upload handler
+            if(window.handleProfileUpload) window.handleProfileUpload(fileInput);
+            payload = "Photo Update Initiated";
+        } else { return; }
+    } 
+    else if (currentActionType === 'routine') {
+        payload = "Routine Requested: " + subType;
+        // Show the upload button on dashboard
+        document.getElementById('btnDailyRoutine').classList.remove('hidden');
+    }
+    else {
+        // Text Input (Name, Kinks, Limits)
+        const text = document.getElementById('lobbyInputText').value;
+        if(!text) return;
+        payload = currentActionType.toUpperCase() + ": " + text;
+        
+        // Optimistic Name Update
+        if(currentActionType === 'name') {
+            document.getElementById('mob_slaveName').innerText = text;
+            userProfile.name = text; // Update local state
+        }
+    }
+
+    // CHARGE & NOTIFY
+    window.parent.postMessage({ 
+        type: "PURCHASE_ITEM", 
+        itemName: "Lobby Request: " + currentActionType, 
+        cost: currentActionCost, 
+        messageToDom: payload 
+    }, "*");
+
+    window.closeLobby();
+};
+
+// 4. SYNC HUD AVATAR (Add to syncMobileDashboard)
+// I will just add a line here, make sure your sync function uses it.
+// document.getElementById('hudSlavePic').src = elPic.src;
 
 
 
