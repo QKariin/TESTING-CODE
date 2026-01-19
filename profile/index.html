@@ -979,29 +979,34 @@
                 </div>
 
                 <!-- VIEW 2: ACTION INPUT -->
+                <!-- VIEW 2: ACTION INPUT -->
                 <div id="lobbyActionView" class="lobby-content hidden">
                     <div id="lobbyPrompt" class="lobby-prompt">...</div>
                     
-                    <!-- 1. TEXT INPUT -->
+                    <!-- 1. TEXT INPUT (Name/Limits) -->
                     <input type="text" id="lobbyInputText" class="lobby-input hidden" placeholder="Type here...">
                     
-                    <!-- 2. FILE INPUT -->
-                    <button id="lobbyInputFileBtn" class="lobby-file-btn hidden" onclick="document.getElementById('lobbyFile').click()">CHOOSE FILE</button>
+                    <!-- 2. FILE INPUT (Photo) -->
+                    <button id="lobbyInputFileBtn" class="lobby-file-btn hidden" onclick="document.getElementById('lobbyFile').click()">PICK PHOTO</button>
                     <input type="file" id="lobbyFile" hidden onchange="document.getElementById('lobbyInputFileBtn').innerText = 'FILE SELECTED'">
 
-                   <!-- 3. ROUTINE SELECTOR (The Tile List) -->
+                    <!-- 3. ROUTINE SELECTOR -->
                     <div id="routineSelectionArea" class="hidden" style="width:100%; display:flex; flex-direction:column; gap:10px;">
-                        <!-- The Grid of Options -->
+                        <div class="lobby-label" style="font-size:0.6rem; color:#888;">SELECT PROTOCOL:</div>
                         <div class="routine-grid">
-                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Morning Kneel')">Morning Kneel</div>
+                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Morning Kneel')">Morning Kneeling</div>
                             <div class="routine-tile" onclick="selectRoutineItem(this, 'Chastity Check')">Chastity Check</div>
                             <div class="routine-tile" onclick="selectRoutineItem(this, 'Hydration Report')">Hydration Report</div>
-                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Cleanliness Check')">Cleanliness Check</div>
                             <div class="routine-tile special" onclick="selectRoutineItem(this, 'custom')">CREATE OWN (+1000)</div>
                         </div>
-
-                        <!-- Custom Input (Hidden by default) -->
                         <input type="text" id="routineCustomInput" class="lobby-input hidden" placeholder="Describe your routine..." style="margin-top:10px;">
+                    </div>
+
+                    <!-- 4. KINK SELECTOR (NEW ADDITION) -->
+                    <div id="kinkSelectionArea" class="hidden" style="width:100%; display:flex; flex-direction:column; gap:10px;">
+                         <div class="lobby-label" style="font-size:0.6rem; color:#888;">Pick kinks (100 EACH):</div>
+                         <!-- The JS will auto-fill this grid -->
+                         <div id="kinkGrid" class="routine-grid"></div>
                     </div>
 
                     <!-- COST DISPLAY -->
@@ -1013,9 +1018,6 @@
                     <button id="btnLobbyConfirm" class="lobby-btn gold" onclick="confirmLobbyAction()">SUBMIT</button>
                     <button class="lobby-btn close" onclick="backToLobbyMenu()">BACK</button>
                 </div>
-
-            </div>
-        </div>
 
       
 
