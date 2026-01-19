@@ -20,7 +20,7 @@ export function switchTab(mode) {
         }
     });
 
-    // 3. Mobile Navigation Logic - Call toggleMobileView for mobile views
+    // 3. Mobile Navigation Logic
     if (window.innerWidth < 768) {
         allBtns.forEach(btn => {
             const cmd = btn.getAttribute('onclick') || "";
@@ -33,17 +33,6 @@ export function switchTab(mode) {
                 }
             }
         });
-        
-        // Call toggleMobileView for mobile-specific handling
-        const mobileViewMap = {
-            'serve': 'home',
-            'history': 'record'
-        };
-        
-        if (mobileViewMap[mode] && window.toggleMobileView) {
-            window.toggleMobileView(mobileViewMap[mode]);
-            return; // Exit early to avoid desktop view logic
-        }
     }
     
     // 4. Hide all views - Including historySection
