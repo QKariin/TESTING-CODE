@@ -617,6 +617,39 @@
     
     /* HUD PICS */
     .hud-circle img { object-fit: cover; }
+
+    /* ROUTINE TILES */
+    .routine-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* 2 Columns */
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .routine-tile {
+        background: #111;
+        border: 1px solid #333;
+        padding: 10px 5px;
+        text-align: center;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.6rem;
+        color: #888;
+        cursor: pointer;
+        transition: 0.2s;
+        border-radius: 4px;
+    }
+
+    .routine-tile:hover { border-color: #666; color: #fff; }
+    
+    /* Selected State (Gold) */
+    .routine-tile.selected {
+        background: rgba(197, 160, 89, 0.1);
+        border-color: #c5a059;
+        color: #c5a059;
+        box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);
+    }
+    
+    .routine-tile.special { border-color: #444; color: #ccc; }
     
   </style>
 </head>
@@ -959,21 +992,23 @@
                     <button id="lobbyInputFileBtn" class="lobby-file-btn hidden" onclick="document.getElementById('lobbyFile').click()">CHOOSE FILE</button>
                     <input type="file" id="lobbyFile" hidden onchange="document.getElementById('lobbyInputFileBtn').innerText = 'FILE SELECTED'">
 
-                    <!-- 3. ROUTINE SELECTOR (Immediate Dropdown) -->
+                   <!-- 3. ROUTINE SELECTOR (The Tile List) -->
                     <div id="routineSelectionArea" class="hidden" style="width:100%; display:flex; flex-direction:column; gap:10px;">
                         
-                        <!-- Dropdown (Last option triggers custom input) -->
-                        <select id="routineDropdown" class="lobby-input" onchange="checkRoutineDropdown()">
-                            <option value="Morning Kneel">Morning Kneel</option>
-                            <option value="Chastity Check">Chastity Check</option>
-                            <option value="Post-Workout Report">Post-Workout Report</option>
-                            <option value="Cleanliness Check">Cleanliness Check</option>
-                            <option value="Sleep Position">Sleep Position</option>
-                            <option value="custom" style="color:var(--mob-gold); font-weight:bold;">-- PERSONALIZED --</option>
-                        </select>
+                        <div class="lobby-label">SELECT PROTOCOL:</div>
 
-                        <!-- Custom Input (Hidden unless "Personalized" is picked) -->
-                        <input type="text" id="routineCustomInput" class="lobby-input hidden" placeholder="Describe your routine...">
+                        <!-- The Grid of Options -->
+                        <div class="routine-grid">
+                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Morning Kneel')">Morning Kneel</div>
+                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Chastity Check')">Chastity Check</div>
+                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Hydration Report')">Hydration Report</div>
+                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Cleanliness Check')">Cleanliness Check</div>
+                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Sleep Position')">Sleep Position</div>
+                            <div class="routine-tile special" onclick="selectRoutineItem(this, 'custom')">CREATE OWN (+1000)</div>
+                        </div>
+
+                        <!-- Custom Input (Hidden by default) -->
+                        <input type="text" id="routineCustomInput" class="lobby-input hidden" placeholder="Describe your routine..." style="margin-top:10px;">
                     </div>
 
                     <!-- COST DISPLAY -->
