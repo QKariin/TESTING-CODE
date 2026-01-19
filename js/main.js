@@ -753,7 +753,7 @@ window.triggerKneel = function() {
     }
 };
 
-// 4. DATA SYNC (FIXED: ROBUST IMAGE LOADING)
+// 4. DATA SYNC (FIXED: Updates Face AND Background)
 window.syncMobileDashboard = function() {
     // 1. Safety Check
     if (!gameStats || !userProfile) return;
@@ -762,9 +762,8 @@ window.syncMobileDashboard = function() {
     const elName = document.getElementById('mob_slaveName');
     const elRank = document.getElementById('mob_rankStamp');
     const elPic = document.getElementById('mob_profilePic'); // The Hexagon Face
-    const elBg = document.getElementById('mob_bgPic');       // The Background Wallpaper
-    
-    // (Stats IDs)
+    const elBg = document.getElementById('mob_bgPic');       // The Background Wallpaper (NEW ID)
+
     const elPoints = document.getElementById('mobPoints');
     const elCoins = document.getElementById('mobCoins');
 
@@ -774,32 +773,32 @@ window.syncMobileDashboard = function() {
     if (elPoints) elPoints.innerText = gameStats.points || 0;
     if (elCoins) elCoins.innerText = gameStats.coins || 0;
     
-    // 4. SYNC IMAGES (THE FIX)
-    // We define the fallback first
-    const fallbackUrl = "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png";
-    let finalUrl = fallbackUrl;
+    // 4. SYNC IMAGES (Face & Background)
+    if (userProfile.profilePicture) {
+        let rawUrl = userProfile.profilePicture;
+        let finalUrl = rawUrl;
 
-    if (userProfile.profilePicture && userProfile.profilePicture.length > 5) {
-        // If it is a Wix internal URL, convert it. 
-        // If it is already https (from desktop logic), leave it alone.
-        if (userProfile.profilePicture.startsWith("wix:image")) {
-            const uri = userProfile.profilePicture.split('/')[3].split('#')[0]; 
+        // Wix URL Fixer
+        const defaultPic = "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png";
+        
+        if (!rawUrl || rawUrl === "" || rawUrl === "undefined") {
+            finalUrl = defaultPic;
+        } 
+        else if (rawUrl.startsWith("wix:image")) {
+            const uri = rawUrl.split('/')[3].split('#')[0]; 
             finalUrl = `https://static.wixstatic.com/media/${uri}`;
-        } else {
-            finalUrl = userProfile.profilePicture;
         }
+
+        // Apply to Hexagon
+        if (elPic) elPic.src = finalUrl;
+        
+        // Apply to Background (Atmosphere)
+        if (elBg) elBg.src = finalUrl;
+        
+        // Apply to HUD Small Circle (Settings Button)
+        const hud = document.getElementById('hudSlavePic');
+        if (hud) hud.src = finalUrl;
     }
-
-    // Apply to Hexagon
-    if (elPic) elPic.src = finalUrl;
-    
-    // Apply to Background
-    if (elBg) elBg.src = finalUrl;
-    
-    // Apply to HUD Small Circle (if it exists)
-    const hudPic = document.getElementById('hudSlavePic');
-    if (hudPic) hudPic.src = finalUrl;
-
 
     // 5. Fill Grid
     const grid = document.getElementById('mob_streakGrid');
