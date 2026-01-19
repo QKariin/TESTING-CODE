@@ -11,7 +11,7 @@ import {
 } from './dashboard-state.js';
 import { clean, raw } from './dashboard-utils.js';
 import { Bridge } from './bridge.js'; 
-import { getOptimizedUrl, mediaType } from './media.js';
+import { getOptimizedUrl, mediaType as mediaTypeFunction } from './media.js';
 
 // --- INTERNAL WORKSHOP STATE ---
 let pendingDirectiveText = ""; 
@@ -69,7 +69,7 @@ export function openModal(taskId, memberId, mediaUrl, mediaType, taskText, isHis
     const textEl = document.getElementById('mText');
     const actionsEl = document.getElementById('modalActions');
     if (!modal || !mediaBox || !textEl) return;
-    const isVideo = mediaType(mediaUrl) === 'video';
+    const isVideo = mediaTypeFunction(mediaUrl) === 'video';
 
     if (mediaUrl) {
         if (isVideo) {
