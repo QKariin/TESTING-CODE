@@ -1020,7 +1020,7 @@ window.syncMobileDashboard = function() {
             bottom: '0', 
             left: '0', 
             width: '100%', 
-            height: '80px',
+            height: '60px',
             
             background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
             paddingBottom: 'env(safe-area-inset-bottom)',
