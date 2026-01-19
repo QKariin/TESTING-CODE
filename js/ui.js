@@ -33,6 +33,24 @@ export function switchTab(mode) {
                 }
             }
         });
+        
+        // 3a. Handle mobile-specific views
+        const mobileViews = ['viewMobileHome', 'viewMobileRecord'];
+        mobileViews.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.display = 'none';
+            }
+        });
+        
+        // Show the appropriate mobile view
+        if (mode === 'serve' || mode === 'history') {
+            const mobileViewId = mode === 'history' ? 'viewMobileRecord' : 'viewMobileHome';
+            const mobileView = document.getElementById(mobileViewId);
+            if (mobileView) {
+                mobileView.style.display = 'flex';
+            }
+        }
     }
     
     // 4. Hide all views - Including historySection
