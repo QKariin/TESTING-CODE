@@ -1043,7 +1043,7 @@ window.syncMobileDashboard = function() {
 <button onclick="window.toggleMobileView('home')" style="${btnStyle}"><span style="font-size:1.4rem;color:#888;">◈</span><span>PROFILE</span></button>
 <button onclick="window.toggleMobileView('record')" style="${btnStyle}"><span style="font-size:1.4rem;color:#888;">▦</span><span>RECORD</span></button>
 <button onclick="window.toggleMobileView('chat')" style="${chatStyle};display:inline-flex;align-items:center;justify-content:center;padding:0;min-width:60px;">
-<img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #ff003c;display:block;">
+<img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:1px solid #ff003c;display:block;">
 </button>
 <button onclick="window.toggleMobileView('queen')" style="${btnStyle}"><span style="font-size:1.4rem;color:#888;">♛</span><span>QUEEN</span></button>
 <button onclick="window.toggleMobileView('global')" style="${btnStyle}">
