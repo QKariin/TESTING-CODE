@@ -75,7 +75,7 @@ export function openModal(taskId, memberId, mediaUrl, mediaType, taskText, isHis
         if (isVideo) {
             mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls muted autoplay loop></video>`;
         } else {
-            mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 800)}" class="m-img">`;
+            mediaBox.innerHTML = `<img src="${mediaUrl}" class="m-img">`;
         }
     } else {
         mediaBox.innerHTML = `<div style="color:#666; font-family:'Rajdhani';">NO MEDIA</div>`;

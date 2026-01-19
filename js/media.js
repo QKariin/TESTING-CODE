@@ -56,6 +56,10 @@ export function getOptimizedUrl(url, width = 400) {
 
   // 2. BYTESCALE
   if (url.includes("upcdn.io")) {
+    if (url.includes("&sig=")) {
+      // Signed URL → do not modify
+      return url;
+    }
     const cleanUrl = getThumbnail(url);
     const sep = cleanUrl.includes("?") ? "&" : "?";
     return `${cleanUrl}${sep}width=${width}&format=auto&quality=auto&dpr=auto`;
