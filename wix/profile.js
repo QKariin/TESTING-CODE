@@ -381,7 +381,46 @@ $w("#html2").onMessage(async (event) => {
                 await syncProfileAndTasks(); 
             }
         }
-        
+
+        // I. UPDATE CMS FIELD (Restored for Lobby)
+        else if (data.type === "UPDATE_CMS_FIELD") {
+            try {
+                const results = await wixData.query("Tasks")
+                    .eq("memberId", currentUserEmail)
+                    .find({ suppressAuth: true });
+
+                if (results.items.length > 0) {
+                    let item = results.items[0];
+                    
+                    if (data.field === "title_fld") {
+                        item.title_fld = data.value;
+                        item.title = data.value; 
+                    } 
+                    else if (data.field === "routine") {
+                        item.routine = data.value;
+                        await insertMessage({ 
+                            memberId: currentUserEmail, 
+                            message: "PROTOCOL SET: " + data.value, 
+                            sender: "system", 
+                            read: false 
+                        });
+                    }
+                    else if (data.field === "kink") {
+                        item.kink = data.value;
+                    }
+
+                    if (data.cost > 0) {
+                        item.wallet = (item.wallet || 0) - data.cost;
+                    }
+
+                    await wixData.update("Tasks", item, { suppressAuth: true });
+                    await syncProfileAndTasks();
+                }
+            } catch (e) {
+                console.error("Field Update Error", e);
+            }
+        }
+            
         // H. TASK QUEUE MANAGEMENT - NEW HANDLER
         else if (data.type === "updateTaskQueue") {
             try {
