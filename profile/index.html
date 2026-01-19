@@ -799,18 +799,19 @@
 <!-- =======================================================
      UNIVERSE B: MOBILE APP (KAIZEN LAYOUT)
      ======================================================= -->
-<!-- 🟢 MOBILE UNIVERSE (FINAL INTEGRATED LAYOUT) -->
+<!-- 🟢 MOBILE UNIVERSE (HALO + WORKING TIMER + RECORD) -->
 <div id="MOBILE_APP" style="display:none;">
     
-   <!-- 1. DASHBOARD (FIXED BUTTON & DRAWER) -->
+    <!-- 1. DASHBOARD -->
     <div id="viewMobileHome" class="mob-frame">
         
-       <div class="mob-bg-layer">
+        <!-- DYNAMIC BACKGROUND -->
+        <div class="mob-bg-layer">
             <img id="mob_profilePic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="bg-blur">
             <div class="bg-overlay"></div>
         </div>
 
-        <!-- 2. THE HALO -->
+        <!-- 2. THE HALO (Identity) -->
         <div class="halo-section">
             <div class="halo-ring">
                 <div id="mob_slaveName" class="halo-name">SLAVE</div>
@@ -818,36 +819,35 @@
             </div>
         </div>
 
-        <!-- 3. STATS BRIDGE -->
-        <div class="halo-stats-card">
-            <div class="h-stat">
-                <span class="h-val" id="mobPoints">0</span>
-                <span class="h-lbl">MERIT</span>
+        <!-- 3. STATS BRIDGE & DRAWER -->
+        <div style="width:100%; display:flex; flex-direction:column; align-items:center; z-index:3;">
+            <div class="halo-stats-card">
+                <div class="h-stat">
+                    <span class="h-val" id="mobPoints">0</span>
+                    <span class="h-lbl">MERIT</span>
+                </div>
+                <div class="h-divider"></div>
+                <div class="h-stat">
+                    <span class="h-val" id="mobCoins">0</span>
+                    <span class="h-lbl">NET</span>
+                </div>
             </div>
-            <div class="h-divider"></div>
-            <div class="h-stat">
-                <span class="h-val" id="mobCoins">0</span>
-                <span class="h-lbl">NET</span>
-            </div>
-        </div>
-      
-            <!-- TOGGLE BUTTON -->
+
             <div class="mob-stats-toggle-btn" onclick="toggleMobileStats()">
                 SLAVE STATS <span id="mobStatsArrow">▼</span>
             </div>
 
-            <!-- INTERNAL DRAWER (Now inside the card) -->
             <div id="mobStatsContent" class="mob-internal-drawer">
                 <div class="drawer-row"><span class="d-lbl">CURRENT STREAK</span><span class="d-val" id="mobStreak">0</span></div>
                 <div class="drawer-row"><span class="d-lbl">TOTAL SERVED</span><span class="d-val" id="mobTotal">0</span></div>
                 <div class="drawer-row"><span class="d-lbl">KNEEL COUNT</span><span class="d-val" id="mobKneels">0</span></div>
             </div>
-            
         </div>
-     
-        <!-- CARD 1: THE EXECUTION BAR (Wide Kneel Button) -->
-        <div class="mob-section-wrapper">
-            <!-- Added mob-kneel-zone class for JS -->
+
+        <!-- 4. ACTION STACK -->
+        <div class="halo-stack" style="padding: 0 20px; width:100%; margin-top:15px;">
+            
+            <!-- KNEEL BAR (With correct classes for JS) -->
             <div class="mob-kneel-bar mob-kneel-zone" 
                  onmousedown="if(window.handleHoldStart) window.handleHoldStart(event)" 
                  onmouseup="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
@@ -858,66 +858,57 @@
                 <div id="mob_kneelFill" class="mob-bar-fill"></div>
                 <div class="mob-bar-content">
                     <span class="kneel-icon-sm">◈</span>
-                    <!-- Added kneel-label class for JS -->
                     <span id="mob_kneelText" class="kneel-text kneel-label">HOLD TO KNEEL</span>
                 </div>
             </div>
-        </div>
 
-        <!-- CARD 2: THE HEATMAP (24 Squares) -->
-        <div class="mob-section-wrapper">
-            <div class="mob-grid-label-center">DAILY TRACKING</div>
-            <div id="mob_streakGrid" class="mob-streak-strip">
-                <!-- JS Fills this -->
+            <!-- HEATMAP -->
+            <div class="mob-section-wrapper" style="width:100%;">
+                <div class="mob-grid-label-center">DAILY PROGRESS</div>
+                <div id="mob_streakGrid" class="mob-streak-strip"></div>
             </div>
-        </div>
 
-        <!-- CARD 3: THE TASK DECK (GOLD GAUGE EDITION) -->
-        <div class="mob-card operations-card">
-            <div class="op-status-row">
-                <div id="mob_statusLight" class="status-light red"></div>
-                <div id="mob_statusText" class="status-text">UNPRODUCTIVE</div>
-            </div>
-            
-            <div class="op-action-row">
-                <!-- Idle State -->
-                <button id="mob_btnRequest" class="mob-action-btn" onclick="if(window.getRandomTask) window.getRandomTask()">REQUEST PROTOCOL</button>
+            <!-- TASK CARD (With Gold Gauge Timer) -->
+            <div class="mob-card operations-card">
+                <div class="op-status-row">
+                    <div id="mob_statusLight" class="status-light red"></div>
+                    <div id="mob_statusText" class="status-text">UNPRODUCTIVE</div>
+                </div>
                 
-                <!-- Active State (The 3 Gold Rings) -->
-                <div id="mob_activeTimer" class="mob-timer-row hidden">
+                <div class="op-action-row">
+                    <!-- Idle State -->
+                    <button id="mob_btnRequest" class="mob-action-btn" onclick="if(window.getRandomTask) window.getRandomTask()">REQUEST PROTOCOL</button>
                     
-                    <!-- HOURS -->
-                    <div class="timer-gauge">
-                        <div class="gauge-ring"></div>
-                        <div class="gauge-content">
-                            <span id="m_timerH" class="g-val">00</span>
-                            <span class="g-lbl">HRS</span>
+                    <!-- Active State (3 Rings) -->
+                    <div id="mob_activeTimer" class="mob-timer-row hidden">
+                        <!-- HOUR -->
+                        <div class="timer-gauge">
+                            <div id="ring_H" class="gauge-ring"></div>
+                            <div class="gauge-content">
+                                <span id="m_timerH" class="g-val">00</span><span class="g-lbl">HRS</span>
+                            </div>
+                        </div>
+                        <!-- MINUTE -->
+                        <div class="timer-gauge">
+                            <div id="ring_M" class="gauge-ring"></div>
+                            <div class="gauge-content">
+                                <span id="m_timerM" class="g-val">00</span><span class="g-lbl">MIN</span>
+                            </div>
+                        </div>
+                        <!-- SECOND -->
+                        <div class="timer-gauge">
+                            <div id="ring_S" class="gauge-ring"></div>
+                            <div class="gauge-content">
+                                <span id="m_timerS" class="g-val">00</span><span class="g-lbl">SEC</span>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- MINUTES -->
-                    <div class="timer-gauge">
-                        <div class="gauge-ring"></div>
-                        <div class="gauge-content">
-                            <span id="m_timerM" class="g-val">00</span>
-                            <span class="g-lbl">MIN</span>
-                        </div>
-                    </div>
-
-                    <!-- SECONDS (Spinning) -->
-                    <div class="timer-gauge">
-                        <div class="gauge-ring active"></div>
-                        <div class="gauge-content">
-                            <span id="m_timerS" class="g-val">00</span>
-                            <span class="g-lbl">SEC</span>
-                        </div>
-                    </div>
-
                 </div>
             </div>
+
         </div>
 
-        <!-- MOBILE REWARD OVERLAY (Twin) -->
+        <!-- REWARD POPUP -->
         <div id="mobKneelReward" class="mob-reward-overlay hidden">
             <div class="mob-reward-card">
                 <div class="mob-hex-wrap small-reward">
@@ -931,35 +922,34 @@
             </div>
         </div>
 
-        <!-- Spacer for Footer -->
         <div style="height: 120px;"></div>
     </div>
 
-    <!-- 2. MOBILE RECORD (HEADLESS VAULT) -->
-    <div id="viewMobileRecord" class="mob-frame" style="display:none; flex-direction:column; padding-left:0; padding-right:0; padding-top:5px;">
-        
-        <!-- TOP SECTION: THE ALTAR (No Header, starts at top) -->
-        <div class="mob-altar-container" style="margin-top: 0;">
-            <div class="mob-grid-label-center" style="margin-top: 5px;">HIGHEST MERIT</div>
-            
+    <!-- 2. RECORD (VAULT) -->
+    <div id="viewMobileRecord" class="mob-frame" style="display:none; flex-direction:column; padding:0; padding-top:10px;">
+        <div class="mob-header" style="margin-bottom:10px;">
+            <div class="mob-name">SLAVE RECORD</div>
+        </div>
+        <div class="mob-altar-container">
+            <div class="mob-grid-label-center">HIGHEST MERIT</div>
             <div class="mob-pyramid-stage">
                 <div class="mob-idol side"><img id="mobRec_Slot2" src=""><div class="mob-rank-badge">II</div></div>
                 <div class="mob-idol side right"><img id="mobRec_Slot3" src=""><div class="mob-rank-badge">III</div></div>
                 <div class="mob-idol center"><img id="mobRec_Slot1" src=""><div class="mob-rank-badge main">I</div></div>
             </div>
         </div>
-
-        <!-- SECTION 2: ARCHIVE (Horizontal Scroll) -->
-        <div class="mob-section-wrapper" style="margin-top:10px; align-items:flex-start; padding-left:20px;">
+        <div class="mob-section-wrapper" style="margin-top:20px; align-items:flex-start; padding-left:20px;">
             <div class="mob-grid-label">ACCEPTED PROTOCOLS</div>
             <div id="mobRec_Grid" class="mob-horiz-scroll"></div>
         </div>
-
-        <!-- SECTION 3: HEAP (Horizontal Scroll) -->
-        <div class="mob-section-wrapper" style="margin-top:10px; align-items:flex-start; padding-left:20px;">
-            <div class="mob-grid-label" style="color:var(--neon-red);">DENIED / FAILED</div>
+        <div class="mob-section-wrapper" style="margin-top:20px; align-items:flex-start; padding-left:20px;">
+            <div class="mob-grid-label" style="color:#ff003c;">DENIED / FAILED</div>
             <div id="mobRec_Heap" class="mob-horiz-scroll small"></div>
         </div>
+        <div style="height: 120px;"></div>
+    </div>
+
+</div>
         
         <!-- SPACER -->
         <div style="height: 120px;"></div>
