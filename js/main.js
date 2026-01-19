@@ -1040,28 +1040,17 @@ window.syncMobileDashboard = function() {
         const chatStyle = "background:none; border:none; color:#ff003c; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; text-shadow: 0 0 10px rgba(255,0,60,0.4);";
 
         footer.innerHTML = `
-            <button onclick="window.toggleMobileView('home')" style="${btnStyle}">
-                <span style="font-size:1.4rem; color:#888;">◈</span><span>PROFILE</span>
+            <button onclick="window.toggleMobileView('home')" style="${btnStyle}"><span style="font-size:1.4rem;color:#888;">◈</span><span>PROFILE</span></button>
+            <button onclick="window.toggleMobileView('record')" style="${btnStyle}"><span style="font-size:1.4rem;color:#888;">▦</span><span>RECORD</span></button>
+            <button onclick="window.toggleMobileView('chat')" style="${chatStyle};display:inline-flex;flex-direction:column;align-items:center;justify-content:center;padding:5px 0;">
+            <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:2px solid #ff003c;">
+            <span style="color:#ff003c;font-size:0.7rem;font-weight:bold;">LOGS</span>
             </button>
-            
-            <button onclick="window.toggleMobileView('record')" style="${btnStyle}">
-                <span style="font-size:1.4rem; color:#888;">▦</span><span>RECORD</span>
-            </button>
-            
-            <!-- MIDDLE: CHAT (Red Highlight) -->
-            <button onclick="window.toggleMobileView('chat')" style="${chatStyle}">
-                <span style="font-size:1.6rem; color:#ff003c;">❖</span><span>LOGS</span>
-            </button>
-
-            <button onclick="window.toggleMobileView('queen')" style="${btnStyle}">
-                <span style="font-size:1.4rem; color:#888;">♛</span><span>QUEEN</span>
-            </button>
-
+            <button onclick="window.toggleMobileView('queen')" style="${btnStyle}"><span style="font-size:1.4rem;color:#888;">♛</span><span>QUEEN</span></button>
             <button onclick="window.toggleMobileView('global')" style="${btnStyle}">
-                <span style="font-size:1.4rem; color:#888;">🌐</span><span>GLOBAL</span>
-            </button>
-        `;
-        document.body.appendChild(footer);
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <span>GLOBAL</span></button>`;
+document.body.appendChild(footer);
     }
 
     // 3. RUN
