@@ -952,48 +952,66 @@
                     <button class="lobby-btn close" onclick="closeLobby()">LEAVE</button>
                 </div>
 
-               <!-- VIEW 2: ACTION INPUT -->
+              <!-- C. SETTINGS MENU (Simplified & Direct) -->
+        <div id="lobbyOverlay" class="mob-reward-overlay hidden">
+            <div class="mob-reward-card lobby-card">
+                
+                <!-- HEADER -->
+                <div class="lobby-header">
+                    <div class="lobby-title">SETTINGS</div>
+                </div>
+
+                <!-- VIEW 1: MENU LIST -->
+                <div id="lobbyMenu" class="lobby-content">
+                    <button class="lobby-btn" onclick="showLobbyAction('name')">CHANGE NAME</button>
+                    <button class="lobby-btn" onclick="showLobbyAction('photo')">CHANGE PHOTO</button>
+                    <button class="lobby-btn" onclick="showLobbyAction('routine')">DAILY ROUTINE</button>
+                    <button class="lobby-btn" onclick="showLobbyAction('kinks')">ADD KINKS</button>
+                    <button class="lobby-btn" onclick="showLobbyAction('limits')">ADD LIMITS</button>
+                    <div class="lobby-divider"></div>
+                    <button class="lobby-btn close" onclick="closeLobby()">CLOSE</button>
+                </div>
+
+                <!-- VIEW 2: ACTION INPUT -->
                 <div id="lobbyActionView" class="lobby-content hidden">
                     <div id="lobbyPrompt" class="lobby-prompt">...</div>
                     
-                    <!-- 1. GENERIC TEXT INPUT (Name/Kinks/Limits) -->
+                    <!-- 1. TEXT INPUT -->
                     <input type="text" id="lobbyInputText" class="lobby-input hidden" placeholder="Type here...">
                     
-                    <!-- 2. FILE INPUT (Photo) -->
+                    <!-- 2. FILE INPUT -->
                     <button id="lobbyInputFileBtn" class="lobby-file-btn hidden" onclick="document.getElementById('lobbyFile').click()">CHOOSE FILE</button>
                     <input type="file" id="lobbyFile" hidden onchange="document.getElementById('lobbyInputFileBtn').innerText = 'FILE SELECTED'">
 
-                    <!-- 3. ROUTINE SELECTOR (The New Logic) -->
+                    <!-- 3. ROUTINE SELECTOR (Immediate Dropdown) -->
                     <div id="routineSelectionArea" class="hidden" style="width:100%; display:flex; flex-direction:column; gap:10px;">
                         
-                        <!-- Step A: Choose Path -->
-                        <div id="routinePathBtns" style="display:flex; gap:10px;">
-                            <button class="lobby-btn small" onclick="selectRoutinePath('standard')">STANDARD (1000)</button>
-                            <button class="lobby-btn small" onclick="selectRoutinePath('custom')">CUSTOM (2000)</button>
-                        </div>
-
-                        <!-- Step B1: Standard List -->
-                        <select id="routineDropdown" class="lobby-input hidden">
+                        <!-- Dropdown (Last option triggers custom input) -->
+                        <select id="routineDropdown" class="lobby-input" onchange="checkRoutineDropdown()">
                             <option value="Morning Kneel">Morning Kneel</option>
-                            <option value="Chastity Verification">Chastity Verification</option>
-                            <option value="Collar Check">Collar Check</option>
-                            <option value="Hydration Report">Hydration Report</option>
+                            <option value="Chastity Check">Chastity Check</option>
+                            <option value="Post-Workout Report">Post-Workout Report</option>
+                            <option value="Cleanliness Check">Make a bed</option>
                             <option value="Sleep Position">Sleep Position</option>
+                            <option value="custom" style="color:var(--mob-gold); font-weight:bold;">-- PERSONALIZED --</option>
                         </select>
 
-                        <!-- Step B2: Custom Input -->
+                        <!-- Custom Input (Hidden unless "Personalized" is picked) -->
                         <input type="text" id="routineCustomInput" class="lobby-input hidden" placeholder="Describe your routine...">
                     </div>
 
                     <!-- COST DISPLAY -->
                     <div class="lobby-cost-area">
-                        <span class="cost-lbl">TRIBUTE REQUIRED:</span>
+                        <span class="cost-lbl">COST:</span>
                         <span id="lobbyCostDisplay" class="cost-val">0</span>
                     </div>
 
-                    <button id="btnLobbyConfirm" class="lobby-btn gold" onclick="confirmLobbyAction()">SUBMIT REQUEST</button>
-                    <button class="lobby-btn close" onclick="backToLobbyMenu()">CANCEL</button>
+                    <button id="btnLobbyConfirm" class="lobby-btn gold" onclick="confirmLobbyAction()">SUBMIT</button>
+                    <button class="lobby-btn close" onclick="backToLobbyMenu()">BACK</button>
                 </div>
+
+            </div>
+        </div>
 
             </div>
         </div>
