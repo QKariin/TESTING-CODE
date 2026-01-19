@@ -64,6 +64,80 @@
         width: 100%;
     }
 
+      /* --- HALO PROFILE LAYOUT --- */
+
+    /* 1. ATMOSPHERE (The Blurred Background) */
+    .mob-bg-layer {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        z-index: 0; pointer-events: none;
+    }
+    .bg-blur {
+        width: 100%; height: 100%; object-fit: cover;
+        filter: blur(25px) brightness(0.4); /* Dark & Blurry */
+        transform: scale(1.1); /* Prevents white edges from blur */
+    }
+    .bg-overlay {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at center, transparent 0%, #000 90%);
+    }
+
+    /* 2. THE HALO (Identity) */
+    .halo-section {
+        position: relative; z-index: 2;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        margin-top: 40px; margin-bottom: -30px; /* Overlap Pull */
+    }
+
+    .halo-ring {
+        width: 280px; height: 280px;
+        border-radius: 50%;
+        border: 2px solid #c5a059; /* Gold */
+        box-shadow: 0 0 30px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: radial-gradient(circle, rgba(197,160,89,0.1) 0%, transparent 70%);
+        backdrop-filter: blur(0px); /* Keeps text sharp */
+    }
+
+    .halo-name {
+        font-family: 'Cinzel', serif; font-size: 2.2rem; color: #fff;
+        text-transform: uppercase; letter-spacing: 2px;
+        text-shadow: 0 0 20px rgba(255,255,255,0.4);
+        line-height: 1; margin-bottom: 5px; text-align: center;
+    }
+    .halo-rank {
+        font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: #c5a059;
+        letter-spacing: 4px; text-transform: uppercase;
+    }
+
+    /* 3. THE STATS BRIDGE (Overlapping Card) */
+    .halo-stats-card {
+        position: relative; z-index: 3;
+        width: 85%;
+        background: rgba(10, 10, 10, 0.85); /* Glass */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 15px;
+        display: flex; align-items: center; justify-content: space-around;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        backdrop-filter: blur(15px);
+        margin-bottom: 20px;
+    }
+
+    .h-stat { display: flex; flex-direction: column; align-items: center; }
+    .h-val { font-family: 'Cinzel', serif; font-size: 1.5rem; color: #fff; line-height: 1; }
+    .h-lbl { font-family: 'Orbitron', sans-serif; font-size: 0.5rem; color: #888; letter-spacing: 2px; margin-top: 4px; }
+    .h-divider { width: 1px; height: 30px; background: rgba(255,255,255,0.15); }
+
+    /* 4. CONTENT STACK */
+    .halo-stack {
+        position: relative; z-index: 3; width: 100%;
+        display: flex; flex-direction: column; align-items: center; gap: 15px;
+    }
+    
+    /* Tweaks for inner cards to fit the new look */
+    .mob-kneel-bar { background: rgba(0,0,0,0.6) !important; border-color: #444 !important; }
+    .operations-card { background: rgba(0,0,0,0.6) !important; border: 1px solid #333 !important; }
+
     /* 2. The Main Card Container */
     .mob-profile-card {
         display: flex;
@@ -731,35 +805,32 @@
    <!-- 1. DASHBOARD (FIXED BUTTON & DRAWER) -->
     <div id="viewMobileHome" class="mob-frame">
         
-        <!-- HEADER: ROYAL CARD -->
-        <!-- HEADER: ROYAL CARD (EXPANDABLE) -->
-        <div class="mob-profile-card">
-            
-            <!-- TOP ROW: FACE + DATA -->
-            <div class="mob-card-top">
-                <div class="mob-visual-col">
-                    <div class="mob-hex-wrap">
-                        <img id="mob_profilePic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="mob-hex-img">
-                    </div>
-                    <div id="mob_rankStamp" class="mob-rank-banner">INITIATE</div>
-                </div>
+       <div class="mob-bg-layer">
+            <img id="mob_profilePic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="bg-blur">
+            <div class="bg-overlay"></div>
+        </div>
 
-                <div class="mob-data-col">
-                    <div id="mob_slaveName" class="mob-name-static">SLAVE</div>
-                    <div class="mob-stat-row">
-                        <div class="stat-pair">
-                            <span class="stat-val gray" id="mobPoints">0</span>
-                            <span class="stat-lbl">MERIT</span>
-                        </div>
-                        <div class="stat-divider-vert"></div>
-                        <div class="stat-pair">
-                            <span class="stat-val gold-dim" id="mobCoins">0</span>
-                            <span class="stat-lbl">NET</span>
-                        </div>
-                    </div>
-                </div>
-            </div> 
+        <!-- 2. THE HALO -->
+        <div class="halo-section">
+            <div class="halo-ring">
+                <div id="mob_slaveName" class="halo-name">SLAVE</div>
+                <div id="mob_rankStamp" class="halo-rank">INITIATE</div>
+            </div>
+        </div>
 
+        <!-- 3. STATS BRIDGE -->
+        <div class="halo-stats-card">
+            <div class="h-stat">
+                <span class="h-val" id="mobPoints">0</span>
+                <span class="h-lbl">MERIT</span>
+            </div>
+            <div class="h-divider"></div>
+            <div class="h-stat">
+                <span class="h-val" id="mobCoins">0</span>
+                <span class="h-lbl">NET</span>
+            </div>
+        </div>
+      
             <!-- TOGGLE BUTTON -->
             <div class="mob-stats-toggle-btn" onclick="toggleMobileStats()">
                 SLAVE STATS <span id="mobStatsArrow">▼</span>
