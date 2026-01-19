@@ -196,44 +196,60 @@ window.showLobbyAction = function(type) {
     costDisplay.innerText = currentActionCost;
 };
 
-// 3. ROUTINE DROPDOWN LOGIC
-window.checkRoutineDropdown = function() {
-    const val = document.getElementById('routineDropdown').value;
+// NEW: HANDLE ROUTINE TILE SELECTION
+window.selectRoutineItem = function(el, value) {
+    // 1. Visually deselect all others
+    document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('selected'));
+    
+    // 2. Select clicked
+    el.classList.add('selected');
+    
+    // 3. Handle Logic
     const input = document.getElementById('routineCustomInput');
     const costDisplay = document.getElementById('lobbyCostDisplay');
-
-    if (val === 'custom') {
+    
+    if (value === 'custom') {
         input.classList.remove('hidden');
         currentActionCost = 2000;
+        // Clear the dropdown value so we know to check the input
+        document.getElementById('routineDropdown').value = "custom"; 
     } else {
         input.classList.add('hidden');
         currentActionCost = 1000;
+        // Store the selected value in the hidden dropdown or a temp variable
+        document.getElementById('routineDropdown').value = value;
     }
+    
     costDisplay.innerText = currentActionCost;
 };
 
-// 4. EXECUTE ACTION
+// 4. EXECUTE ACTION (UPDATED FOR CMS FIELDS)
 window.confirmLobbyAction = function() {
     if (gameStats.coins < currentActionCost) {
-        alert("NOT ENOUGH COINS");
+        alert("INSUFFICIENT FUNDS");
         return;
     }
 
-    let payload = "";
-    
-    // ROUTINE LOGIC
+    // A. ROUTINE (Update 'routine' field)
     if (currentActionType === 'routine') {
-        const val = document.getElementById('routineDropdown').value;
-        let taskName = val;
-        
-        if (val === 'custom') {
+        // Get value from our hidden holder or input
+        let taskName = document.getElementById('routineDropdown').value; 
+        if (taskName === 'custom') {
             taskName = document.getElementById('routineCustomInput').value;
         }
         
         if(!taskName) return;
-        payload = "Routine Purchased: " + taskName;
 
-        // Show Button on Dashboard
+        // SEND TO WIX: Update 'routine' field
+        window.parent.postMessage({ 
+            type: "UPDATE_CMS_FIELD", // New Type
+            field: "routine", 
+            value: taskName,
+            cost: currentActionCost,
+            message: "Routine set to: " + taskName
+        }, "*");
+        
+        // UI Update
         const btn = document.getElementById('btnDailyRoutine');
         if(btn) {
             btn.classList.remove('hidden');
@@ -241,34 +257,54 @@ window.confirmLobbyAction = function() {
             if(txt) txt.innerText = "SUBMIT: " + taskName.toUpperCase();
         }
     } 
-    // PHOTO LOGIC
+    
+    // B. PHOTO (Update 'image_fld' - Already handled by UPDATE_PROFILE_PIC)
     else if (currentActionType === 'photo') {
         const fileInput = document.getElementById('lobbyFile');
         if (fileInput.files.length > 0) {
+            // This relies on your existing handleProfileUpload logic
+            // You might need to deduct coins separately if handleProfileUpload doesn't
+             window.parent.postMessage({ 
+                type: "PROCESS_PAYMENT", 
+                cost: 500, 
+                note: "Photo Change" 
+            }, "*");
+            
             if(window.handleProfileUpload) window.handleProfileUpload(fileInput);
-            payload = "Photo Update";
         } else { return; }
     }
-    // TEXT LOGIC
+    
+    // C. NAME (Update 'title_fld')
+    else if (currentActionType === 'name') {
+        const text = document.getElementById('lobbyInputText').value;
+        if(!text) return;
+        
+        // SEND TO WIX: Update 'title_fld'
+        window.parent.postMessage({ 
+            type: "UPDATE_CMS_FIELD", 
+            field: "title_fld", 
+            value: text,
+            cost: 100,
+            message: "Designation changed to: " + text
+        }, "*");
+
+        // Optimistic UI Update
+        const el = document.getElementById('mob_slaveName');
+        if(el) el.innerText = text;
+        userProfile.name = text;
+    }
+    
+    // D. KINKS/LIMITS (Generic Purchase)
     else {
         const text = document.getElementById('lobbyInputText').value;
         if(!text) return;
-        payload = currentActionType.toUpperCase() + ": " + text;
-        
-        if(currentActionType === 'name') {
-            const el = document.getElementById('mob_slaveName');
-            if(el) el.innerText = text;
-            userProfile.name = text;
-        }
+        window.parent.postMessage({ 
+            type: "PURCHASE_ITEM", 
+            itemName: currentActionType.toUpperCase() + ": " + text, 
+            cost: currentActionCost, 
+            messageToDom: "Profile Updated." 
+        }, "*");
     }
-
-    // Send to CMS
-    window.parent.postMessage({ 
-        type: "PURCHASE_ITEM", 
-        itemName: payload, 
-        cost: currentActionCost, 
-        messageToDom: payload 
-    }, "*");
 
     window.closeLobby();
 };
