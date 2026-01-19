@@ -935,15 +935,34 @@ window.syncMobileDashboard = function() {
         if (hud) hud.src = finalUrl;
     }
 
-    // 5. Fill Grid
+    // 5. FILL 24-HOUR GRID (Timeline)
     const grid = document.getElementById('mob_streakGrid');
     if(grid) {
         grid.innerHTML = '';
+        
+        // Data Source: Ideally 'gameStats.kneelHours' (Array of hours), 
+        // fallback to 'kneelCount' for now.
         const count = gameStats.kneelCount || 0;
-        const progress = count % 24; 
+        
+        // Generate 24 Squares (00 to 23)
         for(let i=0; i<24; i++) {
             const sq = document.createElement('div');
-            sq.className = 'streak-sq' + (i < progress ? ' active' : '');
+            sq.className = 'streak-sq';
+            
+            // LOGIC: If we have specific hours, check them.
+            // If not, just fill the first N squares based on count.
+            if (i < count) {
+                sq.classList.add('active'); // Gold
+            } else {
+                // Determine if this hour has passed (Failure check)
+                const currentHour = new Date().getHours();
+                if (i < currentHour) {
+                    // It's 2 PM, this is 9 AM, and it's empty -> FAILURE
+                    sq.style.borderColor = "#333"; // Or "#ff003c" for red shame
+                    sq.style.opacity = "0.5";
+                }
+            }
+            
             grid.appendChild(sq);
         }
     }
