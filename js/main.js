@@ -501,6 +501,9 @@ window.addEventListener("message", (event) => {
             if(badge) { badge.innerHTML = data.online ? "ONLINE" : data.text; badge.className = data.online ? "chat-status-text chat-online" : "chat-status-text"; }
             if(ring) ring.className = data.online ? "dom-status-ring ring-active" : "dom-status-ring ring-inactive";
             if(domBadge) { domBadge.innerHTML = data.online ? '<span class="status-dot"></span> ONLINE' : `<span class="status-dot"></span> ${data.text}`; domBadge.className = data.online ? "dom-status status-online" : "dom-status"; }
+            // HUD Status
+            const hud = document.getElementById('hudDomStatus');
+            if(hud) hud.className = data.online ? 'hud-status-dot online' : 'hud-status-dot offline';
         }
 
         if (data.type === "UPDATE_Q_FEED") {
@@ -518,14 +521,16 @@ window.addEventListener("message", (event) => {
         if (payload) {
             if (data.profile && !ignoreBackendUpdates) {
                 setGameStats(data.profile);
+                
+                // 1. SAVE TO MEMORY (Fixed Commas)
                 setUserProfile({
                     name: data.profile.name || "Slave",
                     hierarchy: data.profile.hierarchy || "HallBoy",
                     memberId: data.profile.memberId || "",
-                    joined: data.profile.joined,                 // <--- Comma here
-                    profilePicture: data.profile.profilePicture, // <--- Comma here
-                    kneelHistory: data.profile.kneelHistory,     // <--- Comma here
-                    routine: data.profile.routine                // <--- No comma needed on last one
+                    joined: data.profile.joined,
+                    profilePicture: data.profile.profilePicture,
+                    kneelHistory: data.profile.kneelHistory,
+                    routine: data.profile.routine
                 });
                 
                 if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
@@ -548,33 +553,31 @@ window.addEventListener("message", (event) => {
                 renderRewardGrid();
                 if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
                 setStats(migrateGameStatsToStats(data.profile, stats));
-                // *** DIRECT IMAGE SYNC (DESKTOP + MOBILE) ***
+                
+                // 2. DIRECT IMAGE UPDATE (Desktop + Mobile)
                 if(data.profile.profilePicture) {
                     const rawUrl = data.profile.profilePicture;
                     
-                    // 1. Update Desktop (Existing Logic)
+                    // Desktop
                     const picEl = document.getElementById('profilePic');
                     if(picEl) picEl.src = getOptimizedUrl(rawUrl, 150);
-        
-                    // 2. Update Mobile (Direct Injection)
-                    const mobPic = document.getElementById('mob_profilePic'); // Hexagon
-                    const mobBg = document.getElementById('mob_bgPic');       // Background
+
+                    // Mobile
+                    const mobPic = document.getElementById('mob_profilePic');
+                    const mobBg = document.getElementById('mob_bgPic');
+                    const hudPic = document.getElementById('hudSlavePic');
                     
-                    // Decode Wix URL if needed
                     let finalUrl = rawUrl;
                     if (rawUrl.startsWith("wix:image")) {
                         const uri = rawUrl.split('/')[3].split('#')[0];
                         finalUrl = `https://static.wixstatic.com/media/${uri}`;
                     }
-        
+
                     if(mobPic) mobPic.src = finalUrl;
                     if(mobBg) mobBg.src = finalUrl;
-                    
-                    // 3. Force Save to Memory (Safe Way)
-                    if(typeof userProfile !== 'undefined') {
-                        userProfile.profilePicture = rawUrl;
-                    }
+                    if(hudPic) hudPic.src = finalUrl;
                 }
+                
                 updateStats(); 
             }
 
