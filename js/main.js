@@ -171,12 +171,13 @@ Bridge.listen((data) => {
 });
 
 // =========================================
-// NEW: SETTINGS LOGIC (FIXED ROUTINE CRASH)
+// NEW: SETTINGS LOGIC (FIXED FOR GRID TILES)
 // =========================================
 
 let currentActionType = "";
 let currentActionCost = 0;
-let selectedRoutineValue = ""; // <--- NEW VARIABLE TO STORE SELECTION
+let selectedRoutineValue = ""; 
+let selectedKinks = new Set();
 
 // 1. NAVIGATION
 window.openLobby = function() {
@@ -194,8 +195,6 @@ window.backToLobbyMenu = function() {
 };
 
 // 2. SETUP ACTION SCREEN
-let selectedKinks = new Set(); // Store selections
-
 window.showLobbyAction = function(type) {
     currentActionType = type;
     
@@ -203,7 +202,7 @@ window.showLobbyAction = function(type) {
     const input = document.getElementById('lobbyInputText');
     const fileBtn = document.getElementById('lobbyInputFileBtn');
     const routineArea = document.getElementById('routineSelectionArea');
-    const kinkArea = document.getElementById('kinkSelectionArea'); // NEW
+    const kinkArea = document.getElementById('kinkSelectionArea');
     const costDisplay = document.getElementById('lobbyCostDisplay');
 
     // Reset UI
@@ -234,11 +233,13 @@ window.showLobbyAction = function(type) {
     else if (type === 'routine') {
         prompt.innerText = "Select a Daily Routine.";
         routineArea.classList.remove('hidden');
-        document.getElementById('routineDropdown').value = "Morning Kneel";
-        window.checkRoutineDropdown();
-        return; 
+        
+        // *** FIX: RESET GRID, NOT DROPDOWN ***
+        selectedRoutineValue = "";
+        document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('selected'));
+        document.getElementById('routineCustomInput').classList.add('hidden');
+        currentActionCost = 0;
     }
-    // *** NEW KINK LOGIC ***
     else if (type === 'kinks') {
         prompt.innerText = "Select your perversions.";
         if(kinkArea) {
@@ -249,6 +250,151 @@ window.showLobbyAction = function(type) {
     }
 
     costDisplay.innerText = currentActionCost;
+};
+
+// 3. HANDLE ROUTINE TILE SELECTION (The Grid Logic)
+window.selectRoutineItem = function(el, value) {
+    // Visually toggle
+    document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    
+    selectedRoutineValue = value;
+    const input = document.getElementById('routineCustomInput');
+    
+    if (value === 'custom') {
+        input.classList.remove('hidden');
+        currentActionCost = 2000;
+    } else {
+        input.classList.add('hidden');
+        currentActionCost = 1000;
+    }
+    
+    document.getElementById('lobbyCostDisplay').innerText = currentActionCost;
+};
+
+// 4. SUBMIT ACTION (The Trigger)
+window.confirmLobbyAction = function() {
+    // Validation
+    if (currentActionType === 'routine' && !selectedRoutineValue) return;
+    if (currentActionType === 'kinks' && selectedKinks.size === 0) return;
+    
+    if (gameStats.coins < currentActionCost) {
+        window.triggerPoverty();
+        return;
+    }
+
+    let payload = "";
+    let notifyTitle = "SYSTEM UPDATE";
+    let notifyText = "Changes saved.";
+
+    // --- A. ROUTINE LOGIC ---
+    if (currentActionType === 'routine') {
+        let taskName = selectedRoutineValue;
+        if (taskName === 'custom') {
+            taskName = document.getElementById('routineCustomInput').value;
+        }
+        
+        if(!taskName) return;
+
+        notifyTitle = "PROTOCOL ASSIGNED";
+        notifyText = taskName.toUpperCase();
+
+        // 1. Send to Wix
+        window.parent.postMessage({ 
+            type: "UPDATE_CMS_FIELD", 
+            field: "routine", 
+            value: taskName,
+            cost: currentActionCost,
+            message: "Routine set to: " + taskName
+        }, "*");
+        
+        // 2. Update Memory
+        userProfile.routine = taskName;
+        
+        // 3. Update Dashboard Button (Show it immediately)
+        const btn = document.getElementById('btnDailyRoutine');
+        if(btn) {
+            btn.classList.remove('hidden');
+            // Try to set text in various places depending on your HTML version
+            const txt = btn.querySelector('.kneel-text') || btn;
+            if(txt) txt.innerText = "SUBMIT: " + taskName.toUpperCase();
+        }
+        
+        // 4. Update Queen Menu text
+        const mobDisp = document.getElementById('mobRoutineDisplay');
+        if(mobDisp) mobDisp.innerText = taskName.toUpperCase();
+    } 
+    
+    // --- B. PHOTO LOGIC ---
+    else if (currentActionType === 'photo') {
+        const fileInput = document.getElementById('lobbyFile');
+        if (fileInput.files.length > 0) {
+            notifyTitle = "VISUALS LOGGED";
+            notifyText = "Uploading...";
+            window.parent.postMessage({ type: "PROCESS_PAYMENT", cost: 500, note: "Photo Change" }, "*");
+            if(window.handleProfileUpload) window.handleProfileUpload(fileInput);
+        } else { return; }
+    }
+    
+    // --- C. NAME LOGIC ---
+    else if (currentActionType === 'name') {
+        const text = document.getElementById('lobbyInputText').value;
+        if(!text) return;
+        
+        notifyTitle = "IDENTITY REWRITTEN";
+        notifyText = text.toUpperCase();
+
+        window.parent.postMessage({ 
+            type: "UPDATE_CMS_FIELD", 
+            field: "title_fld", 
+            value: text,
+            cost: 100,
+            message: "Name changed to: " + text
+        }, "*");
+
+        // Update UI
+        const el = document.getElementById('mob_slaveName');
+        const halo = document.getElementById('mob_slaveName');
+        if(el) el.innerText = text;
+        if(halo) halo.innerText = text;
+        userProfile.name = text;
+    }
+    
+    // --- D. KINKS LOGIC ---
+    else if (currentActionType === 'kinks') {
+        const kinkString = Array.from(selectedKinks).join(", ");
+        notifyTitle = "FILE UPDATED";
+        notifyText = "Kinks registered.";
+
+        window.parent.postMessage({ 
+            type: "UPDATE_CMS_FIELD", 
+            field: "kink", 
+            value: kinkString,
+            cost: currentActionCost,
+            message: "Kinks updated: " + kinkString
+        }, "*");
+    }
+
+    // --- E. LIMITS LOGIC ---
+    else {
+        const text = document.getElementById('lobbyInputText').value;
+        if(!text) return;
+
+        notifyTitle = "DATA APPENDED";
+        notifyText = "Limits updated.";
+
+        window.parent.postMessage({ 
+            type: "PURCHASE_ITEM", 
+            itemName: currentActionType.toUpperCase() + ": " + text, 
+            cost: currentActionCost, 
+            messageToDom: "Limits: " + text 
+        }, "*");
+    }
+
+    window.closeLobby();
+    if(window.showSystemNotification) {
+        window.showSystemNotification(notifyTitle, notifyText);
+    }
 };
 
 // NEW: RENDER KINK GRID
