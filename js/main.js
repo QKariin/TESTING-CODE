@@ -308,45 +308,35 @@ window.selectRoutineItem = function(el, value) {
     costDisplay.innerText = currentActionCost;
 };
 
+// 4. EXECUTE ACTION (FIXED ROUTINE SELECTION)
 window.confirmLobbyAction = function() {
-    // Kink Safety Check
-    if (currentActionType === 'kinks' && selectedKinks.size === 0) return;
-
+    // 1. Check Funds
     if (gameStats.coins < currentActionCost) {
-        window.triggerPoverty(); // <--- ADD THIS
+        window.triggerPoverty();
         return;
     }
 
     let payload = "";
     let notifyTitle = "SYSTEM UPDATE";
     let notifyText = "Changes saved.";
-    
-    // --- KINK LOGIC ---
-    if (currentActionType === 'kinks') {
-        // Convert Set to String: "SPH, Chastity, Control"
-        const kinkString = Array.from(selectedKinks).join(", ");
+
+    // --- A. ROUTINE LOGIC (THE FIX) ---
+    if (currentActionType === 'routine') {
+        // USE THE GLOBAL VARIABLE FROM TILE SELECTION
+        let taskName = selectedRoutineValue; 
         
-        notifyTitle = "FILE UPDATED";
-        notifyText = "Kinks registered.";
-
-        window.parent.postMessage({ 
-            type: "UPDATE_CMS_FIELD", 
-            field: "kink", 
-            value: kinkString,
-            cost: currentActionCost,
-            message: "Kinks updated: " + kinkString
-        }, "*");
-    }
-
-    // --- ROUTINE LOGIC ---
-    else if (currentActionType === 'routine') {
-        let taskName = document.getElementById('routineDropdown').value; 
-        if (taskName === 'custom') taskName = document.getElementById('routineCustomInput').value;
+        // If Custom, read the input box
+        if (taskName === 'custom') {
+            taskName = document.getElementById('routineCustomInput').value;
+        }
+        
+        // If still empty, stop here
         if(!taskName) return;
 
         notifyTitle = "PROTOCOL ASSIGNED";
-        notifyText = taskName;
+        notifyText = taskName.toUpperCase();
 
+        // Send to Wix
         window.parent.postMessage({ 
             type: "UPDATE_CMS_FIELD", 
             field: "routine", 
@@ -355,26 +345,39 @@ window.confirmLobbyAction = function() {
             message: "Routine set to: " + taskName
         }, "*");
         
+        // Immediate UI Update
+        userProfile.routine = taskName; // Update memory
+        
         const btn = document.getElementById('btnDailyRoutine');
+        const noMsg = document.getElementById('noRoutineMsg');
+        
         if(btn) {
             btn.classList.remove('hidden');
-            const txt = btn.querySelector('.kneel-text');
+            // Update button text inside the Queen Menu
+            const txt = document.getElementById('routineBtnText'); 
             if(txt) txt.innerText = "SUBMIT: " + taskName.toUpperCase();
         }
+        if(noMsg) noMsg.style.display = 'none';
     } 
     
-    // --- PHOTO LOGIC ---
+    // --- B. PHOTO LOGIC ---
     else if (currentActionType === 'photo') {
         const fileInput = document.getElementById('lobbyFile');
         if (fileInput.files.length > 0) {
             notifyTitle = "VISUALS LOGGED";
             notifyText = "Uploading...";
-            window.parent.postMessage({ type: "PROCESS_PAYMENT", cost: 500, note: "Photo Change" }, "*");
+
+            window.parent.postMessage({ 
+                type: "PROCESS_PAYMENT", 
+                cost: 500, 
+                note: "Photo Change" 
+            }, "*");
+            
             if(window.handleProfileUpload) window.handleProfileUpload(fileInput);
         } else { return; }
     }
     
-    // --- NAME LOGIC ---
+    // --- C. NAME LOGIC ---
     else if (currentActionType === 'name') {
         const text = document.getElementById('lobbyInputText').value;
         if(!text) return;
@@ -390,29 +393,55 @@ window.confirmLobbyAction = function() {
             message: "Name changed to: " + text
         }, "*");
 
+        // Update UI
         const el = document.getElementById('mob_slaveName');
-        const halo = document.getElementById('mob_slaveName');
+        const halo = document.getElementById('mob_slaveName'); // Halo uses same ID usually
         if(el) el.innerText = text;
         if(halo) halo.innerText = text;
         userProfile.name = text;
     }
+    
+    // --- D. KINKS LOGIC ---
+    else if (currentActionType === 'kinks') {
+        // Safe check
+        if (typeof selectedKinks === 'undefined' || selectedKinks.size === 0) return;
+        
+        const kinkString = Array.from(selectedKinks).join(", ");
+        notifyTitle = "FILE UPDATED";
+        notifyText = "Kinks registered.";
 
-    // --- LIMITS (Generic) ---
+        window.parent.postMessage({ 
+            type: "UPDATE_CMS_FIELD", 
+            field: "kink", 
+            value: kinkString,
+            cost: currentActionCost,
+            message: "Kinks: " + kinkString
+        }, "*");
+    }
+
+    // --- E. LIMITS LOGIC ---
     else {
         const text = document.getElementById('lobbyInputText').value;
         if(!text) return;
+
         notifyTitle = "DATA APPENDED";
         notifyText = "Limits updated.";
+
         window.parent.postMessage({ 
             type: "PURCHASE_ITEM", 
-            itemName: "LIMITS: " + text, 
+            itemName: currentActionType.toUpperCase() + ": " + text, 
             cost: currentActionCost, 
             messageToDom: "Limits: " + text 
         }, "*");
     }
 
+    // FINAL: Close & Celebrate
     window.closeLobby();
-    window.showSystemNotification(notifyTitle, notifyText);
+    
+    // Trigger the Green Notification
+    if(window.showSystemNotification) {
+        window.showSystemNotification(notifyTitle, notifyText);
+    }
 };
 
 // --- NOTIFICATION SYSTEM ---
