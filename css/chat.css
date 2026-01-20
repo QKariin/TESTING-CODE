@@ -198,6 +198,48 @@
    ========================================= */
 @media screen and (max-width: 768px) {
 
+    /* MOBILE CHAT HEADER */
+    .mob-chat-header {
+        position: absolute; /* Sticks to top of chat card */
+        top: 0; left: 0; width: 100%; height: 65px;
+        background: rgba(10, 10, 10, 0.95);
+        border-bottom: 1px solid #333;
+        display: flex; align-items: center;
+        padding: 0 10px;
+        z-index: 5005; /* Above messages */
+        backdrop-filter: blur(10px);
+    }
+
+    .chat-back {
+        background: none; border: none; color: #c5a059;
+        font-size: 2rem; padding: 0 15px 5px 5px; cursor: pointer;
+        line-height: 1;
+    }
+
+    .chat-queen-profile { display: flex; align-items: center; gap: 10px; }
+    
+    .queen-av-wrap { position: relative; width: 40px; height: 40px; }
+    .queen-av-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #c5a059; }
+    
+    /* Online Dot */
+    .status-dot {
+        position: absolute; bottom: 0; right: 0;
+        width: 10px; height: 10px; border-radius: 50%;
+        border: 2px solid #000;
+        background: #666; /* Grey by default */
+    }
+    .status-dot.online { background: #00ff00; box-shadow: 0 0 5px #00ff00; }
+
+    .chat-meta-col { display: flex; flex-direction: column; }
+    .chat-queen-name { font-family: 'Cinzel'; font-size: 0.9rem; color: #fff; letter-spacing: 1px; }
+    .chat-status-text { font-family: 'Orbitron'; font-size: 0.55rem; color: #888; letter-spacing: 1px; }
+
+    /* ADJUST CHAT BODY PADDING (Important!) */
+    /* Update your existing .chat-body-frame rule to add top padding so text isn't hidden */
+    .chat-body-frame {
+        padding-top: 75px !important; /* 65px header + 10px space */
+    }
+
     /* FORCE FULL SCREEN OVERLAY */
     .chat-container, #chatCard {
         display: flex !important;
