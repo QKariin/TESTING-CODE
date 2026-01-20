@@ -658,6 +658,7 @@ window.handleUploadStart = function(inputElement) {
         if (typeof handleEvidenceUpload === 'function') handleEvidenceUpload(inputElement);
     }
 };
+
 window.handleRoutineUpload = window.handleUploadStart;
 window.switchTab = switchTab;
 window.toggleStats = toggleStats;
