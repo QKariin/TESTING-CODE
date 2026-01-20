@@ -527,7 +527,9 @@ window.addEventListener("message", (event) => {
                     name: data.profile.name || "Slave",
                     hierarchy: data.profile.hierarchy || "HallBoy",
                     memberId: data.profile.memberId || "",
-                    joined: data.profile.joined,
+                    joined: data.profile.joined,                 // <--- ADD COMMA HERE
+                    
+                    // ADD THESE 3 LINES:
                     profilePicture: data.profile.profilePicture,
                     kneelHistory: data.profile.kneelHistory,
                     routine: data.profile.routine
