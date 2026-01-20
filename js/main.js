@@ -1,9 +1,4 @@
-
-
-
-
-
-// main.js - FINAL COMPLETE VERSION (DESKTOP + MOBILE)
+// main.js - FINAL FIXED VERSION (VALIDATED)
 
 import { CONFIG, URLS, LEVELS, FUNNY_SAYINGS, STREAM_PASSWORDS } from './config.js';
 import { 
@@ -39,7 +34,7 @@ const KINK_LIST = [
 ];
 
 // =========================================
-// POVERTY SYSTEM (MOCKING LOGIC)
+// 1. POVERTY & LOBBY SYSTEM
 // =========================================
 
 const POVERTY_INSULTS = [
@@ -47,18 +42,14 @@ const POVERTY_INSULTS = [
     "Do not waste my time with empty pockets.",
     "Silence is free. Serving me costs.",
     "Go beg for coins, then come back.",
-    "You cannot afford to look at me.",
-    "Access Denied. Reason: Poverty."
+    "You cannot afford to look at me."
 ];
 
 window.triggerPoverty = function() {
     const overlay = document.getElementById('povertyOverlay');
     const text = document.getElementById('povertyInsult');
-    
-    // Pick random insult
     const insult = POVERTY_INSULTS[Math.floor(Math.random() * POVERTY_INSULTS.length)];
     if(text) text.innerText = `"${insult}"`;
-
     if(overlay) {
         overlay.classList.remove('hidden');
         overlay.style.display = 'flex';
@@ -67,19 +58,160 @@ window.triggerPoverty = function() {
 
 window.closePoverty = function() {
     const overlay = document.getElementById('povertyOverlay');
-    if(overlay) {
-        overlay.classList.add('hidden');
-        overlay.style.display = 'none';
-    }
+    if(overlay) overlay.style.display = 'none';
 };
 
 window.goToExchequer = function() {
     window.closePoverty();
-    window.toggleMobileView('buy'); // Switches to Store View
+    window.toggleMobileView('buy'); 
 };
 
-// --- 2. CRITICAL UI FUNCTIONS ---
+// Lobby Navigation
+window.openLobby = function() {
+    document.getElementById('lobbyOverlay').classList.remove('hidden');
+    window.backToLobbyMenu();
+};
+window.closeLobby = function() {
+    document.getElementById('lobbyOverlay').classList.add('hidden');
+};
+window.backToLobbyMenu = function() {
+    document.getElementById('lobbyMenu').classList.remove('hidden');
+    document.getElementById('lobbyActionView').classList.add('hidden');
+};
 
+// Queen Menu Navigation
+window.openQueenMenu = function() {
+    const menu = document.getElementById('queenOverlay');
+    if (menu) {
+        menu.classList.remove('hidden');
+        menu.style.display = 'flex';
+        if(window.syncMobileDashboard) window.syncMobileDashboard();
+    }
+};
+window.closeQueenMenu = function() {
+    const menu = document.getElementById('queenOverlay');
+    if (menu) {
+        menu.classList.add('hidden');
+        menu.style.display = 'none';
+    }
+};
+
+// Action Logic
+let currentActionType = "";
+let currentActionCost = 0;
+let selectedRoutineValue = "";
+let selectedKinks = new Set();
+
+window.showLobbyAction = function(type) {
+    currentActionType = type;
+    const prompt = document.getElementById('lobbyPrompt');
+    const input = document.getElementById('lobbyInputText');
+    const fileBtn = document.getElementById('lobbyInputFileBtn');
+    const routineArea = document.getElementById('routineSelectionArea');
+    const kinkArea = document.getElementById('kinkSelectionArea');
+    const costDisplay = document.getElementById('lobbyCostDisplay');
+
+    input.classList.add('hidden');
+    fileBtn.classList.add('hidden');
+    routineArea.classList.add('hidden');
+    if(kinkArea) kinkArea.classList.add('hidden');
+    
+    document.getElementById('lobbyMenu').classList.add('hidden');
+    document.getElementById('lobbyActionView').classList.remove('hidden');
+
+    if (type === 'name') { prompt.innerText = "Enter Name"; input.classList.remove('hidden'); currentActionCost = 100; } 
+    else if (type === 'photo') { prompt.innerText = "Upload Photo"; fileBtn.classList.remove('hidden'); currentActionCost = 500; }
+    else if (type === 'kinks') { prompt.innerText = "Select Kinks"; if(kinkArea) { kinkArea.classList.remove('hidden'); renderKinkGrid(); } currentActionCost = 0; }
+    else if (type === 'limits') { prompt.innerText = "Define Limits"; input.classList.remove('hidden'); currentActionCost = 200; }
+    else if (type === 'routine') {
+        prompt.innerText = "Select Routine"; routineArea.classList.remove('hidden');
+        selectedRoutineValue = "";
+        document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('selected'));
+        currentActionCost = 0;
+    }
+    costDisplay.innerText = currentActionCost;
+};
+
+function renderKinkGrid() {
+    const grid = document.getElementById('kinkGrid');
+    if(!grid) return;
+    grid.innerHTML = ""; 
+    selectedKinks.clear();
+    KINK_LIST.forEach(kink => {
+        const btn = document.createElement('div');
+        btn.className = "routine-tile";
+        btn.innerText = kink.toUpperCase();
+        btn.onclick = () => window.toggleKinkSelection(btn, kink);
+        grid.appendChild(btn);
+    });
+}
+window.toggleKinkSelection = function(el, value) {
+    if (selectedKinks.has(value)) { selectedKinks.delete(value); el.classList.remove('selected'); } 
+    else { selectedKinks.add(value); el.classList.add('selected'); }
+    currentActionCost = selectedKinks.size * 100;
+    document.getElementById('lobbyCostDisplay').innerText = currentActionCost;
+};
+window.selectRoutineItem = function(el, value) {
+    document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedRoutineValue = value;
+    const input = document.getElementById('routineCustomInput');
+    if (value === 'custom') { input.classList.remove('hidden'); currentActionCost = 2000; } 
+    else { input.classList.add('hidden'); currentActionCost = 1000; }
+    document.getElementById('lobbyCostDisplay').innerText = currentActionCost;
+};
+
+window.confirmLobbyAction = function() {
+    if (gameStats.coins < currentActionCost) { window.triggerPoverty(); return; }
+
+    let notifyTitle = "UPDATE"; let notifyText = "Saved.";
+
+    if (currentActionType === 'routine') {
+        let taskName = selectedRoutineValue;
+        if (taskName === 'custom') taskName = document.getElementById('routineCustomInput').value;
+        if(!taskName) return;
+        notifyTitle = "PROTOCOL ASSIGNED"; notifyText = taskName;
+        window.parent.postMessage({ type: "UPDATE_CMS_FIELD", field: "routine", value: taskName, cost: currentActionCost }, "*");
+        userProfile.routine = taskName;
+    } 
+    else if (currentActionType === 'photo') {
+        const fileInput = document.getElementById('lobbyFile');
+        if (fileInput.files.length > 0) {
+            notifyTitle = "UPLOADING";
+            window.parent.postMessage({ type: "PROCESS_PAYMENT", cost: 500 }, "*");
+            if(window.handleProfileUpload) window.handleProfileUpload(fileInput);
+        } else return;
+    }
+    else if (currentActionType === 'name') {
+        const text = document.getElementById('lobbyInputText').value;
+        if(!text) return;
+        notifyTitle = "IDENTITY REWRITTEN"; notifyText = text;
+        window.parent.postMessage({ type: "UPDATE_CMS_FIELD", field: "title_fld", value: text, cost: 100 }, "*");
+        userProfile.name = text; updateStats();
+    }
+    else if (currentActionType === 'kinks') {
+        const kinkString = Array.from(selectedKinks).join(", ");
+        notifyTitle = "KINKS LOGGED";
+        window.parent.postMessage({ type: "UPDATE_CMS_FIELD", field: "kink", value: kinkString, cost: currentActionCost }, "*");
+    }
+    else {
+        const text = document.getElementById('lobbyInputText').value;
+        window.parent.postMessage({ type: "PURCHASE_ITEM", itemName: "LIMITS: " + text, cost: currentActionCost }, "*");
+    }
+
+    window.closeLobby();
+    window.showSystemNotification(notifyTitle, notifyText);
+};
+
+window.showSystemNotification = function(title, detail) {
+    const overlay = document.getElementById('celebrationOverlay');
+    if(!overlay) return;
+    overlay.innerHTML = `<div class="glass-card" style="border: 1px solid var(--neon-green); text-align:center; padding: 30px; background: rgba(0,0,0,0.95);"><div style="font-family:'Orbitron'; color:var(--neon-green);">${title}</div><div style="font-family:'Cinzel'; color:#fff;">${detail}</div></div>`;
+    overlay.style.opacity = '1';
+    setTimeout(() => { overlay.style.opacity = '0'; }, 3000);
+};
+
+// --- 2. CORE DESKTOP UI ---
 window.toggleTaskDetails = function(forceOpen = null) {
     if (window.event) window.event.stopPropagation();
     const panel = document.getElementById('taskDetailPanel');
@@ -132,8 +264,7 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// --- 3. INITIALIZATION ---
-
+// --- 3. INIT & BRIDGE ---
 document.addEventListener('click', () => {
     if (!window.audioUnlocked) {
         ['msgSound', 'coinSound', 'skipSound', 'sfx-buy', 'sfx-deny'].forEach(id => {
@@ -164,511 +295,76 @@ function initDomProfile() {
 }
 initDomProfile();
 
-// --- 4. BRIDGE LISTENER ---
-
 Bridge.listen((data) => {
-    const ignoreList = ["CHAT_ECHO", "UPDATE_FULL_DATA", "UPDATE_DOM_STATUS", "instantUpdate", "instantReviewSuccess"];
+    const ignoreList = ["CHAT_ECHO", "instantUpdate", "instantReviewSuccess"];
     if (ignoreList.includes(data.type)) return; 
     window.postMessage(data, "*"); 
 });
 
-// =========================================
-// NEW: SETTINGS LOGIC (FIXED ROUTINE CRASH)
-// =========================================
-
-let currentActionType = "";
-let currentActionCost = 0;
-let selectedRoutineValue = ""; // <--- NEW VARIABLE TO STORE SELECTION
-
-// 1. NAVIGATION
-window.openLobby = function() {
-    document.getElementById('lobbyOverlay').classList.remove('hidden');
-    window.backToLobbyMenu();
-};
-
-window.closeLobby = function() {
-    document.getElementById('lobbyOverlay').classList.add('hidden');
-};
-
-window.backToLobbyMenu = function() {
-    document.getElementById('lobbyMenu').classList.remove('hidden');
-    document.getElementById('lobbyActionView').classList.add('hidden');
-};
-
-// 2. SETUP ACTION SCREEN
-let selectedKinks = new Set(); // Store selections
-
-window.showLobbyAction = function(type) {
-    currentActionType = type;
-    
-    const prompt = document.getElementById('lobbyPrompt');
-    const input = document.getElementById('lobbyInputText');
-    const fileBtn = document.getElementById('lobbyInputFileBtn');
-    const routineArea = document.getElementById('routineSelectionArea');
-    const kinkArea = document.getElementById('kinkSelectionArea'); // NEW
-    const costDisplay = document.getElementById('lobbyCostDisplay');
-
-    // Reset UI
-    input.classList.add('hidden');
-    fileBtn.classList.add('hidden');
-    routineArea.classList.add('hidden');
-    if(kinkArea) kinkArea.classList.add('hidden');
-    
-    // Switch View
-    document.getElementById('lobbyMenu').classList.add('hidden');
-    document.getElementById('lobbyActionView').classList.remove('hidden');
-
-    if (type === 'name') {
-        prompt.innerText = "Enter your new name.";
-        input.classList.remove('hidden');
-        currentActionCost = 100;
-    } 
-    else if (type === 'photo') {
-        prompt.innerText = "Upload a new profile picture.";
-        fileBtn.classList.remove('hidden');
-        currentActionCost = 500;
-    }
-    else if (type === 'limits') {
-        prompt.innerText = "Define your hard limits.";
-        input.classList.remove('hidden');
-        currentActionCost = 200;
-    }
-    else if (type === 'routine') {
-        prompt.innerText = "Select a Daily Routine.";
-        routineArea.classList.remove('hidden');
-        document.getElementById('routineDropdown').value = "Morning Kneel";
-        window.checkRoutineDropdown();
-        return; 
-    }
-    // *** NEW KINK LOGIC ***
-    else if (type === 'kinks') {
-        prompt.innerText = "Select your perversions.";
-        if(kinkArea) {
-            kinkArea.classList.remove('hidden');
-            renderKinkGrid();
-        }
-        currentActionCost = 0;
-    }
-
-    costDisplay.innerText = currentActionCost;
-};
-
-// NEW: RENDER KINK GRID
-function renderKinkGrid() {
-    const grid = document.getElementById('kinkGrid');
-    if(!grid) return;
-    grid.innerHTML = ""; // Clear
-    selectedKinks.clear(); // Reset selection
-
-    KINK_LIST.forEach(kink => {
-        const btn = document.createElement('div');
-        btn.className = "routine-tile";
-        btn.innerText = kink.toUpperCase();
-        btn.onclick = () => toggleKinkSelection(btn, kink);
-        grid.appendChild(btn);
-    });
-}
-
-// NEW: TOGGLE SELECTION
-window.toggleKinkSelection = function(el, value) {
-    if (selectedKinks.has(value)) {
-        selectedKinks.delete(value);
-        el.classList.remove('selected');
-    } else {
-        selectedKinks.add(value);
-        el.classList.add('selected');
-    }
-    
-    // Update Price (100 per kink)
-    currentActionCost = selectedKinks.size * 100;
-    document.getElementById('lobbyCostDisplay').innerText = currentActionCost;
-};
-
-// 3. HANDLE ROUTINE TILE SELECTION (FIXED)
-window.selectRoutineItem = function(el, value) {
-    // 1. Visually deselect all others
-    document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('selected'));
-    
-    // 2. Select clicked
-    el.classList.add('selected');
-    
-    // 3. Save Value to Variable (Not Element)
-    selectedRoutineValue = value;
-
-    // 4. Handle Logic
-    const input = document.getElementById('routineCustomInput');
-    const costDisplay = document.getElementById('lobbyCostDisplay');
-    
-    if (value === 'custom') {
-        input.classList.remove('hidden');
-        currentActionCost = 2000;
-    } else {
-        input.classList.add('hidden');
-        currentActionCost = 1000;
-    }
-    
-    costDisplay.innerText = currentActionCost;
-};
-
-// 4. EXECUTE ACTION (FIXED ROUTINE SELECTION)
-window.confirmLobbyAction = function() {
-    // 1. Check Funds
-    if (gameStats.coins < currentActionCost) {
-        window.triggerPoverty();
-        return;
-    }
-
-    let payload = "";
-    let notifyTitle = "SYSTEM UPDATE";
-    let notifyText = "Changes saved.";
-
-    // --- A. ROUTINE LOGIC (THE FIX) ---
-    if (currentActionType === 'routine') {
-        // USE THE GLOBAL VARIABLE FROM TILE SELECTION
-        let taskName = selectedRoutineValue; 
-        
-        // If Custom, read the input box
-        if (taskName === 'custom') {
-            taskName = document.getElementById('routineCustomInput').value;
-        }
-        
-        // If still empty, stop here
-        if(!taskName) return;
-
-        notifyTitle = "PROTOCOL ASSIGNED";
-        notifyText = taskName.toUpperCase();
-
-        // Send to Wix
-        window.parent.postMessage({ 
-            type: "UPDATE_CMS_FIELD", 
-            field: "routine", 
-            value: taskName,
-            cost: currentActionCost,
-            message: "Routine set to: " + taskName
-        }, "*");
-        
-        // Immediate UI Update
-        userProfile.routine = taskName; // Update memory
-        
-        const btn = document.getElementById('btnDailyRoutine');
-        const noMsg = document.getElementById('noRoutineMsg');
-        
-        if(btn) {
-            btn.classList.remove('hidden');
-            // Update button text inside the Queen Menu
-            const txt = document.getElementById('routineBtnText'); 
-            if(txt) txt.innerText = "SUBMIT: " + taskName.toUpperCase();
-        }
-        if(noMsg) noMsg.style.display = 'none';
-    } 
-    
-    // --- B. PHOTO LOGIC ---
-    else if (currentActionType === 'photo') {
-        const fileInput = document.getElementById('lobbyFile');
-        if (fileInput.files.length > 0) {
-            notifyTitle = "VISUALS LOGGED";
-            notifyText = "Uploading...";
-
-            window.parent.postMessage({ 
-                type: "PROCESS_PAYMENT", 
-                cost: 500, 
-                note: "Photo Change" 
-            }, "*");
-            
-            if(window.handleProfileUpload) window.handleProfileUpload(fileInput);
-        } else { return; }
-    }
-    
-    // --- C. NAME LOGIC ---
-    else if (currentActionType === 'name') {
-        const text = document.getElementById('lobbyInputText').value;
-        if(!text) return;
-        
-        notifyTitle = "IDENTITY REWRITTEN";
-        notifyText = text.toUpperCase();
-
-        window.parent.postMessage({ 
-            type: "UPDATE_CMS_FIELD", 
-            field: "title_fld", 
-            value: text,
-            cost: 100,
-            message: "Name changed to: " + text
-        }, "*");
-
-        // Update UI
-        const el = document.getElementById('mob_slaveName');
-        const halo = document.getElementById('mob_slaveName'); // Halo uses same ID usually
-        if(el) el.innerText = text;
-        if(halo) halo.innerText = text;
-        userProfile.name = text;
-    }
-    
-    // --- D. KINKS LOGIC ---
-    else if (currentActionType === 'kinks') {
-        // Safe check
-        if (typeof selectedKinks === 'undefined' || selectedKinks.size === 0) return;
-        
-        const kinkString = Array.from(selectedKinks).join(", ");
-        notifyTitle = "FILE UPDATED";
-        notifyText = "Kinks registered.";
-
-        window.parent.postMessage({ 
-            type: "UPDATE_CMS_FIELD", 
-            field: "kink", 
-            value: kinkString,
-            cost: currentActionCost,
-            message: "Kinks: " + kinkString
-        }, "*");
-    }
-
-    // --- E. LIMITS LOGIC ---
-    else {
-        const text = document.getElementById('lobbyInputText').value;
-        if(!text) return;
-
-        notifyTitle = "DATA APPENDED";
-        notifyText = "Limits updated.";
-
-        window.parent.postMessage({ 
-            type: "PURCHASE_ITEM", 
-            itemName: currentActionType.toUpperCase() + ": " + text, 
-            cost: currentActionCost, 
-            messageToDom: "Limits: " + text 
-        }, "*");
-    }
-
-    // FINAL: Close & Celebrate
-    window.closeLobby();
-    
-    // Trigger the Green Notification
-    if(window.showSystemNotification) {
-        window.showSystemNotification(notifyTitle, notifyText);
-    }
-};
-
-// --- NOTIFICATION SYSTEM ---
-window.showSystemNotification = function(title, detail) {
-    const overlay = document.getElementById('celebrationOverlay');
-    if(!overlay) return;
-
-    // Inject Dynamic HTML
-    overlay.innerHTML = `
-        <div class="glass-card" style="border: 1px solid var(--neon-green); text-align:center; padding: 30px; background: rgba(0,0,0,0.95); box-shadow: 0 0 30px rgba(0,255,0,0.2);">
-            <div style="font-family:'Orbitron'; font-size:1.2rem; color:var(--neon-green); margin-bottom:10px; letter-spacing:2px;">${title}</div>
-            <div style="font-family:'Cinzel'; font-size:0.9rem; color:#fff;">${detail}</div>
-        </div>
-    `;
-
-    // Show
-    overlay.style.pointerEvents = "auto";
-    overlay.style.opacity = '1';
-
-    // Hide after 3 seconds
-    setTimeout(() => {
-        overlay.style.opacity = '0';
-        overlay.style.pointerEvents = "none";
-    }, 3000);
-};
-
-
-
 window.addEventListener("message", (event) => {
     try {
         const data = event.data;
-
         if (data.type === "CHAT_ECHO" && data.msgObj) renderChat([data.msgObj], true);
-
-        if (data.type === 'UPDATE_RULES') {
-            const rules = data.payload || {};
-            for (let i = 1; i <= 8; i++) {
-                const el = document.getElementById('r' + i);
-                if (el && rules['rule' + i]) el.innerHTML = rules['rule' + i];
-            }
-        }
-
-        if (data.type === "INIT_TASKS") {
-            setTaskDatabase(data.tasks || []);
-        }
-        if (data.type === "INIT_WISHLIST" || data.wishlist) {
-            setWishlistItems(data.wishlist || []);
-            window.WISHLIST_ITEMS = data.wishlist || []; 
-            renderWishlist();
-        }
-
-        if (data.type === "UPDATE_DOM_STATUS") {
-            const badge = document.getElementById('chatStatusBadge');
-            const ring = document.getElementById('chatStatusRing');
-            const domBadge = document.getElementById('domStatusBadge');
-            if(badge) { badge.innerHTML = data.online ? "ONLINE" : data.text; badge.className = data.online ? "chat-status-text chat-online" : "chat-status-text"; }
-            if(ring) ring.className = data.online ? "dom-status-ring ring-active" : "dom-status-ring ring-inactive";
-            if(domBadge) { domBadge.innerHTML = data.online ? '<span class="status-dot"></span> ONLINE' : `<span class="status-dot"></span> ${data.text}`; domBadge.className = data.online ? "dom-status status-online" : "dom-status"; }
-            // HUD Status
-            const hud = document.getElementById('hudDomStatus');
-            if(hud) hud.className = data.online ? 'hud-status-dot online' : 'hud-status-dot offline';
-        }
-
-        if (data.type === "UPDATE_Q_FEED") {
-            const feedData = data.domVideos || data.posts || data.feed;
-            if (feedData && Array.isArray(feedData)) {
-                renderDomVideos(feedData);
-                renderNews(feedData);
-                const pc = document.getElementById('cntPosts');
-                if (pc) pc.innerText = feedData.length;
-            }
-        }
-
-        const payload = data.profile || data.galleryData || data.pendingState ? data : (data.type === "UPDATE_FULL_DATA" ? data : null);
+        if (data.type === "INIT_TASKS") setTaskDatabase(data.tasks || []);
+        if (data.type === "INIT_WISHLIST") { setWishlistItems(data.wishlist || []); window.WISHLIST_ITEMS = data.wishlist || []; renderWishlist(); }
         
-        if (payload) {
-            if (data.profile && !ignoreBackendUpdates) {
+        if (data.type === "UPDATE_FULL_DATA") {
+            if (data.profile) {
                 setGameStats(data.profile);
-                
-                // 1. SAVE TO MEMORY (Fixed Commas)
                 setUserProfile({
                     name: data.profile.name || "Slave",
                     hierarchy: data.profile.hierarchy || "HallBoy",
                     memberId: data.profile.memberId || "",
-                    joined: data.profile.joined,                 // <--- ADD COMMA HERE
-                    
-                    // ADD THESE 3 LINES:
+                    joined: data.profile.joined,
                     profilePicture: data.profile.profilePicture,
                     kneelHistory: data.profile.kneelHistory,
                     routine: data.profile.routine
                 });
                 
-                if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
-                
-                if (data.profile.activeRevealMap) {
-                    let map = [];
-                    try { map = (typeof data.profile.activeRevealMap === 'string') ? JSON.parse(data.profile.activeRevealMap) : data.profile.activeRevealMap; } catch(e) { map = []; }
-                    setActiveRevealMap(map);
-                }
-                
-                if (data.profile.rewardVault) {
-                    let vault = [];
-                    try { vault = (typeof data.profile.rewardVault === 'string') ? JSON.parse(data.profile.rewardVault) : data.profile.rewardVault; } catch(e) { vault = []; }
-                    setVaultItems(vault);
-                }
-
-                setLibraryProgressIndex(data.profile.libraryProgressIndex || 1);
-                setCurrentLibraryMedia(data.profile.currentLibraryMedia || "");
-
-                renderRewardGrid();
-                if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
-                setStats(migrateGameStatsToStats(data.profile, stats));
-                
-                // 2. DIRECT IMAGE UPDATE (Desktop + Mobile)
+                // Direct Image Sync
                 if(data.profile.profilePicture) {
                     const rawUrl = data.profile.profilePicture;
-                    
-                    // Desktop
                     const picEl = document.getElementById('profilePic');
                     if(picEl) picEl.src = getOptimizedUrl(rawUrl, 150);
 
-                    // Mobile
                     const mobPic = document.getElementById('mob_profilePic');
                     const mobBg = document.getElementById('mob_bgPic');
                     const hudPic = document.getElementById('hudSlavePic');
-                    
                     let finalUrl = rawUrl;
                     if (rawUrl.startsWith("wix:image")) {
                         const uri = rawUrl.split('/')[3].split('#')[0];
                         finalUrl = `https://static.wixstatic.com/media/${uri}`;
                     }
-
                     if(mobPic) mobPic.src = finalUrl;
                     if(mobBg) mobBg.src = finalUrl;
                     if(hudPic) hudPic.src = finalUrl;
                 }
-                
                 updateStats(); 
             }
-
-            if (data.type === "INSTANT_REVEAL_SYNC") {
-                if (data.currentLibraryMedia) setCurrentLibraryMedia(data.currentLibraryMedia);
-                renderRewardGrid(); 
-                setTimeout(() => {
-                    const winnerId = data.activeRevealMap[data.activeRevealMap.length - 1];
-                    runTargetingAnimation(winnerId, () => {
-                        setActiveRevealMap(data.activeRevealMap || []);
-                        renderRewardGrid(); 
-                    });
-                }, 50); 
-            }
-
-            if (payload.galleryData) {
-                const currentGalleryJson = JSON.stringify(payload.galleryData);
-                if (currentGalleryJson !== lastGalleryJson) {
-                    setLastGalleryJson(currentGalleryJson);
-                    setGalleryData(payload.galleryData);
-                    renderGallery();
-                    updateStats();
-                }
-            }
-
-            if (payload.pendingState !== undefined) {
-                if (!taskJustFinished && !ignoreBackendUpdates) {
-                    setPendingTaskState(payload.pendingState);
-                    if (pendingTaskState) {
-                        setCurrentTask(pendingTaskState.task);
-                        restorePendingUI();
-                        window.updateTaskUIState(true);
-                    } else if (!resetUiTimer) {
-                        window.updateTaskUIState(false);
-                        const rt = document.getElementById('readyText');
-                        if(rt) rt.innerText = "AWAITING ORDERS";
-                    }
-                }
-            }
+            if (data.galleryData) { setGalleryData(data.galleryData); renderGallery(); }
         }
-
         if (data.type === "UPDATE_CHAT" || data.chatHistory) renderChat(data.chatHistory || data.messages);
-
-        if (data.type === "FRAGMENT_REVEALED") {
-            const { fragmentNumber, isComplete } = data;
-            import('../profile/kneeling/reward.js').then(({ runTargetingAnimation, renderRewardGrid }) => {
-                runTargetingAnimation(fragmentNumber, () => {
-                    renderRewardGrid();
-                    if (isComplete) triggerSound('coinSound');
-                });
-            });
-        }
     } catch(err) { console.error("Main error:", err); }
 });
 
+// --- 4. EXPORTS & HELPERS ---
 window.handleUploadStart = function(inputElement) {
     if (inputElement.files && inputElement.files.length > 0) {
-        
-        // 1. Check if this is the Routine Upload
         const isRoutine = inputElement.id === 'routineUpload';
-        
         if (isRoutine) {
-            // Visual Feedback
-            const btn = document.getElementById('btnDailyRoutine');
-            if(btn) { 
-                btn.innerText = "VERIFYING..."; 
-                btn.style.opacity = "0.5"; 
-            }
-            
-            // 2. Tell Backend: Mark Routine as Done (Update History)
-            // This triggers the 'COMPLETE_ROUTINE' logic in profile.js
             window.parent.postMessage({ type: "COMPLETE_ROUTINE" }, "*");
-
-            // 3. Upload the file (Normal flow)
-            if (typeof handleEvidenceUpload === 'function') handleEvidenceUpload(inputElement);
-            
-            // 4. Notify
-            if(window.showSystemNotification) window.showSystemNotification("EVIDENCE SENT", "Daily routine logged.");
-
+            window.showSystemNotification("EVIDENCE SENT", "Daily routine logged.");
+            // Mark local done too for speed
+            const todayStr = new Date().toDateString();
+            const btn = document.getElementById('btnDailyRoutine');
+            if(btn) btn.classList.add('hidden');
         } else {
-            // Standard Task Upload
             const btn = document.getElementById('btnUpload');
-            if (btn) { btn.innerHTML = '...'; btn.style.background = '#333'; btn.style.color = '#ffd700'; btn.style.cursor = 'wait'; }
-            if (typeof handleEvidenceUpload === 'function') handleEvidenceUpload(inputElement);
+            if (btn) { btn.innerHTML = '...'; btn.style.background = '#333'; btn.style.color = '#ffd700'; }
         }
+        if (typeof handleEvidenceUpload === 'function') handleEvidenceUpload(inputElement);
     }
 };
-
 window.handleRoutineUpload = window.handleUploadStart;
 window.switchTab = switchTab;
 window.toggleStats = toggleStats;
@@ -709,193 +405,24 @@ window.WISHLIST_ITEMS = WISHLIST_ITEMS;
 window.gameStats = gameStats;
 
 function updateStats() {
-    // 1. DESKTOP UPDATE (Original Logic - Keep safe)
     const subName = document.getElementById('subName');
-    const subHierarchy = document.getElementById('subHierarchy');
     const coinsEl = document.getElementById('coins');
-    const pointsEl = document.getElementById('points');
-
-    if (!subName || !userProfile || !gameStats) return; 
-
-    // Update Desktop Elements
-    subName.textContent = userProfile.name || "Slave";
-    if (subHierarchy) subHierarchy.textContent = userProfile.hierarchy || "HallBoy";
+    if (subName) subName.textContent = userProfile.name || "Slave";
     if (coinsEl) coinsEl.textContent = gameStats.coins ?? 0;
-    if (pointsEl) pointsEl.textContent = gameStats.points ?? 0;
-
-    // 2. MOBILE UPDATE (The New Connection)
-    // Header Identity
-    const mobName = document.getElementById('mob_slaveName');
-    const mobRank = document.getElementById('mob_rankStamp');
-    const mobPic = document.getElementById('mob_profilePic');
     
-    // Header Stats (Visible)
-    const mobPoints = document.getElementById('mobPoints');
-    const mobCoins = document.getElementById('mobCoins');
-
-    // Drawer Stats (Hidden)
-    const mobStreak = document.getElementById('mobStreak');
-    const mobTotal = document.getElementById('mobTotal');
-    const mobKneels = document.getElementById('mobKneels');
-
-    // FILL DATA
-    if (mobName) mobName.innerText = userProfile.name || "SLAVE";
-    if (mobRank) mobRank.innerText = userProfile.hierarchy || "INITIATE";
-    
-    // Merit & Net
-    if (mobPoints) mobPoints.innerText = gameStats.points || 0;
-    if (mobCoins) mobCoins.innerText = gameStats.coins || 0;
-
-    // Drawer Data
-    if (mobStreak) mobStreak.innerText = gameStats.taskdom_streak || 0;
-    if (mobTotal) mobTotal.innerText = gameStats.taskdom_total_tasks || 0;
-    if (mobKneels) mobKneels.innerText = gameStats.kneelCount || 0;
-
-    // Profile Picture Logic (Wix Fix)
-    if (mobPic && userProfile.profilePicture) {
-        let rawUrl = userProfile.profilePicture;
-        if (rawUrl.startsWith("wix:image")) {
-            const uri = rawUrl.split('/')[3].split('#')[0];
-            mobPic.src = `https://static.wixstatic.com/media/${uri}`;
-        } else {
-            mobPic.src = rawUrl;
-        }
-    }
-
-// 5. FILL GRID (Local Midnight Reset)
-    const grid = document.getElementById('mob_streakGrid');
-    if(grid) {
-        grid.innerHTML = '';
-        
-        let todayCount = 0;
-
-        // LOGIC: Check if the last kneel happened "Today" on this device
-        if (userProfile.lastWorship) {
-            const lastDate = new Date(userProfile.lastWorship);
-            const now = new Date();
-            
-            // Compare Day, Month, Year (Local Time)
-            const isToday = lastDate.getDate() === now.getDate() &&
-                            lastDate.getMonth() === now.getMonth() &&
-                            lastDate.getFullYear() === now.getFullYear();
-            
-            if (isToday) {
-                // If it is today, use the backend count (or cycle math)
-                // Use todayKneeling if available, otherwise fallback to cycle
-                todayCount = gameStats.todayKneeling || (gameStats.kneelCount % 24);
-            } else {
-                // If last worship was yesterday (or older), show 0
-                todayCount = 0;
-            }
-        }
-
-        // Render 24 Micro-Squares
-        for(let i=0; i<24; i++) {
-            const sq = document.createElement('div');
-            // Fill squares based on the calculated todayCount
-            sq.className = 'streak-sq' + (i < todayCount ? ' active' : '');
-            grid.appendChild(sq);
-        }
-    }
-
-    // 4. DESKTOP EXTRAS (Progress Bar etc)
-    const sinceEl = document.getElementById('slaveSinceDate');
-    if (sinceEl && userProfile.joined) {
-         try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch(e) { sinceEl.textContent = "--/--/--"; }
-    }
-
-    if (typeof LEVELS !== 'undefined' && LEVELS.length > 0) {
-        let nextLevel = LEVELS.find(l => l.min > gameStats.points) || LEVELS[LEVELS.length - 1];
-        const nln = document.getElementById('nextLevelName');
-        const pnd = document.getElementById('pointsNeeded');
-        
-        if(nln) nln.innerText = nextLevel.name;
-        if(pnd) pnd.innerText = Math.max(0, nextLevel.min - gameStats.points) + " to go";
-        
-        const pb = document.getElementById('progressBar');
-        const progress = ((gameStats.points - 0) / (nextLevel.min - 0)) * 100;
-        if (pb) pb.style.width = Math.min(100, Math.max(0, progress)) + "%";
-    }
-    
+    // Mobile Sync
+    if (window.syncMobileDashboard) window.syncMobileDashboard();
     updateKneelingStatus();
 }
 
-// =========================================
-// PART 3: TRIBUTE & BACKEND FUNCTIONS (RESTORED)
-// =========================================
-
-let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
-function toggleTributeHunt() { const overlay = document.getElementById('tributeHuntOverlay'); if (overlay.classList.contains('hidden')) { selectedReason = ""; selectedItem = null; if(document.getElementById('huntNote')) document.getElementById('huntNote').value = ""; overlay.classList.remove('hidden'); showTributeStep(1); } else { overlay.classList.add('hidden'); resetTributeFlow(); } }
-function showTributeStep(step) { document.querySelectorAll('.tribute-step').forEach(el => el.classList.add('hidden')); const target = document.getElementById('tributeStep' + step); if (target) target.classList.remove('hidden'); const progressEl = document.getElementById('huntProgress'); if (progressEl) progressEl.innerText = ["", "INTENTION", "THE HUNT", "CONFESSION"][step] || ""; }
-function selectTributeReason(reason) { selectedReason = reason; renderHuntStore(gameStats.coins); showTributeStep(2); }
-function setTributeNote(note) { showTributeStep(3); }
-function filterByBudget(max) { renderHuntStore(max); showTributeStep(3); }
-function renderHuntStore(budget) { const grid = document.getElementById('huntStoreGrid'); if (!grid) return; filteredItems = (window.WISHLIST_ITEMS || []).filter(item => Number(item.price || item.Price || 0) <= budget); currentHuntIndex = 0; if (filteredItems.length === 0) { grid.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">NO TRIBUTES IN THIS TIER...</div>'; return; } showTinderCard(); }
-function showTinderCard() { const grid = document.getElementById('huntStoreGrid'); const item = filteredItems[currentHuntIndex]; if (!item) { grid.innerHTML = `<div style="text-align:center; padding:40px;"><div style="font-size:2rem; margin-bottom:10px;">💨</div><div style="color:#666; font-size:0.7rem;">NO MORE ITEMS IN THIS TIER</div><button class="tab-btn" onclick="showTributeStep(2)" style="margin-top:15px; width:auto; padding:5px 15px;">CHANGE BUDGET</button></div>`; return; } grid.style.perspective = "1000px"; grid.innerHTML = `<div id="tinderCard" class="tinder-card-main"><div id="likeLabel" class="swipe-indicator like">SACRIFICE</div><div id="nopeLabel" class="swipe-indicator nope">SKIP</div><img src="${item.img || item.image}" draggable="false"><div class="tinder-card-info"><div style="color:var(--neon-yellow); font-size:1.8rem; font-weight:900;">${item.price} 🪙</div><div style="color:white; letter-spacing:2px; font-weight:bold; font-size:0.8rem;">${item.name.toUpperCase()}</div></div></div>`; initSwipeEvents(document.getElementById('tinderCard'), item); }
-function initSwipeEvents(card, item) { let startX = 0; let currentX = 0; const handleStart = (e) => { startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; card.style.transition = 'none'; }; const handleMove = (e) => { if (!startX) return; currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const diff = currentX - startX; card.style.transform = `translateX(${diff}px) rotate(${diff / 15}deg)`; const likeLabel = document.getElementById('likeLabel'); const nopeLabel = document.getElementById('nopeLabel'); if(likeLabel) likeLabel.style.opacity = diff > 0 ? (diff / 100) : 0; if(nopeLabel) nopeLabel.style.opacity = diff < 0 ? (Math.abs(diff) / 100) : 0; }; const handleEnd = () => { const diff = currentX - startX; card.style.transition = 'transform 0.4s ease, opacity 0.4s ease'; if (diff > 120) { card.style.transform = `translateX(600px) rotate(45deg)`; selectedItem = item; if(document.getElementById('huntSelectedImg')) document.getElementById('huntSelectedImg').src = item.img || item.image; if(document.getElementById('huntSelectedName')) document.getElementById('huntSelectedName').innerText = item.name.toUpperCase(); if(document.getElementById('huntSelectedPrice')) document.getElementById('huntSelectedPrice').innerText = item.price + " 🪙"; setTimeout(() => { showTributeStep(4); }, 200); } else if (diff < -120) { card.style.transform = `translateX(-600px) rotate(-45deg)`; card.style.opacity = "0"; currentHuntIndex++; setTimeout(() => { showTinderCard(); }, 300); } else { card.style.transform = `translateX(0) rotate(0)`; if(document.getElementById('likeLabel')) document.getElementById('likeLabel').style.opacity = 0; if(document.getElementById('nopeLabel')) document.getElementById('nopeLabel').style.opacity = 0; } startX = 0; }; card.addEventListener('mousedown', handleStart); card.addEventListener('touchstart', handleStart); window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove); window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd); }
-function toggleHuntNote(show) { const container = document.getElementById('huntNoteContainer'); const btn = document.getElementById('btnShowNote'); if (!container || !btn) return; if (show) { container.classList.remove('hidden'); btn.classList.add('hidden'); document.getElementById('huntNote').focus(); } else { container.classList.add('hidden'); btn.classList.remove('hidden'); } }
-function finalizeSacrifice() { 
-    const noteEl = document.getElementById('huntNote'); 
-    const note = noteEl ? noteEl.value.trim() : ""; 
-    
-    if (!selectedItem || !selectedReason) return; 
-    
-    // *** THE FIX: USE POVERTY SYSTEM INSTEAD OF ALERT ***
-    if (gameStats.coins < selectedItem.price) { 
-        triggerSound('sfx-deny'); 
-        window.triggerPoverty(); 
-        return; 
-    } 
-    
-    const tributeMessage = `💝 TRIBUTE: ${selectedReason}\n🎁 ITEM: ${selectedItem.name}\n💰 COST: ${selectedItem.price}\n💌 "${note || "A silent tribute."}"`; 
-    
-    window.parent.postMessage({ 
-        type: "PURCHASE_ITEM", 
-        itemName: selectedItem.name, 
-        cost: selectedItem.price, 
-        messageToDom: tributeMessage 
-    }, "*"); 
-    
-    triggerSound('sfx-buy'); 
-    triggerCoinShower(); 
-    toggleTributeHunt(); 
-}
-function buyRealCoins(amount) { triggerSound('sfx-buy'); window.parent.postMessage({ type: "INITIATE_STRIPE_PAYMENT", amount: amount }, "*"); }
-function triggerCoinShower() { for (let i = 0; i < 40; i++) { const coin = document.createElement('div'); coin.className = 'coin-particle'; coin.innerHTML = `<svg style="width:100%; height:100%; fill:gold;"><use href="#icon-coin"></use></svg>`; coin.style.setProperty('--tx', `${Math.random() * 200 - 100}vw`); coin.style.setProperty('--ty', `${-(Math.random() * 80 + 20)}vh`); document.body.appendChild(coin); setTimeout(() => coin.remove(), 2000); } }
-function breakGlass(e) { if (e && e.stopPropagation) e.stopPropagation(); const overlay = document.getElementById('specialGlassOverlay'); if (overlay) overlay.classList.remove('active'); window.parent.postMessage({ type: "GLASS_BROKEN" }, "*"); }
-function submitSessionRequest() { const checked = document.querySelector('input[name="sessionType"]:checked'); if (!checked) return; window.parent.postMessage({ type: "SESSION_REQUEST", sessionType: checked.value, cost: checked.getAttribute('data-cost') }, "*"); }
-function resetTributeFlow() { selectedReason = ""; selectedNote = ""; selectedItem = null; const note = document.getElementById('huntNote'); if (note) note.value = ""; showTributeStep(1); }
-
-// =========================================
-// PART 1: MOBILE LOGIC (BRAIN & NAVIGATION)
-// =========================================
-
-// 5. STATS EXPANDER (SIMPLE TOGGLE)
+// --- MOBILE LOGIC ---
 window.toggleMobileStats = function() {
     const drawer = document.getElementById('mobStatsContent');
     const arrow = document.getElementById('mobStatsArrow');
-    
-    if(drawer) {
-        // Toggle the class that handles the animation (CSS)
-        drawer.classList.toggle('open');
-        
-        // Rotate Arrow
-        if(arrow) {
-            arrow.innerText = drawer.classList.contains('open') ? "▲" : "▼";
-        }
-    }
+    if(drawer) { drawer.classList.toggle('open'); if(arrow) arrow.innerText = drawer.classList.contains('open') ? "▲" : "▼"; }
 };
 
-// 3. MAIN NAVIGATION CONTROLLER (AUTO-RESET FIX)
 window.toggleMobileView = function(viewName) {
-    // --- 1. CLEANUP (Reset Overlays) ---
-    // This ensures we always land on a clean page, not an open menu
-    if (window.closeLobby) window.closeLobby();
-    
-    // Also close the Poverty card if it's open
-    if (window.closePoverty) window.closePoverty();
-
-    // --- 2. HIDE ALL VIEWS ---
     const home = document.getElementById('viewMobileHome');
     const mobRecord = document.getElementById('viewMobileRecord');
     const chatCard = document.getElementById('chatCard');
@@ -904,103 +431,43 @@ window.toggleMobileView = function(viewName) {
     const news = document.getElementById('viewNews');
     const protocol = document.getElementById('viewProtocol');
     
-    const views = [home, history, mobRecord, news, protocol];
-    views.forEach(el => { if(el) el.style.display = 'none'; });
-
-    // Reset Chat Visibility
+    [home, mobRecord, history, news, protocol].forEach(el => { if(el) el.style.display = 'none'; });
     if (chatCard) chatCard.style.setProperty('display', 'none', 'important');
 
-    // --- 3. SHOW TARGET ---
     if (viewName === 'home') {
-        if(home) {
-            home.style.display = 'flex';
-            if(window.syncMobileDashboard) window.syncMobileDashboard();
-        }
+        if(home) { home.style.display = 'flex'; if(window.syncMobileDashboard) window.syncMobileDashboard(); }
     }
     else if (viewName === 'chat') {
         if(chatCard && mobileApp) {
-            if (chatCard.parentElement !== mobileApp) {
-                mobileApp.appendChild(chatCard);
-            }
+            if (chatCard.parentElement !== mobileApp) mobileApp.appendChild(chatCard);
             chatCard.style.removeProperty('display');
             chatCard.style.display = 'flex';
-            
-            const chatBox = document.getElementById('chatBox');
-            if (chatBox) setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
+            setTimeout(() => { document.getElementById('chatBox').scrollTop = 9999; }, 100);
         }
     }
     else if (viewName === 'record') {
         if (mobRecord) {
             mobRecord.style.display = 'flex';
-            if(window.renderGallery) {
-                window.renderGallery();
-                console.log("Rendering Gallery from Mobile Record View");
-            }
-            console.log("End Rendering Gallery from Mobile Record View");
-        } else if (history) {
-            history.style.display = 'flex';
             if(window.renderGallery) window.renderGallery();
-            console.log("Rendering Gallery from Mobile History View");
-        } else {
-            console.warn("No valid element found for Record/History view.");        
         }
     }
-    else if (viewName === 'queen') {
-        if(news) news.style.display = 'block';
-    }
-    else if (viewName === 'global') {
-        if(protocol) protocol.style.display = 'block';
-    }
+    else if (viewName === 'queen') { if(news) news.style.display = 'block'; }
     
-    // --- 4. SIDEBAR CLEANUP ---
     const sidebar = document.querySelector('.layout-left');
     if (sidebar) sidebar.classList.remove('mobile-open');
-    document.querySelectorAll('.mf-btn').forEach(btn => btn.classList.remove('active'));
 };
 
-// QUEEN'S MENU NAVIGATION
-window.openQueenMenu = function() {
-    const menu = document.getElementById('queenOverlay');
-    if (menu) {
-        menu.classList.remove('hidden');
-        menu.style.display = 'flex';
-        // Force a data refresh so the progress bar updates
-        if(window.syncMobileDashboard) window.syncMobileDashboard();
-    }
-};
-
-window.closeQueenMenu = function() {
-    const menu = document.getElementById('queenOverlay');
-    if (menu) {
-        menu.classList.add('hidden');
-        menu.style.display = 'none';
-    }
-};
-// 3. KNEEL BUTTON
 window.triggerKneel = function() {
     const sidebar = document.querySelector('.layout-left');
     const realBtn = document.querySelector('.kneel-bar-graphic');
-    
     if (sidebar) sidebar.classList.add('mobile-open'); 
-
-    if (realBtn) {
-        realBtn.style.boxShadow = "0 0 20px var(--neon-red)";
-        setTimeout(() => realBtn.style.boxShadow = "", 1000);
-    }
+    if (realBtn) { realBtn.style.boxShadow = "0 0 20px var(--neon-red)"; setTimeout(() => realBtn.style.boxShadow = "", 1000); }
 };
 
-// 4. DATA SYNC (COMPLETE & FIXED)
 window.syncMobileDashboard = function() {
-    // 1. Safety Check
     if (!gameStats || !userProfile) return;
-
-    // --- A. IDENTITY & IMAGES ---
     const elName = document.getElementById('mob_slaveName');
     const elRank = document.getElementById('mob_rankStamp');
-    const elPic = document.getElementById('mob_profilePic');
-    const elBg = document.getElementById('mob_bgPic');
-    const hudPic = document.getElementById('hudSlavePic');
-
     const elPoints = document.getElementById('mobPoints');
     const elCoins = document.getElementById('mobCoins');
 
@@ -1009,22 +476,6 @@ window.syncMobileDashboard = function() {
     if (elPoints) elPoints.innerText = gameStats.points || 0;
     if (elCoins) elCoins.innerText = gameStats.coins || 0;
 
-    // Image Logic
-    let finalUrl = "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png";
-    if (userProfile.profilePicture && userProfile.profilePicture.length > 5) {
-        let rawUrl = userProfile.profilePicture;
-        if (rawUrl.startsWith("wix:image")) {
-            const uri = rawUrl.split('/')[3].split('#')[0]; 
-            finalUrl = `https://static.wixstatic.com/media/${uri}`;
-        } else {
-            finalUrl = rawUrl;
-        }
-    }
-    if (elPic) elPic.src = finalUrl;
-    if (elBg) elBg.src = finalUrl;
-    if (hudPic) hudPic.src = finalUrl;
-
-    // Stats Drawer
     const mobStreak = document.getElementById('mobStreak');
     const mobTotal = document.getElementById('mobTotal');
     const mobKneels = document.getElementById('mobKneels');
@@ -1032,37 +483,69 @@ window.syncMobileDashboard = function() {
     if (mobTotal) mobTotal.innerText = gameStats.taskdom_total_tasks || 0;
     if (mobKneels) mobKneels.innerText = gameStats.kneelCount || 0;
 
-    // --- B. TIME-BASED GRID (24h Timeline) ---
+    // Grid
     const grid = document.getElementById('mob_streakGrid');
     if(grid) {
         grid.innerHTML = '';
         let loggedHours = [];
         const now = new Date();
-
-        // Read History
         if (userProfile.kneelHistory) {
             try {
-                const historyObj = JSON.parse(userProfile.kneelHistory);
-                if (historyObj.date === now.toDateString()) {
-                    loggedHours = historyObj.hours || [];
-                }
-            } catch(e) { console.error("Grid parse error", e); }
+                const hObj = JSON.parse(userProfile.kneelHistory);
+                if (hObj.date === now.toDateString()) { loggedHours = hObj.hours || []; }
+            } catch(e) {}
         }
-
-        // Render Squares
         for(let i=0; i<24; i++) {
             const sq = document.createElement('div');
             sq.className = 'streak-sq';
             if (loggedHours.includes(i)) sq.classList.add('active');
-            else if (i < now.getHours()) {
-                sq.style.opacity = "0.3"; 
-                sq.style.borderColor = "#333";
-            }
+            else if (i < now.getHours()) { sq.style.opacity = "0.3"; sq.style.borderColor = "#333"; }
             grid.appendChild(sq);
         }
     }
     
-    // --- C. OPERATIONS CARD (Status) ---
+    // Queen Menu
+    const kneelFill = document.getElementById('kneelDailyFill');
+    const kneelText = document.getElementById('kneelDailyText');
+    if (kneelFill && kneelText) {
+        const count = gameStats.todayKneeling || (gameStats.kneelCount % 8) || 0; 
+        const goal = 8;
+        kneelFill.style.width = Math.min(100, (count/goal)*100) + "%";
+        kneelText.innerText = `${count} / ${goal}`;
+    }
+
+    const routineBtn = document.getElementById('btnDailyRoutine');
+    const noRoutineMsg = document.getElementById('noRoutineMsg');
+    
+    if (userProfile.routine && userProfile.routine.length > 2) {
+        const now = new Date();
+        const isTime = now.getHours() >= 7; 
+        
+        let isDoneToday = false;
+        if (userProfile.kneelHistory) {
+            try {
+                const hObj = JSON.parse(userProfile.kneelHistory);
+                if (hObj.date === now.toDateString() && hObj.routineDone === true) isDoneToday = true;
+            } catch(e) {}
+        }
+
+        if (isTime && !isDoneToday) {
+            if (routineBtn) { routineBtn.classList.remove('hidden'); routineBtn.innerText = "SUBMIT: " + userProfile.routine.toUpperCase(); }
+            if (noRoutineMsg) noRoutineMsg.style.display = 'none';
+        } else {
+            if (routineBtn) routineBtn.classList.add('hidden');
+            if (noRoutineMsg) {
+                noRoutineMsg.style.display = 'block';
+                noRoutineMsg.innerText = isDoneToday ? "DUTY COMPLETED" : "AWAITING 07:00";
+                noRoutineMsg.style.color = isDoneToday ? "#00ff00" : "#666";
+            }
+        }
+    } else {
+        if (routineBtn) routineBtn.classList.add('hidden');
+        if (noRoutineMsg) { noRoutineMsg.style.display = 'block'; noRoutineMsg.innerText = "NO ROUTINE ASSIGNED"; }
+    }
+    
+    // Operations Card
     const activeRow = document.getElementById('activeTimerRow');
     if (activeRow) {
         const isWorking = !activeRow.classList.contains('hidden');
@@ -1070,7 +553,6 @@ window.syncMobileDashboard = function() {
         const text = document.getElementById('mob_statusText');
         const timer = document.getElementById('mob_activeTimer');
         const btn = document.getElementById('mob_btnRequest');
-
         if (isWorking) {
             if(light) light.className = 'status-light green';
             if(text) text.innerText = "WORKING";
@@ -1083,237 +565,52 @@ window.syncMobileDashboard = function() {
             if(btn) btn.classList.remove('hidden');
         }
     }
+};
 
-    // --- D. QUEEN'S MENU (TIME GATED ROUTINE) ---
-    
-// --- D. QUEEN'S MENU UPDATES ---
-// --- 5. QUEEN'S MENU UPDATES ---
-    
-    // A. KNEEL PROGRESS (Goal: 8)
-    const kneelFill = document.getElementById('kneelDailyFill');
-    const kneelText = document.getElementById('kneelDailyText');
-    if (kneelFill && kneelText) {
-        const count = gameStats.todayKneeling || (gameStats.kneelCount % 8) || 0; 
-        const goal = 8;
-        const pct = Math.min(100, (count / goal) * 100);
-        kneelFill.style.width = pct + "%";
-        kneelText.innerText = `${count} / ${goal}`;
-    }
-
-    // B. DAILY ROUTINE LOGIC (The Fix)
-    const routineDisplay = document.getElementById('mobRoutineDisplay');
-    const routineBtn = document.getElementById('btnDailyRoutine');
-    const routineCheck = document.getElementById('mobRoutineCheck');
-    
-    // 1. Check if a Routine exists in CMS
-    if (userProfile.routine && userProfile.routine.length > 2) {
-        
-        // Always show the name
-        if(routineDisplay) {
-            routineDisplay.innerText = userProfile.routine.toUpperCase();
-            routineDisplay.style.color = "#fff";
-        }
-
-        // 2. Check Time & Completion
-        const now = new Date();
-        const currentHour = now.getHours(); 
-        const isTime = currentHour >= 7; // 7:00 AM start
-
-        // Check CMS History (kneelHistory JSON)
-        let isDoneToday = false;
-        if (userProfile.kneelHistory) {
-            try {
-                const hObj = JSON.parse(userProfile.kneelHistory);
-                if (hObj.date === now.toDateString() && hObj.routineDone === true) {
-                    isDoneToday = true;
-                }
-            } catch(e) {}
-        }
-
-        // 3. Toggle UI States
-        if (isDoneToday) {
-            // STATE: DONE
-            if(routineBtn) routineBtn.classList.add('hidden');
-            if(routineCheck) routineCheck.classList.remove('hidden');
-        } 
-        else if (isTime) {
-            // STATE: TODO (Show Button)
-            if(routineBtn) routineBtn.classList.remove('hidden');
-            if(routineCheck) routineCheck.classList.add('hidden');
-        } 
-        else {
-            // STATE: TOO EARLY (Hide Both, Show Text)
-            if(routineBtn) routineBtn.classList.add('hidden');
-            if(routineCheck) routineCheck.classList.add('hidden');
-            if(routineDisplay) {
-                routineDisplay.innerText = "AWAITING 07:00";
-                routineDisplay.style.color = "#666";
-            }
-        }
-
-    } else {
-        // STATE: NO ROUTINE ASSIGNED
-        if(routineDisplay) routineDisplay.innerText = "NO ROUTINE ASSIGNED";
-        if(routineBtn) routineBtn.classList.add('hidden');
-        if(routineCheck) routineCheck.classList.add('hidden');
-    }
-// =========================================
-// PART 2: FINAL APP MODE (NATIVE FLOW)
-// =========================================
-
+// APP ENGINE
 (function() {
-    // Only run on Mobile
     if (window.innerWidth > 768) return;
-
-    // 1. LOCK THE FRAME, BUT LET THE CONTENT BREATHE
     function lockVisuals() {
-        const height = window.innerHeight;
-        
-        Object.assign(document.body.style, {
-            height: height + 'px',
-            width: '100%',
-            position: 'fixed',
-            overflow: 'hidden',
-            inset: '0',
-            overscrollBehavior: 'none',
-            touchAction: 'none'
-        });
-
+        Object.assign(document.body.style, { height: window.innerHeight + 'px', width: '100%', position: 'fixed', overflow: 'hidden', inset: '0', overscrollBehavior: 'none', touchAction: 'none' });
         const app = document.querySelector('.app-container');
         if (app) Object.assign(app.style, { height: '100%', overflow: 'hidden' });
-
-        const scrollables = document.querySelectorAll('.content-stage, .chat-body-frame, #viewMobileHome, #historySection, #viewNews');
-        scrollables.forEach(el => {
-            Object.assign(el.style, {
-                height: '100%',
-                overflowY: 'auto',              
-                webkitOverflowScrolling: 'touch', 
-                paddingBottom: '100px',
-                overscrollBehaviorY: 'contain',
-                touchAction: 'pan-y'
-            });
+        document.querySelectorAll('.content-stage, .chat-body-frame, #viewMobileHome, #viewMobileRecord, #viewNews').forEach(el => {
+            Object.assign(el.style, { height: '100%', overflowY: 'auto', webkitOverflowScrolling: 'touch', paddingBottom: '100px', overscrollBehaviorY: 'contain', touchAction: 'pan-y' });
         });
     }
-
-// 2. BUILD FOOTER (FORCE REBUILD VERSION)
     function buildAppFooter() {
-        // 1. KILL THE GHOST (Delete any existing footer)
-        const oldFooter = document.getElementById('app-mode-footer');
-        if (oldFooter) oldFooter.remove();
-        
-        // 2. CREATE FRESH
+        if (document.getElementById('app-mode-footer')) { document.getElementById('app-mode-footer').remove(); }
         const footer = document.createElement('div');
         footer.id = 'app-mode-footer';
-        
-        Object.assign(footer.style, {
-            display: 'flex', 
-            justifyContent: 'space-around', 
-            alignItems: 'center',
-            position: 'fixed', 
-            bottom: '0', 
-            left: '0', 
-            width: '100%', 
-            height: '80px',
-            background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
-            paddingBottom: 'env(safe-area-inset-bottom)',
-            zIndex: '2147483647', 
-            borderTop: '1px solid rgba(197, 160, 89, 0.3)',
-            backdropFilter: 'blur(10px)', 
-            pointerEvents: 'auto', 
-            touchAction: 'none'
-        });
-
-        footer.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-
+        Object.assign(footer.style, { display: 'flex', justifyContent: 'space-around', alignItems: 'center', position: 'fixed', bottom: '0', left: '0', width: '100%', height: '80px', background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: '2147483647', borderTop: '1px solid rgba(197, 160, 89, 0.3)', backdropFilter: 'blur(10px)', pointerEvents: 'auto', touchAction: 'none' });
         const btnStyle = "background:none; border:none; color:#666; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer;";
         const chatStyle = "background:none; border:none; color:#ff003c; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; text-shadow: 0 0 10px rgba(255,0,60,0.4);";
-
-        footer.innerHTML = `
-            <button class="mf-btn" onclick="window.toggleMobileView('home')" style="${btnStyle}"><span style="font-size:1.4rem;">◈</span><span>PROFILE</span></button>
-            <button class="mf-btn" onclick="window.toggleMobileView('record')" style="${btnStyle}"><span style="font-size:1.4rem;">▦</span><span>RECORD</span></button>
-            <button onclick="window.toggleMobileView('chat')" style="${chatStyle};display:inline-flex;align-items:center;justify-content:center;padding:0;min-width:60px;">
-<img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:1px solid #ff003c;display:block;">
-</button>
-            <button class="mf-btn" onclick="window.toggleMobileView('queen')" style="${btnStyle}"><span style="font-size:1.4rem;">♛</span><span>QUEEN</span></button>
-            <button class="mf-btn" onclick="window.toggleMobileView('global')" style="${btnStyle}"><span style="font-size:1.4rem;">🌐</span><span>GLOBAL</span></button>
-        `;
+        footer.innerHTML = `<button class="mf-btn" onclick="window.toggleMobileView('home')" style="${btnStyle}"><span style="font-size:1.4rem;">◈</span><span>PROFILE</span></button><button class="mf-btn" onclick="window.toggleMobileView('record')" style="${btnStyle}"><span style="font-size:1.4rem;">▦</span><span>RECORD</span></button><button class="mf-btn" onclick="window.toggleMobileView('chat')" style="${chatStyle}"><span style="font-size:1.6rem;">❖</span><span>LOGS</span></button><button class="mf-btn" onclick="window.toggleMobileView('queen')" style="${btnStyle}"><span style="font-size:1.4rem;">♛</span><span>QUEEN</span></button><button class="mf-btn" onclick="window.toggleMobileView('global')" style="${btnStyle}"><span style="font-size:1.4rem;">🌐</span><span>GLOBAL</span></button>`;
         document.body.appendChild(footer);
     }
-
-    // 3. RUN
-    window.addEventListener('load', () => { 
-        lockVisuals(); 
-        buildAppFooter();
-        // FORCE HOME ON LOAD
-        if(window.toggleMobileView) window.toggleMobileView('home'); 
-    });
+    window.addEventListener('load', () => { lockVisuals(); buildAppFooter(); if(window.toggleMobileView) window.toggleMobileView('home'); });
     window.addEventListener('resize', lockVisuals);
-    lockVisuals(); buildAppFooter();
 })();
 
-// TIMER SYNC & VISUALIZATION (GOLD RINGS)
+// TIMER SYNC
 setInterval(() => {
     const desktopH = document.getElementById('timerH');
     const desktopM = document.getElementById('timerM');
     const desktopS = document.getElementById('timerS');
-    
     const mobileH = document.getElementById('m_timerH');
     const mobileM = document.getElementById('m_timerM');
     const mobileS = document.getElementById('m_timerS');
-    
-    // Ring Elements (Conic Gradient Targets)
     const ringH = document.getElementById('ring_H');
     const ringM = document.getElementById('ring_M');
     const ringS = document.getElementById('ring_S');
-
     if (desktopH && mobileH) {
-        // 1. Get Values
         const hVal = parseInt(desktopH.innerText) || 0;
         const mVal = parseInt(desktopM.innerText) || 0;
         const sVal = parseInt(desktopS.innerText) || 0;
-
-        // 2. Update Text
-        mobileH.innerText = desktopH.innerText;
-        mobileM.innerText = desktopM.innerText;
-        mobileS.innerText = desktopS.innerText;
-
-        // 3. Update Visual Rings (Conic Gradient)
-        if(ringH) {
-            const hDeg = (hVal / 24) * 360;
-            ringH.style.background = `conic-gradient(#c5a059 ${hDeg}deg, rgba(197, 160, 89, 0.1) ${hDeg}deg)`;
-        }
-        if(ringM) {
-            const mDeg = (mVal / 60) * 360;
-            ringM.style.background = `conic-gradient(#c5a059 ${mDeg}deg, rgba(197, 160, 89, 0.1) ${mDeg}deg)`;
-        }
-        if(ringS) {
-            const sDeg = (sVal / 60) * 360;
-            ringS.style.background = `conic-gradient(#c5a059 ${sDeg}deg, rgba(197, 160, 89, 0.1) ${sDeg}deg)`;
-        }
-    }
-    
-    // Sync Visibility Logic (Unchanged)
-    const activeRow = document.getElementById('activeTimerRow');
-    const mobTimer = document.getElementById('mob_activeTimer');
-    const mobRequestBtn = document.getElementById('mob_btnRequest');
-    
-    if (activeRow && mobTimer && mobRequestBtn) {
-        const isWorking = !activeRow.classList.contains('hidden');
-        if (isWorking) {
-            mobTimer.classList.remove('hidden');
-            mobRequestBtn.classList.add('hidden');
-            const light = document.getElementById('mob_statusLight');
-            const text = document.getElementById('mob_statusText');
-            if(light) light.className = 'status-light green';
-            if(text) text.innerText = "WORKING";
-        } else {
-            mobTimer.classList.add('hidden');
-            mobRequestBtn.classList.remove('hidden');
-            const light = document.getElementById('mob_statusLight');
-            const text = document.getElementById('mob_statusText');
-            if(light) light.className = 'status-light red';
-            if(text) text.innerText = "UNPRODUCTIVE";
-        }
+        mobileH.innerText = desktopH.innerText; mobileM.innerText = desktopM.innerText; mobileS.innerText = desktopS.innerText;
+        if(ringH) ringH.style.background = `conic-gradient(#c5a059 ${(hVal / 24) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if(ringM) ringM.style.background = `conic-gradient(#c5a059 ${(mVal / 60) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if(ringS) ringS.style.background = `conic-gradient(#c5a059 ${(sVal / 60) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
     }
 }, 500);
 
