@@ -270,7 +270,7 @@ $w("#html2").onMessage(async (event) => {
             await syncProfileAndTasks();
         }
         
-        // E. DEVOTION LOGIC (SERVER-SIDE TRACKING)
+        // E. DEVOTION LOGIC (FIXED)
         else if (data.type === "CLAIM_KNEEL_REWARD") {
             try {
                 const results = await wixData.query("Tasks")
@@ -282,46 +282,18 @@ $w("#html2").onMessage(async (event) => {
                     const amount = data.rewardValue;
                     const type = data.rewardType; 
                     
-                    // 1. Update Wallet
                     if (type === 'coins') {
                         item.wallet = (item.wallet || 0) + amount;
                     } else if (type === 'points') {
                         item.score = (item.score || 0) + amount;
                     }
+                    // Fragment reward is handled by REVEAL_FRAGMENT
                     
                     item.lastWorship = new Date();
                     item.kneelCount = (item.kneelCount || 0) + 1;
-
-                    // 2. SERVER-SIDE GRID LOGIC
-                    // We store a JSON string: { "date": "Mon Jan 01 2026", "hours": [1, 5, 9] }
-                    let historyLog = {};
-                    try { 
-                        historyLog = item.kneel_history ? JSON.parse(item.kneel_history) : {}; 
-                    } catch(e) { 
-                        historyLog = {}; 
-                    }
-
-                    const now = new Date();
-                    const todayStr = now.toDateString(); // e.g. "Mon Jan 20 2026"
-                    const currentHour = now.getHours();  // 0-23
-
-                    // If the saved date is NOT today, reset the list
-                    if (historyLog.date !== todayStr) {
-                        historyLog = { date: todayStr, hours: [] };
-                    }
-
-                    // Add current hour if not already there
-                    if (!historyLog.hours) historyLog.hours = [];
-                    if (!historyLog.hours.includes(currentHour)) {
-                        historyLog.hours.push(currentHour);
-                    }
-
-                    // Save back to CMS
-                    item.kneel_history = JSON.stringify(historyLog);
                     
                     await wixData.update("Tasks", item, { suppressAuth: true });
                     
-                    // Notify User
                     const label = type === 'coins' ? "COINS" : type === 'points' ? "POINTS" : "FRAGMENT";
                     await insertMessage({
                         memberId: currentUserEmail,
