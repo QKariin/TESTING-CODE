@@ -522,11 +522,10 @@ window.addEventListener("message", (event) => {
                     name: data.profile.name || "Slave",
                     hierarchy: data.profile.hierarchy || "HallBoy",
                     memberId: data.profile.memberId || "",
-                    joined: data.profile.joined,
-                    profilePicture: data.profile.profilePicture, // <--- ADD THIS LINE
-                    routine: data.profile.routine,
-                    kneelHistory: data.profile.kneelHistory
-                    
+                    joined: data.profile.joined,                 // <--- Comma here
+                    profilePicture: data.profile.profilePicture, // <--- Comma here
+                    kneelHistory: data.profile.kneelHistory,     // <--- Comma here
+                    routine: data.profile.routine                // <--- No comma needed on last one
                 });
                 
                 if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
