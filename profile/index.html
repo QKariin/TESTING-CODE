@@ -980,7 +980,7 @@
                 <div class="hud-gear">⚙</div>
             </div>
             <!-- Right: Her (Visual Only) -->
-            <div class="hud-circle queen">
+             <div class="hud-circle queen" onclick="openQueenMenu()">
                 <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png">
                 <div id="hudDomStatus" class="hud-status-dot offline"></div>
             </div>
@@ -1056,6 +1056,72 @@
             </div>
         </div>
 
+        <!-- QUEEN'S DUTY MENU -->
+    <div id="queenOverlay" class="mob-reward-overlay hidden">
+        <div class="mob-reward-card lobby-card">
+            
+            <div class="lobby-header">
+                <div class="lobby-title">ACTIVE DUTIES</div>
+            </div>
+
+            <div class="lobby-content">
+                
+                <!-- 1. DAILY ROUTINE -->
+                <div class="duty-wrapper" style="width:100%; margin-bottom:15px;">
+                    <div class="lobby-label">DAILY ROUTINE</div>
+                    <!-- The Upload Button (Hidden until routine bought) -->
+                    <button id="btnDailyRoutine" class="lobby-btn gold hidden" onclick="document.getElementById('routineUpload').click()">
+                        SUBMIT EVIDENCE
+                    </button>
+                    <input type="file" id="routineUpload" hidden onchange="handleRoutineUpload(this)">
+                    <!-- Placeholder text if no routine -->
+                    <div id="noRoutineMsg" style="color:#666; font-size:0.6rem; text-align:center; margin-top:5px;">NO ROUTINE ASSIGNED</div>
+                </div>
+
+                <div class="lobby-divider"></div>
+
+                <!-- 2. KNEELING PROGRESS -->
+                <div class="duty-wrapper" style="width:100%; margin-bottom:15px;">
+                    <div class="lobby-label">KNEELING GOAL (8/DAY)</div>
+                    <div class="kneel-progress-track" style="height:10px; background:#111; border:1px solid #333; margin-top:5px;">
+                        <div id="kneelDailyFill" style="height:100%; width:0%; background:#c5a059;"></div>
+                    </div>
+                    <div id="kneelDailyText" style="text-align:center; font-family:'Orbitron'; font-size:0.7rem; color:#fff; margin-top:5px;">0 / 8</div>
+                </div>
+
+                <div class="lobby-divider"></div>
+
+                <!-- 3. TASK PROTOCOL -->
+                <div class="duty-wrapper" style="width:100%;">
+                    <div class="lobby-label">CURRENT PROTOCOL</div>
+                    
+                    <!-- IDLE: Request Button -->
+                    <button id="mob_btnRequest" class="lobby-btn" onclick="if(window.getRandomTask) window.getRandomTask()">
+                        REQUEST NEW TASK
+                    </button>
+
+                    <!-- ACTIVE: The Gold Timer (Moved here) -->
+                    <div id="mob_activeTimer" class="mob-timer-row hidden">
+                        <div class="timer-gauge">
+                            <div id="ring_H" class="gauge-ring"></div>
+                            <div class="gauge-content"><span id="m_timerH" class="g-val">00</span><span class="g-lbl">HRS</span></div>
+                        </div>
+                        <div class="timer-gauge">
+                            <div id="ring_M" class="gauge-ring"></div>
+                            <div class="gauge-content"><span id="m_timerM" class="g-val">00</span><span class="g-lbl">MIN</span></div>
+                        </div>
+                        <div class="timer-gauge">
+                            <div id="ring_S" class="gauge-ring"></div>
+                            <div class="gauge-content"><span id="m_timerS" class="g-val">00</span><span class="g-lbl">SEC</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="lobby-btn close" style="margin-top:20px;" onclick="closeQueenMenu()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
       
 
         <!-- 2. THE HALO (Identity) -->
@@ -1111,47 +1177,7 @@
                     <span id="mob_kneelText" class="kneel-text kneel-label">HOLD TO KNEEL</span>
                 </div>
             </div>
-
-
-            <!-- TASK CARD (With Gold Gauge Timer) -->
-            <div class="mob-card operations-card">
-                <div class="op-status-row">
-                    <div id="mob_statusLight" class="status-light red"></div>
-                    <div id="mob_statusText" class="status-text">UNPRODUCTIVE</div>
-                </div>
-                
-                <div class="op-action-row">
-                    <!-- Idle State -->
-                    <button id="mob_btnRequest" class="mob-action-btn" onclick="if(window.getRandomTask) window.getRandomTask()">REQUEST PROTOCOL</button>
-                    
-                    <!-- Active State (3 Rings) -->
-                    <div id="mob_activeTimer" class="mob-timer-row hidden">
-                        <!-- HOUR -->
-                        <div class="timer-gauge">
-                            <div id="ring_H" class="gauge-ring"></div>
-                            <div class="gauge-content">
-                                <span id="m_timerH" class="g-val">00</span><span class="g-lbl">HOURS</span>
-                            </div>
-                        </div>
-                        <!-- MINUTE -->
-                        <div class="timer-gauge">
-                            <div id="ring_M" class="gauge-ring"></div>
-                            <div class="gauge-content">
-                                <span id="m_timerM" class="g-val">00</span><span class="g-lbl">MINUTES</span>
-                            </div>
-                        </div>
-                        <!-- SECOND -->
-                        <div class="timer-gauge">
-                            <div id="ring_S" class="gauge-ring"></div>
-                            <div class="gauge-content">
-                                <span id="m_timerS" class="g-val">00</span><span class="g-lbl">SECONDS</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
+         </div>
 
         <!-- REWARD POPUP -->
         <div id="mobKneelReward" class="mob-reward-overlay hidden">
