@@ -493,6 +493,7 @@ window.addEventListener("message", (event) => {
                     hierarchy: data.profile.hierarchy || "HallBoy",
                     memberId: data.profile.memberId || "",
                     joined: data.profile.joined,
+                    kneelHistory: data.profile.kneelHistory 
                     profilePicture: data.profile.profilePicture // <--- ADD THIS LINE
                 });
                 
@@ -958,32 +959,38 @@ window.syncMobileDashboard = function() {
         if (hud) hud.src = finalUrl;
     }
 
-    // 5. FILL 24-HOUR GRID (Timeline)
+    // --- B. TIME-BASED GRID (CMS VERSION) ---
     const grid = document.getElementById('mob_streakGrid');
     if(grid) {
         grid.innerHTML = '';
         
-        // Data Source: Ideally 'gameStats.kneelHours' (Array of hours), 
-        // fallback to 'kneelCount' for now.
-        const count = gameStats.kneelCount || 0;
-        
-        // Generate 24 Squares (00 to 23)
+        let loggedHours = [];
+        const now = new Date();
+
+        // 1. Read from Backend Data
+        if (userProfile.kneelHistory) {
+            try {
+                const historyObj = JSON.parse(userProfile.kneelHistory);
+                // Only use the hours if the date matches Today
+                if (historyObj.date === now.toDateString()) {
+                    loggedHours = historyObj.hours || [];
+                }
+            } catch(e) { console.error("Grid parse error", e); }
+        }
+
+        // 2. Render 24 Hour Squares
         for(let i=0; i<24; i++) {
             const sq = document.createElement('div');
             sq.className = 'streak-sq';
             
-            // LOGIC: If we have specific hours, check them.
-            // If not, just fill the first N squares based on count.
-            if (i < count) {
-                sq.classList.add('active'); // Gold
-            } else {
-                // Determine if this hour has passed (Failure check)
-                const currentHour = new Date().getHours();
-                if (i < currentHour) {
-                    // It's 2 PM, this is 9 AM, and it's empty -> FAILURE
-                    sq.style.borderColor = "#333"; // Or "#ff003c" for red shame
-                    sq.style.opacity = "0.5";
-                }
+            // Active: If this hour is in the list
+            if (loggedHours.includes(i)) {
+                sq.classList.add('active');
+            }
+            // Failed: If the hour has passed and it's empty
+            else if (i < now.getHours()) {
+                sq.style.opacity = "0.3"; 
+                sq.style.borderColor = "#333";
             }
             
             grid.appendChild(sq);
