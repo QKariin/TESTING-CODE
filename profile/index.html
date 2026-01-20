@@ -1004,9 +1004,9 @@
 
                 <!-- VIEW 1: MENU LIST -->
                 <div id="lobbyMenu" class="lobby-content">
-                    <button class="lobby-btn" onclick="showLobbyAction('name')">CHANGE NAME</button>
-                    <button class="lobby-btn" onclick="showLobbyAction('photo')">CHANGE PHOTO</button>
-                    <button class="lobby-btn" onclick="showLobbyAction('routine')">DAILY ROUTINE</button>
+                    <button class="lobby-btn" onclick="showLobbyAction('name')">ADD YOUR NAME</button>
+                    <button class="lobby-btn" onclick="showLobbyAction('photo')">UPLOAD PHOTO</button>
+                    <button class="lobby-btn" onclick="showLobbyAction('routine')">GET ROUTINE</button>
                     <button class="lobby-btn" onclick="showLobbyAction('kinks')">ADD KINKS</button>
                     <button class="lobby-btn" onclick="showLobbyAction('limits')">ADD LIMITS</button>
                     <div class="lobby-divider"></div>
@@ -1022,7 +1022,7 @@
                     
                     <!-- 2. FILE INPUT (Photo) -->
                     <button id="lobbyInputFileBtn" class="lobby-file-btn hidden" onclick="document.getElementById('lobbyFile').click()">PICK PHOTO</button>
-                    <input type="file" id="lobbyFile" hidden onchange="document.getElementById('lobbyInputFileBtn').innerText = 'FILE SELECTED'">
+                    <input type="file" id="lobbyFile" hidden onchange="document.getElementById('lobbyInputFileBtn').innerText = 'PHOTO UPLOADED'">
 
                     <!-- 3. ROUTINE SELECTOR -->
                     <div id="routineSelectionArea" class="hidden" style="width:100%; display:flex; flex-direction:column; gap:10px;">
@@ -1030,9 +1030,7 @@
                         <div class="routine-grid">
                             <div class="routine-tile" onclick="selectRoutineItem(this, 'Morning Kneel')">Morning Kneel</div>
                             <div class="routine-tile" onclick="selectRoutineItem(this, 'Chastity Check')">Chastity Check</div>
-                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Hydration Report')">Hydration Report</div>
                             <div class="routine-tile" onclick="selectRoutineItem(this, 'Cleanliness Check')">Cleanliness Check</div>
-                            <div class="routine-tile" onclick="selectRoutineItem(this, 'Sleep Position')">Sleep Position</div>
                             <div class="routine-tile special" onclick="selectRoutineItem(this, 'custom')">CREATE OWN (+1000)</div>
                         </div>
                         <input type="text" id="routineCustomInput" class="lobby-input hidden" placeholder="Describe your routine..." style="margin-top:10px;">
