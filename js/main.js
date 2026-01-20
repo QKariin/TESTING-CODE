@@ -1148,6 +1148,7 @@ window.syncMobileDashboard = function() {
             noRoutineMsg.style.color = "#666";
         }
     }
+    }
 // =========================================
 // PART 2: FINAL APP MODE (NATIVE FLOW)
 // =========================================
