@@ -1443,38 +1443,36 @@ window.closeExchequer = function() {
 // REPLACE THE 'lockVisuals' FUNCTION (Around Line 1184) WITH THIS:
 // ==========================
 
- function lockVisuals() {
-    const height = window.innerHeight;
-    
-    // 1. LOCK THE BODY TO SCREEN SIZE (Prevent Bounce)
+function lockVisuals() {
+    // 1. LOCK THE BODY (Prevent global bounce)
     Object.assign(document.body.style, {
-        height: height + 'px',
-        width: '100%',
         position: 'fixed',
-        overflow: 'hidden', 
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
         inset: '0',
         overscrollBehavior: 'none',
         touchAction: 'none',
         backgroundColor: '#000000'
     });
 
-    // 2. LOCK THE APP CONTAINER
-    const app = document.querySelector('.app-container');
-    if (app) Object.assign(app.style, { height: '100%', overflow: 'hidden' });
-
-    // 3. ALLOW SCROLLING *ONLY* ON THESE ELEMENTS
-    // Added: #mobHomeScroll and #mobGlobalScroll
-    const scrollables = document.querySelectorAll('.content-stage, .chat-body-frame, #historySection, #viewNews, #viewMobileRecord, #mobHomeScroll, #mobGlobalScroll');
+    // 2. DEFINE SCROLLABLE ZONES
+    // These specific elements are allowed to handle vertical swipes
+    const scrollables = document.querySelectorAll(
+        '.content-stage, .chat-body-frame, #historySection, #viewNews, #viewMobileRecord, #mobHomeScroll, #mobGlobalScroll'
+    );
     
+    // 3. APPLY PHYSICS WITHOUT BREAKING FLEXBOX
     scrollables.forEach(el => {
-        Object.assign(el.style, {
-            height: '100%',
-            overflowY: 'auto',              
-            webkitOverflowScrolling: 'touch', 
-            overscrollBehaviorY: 'contain', // CRITICAL: Traps scroll inside
-            touchAction: 'pan-y'            // CRITICAL: Tells browser "Handle vertical swipes here"
-        });
+        // We do NOT set height here. We trust the CSS.
+        el.style.overflowY = 'auto';
+        el.style.webkitOverflowScrolling = 'touch';
+        el.style.overscrollBehaviorY = 'contain'; // Stops the "Chain Reaction" to body
+        el.style.touchAction = 'pan-y';           // Explicitly allows vertical scroll
     });
+
+    // 4. PREVENT TEXT SELECTION (Optional, helps feel like an app)
+    document.onselectstart = function() { return false; }
 }
 
 // 2. BUILD FOOTER (FULL WIDTH 5-SLOT)
