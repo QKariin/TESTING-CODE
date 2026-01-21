@@ -1443,15 +1443,15 @@ window.closeExchequer = function() {
 // REPLACE THE 'lockVisuals' FUNCTION (Around Line 1184) WITH THIS:
 // ==========================
 
-   function lockVisuals() {
+  function lockVisuals() {
         const height = window.innerHeight;
         
-        // 1. LOCK THE BODY
+        // 1. LOCK THE BODY TO SCREEN SIZE (Prevent Bounce)
         Object.assign(document.body.style, {
             height: height + 'px',
             width: '100%',
             position: 'fixed',
-            overflow: 'hidden', // Body is frozen
+            overflow: 'hidden', 
             inset: '0',
             overscrollBehavior: 'none',
             touchAction: 'none',
@@ -1462,9 +1462,9 @@ window.closeExchequer = function() {
         const app = document.querySelector('.app-container');
         if (app) Object.assign(app.style, { height: '100%', overflow: 'hidden' });
 
-        // 3. ALLOW SCROLLING *ONLY* ON THESE ELEMENTS
-        // (Home, Global, and Record are REMOVED because they use internal scrolling)
-        const scrollables = document.querySelectorAll('.content-stage, .chat-body-frame, #historySection, #viewNews');
+        // 3. ALLOW SCROLLING *ONLY* ON THESE ELEMENTS (Using internal scroll)
+        // Record, Chat, News, History are here. Home and Global handle it in HTML now.
+        const scrollables = document.querySelectorAll('.content-stage, .chat-body-frame, #historySection, #viewNews, #viewMobileRecord');
         
         scrollables.forEach(el => {
             Object.assign(el.style, {
