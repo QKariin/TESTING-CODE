@@ -1464,7 +1464,7 @@ window.closeExchequer = function() {
 
         // 3. ALLOW SCROLLING *ONLY* ON THESE ELEMENTS (Using internal scroll)
         // Record, Chat, News, History are here. Home and Global handle it in HTML now.
-        const scrollables = document.querySelectorAll('.content-stage, .chat-body-frame, #historySection, #viewNews, #viewMobileRecord, #viewMobileHome, #viewMobileGlobal');
+        const scrollables = document.querySelectorAll('.content-stage, .chat-body-frame, #historySection, #viewNews, #viewMobileRecord');
         
         scrollables.forEach(el => {
             Object.assign(el.style, {
