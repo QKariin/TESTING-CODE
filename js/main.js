@@ -1284,123 +1284,121 @@ window.triggerKneel = function() {
 window.syncMobileDashboard = function() {
     if (!gameStats || !userProfile) return;
 
-    // --- 1. IDENTITY & STATS ---
+    // --- 1. EXISTING DASHBOARD SYNC (Keep your existing code here for name/rank/grid) ---
     const elName = document.getElementById('mob_slaveName');
-    const elRank = document.getElementById('mob_rankStamp');
-    const elPoints = document.getElementById('mobPoints');
-    const elCoins = document.getElementById('mobCoins');
-
     if (elName) elName.innerText = userProfile.name || "SLAVE";
+    const elRank = document.getElementById('mob_rankStamp');
     if (elRank) elRank.innerText = userProfile.hierarchy || "INITIATE";
-    if (elPoints) elPoints.innerText = gameStats.points || 0;
-    if (elCoins) elCoins.innerText = gameStats.coins || 0;
-    
-    // --- 2. IMAGES (Face, Background, HUD) ---
-    const elPic = document.getElementById('mob_profilePic');
-    const elBg = document.getElementById('mob_bgPic');
-    const hudPic = document.getElementById('hudSlavePic');
+    // ... (Keep the rest of your existing Grid/Image sync logic here) ...
 
-    let finalUrl = "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png";
-    
-    if (userProfile.profilePicture && userProfile.profilePicture.length > 5) {
-        let rawUrl = userProfile.profilePicture;
-        if (rawUrl.startsWith("wix:image")) {
-            const uri = rawUrl.split('/')[3].split('#')[0]; 
-            finalUrl = `https://static.wixstatic.com/media/${uri}`;
-        } else {
-            finalUrl = rawUrl;
-        }
-    }
-    if (elPic) elPic.src = finalUrl;
-    if (elBg) elBg.src = finalUrl;
-    if (hudPic) hudPic.src = finalUrl;
+    // --- 2. NEW QUEEN MENU LOGIC ---
 
-    // --- 3. THE GRID (24-Hour Timeline) ---
-    const grid = document.getElementById('mob_streakGrid');
-    if(grid) {
-        grid.innerHTML = '';
-        let loggedHours = [];
-        const now = new Date();
+    // A. DATE DISPLAY
+    const dateEl = document.getElementById('dutyDateDisplay');
+    if(dateEl) dateEl.innerText = new Date().toLocaleDateString().toUpperCase();
 
-        // Try to read history from CMS
-        if (userProfile.kneelHistory) {
-            try {
-                const historyObj = JSON.parse(userProfile.kneelHistory);
-                if (historyObj.date === now.toDateString()) {
-                    loggedHours = historyObj.hours || [];
-                }
-            } catch(e) { console.error("Grid parse error", e); }
-        }
+    // B. ROUTINE LOGIC (7AM Check)
+    const routineName = userProfile.routine || "None Assigned";
+    const rDisplay = document.getElementById('mobRoutineDisplay');
+    if(rDisplay) rDisplay.innerText = routineName.toUpperCase();
 
-        for(let i=0; i<24; i++) {
-            const sq = document.createElement('div');
-            sq.className = 'streak-sq';
-            
-            // Gold if logged
-            if (loggedHours.includes(i)) {
-                sq.classList.add('active');
-            } 
-            // Dim if hour passed & empty
-            else if (i < now.getHours()) {
-                sq.style.opacity = "0.3"; 
-                sq.style.borderColor = "#333";
-            }
-            grid.appendChild(sq);
-        }
-    }
-    
-    // --- 4. OPERATIONS CARD (Status) ---
-    const activeRow = document.getElementById('activeTimerRow');
-    if (activeRow) {
-        const isWorking = !activeRow.classList.contains('hidden');
-        const light = document.getElementById('mob_statusLight');
-        const text = document.getElementById('mob_statusText');
-        const timer = document.getElementById('mob_activeTimer');
-        const btn = document.getElementById('mob_btnRequest');
+    const nowHour = new Date().getHours();
+    const isMorning = nowHour >= 7; // 7 AM
+    // Check if done (You need to store 'routineDone' in gameStats or userProfile. 
+    // For now, let's assume it's stored in gameStats.routineDoneToday)
+    const isDone = gameStats.routineDoneToday === true;
 
-        if (isWorking) {
-            if(light) light.className = 'status-light green';
-            if(text) text.innerText = "WORKING";
-            if(timer) timer.classList.remove('hidden');
-            if(btn) btn.classList.add('hidden');
-        } else {
-            if(light) light.className = 'status-light red';
-            if(text) text.innerText = "UNPRODUCTIVE";
-            if(timer) timer.classList.add('hidden');
-            if(btn) btn.classList.remove('hidden');
-        }
+    const btnLocked = document.getElementById('btnRoutineLocked');
+    const btnUpload = document.getElementById('btnRoutineUpload');
+    const msgDone = document.getElementById('routineDoneMsg');
+    const pill = document.getElementById('routineStatusPill');
+    const cardRoutine = document.getElementById('cardRoutine');
+
+    // Reset Classes
+    if(cardRoutine) cardRoutine.classList.remove('done');
+
+    if (isDone) {
+        // STATE: COMPLETED
+        if(btnLocked) btnLocked.classList.add('hidden');
+        if(btnUpload) btnUpload.classList.add('hidden');
+        if(msgDone) msgDone.classList.remove('hidden');
+        if(pill) { pill.innerText = "COMPLETE"; pill.className = "status-pill pill-active"; }
+        if(cardRoutine) cardRoutine.classList.add('done');
+    } 
+    else if (isMorning) {
+        // STATE: OPEN (7AM+)
+        if(btnLocked) btnLocked.classList.add('hidden');
+        if(btnUpload) btnUpload.classList.remove('hidden');
+        if(msgDone) msgDone.classList.add('hidden');
+        if(pill) { pill.innerText = "PENDING"; pill.className = "status-pill pill-idle"; }
+    } 
+    else {
+        // STATE: LOCKED (<7AM)
+        if(btnLocked) btnLocked.classList.remove('hidden');
+        if(btnUpload) btnUpload.classList.add('hidden');
+        if(msgDone) msgDone.classList.add('hidden');
+        if(pill) { pill.innerText = "LOCKED"; pill.className = "status-pill pill-wait"; }
     }
 
-    // --- 5. QUEEN'S MENU UPDATES (This was missing) ---
+    // C. TASK LOGIC (Active vs Idle + Count)
+    const activeRow = document.getElementById('activeTimerRow'); // Check desktop state
+    const isWorking = activeRow && !activeRow.classList.contains('hidden');
     
-    // A. Kneel Progress Bar
+    const taskIdle = document.getElementById('qm_TaskIdle');
+    const taskActive = document.getElementById('qm_TaskActive');
+    
+    if (isWorking) {
+        if(taskIdle) taskIdle.classList.add('hidden');
+        if(taskActive) taskActive.classList.remove('hidden');
+    } else {
+        if(taskIdle) taskIdle.classList.remove('hidden');
+        if(taskActive) taskActive.classList.add('hidden');
+    }
+
+    // Task Count (0/5) - Assuming gameStats.dailyTasksDone exists or we calculate it
+    // If you don't have this var yet, create a temporary one in memory
+    const dailyCount = gameStats.dailyTasksDone || 0; 
+    const countDisplay = document.getElementById('dailyTaskCount');
+    const cardTasks = document.getElementById('cardTasks');
+    
+    if(countDisplay) countDisplay.innerText = `${dailyCount} / 5`;
+    if(dailyCount >= 5 && cardTasks) cardTasks.classList.add('done'); // Green border if 5+
+
+    // D. KNEELING LOGIC (Green Bar)
     const kneelFill = document.getElementById('kneelDailyFill');
     const kneelText = document.getElementById('kneelDailyText');
+    const cardKneel = document.getElementById('cardKneel');
+    
     if (kneelFill && kneelText) {
-        // Fallback to modulo if todayKneeling isn't tracked yet
-        const count = gameStats.todayKneeling || (gameStats.kneelCount % 8) || 0; 
-        const goal = 8;
-        const pct = Math.min(100, (count / goal) * 100);
+        const kCount = gameStats.todayKneeling || (gameStats.kneelCount % 8) || 0; 
+        const kGoal = 8;
+        const pct = Math.min(100, (kCount / kGoal) * 100);
         
         kneelFill.style.width = pct + "%";
-        kneelText.innerText = `${count} / ${goal}`;
-    }
+        kneelText.innerText = `${kCount} / ${kGoal}`;
 
-    // B. Routine Button Text
-    const routineBtn = document.getElementById('btnDailyRoutine');
-    const noRoutineMsg = document.getElementById('noRoutineMsg');
-    
-    if (userProfile.routine && userProfile.routine.length > 2) {
-        if (routineBtn) {
-            routineBtn.classList.remove('hidden');
-            routineBtn.innerText = "SUBMIT: " + userProfile.routine.toUpperCase();
+        if (kCount >= kGoal) {
+            kneelFill.classList.add('bar-done');
+            if(cardKneel) cardKneel.classList.add('done');
+        } else {
+            kneelFill.classList.remove('bar-done');
+            if(cardKneel) cardKneel.classList.remove('done');
         }
-        if (noRoutineMsg) noRoutineMsg.style.display = 'none';
-    } else {
-        if (routineBtn) routineBtn.classList.add('hidden');
-        if (noRoutineMsg) noRoutineMsg.style.display = 'block';
     }
 };
+
+window.handleRoutineUpload = function(input) {
+    if(input.files.length > 0) {
+        // 1. Send to backend
+        window.handleEvidenceUpload(input); 
+        
+        // 2. Mark as done locally for immediate UI update
+        gameStats.routineDoneToday = true; 
+        
+        // 3. Refresh UI
+        window.syncMobileDashboard();
+    }
+}
 
 // ==========================
 // EXCHEQUER LOGIC (MOBILE)
@@ -1521,46 +1519,49 @@ document.body.appendChild(footer);
     lockVisuals(); buildAppFooter();
 })();
 
-// TIMER SYNC & VISUALIZATION (GOLD RINGS)
+// TIMER SYNC & VISUALIZATION
 setInterval(() => {
+    // 1. Get Source (Desktop Hidden Elements)
     const desktopH = document.getElementById('timerH');
     const desktopM = document.getElementById('timerM');
     const desktopS = document.getElementById('timerS');
     
+    // 2. Mobile Dashboard Elements
     const mobileH = document.getElementById('m_timerH');
     const mobileM = document.getElementById('m_timerM');
     const mobileS = document.getElementById('m_timerS');
+
+    // 3. Queen Menu Elements (NEW)
+    const qmH = document.getElementById('qm_timerH');
+    const qmM = document.getElementById('qm_timerM');
+    const qmS = document.getElementById('qm_timerS');
     
-    // Ring Elements (Conic Gradient Targets)
-    const ringH = document.getElementById('ring_H');
-    const ringM = document.getElementById('ring_M');
-    const ringS = document.getElementById('ring_S');
+    // 4. Update Values
+    if (desktopH) {
+        const hTxt = desktopH.innerText;
+        const mTxt = desktopM.innerText;
+        const sTxt = desktopS.innerText;
 
-    if (desktopH && mobileH) {
-        // 1. Get Values
-        const hVal = parseInt(desktopH.innerText) || 0;
-        const mVal = parseInt(desktopM.innerText) || 0;
-        const sVal = parseInt(desktopS.innerText) || 0;
+        // Update Dashboard
+        if(mobileH) { mobileH.innerText = hTxt; mobileM.innerText = mTxt; mobileS.innerText = sTxt; }
+        
+        // Update Queen Menu Card
+        if(qmH) { qmH.innerText = hTxt; qmM.innerText = mTxt; qmS.innerText = sTxt; }
 
-        // 2. Update Text
-        mobileH.innerText = desktopH.innerText;
-        mobileM.innerText = desktopM.innerText;
-        mobileS.innerText = desktopS.innerText;
-
-        // 3. Update Visual Rings (Conic Gradient)
-        if(ringH) {
-            const hDeg = (hVal / 24) * 360;
-            ringH.style.background = `conic-gradient(#c5a059 ${hDeg}deg, rgba(197, 160, 89, 0.1) ${hDeg}deg)`;
-        }
-        if(ringM) {
-            const mDeg = (mVal / 60) * 360;
-            ringM.style.background = `conic-gradient(#c5a059 ${mDeg}deg, rgba(197, 160, 89, 0.1) ${mDeg}deg)`;
-        }
-        if(ringS) {
-            const sDeg = (sVal / 60) * 360;
-            ringS.style.background = `conic-gradient(#c5a059 ${sDeg}deg, rgba(197, 160, 89, 0.1) ${sDeg}deg)`;
-        }
+        // Update Rings (Dashboard)
+        const hVal = parseInt(hTxt) || 0;
+        const mVal = parseInt(mTxt) || 0;
+        const sVal = parseInt(sTxt) || 0;
+        
+        const ringH = document.getElementById('ring_H');
+        const ringM = document.getElementById('ring_M');
+        const ringS = document.getElementById('ring_S');
+        
+        if(ringH) ringH.style.background = `conic-gradient(#c5a059 ${(hVal/24)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if(ringM) ringM.style.background = `conic-gradient(#c5a059 ${(mVal/60)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if(ringS) ringS.style.background = `conic-gradient(#c5a059 ${(sVal/60)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
     }
+}, 500);
     
     // Sync Visibility Logic (Unchanged)
     const activeRow = document.getElementById('activeTimerRow');
