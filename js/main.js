@@ -1561,9 +1561,8 @@ setInterval(() => {
         if(ringM) ringM.style.background = `conic-gradient(#c5a059 ${(mVal/60)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
         if(ringS) ringS.style.background = `conic-gradient(#c5a059 ${(sVal/60)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
     }
-}, 500);
-    
-    // Sync Visibility Logic (Unchanged)
+
+    // Sync Visibility Logic (Moved inside the same interval for efficiency)
     const activeRow = document.getElementById('activeTimerRow');
     const mobTimer = document.getElementById('mob_activeTimer');
     const mobRequestBtn = document.getElementById('mob_btnRequest');
