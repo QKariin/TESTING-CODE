@@ -1047,8 +1047,8 @@ function updateStats() {
     if (mobKneels) mobKneels.innerText = gameStats.kneelCount || 0;
 
     //Daily Duties
-    const dailyKneels = (gameStats.kneelHistory ? JSON.parse(gameStats.kneelHistory).hours?.length || 0 : 0) + " / 8";
-    if (mobDailyKneels) mobDailyKneels.innerText = dailyKneels;
+    const dailyKneels = (gameStats.kneelHistory ? JSON.parse(gameStats.kneelHistory).hours?.length || 0 : 0);
+    if (mobDailyKneels) mobDailyKneels.innerText = dailyKneels  + " / 8";
 
     if (kneelDailyFill) {
         const percent = Math.min((dailyKneels / 8) * 100, 100);
