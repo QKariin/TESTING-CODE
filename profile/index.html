@@ -724,6 +724,50 @@
         letter-spacing: 2px; cursor: pointer;
         box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
     }
+
+    /* --- DUTY CARD STYLES --- */
+.duty-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #333;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: 0.3s;
+}
+
+.duty-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 8px; margin-bottom: 5px;
+}
+
+.duty-title { font-family: 'Cinzel', serif; color: #ccc; font-size: 0.8rem; letter-spacing: 2px; }
+.duty-count { font-family: 'Orbitron', sans-serif; color: var(--mob-gold); font-size: 0.8rem; }
+
+/* STATUS BARS */
+.status-pill {
+    font-size: 0.6rem; padding: 4px 8px; border-radius: 4px;
+    font-family: 'Orbitron'; text-transform: uppercase; letter-spacing: 1px;
+}
+.pill-idle { background: rgba(255, 0, 60, 0.2); color: #ff003c; border: 1px solid #ff003c; }
+.pill-active { background: rgba(0, 255, 0, 0.1); color: #00ff00; border: 1px solid #00ff00; }
+.pill-wait { background: #222; color: #888; border: 1px solid #444; }
+
+/* GREEN DONE STATE */
+.duty-card.done { border-color: #00ff00; background: rgba(0, 255, 0, 0.05); }
+.duty-card.done .duty-title { color: #00ff00; }
+.duty-card.done .duty-count { color: #00ff00; }
+.bar-done { background: #00ff00 !important; box-shadow: 0 0 10px #00ff00; }
+
+/* TIMER IN CARD */
+.card-timer-row { display: flex; justify-content: center; gap: 5px; margin: 10px 0; }
+.card-t-box { 
+    background: #000; border: 1px solid #444; color: #fff; 
+    font-family: 'Rajdhani'; font-size: 1.2rem; padding: 5px 10px; border-radius: 4px; 
+}
     
   </style>
 </head>
@@ -1088,57 +1132,88 @@
             </div>
         </div>
 
-        <!-- QUEEN'S DUTY MENU -->
+        <!-- QUEEN'S DUTY MENU (DAILY CARD) -->
         <div id="queenOverlay" class="mob-reward-overlay hidden">
             <div class="mob-reward-card lobby-card">
+                
                 <div class="lobby-header">
-                    <div class="lobby-title">ACTIVE DUTIES</div>
+                    <div class="lobby-title">DAILY DUTIES</div>
+                    <div class="lobby-subtitle" id="dutyDateDisplay">--/--/--</div>
                 </div>
-                <div class="lobby-content">
-                    <div class="duty-wrapper" style="width:100%; margin-bottom:15px;">
-                        <div class="duty-wrapper" style="width:100%;">
-                            <div class="lobby-label">CURRENT TASK</div>
-                            <button id="mob_btnRequest" class="lobby-btn" onclick="if(window.getRandomTask) window.getRandomTask()">
-                                RECEIVE TASK
-                            </button>
-                            <div id="mob_activeTimer" class="mob-timer-row hidden">
-                                <div class="timer-gauge">
-                                    <div id="ring_H" class="gauge-ring"></div>
-                                    <div class="gauge-content"><span id="m_timerH" class="g-val">00</span><span class="g-lbl">HRS</span></div>
-                                </div>
-                                <div class="timer-gauge">
-                                    <div id="ring_M" class="gauge-ring"></div>
-                                    <div class="gauge-content"><span id="m_timerM" class="g-val">00</span><span class="g-lbl">MIN</span></div>
-                                </div>
-                                <div class="timer-gauge">
-                                    <div id="ring_S" class="gauge-ring"></div>
-                                    <div class="gauge-content"><span id="m_timerS" class="g-val">00</span><span class="g-lbl">SEC</span></div>
-                                </div>
-                            </div>
+        
+                <div class="lobby-content" style="width:100%;">
+        
+                    <!-- 1. ROUTINE SECTION (7AM Logic) -->
+                    <div id="cardRoutine" class="duty-card">
+                        <div class="duty-header">
+                            <span class="duty-title">MORNING PROTOCOL</span>
+                            <span id="routineStatusPill" class="status-pill pill-wait">LOCKED</span>
                         </div>
                         
-                        <div id="mobRoutineDisplay" style="font-family:'Cinzel'; font-size:1.2rem; color:#fff; text-align:center; margin:10px 0; letter-spacing:2px; text-shadow:0 0 10px rgba(197, 160, 89, 0.4);">
-                            LOADING...
+                        <!-- Routine Name -->
+                        <div id="mobRoutineDisplay" style="font-family:'Cinzel'; font-size:1rem; color:#fff; text-align:center; padding:10px 0;">
+                            NO PROTOCOL ASSIGNED
                         </div>
-                        <button id="btnDailyRoutine" class="lobby-btn gold hidden" onclick="document.getElementById('routineUpload').click()">
-                            UPLOAD EVIDENCE
-                        </button>
+        
+                        <!-- Action Area -->
+                        <div id="routineActionArea">
+                            <button id="btnRoutineLocked" class="lobby-btn small" style="opacity:0.5; cursor:not-allowed;">UNLOCKS AT 07:00</button>
+                            <button id="btnRoutineUpload" class="lobby-btn gold hidden" onclick="document.getElementById('routineUpload').click()">UPLOAD EVIDENCE</button>
+                            <div id="routineDoneMsg" class="hidden" style="text-align:center; color:#00ff00; font-family:'Orbitron'; font-size:0.8rem;">✔ COMPLETED</div>
+                        </div>
                         <input type="file" id="routineUpload" hidden onchange="window.handleRoutineUpload(this)">
-                        <div id="mobRoutineCheck" class="hidden" style="text-align:center; margin-top:5px;">
-                            <div style="font-size:2rem; color:#00ff00; text-shadow:0 0 15px #00ff00;">✔</div>
-                            <div style="font-family:'Orbitron'; font-size:0.6rem; color:#888; letter-spacing:2px;">DUTY COMPLETED</div>
+                    </div>
+        
+                    <!-- 2. TASK SECTION (5 Daily) -->
+                    <div id="cardTasks" class="duty-card">
+                        <div class="duty-header">
+                            <span class="duty-title">LABOR</span>
+                            <span id="dailyTaskCount" class="duty-count">0 / 5</span>
+                        </div>
+        
+                        <!-- STATE: IDLE -->
+                        <div id="qm_TaskIdle" class="hidden">
+                            <div style="text-align:center; margin-bottom:10px;">
+                                <span class="status-pill pill-idle">UNPRODUCTIVE</span>
+                            </div>
+                            <button class="lobby-btn" onclick="window.getRandomTask()">REQUEST TASK</button>
+                        </div>
+        
+                        <!-- STATE: ACTIVE -->
+                        <div id="qm_TaskActive" class="hidden">
+                             <div style="text-align:center; margin-bottom:5px;">
+                                <span class="status-pill pill-active">IN PROGRESS</span>
+                            </div>
+                            
+                            <!-- Card Timer -->
+                            <div class="card-timer-row">
+                                <div id="qm_timerH" class="card-t-box">00</div>:
+                                <div id="qm_timerM" class="card-t-box">00</div>:
+                                <div id="qm_timerS" class="card-t-box">00</div>
+                            </div>
+        
+                            <!-- Buttons -->
+                            <div style="display:flex; gap:5px;">
+                                <button class="lobby-btn small" onclick="document.getElementById('evidenceInput').click()">UPLOAD</button>
+                                <button class="lobby-btn small close" onclick="window.cancelPendingTask()">SKIP</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="lobby-divider"></div>
-                    <div class="duty-wrapper" style="width:100%; margin-bottom:15px;">
-                        <div class="lobby-label">KNEELING GOAL (8/DAY)</div>
-                        <div class="kneel-progress-track" style="height:10px; background:#111; border:1px solid #333; margin-top:5px;">
-                            <div id="kneelDailyFill" style="height:100%; width:0%; background:#c5a059;"></div>
+        
+                    <!-- 3. KNEELING SECTION (8 Daily) -->
+                    <div id="cardKneel" class="duty-card">
+                        <div class="duty-header">
+                            <span class="duty-title">DEVOTION</span>
+                            <span id="kneelDailyText" class="duty-count">0 / 8</span>
                         </div>
-                        <div id="kneelDailyText" style="text-align:center; font-family:'Orbitron'; font-size:0.7rem; color:#fff; margin-top:5px;">0 / 8</div>
+                        
+                        <div class="kneel-progress-track" style="height:8px; background:#111; border:1px solid #333; margin-top:5px; border-radius:4px; overflow:hidden;">
+                            <div id="kneelDailyFill" style="height:100%; width:0%; background:#c5a059; transition: width 0.3s ease;"></div>
+                        </div>
+                        <div style="text-align:right; font-size:0.5rem; color:#666; margin-top:4px;">HOLD 'KNEEL' ON DASHBOARD</div>
                     </div>
-                    <div class="lobby-divider"></div>
-                    <button class="lobby-btn close" style="margin-top:20px;" onclick="closeQueenMenu()">CLOSE</button>
+        
+                    <button class="lobby-btn close" style="margin-top:10px;" onclick="closeQueenMenu()">CLOSE CARD</button>
                 </div>
             </div>
         </div>
