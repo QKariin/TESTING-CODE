@@ -1358,6 +1358,7 @@ window.handleRoutineUpload = function(input) {
         window.syncMobileDashboard();
     }
 }
+};
 
 // ==========================
 // EXCHEQUER LOGIC (MOBILE)
