@@ -1183,19 +1183,16 @@ window.toggleMobileStats = function() {
     }
 };
 
-// 3. MAIN NAVIGATION CONTROLLER (FINAL SAFE VERSION)
 window.toggleMobileView = function(viewName) {
-    // --- 1. CLEANUP (Reset Overlays - KEPT SAFE) ---
+    // --- 1. CLEANUP ---
     if (window.closeLobby) window.closeLobby();
-    if (window.closeQueenMenu) window.closeQueenMenu(); // Added Queen Menu closing too
+    if (window.closeQueenMenu) window.closeQueenMenu();
     if (window.closePoverty) window.closePoverty();
 
     // --- 2. DEFINE VIEWS ---
     const home = document.getElementById('viewMobileHome');
-    
-    // Mobile Specific Views (The new ones)
     const mobRecord = document.getElementById('viewMobileRecord');
-    const mobGlobal = document.getElementById('viewMobileGlobal'); // <--- UPDATED ID
+    const mobGlobal = document.getElementById('viewMobileGlobal'); // Must match HTML ID
     
     // Desktop/Shared Views
     const chatCard = document.getElementById('chatCard');
@@ -1205,6 +1202,7 @@ window.toggleMobileView = function(viewName) {
     const protocol = document.getElementById('viewProtocol');
     
     // --- 3. HIDE EVERYTHING ---
+    // We add a safety check (el && ...) to prevent crashes if a view is missing
     const views = [home, mobRecord, mobGlobal, history, news, protocol];
     views.forEach(el => { if(el) el.style.display = 'none'; });
 
@@ -1212,40 +1210,28 @@ window.toggleMobileView = function(viewName) {
     if (chatCard) chatCard.style.setProperty('display', 'none', 'important');
 
     // --- 4. SHOW TARGET ---
-    if (viewName === 'home') {
-        if(home) {
-            home.style.display = 'flex';
-            if(window.syncMobileDashboard) window.syncMobileDashboard();
-        }
+    if (viewName === 'home' && home) {
+        home.style.display = 'flex';
+        if(window.syncMobileDashboard) window.syncMobileDashboard();
     }
     else if (viewName === 'chat') {
         if(chatCard && mobileApp) {
-            // Teleport logic
-            if (chatCard.parentElement !== mobileApp) {
-                mobileApp.appendChild(chatCard);
-            }
+            if (chatCard.parentElement !== mobileApp) mobileApp.appendChild(chatCard);
             chatCard.style.removeProperty('display');
             chatCard.style.display = 'flex';
-            
             const chatBox = document.getElementById('chatBox');
             if (chatBox) setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
         }
     }
-    else if (viewName === 'record') {
-        // Open Mobile Vault
-        if (mobRecord) {
-            mobRecord.style.display = 'flex';
-            if(window.renderGallery) window.renderGallery();
-        }
+    else if (viewName === 'record' && mobRecord) {
+        mobRecord.style.display = 'flex';
+        if(window.renderGallery) window.renderGallery();
     }
-    else if (viewName === 'queen') {
-        if(news) news.style.display = 'block';
+    else if (viewName === 'queen' && news) {
+        news.style.display = 'block';
     }
-    else if (viewName === 'global') {
-        // Open Mobile Global (Exchequer/Protocol)
-        if(mobGlobal) {
-            mobGlobal.style.display = 'flex';
-        }
+    else if (viewName === 'global' && mobGlobal) {
+        mobGlobal.style.display = 'flex';
     }
     
     // --- 5. SIDEBAR CLEANUP ---
@@ -1350,18 +1336,13 @@ window.syncMobileDashboard = function() {
         if(taskActive) taskActive.classList.add('hidden');
     }
 
+// PUT THIS AT THE VERY BOTTOM OF MAIN.JS
 window.handleRoutineUpload = function(input) {
     if(input.files.length > 0) {
-        // 1. Send to backend
         window.handleEvidenceUpload(input); 
-        
-        // 2. Mark as done locally for immediate UI update
         gameStats.routineDoneToday = true; 
-        
-        // 3. Refresh UI
         window.syncMobileDashboard();
     }
-}
 };
 
 // ==========================
@@ -1484,11 +1465,14 @@ document.body.appendChild(footer);
 })();
 
 window.mobileRequestTask = function() {
+    // 0. SAFETY CHECK: If game hasn't loaded yet, stop.
+    if (!window.gameStats) return;
+
     // 1. GATEKEEPER: Check for 300 Coins
     if (gameStats.coins < 300) {
-        window.triggerPoverty(); // Show Insult
+        window.triggerPoverty(); 
         if(window.triggerSound) triggerSound('sfx-deny');
-        return; // STOP
+        return; 
     }
 
     // 2. SUCCESS: Switch UI
@@ -1507,11 +1491,10 @@ window.mobileRequestTask = function() {
 
     // 4. GET THE TASK
     setTimeout(() => {
-        window.getRandomTask(); // Call backend
+        if(window.getRandomTask) window.getRandomTask(); 
         
-        // Refresh UI shortly after
         setTimeout(() => {
-            window.syncMobileDashboard(); 
+            if(window.syncMobileDashboard) window.syncMobileDashboard(); 
         }, 800);
     }, 500);
 };
