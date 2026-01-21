@@ -1443,40 +1443,39 @@ window.closeExchequer = function() {
 // REPLACE THE 'lockVisuals' FUNCTION (Around Line 1184) WITH THIS:
 // ==========================
 
-  function lockVisuals() {
-        const height = window.innerHeight;
-        
-        // 1. LOCK THE BODY TO SCREEN SIZE (Prevent Bounce)
-        Object.assign(document.body.style, {
-            height: height + 'px',
-            width: '100%',
-            position: 'fixed',
-            overflow: 'hidden', 
-            inset: '0',
-            overscrollBehavior: 'none',
-            touchAction: 'none',
-            backgroundColor: '#000000'
-        });
+ function lockVisuals() {
+    const height = window.innerHeight;
+    
+    // 1. LOCK THE BODY TO SCREEN SIZE (Prevent Bounce)
+    Object.assign(document.body.style, {
+        height: height + 'px',
+        width: '100%',
+        position: 'fixed',
+        overflow: 'hidden', 
+        inset: '0',
+        overscrollBehavior: 'none',
+        touchAction: 'none',
+        backgroundColor: '#000000'
+    });
 
-        // 2. LOCK THE APP CONTAINER
-        const app = document.querySelector('.app-container');
-        if (app) Object.assign(app.style, { height: '100%', overflow: 'hidden' });
+    // 2. LOCK THE APP CONTAINER
+    const app = document.querySelector('.app-container');
+    if (app) Object.assign(app.style, { height: '100%', overflow: 'hidden' });
 
-        // 3. ALLOW SCROLLING *ONLY* ON THESE ELEMENTS (Using internal scroll)
-        // Record, Chat, News, History are here. Home and Global handle it in HTML now.
-        const scrollables = document.querySelectorAll('.content-stage, .chat-body-frame, #historySection, #viewNews, #viewMobileRecord');
-        
-        scrollables.forEach(el => {
-            Object.assign(el.style, {
-                height: '100%',
-                overflowY: 'auto',              
-                webkitOverflowScrolling: 'touch', 
-                paddingBottom: '100px',
-                overscrollBehaviorY: 'contain',
-                touchAction: 'pan-y'
-            });
+    // 3. ALLOW SCROLLING *ONLY* ON THESE ELEMENTS
+    // Added: #mobHomeScroll and #mobGlobalScroll
+    const scrollables = document.querySelectorAll('.content-stage, .chat-body-frame, #historySection, #viewNews, #viewMobileRecord, #mobHomeScroll, #mobGlobalScroll');
+    
+    scrollables.forEach(el => {
+        Object.assign(el.style, {
+            height: '100%',
+            overflowY: 'auto',              
+            webkitOverflowScrolling: 'touch', 
+            overscrollBehaviorY: 'contain', // CRITICAL: Traps scroll inside
+            touchAction: 'pan-y'            // CRITICAL: Tells browser "Handle vertical swipes here"
         });
-    }
+    });
+}
 
 // 2. BUILD FOOTER (FULL WIDTH 5-SLOT)
     function buildAppFooter() {
