@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,7 +33,9 @@
             position: fixed;
             top: 0; left: 0;
             z-index: 999999;
-            background: #000000;
+            background-color: #000000 !important;
+            background: #000000 !important;
+            overscroll-behavior-y: none; /* Tells browser: "Don't bounce the body" */
             color: white;
             font-family: 'Cinzel', serif;
             overflow: hidden;
@@ -1236,16 +1239,15 @@
 <!-- 🟢 MOBILE UNIVERSE (HALO + WORKING TIMER + RECORD) -->
 <div id="MOBILE_APP" style="display:none;">
     
-   <!-- 1. DASHBOARD (HOME) -->
-    <div id="viewMobileHome" class="mob-frame" style="overflow: hidden;"> <!-- LOCKED PARENT -->
+  <!-- 1. DASHBOARD (HOME) -->
+    <div id="viewMobileHome" class="mob-frame" style="height: 100%; overflow: hidden; display: flex; flex-direction: column; padding: 0;">
         
-        <!-- DYNAMIC BACKGROUND (Fixed) -->
+        <!-- === FIXED LAYER (Background & HUD) === -->
         <div class="mob-bg-layer">
             <img id="mob_bgPic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="bg-blur">
             <div class="bg-overlay"></div>
         </div>
 
-         <!-- HUD (Fixed Top Layer) -->
         <div class="mob-hud-row">
             <div class="hud-circle slave" onclick="openLobby()">
                 <img id="hudSlavePic" src="">
@@ -1257,7 +1259,9 @@
             </div>
         </div>
 
-        <!-- SETTINGS MENU (LOBBY) -->
+        <!-- === POPUP OVERLAYS (Hidden by default) === -->
+        
+        <!-- LOBBY (Settings) -->
         <div id="lobbyOverlay" class="mob-reward-overlay hidden">
             <div class="mob-reward-card lobby-card">
                 <!-- VIEW 1: MENU LIST -->
@@ -1307,17 +1311,11 @@
 
         <!-- QUEEN'S DUTY MENU -->
         <div id="queenOverlay" class="mob-reward-overlay hidden">
-            <!-- NO PADDING on layout so header touches edges -->
             <div class="mob-reward-card queen-card-layout">
-                
-                <!-- *** THE REAL HEADER (EXACT CLONE OF CHAT HEADER) *** -->
                 <div class="mob-chat-header" style="position: relative; top: 0; width: 100%; justify-content: center; border-bottom: 1px solid #333; background: #000; padding: 15px 0;">
-                    
-                    <!-- We remove the 'Back' button and just center the profile -->
                     <div class="chat-queen-profile">
                         <div class="queen-av-wrap">
                             <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="queen-av-img">
-                            <!-- Online Dot -->
                             <div class="status-dot online"></div>
                         </div>
                         <div class="chat-meta-col" style="align-items: center; text-align: center;">
@@ -1325,32 +1323,21 @@
                             <div class="chat-status-text" id="dutyDateDisplay" style="color: #c5a059;">--/--/--</div>
                         </div>
                     </div>
-
-                    <!-- Optional: Close 'X' positioned absolutely to the right -->
                     <button onclick="closeQueenMenu()" style="position: absolute; right: 20px; background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer;">×</button>
                 </div>
 
-
-                <!-- SCROLLABLE CONTENT -->
                 <div class="qm-scroll-content">
-                    
                     <div class="luxury-wrap">
-                
                         <!-- CARD 1: PROTOCOL -->
                         <div class="luxury-card">
                             <div class="duty-label">PROTOCOL</div>
-                            
                             <div id="mobRoutineDisplay" style="font-family:'Cinzel'; font-size:1.1rem; color:#fff; margin-bottom:10px; line-height:1.4; text-align:center; text-shadow:0 0 10px rgba(255,255,255,0.1);">
                                 LOADING...
                             </div>
-                
-                            <!-- Statuses -->
                             <div style="text-align:center;">
                                 <div id="routineTimeMsg" class="txt-status-gold hidden">🔒 LOCKED UNTIL 07:00</div>
                                 <div id="routineDoneMsg" class="txt-status-green hidden">✔ EVIDENCE SUBMITTED</div>
                             </div>
-                
-                            <!-- Upload -->
                             <div style="display:flex; justify-content:center; margin-top:10px;">
                                 <button id="btnRoutineUpload" class="btn-upload-sm hidden" style="width:100%;" onclick="document.getElementById('routineUpload').click()">
                                     UPLOAD EVIDENCE
@@ -1362,24 +1349,15 @@
                         <!-- CARD 2: LABOR -->
                         <div class="luxury-card">
                             <div class="duty-label">LABOR</div>
-                        
-                            <!-- IDLE STATE -->
                             <div id="qm_TaskIdle" class="hidden">
                                 <div class="txt-status-red" style="margin-bottom:15px; font-size: 0.9rem; text-align:center;">UNPRODUCTIVE</div>
-                                <!-- UPDATED BUTTON: Calls mobileRequestTask() -->
                                 <button class="lobby-btn" style="width:100%;" onclick="window.mobileRequestTask()">
                                     REQUEST TASK
                                 </button>
                             </div>
-                        
-                            <!-- ACTIVE STATE -->
                             <div id="qm_TaskActive" class="hidden">
                                 <div class="txt-status-green" style="margin-bottom:10px; font-size: 0.9rem; text-align:center;">WORKING</div>
-                                
-                                <!-- TASK TEXT (Now uses new CSS) -->
                                 <div id="mobTaskText">LOADING ORDERS...</div>
-                        
-                                <!-- TIMER -->
                                 <div class="card-timer-row">
                                     <div id="qm_timerH" class="card-t-box">00</div>
                                     <div style="color:#444; font-size:1.2rem;">:</div>
@@ -1387,8 +1365,6 @@
                                     <div style="color:#444; font-size:1.2rem;">:</div>
                                     <div id="qm_timerS" class="card-t-box">00</div>
                                 </div>
-                        
-                                <!-- ACTION BUTTONS (Updated) -->
                                 <div style="display:flex; gap:10px; margin-top: 15px;">
                                    <button id="mobBtnUpload" class="btn-upload-sm" style="flex:1;" onclick="document.getElementById('evidenceInputMob').click()">
                                         UPLOAD
@@ -1404,20 +1380,16 @@
                         <!-- CARD 3: KNEELING -->
                         <div class="luxury-card">
                             <div class="duty-label">KNEELING GOAL</div>
-                            
                             <div class="kneel-track-reverted">
                                 <div id="kneelDailyFill" class="kneel-fill-reverted"></div>
                             </div>
-                            
                             <div style="display:flex; justify-content:space-between; margin-top:10px; padding:0 5px;">
                                 <span style="font-family:'Orbitron'; font-size:0.6rem; color:#666;">DAILY TARGET</span>
                                 <span id="kneelDailyText" style="font-family:'Orbitron'; font-size:0.8rem; color:#fff;">0 / 8</span>
                             </div>
                         </div>
                 
-                        <!-- CLOSE BUTTON -->
                         <button class="lobby-btn close" style="margin-top:10px; border-color: #333; color: #666;" onclick="closeQueenMenu()">CLOSE CARD</button>
-                
                         <div style="height: 60px;"></div>
                     </div>
                 </div>
@@ -1474,27 +1446,26 @@
                 </div>
              </div>
 
+            <!-- REWARD POPUP (Inside Scrollable, but overlay logic handles display) -->
+            <div id="mobKneelReward" class="mob-reward-overlay hidden">
+                <div class="mob-reward-card">
+                    <div class="mob-hex-wrap small-reward">
+                        <div class="mob-rank-stamp" style="right: auto; left: -5px; color: #fff; border-color: #fff;">AUTHORIZED</div>
+                    </div>
+                    <h2 class="mob-reward-title">DEVOTION RECOGNIZED</h2>
+                    <div class="mob-reward-actions">
+                        <button onclick="window.claimKneelReward('coins')" class="mob-action-btn" style="border-color: #ffd700; color: #ffd700;">CLAIM COINS</button>
+                        <button onclick="window.claimKneelReward('points')" class="mob-action-btn" style="border-color: #fff; color: #fff;">CLAIM MERIT</button>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Spacer for footer -->
             <div style="height: 120px;"></div>
 
         </div> <!-- END INTERNAL SCROLL WRAPPER -->
-        
-        <!-- REWARD POPUP (Outside wrapper to prevent clipping) -->
-        <div id="mobKneelReward" class="mob-reward-overlay hidden">
-            <div class="mob-reward-card">
-                <div class="mob-hex-wrap small-reward">
-                    <div class="mob-rank-stamp" style="right: auto; left: -5px; color: #fff; border-color: #fff;">AUTHORIZED</div>
-                </div>
-                <h2 class="mob-reward-title">DEVOTION RECOGNIZED</h2>
-                <div class="mob-reward-actions">
-                    <button onclick="window.claimKneelReward('coins')" class="mob-action-btn" style="border-color: #ffd700; color: #ffd700;">CLAIM COINS</button>
-                    <button onclick="window.claimKneelReward('points')" class="mob-action-btn" style="border-color: #fff; color: #fff;">CLAIM MERIT</button>
-                </div>
-            </div>
-        </div>
 
     </div> <!-- CLOSES viewMobileHome -->
-    
 
     <!-- 2. MOBILE RECORD (THE VERTICAL VAULT) -->
     <div id="viewMobileRecord" class="mob-frame" style="display:none; flex-direction:column; padding-left:0; padding-right:0; padding-top:10px;">
