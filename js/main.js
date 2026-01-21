@@ -1474,8 +1474,11 @@ document.body.appendChild(footer);
     lockVisuals(); buildAppFooter();
 })();
 
+BEFORE THE FUNCTION ---
+let isRequestingTask = false; 
+
 window.mobileRequestTask = function() {
-    // 1. SAFETY CHECK (Prevents crash if data isn't ready)
+    // 1. SAFETY CHECK
     if (!window.gameStats) return;
 
     // 2. POVERTY CHECK
@@ -1485,9 +1488,15 @@ window.mobileRequestTask = function() {
         return; 
     }
 
-    // 3. SUCCESS UI
-    document.getElementById('qm_TaskIdle').classList.add('hidden');
-    document.getElementById('qm_TaskActive').classList.remove('hidden');
+    // 3. LOCK THE UI (Stop the interval from resetting it)
+    isRequestingTask = true;
+
+    // 4. SET "LOADING" STATE UI
+    const idleCard = document.getElementById('qm_TaskIdle');
+    const activeCard = document.getElementById('qm_TaskActive');
+    
+    if (idleCard) idleCard.classList.add('hidden');
+    if (activeCard) activeCard.classList.remove('hidden');
 
     const txt = document.getElementById('mobTaskText');
     if(txt) {
@@ -1495,11 +1504,17 @@ window.mobileRequestTask = function() {
         txt.className = "text-pulse"; 
     }
 
-    // 4. GET TASK
+    // 5. EXECUTE AFTER DELAY
     setTimeout(() => {
+        // Generate the task (starts the desktop timer)
         if(window.getRandomTask) window.getRandomTask(); 
-        setTimeout(() => { if(window.syncMobileDashboard) window.syncMobileDashboard(); }, 800);
-    }, 500);
+        
+        // Wait a moment for the Desktop DOM to actually update, then unlock
+        setTimeout(() => { 
+            isRequestingTask = false; // Unlock
+            if(window.syncMobileDashboard) window.syncMobileDashboard(); 
+        }, 1000); // 1 second buffer
+    }, 800);
 };
 
 window.mobileUploadEvidence = function(input) {
@@ -1567,6 +1582,50 @@ window.mobileSkipTask = function() {
     window.syncMobileDashboard();
 };
 
+// --- ADD THIS VARIABLE AT THE TOP OF YOUR MOBILE SECTION OR BEFORE THE FUNCTION ---
+let isRequestingTask = false; 
+
+window.mobileRequestTask = function() {
+    // 1. SAFETY CHECK
+    if (!window.gameStats) return;
+
+    // 2. POVERTY CHECK
+    if (gameStats.coins < 300) {
+        window.triggerPoverty(); 
+        if(window.triggerSound) triggerSound('sfx-deny');
+        return; 
+    }
+
+    // 3. LOCK THE UI (Stop the interval from resetting it)
+    isRequestingTask = true;
+
+    // 4. SET "LOADING" STATE UI
+    const idleCard = document.getElementById('qm_TaskIdle');
+    const activeCard = document.getElementById('qm_TaskActive');
+    
+    if (idleCard) idleCard.classList.add('hidden');
+    if (activeCard) activeCard.classList.remove('hidden');
+
+    const txt = document.getElementById('mobTaskText');
+    if(txt) {
+        txt.innerHTML = "ESTABLISHING LINK...";
+        txt.className = "text-pulse"; 
+    }
+
+    // 5. EXECUTE AFTER DELAY
+    setTimeout(() => {
+        // Generate the task (starts the desktop timer)
+        if(window.getRandomTask) window.getRandomTask(); 
+        
+        // Wait a moment for the Desktop DOM to actually update, then unlock
+        setTimeout(() => { 
+            isRequestingTask = false; // Unlock
+            if(window.syncMobileDashboard) window.syncMobileDashboard(); 
+        }, 1000); // 1 second buffer
+    }, 800);
+};
+
+
 // TIMER SYNC & VISUALIZATION
 setInterval(() => {
     // 1. Get Source (Desktop Hidden Elements)
@@ -1579,7 +1638,7 @@ setInterval(() => {
     const mobileM = document.getElementById('m_timerM');
     const mobileS = document.getElementById('m_timerS');
 
-    // 3. Queen Menu Elements (NEW)
+    // 3. Queen Menu Elements
     const qmH = document.getElementById('qm_timerH');
     const qmM = document.getElementById('qm_timerM');
     const qmS = document.getElementById('qm_timerS');
@@ -1610,27 +1669,50 @@ setInterval(() => {
         if(ringS) ringS.style.background = `conic-gradient(#c5a059 ${(sVal/60)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
     }
 
-    // Sync Visibility Logic (Moved inside the same interval for efficiency)
+    // --- VISIBILITY SYNC (THE FIX) ---
+    
+    // IF WE ARE CURRENTLY REQUESTING A TASK, DO NOT RUN THIS LOGIC
+    // This prevents the screen from flickering back to "Idle" while loading
+    if (window.isRequestingTask === true) return; 
+
     const activeRow = document.getElementById('activeTimerRow');
     const mobTimer = document.getElementById('mob_activeTimer');
     const mobRequestBtn = document.getElementById('mob_btnRequest');
     
-    if (activeRow && mobTimer && mobRequestBtn) {
+    if (activeRow) {
         const isWorking = !activeRow.classList.contains('hidden');
-        if (isWorking) {
-            mobTimer.classList.remove('hidden');
-            mobRequestBtn.classList.add('hidden');
-            const light = document.getElementById('mob_statusLight');
-            const text = document.getElementById('mob_statusText');
-            if(light) light.className = 'status-light green';
-            if(text) text.innerText = "WORKING";
-        } else {
-            mobTimer.classList.add('hidden');
-            mobRequestBtn.classList.remove('hidden');
-            const light = document.getElementById('mob_statusLight');
-            const text = document.getElementById('mob_statusText');
-            if(light) light.className = 'status-light red';
-            if(text) text.innerText = "UNPRODUCTIVE";
+        
+        // 1. Update Dashboard
+        if (mobTimer && mobRequestBtn) {
+            if (isWorking) {
+                mobTimer.classList.remove('hidden');
+                mobRequestBtn.classList.add('hidden');
+                const light = document.getElementById('mob_statusLight');
+                const text = document.getElementById('mob_statusText');
+                if(light) light.className = 'status-light green';
+                if(text) text.innerText = "WORKING";
+            } else {
+                mobTimer.classList.add('hidden');
+                mobRequestBtn.classList.remove('hidden');
+                const light = document.getElementById('mob_statusLight');
+                const text = document.getElementById('mob_statusText');
+                if(light) light.className = 'status-light red';
+                if(text) text.innerText = "UNPRODUCTIVE";
+            }
+        }
+
+        // 2. Update Queen Menu (The Cards)
+        const taskIdle = document.getElementById('qm_TaskIdle');
+        const taskActive = document.getElementById('qm_TaskActive');
+
+        if(taskIdle && taskActive) {
+            if (isWorking) {
+                taskIdle.classList.add('hidden');
+                taskActive.classList.remove('hidden');
+            } else {
+                taskIdle.classList.remove('hidden');
+                taskActive.classList.add('hidden');
+            }
         }
     }
 }, 500);
