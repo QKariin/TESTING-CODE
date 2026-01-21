@@ -1,6 +1,7 @@
 
 
 
+
 // main.js - FINAL COMPLETE VERSION (DESKTOP + MOBILE)
 
 import { CONFIG, URLS, LEVELS, FUNNY_SAYINGS, STREAM_PASSWORDS } from './config.js';
@@ -1032,8 +1033,6 @@ function updateStats() {
     const mobName = document.getElementById('mob_slaveName');
     const mobRank = document.getElementById('mob_rankStamp');
     const mobPic = document.getElementById('mob_profilePic');
-    const recName = document.getElementById('mob_recordName'); 
-
     
     // Header Stats (Visible)
     const mobPoints = document.getElementById('mobPoints');
@@ -1047,8 +1046,6 @@ function updateStats() {
     // FILL DATA
     if (mobName) mobName.innerText = userProfile.name || "SLAVE";
     if (mobRank) mobRank.innerText = userProfile.hierarchy || "INITIATE";
-    if (recName) recName.innerText = userProfile.name || "Archive"; 
-
     
     // Merit & Net
     if (mobPoints) mobPoints.innerText = gameStats.points || 0;
@@ -1081,6 +1078,9 @@ function updateStats() {
             try {
                 const hObj = JSON.parse(userProfile.kneelHistory);
                 
+                // FIX: Trust the backend data. 
+                // The backend already resets this at midnight.
+                // We do not check the date here to avoid Timezone bugs.
                 loggedHours = hObj.hours || [];
                 
             } catch(e) { console.error("Grid parse error", e); }
@@ -1252,11 +1252,9 @@ window.toggleMobileView = function(viewName) {
         if(news) news.style.display = 'block';
     }
     else if (viewName === 'global') {
-        console.log("Global View Triggered. Element found:", mobGlobal); // Add this
+        // Open Mobile Global (Exchequer/Protocol)
         if(mobGlobal) {
             mobGlobal.style.display = 'flex';
-        } else {
-            console.error("The element #viewMobileGlobal was not found in the DOM.");
         }
     }
     
@@ -1391,14 +1389,11 @@ window.openExchequer = function() {
 };
 
 window.closeExchequer = function() {
-    // 1. Hide the Store Overlay
     const store = document.getElementById('mobExchequer');
     if (store) {
         store.classList.add('hidden');
         store.style.display = 'none';
     }
-
-    window.toggleMobileView('home');
 };
 // =========================================
 // PART 2: FINAL APP MODE (NATIVE FLOW)
