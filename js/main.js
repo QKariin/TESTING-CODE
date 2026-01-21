@@ -40,26 +40,27 @@ const KINK_LIST = [
 // POVERTY SYSTEM (MOCKING LOGIC)
 // =========================================
 
-const POVERTY_INSULTS = [
-    "Your wallet is as empty as your worth.",
-    "Do not waste my time with empty pockets.",
-    "Silence is free. Serving me costs.",
-    "Go beg for coins, then come back.",
-    "You cannot afford to look at me.",
-    "Access Denied. Reason: Poverty."
-];
-
 window.triggerPoverty = function() {
     const overlay = document.getElementById('povertyOverlay');
     const text = document.getElementById('povertyInsult');
     
-    // Pick random insult
-    const insult = POVERTY_INSULTS[Math.floor(Math.random() * POVERTY_INSULTS.length)];
-    if(text) text.innerText = `"${insult}"`;
+    // 1. POVERTY INSULTS LIST
+    const insults = [
+        "Your wallet is as empty as your worth.",
+        "Do not waste my time with empty pockets.",
+        "Silence is free. Serving me costs.",
+        "Go beg for coins, then come back.",
+        "You cannot afford to look at me.",
+        "Access Denied. Reason: Poverty."
+    ];
 
+    // 2. Pick Random Insult
+    if(text) text.innerText = `"${insults[Math.floor(Math.random() * insults.length)]}"`;
+
+    // 3. SHOW THE OVERLAY (Force Flex to center it)
     if(overlay) {
         overlay.classList.remove('hidden');
-        overlay.style.display = 'flex';
+        overlay.style.display = 'flex'; 
     }
 };
 
@@ -1539,39 +1540,26 @@ window.mobileUploadEvidence = function(input) {
 };
 
 window.mobileSkipTask = function() {
-    // 1. CHECK FUNDS (Need 300)
+    // 1. CHECK FUNDS (Strict Check)
     if (gameStats.coins < 300) {
-        // A. Play Deny Sound
-        if(window.triggerSound) triggerSound('sfx-deny');
+        // Trigger the Fancy Overlay
+        window.triggerPoverty(); 
         
-        // B. Trigger the visual Poverty Overlay (Insult)
-        if(window.triggerPoverty) {
-            window.triggerPoverty();
-        } else {
-            console.error("Poverty System missing!");
-        }
-        
-        // C. STOP EXECUTION (Do not skip the task)
-        return;
+        // STOP HERE - Do not run the old logic that shows the cheap alert
+        return; 
     }
 
-    // --- IF WE HAVE MONEY, PROCEED ---
-
-    // 2. DEDUCT COINS
+    // 2. IF RICH ENOUGH:
     gameStats.coins -= 300;
     if(window.updateStats) window.updateStats(); 
-
-    // 3. PLAY SOUND & NOTIFY
-    if(window.triggerSound) triggerSound('sfx-deny'); // Deny sound fits "Task Failed" too
+    if(window.triggerSound) triggerSound('sfx-deny');
 
     if(window.showSystemNotification) {
         window.showSystemNotification("PROTOCOL ABORTED", "PENALTY: -300 COINS");
     }
 
-    // 4. CANCEL TASK IN BACKEND
     if(window.cancelPendingTask) window.cancelPendingTask(); 
     
-    // 5. RESET MOBILE UI
     window.updateTaskUIState(false);
     if(window.syncMobileDashboard) window.syncMobileDashboard();
 };
