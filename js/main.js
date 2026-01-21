@@ -49,6 +49,10 @@ const POVERTY_INSULTS = [
     "Access Denied. Reason: Poverty."
 ];
 
+// ==========================
+// REPLACE window.triggerPoverty WITH THIS JAILBREAK VERSION
+// ==========================
+
 window.triggerPoverty = function() {
     const overlay = document.getElementById('povertyOverlay');
     const text = document.getElementById('povertyInsult');
@@ -58,6 +62,11 @@ window.triggerPoverty = function() {
     if(text) text.innerText = `"${insult}"`;
 
     if(overlay) {
+        // *** THE FIX: Move overlay to Body so it is never hidden by a parent view ***
+        if (overlay.parentElement !== document.body) {
+            document.body.appendChild(overlay);
+        }
+
         overlay.classList.remove('hidden');
         overlay.style.display = 'flex';
     }
