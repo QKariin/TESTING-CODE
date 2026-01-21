@@ -1203,78 +1203,98 @@
             </div>
         </div>
 
-        <div id="queenOverlay" class="mob-reward-overlay hidden">
-    <!-- CHANGED CLASS TO 'queen-card-layout' FOR NO PADDING -->
-          <div class="mob-reward-card queen-card-layout">
-              
-              <!-- 1. FIXED HEADER -->
-              <div class="qm-pinned-header">
-                  <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="qm-avatar-sm">
-                  <div class="qm-header-text">
-                      <div class="qm-h-title">QUEEN KARIN</div>
-                      <div class="qm-h-sub"><div class="dot-live"></div> ACTIVE DUTIES</div>
-                  </div>
-                  <!-- Date pinned to right -->
-                  <div id="dutyDateDisplay" style="margin-left:auto; font-family:'Orbitron'; font-size:0.7rem; color:#666;">--/--</div>
-              </div>
-      
-              <!-- 2. SCROLLING BODY -->
-              <div class="qm-scroll-content">
-                  
-                  <!-- SECTION 1: PROTOCOL -->
-                  <div class="duty-section">
-                      <div class="duty-label">PROTOCOL</div>
-                      <div id="mobRoutineDisplay" style="font-family:'Cinzel'; font-size:1rem; color:#fff; margin-bottom:5px;">LOADING...</div>
-                      
-                      <div id="routineTimeMsg" class="txt-status-gold hidden">LOCKED UNTIL 07:00</div>
-                      <div id="routineDoneMsg" class="txt-status-green hidden">✔ EVIDENCE SUBMITTED</div>
-                      
-                      <button id="btnRoutineUpload" class="btn-upload-sm hidden" onclick="document.getElementById('routineUpload').click()">UPLOAD EVIDENCE</button>
-                      <input type="file" id="routineUpload" hidden onchange="window.handleRoutineUpload(this)">
-                  </div>
-      
-                  <div class="lobby-divider" style="width:100%;"></div>
-      
-                  <!-- SECTION 2: LABOR -->
-                  <div class="duty-section" style="margin-top:10px;">
-                      <div class="duty-label">LABOR</div>
-      
-                      <!-- IDLE -->
-                      <div id="qm_TaskIdle" class="hidden">
-                          <div class="txt-status-red" style="margin-bottom:10px;">UNPRODUCTIVE</div>
-                          <button class="lobby-btn" onclick="window.getRandomTask()">REQUEST TASK</button>
-                      </div>
-      
-                      <!-- ACTIVE -->
-                      <div id="qm_TaskActive" class="hidden">
-                          <div class="txt-status-green" style="margin-bottom:5px;">WORKING</div>
-                          <div class="card-timer-row">
-                              <div id="qm_timerH" class="card-t-box">00</div>:
-                              <div id="qm_timerM" class="card-t-box">00</div>:
-                              <div id="qm_timerS" class="card-t-box">00</div>
-                          </div>
-                          <div style="display:flex; gap:10px;">
-                              <button class="btn-upload-sm" onclick="document.getElementById('evidenceInput').click()">UPLOAD EVIDENCE</button>
-                              <button class="btn-skip-sm" onclick="window.cancelPendingTask()">SKIP</button>
-                          </div>
-                      </div>
-                  </div>
-      
-                  <div class="lobby-divider" style="width:100%;"></div>
-      
-                  <!-- SECTION 3: KNEELING -->
-                  <div class="duty-wrapper" style="width:100%; margin-top:10px;">
-                      <div class="duty-label">KNEELING GOAL (8/DAY)</div>
-                      <div class="kneel-track-reverted">
-                          <div id="kneelDailyFill" class="kneel-fill-reverted"></div>
-                      </div>
-                      <div id="kneelDailyText" style="text-align:center; font-family:'Orbitron'; font-size:0.7rem; color:#fff; margin-top:5px;">0 / 8</div>
-                  </div>
-      
-                  <button class="lobby-btn close" style="margin-top:30px;" onclick="closeQueenMenu()">CLOSE CARD</button>
-              </div>
-          </div>
-      </div>
+        <!-- QUEEN'S DUTY MENU -->
+<div id="queenOverlay" class="mob-reward-overlay hidden">
+    <!-- NO PADDING on layout so header touches edges -->
+    <div class="mob-reward-card queen-card-layout">
+        
+        <!-- *** THE REAL HEADER (EXACT CLONE OF CHAT HEADER) *** -->
+        <div class="mob-chat-header" style="position: relative; top: 0; width: 100%; justify-content: center; border-bottom: 1px solid #333; background: #000; padding: 15px 0;">
+            
+            <!-- We remove the 'Back' button and just center the profile -->
+            <div class="chat-queen-profile">
+                <div class="queen-av-wrap">
+                    <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="queen-av-img">
+                    <!-- Online Dot -->
+                    <div class="status-dot online"></div>
+                </div>
+                <div class="chat-meta-col" style="align-items: center; text-align: center;">
+                    <div class="chat-queen-name">DAILY DUTIES</div>
+                    <div class="chat-status-text" id="dutyDateDisplay" style="color: #c5a059;">--/--/--</div>
+                </div>
+            </div>
+
+            <!-- Optional: Close 'X' positioned absolutely to the right -->
+            <button onclick="closeQueenMenu()" style="position: absolute; right: 20px; background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer;">×</button>
+        </div>
+
+        <!-- SCROLLING CONTENT -->
+        <div class="qm-scroll-content">
+
+            <!-- 1. PROTOCOL -->
+            <div class="duty-section">
+                <div class="duty-label">PROTOCOL</div>
+                
+                <div id="mobRoutineDisplay" style="font-family:'Cinzel'; font-size:1rem; color:#fff; margin-bottom:5px;">
+                    LOADING...
+                </div>
+
+                <!-- Statuses -->
+                <div id="routineTimeMsg" class="txt-status-gold hidden">LOCKED UNTIL 07:00</div>
+                <div id="routineDoneMsg" class="txt-status-green hidden">✔ EVIDENCE SUBMITTED</div>
+
+                <!-- Upload -->
+                <button id="btnRoutineUpload" class="btn-upload-sm hidden" onclick="document.getElementById('routineUpload').click()">
+                    UPLOAD EVIDENCE
+                </button>
+                <input type="file" id="routineUpload" hidden onchange="window.handleRoutineUpload(this)">
+            </div>
+
+            <div class="lobby-divider" style="width:100%;"></div>
+
+            <!-- 2. LABOR -->
+            <div class="duty-section" style="margin-top:10px;">
+                <div class="duty-label">LABOR</div>
+
+                <!-- IDLE -->
+                <div id="qm_TaskIdle" class="hidden">
+                    <div class="txt-status-red" style="margin-bottom:10px;">UNPRODUCTIVE</div>
+                    <button class="lobby-btn" onclick="window.getRandomTask()">REQUEST TASK</button>
+                </div>
+
+                <!-- ACTIVE -->
+                <div id="qm_TaskActive" class="hidden">
+                    <div class="txt-status-green" style="margin-bottom:5px;">WORKING</div>
+                    
+                    <div class="card-timer-row">
+                        <div id="qm_timerH" class="card-t-box">00</div>:
+                        <div id="qm_timerM" class="card-t-box">00</div>:
+                        <div id="qm_timerS" class="card-t-box">00</div>
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-upload-sm" onclick="document.getElementById('evidenceInput').click()">UPLOAD EVIDENCE</button>
+                        <button class="btn-skip-sm" onclick="window.cancelPendingTask()">SKIP</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lobby-divider" style="width:100%;"></div>
+
+            <!-- 3. KNEELING -->
+            <div class="duty-wrapper" style="width:100%; margin-top:10px;">
+                <div class="duty-label">KNEELING GOAL (8/DAY)</div>
+                <div class="kneel-track-reverted">
+                    <div id="kneelDailyFill" class="kneel-fill-reverted"></div>
+                </div>
+                <div id="kneelDailyText" style="text-align:center; font-family:'Orbitron'; font-size:0.7rem; color:#fff; margin-top:5px;">0 / 8</div>
+            </div>
+            
+            <!-- Bottom Close Button -->
+            <button class="lobby-btn close" style="margin-top:30px;" onclick="closeQueenMenu()">CLOSE</button>
+        </div>
+    </div>
+</div>
         <!-- 2. THE HALO (Identity) -->
         <div class="halo-section">
             <div class="halo-ring">
