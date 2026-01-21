@@ -1032,6 +1032,8 @@ function updateStats() {
     const mobName = document.getElementById('mob_slaveName');
     const mobRank = document.getElementById('mob_rankStamp');
     const mobPic = document.getElementById('mob_profilePic');
+    const recName = document.getElementById('mob_recordName'); 
+
     
     // Header Stats (Visible)
     const mobPoints = document.getElementById('mobPoints');
@@ -1045,6 +1047,8 @@ function updateStats() {
     // FILL DATA
     if (mobName) mobName.innerText = userProfile.name || "SLAVE";
     if (mobRank) mobRank.innerText = userProfile.hierarchy || "INITIATE";
+    if (recName) recName.innerText = userProfile.name || "Archive"; 
+
     
     // Merit & Net
     if (mobPoints) mobPoints.innerText = gameStats.points || 0;
@@ -1077,9 +1081,6 @@ function updateStats() {
             try {
                 const hObj = JSON.parse(userProfile.kneelHistory);
                 
-                // FIX: Trust the backend data. 
-                // The backend already resets this at midnight.
-                // We do not check the date here to avoid Timezone bugs.
                 loggedHours = hObj.hours || [];
                 
             } catch(e) { console.error("Grid parse error", e); }
