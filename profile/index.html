@@ -686,6 +686,44 @@
         border-style: dashed; 
         color: #ccc;
     }
+
+    /* EXCHEQUER (MOBILE STORE) */
+    
+    /* 1. The Coin Package Grid */
+    .coin-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* 2 Columns */
+        gap: 10px;
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    /* 2. The Coin Tile */
+    .coin-tile {
+        background: rgba(20, 20, 20, 0.9);
+        border: 1px solid #333;
+        border-radius: 4px;
+        padding: 15px 5px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .coin-tile:active { background: rgba(197, 160, 89, 0.2); border-color: #c5a059; }
+
+    .coin-amount { font-family: 'Rajdhani', sans-serif; font-size: 1.4rem; color: #c5a059; font-weight: 700; line-height: 1; }
+    .coin-price { font-family: 'Cinzel', serif; font-size: 0.7rem; color: #888; }
+
+    /* 3. The "Fill Wallet" Button styling */
+    .wallet-btn {
+        width: 100%; padding: 15px; background: transparent;
+        border: 1px solid #c5a059; color: #c5a059;
+        font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.9rem;
+        letter-spacing: 2px; cursor: pointer;
+        box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
+    }
     
   </style>
 </head>
