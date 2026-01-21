@@ -1388,11 +1388,14 @@ window.openExchequer = function() {
 };
 
 window.closeExchequer = function() {
+    // 1. Hide the Store Overlay
     const store = document.getElementById('mobExchequer');
     if (store) {
         store.classList.add('hidden');
         store.style.display = 'none';
     }
+
+    window.toggleMobileView('home');
 };
 // =========================================
 // PART 2: FINAL APP MODE (NATIVE FLOW)
