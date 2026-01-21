@@ -1252,9 +1252,11 @@ window.toggleMobileView = function(viewName) {
         if(news) news.style.display = 'block';
     }
     else if (viewName === 'global') {
-        // Open Mobile Global (Exchequer/Protocol)
+        console.log("Global View Triggered. Element found:", mobGlobal); // Add this
         if(mobGlobal) {
             mobGlobal.style.display = 'flex';
+        } else {
+            console.error("The element #viewMobileGlobal was not found in the DOM.");
         }
     }
     
