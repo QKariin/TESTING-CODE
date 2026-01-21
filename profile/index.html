@@ -600,10 +600,60 @@
         .qm-scroll-content {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            padding-bottom: 80px !important; 
-            -webkit-overflow-scrolling: touch;
+            padding: 20px 0; /* Top/Bottom padding only, sides are 0 */
+            width: 100%;
+            
+            /* Hide Scrollbar */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE/Edge */
         }
+        .qm-scroll-content::-webkit-scrollbar { 
+            display: none; /* Chrome/Safari */
+        }
+        /* 2. DUTY SECTION: Add side padding internally so text isn't glued to edge */
+        .duty-section, .duty-wrapper {
+            width: 100%;
+            padding: 0 15px; /* Internal breathing room */
+            box-sizing: border-box;
+        }
+        
+        /* 3. TIMER FIX: Force Horizontal Row */
+        .card-timer-row { 
+            display: flex !important; 
+            flex-direction: row !important; /* FORCE ROW */
+            align-items: center; 
+            justify-content: center; 
+            gap: 5px; 
+            margin: 15px 0; 
+            width: 100%;
+        }
+        
+        .card-t-box { 
+            background: #000; 
+            border: 1px solid #333; 
+            color: #c5a059; 
+            font-family: 'Rajdhani', sans-serif; 
+            font-size: 1.5rem; 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            min-width: 40px;
+            text-align: center;
+            line-height: 1;
+        }
+        
+        /* 4. TASK TEXT STYLE (New) */
+        #mobTaskText {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: #fff;
+            text-align: center;
+            line-height: 1.4;
+            margin: 10px 0 20px 0;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.02);
+        }
+      
         .routine-tile {
             width: 100%;
             background: rgba(255, 255, 255, 0.03); 
@@ -1194,19 +1244,26 @@
                     <button class="lobby-btn" onclick="window.getRandomTask()">REQUEST TASK</button>
                 </div>
 
-                <!-- ACTIVE -->
+                <!-- ACTIVE TASK STATE -->
                 <div id="qm_TaskActive" class="hidden">
-                    <div class="txt-status-green" style="margin-bottom:5px;">WORKING</div>
+                    <div class="txt-status-green" style="margin-bottom:10px; text-align: center;">WORKING</div>
                     
+                    <!-- *** NEW: THE TASK TEXT *** -->
+                    <div id="mobTaskText">LOADING ORDERS...</div>
+                
+                    <!-- THE TIMER (Fixed Layout) -->
                     <div class="card-timer-row">
-                        <div id="qm_timerH" class="card-t-box">00</div>:
-                        <div id="qm_timerM" class="card-t-box">00</div>:
+                        <div id="qm_timerH" class="card-t-box">00</div>
+                        <div style="color:#666; font-size:1.2rem;">:</div>
+                        <div id="qm_timerM" class="card-t-box">00</div>
+                        <div style="color:#666; font-size:1.2rem;">:</div>
                         <div id="qm_timerS" class="card-t-box">00</div>
                     </div>
-
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn-upload-sm" onclick="document.getElementById('evidenceInput').click()">UPLOAD EVIDENCE</button>
-                        <button class="btn-skip-sm" onclick="window.cancelPendingTask()">SKIP</button>
+                
+                    <!-- BUTTONS -->
+                    <div style="display:flex; gap:10px; margin-top: 10px;">
+                        <button class="btn-upload-sm" style="flex:1;" onclick="document.getElementById('evidenceInput').click()">UPLOAD</button>
+                        <button class="btn-skip-sm" style="flex:1;" onclick="window.cancelPendingTask()">SKIP</button>
                     </div>
                 </div>
             </div>
