@@ -701,9 +701,20 @@
 
                     <!-- INPUT AREA -->
                     <div class="chat-footer">
-                        <button id="tributeHuntBtn" onclick="toggleTributeHunt()" class="icon-btn">🎁</button>
-                        <input type="text" id="chatMsgInput" class="chat-input" placeholder="Whisper to Queen Karin..." onkeypress="handleChatKey(event)">
-                        <button class="chat-send" onclick="sendChatMessage()" class="icon-btn">Send</button>
+                        <!-- 1. RANK GATED MEDIA BUTTON -->
+                        <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()">+</button>
+                        
+                        <!-- 2. FILE INPUT (Hidden, triggered by JS) -->
+                        <input type="file" id="chatMediaInput" accept="image/*,video/*" class="hidden" onchange="window.handleEvidenceUpload(this)">
+                    
+                        <!-- 3. TEXT INPUT -->
+                        <input type="text" id="chatMsgInput" class="chat-input" placeholder="Type..." onkeypress="handleChatKey(event)">
+                        
+                        <!-- 4. TRIBUTE (Desktop Only) -->
+                        <button id="deskTributeBtn" class="chat-btn-tribute desktop-only" onclick="toggleTributeHunt()">🎁</button>
+                    
+                        <!-- 5. SEND ARROW -->
+                        <button class="chat-btn-send" onclick="sendChatMessage()">></button>
                     </div>
                 </div>
             </div>
