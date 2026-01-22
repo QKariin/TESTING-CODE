@@ -1170,80 +1170,98 @@ function updateStats() {
 // =========================================
 // REWARD SYSTEM CONFIG & RENDER
 // =========================================
+// =========================================
+// LUXURY REWARD SYSTEM (SVG + SHAPES)
+// =========================================
+
+// SVG PATHS (Simplified for performance)
+const ICONS = {
+    rank: "M12 2l-10 9h20l-10-9zm0 5l6 5.5h-12l6-5.5z M12 14l-8 7h16l-8-7z", // Chevron Stack
+    task: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z", // Check Circle
+    kneel: "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z", // Clock/Time
+    spend: "M12,2L2,12L12,22L22,12L12,2Z M12,18L6,12L12,6L18,12L12,18Z" // Diamond Gem
+};
 
 const REWARD_DATA = {
     ranks: [
-        { name: "Hall Boy", icon: "🧹" },
-        { name: "Footman", icon: "👢" },
-        { name: "Silverman", icon: "🍴" },
-        { name: "Butler", icon: "🍷" },
-        { name: "Chamberlain", icon: "🏰" },
-        { name: "Secretary", icon: "📜" },
-        { name: "Champion", icon: "⚔️" }
+        { name: "INITIATE", icon: ICONS.rank },
+        { name: "FOOTMAN", icon: ICONS.rank },
+        { name: "SILVERMAN", icon: ICONS.rank },
+        { name: "BUTLER", icon: ICONS.rank },
+        { name: "CHAMBERLAIN", icon: ICONS.rank },
+        { name: "SECRETARY", icon: ICONS.rank },
+        { name: "CHAMPION", icon: ICONS.rank }
     ],
     tasks: [
-        { limit: 10, name: "Laborer", icon: "🔨" },
-        { limit: 50, name: "Tool", icon: "🔧" },
-        { limit: 100, name: "Drone", icon: "🤖" },
-        { limit: 500, name: "Machine", icon: "⚙️" },
-        { limit: 1000, name: "Architect", icon: "🏗️" }
+        { limit: 10, name: "LABORER", icon: ICONS.task },
+        { limit: 50, name: "TOOL", icon: ICONS.task },
+        { limit: 100, name: "DRONE", icon: ICONS.task },
+        { limit: 500, name: "MACHINE", icon: ICONS.task },
+        { limit: 1000, name: "ARCHITECT", icon: ICONS.task }
     ],
     kneeling: [
-        { limit: 10, name: "Bent", icon: "🧎" },
-        { limit: 50, name: "Sore", icon: "🩹" },
-        { limit: 100, name: "Trained", icon: "🐕" },
-        { limit: 500, name: "Furniture", icon: "🪑" },
-        { limit: 1000, name: "Statue", icon: "🗿" }
+        { limit: 10, name: "BENT", icon: ICONS.kneel },
+        { limit: 50, name: "SORE", icon: ICONS.kneel },
+        { limit: 100, name: "TRAINED", icon: ICONS.kneel },
+        { limit: 500, name: "FURNITURE", icon: ICONS.kneel },
+        { limit: 1000, name: "STATUE", icon: ICONS.kneel }
     ],
     spending: [
-        { limit: 1000, name: "Tithe", icon: "🪙" },
-        { limit: 10000, name: "Supporter", icon: "💰" },
-        { limit: 50000, name: "Patron", icon: "💎" },
-        { limit: 100000, name: "Financier", icon: "🏦" },
-        { limit: 500000, name: "Whale", icon: "🐳" }
+        { limit: 1000, name: "TITHE", icon: ICONS.spend },
+        { limit: 10000, name: "SUPPORTER", icon: ICONS.spend },
+        { limit: 50000, name: "PATRON", icon: ICONS.spend },
+        { limit: 100000, name: "FINANCIER", icon: ICONS.spend },
+        { limit: 500000, name: "WHALE", icon: ICONS.spend }
     ]
 };
 
 window.renderRewards = function() {
     if (!window.gameStats) return;
 
-    // 1. GET CURRENT STATS
+    // 1. GET DATA
     const currentRank = window.userProfile?.hierarchy || "Hall Boy";
     const totalTasks = window.gameStats.taskdom_completed || 0;
     const totalKneels = window.gameStats.kneelCount || 0;
-    const totalSpent = window.gameStats.total_coins_spent || 0; // Requires Backend Update, defaults 0
+    const totalSpent = window.gameStats.total_coins_spent || 0; 
 
     // HELPER: BUILD SHELF
-    const buildShelf = (containerId, data, checkFn) => {
+    // shapeClass = 'shape-hex', 'shape-circle', etc.
+    const buildShelf = (containerId, data, shapeClass, checkFn) => {
         const container = document.getElementById(containerId);
         if (!container) return;
         
         container.innerHTML = data.map((item, index) => {
             const isUnlocked = checkFn(item, index);
             const statusClass = isUnlocked ? "unlocked" : "locked";
+            const isLegendary = index === data.length - 1 ? "legendary" : ""; // Last item is legendary
             
             return `
-                <div class="reward-badge ${statusClass}" onclick="alert('Reward: ${item.name}\\nStatus: ${isUnlocked ? 'CLAIMED' : 'LOCKED'}')">
-                    <div class="rb-icon">${item.icon}</div>
-                    <div class="rb-label">${item.name}</div>
+                <div class="reward-badge ${shapeClass} ${statusClass} ${isLegendary}">
+                    <div class="rb-inner" style="display:flex; flex-direction:column; align-items:center;">
+                        <svg class="rb-icon" viewBox="0 0 24 24"><path d="${item.icon}"/></svg>
+                        <div class="rb-label">${item.name}</div>
+                    </div>
                 </div>
             `;
         }).join('');
     };
 
-    // 2. RENDER RANKS
-    const rankList = REWARD_DATA.ranks.map(r => r.name);
-    const myRankIndex = rankList.indexOf(currentRank);
-    buildShelf('shelfRanks', REWARD_DATA.ranks, (item, idx) => idx <= myRankIndex);
+    // 2. RENDER (With Specific Shapes)
+    const rankList = REWARD_DATA.ranks.map(r => r.name.toLowerCase());
+    // Normalize rank string comparison
+    const myRankIndex = rankList.findIndex(r => r === currentRank.toLowerCase()) || 0;
 
-    // 3. RENDER TASKS
-    buildShelf('shelfTasks', REWARD_DATA.tasks, (item) => totalTasks >= item.limit);
+    // RANKS -> HEXAGONS
+    buildShelf('shelfRanks', REWARD_DATA.ranks, 'shape-hex', (item, idx) => idx <= myRankIndex);
 
-    // 4. RENDER KNEELING
-    buildShelf('shelfKneel', REWARD_DATA.kneeling, (item) => totalKneels >= item.limit);
+    // TASKS -> CHIPS
+    buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', (item) => totalTasks >= item.limit);
 
-    // 5. RENDER SPENDING
-    buildShelf('shelfSpend', REWARD_DATA.spending, (item) => totalSpent >= item.limit);
+    // KNEELING -> CIRCLES
+    buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', (item) => totalKneels >= item.limit);
+
+    // SPENDING -> DIAMONDS
+    buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', (item) => totalSpent >= item.limit);
 };
 // =========================================
 // PART 3: TRIBUTE & BACKEND FUNCTIONS (RESTORED)
