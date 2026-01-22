@@ -945,6 +945,30 @@
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
         }
+
+     /* --- HEADER TOGGLE LOGIC --- */
+
+        /* Default (Desktop): Show Black Bar, Hide Giant Mobile Header */
+        .mob-chat-header { display: none !important; }
+        .right-header { display: flex !important; }
+        
+        /* Mobile Mode: Show Giant Header, Hide Black Bar */
+        @media screen and (max-width: 768px) {
+            .mob-chat-header { display: flex !important; }
+            .right-header { display: none !important; }
+            
+            /* Force Chat Container to be full screen on mobile */
+            .chat-container {
+                position: fixed !important;
+                top: 0 !important; left: 0 !important;
+                width: 100vw !important; height: 100vh !important;
+                z-index: 5000 !important;
+                background: #000 !important;
+                border: none !important;
+                margin: 0 !important;
+            }
+        }
+   
 </style>
 </head>
 <body>
