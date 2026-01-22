@@ -1,4 +1,4 @@
-// Chat functionality - FIXED FOR MODULES & LUXURY UI
+// Chat functionality - FIXED FOR MODULES & LUXURY UI & SYSTEM TICKER
 import { 
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId 
 } from './state.js';
@@ -14,6 +14,7 @@ export async function renderChat(messages) {
     const chatBoxContainer = document.getElementById('chatBox');
     const chatContent = document.getElementById('chatContent');
     const loadMoreBtn = document.getElementById('chatLoadMoreBtn'); // External button (hidden)
+    const ticker = document.getElementById('systemTicker'); // [NEW] Target the Ticker
 
     if (!messages || !chatContent) return;
 
@@ -55,12 +56,9 @@ export async function renderChat(messages) {
     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
 
     // ============================================================
-    // 4. SMART SLICING (THE FIX)
+    // 4. SMART SLICING
     // ============================================================
-    // Mobile: Show 10. Desktop: Show Global Limit (e.g. 50).
     const activeLimit = window.innerWidth <= 768 ? 10 : chatLimit;
-    
-    // Slice the array to get only the last N messages
     const visibleMessages = sortedMessages.slice(-activeLimit);
 
     // Proxy Bytescale URLs
@@ -74,26 +72,30 @@ export async function renderChat(messages) {
     // 5. RENDER HTML
     let messagesHtml = visibleMessages.map(m => {
         let txt = DOMPurify.sanitize(m.message);
-        txt = txt.replace(/\n/g, "<br>");
         
         const senderLower = (m.sender || "").toLowerCase();
         const isMe = senderLower === 'user' || senderLower === 'slave';
+        
+        // --- 1. INTERCEPTOR LOGIC (Send System Msgs to Ticker) ---
         const isSystem = senderLower === 'system';
-
-        // TACTICAL SYSTEM MESSAGE LOGIC
-        const isStatusUpdate = txt.includes("Verified") || txt.includes("Rejected") || txt.includes("FAILED") || txt.includes("earned");
+        const isStatusUpdate = txt.includes("Verified") || txt.includes("Rejected") || txt.includes("FAILED") || txt.includes("earned") || txt.includes("System");
 
         if (isSystem || isStatusUpdate) {
-            let sysClass = "sys-gold"; 
-            if (txt.includes("Rejected") || txt.includes("FAILED") || txt.includes("Removed")) {
-                sysClass = "sys-red"; 
+            // ONLY UPDATE TICKER IF IT EXISTS
+            if (ticker) {
+                ticker.classList.remove('hidden');
+                ticker.innerHTML = `<span style="color:#fff;">◈</span> ${txt}`;
+                
+                // Trigger Flash Animation
+                ticker.classList.remove('ticker-flash');
+                void ticker.offsetWidth; // Force Reflow
+                ticker.classList.add('ticker-flash');
             }
-
-            return `
-                <div class="msg-row system-row">
-                    <div class="msg-system ${sysClass}">${txt}</div>
-                </div>`;
+            return ''; // STOP. Do not print this to the chat log.
         }
+
+        // --- 2. NORMAL CHAT LOGIC ---
+        txt = txt.replace(/\n/g, "<br>");
 
         // TRIBUTE CARD LOGIC
         if (txt.includes("TRIBUTE:")) {
@@ -163,7 +165,6 @@ export async function renderChat(messages) {
     // ============================================================
     // 6. INJECT "ACCESS ARCHIVE" BUTTON
     // ============================================================
-    // If we have more messages in history than what we are showing
     if (sortedMessages.length > visibleMessages.length) {
         messagesHtml = `
             <div id="historyTrigger" style="width:100%; text-align:center; padding:15px 0;">
