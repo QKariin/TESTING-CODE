@@ -52,6 +52,25 @@
 
         #mobRec_Grid, #mobRec_Heap { min-height: 100px; }
 
+        /* --- HIDE ALL SCROLLBARS (Chrome, Safari, Firefox) --- */
+
+        /* 1. Target the specific scrolling containers */
+        #mobHomeScroll, 
+        #mobGlobalScroll, 
+        .mob-horiz-scroll,
+        .qm-scroll-content {
+            -ms-overflow-style: none;  /* Internet Explorer 10+ */
+            scrollbar-width: none;  /* Firefox */
+        }
+        
+        /* 2. Target Webkit (Chrome, Safari, Edge) */
+        #mobHomeScroll::-webkit-scrollbar, 
+        #mobGlobalScroll::-webkit-scrollbar, 
+        .mob-horiz-scroll::-webkit-scrollbar,
+        .qm-scroll-content::-webkit-scrollbar { 
+            display: none; 
+        }
+
         /* =========================================
            2. HALO DASHBOARD
            ========================================= */
