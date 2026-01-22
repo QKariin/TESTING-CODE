@@ -52,29 +52,28 @@
 
         #mobRec_Grid, #mobRec_Heap { min-height: 100px; }
 
-       /* --- HIDE ALL SCROLLBARS (BRUTE FORCE) --- */
+     /* --- HIDE ALL SCROLLBARS (UPDATED) --- */
 
-        /* 1. Firefox / IE: Target IDs directly */
+        /* 1. Target the specific scrolling containers */
         #mobHomeScroll, 
         #mobGlobalScroll, 
-        #mobRec_Grid,      /* <--- ADDED */
-        #mobRec_Heap,      /* <--- ADDED */
+        #mobRecordScroll, /* <--- ADDED THIS */
         .mob-horiz-scroll,
         .qm-scroll-content {
             -ms-overflow-style: none !important;
             scrollbar-width: none !important;
         }
         
-        /* 2. Chrome / Safari / Edge: Target IDs directly */
+        /* 2. Target Webkit (Chrome, Safari, Edge) */
         #mobHomeScroll::-webkit-scrollbar, 
         #mobGlobalScroll::-webkit-scrollbar, 
-        #mobRec_Grid::-webkit-scrollbar,   /* <--- ADDED */
-        #mobRec_Heap::-webkit-scrollbar,   /* <--- ADDED */
+        #mobRecordScroll::-webkit-scrollbar, /* <--- ADDED THIS */
         .mob-horiz-scroll::-webkit-scrollbar,
         .qm-scroll-content::-webkit-scrollbar { 
             display: none !important;
             width: 0 !important;
             height: 0 !important;
+            background: transparent !important;
         }
 
         /* =========================================
@@ -417,6 +416,27 @@
         /* =========================================
            9. OVERLAYS (GENERIC)
            ========================================= */
+         /* --- NUCLEAR FIX FOR RECORD HORIZONTAL SCROLLBARS --- */
+
+        #mobRec_Grid::-webkit-scrollbar,
+        #mobRec_Heap::-webkit-scrollbar {
+            /* 1. Force it hidden */
+            display: none !important;
+            /* 2. Physically shrink it to zero (The Fix) */
+            width: 0px !important;
+            height: 0px !important;
+            /* 3. Make it invisible */
+            background: transparent !important;
+            -webkit-appearance: none !important;
+        }
+        
+        #mobRec_Grid,
+        #mobRec_Heap {
+            /* Firefox / IE support */
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
+              
         .hidden { display: none !important; }
 
         .mob-reward-overlay {
@@ -1008,9 +1028,8 @@
     </div>
 </div>
     
-    <!-- 2. SCROLLABLE CONTENT (Added Padding Top) -->
-    <div style="flex: 1; overflow-y: auto; width: 100%; padding-top: 20px;">
-        
+<!-- Added ID: mobRecordScroll -->
+<div id="mobRecordScroll" style="flex: 1; overflow-y: auto; width: 100%; padding-top: 20px; -webkit-overflow-scrolling: touch;">        
         <!-- ALTAR -->
         <div class="mob-altar-container">
             <div class="mob-grid-label-center">HIGHEST MERIT</div>
