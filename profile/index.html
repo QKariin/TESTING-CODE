@@ -61,7 +61,7 @@
         #DESKTOP_APP { display: none !important; }
 
         .mob-frame {
-            flex: 1; overflow-y: auto; padding: 10px 5px; padding-bottom: 120px;
+            flex: 1; overflow-y: auto; padding: 10px 5px; padding-bottom: 140px;
             display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%;
             -ms-overflow-style: none; scrollbar-width: none;
         }
@@ -650,7 +650,7 @@
         /* 3. Fix the Scroll Area (Remove Top Gap) */
         .qm-scroll-content {
             padding-top: 0 !important; /* Remove the gap below the header */
-            padding-bottom: 120px !important; /* Keep footer space */
+            padding-bottom: 140px !important; /* Keep footer space + safe area */
             width: 100% !important;
         }
         
@@ -676,6 +676,20 @@
             z-index: 2147483647 !important; background: rgba(0,0,0,0.95) !important;
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
+        }
+
+        /* FOOTER STYLING (Mobile) */
+        #app-mode-footer {
+            /* Ensure footer stays visible and doesn't overlap content */
+            will-change: transform;
+            /* Prevent footer buttons from wrapping or shrinking */
+        }
+        
+        #app-mode-footer button {
+            /* Ensure buttons fill available space */
+            flex: 1;
+            min-height: 60px;
+            padding: 8px 0;
         }
     }
 </style>
@@ -1243,7 +1257,7 @@
                 </div>
             </div>
             
-            <div style="height: 120px;"></div>
+            <div style="height: 140px;"></div>
         </div> 
     </div> <!-- CLOSES viewMobileHome -->
 
@@ -1269,7 +1283,7 @@
         </div>
         
         <!-- SCROLLABLE CONTENT -->
-        <div id="mobRecordScroll" style="flex: 1; overflow-y: auto; width: 100%; display: flex; flex-direction: column; justify-content: space-evenly; padding-top: 100px; padding-bottom: 80px; -webkit-overflow-scrolling: touch;">        
+        <div id="mobRecordScroll" style="flex: 1; overflow-y: auto; width: 100%; display: flex; flex-direction: column; justify-content: space-evenly; padding-top: 100px; padding-bottom: 140px; -webkit-overflow-scrolling: touch;">        
             
             <div class="mob-altar-container">
                 <div class="mob-grid-label-center">HIGHEST MERIT</div>
@@ -1313,7 +1327,7 @@
         </div>
 
         <!-- SCROLLABLE CHILD -->
-        <div id="mobGlobalScroll" style="flex: 1; overflow-y: auto; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 30px; padding-top: 100px; padding-bottom: 100px; -webkit-overflow-scrolling: touch;">
+        <div id="mobGlobalScroll" style="flex: 1; overflow-y: auto; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 30px; padding-top: 100px; padding-bottom: 140px; -webkit-overflow-scrolling: touch;">
 
             <div style="width: 90%;">
                 <button class="wallet-btn" onclick="openExchequer()" style="background: rgba(20,20,20,0.8); border: 1px solid #c5a059; color: #c5a059; padding: 20px; font-size: 1.1rem; box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);">

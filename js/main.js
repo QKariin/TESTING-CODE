@@ -1756,64 +1756,101 @@ window.triggerRankMock = function(customTitle) {
 
     // 2. Build The Footer
     function buildAppFooter() {
-        // Run only on mobile
-        if (window.innerWidth > 768) return;
+        // Run only on mobile (use innerWidth check)
+        const isMobile = window.innerWidth <= 768;
+        if (!isMobile) return;
 
-        // If exists, don't rebuild
-        if (document.getElementById('app-mode-footer')) return;
+        // Check if already exists
+        let footer = document.getElementById('app-mode-footer');
+        if (footer) {
+            // Make sure it's visible if it exists
+            footer.style.display = 'flex';
+            footer.style.visibility = 'visible';
+            footer.style.opacity = '1';
+            return;
+        }
         
-        const footer = document.createElement('div');
+        // Create footer element
+        footer = document.createElement('div');
         footer.id = 'app-mode-footer';
         
-        // CSS INJECTION (Max Z-Index to stay on top of everything)
-        Object.assign(footer.style, {
-            display: 'flex', 
-            justifyContent: 'space-around',
-            alignItems: 'center',
-            position: 'fixed', 
-            bottom: '0', 
-            left: '0', 
-            width: '100%', 
-            height: '60px',
-            background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
-            paddingBottom: 'env(safe-area-inset-bottom)', /* Handles iPhone Home Bar */
-            zIndex: '2147483647', 
-            borderTop: '1px solid rgba(197, 160, 89, 0.3)',
-            backdropFilter: 'blur(10px)', 
-            pointerEvents: 'auto', 
-            touchAction: 'none'
-        });
+        // CSS INJECTION with !important for override
+        const footerStyles = {
+            display: 'flex !important', 
+            justifyContent: 'space-around !important',
+            alignItems: 'center !important',
+            position: 'fixed !important', 
+            bottom: '0 !important', 
+            left: '0 !important',
+            right: '0 !important',
+            width: '100% !important', 
+            minHeight: '60px !important',
+            boxSizing: 'border-box !important',
+            background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95)) !important',
+            zIndex: '2147483647 !important', 
+            borderTop: '1px solid rgba(197, 160, 89, 0.3) !important',
+            backdropFilter: 'blur(10px) !important', 
+            pointerEvents: 'auto !important', 
+            touchAction: 'none !important',
+            visibility: 'visible !important',
+            opacity: '1 !important'
+        };
+        
+        // Apply styles with setAttribute for better compatibility
+        let styleString = 'display: flex !important; justify-content: space-around !important; align-items: center !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; min-height: 60px !important; box-sizing: border-box !important; background: linear-gradient(to top, #000 40%, rgba(0,0,0,0.95)) !important; padding-bottom: env(safe-area-inset-bottom) !important; z-index: 2147483647 !important; border-top: 1px solid rgba(197, 160, 89, 0.3) !important; backdrop-filter: blur(10px) !important; pointer-events: auto !important; touch-action: none !important; visibility: visible !important; opacity: 1 !important;';
+        footer.setAttribute('style', styleString);
 
         footer.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
-        const btnStyle = "background:none; border:none; color:#666; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; -webkit-tap-highlight-color: transparent;";
-        const centerStyle = "background:none; border:none; color:#ff003c; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; -webkit-tap-highlight-color: transparent;";
+        const btnStyle = "background:none !important; border:none !important; color:#666 !important; display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:center !important; gap:4px !important; font-family:'Cinzel',serif !important; font-size:0.55rem !important; width:20% !important; height:100% !important; cursor:pointer !important; -webkit-tap-highlight-color: transparent !important; flex:1 !important; min-height:60px !important; padding:8px 0 !important;";
+        const centerStyle = "background:none !important; border:none !important; color:#ff003c !important; display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:center !important; gap:4px !important; font-family:'Cinzel',serif !important; font-size:0.55rem !important; width:20% !important; height:100% !important; cursor:pointer !important; -webkit-tap-highlight-color: transparent !important; flex:1 !important; min-height:60px !important; padding:8px 0 !important;";
 
         footer.innerHTML = `
             <button onclick="window.toggleMobileView('home')" style="${btnStyle}">
-                <span style="font-size:1.4rem;color:#888;">◈</span><span>PROFILE</span>
+                <span style="font-size:1.4rem !important;color:#888 !important;">◈</span><span>PROFILE</span>
             </button>
             <button onclick="window.toggleMobileView('record')" style="${btnStyle}">
-                <span style="font-size:1.4rem;color:#888;">▦</span><span>RECORD</span>
+                <span style="font-size:1.4rem !important;color:#888 !important;">▦</span><span>RECORD</span>
             </button>
             <button onclick="window.toggleMobileView('chat')" style="${centerStyle}">
-                <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:1px solid #ff003c;box-shadow:0 0 10px rgba(255,0,60,0.3);">
+                <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:70px !important;height:70px !important;border-radius:50% !important;object-fit:cover !important;border:1px solid #ff003c !important;box-shadow:0 0 10px rgba(255,0,60,0.3) !important;">
             </button>
             <button onclick="window.toggleMobileView('queen')" style="${btnStyle}">
-                <span style="font-size:1.4rem;color:#888;">♛</span><span>QUEEN</span>
+                <span style="font-size:1.4rem !important;color:#888 !important;">♛</span><span>QUEEN</span>
             </button>
             <button onclick="window.toggleMobileView('global')" style="${btnStyle}">
-                <span style="font-size:1.4rem;color:#888;">⊕</span><span>GLOBAL</span>
+                <span style="font-size:1.4rem !important;color:#888 !important;">⊕</span><span>GLOBAL</span>
             </button>`;
         
-        document.body.appendChild(footer);
+        // Try appending to body first, then documentElement if needed
+        try {
+            document.body.appendChild(footer);
+        } catch (e) {
+            console.warn('Could not append to body, trying documentElement');
+            document.documentElement.appendChild(footer);
+        }
+        
+        // Force a reflow to ensure it renders
+        footer.offsetHeight;
     }
 
-    // 3. Init
-    window.addEventListener('load', () => { lockVisuals(); buildAppFooter(); });
-    window.addEventListener('resize', () => { lockVisuals(); buildAppFooter(); });
+    // 3. Init with multiple calls to ensure it creates
+    const ensureFooter = () => {
+        buildAppFooter();
+        // Call again after a brief delay to catch late DOM ready
+        setTimeout(buildAppFooter, 100);
+        setTimeout(buildAppFooter, 500);
+    };
     
-    // Force run immediately in case load event passed
+    // Run on multiple events to ensure it works on all devices
+    window.addEventListener('load', ensureFooter);
+    window.addEventListener('DOMContentLoaded', ensureFooter);
+    document.addEventListener('readystatechange', () => {
+        if (document.readyState === 'complete') ensureFooter();
+    });
+    window.addEventListener('resize', buildAppFooter);
+    
+    // Force run immediately
     lockVisuals(); 
     buildAppFooter();
 
