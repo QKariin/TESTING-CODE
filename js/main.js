@@ -1044,6 +1044,9 @@ function updateStats() {
     if (document.getElementById('statSkipped')) document.getElementById('statSkipped').innerText = gameStats.taskdom_skipped || 0;
     if (document.getElementById('statTotalKneels')) document.getElementById('statTotalKneels').innerText = gameStats.kneelCount || 0;
 
+    if (window.renderRewards) window.renderRewards();
+
+
     // 2. MOBILE UPDATE (The New Connection)
     // Header Identity
     const mobName = document.getElementById('mob_slaveName');
@@ -1163,6 +1166,85 @@ function updateStats() {
     
     updateKneelingStatus();
 }
+
+// =========================================
+// REWARD SYSTEM CONFIG & RENDER
+// =========================================
+
+const REWARD_DATA = {
+    ranks: [
+        { name: "Hall Boy", icon: "🧹" },
+        { name: "Footman", icon: "👢" },
+        { name: "Silverman", icon: "🍴" },
+        { name: "Butler", icon: "🍷" },
+        { name: "Chamberlain", icon: "🏰" },
+        { name: "Secretary", icon: "📜" },
+        { name: "Champion", icon: "⚔️" }
+    ],
+    tasks: [
+        { limit: 10, name: "Laborer", icon: "🔨" },
+        { limit: 50, name: "Tool", icon: "🔧" },
+        { limit: 100, name: "Drone", icon: "🤖" },
+        { limit: 500, name: "Machine", icon: "⚙️" },
+        { limit: 1000, name: "Architect", icon: "🏗️" }
+    ],
+    kneeling: [
+        { limit: 10, name: "Bent", icon: "🧎" },
+        { limit: 50, name: "Sore", icon: "🩹" },
+        { limit: 100, name: "Trained", icon: "🐕" },
+        { limit: 500, name: "Furniture", icon: "🪑" },
+        { limit: 1000, name: "Statue", icon: "🗿" }
+    ],
+    spending: [
+        { limit: 1000, name: "Tithe", icon: "🪙" },
+        { limit: 10000, name: "Supporter", icon: "💰" },
+        { limit: 50000, name: "Patron", icon: "💎" },
+        { limit: 100000, name: "Financier", icon: "🏦" },
+        { limit: 500000, name: "Whale", icon: "🐳" }
+    ]
+};
+
+window.renderRewards = function() {
+    if (!window.gameStats) return;
+
+    // 1. GET CURRENT STATS
+    const currentRank = window.userProfile?.hierarchy || "Hall Boy";
+    const totalTasks = window.gameStats.taskdom_completed || 0;
+    const totalKneels = window.gameStats.kneelCount || 0;
+    const totalSpent = window.gameStats.total_coins_spent || 0; // Requires Backend Update, defaults 0
+
+    // HELPER: BUILD SHELF
+    const buildShelf = (containerId, data, checkFn) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = data.map((item, index) => {
+            const isUnlocked = checkFn(item, index);
+            const statusClass = isUnlocked ? "unlocked" : "locked";
+            
+            return `
+                <div class="reward-badge ${statusClass}" onclick="alert('Reward: ${item.name}\\nStatus: ${isUnlocked ? 'CLAIMED' : 'LOCKED'}')">
+                    <div class="rb-icon">${item.icon}</div>
+                    <div class="rb-label">${item.name}</div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    // 2. RENDER RANKS
+    const rankList = REWARD_DATA.ranks.map(r => r.name);
+    const myRankIndex = rankList.indexOf(currentRank);
+    buildShelf('shelfRanks', REWARD_DATA.ranks, (item, idx) => idx <= myRankIndex);
+
+    // 3. RENDER TASKS
+    buildShelf('shelfTasks', REWARD_DATA.tasks, (item) => totalTasks >= item.limit);
+
+    // 4. RENDER KNEELING
+    buildShelf('shelfKneel', REWARD_DATA.kneeling, (item) => totalKneels >= item.limit);
+
+    // 5. RENDER SPENDING
+    buildShelf('shelfSpend', REWARD_DATA.spending, (item) => totalSpent >= item.limit);
+};
 // =========================================
 // PART 3: TRIBUTE & BACKEND FUNCTIONS (RESTORED)
 // =========================================
