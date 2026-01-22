@@ -116,6 +116,39 @@
     gap: 15px;
 }
 
+/* --- SYSTEM TICKER INTERCEPTOR --- */
+.system-ticker {
+    width: 100%;
+    padding: 8px 0;
+    background: rgba(10, 10, 10, 0.95);
+    border-bottom: 1px solid rgba(197, 160, 89, 0.3); /* Gold Line */
+    color: #c5a059;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    text-align: center;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    flex-shrink: 0; /* Never collapse */
+    z-index: 40;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.system-ticker.hidden {
+    display: none !important;
+}
+
+/* BLINK ANIMATION FOR UPDATES */
+.ticker-flash {
+    animation: textFlash 0.5s ease-in-out;
+}
+@keyframes textFlash {
+    0% { color: #fff; text-shadow: 0 0 10px #fff; background: rgba(197, 160, 89, 0.2); }
+    100% { color: #c5a059; background: rgba(10, 10, 10, 0.95); }
+}
+
+
+
 /* Input Terminal (Desktop Default) */
 .chat-footer {
     background: #050505;
@@ -363,6 +396,16 @@
         -ms-overflow-style: none; /* IE */
     }
     .chat-body-frame::-webkit-scrollbar { display: none; /* Chrome */ }
+
+     .system-ticker {
+        /* Pushes it down so it sits UNDER the fixed mobile header */
+        margin-top: 65px; 
+    }
+    
+    /* Remove padding from body so there is no gap */
+    .chat-body-frame {
+        padding-top: 0 !important; 
+    }
 
     /* INPUT AREA: Sit ON TOP of Footer */
     .chat-footer {
