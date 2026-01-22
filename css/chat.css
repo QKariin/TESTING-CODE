@@ -23,6 +23,79 @@
     position: relative; /* Keep it relative on desktop */
 }
 
+/* --- DESKTOP RIGHT HEADER --- */
+.right-header {
+    width: 100%;
+    height: 80px; /* Fixed height */
+    background: #000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    flex-shrink: 0; /* Prevents scrolling away */
+    z-index: 50;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+}
+
+.rh-profile-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.rh-avatar-wrapper {
+    position: relative;
+    width: 45px;
+    height: 45px;
+}
+
+.rh-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #c5a059; /* Gold Border */
+}
+
+.rh-status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background: #444; /* Default gray */
+    border: 2px solid #000;
+    border-radius: 50%;
+}
+
+.rh-status-dot.online {
+    background: #00ff00;
+    box-shadow: 0 0 8px #00ff00;
+}
+
+.rh-text-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.rh-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    color: #fff;
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+.rh-status-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    color: #c5a059; /* Gold text */
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
 .chat-body-frame {
     flex: 1;
     overflow-y: auto;
