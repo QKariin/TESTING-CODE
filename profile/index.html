@@ -701,21 +701,24 @@
 
                     <!-- INPUT AREA -->
                     <div class="chat-footer">
-                        <!-- 1. RANK GATED MEDIA BUTTON -->
-                        <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()">+</button>
-                        
-                        <!-- 2. FILE INPUT (Hidden, triggered by JS) -->
-                        <input type="file" id="chatMediaInput" accept="image/*,video/*" class="hidden" onchange="window.handleEvidenceUpload(this)">
-                    
-                        <!-- 3. TEXT INPUT -->
-                        <input type="text" id="chatMsgInput" class="chat-input" placeholder="Type..." onkeypress="handleChatKey(event)">
-                        
-                        <!-- 4. TRIBUTE (Desktop Only) -->
-                        <button id="deskTributeBtn" class="chat-btn-tribute desktop-only" onclick="toggleTributeHunt()">🎁</button>
-                    
-                        <!-- 5. SEND ARROW -->
-                        <button class="chat-btn-send" onclick="sendChatMessage()">></button>
-                    </div>
+                      <!-- WRAPPER: Holds Input + The Plus Button inside it -->
+                      <div class="chat-input-wrapper">
+                          <!-- 1. RANK GATED MEDIA BUTTON (Now Circular & Absolute) -->
+                          <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()">+</button>
+                          
+                          <!-- 2. TEXT INPUT (Padding Left added via CSS) -->
+                          <input type="text" id="chatMsgInput" class="chat-input" placeholder="Type..." onkeypress="handleChatKey(event)">
+                      </div>
+                      
+                      <!-- 3. FILE INPUT (Hidden, dynamic accept attribute) -->
+                      <input type="file" id="chatMediaInput" class="hidden" onchange="window.handleEvidenceUpload(this)">
+                  
+                      <!-- 4. TRIBUTE (Desktop Only) -->
+                      <button id="deskTributeBtn" class="chat-btn-tribute desktop-only" onclick="toggleTributeHunt()">🎁</button>
+                  
+                      <!-- 5. SEND ARROW -->
+                      <button class="chat-btn-send" onclick="sendChatMessage()">></button>
+                  </div>
                 </div>
             </div>
             
