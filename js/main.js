@@ -1,1058 +1,2024 @@
-Skip to content
-QKariin
-TESTING-CODE
-Repository navigation
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-Settings
-Files
-Go to file
-t
-api
-audio
-css
-dashboard
-icons
-js
-lib
-profile
-kneeling
-index.html
-navigation.html
-profileCard.html
-tributeOverlay.html
-wix
-.gitignore
-README.md
-index.html
-manifest.json
-package.json
-service-worker.js
-shared-chat-example.html
-TESTING-CODE/profile
-/index.html
- 
-
-Code
-
-Blame
-1447 lines (1275 loc) · 77.6 KB
 
 
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content" />
-  <title>Command Console</title>
-  
-  <script type="module" src="../js/main.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+// main.js - FINAL COMPLETE VERSION (DESKTOP + MOBILE)
 
-  <!-- FONTS -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@200;300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet" />
+import { CONFIG, URLS, LEVELS, FUNNY_SAYINGS, STREAM_PASSWORDS } from './config.js';
+import { 
+    gameStats, stats, userProfile, currentTask, taskDatabase, galleryData, 
+    pendingTaskState, taskJustFinished, cooldownInterval, ignoreBackendUpdates, 
+    lastChatJson, lastGalleryJson, isInitialLoad, chatLimit, lastNotifiedMessageId, 
+    historyLimit, pendingLimit, currentView, resetUiTimer, taskQueue, 
+    audioUnlocked, cmsHierarchyData, WISHLIST_ITEMS, lastWorshipTime, 
+    currentHistoryIndex, touchStartX, isLocked, COOLDOWN_MINUTES,
+    setGameStats, setStats, setUserProfile, setCurrentTask, setTaskDatabase, 
+    setGalleryData, setPendingTaskState, setTaskJustFinished, setIgnoreBackendUpdates, 
+    setLastChatJson, setLastGalleryJson, setIsInitialLoad, setChatLimit, 
+    setLastNotifiedMessageId, setHistoryLimit, setCurrentView, setResetUiTimer, 
+    setTaskQueue, setCmsHierarchyData, setWishlistItems, setLastWorshipTime, 
+    setCurrentHistoryIndex, setTouchStartX, setIsLocked, setCooldownInterval, setActiveRevealMap, setVaultItems, setCurrentLibraryMedia, setLibraryProgressIndex 
+} from './state.js';
+import { renderRewardGrid, runTargetingAnimation } from '../profile/kneeling/reward.js';
+import { triggerSound, migrateGameStatsToStats } from './utils.js';
+import { switchTab, toggleStats, openSessionUI, closeSessionUI, updateSessionCost, toggleSection, renderDomVideos, renderNews, renderWishlist } from './ui.js';
+import { getRandomTask, restorePendingUI, finishTask, cancelPendingTask, resetTaskDisplay } from './tasks.js';
+import { renderChat, sendChatMessage, handleChatKey, sendCoins, loadMoreChat, openChatPreview, closeChatPreview, forceBottom } from './chat.js';
+import { renderGallery, loadMoreHistory, initModalSwipeDetection, closeModal, toggleHistoryView, openHistoryModal, openModal } from './gallery.js';
+import { handleEvidenceUpload, handleProfileUpload, handleAdminUpload } from './uploads.js';
+import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from '../profile/kneeling/kneeling.js';
+import { Bridge } from './bridge.js';
+import { getOptimizedUrl } from './media.js';
 
-  <!-- DESKTOP STYLES -->
-  <link rel="stylesheet" href="../css/chat.css">
-  <link rel="stylesheet" href="../css/profile.css">
-  <link rel="stylesheet" href="../css/reward.css">
+const KINK_LIST = [
+    "JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership", 
+    "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation", 
+    "Task submission", "CBT", "Training", "Power exchange", "Verbal domination", 
+    "Protocol", "Obedience", "Psychological domination"
+];
 
-<style>
+// =========================================
+// POVERTY SYSTEM (MOCKING LOGIC)
+// =========================================
 
-  
-    /* =========================================
-       1. CORE LAYOUT & SCROLLING
-       ========================================= */
-    #MOBILE_APP { display: none; }
+const POVERTY_INSULTS = [
+    "Your wallet is as empty as your worth.",
+    "Do not waste my time with empty pockets.",
+    "Silence is free. Serving me costs.",
+    "Go beg for coins, then come back.",
+    "You cannot afford to look at me.",
+    "Access Denied. Reason: Poverty."
+];
 
-      /* --- CRITICAL IOS FIX: LOCK THE BODY --- */
-    html, body {
-        position: fixed !important; 
-        width: 100% !important;
-        height: 100% !important;
-        overflow: hidden !important;
-        background-color: #000000 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        /* This stops the "Push Up" behavior completely */
-        top: 0 !important;
-        left: 0 !important;
-        overscroll-behavior: none !important;
-    }
+// ==========================
+// REPLACE window.triggerPoverty WITH THIS JAILBREAK VERSION
+// ==========================
 
-    @media screen and (max-width: 768px) {
-        #MOBILE_APP {
-            display: flex !important;
-            flex-direction: column;
-            width: 100vw;
-            height: 100dvh;
-            position: fixed;
-            top: 0; left: 0;
-            z-index: 999999;
-            background-color: #000000 !important;
-            background: #000000 !important;
-            overscroll-behavior-y: none;
-            color: white;
-            font-family: 'Cinzel', serif;
-            overflow: hidden;
-        }
-        #DESKTOP_APP { display: none !important; }
-
-        .mob-frame {
-            flex: 1; overflow-y: auto; padding: 10px 5px; padding-bottom: 120px;
-            display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%;
-            -ms-overflow-style: none; scrollbar-width: none;
-        }
-        .mob-frame::-webkit-scrollbar { display: none; }
-
-        #mobRec_Grid, #mobRec_Heap { min-height: 100px; }
-
-     /* --- HIDE ALL SCROLLBARS (UPDATED) --- */
-
-        /* 1. Target the specific scrolling containers */
-        #mobHomeScroll, 
-        #mobGlobalScroll, 
-        #mobRecordScroll, /* <--- ADDED THIS */
-        .mob-horiz-scroll,
-        .qm-scroll-content {
-            -ms-overflow-style: none !important;
-            scrollbar-width: none !important;
-        }
-        
-        /* 2. Target Webkit (Chrome, Safari, Edge) */
-        #mobHomeScroll::-webkit-scrollbar, 
-        #mobGlobalScroll::-webkit-scrollbar, 
-        #mobRecordScroll::-webkit-scrollbar, /* <--- ADDED THIS */
-        .mob-horiz-scroll::-webkit-scrollbar,
-        .qm-scroll-content::-webkit-scrollbar { 
-            display: none !important;
-            width: 0 !important;
-            height: 0 !important;
-            background: transparent !important;
-        }
-
-        /* =========================================
-           2. HALO DASHBOARD
-           ========================================= */
-        .mob-bg-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0; pointer-events: none;
-        }
-        .bg-blur {
-            width: 100%; height: 100%; object-fit: cover;
-            filter: blur(10px) brightness(0.4); 
-            transform: scale(1.1); 
-        }
-        .bg-overlay {
-            position: absolute; inset: 0;
-            background: radial-gradient(circle at center, transparent 0%, #000 50%);
-        }
-
-        .halo-section {
-            position: relative; z-index: 2;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        }
-
-        .halo-ring {
-            width: 280px; height: 280px;
-            border-radius: 50%;
-            border: 2px solid #c5a059; 
-            box-shadow: 0 0 30px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: radial-gradient(circle, rgba(197,160,89,0.1) 0%, transparent 50%);
-            backdrop-filter: blur(0px); 
-        }
-
-        .halo-name {
-            font-family: 'Cinzel', serif; font-size: 2.2rem; color: #fff;
-            text-transform: uppercase; letter-spacing: 2px;
-            text-shadow: 0 0 20px rgba(255,255,255,0.4);
-            line-height: 1; margin-bottom: 5px; text-align: center;
-        }
-        .halo-rank {
-            font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: #c5a059;
-            letter-spacing: 4px; text-transform: uppercase;
-        }
-
-        .halo-stats-card {
-            position: relative; z-index: 3;
-            margin-top: -40px;
-            width: 100%;
-            background: rgba(10, 10, 10, 0.85); 
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 10px;
-            display: flex; align-items: center; justify-content: space-around;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(15px);
-            margin-bottom: 20px;
-        }
-
-        .h-stat { display: flex; flex-direction: column; align-items: center; }
-        .h-val { font-family: 'Orbitron', serif; font-size: 1.5rem; color: #fff; line-height: 1; }
-        .h-lbl { font-family: 'Orbitron', sans-serif; font-size: 0.5rem; color: #888; letter-spacing: 2px; margin-top: 4px; }
-        .h-divider { width: 1px; height: 30px; background: rgba(255,255,255,0.15); }
-
-        .halo-stack {
-            position: relative; z-index: 3; width: 100%;
-            display: flex; flex-direction: column; align-items: center; gap: 15px;
-        }
-
-        /* =========================================
-           3. STATS DRAWER
-           ========================================= */
-        .mob-stats-toggle-btn {
-            width: 100%;
-            background: transparent;
-            border: 1px solid rgba(136, 136, 136, 0.3);
-            color: #888;
-            opacity: 0.7;
-            font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.75rem;
-            padding: 8px 0;
-            cursor: pointer; letter-spacing: 2px;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            border-radius: 4px;
-            transition: 0.3s;
-        }
-        .mob-stats-toggle-btn:active { opacity: 1; border-color: #fff; color: #fff; }
-
-        .mob-internal-drawer {
-            width: 100%; max-height: 0; opacity: 0; overflow: hidden;
-            transition: all 0.4s ease; background: transparent; 
-            border-top: 1px solid transparent;
-        }
-        .mob-internal-drawer.open {
-            max-height: 200px; opacity: 1; margin-top: 15px; padding-top: 5px;
-            border-top: 1px solid rgba(255,255,255,0.1); 
-        }
-        
-        .drawer-row { 
-            display: flex; justify-content: space-between; padding: 8px 0; 
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-        }
-        .drawer-row:last-child { border-bottom: none; }
-        .d-lbl { font-size: 0.7rem; color: #888; font-family: 'Cinzel'; letter-spacing: 1px; }
-        .d-val { font-size: 0.8rem; color: #c5a059; font-family: 'Orbitron'; }
-
-        /* =========================================
-           4. KNEEL BAR & BUTTONS
-           ========================================= */
-        .mob-section-wrapper { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        
-        .mob-kneel-bar {
-            width: 100%; height: 50px;
-            background: #080808; border: 1px solid #c5a059; border-radius: 4px;
-            position: relative; overflow: hidden; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
-            transition: 0.2s;
-        }
-        .mob-kneel-bar:active { border-color: #fff; transform: scale(0.98); }
-        
-        .mob-bar-fill, .mob-kneel-fill {
-            position: absolute; bottom: 0; left: 0; width: 0%; height: 100%; 
-            background: linear-gradient(90deg, #8b0000, #000000); z-index: 1; transition: width 0.1s linear;
-        }
-        .mob-bar-content { z-index: 2; display: flex; align-items: center; gap: 10px; }
-        .kneel-icon-sm { color: #c5a059; font-size: 1.2rem; }
-        .kneel-text { font-family: 'Cinzel', serif; letter-spacing: 3px; color: #ccc; }
-
-        .mob-action-btn {
-            width: 100%; padding: 15px; background: transparent; margin-top: 15px;
-            border: 1px solid #c5a059; color: #c5a059;
-            font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.9rem;
-            letter-spacing: 2px; cursor: pointer;
-        }
-
-        /* =========================================
-           5. LUXURY CARDS (QUEEN MENU)
-           ========================================= */
-        .luxury-wrap { padding: 0 20px; display: flex; flex-direction: column; gap: 20px; width: 100%; }
-        
-        .luxury-card {
-            background: linear-gradient(180deg, rgba(30,30,30,0.6) 0%, rgba(10,10,10,0.9) 100%);
-            border: 1px solid rgba(197, 160, 89, 0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border-radius: 2px; padding: 20px 15px;
-            position: relative; overflow: hidden;
-        }
-        .luxury-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
-            background: linear-gradient(90deg, transparent 0%, #c5a059 50%, transparent 100%); opacity: 0.7;
-        }
-        
-        .duty-label {
-            font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.7rem; color: #888; 
-            letter-spacing: 4px; text-transform: uppercase; text-align: center;
-            margin-bottom: 20px; position: relative; display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
-        .duty-label::before, .duty-label::after { content: ''; height: 1px; width: 30px; background: #333; }
-
-        /* Timers & Task Text */
-        .card-timer-row { 
-            display: flex !important; flex-direction: row !important;
-            align-items: center; justify-content: center; gap: 5px; margin: 15px 0; width: 100%;
-        }
-        .card-t-box { 
-            background: #000; border: 1px solid #333; color: #c5a059; 
-            font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; 
-            padding: 5px 10px; border-radius: 4px; min-width: 40px; text-align: center; line-height: 1;
-        }
-        
-        #mobTaskText {
-            font-family: 'Cinzel', serif; font-size: 0.85rem; color: #e0e0e0;
-            text-align: center; line-height: 1.4; margin: 5px 0 15px 0; padding: 8px;
-            border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3);
-            min-height: 50px; display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease;
-        }
-        .text-pulse { animation: pulseText 1.5s infinite; color: #c5a059 !important; font-family: 'Orbitron' !important; }
-        @keyframes pulseText { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-
-        /* Status Texts */
-        .txt-status-red { color: #ff003c; font-family: 'Orbitron'; font-size: 0.8rem; letter-spacing: 1px; text-shadow: 0 0 5px rgba(255,0,60,0.4); }
-        .txt-status-green { color: #00ff00; font-family: 'Orbitron'; font-size: 0.8rem; letter-spacing: 1px; text-shadow: 0 0 5px rgba(0,255,0,0.4); }
-        .txt-status-gold { color: #c5a059; font-family: 'Orbitron'; font-size: 0.8rem; letter-spacing: 1px; }
-
-        .btn-upload-sm {
-            background: transparent; border: 1px solid #c5a059; color: #c5a059;
-            font-family: 'Cinzel'; font-size: 0.65rem; padding: 6px 12px;
-            cursor: pointer; align-self: flex-start;
-        }
-        .btn-skip-sm {
-            background: transparent; border: 1px solid #444; color: #666;
-            font-family: 'Cinzel'; font-size: 0.65rem; padding: 6px 12px; cursor: pointer;
-        }
-
-        .kneel-track-reverted { height: 10px; width: 100%; background: #111; border: 1px solid #333; margin-top: 5px; }
-        .kneel-fill-reverted { height: 100%; width: 0%; background: #c5a059; }
-
-        /* =========================================
-           6. RECORD / GALLERY / STREAKS
-           ========================================= */
-        .mob-grid-label-center { 
-            font-size: 0.5rem; color: #444; letter-spacing: 3px; margin-bottom: 5px; text-align: center; width: 100%; 
-        }
-        .mob-streak-strip {
-            display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; width: 70%; margin-bottom: 10px;
-        }
-        .streak-sq { height: 6px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1px; }
-        .streak-sq.active { background: rgba(197, 160, 89, 0.6); border-color: #c5a059; box-shadow: 0 0 8px rgba(197, 160, 89, 0.2); }
-
-        .mob-horiz-scroll {
-            display: flex; flex-direction: row; overflow-x: auto; gap: 10px; width: 100%;
-            padding-right: 20px; -webkit-overflow-scrolling: touch; scrollbar-width: none; 
-        }
-        .mob-horiz-scroll::-webkit-scrollbar { display: none; } 
-
-        .mob-pyramid-stage { position: relative; width: 100%; height: 260px; margin-top: 15px; perspective: 1000px; }
-        .mob-idol { position: absolute; background: #000; overflow: hidden; transition: all 0.3s ease; }
-        .mob-idol img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        
-        .mob-idol.center {
-            width: 160px; height: 230px; top: 0; left: 50%; transform: translateX(-50%); z-index: 20; 
-            border: 2px solid #c5a059; box-shadow: 0 10px 40px rgba(0,0,0,0.9), 0 0 20px rgba(197, 160, 89, 0.2);
-        }
-        .mob-idol.side {
-            width: 130px; height: 190px; top: 50px; left: 10%; z-index: 5; 
-            border: 1px solid #444; filter: brightness(0.5) grayscale(50%); transform: rotate(-6deg); 
-        }
-        .mob-idol.side.right { left: auto; right: 10%; transform: rotate(6deg); }
-        
-        .mob-rank-badge {
-            position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
-            background: #000; border: 1px solid #333; color: #888;
-            font-family: 'Cinzel', serif; font-size: 0.6rem; padding: 2px 6px; z-index: 30;
-        }
-        .mob-rank-badge.main { border-color: #c5a059; color: #c5a059; bottom: 10px; background: rgba(0,0,0,0.8); }
-
-        .mob-scroll-item {
-            flex: 0 0 120px;      /* Fixed Width: Stops them from squashing */
-            height: 160px;        /* Fixed Height */
-            position: relative;
-            border: 1px solid #333;
-            background: #111;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-right: 10px;   /* Spacing between items */
-        }
-        
-        /* 2. Smaller Cards for the Bottom List (Trash/Denied) */
-        .mob-horiz-scroll.small .mob-scroll-item {
-            flex: 0 0 80px; 
-            height: 80px;   
-            opacity: 0.6;
-        }
-        
-        /* 3. The Image Inside */
-        .mob-scroll-img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            display: block;
-        }
-        
-        /* 4. The Pending Icon Overlay */
-        .mob-pending-badge {
-            position: absolute; 
-            top: 5px; 
-            right: 5px;
-            font-size: 1rem; 
-            text-shadow: 0 0 5px black;
-            z-index: 10;
-        }
-
-/* =========================================
-   LUXURY TROPHY CASE (SHAPES & SVGS)
-   ========================================= */
-        
-        .reward-shelf {
-            display: flex;
-            gap: 15px; /* More breathing room */
-            padding: 10px 15px;
-            width: 100%;
-            margin-bottom: 25px; /* Clear separation between shelves */
-            overflow-x: auto;
-            scrollbar-width: none;
-            align-items: center; /* Center vertically */
-        }
-        
-        /* --- BASE BADGE DNA --- */
-        .reward-badge {
-            flex: 0 0 70px;
-            height: 70px;
-            background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-            border: 1px solid #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy pop */
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
-        }
-        
-        /* --- THE SHAPES --- */
-        
-        /* 1. RANKS: HEXAGONS */
-        .reward-badge.shape-hex {
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            width: 70px; height: 80px; /* Taller for hex aspect ratio */
-            border: none; /* Clip path hides border, so we use pseudo-element or background */
-            background: #111; /* Fallback */
-        }
-        /* Inner Hexagon for Border Effect */
-        .reward-badge.shape-hex::before {
-            content: ''; position: absolute; inset: 1px; 
-            background: linear-gradient(145deg, #1a1a1a, #050505);
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            z-index: -1;
-        }
-        
-        /* 2. TASKS: DATA CHIPS (Cut Corners) */
-        .reward-badge.shape-chip {
-            clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
-            width: 70px; height: 70px;
-        }
-        
-        /* 3. KNEELING: RINGS (Circles) */
-        .reward-badge.shape-circle {
-            border-radius: 50%;
-            width: 70px; height: 70px;
-            border: 1px solid #333;
-        }
-        
-        /* 4. SPENDING: DIAMONDS */
-        .reward-badge.shape-diamond {
-            transform: rotate(45deg);
-            width: 55px; height: 55px; /* Smaller because rotation takes space */
-            margin: 10px; /* Space for the corners */
-            border: 1px solid #333;
-        }
-        /* Counter-rotate content so icon isn't sideways */
-        .reward-badge.shape-diamond .rb-inner { transform: rotate(-45deg); }
-        
-        
-        /* --- THE ICONS (SVGs) --- */
-        .rb-icon {
-            width: 24px; height: 24px;
-            fill: #444; /* Locked color */
-            margin-bottom: 5px;
-            transition: 0.3s;
-        }
-        
-        /* --- TEXT LABELS --- */
-        .rb-label {
-            font-family: 'Orbitron'; 
-            font-size: 0.45rem; 
-            color: #444; 
-            text-transform: uppercase; 
-            text-align: center; 
-            line-height: 1;
-            letter-spacing: 1px;
-        }
-        
-        /* --- STATES --- */
-        
-        /* LOCKED */
-        .reward-badge.locked { opacity: 0.6; filter: grayscale(100%); }
-        
-        /* UNLOCKED */
-        .reward-badge.unlocked {
-            background: linear-gradient(135deg, rgba(20,20,20,1), rgba(40,40,40,1));
-            z-index: 2;
-            box-shadow: 0 0 15px rgba(197, 160, 89, 0.15); /* Gold Glow */
-        }
-        
-        .reward-badge.unlocked.shape-circle { border-color: var(--gold); }
-        .reward-badge.unlocked.shape-chip { border-right: 2px solid var(--gold); }
-        .reward-badge.unlocked.shape-diamond { border-color: var(--gold); }
-        
-        /* Hexagon Unlocked Border Trick */
-        .reward-badge.unlocked.shape-hex { background: var(--gold); } /* The "Border" */
-        .reward-badge.unlocked.shape-hex::before { background: #111; } /* The Dark Inner */
-        
-        .reward-badge.unlocked .rb-icon { fill: var(--gold); filter: drop-shadow(0 0 5px rgba(197,160,89,0.5)); }
-        .reward-badge.unlocked .rb-label { color: #ccc; }
-        
-        /* LEGENDARY TIER (Last items) */
-        .reward-badge.unlocked.legendary .rb-icon { fill: #ff003c; filter: drop-shadow(0 0 8px #ff003c); }
-
-        /* --- REWARD DETAIL CARD --- */
-.rc-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 20px;
-    width: 100%;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 15px;
-}
-
-.rc-icon-large {
-    width: 60px; height: 60px;
-    fill: #444;
-}
-.rc-icon-large svg { width: 100%; height: 100%; }
-
-.rc-meta { display: flex; flex-direction: column; align-items: flex-start; }
-.rc-title { font-family: 'Cinzel', serif; font-size: 1.2rem; color: #fff; text-transform: uppercase; }
-.rc-status { font-family: 'Orbitron'; font-size: 0.7rem; letter-spacing: 2px; color: #666; margin-top: 5px; }
-
-.rc-quote {
-    font-family: 'Cinzel', serif;
-    font-style: italic;
-    color: #888;
-    font-size: 0.9rem;
-    margin-bottom: 25px;
-    line-height: 1.4;
-    text-align: center;
-}
-
-/* Progress Bar */
-.rc-progress-wrap { width: 100%; margin-bottom: 20px; }
-.rc-progress-labels { display: flex; justify-content: space-between; margin-bottom: 5px; font-family: 'Orbitron'; font-size: 0.8rem; color: #ccc; }
-.rc-track { width: 100%; height: 6px; background: #111; border: 1px solid #333; border-radius: 3px; overflow: hidden; }
-.rc-fill { height: 100%; width: 0%; background: var(--gold); transition: width 0.5s ease; }
-
-/* Unlocked State overrides */
-.unlocked-mode .rc-icon-large { fill: var(--gold); filter: drop-shadow(0 0 10px var(--gold)); }
-.unlocked-mode .rc-status { color: var(--gold); text-shadow: 0 0 5px var(--gold); }
-.unlocked-mode .rc-fill { background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
-      
-        /* =========================================
-           7. HUD & LOBBY
-           ========================================= */
-        .mob-hud-row {
-            position: absolute; top: 15px; left: 0; width: 100%;
-            display: flex; justify-content: space-between; padding: 0 20px; z-index: 10;
-        }
-        .hud-circle {
-            width: 45px; height: 45px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
-            background: #000; position: relative; overflow: visible; box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
-        .hud-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; opacity: 0.8; }
-        .hud-gear { position: absolute; bottom: -5px; right: -5px; font-size: 0.8rem; color: #fff; text-shadow: 0 0 5px #000; }
-        .hud-status-dot {
-            position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%;
-            border: 2px solid #000;
-        }
-        .hud-status-dot.online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
-        .hud-status-dot.offline { background: #c5a059; box-shadow: 0 0 5px #c5a059; opacity: 0.5; }
-
-        /* LOBBY / SETTINGS */
-        .lobby-card { max-height: 75vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-        .lobby-card::-webkit-scrollbar { display: none; }
-        .lobby-header { margin-bottom: 25px; text-align: center; }
-        .lobby-title { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--mob-gold); letter-spacing: 4px; border-bottom: 1px solid #333; padding-bottom: 10px; display: inline-block;}
-        .lobby-subtitle { font-family: 'Cinzel', serif; font-size: 0.6rem; color: #666; margin-top: 5px; letter-spacing: 2px; }
-        .lobby-content { width: 100%; display: flex; flex-direction: column; gap: 12px; align-items: center; }
-        
-        .lobby-btn {
-            background: transparent; border: 1px solid #333; color: #ccc;
-            font-family: 'Cinzel', serif; font-size: 0.8rem; padding: 12px; width: 100%;
-            cursor: pointer; transition: 0.3s; letter-spacing: 2px;
-        }
-        .lobby-btn:active { background: rgba(255,255,255,0.05); border-color: #666; }
-        .lobby-btn.gold { border-color: #c5a059; color: #c5a059; font-weight: 700; }
-        .lobby-btn.close { border: none; color: #555; font-size: 0.7rem; margin-top: 5px; }
-        .lobby-prompt { font-family: 'Cinzel', serif; color: white; font-size: 1rem; text-align: center; margin-bottom: 15px; line-height: 1.4; }
-        .lobby-input { background: #111; border: 1px solid #444; color: #c5a059; font-family: 'Cinzel', serif; font-size: 1rem; padding: 10px; width: 100%; text-align: center; outline: none; }
-        .lobby-cost-area { margin-top: 10px; margin-bottom: 5px; font-size: 0.7rem; color: #666; font-family: 'Orbitron'; letter-spacing: 1px; }
-        .cost-val { color: #c5a059; font-weight: bold; margin-left: 5px; }
-        
-        .routine-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-bottom: 15px; }
-        .routine-tile {
-            width: 100%; background: rgba(255, 255, 255, 0.03); border: 1px solid #333;
-            padding: 15px; text-align: center; font-family: 'Cinzel', serif; font-size: 0.8rem;
-            color: #888; cursor: pointer; transition: 0.2s; border-radius: 2px; letter-spacing: 2px;
-        }
-        .routine-tile.selected { background: rgba(197, 160, 89, 0.1); border-color: #c5a059; color: #c5a059; font-weight: 700; }
-        .routine-tile.special { border-style: dashed; color: #ccc; }
-
-        /* =========================================
-           8. GLOBAL / COINS
-           ========================================= */
-        .wallet-btn {
-            width: 100%; padding: 15px; background: transparent; border: 1px solid #c5a059; color: #c5a059;
-            font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.9rem; letter-spacing: 2px; cursor: pointer;
-            box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
-        }
-        .coin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 15px; }
-        .coin-tile {
-            background: rgba(20, 20, 20, 0.9); border: 1px solid #333; border-radius: 4px;
-            padding: 15px 5px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer;
-        }
-        .coin-amount { font-family: 'Rajdhani', sans-serif; font-size: 1.4rem; color: #c5a059; font-weight: 700; line-height: 1; }
-        .coin-price { font-family: 'Cinzel', serif; font-size: 0.7rem; color: #888; }
-
-        /* =========================================
-           9. OVERLAYS (GENERIC)
-           ========================================= */
-         /* --- NUCLEAR FIX FOR RECORD HORIZONTAL SCROLLBARS --- */
-
-        #mobRec_Grid::-webkit-scrollbar,
-        #mobRec_Heap::-webkit-scrollbar {
-            /* 1. Force it hidden */
-            display: none !important;
-            /* 2. Physically shrink it to zero (The Fix) */
-            width: 0px !important;
-            height: 0px !important;
-            /* 3. Make it invisible */
-            background: transparent !important;
-            -webkit-appearance: none !important;
-        }
-        
-        #mobRec_Grid,
-        #mobRec_Heap {
-            /* Firefox / IE support */
-            scrollbar-width: none !important;
-            -ms-overflow-style: none !important;
-        }
-              
-        .hidden { display: none !important; }
-
-        .mob-reward-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 9999; 
-            display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(8px); animation: fadeIn 0.3s ease;
-        }
-        .mob-reward-card {
-            background: rgba(20, 20, 20, 0.95); border: 1px solid #c5a059;
-            padding: 40px 20px; border-radius: 4px; text-align: center; width: 85%;
-            box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
-            display: flex; flex-direction: column; align-items: center; gap: 20px;
-        }
-        #queenOverlay {
-            background: #000 !important;
-            padding: 0 !important;
-            /* display: flex !important; REMOVED THIS so it stays hidden by default */
-            flex-direction: column !important;
-        }
-        
-        /* 2. Strip the Card properties so it's just a transparent container */
-        #queenOverlay .mob-reward-card {
-            width: 100vw !important;
-            height: 100vh !important;
-            max-width: none !important;
-            max-height: none !important;
-            border: none !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            background: #000 !important;
-            padding: 0 !important; /* KILL THE PADDING HERE */
-            margin: 0 !important;
-        }
-        
-        /* 3. Fix the Scroll Area (Remove Top Gap) */
-        .qm-scroll-content {
-            padding-top: 0 !important; /* Remove the gap below the header */
-            padding-bottom: 120px !important; /* Keep footer space */
-            width: 100% !important;
-        }
-        
-        /* 4. Fix the Side Margins (Optional: Keep side padding for cards, but ensure full width) */
-        .luxury-wrap {
-            padding: 15px 10px !important; /* Tighter padding, looks more like an app */
-            width: 100% !important;
-            box-sizing: border-box !important;
-        }
-        
-        /* 5. Fix the Header inside Queen Menu (Stop it from floating) */
-        #queenOverlay .mob-chat-header {
-            position: sticky !important; /* Stick to top of this view, not global */
-            top: 0 !important;
-            margin-bottom: 0 !important;
-            background: rgba(10,10,10,0.95) !important;
-            border-bottom: 1px solid #333 !important;
-            width: 100% !important;
-            z-index: 50 !important;
-        }
-
-        #povertyOverlay {
-            z-index: 2147483647 !important; background: rgba(0,0,0,0.95) !important;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-        }
-    }
-</style>
-</head>
-<body>
-
-<!-- SOUNDS & INPUTS -->
-<audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
-<audio id="coinSound" src="/audio/2019-preview1.mp3"></audio>
-<audio id="skipSound" src="https://static.wixstatic.com/mp3/ce3e5b_3b5b34d4083847e2b123b6fd9a8551fd.mp3"></audio>
-<audio id="sfx-buy" src="/audio/2019-preview1.mp3"></audio>
-<audio id="sfx-deny" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3"></audio>
-
-<input type="file" id="profileUploadInput" accept="image/*" class="hidden" onchange="handleProfileUpload(this)">
-<input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden" onchange="handleAdminUpload(this)">
-
-<!-- CELEBRATION OVERLAY -->
-<div id="celebrationOverlay" style="position:fixed;inset:0;pointer-events:none;z-index:2147483647;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.3s;">
-    <div class="glass-card" style="border: 2px solid var(--neon-green); text-align:center;">
-        <div style="font-size:1.8rem;font-weight:900;color:var(--neon-green);text-shadow:0 0 20px var(--neon-green); font-family: 'Orbitron';">TASK<br>SUBMITTED</div>
-    </div>
-</div>
-<!-- =======================================================
-     UNIVERSE A: DESKTOP APP (WRAPPED)
-     ======================================================= -->
-<div id="DESKTOP_APP">
-  <div class="app-container">
+window.triggerPoverty = function() {
+    const overlay = document.getElementById('povertyOverlay');
+    const text = document.getElementById('povertyInsult');
     
-   <div class="layout-left">
-        <!-- HIERARCHY STAMP -->
-        <div id="subHierarchy" class="hierarchy-top">LOADING...</div>
+    // Pick random insult
+    const insult = POVERTY_INSULTS[Math.floor(Math.random() * POVERTY_INSULTS.length)];
+    if(text) text.innerText = `"${insult}"`;
 
-        <div class="avatar-container" onclick="document.getElementById('profileUploadInput').click()">
-            <img id="profilePic" src="" alt="Avatar">
-        </div>
-        <div id="subName" class="identity-name">SLAVE</div>
+    if(overlay) {
+        // *** THE FIX: Move overlay to Body so it is never hidden by a parent view ***
+        if (overlay.parentElement !== document.body) {
+            document.body.appendChild(overlay);
+        }
 
-        <!-- STATS ROW -->
-        <div class="stats-stack-row">
-            <div class="stat-item"><span class="stat-lbl">MERIT</span><span id="points" class="stat-val">0</span></div>
-            <div class="stat-divider"></div>
-            <div class="stat-item"><span class="stat-lbl">CAPITAL</span><span id="coins" class="stat-val">0</span></div>
-        </div>
+        overlay.classList.remove('hidden');
+        overlay.style.display = 'flex';
+    }
+};
 
-       <!-- KNEEL BUTTON (UPDATED) -->
-        <div class="kneel-sidebar-wrapper">
-            <div id="btn" class="kneel-bar-graphic" 
-                 onmousedown="if(window.handleHoldStart) window.handleHoldStart(event)" 
-                 onmouseup="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
-                 onmouseleave="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
-                 ontouchstart="if(window.handleHoldStart) window.handleHoldStart(event)" 
-                 ontouchend="if(window.handleHoldEnd) window.handleHoldEnd(event)">
-                <div id="fill" class="graphic-fill"></div>
-                <span id="txt-main" class="graphic-text">HOLD TO KNEEL</span>
-            </div>
-        </div>
+window.closePoverty = function() {
+    const overlay = document.getElementById('povertyOverlay');
+    if(overlay) {
+        overlay.classList.add('hidden');
+        overlay.style.display = 'none';
+    }
+};
 
-        <!-- EXPANDABLE STATS -->
-        <button class="stats-toggle-btn" onclick="toggleStats()">EXPAND STATS ▾</button>
-        <div id="statsContent" class="stats-panel">
-            <div class="progress-section">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-family: 'Cinzel', serif; font-size: 0.7rem;">
-                    <span style="color:#666;">NEXT:</span>
-                    <span id="nextLevelName" style="color:var(--gold); font-weight:700;">-</span>
-                </div>
-                <div class="prog-bg"><div id="progressBar" class="prog-fill"></div></div>
-                <div style="text-align: center; margin-top: 5px;">
-                    <span id="pointsNeeded" style="color:#888; font-size:0.65rem; font-family:'Cinzel', serif;">0 to go</span>
-                </div>
-            </div>
-            <div class="stat-line"><span>Streak</span> <strong id="statStreak">0</strong></div>
-            <div class="stat-line"><span>Total Tasks</span> <strong id="statTotal">0</strong></div>
-            <div class="stat-line"><span>Completed</span> <strong id="statCompleted">0</strong></div>
-            <div class="stat-line"><span>Skipped</span> <strong id="statSkipped">0</strong></div>
-            <div class="stat-line"><span>Total Kneeling</span> <strong id="statTotalKneels">0</strong></div>
-            <div class="stat-footer">
-                <div style="color:#666; font-size:0.7rem; letter-spacing:2px; margin-bottom:5px;">SLAVE SINCE</div>
-                <strong id="slaveSinceDate" style="color:#ccc; font-size:0.9rem;">--/--/--</strong>
-            </div>
-        </div>
+// ==========================
+// REPLACE WINDOW.GOTOEXCHEQUER (Around Line 56) WITH THIS:
+// ==========================
 
-        <!-- NAV MENU -->
-        <div class="nav-menu">
-            <button class="nav-btn active" onclick="switchTab('serve')">CONSOLE</button>
-            <button class="nav-btn" onclick="switchTab('record')">SLAVE RECORD</button>
-            <button class="nav-btn" onclick="switchTab('news')">QUEEN KARIN</button>
-            <button class="nav-btn" onclick="switchTab('vault')">VAULT</button>
-            <button class="nav-btn" onclick="switchTab('protocol')">PROTOCOL</button>
-            <button class="nav-btn" onclick="switchTab('buy')">EXCHEQUER</button>
-        </div>
-    </div>
+window.goToExchequer = function() {
+    // 1. Close any blocking overlays (Poverty, Queen Menu)
+    window.closePoverty();
+    if(window.closeQueenMenu) window.closeQueenMenu();
 
-    <!-- RIGHT SIDE -->
-    <div class="layout-right">
+    // 2. Switch to the Global View (Mobile) instead of 'buy' (Desktop)
+    // This prevents the "Black Screen" crash
+    if(window.toggleMobileView) window.toggleMobileView('global');
+
+    // 3. Force open the Store Overlay immediately after switching views
+    setTimeout(() => {
+        if(window.openExchequer) window.openExchequer();
+    }, 200);
+};
+
+// --- 2. CRITICAL UI FUNCTIONS ---
+
+window.toggleTaskDetails = function(forceOpen = null) {
+    if (window.event) window.event.stopPropagation();
+    const panel = document.getElementById('taskDetailPanel');
+    const link = document.querySelector('.see-task-link'); 
+    const chatBox = document.getElementById('chatBox'); 
+    if (!panel) return;
+    const isOpen = panel.classList.contains('open');
+    let shouldOpen = (forceOpen === true) ? true : (forceOpen === false ? false : !isOpen);
+
+    if (shouldOpen) {
+        panel.classList.add('open');
+        if(chatBox) chatBox.classList.add('focused-task');
+        if(link) { link.innerHTML = "▲ HIDE DIRECTIVE ▲"; link.style.opacity = "1"; }
+    } else {
+        panel.classList.remove('open');
+        if(chatBox) chatBox.classList.remove('focused-task');
+        if(link) { link.innerHTML = "▼ SEE DIRECTIVE ▼"; link.style.opacity = "1"; }
+    }
+};
+
+window.updateTaskUIState = function(isActive) {
+    const statusText = document.getElementById('mainStatusText');
+    const idleMsg = document.getElementById('idleMessage');
+    const timerRow = document.getElementById('activeTimerRow');
+    const reqBtn = document.getElementById('mainButtonsArea');
+    const uploadArea = document.getElementById('uploadBtnContainer');
+
+    if (isActive) {
+        if (statusText) { statusText.innerText = "WORKING"; statusText.className = "status-text-lg status-working"; }
+        if (idleMsg) idleMsg.classList.add('hidden');
+        if (timerRow) timerRow.classList.remove('hidden');
+        if (reqBtn) reqBtn.classList.add('hidden');
+        if (uploadArea) uploadArea.classList.remove('hidden');
+    } else {
+        if (statusText) { statusText.innerText = "UNPRODUCTIVE"; statusText.className = "status-text-lg status-unproductive"; }
+        if (idleMsg) idleMsg.classList.remove('hidden');
+        if (timerRow) timerRow.classList.add('hidden');
+        if (reqBtn) reqBtn.classList.remove('hidden');
+        if (uploadArea) uploadArea.classList.add('hidden');
+        window.toggleTaskDetails(false);
+    }
+};
+
+document.addEventListener('click', function(event) {
+    const card = document.getElementById('taskCard');
+    const panel = document.getElementById('taskDetailPanel');
+    if (event.target.closest('.see-task-link')) return;
+    if (panel && panel.classList.contains('open') && card && !card.contains(event.target)) {
+        window.toggleTaskDetails(false);
+    }
+});
+
+// --- 3. INITIALIZATION ---
+
+document.addEventListener('click', () => {
+    if (!window.audioUnlocked) {
+        ['msgSound', 'coinSound', 'skipSound', 'sfx-buy', 'sfx-deny'].forEach(id => {
+            const sound = document.getElementById(id);
+            if (sound) {
+                const originalVolume = sound.volume;
+                sound.volume = 0;
+                sound.play().then(() => { sound.pause(); sound.currentTime = 0; sound.volume = originalVolume; }).catch(e => console.log("Audio Engine Ready"));
+            }
+        });
+        window.audioUnlocked = true;
+    }
+}, { once: true });
+
+const resizer = new ResizeObserver(() => { 
+    if(window.parent) window.parent.postMessage({ iframeHeight: document.body.scrollHeight }, '*'); 
+});
+resizer.observe(document.body);
+
+function initDomProfile() {
+    const frame = document.getElementById('twitchFrame');
+    if(frame && !frame.src) {
+        const parents = ["qkarin.com", "www.qkarin.com", "entire-ecosystem.vercel.app", "html-components.wixusercontent.com", "filesusr.com", "editor.wix.com", "manage.wix.com", "localhost"];
+        let parentString = "";
+        parents.forEach(p => parentString += `&parent=${p}`);
+        frame.src = `https://player.twitch.tv/?channel=${CONFIG.TWITCH_CHANNEL}${parentString}&muted=true&autoplay=true`;
+    }
+}
+initDomProfile();
+
+// --- 4. BRIDGE LISTENER ---
+
+Bridge.listen((data) => {
+    const ignoreList = ["CHAT_ECHO", "UPDATE_FULL_DATA", "UPDATE_DOM_STATUS", "instantUpdate", "instantReviewSuccess"];
+    if (ignoreList.includes(data.type)) return; 
+    window.postMessage(data, "*"); 
+});
+
+// =========================================
+
+// NEW: SETTINGS LOGIC (FIXED ROUTINE CRASH)
+
+// =========================================
+
+
+
+let currentActionType = "";
+
+let currentActionCost = 0;
+
+let selectedRoutineValue = ""; // <--- NEW VARIABLE TO STORE SELECTION
+
+
+
+// 1. NAVIGATION
+
+window.openLobby = function() {
+
+    document.getElementById('lobbyOverlay').classList.remove('hidden');
+
+    window.backToLobbyMenu();
+
+};
+
+
+
+window.closeLobby = function() {
+
+    document.getElementById('lobbyOverlay').classList.add('hidden');
+
+};
+
+
+
+window.backToLobbyMenu = function() {
+
+    document.getElementById('lobbyMenu').classList.remove('hidden');
+
+    document.getElementById('lobbyActionView').classList.add('hidden');
+
+};
+
+
+
+// 2. SETUP ACTION SCREEN
+
+let selectedKinks = new Set(); // Store selections
+
+
+
+window.showLobbyAction = function(type) {
+
+    currentActionType = type;
+
+    
+
+    const prompt = document.getElementById('lobbyPrompt');
+
+    const input = document.getElementById('lobbyInputText');
+
+    const fileBtn = document.getElementById('lobbyInputFileBtn');
+
+    const routineArea = document.getElementById('routineSelectionArea');
+
+    const kinkArea = document.getElementById('kinkSelectionArea'); // NEW
+
+    const costDisplay = document.getElementById('lobbyCostDisplay');
+
+
+
+    // Reset UI
+
+    input.classList.add('hidden');
+
+    fileBtn.classList.add('hidden');
+
+    routineArea.classList.add('hidden');
+
+    if(kinkArea) kinkArea.classList.add('hidden');
+
+    
+
+    // Switch View
+
+    document.getElementById('lobbyMenu').classList.add('hidden');
+
+    document.getElementById('lobbyActionView').classList.remove('hidden');
+
+
+
+    if (type === 'name') {
+
+        prompt.innerText = "Enter your new name.";
+
+        input.classList.remove('hidden');
+
+        currentActionCost = 100;
+
+    } 
+
+    else if (type === 'photo') {
+
+        prompt.innerText = "Upload a new profile picture.";
+
+        fileBtn.classList.remove('hidden');
+
+        currentActionCost = 500;
+
+    }
+
+    else if (type === 'limits') {
+
+        prompt.innerText = "Define your hard limits.";
+
+        input.classList.remove('hidden');
+
+        currentActionCost = 200;
+
+    }
+
+    else if (type === 'routine') {
+
+        prompt.innerText = "Select a Daily Routine.";
+
+        routineArea.classList.remove('hidden');
+
+        document.getElementById('routineDropdown').value = "Morning Kneel";
+
+        window.checkRoutineDropdown();
+
+        return; 
+
+    }
+
+    // *** NEW KINK LOGIC ***
+
+    else if (type === 'kinks') {
+
+        prompt.innerText = "Select your perversions.";
+
+        if(kinkArea) {
+
+            kinkArea.classList.remove('hidden');
+
+            renderKinkGrid();
+
+        }
+
+        currentActionCost = 0;
+
+    }
+
+
+
+    costDisplay.innerText = currentActionCost;
+
+};
+
+
+
+// NEW: RENDER KINK GRID
+
+function renderKinkGrid() {
+
+    const grid = document.getElementById('kinkGrid');
+
+    if(!grid) return;
+
+    grid.innerHTML = ""; // Clear
+
+    selectedKinks.clear(); // Reset selection
+
+
+
+    KINK_LIST.forEach(kink => {
+
+        const btn = document.createElement('div');
+
+        btn.className = "routine-tile";
+
+        btn.innerText = kink.toUpperCase();
+
+        btn.onclick = () => toggleKinkSelection(btn, kink);
+
+        grid.appendChild(btn);
+
+    });
+
+}
+
+
+
+// NEW: TOGGLE SELECTION
+
+window.toggleKinkSelection = function(el, value) {
+
+    if (selectedKinks.has(value)) {
+
+        selectedKinks.delete(value);
+
+        el.classList.remove('selected');
+
+    } else {
+
+        selectedKinks.add(value);
+
+        el.classList.add('selected');
+
+    }
+
+    
+
+    // Update Price (100 per kink)
+
+    currentActionCost = selectedKinks.size * 100;
+
+    document.getElementById('lobbyCostDisplay').innerText = currentActionCost;
+
+};
+
+
+
+// 3. HANDLE ROUTINE TILE SELECTION (FIXED)
+
+window.selectRoutineItem = function(el, value) {
+
+    // 1. Visually deselect all others
+
+    document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('selected'));
+
+    
+
+    // 2. Select clicked
+
+    el.classList.add('selected');
+
+    
+
+    // 3. Save Value to Variable (Not Element)
+
+    selectedRoutineValue = value;
+
+
+
+    // 4. Handle Logic
+
+    const input = document.getElementById('routineCustomInput');
+
+    const costDisplay = document.getElementById('lobbyCostDisplay');
+
+    
+
+    if (value === 'custom') {
+
+        input.classList.remove('hidden');
+
+        currentActionCost = 2000;
+
+    } else {
+
+        input.classList.add('hidden');
+
+        currentActionCost = 1000;
+
+    }
+
+    
+
+    costDisplay.innerText = currentActionCost;
+
+};
+
+
+
+// 4. EXECUTE ACTION (FIXED ROUTINE SELECTION)
+
+window.confirmLobbyAction = function() {
+
+    // 1. Check Funds
+
+    if (gameStats.coins < currentActionCost) {
+
+        window.triggerPoverty();
+
+        return;
+
+    }
+
+
+
+    let payload = "";
+
+    let notifyTitle = "SYSTEM UPDATE";
+
+    let notifyText = "Changes saved.";
+
+
+
+    // --- A. ROUTINE LOGIC (THE FIX) ---
+
+    if (currentActionType === 'routine') {
+
+        // USE THE GLOBAL VARIABLE FROM TILE SELECTION
+
+        let taskName = selectedRoutineValue; 
+
         
-        <!-- DESKTOP HEADER -->
-        <div class="right-header">
-            <div class="rh-profile-group">
-                <div class="rh-avatar-wrapper">
-                    <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" alt="Queen" class="rh-avatar">
-                    <div id="domStatusDot" class="rh-status-dot online"></div>
-                </div>
-                <div class="rh-text-col">
-                    <div class="rh-name">QUEEN KARIN</div>
-                    <div id="chatStatusBadge" class="rh-status-text">ONLINE</div>
-                </div>
-            </div>
-        </div>
 
-        <div class="content-stage">
-            <!-- 1. CONSOLE (TASK RIBBON) -->
-            <div id="viewServingTop" class="view-wrapper" style="display: flex; flex-direction: column; height: 100%;">
-                
-                <!-- TASK CARD -->
-                <div id="taskCard" class="glass-card task-ribbon" style="margin: 20px 20px 0 20px; position: relative; z-index: 100; justify-content: space-between;">
-                    <div class="ribbon-left" style="width: 30%; border-right: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <div class="ribbon-label">CURRENT STATUS</div>
-                        <div id="mainStatusText" class="status-text-lg status-unproductive">UNPRODUCTIVE</div>
-                    </div>
-                    <div class="ribbon-center" style="width: 40%; border: none; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <div id="idleMessage" class="ribbon-status" style="opacity: 0.5; font-style: italic;">"Awaiting Royal Decree..."</div>
-                        <div id="activeTimerRow" class="hidden" style="display: flex; flex-direction: column; align-items: center;">
-                            <div class="timer-box-wrapper">
-                                <div id="timerH" class="t-box">00</div><div class="t-sep">:</div>
-                                <div id="timerM" class="t-box">00</div><div class="t-sep">:</div>
-                                <div id="timerS" class="t-box">00</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ribbon-right" style="width: 30%; display: flex; justify-content: center; align-items: center;">
-                        <div id="mainButtonsArea" style="width: 100%; padding: 0 10px;">
-                            <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn" style="width: 100%;">REQUEST TASK</button>
-                        </div>
-                        <div id="uploadBtnContainer" class="hidden" style="width: 100%; display: flex; gap: 10px; justify-content: center; align-items: center; padding: 0 10px;">
-                            <button onclick="window.toggleTaskDetails(null)" class="btn-ghost">SEE TASK</button>
-                            <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden" onchange="window.handleUploadStart(this)">
-                            <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()" class="action-btn btn-upload">UPLOAD</button>
-                        </div>
-                    </div>
-                </div>
+        // If Custom, read the input box
 
-                <!-- DRAWER -->
-                <div id="taskDetailPanel" class="task-detail-panel">
-                    <div class="detail-content">
-                        <div style="color: #666; font-size: 0.7rem; margin-bottom: 10px; font-family: 'Cinzel';">CURRENT ORDERS</div>
-                        <h2 id="readyText" class="drawer-task-text">LOADING...</h2>
-                        <div style="border-top: 1px solid #333; padding-top: 20px; width: 100%; display: flex; justify-content: center; gap: 20px;">
-                            <button onclick="window.toggleTaskDetails(false)" class="text-btn">▲ HIDE</button>
-                            <button id="btnSkip" onclick="window.cancelPendingTask()" class="btn-skip-small">SKIP TASK</button>
-                        </div>
-                    </div>
-                </div>
+        if (taskName === 'custom') {
 
-                <!-- CHAT CONTAINER -->
-                <div id="chatCard" class="chat-container" style="flex-grow: 1; overflow: hidden; margin-top: 20px;">
-                  
-                    <!-- MOBILE CHAT HEADER (Hidden on Desktop via CSS) -->
-                    <div class="mob-chat-header">
-                        <button class="chat-back" onclick="window.toggleMobileView('home')">‹</button>
-                        <div class="chat-queen-profile">
-                            <div class="queen-av-wrap">
-                                <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="queen-av-img">
-                                <div id="mobChatOnlineDot" class="status-dot"></div>
-                            </div>
-                            <div class="chat-meta-col">
-                                <div class="chat-queen-name">QUEEN KARIN</div>
-                                <div id="mobChatStatusText" class="chat-status-text">CONNECTING...</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- [FIX] SYSTEM TICKER (Added Here) -->
-                    <div id="systemTicker" class="system-ticker hidden">SYSTEM ONLINE</div>
+            taskName = document.getElementById('routineCustomInput').value;
 
-                    <!-- SCROLLING MESSAGES -->
-                    <div id="chatBox" class="chat-body-frame">
-                        <div id="kneelRewardOverlay" class="hidden overlay-center">
-                            <div style="text-align: center;">
-                                <h2 style="color:white; margin-bottom: 20px; font-family:'Orbitron';">DEVOTION RECOGNIZED</h2>
-                                <div style="display:flex; gap:10px;">
-                                    <button onclick="claimKneelReward('coins')" class="action-btn">COINS</button>
-                                    <button onclick="claimKneelReward('points')" class="action-btn">POINTS</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="chatMediaOverlay" class="hidden overlay-center">
-                            <div id="mediaOverlayClose" onclick="closeChatPreview()" style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer;">X</div>
-                            <div id="chatMediaOverlayContent"></div>
-                        </div>
-                        <div id="tributeHuntOverlay" class="hidden overlay-center" style="background:#000; padding:20px; flex-direction:column;">
-                            <button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer;">CLOSE</button>
-                            <div id="huntStoreGrid" class="store-grid" style="margin-top: 20px;"></div>
-                            <textarea id="huntNote" class="hidden"></textarea>
-                            <div id="huntProgress" class="hidden"></div>
-                        </div>
-                        <div id="chatContent" class="chat-area"></div>
-                    </div>
+        }
 
-                    <!-- INPUT AREA -->
-                    <div class="chat-footer">
-                      <!-- WRAPPER: Holds Input + The Plus Button inside it -->
-                      <div class="chat-input-wrapper">
-                          <!-- 1. RANK GATED MEDIA BUTTON (Now Circular & Absolute) -->
-                          <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()">+</button>
-                          
-                          <!-- 2. TEXT INPUT (Padding Left added via CSS) -->
-                          <input type="text" id="chatMsgInput" class="chat-input" placeholder="Type..." onkeypress="handleChatKey(event)">
-                      </div>
-                      
-                      <!-- 3. FILE INPUT (Hidden, dynamic accept attribute) -->
-                      <input type="file" id="chatMediaInput" class="hidden" onchange="window.handleEvidenceUpload(this)">
-                  
-                      <!-- 4. TRIBUTE (Desktop Only) -->
-                      <button id="deskTributeBtn" class="chat-btn-tribute desktop-only" onclick="toggleTributeHunt()">🎁</button>
-                  
-                      <!-- 5. SEND ARROW -->
-                      <button class="chat-btn-send" onclick="sendChatMessage()">></button>
-                  </div>
-                </div>
-            </div>
+        
+
+        // If still empty, stop here
+
+        if(!taskName) return;
+
+
+
+        notifyTitle = "PROTOCOL ASSIGNED";
+
+        notifyText = taskName.toUpperCase();
+
+
+
+        // Send to Wix
+
+        window.parent.postMessage({ 
+
+            type: "UPDATE_CMS_FIELD", 
+
+            field: "routine", 
+
+            value: taskName,
+
+            cost: currentActionCost,
+
+            message: "Routine set to: " + taskName
+
+        }, "*");
+
+        
+
+        // Immediate UI Update
+
+        userProfile.routine = taskName; // Update memory
+
+        
+
+        const btn = document.getElementById('btnDailyRoutine');
+
+        const noMsg = document.getElementById('noRoutineMsg');
+
+        
+
+        if(btn) {
+
+            btn.classList.remove('hidden');
+
+            // Update button text inside the Queen Menu
+
+            const txt = document.getElementById('routineBtnText'); 
+
+            if(txt) txt.innerText = "SUBMIT: " + taskName.toUpperCase();
+
+        }
+
+        if(noMsg) noMsg.style.display = 'none';
+
+    } 
+
+    
+
+    // --- B. PHOTO LOGIC ---
+
+    else if (currentActionType === 'photo') {
+
+        const fileInput = document.getElementById('lobbyFile');
+
+        if (fileInput.files.length > 0) {
+
+            notifyTitle = "VISUALS LOGGED";
+
+            notifyText = "Uploading...";
+
+
+
+            window.parent.postMessage({ 
+
+                type: "PROCESS_PAYMENT", 
+
+                cost: 500, 
+
+                note: "Photo Change" 
+
+            }, "*");
+
             
-           <!-- OTHER VIEWS (EXCHEQUER, NEWS, VAULT, ETC) -->
-            <div id="viewBuy" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                <div class="glass-card" style="margin-bottom: 20px;"><h2 style="text-align: center; color: var(--neon-yellow); font-family:'Cinzel';">EXCHEQUER</h2></div>
-                <div class="store-grid">
-                    <div class="store-item"><div>1K</div><button class="si-btn" onclick="buyRealCoins(1000)">€10.00</button></div>
-                    <div class="store-item"><div>5.5K</div><button class="si-btn" onclick="buyRealCoins(5500)">€50.00</button></div>
-                    <div class="store-item"><div>12K</div><button class="si-btn" onclick="buyRealCoins(12000)">€100.00</button></div>
-                    <div class="store-item"><div>30K</div><button class="si-btn" onclick="buyRealCoins(30000)">€250.00</button></div>
-                    <div class="store-item"><div>70K</div><button class="si-btn" onclick="buyRealCoins(70000)">€500.00</button></div>
-                    <div class="store-item"><div>150K</div><button class="si-btn" onclick="buyRealCoins(150000)">€1000.00</button></div>
-                </div>
-            </div>
 
-            <!-- HISTORY SECTION -->
-            <div id="historySection" class="view-wrapper hidden" style="height: 100%; display: flex; flex-direction: column; overflow: hidden; background: #020202;">
-                <!-- ALTAR -->
-                <div class="trilogy-section section-altar triptych-stage">
-                    <div class="altar-halo"></div>
-                    <div class="altar-card side-card left-offering" id="altarSlot2" style="display:none;">
-                        <div class="gold-bar bar-top"></div><div class="inner-hairline"></div><img src="" class="altar-img" id="imgSlot2"><div class="gold-bar bar-bottom"></div><div class="altar-plaque" id="scoreSlot2"></div>
-                    </div>
-                    <div class="altar-card side-card right-offering" id="altarSlot3" style="display:none;">
-                        <div class="gold-bar bar-top"></div><div class="inner-hairline"></div><img src="" class="altar-img" id="imgSlot3"><div class="gold-bar bar-bottom"></div><div class="altar-plaque" id="scoreSlot3"></div>
-                    </div>
-                    <div class="altar-card center-idol" id="altarSlot1" style="display:none;">
-                        <div class="gold-bar bar-top"></div><div class="inner-hairline"></div><img src="" class="altar-img" id="imgSlot1"><div class="gold-bar bar-bottom"></div>
-                        <div class="reflection-mask"><img src="" class="reflect-img" id="reflectSlot1"></div><div class="altar-plaque main-plaque" id="scoreSlot1"></div>
-                    </div>
-                </div>
-                <!-- ARCHIVE -->
-                <div class="trilogy-section section-archive">
-                    <div class="trilogy-label label-archive">PROCESSING</div>
-                    <div id="gridOkay" class="horizontal-scroll-track archive-track" style="display:flex; overflow-x:auto; height:100%; align-items:center; padding:0 20px;"></div>
-                </div>
-                <!-- HEAP -->
-                <div class="trilogy-section section-heap">
-                    <div class="trilogy-label label-heap">CONTAINMENT</div>
-                    <div id="gridFailed" class="horizontal-scroll-track heap-track" style="display:flex; overflow-x:auto; height:100%; align-items:center; padding:0 20px;"></div>
-                </div>
-            </div>
+            if(window.handleProfileUpload) window.handleProfileUpload(fileInput);
 
-            <!-- NEWS, VAULT, PROTOCOL -->
-            <div id="viewNews" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">QUEEN KARIN</h2></div>
-                <div id="newsGrid" class="gallery-grid"></div>
-            </div>
-            <div id="viewVault" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">VAULT</h2></div>
-                <div id="vaultGrid" class="gallery-grid"></div>
-            </div>
-            <div id="viewProtocol" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                <div class="glass-card" style="margin-bottom: 20px; text-align: center;"><h2 style="font-family:'Cinzel';">PROTOCOL</h2></div>
-                <div style="color: #ccc; text-align: center; font-family:'Cinzel';">Obedience is the only currency.</div>
-            </div>
+        } else { return; }
 
-            <div id="viewRewards" class="hidden"></div>
-            <div id="viewHierarchy" class="hidden"></div>
-            <div id="viewSession" class="hidden"></div>
+    }
 
-            <!-- MODAL -->
-            <div id="glassModal" class="glass-modal">
-                <div id="modalMediaContainer" class="modal-bg-photo"></div>
-                <div id="modalGlassOverlay" class="modal-glass-overlay">
-                    <div id="modalCloseX" onclick="closeModal(null)" style="position:absolute; top:20px; right:20px; font-size:2rem; cursor:pointer; color:white; z-index:110;">×</div>
-                    <div class="theater-content dossier-layout">
-                        <div class="dossier-sidebar">
-                            <div class="dossier-block">
-                                <div class="dossier-label">SYSTEM VERDICT</div>
-                                <div class="stamp-container"><img id="modalStatusSticker" src="" class="m-status-sticker-lg"></div>
-                            </div>
-                            <div class="dossier-block">
-                                <div class="dossier-label">MERIT ACQUIRED</div>
-                                <div class="reward-container"><div id="modalPoints" class="m-points-lg">+0</div><div id="modalSticker"></div></div>
-                            </div>
-                            <div id="modalFeedbackView" class="sub-view">
-                                <div class="dossier-label">QUEEN'S FEEDBACK</div>
-                                <div id="modalFeedbackText" class="theater-text-box"></div>
-                            </div>
-                            <div id="modalTaskView" class="sub-view hidden">
-                                <div class="dossier-label">ORIGINAL ASSIGNMENT</div>
-                                <div id="modalOrderText" class="theater-text-box"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer-menu dossier-footer">
-                        <button onclick="event.stopPropagation(); toggleHistoryView('feedback')" class="history-action-btn">FEEDBACK</button>
-                        <button onclick="event.stopPropagation(); toggleHistoryView('task')" class="history-action-btn">THE TASK</button>
-                        <button onclick="event.stopPropagation(); toggleHistoryView('proof')" class="history-action-btn gold-border">SEE PROOF</button>
-                        <button onclick="event.stopPropagation(); toggleHistoryView('info')" class="history-action-btn">STATUS</button>
-                        <button onclick="event.stopPropagation(); closeModal(null)" class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE ARCHIVE</button>
-                    </div>
-                </div>
-            </div>
+    
+
+    // --- C. NAME LOGIC ---
+
+    else if (currentActionType === 'name') {
+
+        const text = document.getElementById('lobbyInputText').value;
+
+        if(!text) return;
+
+        
+
+        notifyTitle = "IDENTITY REWRITTEN";
+
+        notifyText = text.toUpperCase();
+
+
+
+        window.parent.postMessage({ 
+
+            type: "UPDATE_CMS_FIELD", 
+
+            field: "title_fld", 
+
+            value: text,
+
+            cost: 100,
+
+            message: "Name changed to: " + text
+
+        }, "*");
+
+
+
+        // Update UI
+
+        const el = document.getElementById('mob_slaveName');
+
+        const halo = document.getElementById('mob_slaveName'); // Halo uses same ID usually
+
+        if(el) el.innerText = text;
+
+        if(halo) halo.innerText = text;
+
+        userProfile.name = text;
+
+    }
+
+    
+
+    // --- D. KINKS LOGIC ---
+
+    else if (currentActionType === 'kinks') {
+
+        // Safe check
+
+        if (typeof selectedKinks === 'undefined' || selectedKinks.size === 0) return;
+
+        
+
+        const kinkString = Array.from(selectedKinks).join(", ");
+
+        notifyTitle = "FILE UPDATED";
+
+        notifyText = "Kinks registered.";
+
+
+
+        window.parent.postMessage({ 
+
+            type: "UPDATE_CMS_FIELD", 
+
+            field: "kink", 
+
+            value: kinkString,
+
+            cost: currentActionCost,
+
+            message: "Kinks: " + kinkString
+
+        }, "*");
+
+    }
+
+
+
+    // --- E. LIMITS LOGIC ---
+
+    else {
+
+        const text = document.getElementById('lobbyInputText').value;
+
+        if(!text) return;
+
+
+
+        notifyTitle = "DATA APPENDED";
+
+        notifyText = "Limits updated.";
+
+
+
+        window.parent.postMessage({ 
+
+            type: "PURCHASE_ITEM", 
+
+            itemName: currentActionType.toUpperCase() + ": " + text, 
+
+            cost: currentActionCost, 
+
+            messageToDom: "Limits: " + text 
+
+        }, "*");
+
+    }
+
+
+
+    // FINAL: Close & Celebrate
+
+    window.closeLobby();
+
+    
+
+    // Trigger the Green Notification
+
+    if(window.showSystemNotification) {
+
+        window.showSystemNotification(notifyTitle, notifyText);
+
+    }
+
+};
+
+
+
+// --- NOTIFICATION SYSTEM ---
+
+window.showSystemNotification = function(title, detail) {
+
+    const overlay = document.getElementById('celebrationOverlay');
+
+    if(!overlay) return;
+
+
+
+    // Inject Dynamic HTML
+
+    overlay.innerHTML = `
+
+        <div class="glass-card" style="border: 1px solid var(--neon-green); text-align:center; padding: 30px; background: rgba(0,0,0,0.95); box-shadow: 0 0 30px rgba(0,255,0,0.2);">
+
+            <div style="font-family:'Orbitron'; font-size:1.2rem; color:var(--neon-green); margin-bottom:10px; letter-spacing:2px;">${title}</div>
+
+            <div style="font-family:'Cinzel'; font-size:0.9rem; color:#fff;">${detail}</div>
+
         </div>
-    </div>
-  </div>
-</div> <!-- END DESKTOP_APP -->
 
-<!-- 🟢 MOBILE UNIVERSE (HALO + WORKING TIMER + RECORD) -->
-<div id="MOBILE_APP" style="display:none;">
-View remainder of file in raw view
-Footer
-© 2026 GitHub, Inc.
-Footer navigation
-Terms
-Privacy
-Security
-Status
-Community
-Docs
-Contact
-Manage cookies
-Do not share my personal information
+    `;
+
+
+
+    // Show
+
+    overlay.style.pointerEvents = "auto";
+
+    overlay.style.opacity = '1';
+
+
+
+    // Hide after 3 seconds
+
+    setTimeout(() => {
+
+        overlay.style.opacity = '0';
+
+        overlay.style.pointerEvents = "none";
+
+    }, 3000);
+
+};
+
+
+
+
+window.addEventListener("message", (event) => {
+    try {
+        const data = event.data;
+
+        if (data.type === "CHAT_ECHO" && data.msgObj) renderChat([data.msgObj], true);
+
+        if (data.type === 'UPDATE_RULES') {
+            const rules = data.payload || {};
+            for (let i = 1; i <= 8; i++) {
+                const el = document.getElementById('r' + i);
+                if (el && rules['rule' + i]) el.innerHTML = rules['rule' + i];
+            }
+        }
+
+        if (data.type === "INIT_TASKS") {
+            setTaskDatabase(data.tasks || []);
+        }
+        if (data.type === "INIT_WISHLIST" || data.wishlist) {
+            setWishlistItems(data.wishlist || []);
+            window.WISHLIST_ITEMS = data.wishlist || []; 
+            renderWishlist();
+        }
+
+        // UPDATED STATUS HANDLER (DESKTOP + MOBILE)
+        if (data.type === "UPDATE_DOM_STATUS") {
+            // 1. Desktop Updates
+            const badge = document.getElementById('chatStatusBadge');
+            const ring = document.getElementById('chatStatusRing');
+            const domBadge = document.getElementById('domStatusBadge');
+            
+            if(badge) { 
+                badge.innerHTML = data.online ? "ONLINE" : data.text; 
+                badge.className = data.online ? "chat-status-text chat-online" : "chat-status-text"; 
+            }
+            if(ring) ring.className = data.online ? "dom-status-ring ring-active" : "dom-status-ring ring-inactive";
+            if(domBadge) { 
+                domBadge.innerHTML = data.online ? '<span class="status-dot"></span> ONLINE' : `<span class="status-dot"></span> ${data.text}`; 
+                domBadge.className = data.online ? "dom-status status-online" : "dom-status"; 
+            }
+
+            // 2. Mobile Updates (The New Header)
+            const mobText = document.getElementById('mobChatStatusText');
+            const mobDot = document.getElementById('mobChatOnlineDot');
+            const hudDot = document.getElementById('hudDomStatus'); // The Dashboard Circle
+
+            if(mobText) {
+                mobText.innerText = data.online ? "ONLINE NOW" : data.text.toUpperCase();
+                mobText.style.color = data.online ? "#00ff00" : "#888";
+            }
+            
+            const dotClass = data.online ? 'status-dot online' : 'status-dot'; // Reuse class logic
+            if(mobDot) mobDot.className = dotClass;
+            
+            // Update Dashboard HUD too
+            if(hudDot) hudDot.className = data.online ? 'hud-status-dot online' : 'hud-status-dot offline';
+        }
+
+        if (data.type === "UPDATE_Q_FEED") {
+            const feedData = data.domVideos || data.posts || data.feed;
+            if (feedData && Array.isArray(feedData)) {
+                renderDomVideos(feedData);
+                renderNews(feedData);
+                const pc = document.getElementById('cntPosts');
+                if (pc) pc.innerText = feedData.length;
+            }
+        }
+
+        const payload = data.profile || data.galleryData || data.pendingState ? data : (data.type === "UPDATE_FULL_DATA" ? data : null);
+        
+        if (payload) {
+            if (data.profile && !ignoreBackendUpdates) {
+                setGameStats(data.profile);
+                setUserProfile({
+                    name: data.profile.name || "Slave",
+                    hierarchy: data.profile.hierarchy || "HallBoy",
+                    memberId: data.profile.memberId || "",
+                    joined: data.profile.joined,
+                    profilePicture: data.profile.profilePicture, // <--- ADD THIS LINE
+                    routine: data.profile.routine,
+                    kneelHistory: data.profile.kneelHistory
+                    
+                });
+                
+                if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
+                
+                if (data.profile.activeRevealMap) {
+                    let map = [];
+                    try { map = (typeof data.profile.activeRevealMap === 'string') ? JSON.parse(data.profile.activeRevealMap) : data.profile.activeRevealMap; } catch(e) { map = []; }
+                    setActiveRevealMap(map);
+                }
+                
+                if (data.profile.rewardVault) {
+                    let vault = [];
+                    try { vault = (typeof data.profile.rewardVault === 'string') ? JSON.parse(data.profile.rewardVault) : data.profile.rewardVault; } catch(e) { vault = []; }
+                    setVaultItems(vault);
+                }
+
+                setLibraryProgressIndex(data.profile.libraryProgressIndex || 1);
+                setCurrentLibraryMedia(data.profile.currentLibraryMedia || "");
+
+                renderRewardGrid();
+                if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
+                setStats(migrateGameStatsToStats(data.profile, stats));
+                // *** DIRECT IMAGE SYNC (DESKTOP + MOBILE) ***
+                if(data.profile.profilePicture) {
+                    const rawUrl = data.profile.profilePicture;
+                    
+                    // 1. Update Desktop (Existing Logic)
+                    const picEl = document.getElementById('profilePic');
+                    if(picEl) picEl.src = getOptimizedUrl(rawUrl, 150);
+        
+                    // 2. Update Mobile (Direct Injection)
+                    const mobPic = document.getElementById('mob_profilePic'); // Hexagon
+                    const mobBg = document.getElementById('mob_bgPic');       // Background
+                    
+                    // Decode Wix URL if needed
+                    let finalUrl = rawUrl;
+                    if (rawUrl.startsWith("wix:image")) {
+                        const uri = rawUrl.split('/')[3].split('#')[0];
+                        finalUrl = `https://static.wixstatic.com/media/${uri}`;
+                    }
+        
+                    if(mobPic) mobPic.src = finalUrl;
+                    if(mobBg) mobBg.src = finalUrl;
+                    
+                    // 3. Force Save to Memory (Safe Way)
+                    if(typeof userProfile !== 'undefined') {
+                        userProfile.profilePicture = rawUrl;
+                    }
+                }
+                updateStats(); 
+            }
+
+            if (data.type === "INSTANT_REVEAL_SYNC") {
+                if (data.currentLibraryMedia) setCurrentLibraryMedia(data.currentLibraryMedia);
+                renderRewardGrid(); 
+                setTimeout(() => {
+                    const winnerId = data.activeRevealMap[data.activeRevealMap.length - 1];
+                    runTargetingAnimation(winnerId, () => {
+                        setActiveRevealMap(data.activeRevealMap || []);
+                        renderRewardGrid(); 
+                    });
+                }, 50); 
+            }
+
+            if (payload.galleryData) {
+                const currentGalleryJson = JSON.stringify(payload.galleryData);
+                if (currentGalleryJson !== lastGalleryJson) {
+                    setLastGalleryJson(currentGalleryJson);
+                    setGalleryData(payload.galleryData);
+                    renderGallery();
+                    updateStats();
+                }
+            }
+
+            if (payload.pendingState !== undefined) {
+                if (!taskJustFinished && !ignoreBackendUpdates) {
+                    setPendingTaskState(payload.pendingState);
+                    if (pendingTaskState) {
+                        setCurrentTask(pendingTaskState.task);
+                        restorePendingUI();
+                        window.updateTaskUIState(true);
+                    } else if (!resetUiTimer) {
+                        window.updateTaskUIState(false);
+                        const rt = document.getElementById('readyText');
+                        if(rt) rt.innerText = "AWAITING ORDERS";
+                    }
+                }
+            }
+        }
+
+        if (data.type === "UPDATE_CHAT" || data.chatHistory) renderChat(data.chatHistory || data.messages);
+
+        if (data.type === "FRAGMENT_REVEALED") {
+            const { fragmentNumber, isComplete } = data;
+            import('../profile/kneeling/reward.js').then(({ runTargetingAnimation, renderRewardGrid }) => {
+                runTargetingAnimation(fragmentNumber, () => {
+                    renderRewardGrid();
+                    if (isComplete) triggerSound('coinSound');
+                });
+            });
+        }
+    } catch(err) { console.error("Main error:", err); }
+});
+
+// --- EXPORTS & HELPERS ---
+window.handleUploadStart = function(inputElement) {
+    if (inputElement.files && inputElement.files.length > 0) {
+        const btn = document.getElementById('btnUpload');
+        if (btn) { btn.innerHTML = '...'; btn.style.background = '#333'; btn.style.color = '#ffd700'; btn.style.cursor = 'wait'; }
+        if (typeof handleEvidenceUpload === 'function') handleEvidenceUpload(inputElement);
+    }
+};
+
+window.switchTab = switchTab;
+window.toggleStats = toggleStats;
+window.openSessionUI = openSessionUI;
+window.closeSessionUI = closeSessionUI;
+window.updateSessionCost = updateSessionCost;
+window.submitSessionRequest = submitSessionRequest;
+window.sendChatMessage = sendChatMessage;
+window.handleChatKey = handleChatKey;
+window.loadMoreChat = loadMoreChat;
+window.openChatPreview = openChatPreview;
+window.closeChatPreview = closeChatPreview;
+window.breakGlass = breakGlass;
+window.openHistoryModal = openHistoryModal;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.toggleHistoryView = toggleHistoryView;
+window.loadMoreHistory = loadMoreHistory;
+window.handleHoldStart = handleHoldStart;
+window.handleHoldEnd = handleHoldEnd;
+window.claimKneelReward = claimKneelReward;
+window.updateKneelingStatus = updateKneelingStatus;
+window.toggleTributeHunt = toggleTributeHunt;
+window.selectTributeReason = selectTributeReason;
+window.setTributeNote = setTributeNote;
+window.filterByBudget = filterByBudget;
+window.showTributeStep = showTributeStep;
+window.toggleHuntNote = toggleHuntNote;
+window.finalizeSacrifice = finalizeSacrifice;
+window.resetTributeFlow = resetTributeFlow;
+window.buyRealCoins = buyRealCoins;
+window.getRandomTask = getRandomTask;
+window.cancelPendingTask = cancelPendingTask;
+window.handleEvidenceUpload = handleEvidenceUpload;
+window.handleProfileUpload = handleProfileUpload;
+window.handleAdminUpload = handleAdminUpload;
+window.WISHLIST_ITEMS = WISHLIST_ITEMS;
+window.gameStats = gameStats;
+
+function updateStats() {
+    // 1. DESKTOP UPDATE (Basic Header)
+    const subName = document.getElementById('subName');
+    const subHierarchy = document.getElementById('subHierarchy');
+    const coinsEl = document.getElementById('coins');
+    const pointsEl = document.getElementById('points');
+
+    if (!subName || !userProfile || !gameStats) return; 
+
+    // Update Basic Desktop Elements
+    subName.textContent = userProfile.name || "Slave";
+    if (subHierarchy) subHierarchy.textContent = userProfile.hierarchy || "HallBoy";
+    if (coinsEl) coinsEl.textContent = gameStats.coins ?? 0;
+    if (pointsEl) pointsEl.textContent = gameStats.points ?? 0;
+
+    // --- CONNECT DESKTOP EXPANDED STATS ---
+    if (document.getElementById('statStreak')) document.getElementById('statStreak').innerText = gameStats.taskdom_streak || 0;
+    if (document.getElementById('statTotal')) document.getElementById('statTotal').innerText = gameStats.taskdom_total_tasks || 0;
+    if (document.getElementById('statCompleted')) document.getElementById('statCompleted').innerText = gameStats.taskdom_completed || 0;
+    if (document.getElementById('statSkipped')) document.getElementById('statSkipped').innerText = gameStats.taskdom_skipped || 0;
+    if (document.getElementById('statTotalKneels')) document.getElementById('statTotalKneels').innerText = gameStats.kneelCount || 0;
+
+    if (window.renderRewards) window.renderRewards();
+
+
+    // 2. MOBILE UPDATE (The New Connection)
+    // Header Identity
+    const mobName = document.getElementById('mob_slaveName');
+    const mobRank = document.getElementById('mob_rankStamp');
+    const mobPic = document.getElementById('mob_profilePic'); // Center Hexagon
+    
+    // Header Stats (Visible)
+    const mobPoints = document.getElementById('mobPoints');
+    const mobCoins = document.getElementById('mobCoins');
+
+    // Drawer Stats (Hidden)
+    const mobStreak = document.getElementById('mobStreak');
+    const mobTotal = document.getElementById('mobTotal');
+    const mobKneels = document.getElementById('mobKneels');
+
+    // Daily duties
+    const mobDailyKneels = document.getElementById('kneelDailyText');
+    const kneelDailyFill = document.getElementById("kneelDailyFill");
+
+    // FILL MOBILE TEXT DATA
+    if (mobName) mobName.innerText = userProfile.name || "SLAVE";
+    if (mobRank) mobRank.innerText = userProfile.hierarchy || "INITIATE";
+    
+    if (mobPoints) mobPoints.innerText = gameStats.points || 0;
+    if (mobCoins) mobCoins.innerText = gameStats.coins || 0;
+
+    if (mobStreak) mobStreak.innerText = gameStats.taskdom_streak || 0;
+    if (mobTotal) mobTotal.innerText = gameStats.taskdom_total_tasks || 0;
+    if (mobKneels) mobKneels.innerText = gameStats.kneelCount || 0;
+
+    // Daily Duties Logic
+    const dailyKneels = (gameStats.kneelHistory ? JSON.parse(gameStats.kneelHistory).hours?.length || 0 : 0);
+    if (mobDailyKneels) mobDailyKneels.innerText = dailyKneels  + " / 8";
+
+    if (kneelDailyFill) {
+        const percent = Math.min((dailyKneels / 8) * 100, 100);
+        kneelDailyFill.style.width = percent + "%";
+    }
+    
+    // --- [FIX] PROFILE PICTURE LOGIC (SYNC ALL 3 IMAGES) ---
+    if (userProfile.profilePicture) {
+        let rawUrl = userProfile.profilePicture;
+        let finalUrl = rawUrl;
+
+        // Fix Wix URLs
+        if (rawUrl.startsWith("wix:image")) {
+            const uri = rawUrl.split('/')[3].split('#')[0];
+            finalUrl = `https://static.wixstatic.com/media/${uri}`;
+        }
+
+        // 1. Update the Big Hexagon (Dashboard Center)
+        if (mobPic) mobPic.src = finalUrl;
+        
+        // 2. Update the Background Blur
+        const mobBg = document.getElementById('mob_bgPic');
+        if (mobBg) mobBg.src = finalUrl;
+
+        // 3. Update the Right Circle (Slave ID)
+        const rightCircle = document.getElementById('hudSlavePic');
+        if (rightCircle) rightCircle.src = finalUrl;
+
+        // 4. Update Desktop Avatar (Just in case)
+        const deskPic = document.getElementById('profilePic');
+        if (deskPic) deskPic.src = finalUrl;
+    }
+
+    // --- GRID SYNC (TRUST THE BACKEND) ---
+    const grid = document.getElementById('mob_streakGrid');
+    if(grid) {
+        grid.innerHTML = '';
+        let loggedHours = [];
+        const now = new Date();
+
+        if (userProfile.kneelHistory) {
+            try {
+                const hObj = JSON.parse(userProfile.kneelHistory);
+                loggedHours = hObj.hours || [];
+            } catch(e) { console.error("Grid parse error", e); }
+        }
+
+        for(let i=0; i<24; i++) {
+            const sq = document.createElement('div');
+            sq.className = 'streak-sq';
+            
+            // 1. Is this hour logged? (Gold)
+            if (loggedHours.includes(i)) {
+                sq.classList.add('active');
+            }
+            // 2. Has this hour passed? (Dim/Dark)
+            else if (i < now.getHours()) {
+                sq.style.opacity = "0.3"; 
+                sq.style.borderColor = "#333";
+            }
+            // 3. Future hours are normal style
+            grid.appendChild(sq);
+        }
+    }
+
+    // 4. DESKTOP EXTRAS (Progress Bar etc)
+    const sinceEl = document.getElementById('slaveSinceDate');
+    if (sinceEl && userProfile.joined) {
+         try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch(e) { sinceEl.textContent = "--/--/--"; }
+    }
+
+    if (typeof LEVELS !== 'undefined' && LEVELS.length > 0) {
+        let nextLevel = LEVELS.find(l => l.min > gameStats.points) || LEVELS[LEVELS.length - 1];
+        const nln = document.getElementById('nextLevelName');
+        const pnd = document.getElementById('pointsNeeded');
+        
+        if(nln) nln.innerText = nextLevel.name;
+        if(pnd) pnd.innerText = Math.max(0, nextLevel.min - gameStats.points) + " to go";
+        
+        const pb = document.getElementById('progressBar');
+        const progress = ((gameStats.points - 0) / (nextLevel.min - 0)) * 100;
+        if (pb) pb.style.width = Math.min(100, Math.max(0, progress)) + "%";
+    }
+    
+    updateKneelingStatus();
+}
+
+// =========================================
+// REWARD SYSTEM CONFIG & RENDER
+// =========================================
+// =========================================
+// LUXURY REWARD SYSTEM (SVG + SHAPES)
+// =========================================
+
+// SVG PATHS (Simplified for performance)
+const ICONS = {
+    rank: "M12 2l-10 9h20l-10-9zm0 5l6 5.5h-12l6-5.5z M12 14l-8 7h16l-8-7z", // Chevron Stack
+    task: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z", // Check Circle
+    kneel: "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z", // Clock/Time
+    spend: "M12,2L2,12L12,22L22,12L12,2Z M12,18L6,12L12,6L18,12L12,18Z" // Diamond Gem
+};
+
+const REWARD_DATA = {
+    ranks: [
+        { name: "INITIATE", icon: ICONS.rank },
+        { name: "FOOTMAN", icon: ICONS.rank },
+        { name: "SILVERMAN", icon: ICONS.rank },
+        { name: "BUTLER", icon: ICONS.rank },
+        { name: "CHAMBERLAIN", icon: ICONS.rank },
+        { name: "SECRETARY", icon: ICONS.rank },
+        { name: "CHAMPION", icon: ICONS.rank }
+    ],
+    tasks: [
+        { limit: 10, name: "LABORER", icon: ICONS.task },
+        { limit: 50, name: "TOOL", icon: ICONS.task },
+        { limit: 100, name: "DRONE", icon: ICONS.task },
+        { limit: 500, name: "MACHINE", icon: ICONS.task },
+        { limit: 1000, name: "ARCHITECT", icon: ICONS.task }
+    ],
+    kneeling: [
+        { limit: 10, name: "BENT", icon: ICONS.kneel },
+        { limit: 50, name: "SORE", icon: ICONS.kneel },
+        { limit: 100, name: "TRAINED", icon: ICONS.kneel },
+        { limit: 500, name: "FURNITURE", icon: ICONS.kneel },
+        { limit: 1000, name: "STATUE", icon: ICONS.kneel }
+    ],
+    spending: [
+        { limit: 1000, name: "TITHE", icon: ICONS.spend },
+        { limit: 10000, name: "SUPPORTER", icon: ICONS.spend },
+        { limit: 50000, name: "PATRON", icon: ICONS.spend },
+        { limit: 100000, name: "FINANCIER", icon: ICONS.spend },
+        { limit: 500000, name: "WHALE", icon: ICONS.spend }
+    ]
+};
+
+window.renderRewards = function() {
+    if (!window.gameStats) return;
+
+    // 1. GET DATA
+    const currentRank = window.userProfile?.hierarchy || "Hall Boy";
+    const totalTasks = window.gameStats.taskdom_completed || 0;
+    const totalKneels = window.gameStats.kneelCount || 0;
+    const totalSpent = window.gameStats.total_coins_spent || 0; 
+
+    // HELPER: BUILD SHELF
+    // shapeClass = 'shape-hex', 'shape-circle', etc.
+    // UPDATED HELPER: BUILD SHELF WITH CLICK HANDLER
+    const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabel) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = data.map((item, index) => {
+            // Determine Target Value
+            // For Ranks, target is simply the index (0, 1, 2). Current is User's Rank Index.
+            // For others, item.limit is the target.
+            const targetVal = (typeLabel === 'rank') ? index : item.limit;
+            
+            // Logic for Ranks is slightly different (Current >= Target Index)
+            const isUnlocked = (typeLabel === 'rank') 
+                ? (currentVal >= index) 
+                : (currentVal >= targetVal);
+
+            const statusClass = isUnlocked ? "unlocked" : "locked";
+            const isLegendary = index === data.length - 1 ? "legendary" : "";
+            
+            // Generate Click Handler
+            // We pass the raw data to the opener function
+            // Note: For Ranks, we visualize '1/1' if unlocked, '0/1' if locked for simplicity
+            const displayCurrent = (typeLabel === 'rank') ? (isUnlocked ? 1 : 0) : currentVal;
+            const displayTarget = (typeLabel === 'rank') ? 1 : targetVal;
+
+            return `
+                <div class="reward-badge ${shapeClass} ${statusClass} ${isLegendary}" 
+                     onclick="window.openRewardCard('${item.name}', '${item.icon}', ${displayCurrent}, ${displayTarget}, '${typeLabel}')">
+                    <div class="rb-inner" style="display:flex; flex-direction:column; align-items:center;">
+                        <svg class="rb-icon" viewBox="0 0 24 24"><path d="${item.icon}"/></svg>
+                        <div class="rb-label">${item.name}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    // 2. RENDER CALLS (Updated with Type Labels and Current Values)
+    const rankList = REWARD_DATA.ranks.map(r => r.name.toLowerCase());
+    const myRankIndex = rankList.findIndex(r => r === currentRank.toLowerCase());
+
+    // Note: Passing 'currentVal' and 'typeLabel' now
+    buildShelf('shelfRanks', REWARD_DATA.ranks, 'shape-hex', null, myRankIndex, 'rank');
+    buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
+    buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
+    buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', null, totalSpent, 'spend');
+    };
+
+window.openRewardCard = function(name, iconPath, current, target, type) {
+    const overlay = document.getElementById('rewardCardOverlay');
+    const container = overlay.querySelector('.mob-reward-card');
+    
+    // Elements
+    const elIcon = document.getElementById('rcIcon');
+    const elTitle = document.getElementById('rcTitle');
+    const elStatus = document.getElementById('rcStatus');
+    const elQuote = document.getElementById('rcQuote');
+    const elCurrent = document.getElementById('rcCurrent');
+    const elTarget = document.getElementById('rcTarget');
+    const elFill = document.getElementById('rcFill');
+
+    // Logic
+    const isUnlocked = current >= target;
+    const percentage = Math.min((current / target) * 100, 100);
+
+    // 1. Set Visuals
+    elIcon.innerHTML = `<svg viewBox="0 0 24 24"><path d="${iconPath}"/></svg>`;
+    elTitle.innerText = name;
+    
+    if (isUnlocked) {
+        container.classList.add('unlocked-mode');
+        elStatus.innerText = "ACQUIRED";
+        elQuote.innerHTML = getQuote(type, true); // Get Praise
+    } else {
+        container.classList.remove('unlocked-mode');
+        elStatus.innerText = "LOCKED";
+        elQuote.innerHTML = getQuote(type, false); // Get Insult
+    }
+
+    // 2. Set Progress
+    elCurrent.innerText = current.toLocaleString(); // Adds commas (1,000)
+    elTarget.innerText = "/ " + target.toLocaleString();
+    elFill.style.width = percentage + "%";
+
+    // 3. Show
+    overlay.classList.remove('hidden');
+};
+
+window.closeRewardCard = function() {
+    document.getElementById('rewardCardOverlay').classList.add('hidden');
+};
+
+// Helper: Generates Flavor Text
+function getQuote(type, isUnlocked) {
+    const insults = [
+        "You are not there yet. Suffer more.",
+        "Pathetic. Is this your best?",
+        "Do not look at me until you finish this.",
+        "Your dedication is lacking."
+    ];
+    const praise = [
+        "Accepted. You may continue.",
+        "Adequate service. Do not get arrogant.",
+        "I see your effort. Keep going.",
+        "This pleases me. Briefly."
+    ];
+
+    // Specific overrides
+    if (type === 'spend' && !isUnlocked) return "Your wallet is too full. Empty it.";
+    if (type === 'kneel' && !isUnlocked) return "Your knees are too strong. Break them.";
+
+    return isUnlocked 
+        ? praise[Math.floor(Math.random() * praise.length)] 
+        : insults[Math.floor(Math.random() * insults.length)];
+}
+// =========================================
+// PART 3: TRIBUTE & BACKEND FUNCTIONS (RESTORED)
+// =========================================
+
+let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
+function toggleTributeHunt() { const overlay = document.getElementById('tributeHuntOverlay'); if (overlay.classList.contains('hidden')) { selectedReason = ""; selectedItem = null; if(document.getElementById('huntNote')) document.getElementById('huntNote').value = ""; overlay.classList.remove('hidden'); showTributeStep(1); } else { overlay.classList.add('hidden'); resetTributeFlow(); } }
+function showTributeStep(step) { document.querySelectorAll('.tribute-step').forEach(el => el.classList.add('hidden')); const target = document.getElementById('tributeStep' + step); if (target) target.classList.remove('hidden'); const progressEl = document.getElementById('huntProgress'); if (progressEl) progressEl.innerText = ["", "INTENTION", "THE HUNT", "CONFESSION"][step] || ""; }
+function selectTributeReason(reason) { selectedReason = reason; renderHuntStore(gameStats.coins); showTributeStep(2); }
+function setTributeNote(note) { showTributeStep(3); }
+function filterByBudget(max) { renderHuntStore(max); showTributeStep(3); }
+function renderHuntStore(budget) { const grid = document.getElementById('huntStoreGrid'); if (!grid) return; filteredItems = (window.WISHLIST_ITEMS || []).filter(item => Number(item.price || item.Price || 0) <= budget); currentHuntIndex = 0; if (filteredItems.length === 0) { grid.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">NO TRIBUTES IN THIS TIER...</div>'; return; } showTinderCard(); }
+function showTinderCard() { const grid = document.getElementById('huntStoreGrid'); const item = filteredItems[currentHuntIndex]; if (!item) { grid.innerHTML = `<div style="text-align:center; padding:40px;"><div style="font-size:2rem; margin-bottom:10px;">💨</div><div style="color:#666; font-size:0.7rem;">NO MORE ITEMS IN THIS TIER</div><button class="tab-btn" onclick="showTributeStep(2)" style="margin-top:15px; width:auto; padding:5px 15px;">CHANGE BUDGET</button></div>`; return; } grid.style.perspective = "1000px"; grid.innerHTML = `<div id="tinderCard" class="tinder-card-main"><div id="likeLabel" class="swipe-indicator like">SACRIFICE</div><div id="nopeLabel" class="swipe-indicator nope">SKIP</div><img src="${item.img || item.image}" draggable="false"><div class="tinder-card-info"><div style="color:var(--neon-yellow); font-size:1.8rem; font-weight:900;">${item.price} 🪙</div><div style="color:white; letter-spacing:2px; font-weight:bold; font-size:0.8rem;">${item.name.toUpperCase()}</div></div></div>`; initSwipeEvents(document.getElementById('tinderCard'), item); }
+function initSwipeEvents(card, item) { let startX = 0; let currentX = 0; const handleStart = (e) => { startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; card.style.transition = 'none'; }; const handleMove = (e) => { if (!startX) return; currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const diff = currentX - startX; card.style.transform = `translateX(${diff}px) rotate(${diff / 15}deg)`; const likeLabel = document.getElementById('likeLabel'); const nopeLabel = document.getElementById('nopeLabel'); if(likeLabel) likeLabel.style.opacity = diff > 0 ? (diff / 100) : 0; if(nopeLabel) nopeLabel.style.opacity = diff < 0 ? (Math.abs(diff) / 100) : 0; }; const handleEnd = () => { const diff = currentX - startX; card.style.transition = 'transform 0.4s ease, opacity 0.4s ease'; if (diff > 120) { card.style.transform = `translateX(600px) rotate(45deg)`; selectedItem = item; if(document.getElementById('huntSelectedImg')) document.getElementById('huntSelectedImg').src = item.img || item.image; if(document.getElementById('huntSelectedName')) document.getElementById('huntSelectedName').innerText = item.name.toUpperCase(); if(document.getElementById('huntSelectedPrice')) document.getElementById('huntSelectedPrice').innerText = item.price + " 🪙"; setTimeout(() => { showTributeStep(4); }, 200); } else if (diff < -120) { card.style.transform = `translateX(-600px) rotate(-45deg)`; card.style.opacity = "0"; currentHuntIndex++; setTimeout(() => { showTinderCard(); }, 300); } else { card.style.transform = `translateX(0) rotate(0)`; if(document.getElementById('likeLabel')) document.getElementById('likeLabel').style.opacity = 0; if(document.getElementById('nopeLabel')) document.getElementById('nopeLabel').style.opacity = 0; } startX = 0; }; card.addEventListener('mousedown', handleStart); card.addEventListener('touchstart', handleStart); window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove); window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd); }
+function toggleHuntNote(show) { const container = document.getElementById('huntNoteContainer'); const btn = document.getElementById('btnShowNote'); if (!container || !btn) return; if (show) { container.classList.remove('hidden'); btn.classList.add('hidden'); document.getElementById('huntNote').focus(); } else { container.classList.add('hidden'); btn.classList.remove('hidden'); } }
+function finalizeSacrifice() { 
+    const noteEl = document.getElementById('huntNote'); 
+    const note = noteEl ? noteEl.value.trim() : ""; 
+    
+    if (!selectedItem || !selectedReason) return; 
+    
+    // *** THE FIX: USE POVERTY SYSTEM INSTEAD OF ALERT ***
+    if (gameStats.coins < selectedItem.price) { 
+        triggerSound('sfx-deny'); 
+        window.triggerPoverty(); 
+        return; 
+    } 
+    
+    const tributeMessage = `💝 TRIBUTE: ${selectedReason}\n🎁 ITEM: ${selectedItem.name}\n💰 COST: ${selectedItem.price}\n💌 "${note || "A silent tribute."}"`; 
+    
+    window.parent.postMessage({ 
+        type: "PURCHASE_ITEM", 
+        itemName: selectedItem.name, 
+        cost: selectedItem.price, 
+        messageToDom: tributeMessage 
+    }, "*"); 
+    
+    triggerSound('sfx-buy'); 
+    triggerCoinShower(); 
+    toggleTributeHunt(); 
+}
+function buyRealCoins(amount) { triggerSound('sfx-buy'); window.parent.postMessage({ type: "INITIATE_STRIPE_PAYMENT", amount: amount }, "*"); }
+function triggerCoinShower() { for (let i = 0; i < 40; i++) { const coin = document.createElement('div'); coin.className = 'coin-particle'; coin.innerHTML = `<svg style="width:100%; height:100%; fill:gold;"><use href="#icon-coin"></use></svg>`; coin.style.setProperty('--tx', `${Math.random() * 200 - 100}vw`); coin.style.setProperty('--ty', `${-(Math.random() * 80 + 20)}vh`); document.body.appendChild(coin); setTimeout(() => coin.remove(), 2000); } }
+function breakGlass(e) { if (e && e.stopPropagation) e.stopPropagation(); const overlay = document.getElementById('specialGlassOverlay'); if (overlay) overlay.classList.remove('active'); window.parent.postMessage({ type: "GLASS_BROKEN" }, "*"); }
+function submitSessionRequest() { const checked = document.querySelector('input[name="sessionType"]:checked'); if (!checked) return; window.parent.postMessage({ type: "SESSION_REQUEST", sessionType: checked.value, cost: checked.getAttribute('data-cost') }, "*"); }
+function resetTributeFlow() { selectedReason = ""; selectedNote = ""; selectedItem = null; const note = document.getElementById('huntNote'); if (note) note.value = ""; showTributeStep(1); }
+
+// =========================================
+// PART 1: MOBILE LOGIC (BRAIN & NAVIGATION)
+// =========================================
+
+// 5. STATS EXPANDER (SIMPLE TOGGLE)
+window.toggleMobileStats = function() {
+    const drawer = document.getElementById('mobStatsContent');
+    const arrow = document.getElementById('mobStatsArrow');
+    
+    if(drawer) {
+        // Toggle the class that handles the animation (CSS)
+        drawer.classList.toggle('open');
+        
+        // Rotate Arrow
+        if(arrow) {
+            arrow.innerText = drawer.classList.contains('open') ? "▲" : "▼";
+        }
+    }
+};
+
+// ==========================
+// REPLACE window.toggleMobileView WITH THIS VERSION
+// ==========================
+
+window.toggleMobileView = function(viewName) {
+    // 1. CLEANUP POPOVERS
+    if (window.closeLobby) window.closeLobby();
+    if (window.closeQueenMenu) window.closeQueenMenu();
+    if (window.closePoverty) window.closePoverty();
+
+    // 2. DEFINE VIEWS
+    const home = document.getElementById('viewMobileHome');
+    const mobRecord = document.getElementById('viewMobileRecord');
+    const mobGlobal = document.getElementById('viewMobileGlobal');
+    
+    // Desktop/Shared Views to hide
+    const chatCard = document.getElementById('chatCard');
+    const mobileApp = document.getElementById('MOBILE_APP');
+    const history = document.getElementById('historySection');
+    const news = document.getElementById('viewNews');
+    const protocol = document.getElementById('viewProtocol');
+    
+    // 3. HIDE EVERYTHING (Aggressive Reset)
+    const views = [home, mobRecord, mobGlobal, history, news, protocol];
+    views.forEach(el => { 
+        if(el) el.style.display = 'none'; 
+    });
+
+    if (chatCard) chatCard.style.setProperty('display', 'none', 'important');
+
+    // 4. SHOW TARGET VIEW
+    if (viewName === 'home' && home) {
+        home.style.display = 'flex';
+        if(window.syncMobileDashboard) window.syncMobileDashboard();
+    }
+    else if (viewName === 'chat') {
+        if(chatCard && mobileApp) {
+            if (chatCard.parentElement !== mobileApp) mobileApp.appendChild(chatCard);
+            chatCard.style.removeProperty('display');
+            chatCard.style.display = 'flex';
+            // Scroll fix
+            const chatBox = document.getElementById('chatBox');
+            if (chatBox) setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
+        }
+    }
+    else if (viewName === 'record' && mobRecord) {
+        mobRecord.style.display = 'flex';
+        if(window.renderGallery) window.renderGallery();
+    }
+    else if (viewName === 'queen' && news) {
+        news.style.display = 'block';
+    }
+    // *** THE FIX FOR GLOBAL ***
+    else if (viewName === 'global' && mobGlobal) {
+        mobGlobal.style.display = 'flex';
+        
+        // FORCE STYLES VIA JS (Fixes "Invisible" issue)
+        mobGlobal.style.backgroundColor = "#000";
+        mobGlobal.style.color = "#fff";
+        mobGlobal.style.zIndex = "100";
+        
+        // Paint the headers inside it manually to be safe
+        const headers = mobGlobal.querySelectorAll('.mob-name, .mob-header, div');
+        headers.forEach(h => h.style.color = "#fff");
+        
+        const card = mobGlobal.querySelector('.mob-card');
+        if(card) {
+            card.style.border = "1px solid #333";
+            card.style.background = "rgba(20,20,20,0.8)";
+            card.style.padding = "20px";
+            card.style.borderRadius = "8px";
+        }
+    }
+    
+    // 5. SIDEBAR CLEANUP
+    const sidebar = document.querySelector('.layout-left');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    document.querySelectorAll('.mf-btn').forEach(btn => btn.classList.remove('active'));
+};
+
+// QUEEN'S MENU NAVIGATION
+window.openQueenMenu = function() {
+    const menu = document.getElementById('queenOverlay');
+    if (menu) {
+        menu.classList.remove('hidden');
+        menu.style.display = 'flex';
+        // Force a data refresh so the progress bar updates
+        if(window.syncMobileDashboard) window.syncMobileDashboard();
+    }
+};
+
+window.closeQueenMenu = function() {
+    const menu = document.getElementById('queenOverlay');
+    if (menu) {
+        menu.classList.add('hidden');
+        menu.style.display = 'none';
+    }
+};
+// 3. KNEEL BUTTON
+window.triggerKneel = function() {
+    const sidebar = document.querySelector('.layout-left');
+    const realBtn = document.querySelector('.kneel-bar-graphic');
+    
+    if (sidebar) sidebar.classList.add('mobile-open'); 
+
+    if (realBtn) {
+        realBtn.style.boxShadow = "0 0 20px var(--neon-red)";
+        setTimeout(() => realBtn.style.boxShadow = "", 1000);
+    }
+};
+
+window.syncMobileDashboard = function() {
+    if (!gameStats || !userProfile) return;
+
+    // --- HEADER DATA ---
+    const dateEl = document.getElementById('dutyDateDisplay');
+    if(dateEl) dateEl.innerText = new Date().toLocaleDateString().toUpperCase();
+
+    // --- 1. PROTOCOL ---
+    // If we fixed the CMS issue, this will now work:
+    const routineName = userProfile.routine || "NO PROTOCOL"; 
+    const rDisplay = document.getElementById('mobRoutineDisplay');
+    if(rDisplay) rDisplay.innerText = routineName.toUpperCase();
+
+    // Status Check
+    const nowHour = new Date().getHours();
+    const isMorning = nowHour >= 7; 
+    const isDone = gameStats.routineDoneToday === true; // Requires simple memory flag
+
+    const btnUpload = document.getElementById('btnRoutineUpload');
+    const msgTime = document.getElementById('routineTimeMsg');
+    const msgDone = document.getElementById('routineDoneMsg');
+
+    if (isDone) {
+        if(btnUpload) btnUpload.classList.add('hidden');
+        if(msgTime) msgTime.classList.add('hidden');
+        if(msgDone) msgDone.classList.remove('hidden');
+    } else if (isMorning) {
+        if(btnUpload) btnUpload.classList.remove('hidden');
+        if(msgTime) msgTime.classList.add('hidden');
+        if(msgDone) msgDone.classList.add('hidden');
+    } else {
+        if(btnUpload) btnUpload.classList.add('hidden');
+        if(msgTime) msgTime.classList.remove('hidden');
+        if(msgDone) msgDone.classList.add('hidden');
+    }
+
+     // --- 2. LABOR ---
+    const activeRow = document.getElementById('activeTimerRow'); // Desktop source
+    const isWorking = activeRow && !activeRow.classList.contains('hidden');
+    
+    const taskIdle = document.getElementById('qm_TaskIdle');
+    const taskActive = document.getElementById('qm_TaskActive');
+    
+    // NEW: Get Task Text
+    const mobTaskText = document.getElementById('mobTaskText');
+
+    if (isWorking) {
+        if(taskIdle) taskIdle.classList.add('hidden');
+        if(taskActive) taskActive.classList.remove('hidden');
+
+        // *** INJECT TASK TEXT ***
+        // We use the same source as the desktop (currentTask global var)
+        if (mobTaskText && typeof currentTask !== 'undefined' && currentTask) {
+            mobTaskText.innerText = currentTask.instruction || currentTask.text || "AWAITING ORDERS";
+        } else if (mobTaskText) {
+            // Fallback if currentTask isn't ready yet, try reading desktop text
+            const desktopText = document.getElementById('readyText');
+            mobTaskText.innerText = desktopText ? desktopText.innerText : "PROCESSING...";
+        }
+
+    } else {
+        if(taskIdle) taskIdle.classList.remove('hidden');
+        if(taskActive) taskActive.classList.add('hidden');
+    }
+}; 
+
+// PUT THIS AT THE VERY BOTTOM OF MAIN.JS
+window.handleRoutineUpload = function(input) {
+    if(input.files.length > 0) {
+        window.handleEvidenceUpload(input); 
+        gameStats.routineDoneToday = true; 
+        window.syncMobileDashboard();
+    }
+};
+
+// ==========================
+// EXCHEQUER LOGIC (MOBILE)
+// ==========================
+
+window.openExchequer = function() {
+    const store = document.getElementById('mobExchequer');
+    
+    if (store) {
+        // 1. JAILBREAK: Move store to Body so it is never hidden by parent views
+        if (store.parentElement !== document.body) {
+            document.body.appendChild(store);
+        }
+
+        // 2. FORCE Z-INDEX: Make sure it sits on top (just under the poverty alert)
+        store.style.zIndex = "2147483640"; 
+
+        // 3. SHOW IT
+        store.classList.remove('hidden');
+        store.style.display = 'flex'; 
+    } else {
+        console.error("Exchequer Overlay not found! Check HTML IDs.");
+    }
+};
+
+window.closeExchequer = function() {
+    const store = document.getElementById('mobExchequer');
+    if (store) {
+        store.classList.add('hidden');
+        store.style.display = 'none';
+    }
+};
+
+// --- RANK DEFINITIONS (MATCHING YOUR IMAGE) ---
+const HIERARCHY_LEVELS = [
+    "Hall Boy", 
+    "Footman", 
+    "Silverman", 
+    "Butler", 
+    "Chamberlain", 
+    "Secretary", 
+    "Queen's Champion"
+];
+
+// MOCKING INSULTS
+const RANK_INSULTS = [
+    "You are too pathetic to send media.",
+    "Silverman rank required. Know your place.",
+    "I do not want to see your face.",
+    "Earn your stripes before you try to impress me."
+];
+
+window.handleMediaPlus = function() {
+    // Get Rank (Default to Hall Boy if missing)
+    let currentRank = window.userProfile?.hierarchy || "Hall Boy";
+    
+    // Normalize string (Case insensitive check)
+    const rankIndex = HIERARCHY_LEVELS.findIndex(r => r.toLowerCase() === currentRank.toLowerCase());
+    
+    // SILVERMAN IS INDEX 2. BUTLER IS INDEX 3.
+    const SILVERMAN_IDX = 2;
+    const BUTLER_IDX = 3;
+
+    // 1. CHECK: BELOW SILVERMAN -> REJECT
+    if (rankIndex < SILVERMAN_IDX) {
+        triggerRankMock("SILVERMAN REQUIRED");
+        return;
+    }
+
+    // 2. CONFIGURE INPUT BASED ON RANK
+    const fileInput = document.getElementById('chatMediaInput');
+    
+    if (rankIndex < BUTLER_IDX) {
+        // SILVERMAN: Photos Only
+        fileInput.setAttribute("accept", "image/*");
+        // Optional: Notify user they can't send video yet
+        // console.log("Rank: Silverman. Photos allowed. Videos restricted.");
+    } else {
+        // BUTLER+: Photos & Videos
+        fileInput.setAttribute("accept", "image/*,video/*");
+    }
+
+    // 3. OPEN PICKER
+    fileInput.click();
+};
+
+window.triggerRankMock = function(customTitle) {
+    const overlay = document.getElementById('povertyOverlay');
+    const title = overlay.querySelector('.mob-reward-title');
+    const text = document.getElementById('povertyInsult');
+    const stamp = overlay.querySelector('.mob-rank-stamp');
+
+    if (!overlay) return;
+
+    const insult = RANK_INSULTS[Math.floor(Math.random() * RANK_INSULTS.length)];
+
+    if(title) {
+        title.innerText = customTitle || "RANK INSUFFICIENT";
+        title.style.color = "#888";
+    }
+    if(text) text.innerText = `"${insult}"`;
+    if(stamp) {
+        stamp.innerText = "SILENCE";
+        stamp.style.borderColor = "#888";
+    }
+    
+    if (overlay.parentElement !== document.body) document.body.appendChild(overlay);
+    overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
+    
+    if(window.triggerSound) triggerSound('sfx-deny');
+};
+// =========================================
+// PART 2: FINAL APP MODE (NATIVE FLOW)
+// =========================================
+
+// =========================================
+// FINAL PART: APP NAVIGATION BAR (FORCE RENDER)
+// =========================================
+
+(function() {
+    // 1. Force Visual Lock (Anti-Bounce)
+    function lockVisuals() {
+        if (window.innerWidth > 768) return; // Mobile Only
+
+        const lockStyles = {
+            position: 'fixed',
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden',
+            inset: '0',
+            overscrollBehavior: 'none',
+            touchAction: 'none', 
+            backgroundColor: '#000000'
+        };
+        Object.assign(document.documentElement.style, lockStyles);
+        Object.assign(document.body.style, lockStyles);
+
+        const allowedSelectors = '#mobHomeScroll, #mobGlobalScroll, #mobRecordScroll, .chat-body-frame, .qm-scroll-content, .mob-horiz-scroll, #gridOkay, #gridFailed';
+        const scrollables = document.querySelectorAll(allowedSelectors);
+        
+        scrollables.forEach(el => {
+            if (!el) return;
+            el.style.overflowY = 'auto';
+            el.style.webkitOverflowScrolling = 'touch';
+            el.style.overscrollBehavior = 'contain'; 
+            el.style.touchAction = 'pan-y'; 
+            
+            if (el.classList.contains('mob-horiz-scroll') || el.id.includes('grid')) {
+                el.style.touchAction = 'pan-x pan-y';
+                el.style.overflowX = 'auto';
+                el.style.overflowY = 'hidden';
+            }
+        });
+
+        document.addEventListener('touchmove', function(e) {
+            const target = e.target;
+            const scrollableParent = target.closest(allowedSelectors);
+            if (!scrollableParent && e.cancelable) e.preventDefault();
+        }, { passive: false });
+    }
+
+    // 2. Build The Footer
+    function buildAppFooter() {
+        // Run only on mobile
+        if (window.innerWidth > 768) return;
+
+        // If exists, don't rebuild
+        if (document.getElementById('app-mode-footer')) return;
+        
+        const footer = document.createElement('div');
+        footer.id = 'app-mode-footer';
+        
+        // CSS INJECTION (Max Z-Index to stay on top of everything)
+        Object.assign(footer.style, {
+            display: 'flex', 
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            position: 'fixed', 
+            bottom: '0', 
+            left: '0', 
+            width: '100%', 
+            height: '60px',
+            background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
+            paddingBottom: 'env(safe-area-inset-bottom)', /* Handles iPhone Home Bar */
+            zIndex: '2147483647', 
+            borderTop: '1px solid rgba(197, 160, 89, 0.3)',
+            backdropFilter: 'blur(10px)', 
+            pointerEvents: 'auto', 
+            touchAction: 'none'
+        });
+
+        footer.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+        const btnStyle = "background:none; border:none; color:#666; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; -webkit-tap-highlight-color: transparent;";
+        const centerStyle = "background:none; border:none; color:#ff003c; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; -webkit-tap-highlight-color: transparent;";
+
+        footer.innerHTML = `
+            <button onclick="window.toggleMobileView('home')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">◈</span><span>PROFILE</span>
+            </button>
+            <button onclick="window.toggleMobileView('record')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">▦</span><span>RECORD</span>
+            </button>
+            <button onclick="window.toggleMobileView('chat')" style="${centerStyle}">
+                <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:1px solid #ff003c;box-shadow:0 0 10px rgba(255,0,60,0.3);">
+            </button>
+            <button onclick="window.toggleMobileView('queen')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">♛</span><span>QUEEN</span>
+            </button>
+            <button onclick="window.toggleMobileView('global')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">⊕</span><span>GLOBAL</span>
+            </button>`;
+        
+        document.body.appendChild(footer);
+    }
+
+    // 3. Init
+    window.addEventListener('load', () => { lockVisuals(); buildAppFooter(); });
+    window.addEventListener('resize', () => { lockVisuals(); buildAppFooter(); });
+    
+    // Force run immediately in case load event passed
+    lockVisuals(); 
+    buildAppFooter();
+
+})();
+// ==========================
+// REPLACE FROM LINE 1235 DOWN TO LINE 1270 WITH THIS:
+// ==========================
+
+// 1. GLOBAL VARIABLE (Must be attached to window)
+window.isRequestingTask = false; 
+
+window.mobileRequestTask = function() {
+    // 1. SAFETY CHECK
+    if (!window.gameStats) return;
+
+    // 2. POVERTY CHECK (Added parseInt for safety)
+    if (parseInt(gameStats.coins || 0) < 300) {
+        window.triggerPoverty(); 
+        if(window.triggerSound) triggerSound('sfx-deny');
+        return; 
+    }
+
+    // 3. LOCK THE UI (Stop the interval from resetting it)
+    window.isRequestingTask = true; // <--- CHANGED THIS TO WINDOW
+
+    // 4. SET "LOADING" STATE UI
+    const idleCard = document.getElementById('qm_TaskIdle');
+    const activeCard = document.getElementById('qm_TaskActive');
+    
+    if (idleCard) idleCard.classList.add('hidden');
+    if (activeCard) activeCard.classList.remove('hidden');
+
+    const txt = document.getElementById('mobTaskText');
+    if(txt) {
+        txt.innerHTML = "ESTABLISHING LINK...";
+        txt.className = "text-pulse"; 
+    }
+
+    // 5. EXECUTE AFTER DELAY
+    setTimeout(() => {
+        // Generate the task (starts the desktop timer)
+        if(window.getRandomTask) window.getRandomTask(); 
+        
+        // Wait a moment for the Desktop DOM to actually update, then unlock
+        setTimeout(() => { 
+            window.isRequestingTask = false; // <--- CHANGED THIS TO WINDOW
+            if(window.syncMobileDashboard) window.syncMobileDashboard(); 
+        }, 1000); // 1 second buffer
+    }, 800);
+};
+
+
+window.mobileUploadEvidence = function(input) {
+    if (input.files && input.files.length > 0) {
+        
+        // 1. Trigger the Backend Upload
+        window.handleEvidenceUpload(input);
+
+        // 2. UI FEEDBACK
+        const btn = document.getElementById('mobBtnUpload');
+        if(btn) btn.innerText = "SENDING...";
+
+        // 3. SHOW SUCCESS & CLOSE TASK (After 1.5 seconds)
+        setTimeout(() => {
+            // Show Green Notification (Reuse your system notification)
+            if(window.showSystemNotification) {
+                window.showSystemNotification("EVIDENCE SENT", "STATUS: PENDING REVIEW");
+            }
+            
+            // RESET UI TO "UNACTIVE"
+            // We trick the system into thinking we are idle
+            window.updateTaskUIState(false); 
+            
+            // Reset Button Text
+            if(btn) btn.innerText = "UPLOAD";
+            
+            // Force Mobile Sync
+            window.syncMobileDashboard();
+        }, 1500);
+    }
+};
+
+window.mobileSkipTask = function() {
+    // 1. CHECK FUNDS (Need 300)
+    if (gameStats.coins < 300) {
+        window.triggerPoverty(); // Reuse your poverty overlay
+        return;
+    }
+
+    // 2. DEDUCT COINS
+    gameStats.coins -= 300;
+    window.updateStats(); // Refresh headers
+
+    // 3. PLAY SOUND & INSULT
+    triggerSound('sfx-deny');
+    
+    const insults = [
+        "WEAKNESS DETECTED.", 
+        "PATHETIC. -300 COINS.", 
+        "YOU PAY FOR YOUR FAILURE.", 
+        "DISAPPOINTING."
+    ];
+    const randomInsult = insults[Math.floor(Math.random() * insults.length)];
+
+    // Show Red Notification
+    if(window.showSystemNotification) {
+        window.showSystemNotification("PROTOCOL ABORTED", randomInsult);
+    }
+
+    // 4. CANCEL TASK & RESET UI
+    if(window.cancelPendingTask) window.cancelPendingTask(); // Backend cleanup
+    
+    // FORCE UI RESET
+    window.updateTaskUIState(false);
+    window.syncMobileDashboard();
+};
+
+// TIMER SYNC & VISUALIZATION
+setInterval(() => {
+    // 1. Get Source (Desktop Hidden Elements)
+    const desktopH = document.getElementById('timerH');
+    const desktopM = document.getElementById('timerM');
+    const desktopS = document.getElementById('timerS');
+    
+    // 2. Mobile Dashboard Elements
+    const mobileH = document.getElementById('m_timerH');
+    const mobileM = document.getElementById('m_timerM');
+    const mobileS = document.getElementById('m_timerS');
+
+    // 3. Queen Menu Elements
+    const qmH = document.getElementById('qm_timerH');
+    const qmM = document.getElementById('qm_timerM');
+    const qmS = document.getElementById('qm_timerS');
+    
+    // 4. Update Values
+    if (desktopH) {
+        const hTxt = desktopH.innerText;
+        const mTxt = desktopM.innerText;
+        const sTxt = desktopS.innerText;
+
+        // Update Dashboard
+        if(mobileH) { mobileH.innerText = hTxt; mobileM.innerText = mTxt; mobileS.innerText = sTxt; }
+        
+        // Update Queen Menu Card
+        if(qmH) { qmH.innerText = hTxt; qmM.innerText = mTxt; qmS.innerText = sTxt; }
+
+        // Update Rings (Dashboard)
+        const hVal = parseInt(hTxt) || 0;
+        const mVal = parseInt(mTxt) || 0;
+        const sVal = parseInt(sTxt) || 0;
+        
+        const ringH = document.getElementById('ring_H');
+        const ringM = document.getElementById('ring_M');
+        const ringS = document.getElementById('ring_S');
+        
+        if(ringH) ringH.style.background = `conic-gradient(#c5a059 ${(hVal/24)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if(ringM) ringM.style.background = `conic-gradient(#c5a059 ${(mVal/60)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if(ringS) ringS.style.background = `conic-gradient(#c5a059 ${(sVal/60)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+    }
+
+    // --- VISIBILITY SYNC (THE FIX) ---
+    
+    // IF WE ARE CURRENTLY REQUESTING A TASK, DO NOT RUN THIS LOGIC
+    // This prevents the screen from flickering back to "Idle" while loading
+    if (window.isRequestingTask === true) return; 
+
+    const activeRow = document.getElementById('activeTimerRow');
+    const mobTimer = document.getElementById('mob_activeTimer');
+    const mobRequestBtn = document.getElementById('mob_btnRequest');
+    
+    if (activeRow) {
+        const isWorking = !activeRow.classList.contains('hidden');
+        
+        // 1. Update Dashboard
+        if (mobTimer && mobRequestBtn) {
+            if (isWorking) {
+                mobTimer.classList.remove('hidden');
+                mobRequestBtn.classList.add('hidden');
+                const light = document.getElementById('mob_statusLight');
+                const text = document.getElementById('mob_statusText');
+                if(light) light.className = 'status-light green';
+                if(text) text.innerText = "WORKING";
+            } else {
+                mobTimer.classList.add('hidden');
+                mobRequestBtn.classList.remove('hidden');
+                const light = document.getElementById('mob_statusLight');
+                const text = document.getElementById('mob_statusText');
+                if(light) light.className = 'status-light red';
+                if(text) text.innerText = "UNPRODUCTIVE";
+            }
+        }
+
+        // 2. Update Queen Menu (The Cards)
+        const taskIdle = document.getElementById('qm_TaskIdle');
+        const taskActive = document.getElementById('qm_TaskActive');
+
+        if(taskIdle && taskActive) {
+            if (isWorking) {
+                taskIdle.classList.add('hidden');
+                taskActive.classList.remove('hidden');
+            } else {
+                taskIdle.classList.remove('hidden');
+                taskActive.classList.add('hidden');
+            }
+        }
+    }
+}, 500);
+window.parent.postMessage({ type: "UI_READY" }, "*");
