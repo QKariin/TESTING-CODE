@@ -375,6 +375,14 @@
 }
 
 /* THE ITEMS (Dark Glass Look) */
+.store-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 Columns Mobile */
+    gap: 15px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
 .tribute-item {
     background: rgba(20, 20, 20, 0.9);
     border: 1px solid #333;
@@ -532,30 +540,86 @@
         height: 40px !important;
     }
 
-     #tributeStoreOverlay {
-        position: absolute !important;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 25%; /* Start after the Left Sidebar */
-        width: 75%; /* Cover the remaining width */
-        height: 100%;
-        background: rgba(0,0,0,0.95);
-        backdrop-filter: blur(10px);
-        z-index: 500; /* Above chat, below alerts */
+    .store-grid-layout {
+        grid-template-columns: repeat(4, 1fr);
     }
-    
-    #tributeStoreOverlay .mob-reward-card {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        width: 100% !important;
-    }
-    
-    #tributeGridContent {
-        grid-template-columns: repeat(4, 1fr) !important; /* 4 Columns on Desktop */
-    }
+}
 
+/* THE CARD (Derived from your Luxury Card style) */
+.store-card {
+    background: linear-gradient(180deg, rgba(30,30,30,0.8) 0%, rgba(10,10,10,0.95) 100%);
+    border: 1px solid rgba(197, 160, 89, 0.2); /* Gold Dim */
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all 0.2s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.store-card:active {
+    transform: scale(0.98);
+    border-color: #c5a059;
+}
+
+/* IMAGE AREA */
+.store-img-box {
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Perfect Square */
+    background: #000;
+    border-bottom: 1px solid #333;
+    position: relative;
+}
+
+.store-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* INFO AREA */
+.store-info {
+    padding: 15px 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.store-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    color: #fff;
+    line-height: 1.2;
+}
+
+.store-price {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    color: #c5a059;
+    font-weight: 700;
+    margin-top: 5px;
+}
+
+/* BUY BUTTON (Visual Only - whole card is clickable) */
+.store-buy-btn {
+    margin-top: 10px;
+    background: transparent;
+    border: 1px solid #333;
+    color: #666;
+    font-size: 0.6rem;
+    font-family: 'Orbitron';
+    padding: 8px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.store-card:active .store-buy-btn {
+    background: #c5a059;
+    color: #000;
+    border-color: #c5a059;
+}
     /* CLEAN UP MESSAGES FOR MOBILE */
     .msg {
         max-width: 88% !important;
