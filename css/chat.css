@@ -543,7 +543,7 @@
     .store-grid-layout {
         grid-template-columns: repeat(4, 1fr);
     }
-
+}
 
 /* THE CARD (Derived from your Luxury Card style) */
 .store-card {
