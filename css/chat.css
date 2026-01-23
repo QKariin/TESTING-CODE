@@ -490,6 +490,77 @@
         height: 40px !important;
     }
 
+   /* --- TRIBUTE STORE STYLING --- */
+
+/* THE ITEMS (Dark Glass Look) */
+.tribute-item {
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid #333;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+}
+.tribute-item:hover { border-color: #c5a059; }
+.tribute-item:active { transform: scale(0.98); }
+
+.tribute-img-box {
+    width: 100%;
+    height: 120px;
+    background: #000;
+    border-bottom: 1px solid #333;
+}
+.tribute-img { width: 100%; height: 100%; object-fit: cover; }
+
+.tribute-info { padding: 10px; text-align: center; }
+
+.tribute-name {
+    font-family: 'Cinzel', serif;
+    color: #e0e0e0;
+    font-size: 0.7rem;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tribute-price {
+    font-family: 'Orbitron', sans-serif;
+    color: #c5a059;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* DESKTOP POSITIONING: Cover the Chat Area */
+@media screen and (min-width: 769px) {
+    #tributeStoreOverlay {
+        position: absolute !important;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 25%; /* Start after the Left Sidebar */
+        width: 75%; /* Cover the remaining width */
+        height: 100%;
+        background: rgba(0,0,0,0.95);
+        backdrop-filter: blur(10px);
+        z-index: 500; /* Above chat, below alerts */
+    }
+    
+    #tributeStoreOverlay .mob-reward-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+    }
+    
+    #tributeGridContent {
+        grid-template-columns: repeat(4, 1fr) !important; /* 4 Columns on Desktop */
+    }
+}
+
 
     /* CLEAN UP MESSAGES FOR MOBILE */
     .msg {
