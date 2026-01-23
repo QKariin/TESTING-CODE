@@ -49,29 +49,34 @@ $w.onReady(function () {
             console.log("Processing Review Data:", data);
 
             // --- STEP 1: AWARD POINTS ---
-            if (data.decision === 'approve' && data.bonusCoins) {
+            // --- STEP 3: SAVE HISTORY ---
+            if (data.decision === 'approve' && (data.sticker || data.comment || data.media || data.bonusCoins)) { // Add bonusCoins to check
                 try {
-                    const amount = Number(data.bonusCoins);
-                    if (amount > 0) {
-                        const userRes = await wixData.query("Tasks").eq("memberId", data.memberId).find({suppressAuth:true});
-                        if(userRes.items.length > 0) {
-                            let uItem = userRes.items[0];
-                            uItem.score        = (uItem.score || 0) + amount;
-                            uItem.dailyScore   = (uItem.dailyScore || 0) + amount;
-                            uItem.weeklyScore  = (uItem.weeklyScore || 0) + amount;
-                            uItem.monthlyScore = (uItem.monthlyScore || 0) + amount;
-                            uItem.yearlyScore  = (uItem.yearlyScore || 0) + amount;
+                    const userRes = await wixData.query("Tasks").eq("memberId", data.memberId).find({suppressAuth:true});
+                    if(userRes.items.length > 0) {
+                        let item = userRes.items[0];
+                        let history = (typeof item.taskdom_history === 'string') ? JSON.parse(item.taskdom_history) : (item.taskdom_history || []);
+                        
+                        const tIndex = history.findIndex(t => t.id == data.taskId);
+                        if(tIndex > -1) {
+                            if(data.sticker)    history[tIndex].sticker = data.sticker;
+                            if(data.comment)    history[tIndex].adminComment = data.comment;
+                            if(data.media)      history[tIndex].adminMedia = data.media;
+                            
+                            // THE FIX: Save the points into the history object itself
+                            if(data.bonusCoins) history[tIndex].points = Number(data.bonusCoins); 
 
-                            await wixData.update("Tasks", uItem, {suppressAuth:true});
+                            item.taskdom_history = JSON.stringify(history);
+                            await wixData.update("Tasks", item, {suppressAuth:true});
                         }
                     }
-                } catch (e) { console.error("Failed to award points:", e); }
+                } catch(err) { console.error("Extra Data Save Error:", err); }
             }
 
             // --- STEP 2: SEND VERDICT MESSAGES ---
             try {
                 if (data.decision === 'approve') {
-                    let msgText = "✔️ Task Verified.";
+                    let msgText = "Task Verified.";
                     if (data.bonusCoins > 0) msgText += ` +${data.bonusCoins} Points.`;
                     if (data.comment) msgText += `\n"${data.comment}"`;
                     await insertMessage({ memberId: data.memberId, message: msgText, sender: "admin", read: false });
@@ -209,7 +214,7 @@ $w.onReady(function () {
                     await wixData.update("Tasks", uItem, { suppressAuth: true });
                     await insertMessage({ 
                         memberId: mid, 
-                        message: "SYSTEM: DIRECT COMMAND RECEIVED - " + data.taskText, 
+                        message: "DIRECT COMMAND from Queen Karin: - " + data.taskText, 
                         sender: "system", 
                         read: false 
                     });
