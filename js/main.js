@@ -1789,7 +1789,8 @@ window.triggerRankMock = function(customTitle) {
         Object.assign(document.documentElement.style, lockStyles);
         Object.assign(document.body.style, lockStyles);
 
-        const allowedSelectors = '#mobHomeScroll, #mobGlobalScroll, #mobRecordScroll, .chat-body-frame, .qm-scroll-content, .mob-horiz-scroll, #gridOkay, #gridFailed';
+        // Added #tributeScrollArea to the list
+        const allowedSelectors = '#mobHomeScroll, #mobGlobalScroll, #mobRecordScroll, #tributeScrollArea, .chat-body-frame, .qm-scroll-content, .mob-horiz-scroll, #gridOkay, #gridFailed';
         const scrollables = document.querySelectorAll(allowedSelectors);
         
         scrollables.forEach(el => {
