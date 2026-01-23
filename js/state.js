@@ -1,3 +1,5 @@
+// js/state.js - CENTRAL DATA STORE
+
 // --- 1. DATA STORAGE ---
 export let gameStats = { 
     totalTasks: 0, 
@@ -5,8 +7,10 @@ export let gameStats = {
     currentStreak: 0, 
     points: 0, 
     coins: 0,
-    kneelCount: 0,      // Added for the Kneel button
-    todayKneeling: 0    // Added for the Kneel button
+    kneelCount: 0,      
+    todayKneeling: 0,
+    taskdom_streak: 0,      // Sync naming
+    taskdom_total_tasks: 0  // Sync naming
 };
 
 export let stats = { 
@@ -24,8 +28,20 @@ export let userProfile = {
     name: "Slave", 
     hierarchy: "Loading...", 
     avatar: "",
-    joined: null 
+    joined: null,
+    
+    // *** NEW FIELDS (INITIALIZED) ***
+    profilePicture: "",      // For the Hexagon/Background
+    kneelHistory: null,      // For the 24-Square Grid
+    routine: "",             // For Daily Routine Logic
+    kinks: ""                // For Kink List
 };
+
+// --- NEW: REWARD SYSTEM DATA ---
+export let activeRevealMap = [];
+export let vaultItems = [];
+export let currentLibraryMedia = "";
+export let libraryProgressIndex = 1;
 
 // --- 2. APP STATE VARIABLES ---
 export let isLocked = false;
@@ -54,21 +70,18 @@ export let lastWorshipTime = 0;
 export let currentHistoryIndex = 0;
 export let touchStartX = 0;
 
-// --- 3. SETTERS (The "Phone Lines" for other files) ---
+// --- 3. SETTERS (THE ONLY WAY TO UPDATE STATE SAFELY) ---
 
-// This matches the "setGameStats" import in your main.js
 export function setGameStats(newStats) {
-    gameStats = { ...gameStats, ...newStats };
+    Object.assign(gameStats, newStats); 
 }
 
-// This matches the "setStats" importY
 export function setStats(newStats) {
-    stats = { ...stats, ...newStats };
+    Object.assign(stats, newStats);
 }
 
-// This matches the "setUserProfile" import
 export function setUserProfile(newProfile) {
-    userProfile = { ...userProfile, ...newProfile };
+    Object.assign(userProfile, newProfile);
 }
 
 export function setCurrentTask(task) { currentTask = task; }
@@ -78,7 +91,7 @@ export function setGalleryData(data) { galleryData = data; }
 export function setWishlistItems(items) { WISHLIST_ITEMS = items; }
 export function setCmsHierarchyData(data) { cmsHierarchyData = data; }
 
-// CRITICAL: These were missing and caused your crash!
+// SYSTEM SETTERS
 export function setCooldownInterval(val) { cooldownInterval = val; }
 export function setTaskJustFinished(val) { taskJustFinished = val; }
 export function setIgnoreBackendUpdates(val) { ignoreBackendUpdates = val; }
@@ -96,3 +109,9 @@ export function setLastWorshipTime(val) { lastWorshipTime = val; }
 export function setIsLocked(val) { isLocked = val; }
 export function setCurrentHistoryIndex(val) { currentHistoryIndex = val; }
 export function setTouchStartX(val) { touchStartX = val; }
+
+// REWARD SETTERS
+export function setActiveRevealMap(val) { activeRevealMap = val || []; }
+export function setVaultItems(val) { vaultItems = val || []; }
+export function setCurrentLibraryMedia(val) { currentLibraryMedia = val || ""; }
+export function setLibraryProgressIndex(val) { libraryProgressIndex = val || 1; }

@@ -6,8 +6,9 @@ import {
     availableDailyTasks, 
     setCooldownInterval, setHistLimit, setLastHistoryJson 
 } from './dashboard-state.js';
-import { getOptimizedUrl, clean, raw, formatTimer } from './dashboard-utils.js';
+import { clean, raw, formatTimer } from './dashboard-utils.js';
 import { Bridge } from './bridge.js';
+import { getOptimizedUrl, getSignedUrl } from './media.js';
 
 // --- STEP 2: EXPANSION MEMORY ---
 // This keeps tasks open during the 4-second Wix refresh
@@ -68,6 +69,7 @@ export function updateDetail(u) {
     
     document.getElementById('dTasks').innerText = u.completed || 0;
     document.getElementById('dStreak').innerText = u.streak || 0;
+    document.getElementById('dStrikes').innerText = u.strikeCount || 0;
     
     const joined = u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "N/A";
     const joinedEl = document.getElementById('dJoined');
@@ -189,7 +191,7 @@ window.assignFillerTask = function(text) {
     updateDetail(u);
 };
 
-function updateHistory(u) {
+async function updateHistory(u) {
     const currentJson = JSON.stringify(u.history || []);
     if (currentJson !== lastHistoryJson || histLimit > 10) {
         setLastHistoryJson(currentJson);
@@ -201,10 +203,18 @@ function updateHistory(u) {
         const loadBtn = document.getElementById('loadMoreHist');
         if (loadBtn) loadBtn.style.display = (cleanHist.length > histLimit) ? 'block' : 'none';
         
+        const signingPromises = historyToShow.map(async h => {
+            console.log("RAW:", h.proofUrl);
+            h.thumbSigned = await getSignedUrl(getOptimizedUrl(h.proofUrl, 150));
+            h.fullSigned  = await getSignedUrl(h.proofUrl);
+            console.log("thumb:", h.thumbSigned);
+        });
+        await Promise.all(signingPromises);
+
         hGrid.innerHTML = historyToShow.length > 0 ? historyToShow.map(h => {
             const cls = h.status === 'approve' ? 'hb-app' : 'hb-rej';
-            return `<div class="h-card-mini" onclick='openModal(null, null, "${h.proofUrl||''}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
-                <img src="${getOptimizedUrl(h.proofUrl,150)}" class="hc-img"><div class="h-badge ${cls}">${h.status.toUpperCase()}</div></div>`;
+            return `<div class="h-card-mini" onclick='openModal(null, null, "${h.fullSigned||''}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
+                <img src="${h.thumbSigned}" class="hc-img"><div class="h-badge ${cls}">${h.status.toUpperCase()}</div></div>`;
         }).join('') : '<div style="color:#444; font-size:0.7rem;">No history.</div>';
     }
 }

@@ -5,7 +5,8 @@ import {
     queenContent, profileMedia, users,
     setQueenContent, setProfileMedia, ACCOUNT_ID, API_KEY
 } from './dashboard-state.js';
-import { getOptimizedUrl, raw } from './dashboard-utils.js';
+import { raw } from './dashboard-utils.js';
+import { getOptimizedUrl, mediaType } from './media.js';
 
 export function renderProfile() {
     const storiesList = queenContent.filter(item => item.stories);
@@ -41,11 +42,12 @@ function renderMediaGrid(gridList) {
     if (!grid) return;
     
     grid.innerHTML = gridList.map((p, i) => {
-        let isVid = p.page && (p.page.endsWith('.mp4') || p.page.endsWith('.mov'));
+        //let isVid = p.page && (p.page.endsWith('.mp4') || p.page.endsWith('.mov'));
+        const isVideo = mediaType(p.page) === 'video';
         return `
-            <div class="mg-item" onclick="openMod(null,null,'${p.page}','${isVid?'video':'image'}','${raw(p.post||'')}',true,'POST')">
-                ${isVid ? 
-                    `<video src="${p.page}"></video>` : 
+            <div class="mg-item" onclick="openMod(null,null,'${p.page}','${isVideo?'video':'image'}','${raw(p.post||'')}',true,'POST')">
+                ${isVideo ? 
+                    `<video src="${p.page}"></video>` :
                     `<img src="${getOptimizedUrl(p.page, 400)}">`
                 }
                 <div class="mg-type">${isVid ? 'VID' : 'IMG'}</div>

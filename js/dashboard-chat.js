@@ -2,17 +2,36 @@
 // Chat rendering, message handling, and file uploads
 
 import { currId, lastChatJson, setLastChatJson, ACCOUNT_ID, API_KEY, users } from './dashboard-state.js';
-import { getOptimizedUrl, forceBottom, isAtBottom } from './dashboard-utils.js';
+import { forceBottom, isAtBottom } from './dashboard-utils.js';
+import { getPrivateFile } from './mediaBytescale.js';
+import { getOptimizedUrl, mediaType, fileType, getSignedUrl } from './media.js';
 
 let lastNotifiedMessageId = null;
 let isInitialLoad = true;
 
-export function renderChat(msgs) {
+export async function renderChat(msgs) {
     if (!msgs || !Array.isArray(msgs)) return;
     
     const currentJson = JSON.stringify(msgs);
     if (currentJson === lastChatJson) return;
     setLastChatJson(currentJson);
+    
+    // Proxy Bytescale URLs for private access (in parallel)
+    const signingPromises = msgs.map(async (m) => {
+        if (m.message && m.message.startsWith('https://')) {
+            //const parts = m.message.split('/raw/');
+            //if (parts.length === 2) {
+                //const filePath = '/' + parts[1];
+                try {
+                    //m.mediaUrl = await getPrivateFile(filePath);
+                    m.mediaUrl = await getSignedUrl(getOptimizedUrl(m.message, 400));
+                } catch (e) {
+                    console.error('Failed to sign URL', e);
+                }
+            //}
+        }
+    });
+    await Promise.all(signingPromises);
     
     const b = document.getElementById('adminChatBox');
     if (!b) return;
@@ -31,20 +50,26 @@ export function renderChat(msgs) {
         // Message content
         // Smarter Media Detection
         if (m.message) {
-            const msgLower = m.message.toLowerCase();
-            const isImage = msgLower.match(/\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)/i) || msgLower.includes("image");
-            const isVideo = msgLower.match(/\.(mp4|mov|webm)/i) || msgLower.includes(".mp4");
+            const isImage = mediaType(m.message) === "image";
+            const isVideo = mediaType(m.message) === "video";
 
             if (isImage) {
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${getOptimizedUrl(m.message, 300)}" onclick="openChatPreview('${encodeURIComponent(m.message)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
+                const srcUrl = m.mediaUrl || getOptimizedUrl(m.message, 300);
+                const previewUrl = m.mediaUrl || m.message;
+                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
             } else if (isVideo) {
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${m.message}" onclick="openChatPreview('${encodeURIComponent(m.message)}', true)" muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
+                const srcUrl = m.mediaUrl || m.message;
+                const previewUrl = m.mediaUrl || m.message;
+                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', true)" muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
             } else if (m.message.startsWith('💝 TRIBUTE:')) {
                 contentHtml = renderTributeMessage(m.message, timeStr);
             } else if (m.message.includes('Task Verified') || m.message.includes('Task Rejected')) {
                 contentHtml = renderSystemMessage(m.message, m.message.includes('Verified') ? 'green' : 'red');
             } else {
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}">${m.message}</div>`;
+                let safeHtml = DOMPurify.sanitize(m.message);
+                // Convert newlines to <br>
+                safeHtml = safeHtml.replace(/\n/g, "<br>");
+                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}">${safeHtml}</div>`;
             }
         }
         
@@ -81,31 +106,50 @@ export function renderChat(msgs) {
 }
 
 function renderTributeMessage(message, timeStr) {
-    const lines = message.split('\n');
-    const tributeLine = lines.find(line => line.includes('💝 TRIBUTE:'));
-    const itemLine = lines.find(line => line.includes('🎁 ITEM:'));
-    const costLine = lines.find(line => line.includes('💰 COST:'));
-    const messageLine = lines.find(line => line.includes('💌'));
+    // Regex to remove any potential emojis from the incoming string
+    const cleanMsg = message.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
     
-    const reason = tributeLine ? tributeLine.replace('💝 TRIBUTE:', '').trim() : 'Unknown';
-    const item = itemLine ? itemLine.replace('🎁 ITEM:', '').trim() : 'Unknown Item';
-    const cost = costLine ? costLine.replace('💰 COST:', '').trim() : '0';
-    const note = messageLine ? messageLine.replace('💌', '').replace(/"/g, '').trim() : 'A silent tribute';
+    const lines = cleanMsg.split('\n');
+    const tributeLine = lines.find(line => line.includes('TRIBUTE:'));
+    const itemLine = lines.find(line => line.includes('ITEM:'));
+    const costLine = lines.find(line => line.includes('COST:'));
+    const messageLine = lines.find(line => line.includes('MESSAGE:')) || lines[lines.length - 1];
+    
+    const reason = tributeLine ? tributeLine.replace('TRIBUTE:', '').trim() : 'Adoration';
+    const item = itemLine ? itemLine.replace('ITEM:', '').trim() : 'Premium Selection';
+    const cost = costLine ? costLine.replace('COST:', '').trim() : '0';
+    const note = messageLine ? messageLine.replace('MESSAGE:', '').replace(/"/g, '').trim() : 'A silent tribute';
     
     return `
-        <div class="tribute-system-container" style="margin: 15px 0; text-align: center;">
-            <div class="tribute-timestamp" style="font-size: 0.7rem; color: #666; margin-bottom: 5px;">${timeStr}</div>
-            <div class="tribute-card" style="background: linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,0,222,0.1) 100%); border: 1px solid var(--yellow); border-radius: 12px; padding: 15px; max-width: 300px; margin: 0 auto;">
-                <div class="tribute-card-header" style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
-                    <svg style="width: 20px; height: 20px; fill: var(--yellow);" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    <div style="font-weight: 900; color: var(--yellow); font-size: 0.9rem;">TRIBUTE SENT</div>
+        <div class="tribute-system-container" style="margin: 25px 0; width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <div class="tribute-card" style="background: rgba(10, 10, 12, 0.95); border: 1px solid var(--gold); border-radius: 0; padding: 25px; width: 85%; max-width: 290px; position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.8);">
+                
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 15l-3-8 7 3 3-8 3 8 7-3-3 8h-14z"></path>
+                        <circle cx="12" cy="19" r="2"></circle>
+                    </svg>
                 </div>
-                <div style="color: white; font-size: 0.8rem; margin-bottom: 8px;"><strong>Item:</strong> ${item}</div>
-                <div style="color: var(--yellow); font-size: 0.9rem; font-weight: bold; margin-bottom: 8px;">${cost} 🪙</div>
-                <div style="color: #ccc; font-size: 0.75rem; margin-bottom: 8px;"><strong>Reason:</strong> ${reason}</div>
-                <div style="color: #aaa; font-size: 0.7rem; font-style: italic;">"${note}"</div>
-                <div style="margin-top: 10px; color: var(--pink); font-size: 0.7rem; font-weight: bold;">✨ For Queen Karin ✨</div>
+
+                <div class="tribute-card-header" style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-family: 'Cinzel', serif; font-weight: 900; color: var(--gold); font-size: 0.7rem; letter-spacing: 4px; text-transform: uppercase;">Sacrifice Validated</div>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="color: white; font-family: 'Cinzel'; font-size: 1rem; font-weight: 700; letter-spacing: 1.5px;">${item}</div>
+                    <div style="color: var(--gold-bright); font-family: 'Orbitron'; font-size: 1.1rem; font-weight: 900; margin-top: 8px;">${cost} 🪙</div>
+                </div>
+
+                <div style="border-top: 1px solid rgba(212, 175, 55, 0.2); padding-top: 15px;">
+                    <div style="color: var(--gold); font-family: 'Inter'; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; opacity: 0.7;">Intention: ${reason}</div>
+                    <div style="color: #eee; font-family: 'Inter'; font-size: 0.85rem; font-weight: 300; line-height: 1.5; font-style: italic;">"${note}"</div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px; font-family: 'Cinzel'; color: var(--gold); font-size: 0.5rem; letter-spacing: 3px; opacity: 0.5; border-top: 1px solid rgba(212, 175, 55, 0.1); padding-top: 10px;">
+                    ROYAL ASSET
+                </div>
             </div>
+            <div class="msg-time" style="margin-top: 10px; font-family: 'Orbitron'; font-size: 0.6rem; color: #444;">${timeStr}</div>
         </div>
     `;
 }
@@ -142,7 +186,7 @@ export function sendMsg() {
 export async function handleAdminUpload(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        const isVideo = file.type.startsWith('video') || file.name.match(/\.(mp4|mov|webm)$/i);
+        const isVideo = fileType(file) === "video";
         const fd = new FormData();
         fd.append("file", file);
 
@@ -166,9 +210,10 @@ export async function handleAdminUpload(input) {
 
             if (d.files && d.files[0] && d.files[0].fileUrl) {
                 let finalUrl = d.files[0].fileUrl;
-                if (isVideo) {
+                //Not needed with bytescale
+                /*if (isVideo) {
                     finalUrl = finalUrl + "#.mp4";
-                }
+                }*/
                 window.parent.postMessage({ type: "adminMessage", text: finalUrl }, "*");
             }
             btn.innerText = originalText;

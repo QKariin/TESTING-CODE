@@ -1,12 +1,13 @@
-// UI management functions - FULL LOGIC WITH WISHLIST
+// UI management functions - FULL LOGIC WITH WISHLIST & VAULT SYNC & SLAVE RECORD FIX
 import { currentView, cmsHierarchyData, setCurrentView, WISHLIST_ITEMS, gameStats } from './state.js';
 import { CMS_HIERARCHY } from './config.js';
-import { renderGallery } from './gallery.js';
-import { getOptimizedUrl } from './utils.js';
+import { renderGallery, loadMoreHistory } from './gallery.js'; // IMPORTED loadMoreHistory
+import { getOptimizedUrl } from './media.js';
+import { renderVault } from '../profile/kneeling/reward.js';
 
 export function switchTab(mode) {
     // 1. Update the buttons
-    const allBtns = document.querySelectorAll('.tab-btn');
+    const allBtns = document.querySelectorAll('.tab-btn, .nav-btn'); // Added .nav-btn support for new layout
     allBtns.forEach(b => b.classList.remove('active'));
     
     // 2. Update the "State" correctly
@@ -34,45 +35,60 @@ export function switchTab(mode) {
         });
     }
     
-    // 4. Hide all views
-    ['viewServingTop', 'viewTribute', 'viewSession', 'viewRewards', 'viewHierarchy', 'viewNews', 'viewBuy', 'viewProtocol'].forEach(id => {
+    // 4. Hide all views - Including historySection
+    const allViews = [
+        'viewServingTop', 'viewNews', 'viewSession', 
+        'viewVault', 'viewProtocol', 'viewBuy', 
+        'viewTribute', 'viewHierarchy', 'viewRewards', 'historySection'
+    ];
+    
+    allViews.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
+        if (el) {
+            el.classList.add('hidden');
+            el.style.display = 'none'; // Force hide to be safe
+        }
     });
 
-    // 5. Show the correct view
+    // 5. THE CLEAN VIEW MAP (Added 'history')
     const viewMap = {
         'serve': 'viewServingTop',
-        'tribute': 'viewTribute',
+        'news': 'viewNews',
         'session': 'viewSession',
-        'rewards': 'viewRewards',
-        'hierarchy': 'viewHierarchy',
-        'buy': 'viewBuy',
+        'rewards': 'viewVault',    
         'protocol': 'viewProtocol',
-        'news': 'viewNews'
+        'buy': 'viewBuy',
+        'history': 'historySection', // NEW MAPPING
+        'vault': 'viewVault' // Added vault explicitly just in case
     };
 
     const targetId = viewMap[mode];
     if (targetId) {
         const targetEl = document.getElementById(targetId);
-        if (targetEl) targetEl.classList.remove('hidden');
+        if (targetEl) {
+            targetEl.classList.remove('hidden');
+            
+            // New Layout Logic: Grids need Flex, Main Layout needs Block (or Flex Column)
+            if (['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId)) {
+                targetEl.style.display = 'flex';
+                targetEl.style.flexDirection = 'column';
+            } else {
+                targetEl.style.display = 'block';
+            }
+        }
     }
        
+    // 6. TRIGGER RENDERS & MESSAGES
     if (mode === 'news') {
         window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
     }
     
-    // 6. Trigger Renders
-    if (mode === 'hierarchy') {
-        if (window.renderHierarchy) window.renderHierarchy(cmsHierarchyData || CMS_HIERARCHY);
+    if (mode === 'rewards' || mode === 'vault') {
+        renderVault(); 
     }
-    if (mode === 'tribute') {
-        renderWishlist(); // Call the missing function
-    }
-    if (mode === 'serve') renderGallery();
 }
 
-// --- NEW: THE WISHLIST RENDERER ---
+// --- THE WISHLIST RENDERER ---
 export function renderWishlist(maxBudget = 999999) {
     const grid = document.getElementById('storeGrid');
     if (!grid) return;

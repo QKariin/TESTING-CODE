@@ -1,18 +1,20 @@
+import { getThumbnail } from "./media.js";
+
 // Utility functions - FULL LOGIC RESTORED & PROTECTED
 export function getOptimizedUrl(url, width) {
     if (!url) return "";
-    // If it's already a full URL or base64, don't mess with it
     if (url.startsWith('data:')) return url;
 
-    if (url.includes("cloudinary.com") && url.includes("/upload/")) {
-        let cleanUrl = url.replace(/\.(mp4|webm|mov)$/i, ".jpg");
-        return cleanUrl.replace("/upload/", `/upload/f_auto,q_auto,dpr_auto,c_limit,w_${width}/`);
-    }
+    if (url.includes("cloudinary")) return "https://upcdn.io/kW2K8hR/raw/uploads/2025/12/06/collar-512.png";
+
+    // REMOVED THE CLOUDINARY KILL SWITCH THAT WAS BREAKING YOUR LOGS
     if (url.includes("upcdn.io")) {
-        let cleanUrl = url.replace(/\.(mp4|webm|mov)$/i, ".jpg");
+        let cleanUrl = getThumbnail(url);
         const sep = cleanUrl.includes("?") ? "&" : "?";
         return `${cleanUrl}${sep}width=${width}&format=auto&quality=auto&dpr=auto`;
     }
+    
+    // Allow Wix/Cloudinary images to pass through
     return url;
 }
 

@@ -2,8 +2,10 @@
 // User list rendering and sidebar interactions
 
 import { users, currId, setCurrId } from './dashboard-state.js';
-import { getOptimizedUrl, clean } from './dashboard-utils.js';
+import { clean } from './dashboard-utils.js';
+import { triggerSounds } from './sound.js';
 import { triggerSound } from './utils.js';
+import { getOptimizedUrl } from './media.js';
 
 // --- ADD THESE TWO LINES AT THE TOP ---
 let currentVisualOrder = []; 
@@ -55,12 +57,13 @@ export function renderSidebar() {
         const lastSound = Math.max(lastSoundLS, lastSoundRAM);
 
         const isNewMessage = hasMsgCurrent && msgTime > lastSound;
-        //const isNewMessage = msgTime > lastSound;
+        //const isNewMessage = hasMsg && msgTime > lastSound;
 
         if (isNewMessage) {
             soundMemory[u.memberId] = msgTime; // update RAM immediately
             localStorage.setItem('sound_' + u.memberId, msgTime); // update disk
-            triggerSound('sfx-notify');
+            //triggerSound('sfx-notify');
+            triggerSounds("message");
         }
 
         // B. ENTRANCE: Just logged on (Join BACK of Online group)

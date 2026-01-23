@@ -1,4 +1,4 @@
-// js/bridge.js
+// js/bridge.js - THE SHARED ECOSYSTEM BRAIN
 const channel = new BroadcastChannel('ecosystem_link');
 
 export const Bridge = {
@@ -15,11 +15,17 @@ export const Bridge = {
         return saved ? JSON.parse(saved) : null;
     },
 
-    // 3. SHOUT commands
-    send: (type, data) => channel.postMessage({ type, ...data }),
+    // 3. SHOUT commands (used for ENFORCE, SEND, SKIP)
+    send: (type, data) => {
+        channel.postMessage({ type, ...data });
+        console.log("OUTGOING COMMAND:", type, data);
+    },
 
     // 4. LISTEN for changes
     listen: (callback) => {
-        channel.onmessage = (e) => callback(e.data);
+        channel.onmessage = (e) => {
+            console.log("INCOMING COMMAND:", e.data.type, e.data);
+            callback(e.data);
+        };
     }
 };

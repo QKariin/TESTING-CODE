@@ -2,7 +2,8 @@
 // Operations grid, monitoring cards, and feed management
 
 import { users, globalQueue, globalTributes } from './dashboard-state.js';
-import { getOptimizedUrl, clean, formatTimer } from './dashboard-utils.js';
+import { clean, formatTimer } from './dashboard-utils.js';
+import { getOptimizedUrl } from './media.js';
 
 export function renderOperationsMonitor() {
     renderOperationsGrid();

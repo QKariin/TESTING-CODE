@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Chat Component Example</title>
+    
+    <!-- Import the shared chat styles -->
+    <link rel="stylesheet" href="shared-chat.css">
+    
+    <!-- Import existing theme variables (profile.css or dashboard.css) -->
+    <link rel="stylesheet" href="DASHBOARD!/profile.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: var(--bg-dark, #08080a);
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            height: 600px;
+            border: 1px solid #333;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .demo-header {
+            text-align: center;
+            color: var(--elegant-white, #f8f8f8);
+            margin-bottom: 20px;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <h1>SHARED CHAT COMPONENT</h1>
+        <p>Centralized chat for Dashboard and User Profile</p>
+    </div>
+    
+    <div class="demo-container">
+        <!-- This is where the chat will be initialized -->
+        <div id="sharedChatContainer"></div>
+    </div>
+
+    <!-- Audio elements for chat sounds -->
+    <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
+    <audio id="sfx-notify" src="https://static.wixstatic.com/mp3/ce3e5b_31aab32ecdf542e6b6fd01ef272d75bc.mp3"></audio>
+
+    <!-- Import the shared chat JavaScript -->
+    <script type="module">
+        import { initializeChat, updateChatStatus } from './shared-chat.js';
+        
+        // Initialize the chat when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Configuration for the chat
+            const chatConfig = {
+                containerId: 'sharedChatContainer',
+                userId: 'user123',
+                userName: 'QUEEN KARIN',
+                userAvatar: 'https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png'
+            };
+            
+            // Initialize the chat
+            initializeChat(chatConfig);
+            
+            // Simulate status updates
+            setTimeout(() => {
+                updateChatStatus('online', 'Now');
+            }, 2000);
+            
+            // Example of how to update status periodically
+            setInterval(() => {
+                const isOnline = Math.random() > 0.3; // 70% chance of being online
+                const lastSeen = isOnline ? 'Now' : 'A few minutes ago';
+                updateChatStatus(isOnline ? 'online' : 'offline', lastSeen);
+            }, 10000); // Update every 10 seconds
+        });
+    </script>
+</body>
+</html>

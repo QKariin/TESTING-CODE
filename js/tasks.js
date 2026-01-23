@@ -1,108 +1,92 @@
-// Task management functions - WITH 300 COIN COLLATERAL & AUTO-PENALTY
+// tasks.js - MUTED VERSION (Does not send Task Text to Backend)
+
 import { 
     currentTask, pendingTaskState, taskDatabase, taskQueue, gameStats, 
-    resetUiTimer, cooldownInterval, taskJustFinished, ignoreBackendUpdates 
-} from './state.js';
-import { 
+    resetUiTimer, cooldownInterval, taskJustFinished, ignoreBackendUpdates,
     setCurrentTask, setPendingTaskState, setGameStats, 
     setIgnoreBackendUpdates, setTaskJustFinished, setResetUiTimer, setCooldownInterval
 } from './state.js';
-import { triggerSound } from './utils.js';
+import { triggerSound, cleanHTML } from './utils.js';
+
+// Default insults
+const DEFAULT_TRASH = [
+    "Pathetic. Pay the price.",
+    "Disappointing as always.",
+    "Your failure feeds me.",
+    "Try harder next time, worm.",
+    "Obedience is not optional."
+];
 
 export function getRandomTask() {
-    // --- 1. COLLATERAL CHECK (NEW) ---
-    // Slave must have 300 coins to even see a task
     if (gameStats.coins < 300) {
         triggerSound('sfx-deny');
-        
-        // Show shame in the chat
-        const chatContent = document.getElementById('chatContent');
-        if (chatContent) {
-            chatContent.innerHTML += `
-                <div class="msg-row system-row">
-                    <div class="msg-system sys-red">
-                        <svg class="sys-icon"><use href="#icon-close"></use></svg>
-                        ACCESS DENIED: 300 🪙 REQUIRED TO RECEIVE ORDERS
-                    </div>
-                </div>`;
-            // Scroll to bottom
-            const b = document.getElementById('chatBox');
-            if (b) b.scrollTop = b.scrollHeight;
-        }
-        
+        injectChatMessage(false, "ACCESS DENIED: 300 🪙 REQUIRED");
         alert("You are too poor to serve. Earn 300 coins first.");
-        return; // STOP - Do not give a task
+        return;
     }
 
-    // --- 2. PROCEED WITH TASK GENERATION ---
     setIgnoreBackendUpdates(true);
+    if (resetUiTimer) { clearTimeout(resetUiTimer); setResetUiTimer(null); }
     
-    if (resetUiTimer) { 
-        clearTimeout(resetUiTimer); 
-        setResetUiTimer(null); 
-    }
-    
-    let taskText = "Waiting for orders...";
-    if (taskQueue && taskQueue.length > 0) {
-        taskText = taskQueue[0];
-    } else if (taskDatabase && taskDatabase.length > 0) {
-        taskText = taskDatabase[Math.floor(Math.random() * taskDatabase.length)];
-    }
+    let taskText = "AWAITING DIRECTIVE..."; 
+    if (taskQueue && taskQueue.length > 0) taskText = taskQueue[0];
+    else if (taskDatabase && taskDatabase.length > 0) taskText = taskDatabase[Math.floor(Math.random() * taskDatabase.length)];
     
     const newTask = { text: taskText, category: 'general', timestamp: Date.now() };
     setCurrentTask(newTask);
     
-    const endTimeVal = Date.now() + 86400000; // 24 Hours
+    const endTimeVal = Date.now() + 86400000; 
     const newPendingState = { task: newTask, endTime: endTimeVal, status: "PENDING" };
     setPendingTaskState(newPendingState);
     
     restorePendingUI();
+    if(window.updateTaskUIState) window.updateTaskUIState(true);
+    if(window.toggleTaskDetails) window.toggleTaskDetails(true);
     
-    // Communication with Wix
-    window.parent.postMessage({ 
-        type: "savePendingState", 
-        pendingState: newPendingState, 
-        consumeQueue: true 
-    }, "*");
-    
-    setTimeout(() => { 
-        setIgnoreBackendUpdates(false); 
-    }, 5000);
+    window.parent.postMessage({ type: "savePendingState", pendingState: newPendingState, consumeQueue: true }, "*");
+    setTimeout(() => { setIgnoreBackendUpdates(false); }, 5000);
 }
 
 export function restorePendingUI() {
-    if (resetUiTimer) { 
-        clearTimeout(resetUiTimer); 
-        setResetUiTimer(null); 
-    }
-    
-    // Clear old interval if it exists
+    if (resetUiTimer) { clearTimeout(resetUiTimer); setResetUiTimer(null); }
     if (cooldownInterval) clearInterval(cooldownInterval);
     
-    document.getElementById('mainButtonsArea').classList.add('hidden');
-    document.getElementById('activeBadge').classList.add('show');
+    // UI Updates (Visibility)
+    const mainBtns = document.getElementById('mainButtonsArea');
+    if(mainBtns) mainBtns.classList.add('hidden');
     
-    if (currentTask) {
-        document.getElementById('taskContent').innerHTML = `<div style="font-size:1.2rem; font-weight:bold; color:white; padding:10px;">${currentTask.text}</div>`;
+    const uploadBtn = document.getElementById('uploadBtnContainer');
+    if(uploadBtn) uploadBtn.classList.remove('hidden');
+    const timerRow = document.getElementById('activeTimerRow');
+    if(timerRow) timerRow.classList.remove('hidden');
+    const idleMsg = document.getElementById('idleMessage');
+    if(idleMsg) idleMsg.classList.add('hidden');
+
+    const taskEl = document.getElementById('readyText');
+    if (taskEl && currentTask) {
+        taskEl.innerHTML = currentTask.text;
     }
     
-    document.getElementById('cooldownSection').classList.remove('hidden');
-    
+    // Timer Logic
     const targetTime = parseInt(pendingTaskState?.endTime);
     if (!targetTime) return;
 
     const newInterval = setInterval(() => {
         const diff = targetTime - Date.now();
         
+        // GET THE BOXES
+        const tH = document.getElementById('timerH');
+        const tM = document.getElementById('timerM');
+        const tS = document.getElementById('timerS');
+
         if (diff <= 0) {
-            // --- 3. AUTO-PENALTY ON EXPIRY (NEW) ---
             clearInterval(newInterval);
             setCooldownInterval(null);
-            
-            const td = document.getElementById('timerDisplay');
-            if(td) td.textContent = "00:00:00";
-
-            applyPenaltyFail("TIMEOUT"); // New failure logic
+            // Reset to 00 00 00
+            if(tH) tH.innerText = "00";
+            if(tM) tM.innerText = "00";
+            if(tS) tS.innerText = "00";
+            applyPenaltyFail("TIMEOUT");
             return;
         }
 
@@ -110,89 +94,103 @@ export function restorePendingUI() {
         const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
         const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
         
-        const td = document.getElementById('timerDisplay');
-        if(td) td.textContent = `${h}:${m}:${s}`;
+        // UPDATE SEPARATE BOXES
+        if(tH) tH.innerText = h;
+        if(tM) tM.innerText = m;
+        if(tS) tS.innerText = s;
+
     }, 1000);
     
     setCooldownInterval(newInterval);
 }
 
-// NEW HELPER FUNCTION: Handles the actual coin theft and failure
 function applyPenaltyFail(reason) {
-    // 1. Visual/Sound Feedback
     triggerSound('sfx-deny');
-
-    // 2. Subtract 300 coins locally
     const newBalance = Math.max(0, gameStats.coins - 300);
     setGameStats({ coins: newBalance });
-    
-    // Update the UI immediately
     const coinsEl = document.getElementById('coins');
     if (coinsEl) coinsEl.textContent = newBalance;
 
-    // 3. Tell Wix to take the real money
+    // --- FIX: DO NOT SEND TASK TEXT TO BACKEND ---
+    // This stops Velo from echoing it back to the chat.
     window.parent.postMessage({ 
         type: "taskSkipped", 
-        taskTitle: currentTask ? currentTask.text : "Unknown Task",
+        taskTitle: "REDACTED", // Muted
         reason: reason
     }, "*");
 
-    // 4. Reset UI to show they are pathetic
     finishTask(false);
 }
 
+// --- RESULT HANDLER (CHAT ONLY) ---
 export function finishTask(success) {
     if (cooldownInterval) clearInterval(cooldownInterval);
-    
     setTaskJustFinished(true);
     setPendingTaskState(null);
     setCooldownInterval(null);
     
-    const celebration = document.getElementById('celebrationOverlay');
-    if (celebration && success) {
-        celebration.classList.add('active');
-        setTimeout(() => celebration.classList.remove('active'), 2500);
+    // Close the drawer immediately
+    if(window.toggleTaskDetails) window.toggleTaskDetails(false);
+
+    if (success) {
+        injectChatMessage(true, "DIRECTIVE COMPLETE");
+    } else {
+        const trashList = (window.CMS_HIERARCHY && window.CMS_HIERARCHY.trash) 
+                          ? window.CMS_HIERARCHY.trash 
+                          : DEFAULT_TRASH;
+        const insult = trashList[Math.floor(Math.random() * trashList.length)];
+        
+        const failMsg = `FAILURE RECORDED (-300 🪙)<br><span style="font-style:italic; opacity:0.7; font-size:0.8em; margin-top:5px; display:block;">"${insult}"</span>`;
+        injectChatMessage(false, failMsg);
     }
     
     resetTaskDisplay(success);
+    setTimeout(() => { setTaskJustFinished(false); setIgnoreBackendUpdates(false); }, 5000);
+}
+
+function injectChatMessage(isSuccess, htmlContent) {
+    const chatBox = document.getElementById('chatContent');
+    if (!chatBox) return;
+
+    const cssClass = isSuccess ? "sys-gold" : "sys-red";
     
-    setTimeout(() => { 
-        setTaskJustFinished(false); 
-        setIgnoreBackendUpdates(false); 
-    }, 5000);
+    const msgHTML = `
+        <div class="msg-row system-row">
+            <div class="msg-system ${cssClass}">
+                ${htmlContent}
+            </div>
+        </div>`;
+
+    chatBox.innerHTML += msgHTML;
+    
+    const container = document.getElementById('chatBox');
+    if(container) container.scrollTop = container.scrollHeight;
 }
 
 export function cancelPendingTask() {
     if (!currentTask) return;
-    
-    // Check coins for manual skip
     if (gameStats.coins < 300) {
         triggerSound('sfx-deny');
         alert("You cannot afford the 300 coin skip fee.");
         return;
     }
-    
-    // Use the penalty function
     applyPenaltyFail("MANUAL_SKIP");
 }
 
 export function resetTaskDisplay(success) {
-    document.getElementById('cooldownSection').classList.add('hidden');
-    document.getElementById('activeBadge').classList.remove('show');
-    document.getElementById('mainButtonsArea').classList.remove('hidden');
+    if(window.updateTaskUIState) window.updateTaskUIState(false);
     
-    const color = success ? 'var(--neon-green)' : 'var(--neon-red)';
-    const text = success ? 'TASK SUBMITTED' : 'TASK FAILED (-300 🪙)';
-    
-    const tc = document.getElementById('taskContent');
-    if(tc) tc.innerHTML = `<h2 style="font-weight:bold; font-size:1.5rem; color:${color}">${text}</h2>`;
+    const tc = document.getElementById('readyText');
+    if(tc) {
+        const color = success ? '#c5a059' : '#8b0000';
+        const text = success ? 'COMPLETE' : 'FAILED';
+        tc.innerHTML = `<span style="color:${color}">${text}</span>`;
+    }
     
     setCurrentTask(null);
     
-    if (resetUiTimer) clearTimeout(resetUiTimer);
-    
     const timer = setTimeout(() => {
-        if(tc) tc.innerHTML = `<h2 id="readyText" style="font-weight:bold; margin-bottom:5px; color:white; font-size:1.5rem;">Ready?</h2><p class="rajdhani" style="color:#aaa; margin:0;">Waiting for orders.</p>`;
+        if(tc) tc.innerText = "AWAITING ORDERS";
         setResetUiTimer(null);
     }, 4000);
     
