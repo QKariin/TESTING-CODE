@@ -61,11 +61,33 @@ $w.onReady(function () {
                             uItem.weeklyScore  = (uItem.weeklyScore || 0) + amount;
                             uItem.monthlyScore = (uItem.monthlyScore || 0) + amount;
                             uItem.yearlyScore  = (uItem.yearlyScore || 0) + amount;
+                            uItem.strikeCount  = 0;
 
                             await wixData.update("Tasks", uItem, {suppressAuth:true});
                         }
                     }
                 } catch (e) { console.error("Failed to award points:", e); }
+            }
+            else if (data.decision === 'reject') {
+                try {
+                    const userRes = await wixData.query("Tasks")
+                        .eq("memberId", data.memberId)
+                        .find({suppressAuth:true});
+                    if(userRes.items.length > 0) {
+                        let uItem = userRes.items[0];
+                        let strike = (uItem.strikeCount || 0)
+                        if (strike >= 3) {
+                            uItem.score        = Math.round((uItem.score  || 0) * 0.9);
+                            uItem.wallet       = Math.round((uItem.wallet || 0) * 0.9);
+                            uItem.strikeCount  = 0;
+                        }
+                        else {
+                            uItem.strikeCount  = strike + 1;
+                            uItem.wallet       = uItem.wallet-300
+                        }
+                        await wixData.update("Tasks", uItem, {suppressAuth:true});
+                    }
+                } catch (e) { console.error("Failed to reject:", e); }
             }
 
             // --- STEP 2: SEND VERDICT MESSAGES ---
@@ -151,6 +173,7 @@ $w.onReady(function () {
                     uItem.weeklyScore  = (uItem.weeklyScore || 0) + amount;
                     uItem.monthlyScore = (uItem.monthlyScore || 0) + amount;
                     uItem.yearlyScore  = (uItem.yearlyScore || 0) + amount;
+                    uItem.strikeCount  = 0;
                     await wixData.update("Tasks", uItem, {suppressAuth:true});
 
                     // --- THE INSTANT ECHO (POINTS) ---
@@ -282,6 +305,7 @@ async function refreshDashboard() {
                 totalTasks: u.taskdom_total_tasks || 0,
                 completed: u.taskdom_completed_tasks || 0,
                 streak: u.taskdom_current_streak || 0,
+                strikeCount: u.strikeCount || 0,
                 points: u.score || 0,
                 coins: u.wallet || 0,
                 reviewQueue: userReviewQueue,
