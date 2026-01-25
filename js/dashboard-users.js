@@ -77,8 +77,10 @@ async function updateReviewQueue(u) {
     if (u.reviewQueue && u.reviewQueue.length > 0) {
         // Sign URLs for thumbnails
         const signingPromises = u.reviewQueue.map(async t => {
-            if(t.proofUrl && t.proofUrl.startsWith('https://upcdn')) t.thumbSigned = await getSignedUrl(getOptimizedUrl(t.proofUrl, 150));
-            else t.thumbSigned = await getSignedUrl(getOptimizedUrl(t.proofUrl, 150))
+            if(t.proofUrl) {
+                t.thumbSigned = await getSignedUrl(getOptimizedUrl(t.proofUrl, 150));
+                t.fullSigned  = await getSignedUrl(t.proofUrl);
+            }
         });
         await Promise.all(signingPromises);
 

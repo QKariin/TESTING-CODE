@@ -95,7 +95,7 @@ export function openModById(taskId, memberId, isHistory) {
     const u = users.find(x => x.memberId === memberId);
     if (!u) return;
     let t = isHistory ? u.history?.find(x => x.id === taskId) : u.reviewQueue?.find(x => x.id === taskId);
-    if (t) openModal(taskId, memberId, t.proofUrl, t.proofType, t.text, isHistory, t.status);
+    if (t) openModal(taskId, memberId, t.fullSigned, t.proofType, t.text, isHistory, t.status);
 }
 
 // --- 2. REWARD & AUDIO LOGIC (UNTOUCHED) ---
