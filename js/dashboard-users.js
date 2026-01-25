@@ -237,7 +237,7 @@ function updateTrophies(u) {
     if(!container) return;
 
     // Ranks Visualizer
-    const ranks = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Champion"];
+    const ranks = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Queen's Champion"];
     const current = u.hierarchy || "";
     const idx = ranks.findIndex(r => r.toLowerCase() === current.toLowerCase());
 
