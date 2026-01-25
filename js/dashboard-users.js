@@ -267,39 +267,51 @@ async function updateHistory(u) {
 // ACTION FUNCTIONS (EXPOSED TO WINDOW)
 // =========================================
 export function addQueueTask() {
-    console.log("Add Task Clicked"); // Debug check
+    console.log("Button Clicked: Add Queue Task");
 
+    // 1. Check Input
     const input = document.getElementById('qInput');
-    if (!input) return console.error("Error: Input #qInput not found in HTML");
+    if (!input) {
+        console.error("CRITICAL: Input field #qInput missing!");
+        return;
+    }
 
     const txt = input.value.trim();
     
-    // 1. Validate
+    // 2. Check User Selection
     if (!currId) {
-        alert("Select a Slave first.");
+        alert("⚠️ SYSTEM ERROR: No Subject Selected.\nPlease click a user in the sidebar first.");
         return;
     }
-    if (!txt) return; 
+
+    // 3. Check Text
+    if (!txt) {
+        // Just flash the input red if empty
+        input.style.border = "1px solid red";
+        setTimeout(() => input.style.border = "1px solid #333", 500);
+        return;
+    }
     
-    // 2. Logic
+    // 4. Execution
     const u = users.find(x => x.memberId === currId);
     if (u) {
         if (!u.taskQueue) u.taskQueue = [];
         u.taskQueue.push(txt);
         
-        console.log("Adding to queue:", txt);
+        console.log("Sending task to backend:", txt);
 
-        // 3. Send to Backend
+        // Send to Backend
         window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
         
-        // 4. Send to Bridge (Update Phone)
-        if(window.Bridge) {
-            window.Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
+        // Instant Update (Bridge)
+        if (typeof Bridge !== 'undefined') {
+            Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
         }
 
-        // 5. Cleanup
         input.value = '';
-        updateDetail(u); // Refresh the list
+        updateDetail(u); // Refresh UI
+    } else {
+        alert("⚠️ Error: User data not found in memory.");
     }
 }
 
