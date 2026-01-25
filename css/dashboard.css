@@ -284,22 +284,160 @@ html, body {
 .menu-btn svg { width: 16px; height: 16px; fill: #ccc; }
 .menu-btn:hover svg { fill: white; }
 
-/* ACTION PANEL */
-.action-panel { padding: 20px; overflow-y: auto; height: 100%; display: flex; flex-direction: column; gap: 15px; }
-.wallet-panel-display { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #333; width: 100%; flex-shrink: 0; }
-.wpd-label { font-family: 'Rajdhani'; font-size: 0.7rem; color: #666; letter-spacing: 2px; font-weight: bold; }
-.wpd-val { font-size: 2.5rem; font-weight: 900; color: var(--yellow); line-height: 1; text-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
+/* =========================================
+   ADMIN COMMAND CENTER (TABBED LAYOUT)
+   ========================================= */
 
+/* MAIN PANEL CONTAINER */
+.action-panel {
+    display: flex;
+    flex-direction: column;
+    background: #080808;
+    border-left: 1px solid #333;
+    height: 100%;
+    overflow: hidden; /* Internal views handle scrolling */
+    padding: 0;       /* Padding moved to internal views */
+}
+
+/* --- 1. VITALS DECK (TOP FIXED) --- */
+.ap-vitals {
+    padding: 15px;
+    background: #000;
+    border-bottom: 1px solid #222;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.ap-wallet-row { display: flex; flex-direction: column; gap: 2px; }
+.ap-rank-row { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+
+.ap-label { font-family:'Orbitron'; font-size:0.55rem; color:#666; letter-spacing:1px; }
+
+.ap-money-ctrl { display: flex; align-items: center; gap: 10px; }
+.ap-balance { font-family:'Rajdhani'; font-size:1.6rem; color:var(--yellow); font-weight:700; min-width: 60px; text-align:center; text-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
+
+.ap-btn-money {
+    background: #161616; border: 1px solid #333; color: #888;
+    width: 24px; height: 24px; border-radius: 4px; cursor: pointer;
+    font-weight: 900; line-height: 1; display: flex; align-items: center; justify-content: center;
+    transition: 0.2s;
+}
+.ap-btn-money.red:hover { border-color: var(--red); color: var(--red); background: rgba(255,0,0,0.1); }
+.ap-btn-money.green:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,0,0.1); }
+
+.ap-rank-val { font-family:'Cinzel'; font-weight:700; color:white; font-size:1rem; letter-spacing: 1px; }
+
+/* --- 2. NAVIGATION TABS --- */
+.ap-nav {
+    display: flex;
+    border-bottom: 1px solid #333;
+    background: #0a0a0a;
+    flex-shrink: 0;
+}
+
+.ap-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 12px;
+    color: #555;
+    font-family: 'Orbitron';
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: 0.3s;
+}
+.ap-tab:hover { color: #ccc; background: rgba(255,255,255,0.02); }
+.ap-tab.active { color: var(--blue); border-bottom-color: var(--blue); background: rgba(0, 243, 255, 0.05); font-weight: bold; }
+
+/* --- 3. VIEW CONTAINER --- */
+.ap-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.ap-view {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    /* Custom Scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #333 #000;
+}
+.ap-view.hidden { display: none !important; }
+.ap-view.active { display: flex !important; animation: fadeIn 0.2s ease-out; }
+
+/* --- 4. SECTION COMPONENTS (NEW) --- */
+.sec-box {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #333;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+}
+.sec-title { font-size: 0.65rem; color: #666; margin-bottom: 8px; letter-spacing: 1px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #222; padding-bottom: 4px; }
+
+/* ALTAR SLOTS */
+.altar-admin-row { display: flex; gap: 10px; margin-top: 5px; }
+.aa-slot {
+    flex: 1; height: 70px;
+    border: 1px dashed #444; background: #000;
+    display: flex; align-items: center; justify-content: center;
+    color: #444; font-family: 'Cinzel'; cursor: pointer;
+    background-size: cover; background-position: center;
+    transition: 0.2s;
+    font-size: 0.8rem;
+}
+.aa-slot:hover { border-color: var(--gold); color: var(--gold); }
+
+/* TELEMETRY GRID */
+.telemetry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.t-stat { display: flex; flex-direction: column; align-items: center; background: #111; padding: 8px; border-radius: 4px; }
+.t-stat span { font-size: 0.5rem; color: #666; font-family: 'Orbitron'; }
+.t-stat strong { font-size: 1rem; color: #fff; font-family: 'Rajdhani'; }
+
+/* =========================================
+   LEGACY COMPONENTS (KEPT SAFE)
+   ========================================= */
+
+/* STAT BOXES (Reused in Intel Tab) */
 .stats-row { display: flex; gap: 5px; justify-content: space-between; }
 .stat-box { flex: 1; background: #111; border: 1px solid #333; padding: 6px; border-radius: 4px; text-align: center; }
 .stat-val { font-size: 1rem; font-weight: 900; color: white; line-height: 1; }
 .stat-lbl { font-size: 0.5rem; color: #666; font-family: 'Rajdhani'; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 
-.pts-grid { display: flex; flex-direction: row; gap: 4px; overflow-x: auto; flex-wrap: nowrap; align-items: center; }
-.pts-grid::-webkit-scrollbar { display: none; }
+/* MINI ACTIVE TASK (OPS TAB) */
+.mini-active { display: flex; align-items: center; gap: 8px; border: 1px solid var(--blue); background: rgba(0, 243, 255, 0.05); padding: 8px; border-radius: 4px; margin-bottom: 5px; }
+.ma-status { font-size: 0.55rem; color: var(--blue); font-weight: 900; writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 1px; }
+.ma-mid { flex: 1; overflow: hidden; min-width: 0; }
+.ma-txt { font-family: 'Rajdhani'; font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold; }
+.ma-timer { font-family: 'Orbitron'; font-size: 0.85rem; color: var(--blue); font-weight: bold; margin-top: 2px; }
+.ma-ctrl { display: flex; gap: 4px; }
+.ma-btn { padding: 4px 8px; background: #000; border: 1px solid #444; color: #aaa; font-size: 0.6rem; cursor: pointer; border-radius: 3px; font-family: 'Orbitron'; transition: 0.2s; }
+.ma-btn:hover { color: white; border-color: white; }
 
-.q-btn { padding: 6px 2px; font-weight: bold; border-radius: 3px; cursor: pointer; font-family: 'Rajdhani'; border: 1px solid #333; background: #161616; color: white; font-size: 0.7rem; text-align: center; flex: 1; min-width: 35px; height: 35px; }
-.q-btn:hover { background: #222; }
+/* QUEUE COMPONENTS (OPS TAB) */
+.task-queue-box { border: 1px solid #333; padding: 10px; border-radius: 6px; background: #0a0a0a; display: flex; flex-direction: column; gap: 8px; }
+.clickable-title { cursor: pointer; transition: 0.2s; }
+.clickable-title:hover { color: #fff !important; text-decoration: underline; }
+
+.q-list-vertical { display: flex; flex-direction: column; gap: 4px; width: 100%; max-height: 200px; overflow-y: auto; }
+.q-input-row { display: flex; gap: 5px; margin-top: 5px; }
+.q-input { flex: 1; background: #111; border: 1px solid #333; color: white; padding: 6px; font-family: 'Rajdhani'; font-size: 0.8rem; }
+.q-add-btn { background: var(--blue); border: none; color: black; font-weight: bold; width: 30px; cursor: pointer; }
+
+/* QUEUE BUTTONS (Inside List) */
+.q-btn { padding: 6px 2px; font-weight: bold; border-radius: 3px; cursor: pointer; font-family: 'Rajdhani'; border: 1px solid #333; background: #161616; color: white; font-size: 0.7rem; text-align: center; flex: 1; min-width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; }
+.q-btn:hover { background: #222; border-color: #666; }
 .q-minus { border-color: var(--pink); color: var(--pink); } 
 
 .q-btn-img { aspect-ratio: 1/1; background: #000; border: 1px solid #333; border-radius: 6px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; transition: 0.2s; flex: 1; min-width: 35px; height: 35px; }
@@ -308,7 +446,7 @@ html, body {
 .q-btn-img span { position: absolute; bottom: 2px; right: 2px; font-size: 0.55rem; color: var(--green); font-weight: 900; line-height: 1; background: rgba(0,0,0,0.7); padding: 1px 2px; border-radius: 2px; }
 .q-btn-img svg { width: 24px; height: 24px; fill: #444; }
 
-.sec-title { font-size: 0.65rem; color: #666; margin-bottom: 5px; letter-spacing: 1px; font-weight: bold; text-transform: uppercase; }
+/* PENDING CARDS & HISTORY */
 .pend-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .pend-card { display: flex; gap: 12px; background: rgba(255,0,60,0.05); border: 1px solid var(--red); padding: 8px; border-radius: 6px; cursor: pointer; align-items: center; box-shadow: 0 0 10px rgba(255,0,60,0.1); width: 100%; transition: 0.2s; height: 60px; }
 .pend-card:hover { background: rgba(255,0,60,0.1); transform: translateX(2px); }
@@ -316,16 +454,12 @@ html, body {
 .pend-info { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .pend-txt { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; font-weight: bold; width: 100%; }
 .pend-act { font-size: 0.6rem; color: var(--red); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-.mini-active { display: flex; align-items: center; gap: 8px; border: 1px solid #333; background: #080808; padding: 6px; border-radius: 4px; }
-.ma-status { font-size: 0.55rem; color: var(--blue); font-weight: 900; writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 1px; }
-.ma-mid { flex: 1; overflow: hidden; min-width: 0; }
-.ma-txt { font-family: 'Rajdhani'; font-size: 0.75rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ma-timer { font-family: 'Orbitron'; font-size: 0.85rem; color: white; font-weight: bold; }
-.ma-ctrl { display: flex; gap: 2px; }
-.ma-btn { padding: 2px 5px; background: #222; border: 1px solid #444; color: #888; font-size: 0.6rem; cursor: pointer; border-radius: 2px; }
-.ma-btn:hover { color: white; border-color: #666; }
-.task-queue-box { border: 1px solid var(--blue); padding: 5px; border-radius: 6px; background: rgba(0, 243, 255, 0.02); display: flex; flex-direction: column; gap: 5px; }
-.q-list-vertical { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+
+.history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 5px; }
+.load-more-btn { width: 100%; padding: 8px; background: #111; border: 1px solid #333; color: #666; font-size: 0.7rem; cursor: pointer; margin-top: 10px; font-family: 'Orbitron'; }
+.load-more-btn:hover { color: white; border-color: white; }
+
+.pts-grid { display: flex; flex-direction: row; gap: 4px; overflow-x: auto; flex-wrap: nowrap; align-items: center; min-height: 40px; }
 
 /* ============================================================
    ULTRA-COMPACT TACTICAL TASK CARD (NEW MICRO-LOGIC)
