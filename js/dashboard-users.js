@@ -45,6 +45,7 @@ export function updateDetail(u) {
     setText('dPoints', u.points || 0);
 
     // --- 2. TAB: OPS (Operations) ---
+    updateReviewQueue(u);
     updateActiveTask(u);
     updateTaskQueue(u);
     updateDailyProtocol(u); 
@@ -69,6 +70,19 @@ function setText(id, txt) {
 // =========================================
 // TAB 1: OPS (OPERATIONS)
 // =========================================
+function updateReviewQueue(u) {
+    const qSec = document.getElementById('userQueueSec');
+    if (!qSec) return;
+    if (u.reviewQueue && u.reviewQueue.length > 0) {
+        qSec.style.display = 'flex';
+        qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` + 
+            u.reviewQueue.map(t => `<div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false)">
+                    <img src="${getOptimizedUrl(t.proofUrl, 150)}" class="pend-thumb">
+                    <div class="pend-info"><div class="pend-act">PENDING</div><div class="pend-txt">${clean(t.text)}</div></div>
+                </div>`).join('');
+    } else { qSec.style.display = 'none'; }
+}
+
 function updateActiveTask(u) {
     if (cooldownInterval) clearInterval(cooldownInterval);
     const activeText = document.getElementById('dActiveText');
