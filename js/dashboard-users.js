@@ -4,7 +4,7 @@
 import { 
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
     availableDailyTasks, 
-    setCooldownInterval, setHistLimit, setLastHistoryJson, setArmoryTarget
+    setCooldownInterval, setHistLimit, setLastHistoryJson 
 } from './dashboard-state.js';
 import { clean, raw, formatTimer } from './dashboard-utils.js';
 import { Bridge } from './bridge.js';
@@ -21,7 +21,7 @@ window.openQueueTask = openQueueTask;
 window.deleteQueueItem = deleteQueueItem;
 window.addQueueTask = addQueueTask;
 window.updateDetail = updateDetail;
-window.toggleMainTaskExpansion = toggleMainTaskExpansion;
+window.toggleMainTaskExpansion = toggleMainTaskExpansion; // NEW
 
 // --- STABILITY CACHE ---
 let cachedFillers = [];
@@ -71,7 +71,6 @@ export function updateDetail(u) {
     document.getElementById('dStreak').innerText = u.streak || 0;
     document.getElementById('dStrikes').innerText = u.strikeCount || 0;
     
-    // Joined Date - YOUR WORKING CODE
     const joined = u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "N/A";
     const joinedEl = document.getElementById('dJoined');
     if (joinedEl) joinedEl.innerText = `SLAVE SINCE: ${joined}`;
@@ -81,15 +80,8 @@ export function updateDetail(u) {
     updateStickerCase(u);
     updateReviewQueue(u);
     updateActiveTask(u);
-    updateTaskQueue(u);
+    updateTaskQueue(u); // Refreshes every 4s
     updateHistory(u);
-    
-    // NEW: Add missing function calls
-    updateTelemetry(u);
-    updateDossier(u);
-    updateInventory(u);
-    updateAltar(u);
-    updateTrophies(u);
 }
 
 function updatePointsGrid() {
@@ -175,18 +167,13 @@ export function updateTaskQueue(u) {
     
     let personalTasks = u.taskQueue || [];
     
-    // Stability cache logic
-    if (fillerUserId !== u.memberId || cachedFillers.length === 0) {
-        cachedFillers = (availableDailyTasks || []).sort(() => 0.5 - Math.random()).slice(0, 10);
-        fillerUserId = u.memberId;
-    }
-    
+    // ... (Keep your stability cache logic here) ...
     const displayTasks = [...personalTasks, ...cachedFillers.slice(0, Math.max(0, 10 - personalTasks.length))];
     
     listContainer.innerHTML = displayTasks.map((t, idx) => {
         const isPersonal = idx < personalTasks.length;
         const niceText = clean(t);
-        const isExpanded = mainDashboardExpandedTasks.has(niceText);
+        const isExpanded = mainDashboardExpandedTasks.has(niceText); // From Step 2 memory
         
         return `<div class="q-item-line ${isPersonal ? 'direct-order' : 'filler-task'} ${isExpanded ? 'is-expanded' : ''}">
             <div class="dr-card-header">
@@ -219,7 +206,7 @@ window.assignFillerTask = function(text) {
     if (!u) return;
     if (!u.taskQueue) u.taskQueue = [];
     u.taskQueue.push(text);
-    fillerUserId = null;
+    fillerUserId = null; 
     window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
     Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
     updateDetail(u);
@@ -232,6 +219,7 @@ async function updateHistory(u) {
         const hGrid = document.getElementById('userHistoryGrid');
         if (!hGrid) return;
         
+        //const cleanHist = (u.history || []).filter(h => h.status !== 'fail' && (!h.text || !h.text.toUpperCase().includes('SKIPPED')));
         const cleanHist = (u.history || []).filter(h => h.status && h.status !== 'fail' && (!h.text || !h.text.toUpperCase().includes('SKIPPED')));
         let historyToShow = cleanHist.slice(0, histLimit);
         
@@ -241,7 +229,7 @@ async function updateHistory(u) {
         const signingPromises = historyToShow.map(async h => {
             console.log("RAW:", h.proofUrl);
             h.thumbSigned = await getSignedUrl(getOptimizedUrl(h.proofUrl, 150));
-            h.fullSigned = await getSignedUrl(h.proofUrl);
+            h.fullSigned  = await getSignedUrl(h.proofUrl);
             console.log("thumb:", h.thumbSigned);
         });
         await Promise.all(signingPromises);
@@ -255,86 +243,6 @@ async function updateHistory(u) {
         }).join('') : '<div style="color:#444; font-size:0.7rem;">No history.</div>';
     }
 }
-
-// === MISSING FUNCTIONS FROM ORIGINAL ===
-
-function updateTelemetry(u) {
-    const total = u.kneelCount || 0; 
-    const hours = (total * 0.25).toFixed(1); // Assuming 15m per kneel
-    
-    setText('dTotalKneel', `${hours} HRS`);
-    setText('dLastKneel', u.lastKneelDate ? new Date(u.lastKneelDate).toLocaleDateString() : "NEVER");
-}
-
-function updateDossier(u) {
-    const grid = document.getElementById('dossierGrid');
-    if(!grid) return;
-    
-    let content = "";
-    if(u.kinks) content += `<div style="margin-bottom:10px;"><div style="color:var(--blue); font-size:0.6rem; margin-bottom:2px;">KINKS</div><div style="color:#ccc; font-size:0.8rem; line-height:1.2;">${u.kinks}</div></div>`;
-    if(u.limits) content += `<div><div style="color:var(--red); font-size:0.6rem; margin-bottom:2px;">LIMITS</div><div style="color:#ccc; font-size:0.8rem; line-height:1.2;">${u.limits}</div></div>`;
-    
-    if(!content) content = '<div style="color:#444; font-size:0.7rem;">FILE EMPTY</div>';
-    grid.innerHTML = content;
-}
-
-function updateInventory(u) {
-    const grid = document.getElementById('inventoryGrid');
-    if(!grid) return;
-
-    let items = [];
-    if (u.purchasedItems) {
-        if (Array.isArray(u.purchasedItems)) items = u.purchasedItems;
-        else if (typeof u.purchasedItems === 'string') {
-            try { items = JSON.parse(u.purchasedItems); } catch(e) {}
-        }
-    }
-
-    if(items.length === 0) {
-        grid.innerHTML = '<div style="color:#444; font-size:0.7rem; text-align:center;">NO TRIBUTES</div>';
-        return;
-    }
-
-    grid.innerHTML = items.map(i => `
-        <div style="background:#111; border:1px solid #333; padding:5px; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <div style="font-size:0.7rem; color:var(--gold); font-family:'Cinzel';">${i.name || i.itemName || "Item"}</div>
-            <div style="font-size:0.6rem; color:#666;">${i.price || i.cost || 0}</div>
-        </div>
-    `).join('');
-}
-
-function updateAltar(u) {
-    // Future expansion: Make these droppable targets
-}
-
-function updateTrophies(u) {
-    const container = document.getElementById('userStickerCase');
-    if(!container) return;
-
-    const ranks = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Champion"];
-    const current = u.hierarchy || "";
-    const idx = ranks.findIndex(r => r.toLowerCase() === current.toLowerCase());
-
-    let html = '<div style="display:flex; gap:5px; flex-wrap:wrap;">';
-    ranks.forEach((r, i) => {
-        const unlocked = i <= idx;
-        const color = unlocked ? "var(--gold)" : "#333";
-        const bg = unlocked ? "rgba(197, 160, 89, 0.1)" : "transparent";
-        html += `<div style="border:1px solid ${color}; background:${bg}; padding:4px 8px; font-size:0.6rem; color:${color}; border-radius:4px;" title="${r}">
-            ${i+1}
-        </div>`;
-    });
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-// Helper function
-function setText(id, txt) {
-    const el = document.getElementById(id);
-    if(el) el.innerText = txt;
-}
-
-// === EXPORTED FUNCTIONS ===
 
 export function modPoints(amount) {
     if (!currId) return;
@@ -358,7 +266,7 @@ export function deleteQueueItem(memberId, index) {
     const u = users.find(x => x.memberId === memberId);
     if (u?.taskQueue) {
         u.taskQueue.splice(index, 1);
-        fillerUserId = null;
+        fillerUserId = null; 
         window.parent.postMessage({ type: "updateTaskQueue", memberId: memberId, queue: u.taskQueue }, "*");
         Bridge.send("updateTaskQueue", { memberId: memberId, queue: u.taskQueue });
         updateDetail(u);
@@ -366,31 +274,10 @@ export function deleteQueueItem(memberId, index) {
 }
 
 export function addQueueTask() {
-    const input = document.querySelector('#tabOps #qInput') || document.getElementById('qInput');
+    const input = document.getElementById('qInput');
+    const txt = input?.value.trim();
+    if (!txt || !currId) return;
     
-    if (!input) return console.error("Input #qInput not found!");
-    
-    if (!currId) {
-        alert("Select a Slave first.");
-        return;
-    }
-
-    const txt = input.value.trim();
-
-    if (!txt) {
-        // SCENARIO A: Input is Empty -> OPEN DATABASE (Armory)
-        console.log("Input empty. Opening Task Gallery for QUEUE...");
-        setArmoryTarget('queue'); 
-        
-        if(window.openTaskGallery) {
-            window.openTaskGallery();
-        } else {
-            console.error("openTaskGallery function not found on window!");
-        }
-        return;
-    }
-    
-    // SCENARIO B: Input has Text -> ADD MANUAL TASK
     const u = users.find(x => x.memberId === currId);
     if (u) {
         if (!u.taskQueue) u.taskQueue = [];
@@ -398,12 +285,9 @@ export function addQueueTask() {
         fillerUserId = null;
         
         window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+        Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
         
-        if(window.Bridge) {
-            window.Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
-        }
-
         input.value = '';
-        updateDetail(u); 
+        updateDetail(u);
     }
 }
