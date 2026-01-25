@@ -4,7 +4,7 @@ import { userProfile, currentTask } from './state.js'; // FIXED: Added currentTa
 import { finishTask } from './tasks.js';
 import { uploadToBytescale } from './mediaBytescale.js';
 
-export async function handleEvidenceUpload(input) {
+export async function handleEvidenceUpload(input, taskTextOverride = "Task") {
     try {
         if (input.files && input.files[0]) {
             const file = input.files[0];
@@ -23,7 +23,7 @@ export async function handleEvidenceUpload(input) {
             // FIXED: Now correctly reads currentTask.text
             window.parent.postMessage({
                 type: "uploadEvidence",
-                task: currentTask ? currentTask.text : "Task",
+                task: currentTask ? currentTask.text : taskTextOverride,
                 fileUrl: finalUrl,
                 mimeType: file.type
             }, "*");
