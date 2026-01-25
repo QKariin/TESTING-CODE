@@ -575,10 +575,8 @@ html, body {
     font-size: 0.65rem !important; /* MICRO FONT */
     line-height: 1.2 !important;
     color: #888 !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2; /* Locked to 2 lines */
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
+    display: block;
+    overflow: visible !important;
     transition: color 0.3s;
     flex: none !important;
 }
