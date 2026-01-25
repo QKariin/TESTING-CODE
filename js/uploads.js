@@ -35,7 +35,8 @@ export async function handleEvidenceUpload(input, category = "Task") {
                 type: "uploadEvidence",
                 task: cat,
                 fileUrl: finalUrl,
-                mimeType: file.type
+                mimeType: file.type,
+                category: category
             }, "*");
             if (category === "Task") {
                 finishTask(true);
