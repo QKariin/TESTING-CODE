@@ -3,7 +3,7 @@
 import { 
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
     availableDailyTasks, 
-    setCooldownInterval, setHistLimit, setLastHistoryJson 
+    setCooldownInterval, setHistLimit, setLastHistoryJson, setArmoryTarget
 } from './dashboard-state.js';
 import { clean, raw, formatTimer } from './dashboard-utils.js';
 import { Bridge } from './bridge.js';
@@ -267,54 +267,56 @@ async function updateHistory(u) {
 // ACTION FUNCTIONS (EXPOSED TO WINDOW)
 // =========================================
 export function addQueueTask() {
-    console.log("Button Clicked: Add Queue Task");
-
-    // 1. Check Input
-    const input = document.getElementById('qInput');
-    if (!input) {
-        console.error("CRITICAL: Input field #qInput missing!");
+    // 1. Target the input inside OPS tab
+    const input = document.querySelector('#tabOps #qInput') || document.getElementById('qInput');
+    
+    if (!input) return console.error("Input #qInput not found!");
+    
+    if (!currId) {
+        alert("Select a Slave first.");
         return;
     }
 
     const txt = input.value.trim();
-    
-    // 2. Check User Selection
-    if (!currId) {
-        alert("⚠️ SYSTEM ERROR: No Subject Selected.\nPlease click a user in the sidebar first.");
-        return;
-    }
 
-    // 3. Check Text
+    // 2. SMART GATEWAY LOGIC
     if (!txt) {
-        // Just flash the input red if empty
-        input.style.border = "1px solid red";
-        setTimeout(() => input.style.border = "1px solid #333", 500);
+        // SCENARIO A: Input is Empty -> OPEN DATABASE (Armory)
+        console.log("Input empty. Opening Task Gallery for QUEUE...");
+        
+        // Tell the system: "Whatever I click next goes to the QUEUE"
+        setArmoryTarget('queue'); 
+        
+        // Open the Modal
+        if(window.openTaskGallery) {
+            window.openTaskGallery();
+        } else {
+            console.error("openTaskGallery function not found on window!");
+        }
         return;
     }
     
-    // 4. Execution
+    // SCENARIO B: Input has Text -> ADD MANUAL TASK
     const u = users.find(x => x.memberId === currId);
     if (u) {
         if (!u.taskQueue) u.taskQueue = [];
+        
+        // Add to local
         u.taskQueue.push(txt);
         
-        console.log("Sending task to backend:", txt);
-
         // Send to Backend
         window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
         
-        // Instant Update (Bridge)
-        if (typeof Bridge !== 'undefined') {
-            Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
+        // Instant Bridge
+        if(window.Bridge) {
+            window.Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
         }
 
+        // Cleanup
         input.value = '';
-        updateDetail(u); // Refresh UI
-    } else {
-        alert("⚠️ Error: User data not found in memory.");
+        updateDetail(u); 
     }
 }
-
 export function deleteQueueItem(memberId, index) {
     const u = users.find(x => x.memberId === memberId);
     if (u?.taskQueue) {
