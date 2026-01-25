@@ -21,7 +21,7 @@ export const LEVELS = [
     {name: "Butler", min: 10000}, 
     {name: "Chamberlain", min: 20000}, 
     {name: "Secretary", min: 50000}, 
-    {name: "Queen's Champioin", min: 100000} 
+    {name: "Queen's Champion", min: 100000} 
 ];
 
 export const FUNNY_SAYINGS = [

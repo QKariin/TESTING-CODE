@@ -1190,7 +1190,7 @@ const REWARD_DATA = {
         { name: "BUTLER", icon: ICONS.rank },
         { name: "CHAMBERLAIN", icon: ICONS.rank },
         { name: "SECRETARY", icon: ICONS.rank },
-        { name: "CHAMPION", icon: ICONS.rank }
+        { name: "QUEEN'S CHAMPION", icon: ICONS.rank }
     ],
     tasks: [
         { limit: 10, name: "LABORER", icon: ICONS.task },
@@ -1216,13 +1216,11 @@ const REWARD_DATA = {
 };
 
 window.renderRewards = function() {
-    if (!window.gameStats) return;
-
     // 1. GET DATA
-    const currentRank = window.userProfile?.hierarchy || "Hall Boy";
-    const totalTasks = window.gameStats.taskdom_completed || 0;
-    const totalKneels = window.gameStats.kneelCount || 0;
-    const totalSpent = window.gameStats.total_coins_spent || 0; 
+    const currentRank = userProfile?.hierarchy || "Hall Boy";
+    const totalTasks = gameStats.taskdom_completed || 0;
+    const totalKneels = gameStats.kneelCount || 0;
+    const totalSpent = gameStats.total_coins_spent || 0; 
 
     // HELPER: BUILD SHELF
     // shapeClass = 'shape-hex', 'shape-circle', etc.
