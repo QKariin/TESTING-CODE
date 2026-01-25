@@ -86,7 +86,7 @@ async function updateReviewQueue(u) {
 
         qSec.style.display = 'flex';
         qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` + 
-            u.reviewQueue.map(t => `<div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false)">
+            u.reviewQueue.map(t => `<div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false, '${t.fullSigned}')">
                     <img src="${t.thumbSigned}" class="pend-thumb">
                     <div class="pend-info"><div class="pend-act">PENDING</div><div class="pend-txt">${clean(t.text)}</div></div>
                 </div>`).join('');
