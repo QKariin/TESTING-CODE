@@ -1,4 +1,5 @@
-// Dashboard User Management (TABBED EDITION)
+// js/dashboard-users.js - USER DATA CONTROLLER
+
 import { 
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
     availableDailyTasks, 
@@ -8,25 +9,19 @@ import { clean, raw, formatTimer } from './dashboard-utils.js';
 import { Bridge } from './bridge.js';
 import { getOptimizedUrl, getSignedUrl } from './media.js';
 
-// --- BIND WINDOW FUNCTIONS ---
-window.modPoints = modPoints;
-window.loadMoreHist = loadMoreHist;
-window.openQueueTask = openQueueTask;
-window.deleteQueueItem = deleteQueueItem;
-window.addQueueTask = addQueueTask;
-window.updateDetail = updateDetail;
-window.toggleMainTaskExpansion = toggleMainTaskExpansion; 
-
-// --- CACHE & MEMORY ---
-const mainDashboardExpandedTasks = new Set();
+// --- STABILITY CACHE ---
+// Prevents flickering of "System Tasks" when refreshing
 let cachedFillers = [];
 let fillerUserId = null;
+const mainDashboardExpandedTasks = new Set();
 
+// =========================================
+// MAIN UPDATE FUNCTION (Populates All Tabs)
+// =========================================
 export function updateDetail(u) {
     if (!u) return;
     
-    // --- 1. VITALS DECK (Always Visible) ---
-    // Online Status
+    // --- 1. VITALS DECK (Top Header) ---
     const now = Date.now();
     const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
     let diff = Math.floor((now - ls) / 60000);
@@ -35,18 +30,24 @@ export function updateDetail(u) {
     const lsEl = document.getElementById('lastSeen');
     if (lsEl) {
         lsEl.innerText = status;
-        lsEl.classList.toggle('online', status === "ONLINE");
+        lsEl.className = (status === "ONLINE") ? "uh-seen online" : "uh-seen";
     }
     
     // Basic Info
-    document.getElementById('dName').innerText = u.name;
-    document.getElementById('dRank').innerText = u.hierarchy || "SLAVE";
-    document.getElementById('dWalletVal').innerText = u.coins || 0;
+    setText('dName', u.name);
+    setText('dRank', u.hierarchy || "SLAVE");
+    setText('dWalletVal', u.coins || 0);
     
+    // Stats Bar
+    setText('dStrikes', u.strikeCount || 0);
+    setText('dTasks', u.completed || 0);
+    setText('dStreak', u.streak || 0);
+    setText('dPoints', u.points || 0);
+
     // --- 2. TAB: OPS (Operations) ---
     updateActiveTask(u);
     updateTaskQueue(u);
-    updateDailyProtocol(u); // New
+    updateDailyProtocol(u); 
 
     // --- 3. TAB: INTEL (Data) ---
     updateTelemetry(u);
@@ -59,25 +60,40 @@ export function updateDetail(u) {
     updateHistory(u);
 }
 
+// Helper to safely set text
+function setText(id, txt) {
+    const el = document.getElementById(id);
+    if(el) el.innerText = txt;
+}
+
 // =========================================
 // TAB 1: OPS (OPERATIONS)
 // =========================================
-
 function updateActiveTask(u) {
     if (cooldownInterval) clearInterval(cooldownInterval);
+    const activeText = document.getElementById('dActiveText');
+    const activeTimer = document.getElementById('dActiveTimer');
+
+    if (!activeText) return;
+
     if (u.activeTask && u.endTime && u.endTime > Date.now()) {
-        document.getElementById('dActiveText').innerText = clean(u.activeTask.text);
+        activeText.innerText = clean(u.activeTask.text);
+        
         const tick = () => {
             const diff = u.endTime - Date.now();
-            if (diff <= 0) { document.getElementById('dActiveTimer').innerText = "00:00"; clearInterval(cooldownInterval); return; }
-            document.getElementById('dActiveTimer').innerText = formatTimer(diff);
+            if (diff <= 0) { 
+                activeTimer.innerText = "00:00"; 
+                clearInterval(cooldownInterval); 
+                return; 
+            }
+            activeTimer.innerText = formatTimer(diff);
         };
         tick();
         const interval = setInterval(tick, 1000);
         setCooldownInterval(interval);
     } else {
-        document.getElementById('dActiveText').innerText = "IDLE";
-        document.getElementById('dActiveTimer').innerText = "--:--";
+        activeText.innerText = "IDLE";
+        activeTimer.innerText = "--:--";
     }
 }
 
@@ -86,24 +102,27 @@ function updateTaskQueue(u) {
     if (!listContainer) return;
 
     let personalTasks = u.taskQueue || [];
-    // Only fetch filler if user changed or empty
+    
+    // Filler Logic (Random tasks to make it look busy if empty)
     if (fillerUserId !== u.memberId || cachedFillers.length === 0) {
         cachedFillers = (availableDailyTasks || []).sort(() => 0.5 - Math.random()).slice(0, 10);
         fillerUserId = u.memberId;
     }
+    
     const displayTasks = [...personalTasks, ...cachedFillers.slice(0, Math.max(0, 10 - personalTasks.length))];
 
     listContainer.innerHTML = displayTasks.map((t, idx) => {
         const isPersonal = idx < personalTasks.length;
         const niceText = clean(t);
+        const isExpanded = mainDashboardExpandedTasks.has(niceText);
+
         return `
-            <div class="q-item-line ${isPersonal ? 'direct-order' : 'filler-task'}">
-                <div class="dr-card-header">
-                    <span class="q-handle">${isPersonal ? '★' : ''}</span>
-                    ${isPersonal ? `<span class="q-badge-queen">QUEEN</span>` : '<span style="font-size:0.4rem; color:#333;">SYSTEM</span>'}
-                    ${isPersonal ? `<span class="q-del" onclick="event.stopPropagation(); deleteQueueItem('${u.memberId}', ${idx})">&times;</span>` : ''}
+            <div class="mini-active" style="border:1px solid ${isPersonal ? '#333' : '#222'}; opacity:${isPersonal ? 1 : 0.5}; margin-bottom:5px;">
+                <div class="ma-status" style="color:${isPersonal ? 'var(--gold)' : '#555'}">${isPersonal ? 'CMD' : 'AUTO'}</div>
+                <div class="ma-mid">
+                    <div class="ma-txt" style="white-space:normal; cursor:pointer;" onclick="toggleMainTaskExpansion(this, '${raw(niceText)}')">${niceText}</div>
                 </div>
-                <div class="q-txt-line">${niceText}</div>
+                ${isPersonal ? `<button class="ma-btn" onclick="deleteQueueItem('${u.memberId}', ${idx})" style="color:red;">&times;</button>` : ''}
             </div>`;
     }).join('');
 }
@@ -113,19 +132,18 @@ function updateDailyProtocol(u) {
     if(!container) return;
 
     if (!u.routine) {
-        container.innerHTML = '<div style="color:#666; font-size:0.7rem; text-align:center;">NO ROUTINE ASSIGNED</div>';
+        container.innerHTML = '<div style="color:#666; font-size:0.7rem; text-align:center; padding:10px;">NO ROUTINE ASSIGNED</div>';
         return;
     }
 
-    // Logic: Check if they uploaded evidence today
-    const isDone = u.routineDoneToday === true; // Requires this flag from backend
-    const statusColor = isDone ? 'var(--green)' : '#666';
-    const statusIcon = isDone ? '✔' : '☐';
+    const isDone = u.routineDoneToday === true;
+    const color = isDone ? 'var(--green)' : '#666';
+    const icon = isDone ? 'COMPLETED' : 'PENDING';
 
     container.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border:1px solid #333;">
-            <div style="font-family:'Cinzel'; color:#fff;">${u.routine.toUpperCase()}</div>
-            <div style="color:${statusColor}; font-weight:bold;">${statusIcon}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border:1px solid #333; border-left:3px solid ${color};">
+            <div style="font-family:'Cinzel'; color:#fff; font-size:0.9rem;">${u.routine.toUpperCase()}</div>
+            <div style="color:${color}; font-weight:bold; font-size:0.7rem; font-family:'Orbitron';">${icon}</div>
         </div>
     `;
 }
@@ -133,105 +151,81 @@ function updateDailyProtocol(u) {
 // =========================================
 // TAB 2: INTEL (DATA)
 // =========================================
-
 function updateTelemetry(u) {
-    // Kneeling Stats
     const total = u.kneelCount || 0; 
-    // Mocking "Hours" for now based on count * avg session (e.g. 15 mins)
-    const hours = Math.floor((total * 15) / 60); 
-
-    document.getElementById('dTotalKneel').innerText = `${hours}h`;
-    document.getElementById('dLastKneel').innerText = u.lastKneelDate ? new Date(u.lastKneelDate).toLocaleDateString() : "Never";
+    const hours = (total * 0.25).toFixed(1); // Assuming 15m per kneel
+    
+    setText('dTotalKneel', `${hours} HRS`);
+    // Need kneelHistory array from Velo to do this properly, defaulting for now
+    setText('dLastKneel', u.lastKneelDate ? new Date(u.lastKneelDate).toLocaleDateString() : "NEVER");
 }
 
 function updateDossier(u) {
     const grid = document.getElementById('dossierGrid');
     if(!grid) return;
-
-    let html = "";
     
-    // KINKS
-    if(u.kinks) {
-        html += `<div style="margin-bottom:10px;"><div style="color:var(--blue); font-size:0.6rem;">KINKS</div>`;
-        html += `<div style="color:#ccc; font-size:0.8rem;">${u.kinks}</div></div>`;
-    }
-
-    // LIMITS (Red)
-    if(u.limits) {
-        html += `<div><div style="color:var(--red); font-size:0.6rem;">HARD LIMITS</div>`;
-        html += `<div style="color:#ccc; font-size:0.8rem;">${u.limits}</div></div>`;
-    }
-
-    if(html === "") html = '<div style="color:#444; font-size:0.7rem;">FILE EMPTY</div>';
-    grid.innerHTML = html;
+    let content = "";
+    if(u.kinks) content += `<div style="margin-bottom:10px;"><div style="color:var(--blue); font-size:0.6rem; margin-bottom:2px;">KINKS</div><div style="color:#ccc; font-size:0.8rem; line-height:1.2;">${u.kinks}</div></div>`;
+    if(u.limits) content += `<div><div style="color:var(--red); font-size:0.6rem; margin-bottom:2px;">LIMITS</div><div style="color:#ccc; font-size:0.8rem; line-height:1.2;">${u.limits}</div></div>`;
+    
+    if(!content) content = '<div style="color:#444; font-size:0.7rem;">FILE EMPTY</div>';
+    grid.innerHTML = content;
 }
 
 function updateInventory(u) {
     const grid = document.getElementById('inventoryGrid');
     if(!grid) return;
 
-    // This requires u.purchasedItems array from backend
-    const items = u.purchasedItems || [];
-    
+    // Handle string or array parsing for purchased items
+    let items = [];
+    if (u.purchasedItems) {
+        if (Array.isArray(u.purchasedItems)) items = u.purchasedItems;
+        else if (typeof u.purchasedItems === 'string') {
+            try { items = JSON.parse(u.purchasedItems); } catch(e) {}
+        }
+    }
+
     if(items.length === 0) {
-        grid.innerHTML = '<div style="color:#444; font-size:0.7rem;">NO TRIBUTES</div>';
+        grid.innerHTML = '<div style="color:#444; font-size:0.7rem; text-align:center;">NO TRIBUTES</div>';
         return;
     }
 
-    grid.innerHTML = items.map(item => `
-        <div style="background:#111; border:1px solid #333; padding:5px; text-align:center;">
-            <div style="font-size:0.7rem; color:var(--gold);">${item.name}</div>
-            <div style="font-size:0.6rem; color:#666;">${item.price}</div>
+    grid.innerHTML = items.map(i => `
+        <div style="background:#111; border:1px solid #333; padding:5px; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <div style="font-size:0.7rem; color:var(--gold); font-family:'Cinzel';">${i.name || i.itemName || "Item"}</div>
+            <div style="font-size:0.6rem; color:#666;">${i.price || i.cost || 0}</div>
         </div>
     `).join('');
 }
 
-
 // =========================================
 // TAB 3: RECORD (HISTORY & GLORY)
 // =========================================
-
 function updateAltar(u) {
-    // Altar Images (Top 3 Highest Rated)
-    const slots = [1, 2, 3];
-    slots.forEach(i => {
-        const el = document.getElementById('adminAltar' + i);
-        if(!el) return;
-        
-        // Mock logic: Try to find image tagged as "altar1", "altar2", etc.
-        // Or just take top 3 history items for now
-        const img = u.history?.[i-1]?.proofUrl; 
-        
-        if (img) {
-            el.style.backgroundImage = `url(${getOptimizedUrl(img, 100)})`;
-            el.innerText = "";
-        } else {
-            el.style.backgroundImage = "none";
-            el.innerText = "EMPTY";
-        }
-    });
+    // This connects to the HTML slots we made
+    // Future expansion: Make these droppable targets
 }
 
 function updateTrophies(u) {
     const container = document.getElementById('userStickerCase');
     if(!container) return;
 
-    // Reuse the logic from the Mobile App (Hexagons/Diamonds)
-    // For now, we will just list the Ranks they have passed
-    const currentRank = u.hierarchy || "Hall Boy";
-    const rankList = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Champion"];
-    const myIndex = rankList.indexOf(currentRank);
+    // Ranks Visualizer
+    const ranks = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Champion"];
+    const current = u.hierarchy || "";
+    const idx = ranks.findIndex(r => r.toLowerCase() === current.toLowerCase());
 
-    let html = "";
-    rankList.forEach((r, idx) => {
-        const active = idx <= myIndex;
-        const color = active ? "var(--gold)" : "#333";
-        html += `<div style="border:1px solid ${color}; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:0.6rem; color:${color}; margin-right:5px; border-radius:4px;" title="${r}">
-            ${idx+1}
+    let html = '<div style="display:flex; gap:5px; flex-wrap:wrap;">';
+    ranks.forEach((r, i) => {
+        const unlocked = i <= idx;
+        const color = unlocked ? "var(--gold)" : "#333";
+        const bg = unlocked ? "rgba(197, 160, 89, 0.1)" : "transparent";
+        html += `<div style="border:1px solid ${color}; background:${bg}; padding:4px 8px; font-size:0.6rem; color:${color}; border-radius:4px;" title="${r}">
+            ${i+1}
         </div>`;
     });
-    
-    container.innerHTML = `<div style="display:flex;">${html}</div>`;
+    html += '</div>';
+    container.innerHTML = html;
 }
 
 async function updateHistory(u) {
@@ -242,37 +236,69 @@ async function updateHistory(u) {
         if (!hGrid) return;
 
         const cleanHist = (u.history || []).filter(h => h.status && h.status !== 'fail');
-        let historyToShow = cleanHist.slice(0, histLimit);
+        const historyToShow = cleanHist.slice(0, histLimit);
         
+        // Show/Hide Load More
         const loadBtn = document.getElementById('loadMoreHist');
         if (loadBtn) loadBtn.style.display = (cleanHist.length > histLimit) ? 'block' : 'none';
 
         // Sign URLs
         const signingPromises = historyToShow.map(async h => {
-            h.thumbSigned = await getSignedUrl(getOptimizedUrl(h.proofUrl, 150));
+            if(h.proofUrl && h.proofUrl.startsWith('https://upcdn')) h.thumbSigned = await getSignedUrl(getOptimizedUrl(h.proofUrl, 150));
+            else h.thumbSigned = getOptimizedUrl(h.proofUrl, 150);
         });
         await Promise.all(signingPromises);
 
         hGrid.innerHTML = historyToShow.length > 0 ? historyToShow.map(h => {
             const cls = h.status === 'approve' ? 'hb-app' : 'hb-rej';
-            return `<div class="h-card-mini" onclick='openModal(null, null, "${h.proofUrl}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
-                <img src="${h.thumbSigned}" class="hc-img"><div class="h-badge ${cls}">${h.status.toUpperCase()}</div></div>`;
-        }).join('') : '<div style="color:#444; font-size:0.7rem;">No history.</div>';
+            const img = h.thumbSigned || '';
+            // Only show if image exists
+            if(!img) return '';
+            return `<div class="h-card-mini" style="position:relative; width:100%; aspect-ratio:1/1; background:black; border:1px solid #333; cursor:pointer;" 
+                     onclick='openModal(null, null, "${h.proofUrl}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
+                <img src="${img}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;">
+                <div class="h-badge ${cls}" style="position:absolute; bottom:0; left:0; width:100%; font-size:0.5rem; text-align:center;">${h.status.toUpperCase()}</div>
+            </div>`;
+        }).join('') : '<div style="color:#444; font-size:0.7rem; padding:10px;">No history records.</div>';
     }
 }
 
+// =========================================
+// ACTION FUNCTIONS (EXPOSED TO WINDOW)
+// =========================================
+export function addQueueTask() {
+    const input = document.getElementById('qInput');
+    const txt = input?.value.trim();
+    
+    if (!txt || !currId) return;
+    
+    const u = users.find(x => x.memberId === currId);
+    if (u) {
+        if (!u.taskQueue) u.taskQueue = [];
+        u.taskQueue.push(txt);
+        
+        // Send to Backend
+        window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+        Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
 
-// --- UTILS ---
-export function toggleMainTaskExpansion(btn, taskText) {
-    const card = btn.closest('.compact-task-card');
-    if (!card) return;
-    if (mainDashboardExpandedTasks.has(taskText)) {
-        mainDashboardExpandedTasks.delete(taskText);
-        card.classList.remove('is-expanded');
-    } else {
-        mainDashboardExpandedTasks.add(taskText);
-        card.classList.add('is-expanded');
+        input.value = '';
+        updateDetail(u); // Instant Refresh
     }
+}
+
+export function deleteQueueItem(memberId, index) {
+    const u = users.find(x => x.memberId === memberId);
+    if (u?.taskQueue) {
+        u.taskQueue.splice(index, 1);
+        window.parent.postMessage({ type: "updateTaskQueue", memberId: memberId, queue: u.taskQueue }, "*");
+        Bridge.send("updateTaskQueue", { memberId: memberId, queue: u.taskQueue });
+        updateDetail(u);
+    }
+}
+
+export function toggleMainTaskExpansion(btn, taskText) {
+    const card = btn.closest('.mini-active'); // Adjust to match your HTML
+    // Logic to expand text if needed, for now just placeholder
 }
 
 export function modPoints(amount) {
@@ -280,33 +306,25 @@ export function modPoints(amount) {
     window.parent.postMessage({ type: "adjustPoints", memberId: currId, amount: amount }, "*");
 }
 
-export function loadMoreHist() { setHistLimit(histLimit + 10); const u = users.find(x => x.memberId === currId); if (u) updateDetail(u); }
+export function loadMoreHist() { 
+    setHistLimit(histLimit + 10); 
+    const u = users.find(x => x.memberId === currId); 
+    if (u) updateDetail(u); 
+}
 
-export function openQueueTask(memberId, index) { /* (Preserve from old file if needed, usually redundant now) */ }
-
-export function deleteQueueItem(memberId, index) {
+export function openQueueTask(memberId, index) { 
     const u = users.find(x => x.memberId === memberId);
-    if (u?.taskQueue) {
-        u.taskQueue.splice(index, 1);
-        fillerUserId = null; 
-        window.parent.postMessage({ type: "updateTaskQueue", memberId: memberId, queue: u.taskQueue }, "*");
-        Bridge.send("updateTaskQueue", { memberId: memberId, queue: u.taskQueue });
-        updateDetail(u);
+    if (u?.taskQueue?.[index]) {
+         // Assuming you have an openModal import or global availability
+         // window.openModal(...) 
     }
 }
 
-export function addQueueTask() {
-    const input = document.getElementById('qInput');
-    const txt = input?.value.trim();
-    if (!txt || !currId) return;
-    const u = users.find(x => x.memberId === currId);
-    if (u) {
-        if (!u.taskQueue) u.taskQueue = [];
-        u.taskQueue.push(txt);
-        fillerUserId = null;
-        window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
-        Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
-        input.value = '';
-        updateDetail(u);
-    }
-}
+// --- CRITICAL: BIND TO WINDOW SCOPE ---
+window.updateDetail = updateDetail;
+window.addQueueTask = addQueueTask;
+window.deleteQueueItem = deleteQueueItem;
+window.modPoints = modPoints;
+window.loadMoreHist = loadMoreHist;
+window.openQueueTask = openQueueTask;
+window.toggleMainTaskExpansion = toggleMainTaskExpansion;
