@@ -18,7 +18,7 @@ const mainDashboardExpandedTasks = new Set();
 // =========================================
 // MAIN UPDATE FUNCTION (Populates All Tabs)
 // =========================================
-export function updateDetail(u) {
+export async function updateDetail(u) {
     if (!u) return;
     
     // --- 1. VITALS DECK (Top Header) ---
@@ -70,17 +70,27 @@ function setText(id, txt) {
 // =========================================
 // TAB 1: OPS (OPERATIONS)
 // =========================================
-function updateReviewQueue(u) {
+async function updateReviewQueue(u) {
     const qSec = document.getElementById('userQueueSec');
     if (!qSec) return;
+    
     if (u.reviewQueue && u.reviewQueue.length > 0) {
+        // Sign URLs for thumbnails
+        const signingPromises = u.reviewQueue.map(async t => {
+            if(t.proofUrl && t.proofUrl.startsWith('https://upcdn')) t.thumbSigned = await getSignedUrl(getOptimizedUrl(t.proofUrl, 150));
+            else t.thumbSigned = await getSignedUrl(getOptimizedUrl(t.proofUrl, 150))
+        });
+        await Promise.all(signingPromises);
+
         qSec.style.display = 'flex';
         qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` + 
             u.reviewQueue.map(t => `<div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false)">
-                    <img src="${getOptimizedUrl(t.proofUrl, 150)}" class="pend-thumb">
+                    <img src="${t.thumbSigned}" class="pend-thumb">
                     <div class="pend-info"><div class="pend-act">PENDING</div><div class="pend-txt">${clean(t.text)}</div></div>
                 </div>`).join('');
-    } else { qSec.style.display = 'none'; }
+    } else { 
+        qSec.style.display = 'none'; 
+    }
 }
 
 function updateActiveTask(u) {
