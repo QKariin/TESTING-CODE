@@ -1539,7 +1539,7 @@ window.syncMobileDashboard = function() {
     const msgTime = document.getElementById('routineTimeMsg');
     const msgDone = document.getElementById('routineDoneMsg');
 
-    if(btnUpload) btnUpload.enabled = hasRoutine;
+    if(btnUpload) btnUpload.disabled = !hasRoutine;
 
     if (isDone) {
         if(btnUpload) btnUpload.classList.add('hidden');
