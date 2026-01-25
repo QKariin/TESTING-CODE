@@ -1588,7 +1588,7 @@ window.syncMobileDashboard = function() {
 // PUT THIS AT THE VERY BOTTOM OF MAIN.JS
 window.handleRoutineUpload = function(input) {
     if(input.files.length > 0) {
-        window.handleEvidenceUpload(input, "Daily Protocol" + userProfile.routine); 
+        window.handleEvidenceUpload(input, "Routine"); 
         gameStats.routineDoneToday = true; 
         window.syncMobileDashboard();
     }

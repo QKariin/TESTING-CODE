@@ -4,35 +4,49 @@ import { userProfile, currentTask } from './state.js'; // FIXED: Added currentTa
 import { finishTask } from './tasks.js';
 import { uploadToBytescale } from './mediaBytescale.js';
 
-export async function handleEvidenceUpload(input, taskTextOverride = "Task") {
+export async function handleEvidenceUpload(input, category = "Task") {
     try {
         if (input.files && input.files[0]) {
             const file = input.files[0];
+
+            let cat = category;
             
-            const statusEl = document.getElementById("uploadStatus");
-            if (statusEl) statusEl.innerText = "Uploading...";
+            if (category === "Task") {
+                cat = currentTask ? currentTask.text : "Task";
+                const statusEl = document.getElementById("uploadStatus");
+                if (statusEl) statusEl.innerText = "Uploading...";
+            }
+            else if (category === "Routine") {
+                cat = "Daily Routine: " + (userProfile.routine || "Routine");
+            }
             
             const folder = userProfile.name.replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
             const finalUrl = await uploadToBytescale("evidence", file, folder);
             
-            if (finalUrl === "failed") {
-                if (statusEl) statusEl.innerText = "Upload failed.";
-                return;
+            if (category === "Task") {
+                if (finalUrl === "failed") {
+                    if (statusEl) statusEl.innerText = "Upload failed.";
+                    return;
+                }
             }
             
             // FIXED: Now correctly reads currentTask.text
             window.parent.postMessage({
                 type: "uploadEvidence",
-                task: currentTask ? currentTask.text : taskTextOverride,
+                task: cat,
                 fileUrl: finalUrl,
                 mimeType: file.type
             }, "*");
-            finishTask(true);
-            if (statusEl) statusEl.innerText = "Upload complete!";
+            if (category === "Task") {
+                finishTask(true);
+                if (statusEl) statusEl.innerText = "Upload complete!";
+            }
         }
     } catch (err) {
-        const statusEl = document.getElementById("uploadStatus");
-        if (statusEl) statusEl.innerText = "Upload failed (error).";
+        if (category === "Task") {
+            const statusEl = document.getElementById("uploadStatus");
+            if (statusEl) statusEl.innerText = "Upload failed (error).";
+        }
         console.error("Upload error:", err);
     }
 }
