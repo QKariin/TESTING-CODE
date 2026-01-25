@@ -1,83 +1,74 @@
-// --- 1. CORE STATE IMPORTS ---
-import { 
-    users, globalQueue, globalTributes, availableDailyTasks, queenContent, 
-    stickerConfig, broadcastPresets, timerInterval, currId,
-    setUsers, setGlobalQueue, setGlobalTributes, setAvailableDailyTasks, 
-    setQueenContent, setStickerConfig, setBroadcastPresets, setTimerInterval,
-    armoryTarget, setArmoryTarget // <--- ADD THESE TWO HERE
-} from './dashboard-state.js';
-import { unlockAudio } from './utils.js';   
+// js/dashboard-main.js - FULL MASTER CONTROLLER
 
-// --- 2. MODULE IMPORTS ---
+// --- 1. IMPORTS ---
+import { 
+    users, currId, globalQueue, globalTributes, availableDailyTasks,
+    setUsers, setGlobalQueue, setGlobalTributes, setAvailableDailyTasks, 
+    setQueenContent, setStickerConfig, setBroadcastPresets, setTimerInterval, timerInterval,
+    setArmoryTarget
+} from './dashboard-state.js';
+
 import { renderSidebar } from './dashboard-sidebar.js';
 import { renderOperationsMonitor } from './dashboard-operations.js';
 import { renderChat } from './dashboard-chat.js';
 import { updateDetail } from './dashboard-users.js';
 import { toggleMobStats } from './dashboard-utils.js';
-
-// --- 3. SYSTEM & BRIDGE IMPORTS ---
 import { Bridge } from './bridge.js';
-import './dashboard-modals.js'; // This wakes up the Command Armory
+import { unlockAudio } from './utils.js';
+
+// Side-effect imports (Modals, Navigation)
+import './dashboard-modals.js';
 import './dashboard-navigation.js';
 import { openChatPreview, closeChatPreview } from './chat.js';
 
-
-// Initialize dashboard
-// Initialize dashboard
+// --- 2. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', function() {
     
-    // --- 1. AUDIO WAKE-UP (Priming the engine so notifications work) ---
-    // --- 1. AUDIO WAKE-UP ---
+    // Audio Wake-Up Strategy
     document.addEventListener('click', () => {
-        const sfx = document.getElementById('msgSound'); // Updated ID
+        const sfx = document.getElementById('msgSound');
         if (sfx) {
             sfx.play().then(() => {
                 sfx.pause();
                 sfx.currentTime = 0;
-                console.log("Audio Engine Ready: msgSound");
             }).catch(e => console.log("Audio blocked - click again."));
         }
+        unlockAudio(); // Helper call
     }, { once: true });
 
-    // --- 2. DAILY ID (Synced Shadow Math) ---
+    // Daily ID Calculation
     const today = new Date();
-    const m = today.getMonth() + 1; 
-    const d = today.getDate();
-    const dayCode = ((110 - m) * 100 + (82 - d)).toString().padStart(4, '0');
-    
+    const dayCode = ((110 - (today.getMonth() + 1)) * 100 + (82 - today.getDate())).toString().padStart(4, '0');
     const codeEl = document.getElementById('adminDailyCode');
     if (codeEl) codeEl.innerText = dayCode;
     
-    // --- 3. START SYSTEMS ---
+    // Start Systems
     startTimerLoop();
     renderMainDashboard();
     
-    console.log('Dashboard initialized with Daily ID:', dayCode);
+    console.log('Dashboard initialized. ID:', dayCode);
 });
 
-// js/dashboard-main.js (THE COMMANDER'S RADIO)
+// --- 3. BRIDGE LISTENER (The Radio) ---
 Bridge.listen((data) => {
-    // 1. FORWARD TO WIX LOGIC
-    // We ignore echoes of our own messages to prevent a loop on the dashboard
+    // Forward chat echoes to window (for chat.js to pick up)
     if (data.type === "CHAT_ECHO" || data.type === "UPDATE_CHAT") {
-        // We let Wix handle the chat updates for the dashboard
         window.postMessage(data, "*"); 
         return;
     }
 
+    // Forward everything else
     window.postMessage(data, "*"); 
 
-    // 2. INSTANT NOTIFICATION: Slave Reward Claimed
+    // Instant Notification: Reward Claimed
     if (data.type === "SLAVE_REWARD_CLAIMED") {
-        console.log("Intel Received: Subject claimed " + data.choice);
-        
         const u = users.find(x => x.memberId === data.memberId);
         if (u) {
-            // Update local numbers immediately
+            // Instant math update
             if (data.choice === 'coins') u.coins += data.value;
             else u.points += data.value;
 
-            // VISUAL PULSE: The card in your sidebar glows gold or pink
+            // Visual Pulse
             const sidebarItem = document.querySelector(`[onclick*="${data.memberId}"]`);
             if (sidebarItem) {
                 const color = data.choice === 'coins' ? '#ffd700' : '#ff00de';
@@ -85,21 +76,17 @@ Bridge.listen((data) => {
                 setTimeout(() => { sidebarItem.style.boxShadow = "none"; }, 2000);
             }
             
-            // Refresh detail panel if you are looking at them
-            if (window.currId === data.memberId) {
-                window.updateDetail(u);
-            }
+            // Refresh detail if viewing
+            if (window.currId === data.memberId) window.updateDetail(u);
         }
     }
 });
 
-window.addEventListener("click", unlockAudio);
-window.addEventListener("touchstart", unlockAudio);
-
-// Main message listener for communication with Wix backend
+// --- 4. WIX DATA LISTENER (The Heavy Lifting) ---
 window.addEventListener("message", async (event) => {
     const data = event.data;
     
+    // A. MAIN SYNC
     if (data.type === "updateDashboard") {
         setUsers(data.users || []);
         setGlobalQueue(data.globalQueue || []);
@@ -107,8 +94,7 @@ window.addEventListener("message", async (event) => {
         setAvailableDailyTasks(data.dailyTasks || []);
         setQueenContent(data.queenCMS || []);
         
-        // --- THE STICKER MAPPING (10, 20, 30, 40, 50, 100) ---
-        // We hunt for the specific row in your CMS that contains the sticker links
+        // Sticker Mapping (RESTORED)
         const stickerSource = data.queenCMS?.find(item => item["10"] || item["100"]);
         if (stickerSource) {
             const vals = [10, 20, 30, 40, 50, 100];
@@ -116,32 +102,31 @@ window.addEventListener("message", async (event) => {
                 id: `s${v}`,
                 name: `${v} PTS`,
                 val: v,
-                url: stickerSource[v.toString()] || "" // Grabs link from column "10", "20", etc.
+                url: stickerSource[v.toString()] || ""
             }));
             setStickerConfig(newConfig);
         }
-        window.currId = data.currId || currId; 
+
         renderMainDashboard();
         
-        // Update current user if viewing one
-        if (currId) {
-            const u = users.find(x => x.memberId === currId);
+        // Update User Detail (If open)
+        if (window.currId) {
+            const u = users.find(x => x.memberId === window.currId);
             if (u) updateDetail(u);
         }
     }
     
+    // B. CHAT SYNC
     else if (data.type === "updateChat") {
         await renderChat(data.messages || []);
         
         const u = users.find(x => x.memberId === data.memberId);
         
-        // Ensure we have a user and messages before doing math
+        // Sound Logic (RESTORED)
         if (u && data.messages && data.messages.length > 0) {
             const lastMsg = data.messages[data.messages.length - 1];
-            // DECLARE IT HERE
             const realMsgTime = new Date(lastMsg._createdDate).getTime();
 
-            // --- THE SOUND TRIGGER ---
             if (realMsgTime > (u.lastMessageTime || 0) && 
                 lastMsg.sender !== 'admin' && 
                 data.memberId !== currId) {
@@ -149,24 +134,21 @@ window.addEventListener("message", async (event) => {
                 const sfx = document.getElementById('msgSound');
                 if (sfx) {
                     sfx.currentTime = 0;
-                    sfx.play().catch(e => console.log("Audio waiting for first click..."));
+                    sfx.play().catch(e => {});
                 }
             }
-            
             u.lastMessageTime = realMsgTime;
 
             if (data.memberId === currId) {
                 localStorage.setItem('read_' + data.memberId, Date.now().toString());
             }
 
-            if (u.memberId !== currId) {
-                renderSidebar(); 
-            }
+            if (u.memberId !== currId) renderSidebar(); 
         }
     }
         
+    // C. SUB-DATA LISTENERS (RESTORED)
     else if (data.type === "stickerConfig") {
-        // Handle manual config updates if sent separately
         setStickerConfig(data.stickers || []);
     }
     
@@ -180,103 +162,127 @@ window.addEventListener("message", async (event) => {
         });
     }
 
-    // --- THE INSTANT ECHO HANDLERS (Kills the 4s lag) ---
+    // D. INSTANT ECHO HANDLERS (RESTORED - Kills Lag)
     else if (data.type === "instantUpdate") {
         const u = users.find(x => x.memberId === data.memberId);
         if (u) {
-            u.points = data.newPoints; // Instant points update
-            updateDetail(u);
+            u.points = data.newPoints; 
+            if (window.currId === data.memberId) updateDetail(u);
         }
     }
 
     else if (data.type === "instantReviewSuccess") {
         const u = users.find(x => x.memberId === data.memberId);
         if (u && u.reviewQueue) {
-            // Remove the approved/rejected task from the list immediately
             u.reviewQueue = u.reviewQueue.filter(t => t.id !== data.taskId);
             renderMainDashboard();
-            if (currId === data.memberId) updateDetail(u);
+            if (window.currId === data.memberId) updateDetail(u);
         }
     }
 });
 
+// --- 5. RENDER FUNCTIONS ---
 export function renderMainDashboard() {
     renderSidebar();
-    renderDashboardStats();
     renderOperationsMonitor();
+    updateStatsDeck();
 }
 
-function renderDashboardStats() {
-    // Calculate stats from users data
-    const totalTributes = globalTributes.length;
-    const activeTasks = users.filter(u => u.activeTask && u.endTime && u.endTime > Date.now()).length;
-    const pendingReviews = globalQueue.length;
-    const failedTasks = users.reduce((sum, u) => sum + (u.history?.filter(h => h.status === 'fail').length || 0), 0);
-    
-    // Update stat cards
-    const statElements = {
-        'statTributes': totalTributes,
-        'statActive': activeTasks,
-        'statPending': pendingReviews,
-        'statSkipped': failedTasks
-    };
-    
-    Object.entries(statElements).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = value;
-    });
+function updateStatsDeck() {
+    const totalTributes = document.getElementById('statTributes');
+    const activeTasks = document.getElementById('statActive');
+    const pending = document.getElementById('statPending');
+    const skipped = document.getElementById('statSkipped');
+
+    // Stats Math
+    if(totalTributes) totalTributes.innerText = globalTributes.length;
+    if(activeTasks) activeTasks.innerText = users.filter(u => u.activeTask && u.endTime && u.endTime > Date.now()).length;
+    if(pending) pending.innerText = globalQueue.length;
+    if(skipped) skipped.innerText = users.reduce((sum, u) => sum + (u.strikeCount || 0), 0); // Simplified fail metric
 }
 
 function startTimerLoop() {
     if (timerInterval) clearInterval(timerInterval);
-    
     const interval = setInterval(() => {
-        document.querySelectorAll('.ac-timer').forEach(el => {
-            const end = parseInt(el.getAttribute('data-end'));
-            if (end) {
-                const diff = end - Date.now();
-                if (diff <= 0) {
-                    el.innerText = "00:00";
-                } else {
-                    const minutes = Math.floor(diff / 60000);
-                    const seconds = Math.floor((diff % 60000) / 1000);
-                    el.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                }
-            }
-        });
+        // Only tick the current user details if visible
+        if (window.currId) {
+            const u = users.find(x => x.memberId === window.currId);
+            if (u) updateDetail(u); 
+        }
+        // Also tick protocol?
+        // ... (Protocol logic sits in dashboard-protocol.js usually)
     }, 1000);
-    
     setTimerInterval(interval);
 }
 
-// Admin task actions
-export function adminTaskAction(memberId, action) {
-    if (action === 'send') {
-        setArmoryTarget("active"); // Direct injection mode
-        window.openTaskGallery();
-    } 
-    else if (action === 'skip') {
-        // Free skip (Tell Wix to clear the screen)
-        window.parent.postMessage({ type: "adminTaskAction", memberId: memberId, action: "skip" }, "*");
-        
-        // Open library to pick the replacement
-        setArmoryTarget("active");
-        window.openTaskGallery();
+// --- 6. NEW TABS & WALLET LOGIC ---
+
+function switchAdminTab(tabName) {
+    // 1. Highlight Button
+    document.querySelectorAll('.ap-tab').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.innerText.toLowerCase() === tabName) btn.classList.add('active');
+    });
+
+    // 2. Update Views
+    document.querySelectorAll('.ap-view').forEach(view => {
+        view.classList.add('hidden');
+        view.classList.remove('active');
+    });
+
+    // 3. Show Target
+    const targetId = 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+    const target = document.getElementById(targetId);
+    if(target) {
+        target.classList.remove('hidden');
+        target.classList.add('active');
     }
 }
 
-// Make functions available globally
+function adjustWallet(action) {
+    if (!currId) return alert("Select a user first.");
+    const amountStr = prompt(action === 'add' ? "Amount to ADD:" : "Amount to DEDUCT:");
+    const amount = parseInt(amountStr);
+    
+    if(!amount || isNaN(amount)) return;
+    
+    const finalAmount = action === 'add' ? amount : -amount;
+    
+    // Send to Wix
+    window.parent.postMessage({ type: "adjustCoins", memberId: currId, amount: finalAmount }, "*");
+    
+    // Optimistic Update
+    const u = users.find(x => x.memberId === currId);
+    if(u) {
+        u.coins = (u.coins || 0) + finalAmount;
+        document.getElementById('dWalletVal').innerText = u.coins;
+    }
+}
+
+function manageAltar(slotId) {
+    alert(`Altar Slot ${slotId} Manager - Coming Soon`);
+}
+
+// --- 7. EXPORTS (GLOBAL BINDING) ---
 window.renderMainDashboard = renderMainDashboard;
-window.adminTaskAction = adminTaskAction;
+window.adminTaskAction = function(mid, action) {
+    if (action === 'send') {
+        setArmoryTarget("active"); 
+        window.openTaskGallery();
+    } 
+    else if (action === 'skip') {
+        window.parent.postMessage({ type: "adminTaskAction", memberId: mid, action: "skip" }, "*");
+        // Optional: Open Armory after skip to replace it immediately
+        setArmoryTarget("active");
+        window.openTaskGallery();
+    }
+};
 window.toggleMobStats = toggleMobStats;
-window.currId = currId;
 window.openChatPreview = openChatPreview;
 window.closeChatPreview = closeChatPreview;
 
-
-// Send ready signal to parent
-if (window.parent) {
-    window.parent.postMessage({ type: "DASHBOARD_READY" }, "*");
-}
-
-console.log('Dashboard main controller loaded');
+// NEW EXPORTS
+window.switchAdminTab = switchAdminTab;
+window.adjustWallet = adjustWallet;
+window.manageAltar = manageAltar;
+window.currId = currId;
