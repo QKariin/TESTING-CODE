@@ -27,8 +27,12 @@
   function renderMobileHome(){
     return `
     <div id="viewMobileHome" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; display: flex; flex-direction: column; padding: 0; z-index: 1;">
-</div>
-            <div class="mob-hud-row">
+      <div class="mob-bg-layer">
+        <img id="mob_bgPic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="bg-blur">
+        <div class="bg-overlay"></div>
+      </div>
+
+      <div class="mob-hud-row">
                 <div class="hud-circle slave" onclick="openLobby()">
                     <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png">
                     <div class="hud-gear">⚙</div>
