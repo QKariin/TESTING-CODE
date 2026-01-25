@@ -172,49 +172,125 @@
                     </div>
                 </div>
 
-                <div class="action-panel">
-                    <div class="wallet-panel-display">
-                        <div class="wpd-label">WALLET BALANCE</div>
-                        <div id="dWalletVal" class="wpd-val">0</div>
-                    </div>
-                    <div class="stats-row">
-                        <div class="stat-box" style="border-color:rgba(255,0,0,1)"><div class="stat-val" style="color:var(--red)" id="dStrikes">0</div><div class="stat-lbl">STRIKES</div></div>
-                        <div class="stat-box"><div class="stat-val" id="dTasks">0</div><div class="stat-lbl">TASKS</div></div>
-                        <div class="stat-box"><div class="stat-val" id="dStreak">0</div><div class="stat-lbl">STREAK</div></div>
-                        <div class="stat-box" style="border-color:rgba(57,255,20,0.3)"><div class="stat-val" style="color:var(--green)" id="dPoints">0</div><div class="stat-lbl">POINTS</div></div>
-                    </div>
-                    <div style="margin-bottom:15px;">
-                        <div class="sec-title">HONORS & STICKERS</div>
-                        <div id="userStickerCase" class="sticker-case" style="display:none;"></div>
-                    </div>
-                    <div id="pointsGrid" class="pts-grid"></div>
-                    <div id="userQueueSec" style="display:none; flex-direction:column; gap:8px;"></div>
-                    <div class="mini-active">
-                        <div class="ma-status">ACTIVE</div>
-                        <div class="ma-mid">
-                            <div id="dActiveText" class="ma-txt">None</div>
-                            <div id="dActiveTimer" class="ma-timer">--:--</div>
-                        </div>
-                        <div class="ma-ctrl">
-                            <div class="ma-btn" onclick="adminTaskAction(currId, 'send')">SEND</div>
-                            <div class="ma-btn" onclick="adminTaskAction(currId, 'skip')">SKIP</div>
-                        </div>
-                    </div>
-                    <div class="task-queue-box">
-                        <div class="sec-title clickable-title" onclick="openTaskGallery()" style="color:var(--blue);">TASK QUEUE</div>
-                        <div id="qListContainer" class="q-list-vertical"></div>
-                        <div class="q-input-row">
-                            <input type="text" id="qInput" class="q-input" placeholder="Add task..." list="cmsTasksList">
-                            <button class="q-add-btn" onclick="addQueueTask()">+</button>
-                        </div>
-                        <button onclick="openTaskGallery()" style="width:100%; padding:4px; background:#111; border:1px solid var(--blue); color:var(--blue); font-size:0.6rem; margin-top:5px; cursor:pointer;">TASK GALLERY</button>
-                    </div>
-                    <div style="margin-top:15px;">
-                        <div class="sec-title">HISTORY</div>
-                        <div id="userHistoryGrid" class="history-grid"></div>
-                        <button id="loadMoreHist" class="load-more-btn" onclick="loadMoreHist()">LOAD MORE</button>
-                    </div>
+                <!-- NEW RIGHT PANEL: TABBED COMMAND CENTER -->
+<div class="action-panel">
+
+    <!-- 1. VITALS DECK (Always Visible) -->
+    <div class="ap-vitals">
+        <div class="ap-wallet-row">
+            <div class="ap-label">CAPITAL</div>
+            <div class="ap-money-ctrl">
+                <button class="ap-btn-money red" onclick="adjustWallet('sub')">-</button>
+                <div id="dWalletVal" class="ap-balance">0</div>
+                <button class="ap-btn-money green" onclick="adjustWallet('add')">+</button>
+            </div>
+        </div>
+        <div class="ap-rank-row">
+            <div class="ap-label">HIERARCHY</div>
+            <div id="dRank" class="ap-rank-val">SLAVE</div>
+        </div>
+    </div>
+
+    <!-- 2. NAVIGATION TABS -->
+    <div class="ap-nav">
+        <button class="ap-tab active" onclick="switchAdminTab('ops')">OPS</button>
+        <button class="ap-tab" onclick="switchAdminTab('intel')">INTEL</button>
+        <button class="ap-tab" onclick="switchAdminTab('record')">RECORD</button>
+    </div>
+
+    <!-- 3. VIEWS CONTAINER -->
+    <div class="ap-content">
+        
+        <!-- === VIEW 1: OPS (Tasks & Routines) === -->
+        <div id="tabOps" class="ap-view active">
+            <!-- Daily Routine Section (New Placeholder) -->
+            <div class="sec-box">
+                <div class="sec-title">DAILY PROTOCOL</div>
+                <div id="userRoutineList" class="routine-list">
+                    <div style="color:#666; font-size:0.7rem; text-align:center;">NO ROUTINE ASSIGNED</div>
                 </div>
+            </div>
+
+            <!-- Active Task (Preserved) -->
+            <div class="mini-active">
+                <div class="ma-status">ACTIVE DIRECTIVE</div>
+                <div class="ma-mid">
+                    <div id="dActiveText" class="ma-txt">None</div>
+                    <div id="dActiveTimer" class="ma-timer">--:--</div>
+                </div>
+                <div class="ma-ctrl">
+                    <div class="ma-btn" onclick="adminTaskAction(currId, 'send')">SEND</div>
+                    <div class="ma-btn" onclick="adminTaskAction(currId, 'skip')">FAIL</div>
+                </div>
+            </div>
+
+            <!-- Task Queue (Preserved IDs) -->
+            <div class="task-queue-box">
+                <div class="sec-title clickable-title" onclick="openTaskGallery()" style="color:var(--blue);">TASK QUEUE</div>
+                <div id="qListContainer" class="q-list-vertical"></div>
+                <div class="q-input-row">
+                    <input type="text" id="qInput" class="q-input" placeholder="Add task..." list="cmsTasksList">
+                    <button class="q-add-btn" onclick="addQueueTask()">+</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- === VIEW 2: INTEL (Kinks, Limits, Stats) === -->
+        <div id="tabIntel" class="ap-view hidden">
+            <!-- Kneeling Stats -->
+            <div class="sec-box">
+                <div class="sec-title">ENDURANCE TELEMETRY</div>
+                <div id="kneelStatsBox" class="telemetry-grid">
+                    <!-- JS will fill this -->
+                    <div class="t-stat"><span>TOTAL</span><strong id="dTotalKneel">0h</strong></div>
+                    <div class="t-stat"><span>SESSION</span><strong id="dLastKneel">--</strong></div>
+                </div>
+            </div>
+
+            <!-- Dossier (Kinks/Limits) -->
+            <div class="sec-box">
+                <div class="sec-title" style="color:var(--pink);">DOSSIER</div>
+                <div id="dossierGrid" class="dossier-grid">
+                    <!-- JS will fill this -->
+                </div>
+            </div>
+
+            <!-- Inventory -->
+            <div class="sec-box">
+                <div class="sec-title" style="color:var(--gold);">TRIBUTE INVENTORY</div>
+                <div id="inventoryGrid" class="inv-grid">
+                    <!-- JS will fill this -->
+                </div>
+            </div>
+        </div>
+
+        <!-- === VIEW 3: RECORD (Altar, Trophies, History) === -->
+        <div id="tabRecord" class="ap-view hidden">
+            
+            <!-- Altar Manager (New) -->
+            <div class="sec-box">
+                <div class="sec-title" style="color:var(--gold);">THE ALTAR</div>
+                <div class="altar-admin-row">
+                    <div class="aa-slot" id="adminAltar1" onclick="manageAltar(1)">I</div>
+                    <div class="aa-slot" id="adminAltar2" onclick="manageAltar(2)">II</div>
+                    <div class="aa-slot" id="adminAltar3" onclick="manageAltar(3)">III</div>
+                </div>
+            </div>
+
+            <!-- Trophy Case (New) -->
+            <div class="sec-box">
+                <div class="sec-title">HONORS</div>
+                <div id="userStickerCase" class="trophy-case-admin"></div>
+            </div>
+
+            <!-- History Grid (Preserved ID) -->
+            <div class="sec-title">ARCHIVE</div>
+            <div id="userHistoryGrid" class="history-grid"></div>
+            <button id="loadMoreHist" class="load-more-btn" onclick="loadMoreHist()">LOAD MORE</button>
+        </div>
+
+    </div>
+</div>
             </div>
         </div>
     </div>
