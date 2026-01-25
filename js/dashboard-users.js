@@ -267,22 +267,39 @@ async function updateHistory(u) {
 // ACTION FUNCTIONS (EXPOSED TO WINDOW)
 // =========================================
 export function addQueueTask() {
+    console.log("Add Task Clicked"); // Debug check
+
     const input = document.getElementById('qInput');
-    const txt = input?.value.trim();
+    if (!input) return console.error("Error: Input #qInput not found in HTML");
+
+    const txt = input.value.trim();
     
-    if (!txt || !currId) return;
+    // 1. Validate
+    if (!currId) {
+        alert("Select a Slave first.");
+        return;
+    }
+    if (!txt) return; 
     
+    // 2. Logic
     const u = users.find(x => x.memberId === currId);
     if (u) {
         if (!u.taskQueue) u.taskQueue = [];
         u.taskQueue.push(txt);
         
-        // Send to Backend
-        window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
-        Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
+        console.log("Adding to queue:", txt);
 
+        // 3. Send to Backend
+        window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+        
+        // 4. Send to Bridge (Update Phone)
+        if(window.Bridge) {
+            window.Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
+        }
+
+        // 5. Cleanup
         input.value = '';
-        updateDetail(u); // Instant Refresh
+        updateDetail(u); // Refresh the list
     }
 }
 
