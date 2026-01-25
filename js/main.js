@@ -1646,7 +1646,7 @@ const RANK_INSULTS = [
 
 window.handleMediaPlus = function() {
     // Get Rank (Default to Hall Boy if missing)
-    let currentRank = window.userProfile?.hierarchy || "Hall Boy";
+    let currentRank = userProfile?.hierarchy || "Hall Boy";
     
     // Normalize string (Case insensitive check)
     const rankIndex = HIERARCHY_LEVELS.findIndex(r => r.toLowerCase() === currentRank.toLowerCase());
