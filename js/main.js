@@ -1650,6 +1650,7 @@ window.handleMediaPlus = function() {
     
     // Normalize string (Case insensitive check)
     const rankIndex = HIERARCHY_LEVELS.findIndex(r => r.toLowerCase() === currentRank.toLowerCase());
+    console.log("Current Rank:", currentRank, "Index:", rankIndex);
     
     // SILVERMAN IS INDEX 2. BUTLER IS INDEX 3.
     const SILVERMAN_IDX = 2;
