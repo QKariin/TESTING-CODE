@@ -359,7 +359,7 @@
     if (!el) return null;
     if (el.__mobileRendered) return el;
 
-    var html = `<div id="MOBILE_APP" style="display:none;"></div>`;
+    var html = `<div id="MOBILE_APP" style="display:flex;"></div>`;
     el.innerHTML = html;
     el.__mobileRendered = true;
     return el;
