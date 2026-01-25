@@ -1533,10 +1533,13 @@ window.syncMobileDashboard = function() {
     const nowHour = new Date().getHours();
     const isMorning = nowHour >= 7; 
     const isDone = gameStats.routineDoneToday === true; // Requires simple memory flag
+    const hasRoutine = userProfile.routine && userProfile.routine.trim().length > 0;
 
     const btnUpload = document.getElementById('btnRoutineUpload');
     const msgTime = document.getElementById('routineTimeMsg');
     const msgDone = document.getElementById('routineDoneMsg');
+
+    if(btnUpload) btnUpload.enabled = hasRoutine;
 
     if (isDone) {
         if(btnUpload) btnUpload.classList.add('hidden');
