@@ -415,15 +415,76 @@ html, body {
 .stat-val { font-size: 1rem; font-weight: 900; color: white; line-height: 1; }
 .stat-lbl { font-size: 0.5rem; color: #666; font-family: 'Rajdhani'; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 
-/* MINI ACTIVE TASK (OPS TAB) */
-.mini-active { display: flex; align-items: center; gap: 8px; border: 1px solid var(--blue); background: rgba(0, 243, 255, 0.05); padding: 8px; border-radius: 4px; margin-bottom: 5px; }
-.ma-status { font-size: 0.55rem; color: var(--blue); font-weight: 900; writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 1px; }
-.ma-mid { flex: 1; overflow: hidden; min-width: 0; }
-.ma-txt { font-family: 'Rajdhani'; font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold; }
-.ma-timer { font-family: 'Orbitron'; font-size: 0.85rem; color: var(--blue); font-weight: bold; margin-top: 2px; }
-.ma-ctrl { display: flex; gap: 4px; }
-.ma-btn { padding: 4px 8px; background: #000; border: 1px solid #444; color: #aaa; font-size: 0.6rem; cursor: pointer; border-radius: 3px; font-family: 'Orbitron'; transition: 0.2s; }
-.ma-btn:hover { color: white; border-color: white; }
+/* MINI ACTIVE TASK (OPS TAB) - FIXED TEXT WRAP */
+.mini-active { 
+    display: flex; 
+    align-items: center; /* Keep items centered vertically */
+    gap: 8px; 
+    border: 1px solid var(--blue); 
+    background: rgba(0, 243, 255, 0.05); 
+    padding: 8px; 
+    border-radius: 4px; 
+    margin-bottom: 5px; 
+    height: auto; /* Allow box to grow */
+}
+
+.ma-status { 
+    font-size: 0.55rem; 
+    color: var(--blue); 
+    font-weight: 900; 
+    writing-mode: vertical-rl; 
+    transform: rotate(180deg); 
+    letter-spacing: 1px;
+    flex-shrink: 0; /* Prevent status from squashing */
+}
+
+.ma-mid { 
+    flex: 1; 
+    min-width: 0; /* Critical for wrapping inside flex */
+}
+
+.ma-txt { 
+    font-family: 'Rajdhani'; 
+    font-size: 0.85rem; 
+    color: #fff; 
+    font-weight: bold;
+    
+    /* THE FIX: Allow wrapping */
+    white-space: pre-wrap; 
+    word-wrap: break-word; 
+    line-height: 1.2;
+}
+
+.ma-timer { 
+    font-family: 'Orbitron'; 
+    font-size: 0.85rem; 
+    color: var(--blue); 
+    font-weight: bold; 
+    margin-top: 2px; 
+}
+
+.ma-ctrl { 
+    display: flex; 
+    gap: 4px; 
+    align-items: flex-start; /* Aligns buttons to top if text is long */
+}
+
+.ma-btn { 
+    padding: 4px 8px; 
+    background: #000; 
+    border: 1px solid #444; 
+    color: #aaa; 
+    font-size: 0.6rem; 
+    cursor: pointer; 
+    border-radius: 3px; 
+    font-family: 'Orbitron'; 
+    transition: 0.2s; 
+}
+
+.ma-btn:hover { 
+    color: white; 
+    border-color: white; 
+}
 
 /* QUEUE COMPONENTS (OPS TAB) */
 .task-queue-box { border: 1px solid #333; padding: 10px; border-radius: 6px; background: #0a0a0a; display: flex; flex-direction: column; gap: 8px; }
