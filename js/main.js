@@ -1756,15 +1756,14 @@ window.triggerRankMock = function(customTitle) {
         }, { passive: false });
     }
 
-    // 2. Build The Footer
+    // 2. Build The Footer (with automatic restoration if removed)
     function buildAppFooter() {
         // Run only on mobile
-        console.log("Building App Footer...");
         if (window.innerWidth > 768) return;
-        console.log("Mobile detected, proceeding...");
+        
         // If exists, don't rebuild
         if (document.getElementById('app-mode-footer')) return;
-        console.log("Footer not found, creating...");
+        
         const footer = document.createElement('div');
         footer.id = 'app-mode-footer';
         
@@ -1808,18 +1807,30 @@ window.triggerRankMock = function(customTitle) {
             <button onclick="window.toggleMobileView('global')" style="${btnStyle}">
                 <span style="font-size:1.4rem;color:#888;">⊕</span><span>GLOBAL</span>
             </button>`;
-        console.log("Footer created, appending to body...");
+        
         document.body.appendChild(footer);
-        console.log("Footer appended.");
+    }
+    
+    // 2B. DEFENSIVE: Watch for footer removal (iframe / DOM rehydration issue)
+    // If the footer gets removed/cleared, automatically restore it
+    function ensureFooterPersists() {
+        if (window.innerWidth > 768) return; // Mobile only
+        
+        setInterval(() => {
+            if (!document.getElementById('app-mode-footer')) {
+                buildAppFooter();
+            }
+        }, 1000); // Check every 1 second
     }
 
     // 3. Init
-    window.addEventListener('load', () => { lockVisuals(); buildAppFooter(); });
+    window.addEventListener('load', () => { lockVisuals(); buildAppFooter(); ensureFooterPersists(); });
     window.addEventListener('resize', () => { lockVisuals(); buildAppFooter(); });
     
     // Force run immediately in case load event passed
     lockVisuals(); 
     buildAppFooter();
+    ensureFooterPersists(); // Start watching for footer removal
 
 })();
 // ==========================
