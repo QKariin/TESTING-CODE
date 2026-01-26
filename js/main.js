@@ -1875,7 +1875,9 @@ window.triggerRankMock = function(customTitle) {
 
     // 4. CONTINUOUS CHECK: Rebuild footer every 5 seconds as additional safety net
     setInterval(() => {
+        console.log("Footer Check Interval");
         if (window.innerWidth <= 768) {
+            console.log("Rebuilding App Footer from Interval");
             buildAppFooter();
         }
     }, 5000);
