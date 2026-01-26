@@ -1764,7 +1764,7 @@ window.triggerRankMock = function(customTitle) {
         console.log("Mobile detected, proceeding...");
         // If exists, don't rebuild
         if (document.getElementById('app-mode-footer')) return;
-        
+        console.log("Footer not found, creating...");
         const footer = document.createElement('div');
         footer.id = 'app-mode-footer';
         
@@ -1808,8 +1808,9 @@ window.triggerRankMock = function(customTitle) {
             <button onclick="window.toggleMobileView('global')" style="${btnStyle}">
                 <span style="font-size:1.4rem;color:#888;">⊕</span><span>GLOBAL</span>
             </button>`;
-        
+        console.log("Footer created, appending to body...");
         document.body.appendChild(footer);
+        console.log("Footer appended.");
     }
 
     // 3. Init
