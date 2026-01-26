@@ -1809,6 +1809,7 @@ window.triggerRankMock = function(customTitle) {
             </button>`;
         
         document.body.appendChild(footer);
+        console.log("App Mode Footer Built",  document.getElementById('app-mode-footer'));
     }
     
     // 2B. DEFENSIVE: Watch for footer removal (iframe / DOM rehydration issue)
