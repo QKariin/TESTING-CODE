@@ -1808,8 +1808,11 @@ window.triggerRankMock = function(customTitle) {
                 <span style="font-size:1.4rem;color:#888;">⊕</span><span>GLOBAL</span>
             </button>`;
         
-        document.body.appendChild(footer);
-        console.log("App Mode Footer Built",  document.getElementById('app-mode-footer'));
+        // CRITICAL FIX: Append to document.documentElement instead of document.body
+        // This prevents the footer from being destroyed by render functions and view switches
+        // that manipulate body content
+        document.documentElement.appendChild(footer);
+        console.log("App Mode Footer Built (isolated to <html>)",  document.getElementById('app-mode-footer'));
     }
     
     // 2B. DEFENSIVE: Use MutationObserver to detect when footer is removed and restore it
