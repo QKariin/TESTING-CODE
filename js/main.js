@@ -1759,7 +1759,7 @@ window.triggerRankMock = function(customTitle) {
     // 2. Build The Footer
     function buildAppFooter() {
         // Run only on mobile
-        //if (window.innerWidth > 768) return;
+        if (window.innerWidth > 768) return;
 
         // If exists, don't rebuild
         if (document.getElementById('app-mode-footer')) return;
