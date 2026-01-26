@@ -1873,6 +1873,13 @@ window.triggerRankMock = function(customTitle) {
     buildAppFooter();
     ensureFooterPersists(); // Start watching for footer removal
 
+    // 4. CONTINUOUS CHECK: Rebuild footer every 5 seconds as additional safety net
+    setInterval(() => {
+        if (window.innerWidth <= 768) {
+            buildAppFooter();
+        }
+    }, 5000);
+
 })();
 // ==========================
 // REPLACE FROM LINE 1235 DOWN TO LINE 1270 WITH THIS:
