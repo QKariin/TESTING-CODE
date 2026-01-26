@@ -1760,9 +1760,11 @@ window.triggerRankMock = function(customTitle) {
     function buildAppFooter() {
         // Run only on mobile
         if (window.innerWidth > 768) return;
+        console.log("Building App Mode Footer...");
         
         // If exists, don't rebuild
         if (document.getElementById('app-mode-footer')) return;
+        console.log("App Mode Footer not found, creating...");
         
         const footer = document.createElement('div');
         footer.id = 'app-mode-footer';
@@ -1811,7 +1813,7 @@ window.triggerRankMock = function(customTitle) {
         // CRITICAL FIX: Append to document.documentElement instead of document.body
         // This prevents the footer from being destroyed by render functions and view switches
         // that manipulate body content
-        document.documentElement.appendChild(footer);
+        document.body.appendChild(footer);
         console.log("App Mode Footer Built (isolated to <html>)",  document.getElementById('app-mode-footer'));
     }
     
