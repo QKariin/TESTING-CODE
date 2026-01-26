@@ -1812,16 +1812,53 @@ window.triggerRankMock = function(customTitle) {
         console.log("App Mode Footer Built",  document.getElementById('app-mode-footer'));
     }
     
-    // 2B. DEFENSIVE: Watch for footer removal (iframe / DOM rehydration issue)
-    // If the footer gets removed/cleared, automatically restore it
+    // 2B. DEFENSIVE: Use MutationObserver to detect when footer is removed and restore it
+    // The footer gets deleted when DOM structure changes (iframe rehydration, view switches, etc)
     function ensureFooterPersists() {
         if (window.innerWidth > 768) return; // Mobile only
         
-        setInterval(() => {
-            if (!document.getElementById('app-mode-footer')) {
+        // First, try a quick poll as fallback
+        const pollFooter = setInterval(() => {
+            if (!document.getElementById('app-mode-footer') && window.innerWidth <= 768) {
                 buildAppFooter();
             }
-        }, 1000); // Check every 1 second
+        }, 500);
+        
+        // Also watch body for mutations (catching when footer is removed)
+        try {
+            const observer = new MutationObserver((mutations) => {
+                // Check if app-mode-footer was in any removed nodes
+                let footerRemoved = false;
+                
+                mutations.forEach(mutation => {
+                    if (mutation.removedNodes.length > 0) {
+                        mutation.removedNodes.forEach(node => {
+                            if (node.id === 'app-mode-footer' || 
+                                (node.nodeType === Node.ELEMENT_NODE && node.querySelector && node.querySelector('#app-mode-footer'))) {
+                                footerRemoved = true;
+                            }
+                        });
+                    }
+                });
+                
+                // If footer was removed, or if it's just missing now, rebuild it
+                if (footerRemoved || !document.getElementById('app-mode-footer')) {
+                    if (window.innerWidth <= 768) {
+                        buildAppFooter();
+                    }
+                }
+            });
+            
+            // Watch body and html for any mutations
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: false,
+                characterData: false
+            });
+        } catch(e) {
+            console.warn("MutationObserver not supported, relying on polling");
+        }
     }
 
     // 3. Init
