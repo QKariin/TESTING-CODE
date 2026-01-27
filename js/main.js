@@ -1706,23 +1706,28 @@ window.triggerRankMock = function(customTitle) {
     
     if(window.triggerSound) triggerSound('sfx-deny');
 };
-// =========================================
-// PART 2: FINAL APP MODE (NATIVE FLOW)
-// =========================================
 
 // =========================================
 // FINAL PART: APP NAVIGATION BAR (FORCE RENDER)
 // =========================================
 
 (function() {
+    // HELPER: The "Smart Check" - Returns true if we are in Mobile View
+    function isMobileMode() {
+        const mobileContainer = document.getElementById('MOBILE_APP');
+        // If the container exists and is NOT hidden, we are in mobile mode
+        return mobileContainer && getComputedStyle(mobileContainer).display !== 'none';
+    }
+
     // 1. Force Visual Lock (Anti-Bounce)
     function lockVisuals() {
-        if (window.innerWidth > 768) return; // Mobile Only
+        // USE SMART CHECK (Replaces the 768 width check)
+        if (!isMobileMode()) return; 
 
         const lockStyles = {
-            position: 'fixed',
+            position: 'absolute',    // CORRECT: Allows layout to breathe
             width: '100%',
-            height: '100%',
+            height: '100dvh',        // CORRECT: Handles Safari/Chrome bars
             overflow: 'hidden',
             inset: '0',
             overscrollBehavior: 'none',
@@ -1756,20 +1761,18 @@ window.triggerRankMock = function(customTitle) {
         }, { passive: false });
     }
 
-    // 2. Build The Footer (with automatic restoration if removed)
+    // 2. Build The Footer
     function buildAppFooter() {
-        // Run only on mobile
-        if (window.innerWidth > 768) return;
+        // USE SMART CHECK
+        if (!isMobileMode()) return;
+        
         console.log("Building App Mode Footer...");
         
-        // If exists, don't rebuild
         if (document.getElementById('app-mode-footer')) return;
-        console.log("App Mode Footer not found, creating...");
         
         const footer = document.createElement('div');
         footer.id = 'app-mode-footer';
         
-        // CSS INJECTION (Max Z-Index to stay on top of everything)
         Object.assign(footer.style, {
             display: 'flex', 
             justifyContent: 'space-around',
@@ -1780,7 +1783,7 @@ window.triggerRankMock = function(customTitle) {
             width: '100%', 
             height: '60px',
             background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
-            paddingBottom: 'env(safe-area-inset-bottom)', /* Handles iPhone Home Bar */
+            paddingBottom: 'env(safe-area-inset-bottom)', 
             zIndex: '2147483647', 
             borderTop: '1px solid rgba(197, 160, 89, 0.3)',
             backdropFilter: 'blur(10px)', 
@@ -1810,31 +1813,24 @@ window.triggerRankMock = function(customTitle) {
                 <span style="font-size:1.4rem;color:#888;">⊕</span><span>GLOBAL</span>
             </button>`;
         
-        // CRITICAL FIX: Append to document.documentElement instead of document.body
-        // This prevents the footer from being destroyed by render functions and view switches
-        // that manipulate body content
-        document.body.appendChild(footer);
-        console.log("App Mode Footer Built (isolated to <html>)",  document.getElementById('app-mode-footer'));
+        // CORRECT: Attach to Root
+        document.documentElement.appendChild(footer);
     }
     
-    // 2B. DEFENSIVE: Use MutationObserver to detect when footer is removed and restore it
-    // The footer gets deleted when DOM structure changes (iframe rehydration, view switches, etc)
+    // 2B. Backup System
     function ensureFooterPersists() {
-        if (window.innerWidth > 768) return; // Mobile only
+        // USE SMART CHECK
+        if (!isMobileMode()) return; 
         
-        // First, try a quick poll as fallback
         const pollFooter = setInterval(() => {
-            if (!document.getElementById('app-mode-footer') && window.innerWidth <= 768) {
+            if (!document.getElementById('app-mode-footer') && isMobileMode()) {
                 buildAppFooter();
             }
         }, 500);
         
-        // Also watch body for mutations (catching when footer is removed)
         try {
             const observer = new MutationObserver((mutations) => {
-                // Check if app-mode-footer was in any removed nodes
                 let footerRemoved = false;
-                
                 mutations.forEach(mutation => {
                     if (mutation.removedNodes.length > 0) {
                         mutation.removedNodes.forEach(node => {
@@ -1846,40 +1842,29 @@ window.triggerRankMock = function(customTitle) {
                     }
                 });
                 
-                // If footer was removed, or if it's just missing now, rebuild it
                 if (footerRemoved || !document.getElementById('app-mode-footer')) {
-                    if (window.innerWidth <= 768) {
+                    if (isMobileMode()) {
                         buildAppFooter();
                     }
                 }
             });
             
-            // Watch body and html for any mutations
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true,
-                attributes: false,
-                characterData: false
-            });
-        } catch(e) {
-            console.warn("MutationObserver not supported, relying on polling");
-        }
+            observer.observe(document.body, { childList: true, subtree: true, attributes: false, characterData: false });
+        } catch(e) {}
     }
 
     // 3. Init
     window.addEventListener('load', () => { lockVisuals(); buildAppFooter(); ensureFooterPersists(); });
     window.addEventListener('resize', () => { lockVisuals(); buildAppFooter(); });
     
-    // Force run immediately in case load event passed
     lockVisuals(); 
     buildAppFooter();
-    ensureFooterPersists(); // Start watching for footer removal
+    ensureFooterPersists(); 
 
-    // 4. CONTINUOUS CHECK: Rebuild footer every 5 seconds as additional safety net
+    // 4. Final Backup Check
     setInterval(() => {
-        console.log("Footer Check Interval");
-        if (window.innerWidth <= 768) {
-            console.log("Rebuilding App Footer from Interval");
+        // USE SMART CHECK
+        if (isMobileMode()) {
             buildAppFooter();
         }
     }, 5000);
