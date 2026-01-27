@@ -1722,7 +1722,7 @@ window.triggerRankMock = function(customTitle) {
         const lockStyles = {
             position: 'fixed',
             width: '100%',
-            height: '100%',
+            height: '100dvh',
             overflow: 'hidden',
             inset: '0',
             overscrollBehavior: 'none',
@@ -1813,7 +1813,7 @@ window.triggerRankMock = function(customTitle) {
         // CRITICAL FIX: Append to document.documentElement instead of document.body
         // This prevents the footer from being destroyed by render functions and view switches
         // that manipulate body content
-        document.body.appendChild(footer);
+        document.documentElement.appendChild(footer);
         console.log("App Mode Footer Built (isolated to <html>)",  document.getElementById('app-mode-footer'));
     }
     
