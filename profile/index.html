@@ -1398,34 +1398,39 @@
     <!-- =========================================
      LUXURY TRIBUTE STORE (MATCHES DAILY DUTIES LAYOUT)
      ========================================= -->
-<div id="tributeStoreOverlay" class="mob-reward-overlay hidden">
+<div id="tributeStoreOverlay" class="mob-reward-overlay hidden" style="
+    background-color: #000 !important; 
+    padding: 0 !important; 
+    z-index: 2147483647; 
+    display: flex; 
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+">
     
-    <!-- Reuse 'queen-card-layout' for the full screen black frame -->
-    <div class="mob-reward-card queen-card-layout">
-
-        <!-- HEADER -->
-        <div class="mob-chat-header" style="position: sticky; top: 0; z-index: 50;">
-            <div class="chat-queen-profile">
-                <div class="queen-av-wrap">
-                    <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="queen-av-img">
-                    <div class="status-dot online"></div>
-                </div>
-                <div class="chat-meta-col">
-                    <div class="chat-queen-name" style="color: var(--gold);">TRIBUTE STORE</div>
-                    <div class="chat-status-text">SACRIFICE CAPITAL</div>
-                </div>
+    <!-- HEADER (Exact copy of Daily Duties) -->
+    <div class="mob-chat-header" style="position: sticky; top: 0; width: 100%; justify-content: space-between; border-bottom: 1px solid #333; background: #000; padding: 0 15px; z-index: 50; flex-shrink: 0;">
+        <div class="chat-queen-profile">
+            <div class="queen-av-wrap">
+                <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="queen-av-img">
+                <div class="status-dot online"></div>
             </div>
-            <button onclick="window.toggleTributeStore()" style="background: none; border: none; color: #444; font-size: 2rem; cursor: pointer;">×</button>
-        </div>
-
-        <!-- SCROLL CONTENT -->
-        <div class="qm-scroll-content">
-            <div id="tributeGridContent" class="store-grid-layout">
-                <!-- Items go here -->
+            <div class="chat-meta-col">
+                <div class="chat-queen-name" style="color: var(--gold);">TRIBUTE STORE</div>
+                <div class="chat-status-text">SACRIFICE CAPITAL</div>
             </div>
         </div>
-
+        <button onclick="window.toggleTributeStore()" style="background: none; border: none; color: #444; font-size: 2rem; cursor: pointer;">×</button>
     </div>
+
+    <!-- SCROLL AREA -->
+    <div class="qm-scroll-content" style="flex: 1; overflow-y: auto; width: 100%; padding: 20px 10px; padding-bottom: 120px; -webkit-overflow-scrolling: touch;">
+        <!-- GRID -->
+        <div id="tributeGridContent" class="store-grid-layout">
+            <!-- JS will put items here -->
+        </div>
+    </div>
+
 </div>
 
 </div> <!-- THIS IS THE CLOSING DIV FOR #MOBILE_APP -->
@@ -1434,58 +1439,93 @@
 // =========================================
 // IOS VISUAL VIEWPORT RESIZER
 // =========================================
-if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-        // When keyboard opens/closes, browser resizes visualViewport.
-        // We force the body height to match, preventing the "Halfway Scroll" bug.
-        document.body.style.height = window.visualViewport.height + 'px';
-        
-        // Force scroll to top to kill any offsets
-        window.scrollTo(0, 0);
-    });
-}
-  // --- EMERGENCY UI TOGGLE (Bypasses Main.js) ---
-window.toggleTributeStore = function() {
-    const overlay = document.getElementById('tributeStoreOverlay');
-    if (!overlay) return console.error("Overlay not found!");
-
-    if (overlay.classList.contains('hidden')) {
-        // OPEN
-        overlay.classList.remove('hidden');
-        
-        // Try to render items if main.js is alive
-        if (typeof renderTributeGrid === 'function') {
-            renderTributeGrid();
-        } else {
-            console.warn("Main.js not ready, showing empty store.");
-        }
-    } else {
-        // CLOSE
-        overlay.classList.add('hidden');
+  if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+            document.body.style.height = window.visualViewport.height + 'px';
+            window.scrollTo(0, 0);
+        });
     }
-};
-  
+
+    // 2. DEVICE CHECKER
     function checkDevice() {
         const isMobile = window.innerWidth <= 768;
         const desktop = document.getElementById('DESKTOP_APP');
         const mobile = document.getElementById('MOBILE_APP');
-        const dashboard = document.getElementById('viewMobileHome');
-        
         if (isMobile) {
             if(desktop) desktop.style.display = 'none';
             if(mobile) mobile.style.display = 'flex';
-            // Force Dashboard Visible
-            if(dashboard) {
-                dashboard.style.display = 'flex';
-                dashboard.style.visibility = 'visible';
-                dashboard.style.opacity = '1';
-            }
         } else {
             if(mobile) mobile.style.display = 'none';
             if(desktop) desktop.style.display = 'flex'; 
         }
     }
-    // Run immediately and on resize
+
+    // 3. TRIBUTE STORE LOGIC (Embedded)
+    window.toggleTributeStore = function() {
+        const overlay = document.getElementById('tributeStoreOverlay');
+        if (!overlay) return;
+
+        if (overlay.classList.contains('hidden') || overlay.style.display === 'none') {
+            // SHOW
+            overlay.classList.remove('hidden');
+            overlay.style.display = 'flex'; // Force visible
+            renderTributeGridLocal();
+        } else {
+            // HIDE
+            overlay.classList.add('hidden');
+            overlay.style.display = 'none';
+        }
+    };
+
+    function renderTributeGridLocal() {
+        const grid = document.getElementById('tributeGridContent');
+        
+        // DATA SOURCE: Try Main JS, else try Global, else Empty
+        let items = window.WISHLIST_ITEMS || []; 
+        
+        if (!grid) return;
+        grid.innerHTML = "";
+
+        if (items.length === 0) {
+            grid.innerHTML = `<div style="grid-column: span 2; text-align: center; color: #666; font-family:'Cinzel'; margin-top: 50px;">
+                NO ITEMS FOUND<br><span style="font-size:0.6rem; font-family:'Orbitron'">CHECK NETWORK CONNECTION</span>
+            </div>`;
+            return;
+        }
+
+        items.forEach((item) => {
+            const name = item.name || item.Name || "Item";
+            const price = item.price || item.Price || 0;
+            let img = item.img || item.image || item.Image || "";
+            
+            // Wix URL Fix
+            if (img.startsWith("wix:image")) {
+                img = `https://static.wixstatic.com/media/${img.split('/')[3].split('#')[0]}`;
+            }
+
+            const card = document.createElement('div');
+            card.className = "store-card";
+            card.onclick = function() { 
+                // Call main.js logic if available, else alert
+                if(typeof confirmPurchase === 'function') confirmPurchase(item);
+                else alert("Purchase System Offline"); 
+            };
+
+            card.innerHTML = `
+                <div class="store-img-box">
+                    <img src="${img}" class="store-img" onerror="this.style.display='none'">
+                </div>
+                <div class="store-info">
+                    <div class="store-name">${name}</div>
+                    <div class="store-price">${Number(price).toLocaleString()} 🪙</div>
+                    <div class="store-buy-btn">ACQUIRE</div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // INIT
     checkDevice();
     window.addEventListener('resize', checkDevice);
     window.addEventListener('load', checkDevice);
