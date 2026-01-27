@@ -1435,32 +1435,87 @@
 
 </div> <!-- THIS IS THE CLOSING DIV FOR #MOBILE_APP -->
 <script>
-
-// =========================================
-// IOS VISUAL VIEWPORT RESIZER
-// =========================================
-  if (window.visualViewport) {
+    // =========================================
+    // 1. IOS VISUAL VIEWPORT RESIZER
+    // =========================================
+    if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             document.body.style.height = window.visualViewport.height + 'px';
             window.scrollTo(0, 0);
         });
     }
 
-    // 2. DEVICE CHECKER
+    // =========================================
+    // 2. DEVICE CHECKER & APP FOOTER BUILDER
+    // =========================================
     function checkDevice() {
         const isMobile = window.innerWidth <= 768;
         const desktop = document.getElementById('DESKTOP_APP');
         const mobile = document.getElementById('MOBILE_APP');
+        
         if (isMobile) {
             if(desktop) desktop.style.display = 'none';
             if(mobile) mobile.style.display = 'flex';
+            
+            // RESTORED: BUILD FOOTER
+            buildAppFooterLocal();
         } else {
             if(mobile) mobile.style.display = 'none';
             if(desktop) desktop.style.display = 'flex'; 
         }
     }
 
-    // 3. TRIBUTE STORE LOGIC (Embedded)
+    function buildAppFooterLocal() {
+        if (document.getElementById('app-mode-footer')) return;
+
+        const footer = document.createElement('div');
+        footer.id = 'app-mode-footer';
+        
+        // Force Styles
+        Object.assign(footer.style, {
+            display: 'flex', 
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            position: 'fixed', 
+            bottom: '0', 
+            left: '0', 
+            width: '100%', 
+            height: '60px',
+            background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
+            paddingBottom: 'env(safe-area-inset-bottom)',
+            zIndex: '2147483647', 
+            borderTop: '1px solid rgba(197, 160, 89, 0.3)',
+            backdropFilter: 'blur(10px)',
+            touchAction: 'none'
+        });
+
+        // Styles for buttons
+        const btnStyle = "background:none; border:none; color:#666; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; -webkit-tap-highlight-color: transparent;";
+        const centerStyle = "background:none; border:none; color:#ff003c; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; -webkit-tap-highlight-color: transparent;";
+
+        footer.innerHTML = `
+            <button onclick="window.toggleMobileView('home')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">◈</span><span>PROFILE</span>
+            </button>
+            <button onclick="window.toggleMobileView('record')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">▦</span><span>RECORD</span>
+            </button>
+            <button onclick="window.toggleMobileView('chat')" style="${centerStyle}">
+                <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid #ff003c;box-shadow:0 0 10px rgba(255,0,60,0.3);">
+            </button>
+            <button onclick="window.toggleMobileView('queen')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">♛</span><span>QUEEN</span>
+            </button>
+            <button onclick="window.toggleMobileView('global')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">⊕</span><span>GLOBAL</span>
+            </button>`;
+        
+        document.body.appendChild(footer);
+    }
+
+    // =========================================
+    // 3. TRIBUTE STORE LOGIC (FAIL-SAFE)
+    // =========================================
     window.toggleTributeStore = function() {
         const overlay = document.getElementById('tributeStoreOverlay');
         if (!overlay) return;
@@ -1468,7 +1523,7 @@
         if (overlay.classList.contains('hidden') || overlay.style.display === 'none') {
             // SHOW
             overlay.classList.remove('hidden');
-            overlay.style.display = 'flex'; // Force visible
+            overlay.style.display = 'flex';
             renderTributeGridLocal();
         } else {
             // HIDE
@@ -1479,9 +1534,7 @@
 
     function renderTributeGridLocal() {
         const grid = document.getElementById('tributeGridContent');
-        
-        // DATA SOURCE: Try Main JS, else try Global, else Empty
-        let items = window.WISHLIST_ITEMS || []; 
+        const items = window.WISHLIST_ITEMS || []; 
         
         if (!grid) return;
         grid.innerHTML = "";
@@ -1497,35 +1550,29 @@
             const name = item.name || item.Name || "Item";
             const price = item.price || item.Price || 0;
             let img = item.img || item.image || item.Image || "";
-            
-            // Wix URL Fix
-            if (img.startsWith("wix:image")) {
-                img = `https://static.wixstatic.com/media/${img.split('/')[3].split('#')[0]}`;
-            }
+            if (img.startsWith("wix:image")) img = `https://static.wixstatic.com/media/${img.split('/')[3].split('#')[0]}`;
 
             const card = document.createElement('div');
             card.className = "store-card";
             card.onclick = function() { 
-                // Call main.js logic if available, else alert
                 if(typeof confirmPurchase === 'function') confirmPurchase(item);
                 else alert("Purchase System Offline"); 
             };
 
             card.innerHTML = `
-                <div class="store-img-box">
-                    <img src="${img}" class="store-img" onerror="this.style.display='none'">
-                </div>
+                <div class="store-img-box"><img src="${img}" class="store-img" onerror="this.style.display='none'"></div>
                 <div class="store-info">
                     <div class="store-name">${name}</div>
                     <div class="store-price">${Number(price).toLocaleString()} 🪙</div>
                     <div class="store-buy-btn">ACQUIRE</div>
-                </div>
-            `;
+                </div>`;
             grid.appendChild(card);
         });
     }
 
-    // INIT
+    // =========================================
+    // 4. INIT
+    // =========================================
     checkDevice();
     window.addEventListener('resize', checkDevice);
     window.addEventListener('load', checkDevice);
