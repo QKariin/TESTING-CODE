@@ -1499,7 +1499,7 @@
         </div>
     </div>
 
-   <!-- =========================================
+<!-- =========================================
          LUXURY TRIBUTE STORE (FULL SCREEN)
          ========================================= -->
     <div id="tributeStoreOverlay" class="mob-frame" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh !important; overflow: hidden !important; flex-direction: column; padding: 0 !important; background: #000; z-index: 2147483647;">
@@ -1509,25 +1509,40 @@
             <div class="chat-queen-profile">
                 <div class="chat-meta-col">
                     <div class="chat-queen-name" style="color: var(--gold);">TRIBUTE STORE</div>
-                    <div class="chat-status-text">SACRIFICE CAPITAL</div>
+                    <div id="tributeHeaderSub" class="chat-status-text">SACRIFICE CAPITAL</div>
                 </div>
             </div>
-            <button onclick="window.toggleTributeStore()" style="background: none; border: none; color: #444; font-size: 2rem; line-height: 1; cursor: pointer; padding: 0;">×</button>
+            <!-- This close button now handles 'Back' logic too -->
+            <button onclick="window.closeTributeStore()" style="background: none; border: none; color: #444; font-size: 2rem; line-height: 1; cursor: pointer; padding: 0;">×</button>
         </div>
       
         <!-- SCROLLABLE CONTENT -->
-        <!-- Fixed the style tag here to prevent the ">" glitch -->
         <div id="tributeScrollArea" style="flex: 1; overflow-y: auto; width: 100%; padding: 20px; -webkit-overflow-scrolling: touch; padding-bottom: 100px;">
             
-            <!-- GRID CONTAINER -->
-            <div id="tributeGridContent" class="store-grid-layout">
+            <!-- VIEW 1: THE GRID -->
+            <div id="tributeGridContent" class="tribute-grid-3col">
                 <!-- Items injected by JS -->
-            </div> <!-- Closes tributeGridContent -->
+            </div>
 
-        </div> <!-- Closes tributeScrollArea -->
-      
-    </div> <!-- Closes tributeStoreOverlay -->
+            <!-- VIEW 2: CONFIRMATION & NOTE (Hidden by default) -->
+            <div id="tributeConfirmView" class="tribute-confirm-view hidden">
+                <img id="confImg" src="" class="tribute-preview-img">
+                <div style="text-align:center;">
+                    <div id="confName" style="color:white; font-family:'Cinzel'; font-size:1.2rem; margin-bottom:5px;">ITEM NAME</div>
+                    <div id="confPrice" style="color:#c5a059; font-family:'Rajdhani'; font-size:1.5rem; font-weight:bold;">0 🪙</div>
+                </div>
+                
+                <div style="width:100%; text-align:left;">
+                    <div style="color:#666; font-size:0.6rem; margin-bottom:5px; font-family:'Orbitron';">ADD A NOTE</div>
+                    <textarea id="tributeNoteInput" class="tribute-note-input" placeholder="Your message to Queen Karin..."></textarea>
+                </div>
 
+                <button class="wallet-btn" onclick="window.executeTribute()">SEND OFFERING</button>
+                <button class="lobby-btn close" onclick="window.showTributeGrid()">CANCEL</button>
+            </div>
+
+        </div> 
+    </div>
       
     
 </div> <!-- Closes MOBILE_APP -->
