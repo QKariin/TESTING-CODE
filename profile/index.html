@@ -1398,35 +1398,30 @@
     <!-- =========================================
      LUXURY TRIBUTE STORE (MATCHES DAILY DUTIES LAYOUT)
      ========================================= -->
-<div id="tributeStoreOverlay" class="mob-reward-overlay hidden" style="background: #000 !important; padding: 0 !important; z-index: 2147483647; flex-direction: column;">
+<div id="tributeStoreOverlay" class="mob-reward-overlay hidden">
     
-    <!-- Reuse 'queen-card-layout' to force full screen black mode -->
-    <div class="mob-reward-card queen-card-layout" style="width: 100vw !important; height: 100vh !important; border: none !important; border-radius: 0 !important; background: #000 !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important;">
+    <!-- Reuse 'queen-card-layout' for the full screen black frame -->
+    <div class="mob-reward-card queen-card-layout">
 
-        <!-- HEADER (Sticky, Identical to Duties) -->
-        <div class="mob-chat-header" style="position: sticky !important; top: 0 !important; width: 100%; justify-content: space-between; border-bottom: 1px solid #333; background: #000; padding: 0 15px; z-index: 50;">
-            
+        <!-- HEADER -->
+        <div class="mob-chat-header" style="position: sticky; top: 0; z-index: 50;">
             <div class="chat-queen-profile">
                 <div class="queen-av-wrap">
-                    <!-- Queen Avatar -->
                     <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="queen-av-img">
                     <div class="status-dot online"></div>
                 </div>
                 <div class="chat-meta-col">
-                    <div class="chat-queen-name" style="color: var(--gold);">TRIBUTE QUEEN KARIN</div>
+                    <div class="chat-queen-name" style="color: var(--gold);">TRIBUTE STORE</div>
                     <div class="chat-status-text">SACRIFICE CAPITAL</div>
                 </div>
             </div>
-
-            <!-- Close Button -->
-            <button onclick="window.toggleTributeStore()" style="background: none; border: none; color: #444; font-size: 2rem; line-height: 1; cursor: pointer; padding: 0;">×</button>
+            <button onclick="window.toggleTributeStore()" style="background: none; border: none; color: #444; font-size: 2rem; cursor: pointer;">×</button>
         </div>
 
-        <!-- SCROLLABLE CONTENT AREA -->
-        <div class="qm-scroll-content" style="padding: 20px 0; width: 100%;">
-            <!-- THE GRID (Injected by JS) -->
-            <div id="tributeGridContent" class="store-grid-layout" style="padding: 0 15px;">
-                <!-- JS will put items here -->
+        <!-- SCROLL CONTENT -->
+        <div class="qm-scroll-content">
+            <div id="tributeGridContent" class="store-grid-layout">
+                <!-- Items go here -->
             </div>
         </div>
 
