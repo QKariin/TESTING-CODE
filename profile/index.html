@@ -1502,45 +1502,56 @@
 </div>
   
 <script>
-
 // =========================================
 // IOS VISUAL VIEWPORT RESIZER
 // =========================================
 if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
-        // When keyboard opens/closes, browser resizes visualViewport.
-        // We force the body height to match, preventing the "Halfway Scroll" bug.
         document.body.style.height = window.visualViewport.height + 'px';
-        
-        // Force scroll to top to kill any offsets
         window.scrollTo(0, 0);
     });
 }
   
-    function checkDevice() {
-        const isMobile = window.innerWidth <= 768;
-        const desktop = document.getElementById('DESKTOP_APP');
-        const mobile = document.getElementById('MOBILE_APP');
-        const dashboard = document.getElementById('viewMobileHome');
+function checkDevice() {
+    const isMobile = window.innerWidth <= 768;
+    const desktop = document.getElementById('DESKTOP_APP');
+    const mobile = document.getElementById('MOBILE_APP');
+    const dashboard = document.getElementById('viewMobileHome');
+    
+    // 1. GRAB THE FOOTER
+    const footer = document.getElementById('APP_FOOTER_NAV'); // <--- NEW
+
+    if (isMobile) {
+        if(desktop) desktop.style.display = 'none';
         
-        if (isMobile) {
-            if(desktop) desktop.style.display = 'none';
-            if(mobile) mobile.style.display = 'flex';
-            // Force Dashboard Visible
-            if(dashboard) {
-                dashboard.style.display = 'flex';
-                dashboard.style.visibility = 'visible';
-                dashboard.style.opacity = '1';
-            }
-        } else {
-            if(mobile) mobile.style.display = 'none';
-            if(desktop) desktop.style.display = 'flex'; 
+        if(mobile) {
+            mobile.style.display = 'flex';
         }
+
+        if(dashboard) {
+            dashboard.style.display = 'flex';
+            dashboard.style.visibility = 'visible';
+            dashboard.style.opacity = '1';
+        }
+
+        // 2. FORCE THE FOOTER TO SHOW
+        if(footer) footer.style.display = 'flex'; // <--- NEW (Forces it to appear instantly)
+
+    } else {
+        // Desktop Mode
+        if(mobile) mobile.style.display = 'none';
+        
+        // 3. HIDE FOOTER ON DESKTOP
+        if(footer) footer.style.display = 'none'; // <--- NEW
+        
+        if(desktop) desktop.style.display = 'flex'; 
     }
-    // Run immediately and on resize
-    checkDevice();
-    window.addEventListener('resize', checkDevice);
-    window.addEventListener('load', checkDevice);
+}
+
+// Run immediately and on resize
+checkDevice();
+window.addEventListener('resize', checkDevice);
+window.addEventListener('load', checkDevice);
 </script>
 </body>
 </html>
