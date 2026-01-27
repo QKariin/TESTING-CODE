@@ -71,8 +71,8 @@
         left: 0;
         width: 100%;
         height: 60px;
-        /* Padding for iPhone Home Bar */
-        padding-bottom: env(safe-area-inset-bottom);
+        /* Calculates: Either the safe area OR 20px, whichever is bigger */
+        padding-bottom: max(env(safe-area-inset-bottom), 20px) !important;
         box-sizing: content-box; /* Ensures padding adds to height, doesn't shrink it */
         
         background: linear-gradient(to top, #000000 60%, rgba(0,0,0,0.9));
@@ -576,12 +576,23 @@
            7. HUD & LOBBY
            ========================================= */
         .mob-hud-row {
-            position: absolute; top: 15px; left: 0; width: 100%;
-            display: flex; justify-content: space-between; padding: 0 20px; z-index: 10;
+            position: fixed !important; /* Forces it to stick to the glass */
+            top: 0 !important;          /* Resets it to the very top edge */
+            left: 0; 
+            width: 100%;
+            
+            /* This adds space for the iPhone Notch/Status Bar automatically */
+            padding-top: max(15px, env(safe-area-inset-top)); 
+            padding-left: 20px;
+            padding-right: 20px;
+            
+            display: flex; justify-content: space-between; 
+            z-index: 9999; /* Ensures it sits above everything */
+            pointer-events: none; /* Lets you scroll if you touch empty space between circles */
         }
         .hud-circle {
             width: 45px; height: 45px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
-            background: #000; position: relative; overflow: visible; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            background: #000; .hud-circle { pointer-events: auto; position: relative; overflow: visible; box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
         .hud-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; opacity: 0.8; }
         .hud-gear { position: absolute; bottom: -5px; right: -5px; font-size: 0.8rem; color: #fff; text-shadow: 0 0 5px #000; }
