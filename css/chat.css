@@ -405,29 +405,6 @@
     
     .queen-av-wrap { position: relative; width: 40px; height: 40px; }
     .queen-av-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #c5a059; }
-
-   /* FORCE TRIBUTE STORE TO LOOK LIKE QUEEN MENU */
-    #tributeStoreOverlay {
-        background: #000 !important;
-        padding: 0 !important;
-        align-items: flex-start !important; /* Fixes centering issue */
-        z-index: 2147483647 !important; /* Topmost */
-    }
-
-    #tributeStoreOverlay .mob-reward-card {
-        width: 100vw !important;
-        height: 100vh !important;
-        background: #000 !important;
-        border: none !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-    }
-    
-    /* Ensure grid has padding */
-    #tributeGridContent {
-        padding: 20px;
-        padding-bottom: 120px;
-    }
     
     /* Online Dot */
     .status-dot {
