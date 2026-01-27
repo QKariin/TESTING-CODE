@@ -1780,11 +1780,12 @@ window.triggerRankMock = function(customTitle) {
             width: '100%', 
             height: '60px',
             background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
-            paddingBottom: 'env(safe-area-inset-bottom)', /* Handles iPhone Home Bar */
+            paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
             zIndex: '2147483647', 
             borderTop: '1px solid rgba(197, 160, 89, 0.3)',
             backdropFilter: 'blur(10px)', 
             pointerEvents: 'auto', 
+            transform: 'translateZ(9999px)',
             touchAction: 'none'
         });
 
