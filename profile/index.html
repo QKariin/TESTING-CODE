@@ -592,6 +592,68 @@
     text-align: center;
 }
 
+  /* =========================================
+       TRIBUTE STORE (GRID & CONFIRM)
+       ========================================= */
+    .tribute-grid-3col {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* 3 Items Per Row */
+        gap: 8px;
+        width: 100%;
+    }
+
+    .tribute-item-card {
+        background: rgba(20, 20, 20, 0.5);
+        border: 1px solid #333;
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex; 
+        flex-direction: column;
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .tribute-item-card:active { border-color: #c5a059; }
+
+    .tic-img {
+        width: 100%;
+        aspect-ratio: 1 / 1; /* Perfect Square */
+        object-fit: cover;
+    }
+
+    .tic-meta {
+        padding: 5px;
+        text-align: center;
+        background: #050505;
+    }
+
+    .tic-price { color: #c5a059; font-family: 'Rajdhani'; font-weight: 700; font-size: 0.9rem; }
+    .tic-name { color: #888; font-family: 'Cinzel'; font-size: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* CONFIRMATION VIEW */
+    .tribute-confirm-view {
+        display: flex; flex-direction: column; align-items: center; gap: 20px;
+        padding-top: 20px;
+    }
+    .tribute-preview-img {
+        width: 150px; height: 150px; 
+        border: 2px solid #c5a059; 
+        object-fit: cover;
+        box-shadow: 0 0 20px rgba(197, 160, 89, 0.3);
+    }
+    .tribute-note-input {
+        width: 100%;
+        background: #111;
+        border: 1px solid #444;
+        color: white;
+        font-family: 'Cinzel';
+        padding: 10px;
+        min-height: 80px;
+        resize: none;
+        outline: none;
+    }
+    .tribute-note-input:focus { border-color: #c5a059; }
+
 /* Progress Bar */
 .rc-progress-wrap { width: 100%; margin-bottom: 20px; }
 .rc-progress-labels { display: flex; justify-content: space-between; margin-bottom: 5px; font-family: 'Orbitron'; font-size: 0.8rem; color: #ccc; }
