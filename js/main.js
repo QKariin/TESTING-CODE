@@ -990,18 +990,24 @@ window.handleUploadStart = function(inputElement) {
 
 let selectedTributeItem = null;
 
-// 1. OPEN STORE (Replaces toggleTributeHunt)
+// 1. OPEN STORE
 window.toggleTributeHunt = function() {
-    const overlay = document.getElementById('tributeStoreOverlay');
-    if (!overlay) return;
+    // TARGET THE NEW ID HERE:
+    const overlay = document.getElementById('tributeStoreOverlay'); 
     
-    // Switch to Mobile View logic (hides other views)
-    if (window.toggleMobileView) window.toggleMobileView('none'); // Safe way to ensure clean slate
+    if (!overlay) {
+        console.error("Tribute Store Overlay NOT FOUND in HTML");
+        return;
+    }
+    
+    // Hide other mobile views to be safe
+    if (window.toggleMobileView) window.toggleMobileView('none'); 
     
     overlay.style.display = 'flex';
     overlay.classList.remove('hidden');
     
-    window.showTributeGrid(); // Default to grid
+    // Load the Grid
+    if(window.showTributeGrid) window.showTributeGrid(); 
 };
 
 window.closeTributeStore = function() {
@@ -1010,15 +1016,23 @@ window.closeTributeStore = function() {
         overlay.style.display = 'none';
         overlay.classList.add('hidden');
     }
-    // Restore Chat View
-    if (window.toggleMobileView) window.toggleMobileView('chat');
+    // Restore Chat View if on mobile
+    if (window.innerWidth <= 768 && window.toggleMobileView) {
+        window.toggleMobileView('chat');
+    }
 };
 
 // 2. RENDER GRID
 window.showTributeGrid = function() {
-    document.getElementById('tributeGridContent').classList.remove('hidden');
-    document.getElementById('tributeConfirmView').classList.add('hidden');
-    document.getElementById('tributeHeaderSub').innerText = "SACRIFICE CAPITAL";
+    const gridContent = document.getElementById('tributeGridContent');
+    const confirmView = document.getElementById('tributeConfirmView');
+    const headerSub = document.getElementById('tributeHeaderSub');
+
+    if(!gridContent || !confirmView) return;
+
+    gridContent.classList.remove('hidden');
+    confirmView.classList.add('hidden');
+    if(headerSub) headerSub.innerText = "SACRIFICE CAPITAL";
     
     const grid = document.getElementById('tributeGridContent');
     grid.innerHTML = "";
@@ -1031,7 +1045,6 @@ window.showTributeGrid = function() {
     }
 
     items.forEach(item => {
-        // Safe Price Check
         const price = Number(item.price || 0);
         const canAfford = (gameStats.coins >= price);
         const opacity = canAfford ? '1' : '0.4';
@@ -1048,7 +1061,6 @@ window.showTributeGrid = function() {
             </div>
         `;
         
-        // Click Logic
         card.onclick = () => {
             if (!canAfford) {
                 if(window.triggerPoverty) window.triggerPoverty();
@@ -1061,20 +1073,18 @@ window.showTributeGrid = function() {
     });
 };
 
-// 3. OPEN CONFIRMATION (Note)
+// 3. OPEN CONFIRMATION
 window.openTributeConfirm = function(item) {
     selectedTributeItem = item;
     
-    // Switch Views
     document.getElementById('tributeGridContent').classList.add('hidden');
     document.getElementById('tributeConfirmView').classList.remove('hidden');
     document.getElementById('tributeHeaderSub').innerText = "ADD A NOTE";
     
-    // Populate Data
     document.getElementById('confImg').src = item.img;
     document.getElementById('confName').innerText = item.name.toUpperCase();
     document.getElementById('confPrice').innerText = item.price + " 🪙";
-    document.getElementById('tributeNoteInput').value = ""; // Clear note
+    document.getElementById('tributeNoteInput').value = ""; 
 };
 
 // 4. EXECUTE SEND
@@ -1084,16 +1094,13 @@ window.executeTribute = function() {
     const note = document.getElementById('tributeNoteInput').value;
     const price = Number(selectedTributeItem.price);
     
-    // Final Funds Check
     if (gameStats.coins < price) {
         window.triggerPoverty();
         return;
     }
     
-    // Construct Message
     const tributeMessage = `🎁 GIFT: ${selectedTributeItem.name}\n💰 COST: ${price}\n💌 "${note || "A silent tribute."}"`;
 
-    // Send to Backend (Using existing Bridge logic)
     window.parent.postMessage({ 
         type: "PURCHASE_ITEM", 
         itemName: selectedTributeItem.name, 
@@ -1101,11 +1108,9 @@ window.executeTribute = function() {
         messageToDom: tributeMessage 
     }, "*");
 
-    // UI Feedback
     if(window.triggerSound) triggerSound('sfx-buy');
     if(window.showSystemNotification) window.showSystemNotification("OFFERING SENT", `-${price} COINS`);
     
-    // Close Store
     window.closeTributeStore();
 };
 
