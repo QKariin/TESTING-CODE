@@ -991,23 +991,33 @@ window.handleUploadStart = function(inputElement) {
 let selectedTributeItem = null;
 
 // 1. OPEN STORE
+// main.js - TRIBUTE SECTION
+
 window.toggleTributeHunt = function() {
-    // TARGET THE NEW ID HERE:
+    console.log("🎁 Tribute Button Clicked"); 
+
+    // 1. Target the Global Overlay (The new one at the bottom)
     const overlay = document.getElementById('tributeStoreOverlay'); 
     
     if (!overlay) {
-        console.error("Tribute Store Overlay NOT FOUND in HTML");
+        alert("ERROR: The ID 'tributeStoreOverlay' was not found in your HTML. Did you paste the div at the bottom?");
         return;
     }
     
-    // Hide other mobile views to be safe
+    // 2. Hide other Mobile Views (Clean Slate)
     if (window.toggleMobileView) window.toggleMobileView('none'); 
     
-    overlay.style.display = 'flex';
+    // 3. FORCE DISPLAY (Brute Force Style)
     overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
+    overlay.style.zIndex = "2147483647"; // Max Layer
     
-    // Load the Grid
-    if(window.showTributeGrid) window.showTributeGrid(); 
+    // 4. Load Content
+    if(window.showTributeGrid) {
+        window.showTributeGrid(); 
+    } else {
+        alert("Error: showTributeGrid function is missing.");
+    }
 };
 
 window.closeTributeStore = function() {
