@@ -984,6 +984,131 @@ window.handleUploadStart = function(inputElement) {
     }
 };
 
+// =========================================
+// NEW TRIBUTE STORE LOGIC (Grid -> Note -> Send)
+// =========================================
+
+let selectedTributeItem = null;
+
+// 1. OPEN STORE (Replaces toggleTributeHunt)
+window.toggleTributeHunt = function() {
+    const overlay = document.getElementById('tributeStoreOverlay');
+    if (!overlay) return;
+    
+    // Switch to Mobile View logic (hides other views)
+    if (window.toggleMobileView) window.toggleMobileView('none'); // Safe way to ensure clean slate
+    
+    overlay.style.display = 'flex';
+    overlay.classList.remove('hidden');
+    
+    window.showTributeGrid(); // Default to grid
+};
+
+window.closeTributeStore = function() {
+    const overlay = document.getElementById('tributeStoreOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.classList.add('hidden');
+    }
+    // Restore Chat View
+    if (window.toggleMobileView) window.toggleMobileView('chat');
+};
+
+// 2. RENDER GRID
+window.showTributeGrid = function() {
+    document.getElementById('tributeGridContent').classList.remove('hidden');
+    document.getElementById('tributeConfirmView').classList.add('hidden');
+    document.getElementById('tributeHeaderSub').innerText = "SACRIFICE CAPITAL";
+    
+    const grid = document.getElementById('tributeGridContent');
+    grid.innerHTML = "";
+
+    const items = window.WISHLIST_ITEMS || [];
+    
+    if (items.length === 0) {
+        grid.innerHTML = `<div style="grid-column:span 3; text-align:center; color:#666; margin-top:50px; font-family:'Cinzel';">NO TRIBUTES AVAILABLE</div>`;
+        return;
+    }
+
+    items.forEach(item => {
+        // Safe Price Check
+        const price = Number(item.price || 0);
+        const canAfford = (gameStats.coins >= price);
+        const opacity = canAfford ? '1' : '0.4';
+        
+        const card = document.createElement('div');
+        card.className = 'tribute-item-card';
+        card.style.opacity = opacity;
+        
+        card.innerHTML = `
+            <img src="${item.img}" class="tic-img">
+            <div class="tic-meta">
+                <div class="tic-price">${price}</div>
+                <div class="tic-name">${item.name}</div>
+            </div>
+        `;
+        
+        // Click Logic
+        card.onclick = () => {
+            if (!canAfford) {
+                if(window.triggerPoverty) window.triggerPoverty();
+            } else {
+                window.openTributeConfirm(item);
+            }
+        };
+        
+        grid.appendChild(card);
+    });
+};
+
+// 3. OPEN CONFIRMATION (Note)
+window.openTributeConfirm = function(item) {
+    selectedTributeItem = item;
+    
+    // Switch Views
+    document.getElementById('tributeGridContent').classList.add('hidden');
+    document.getElementById('tributeConfirmView').classList.remove('hidden');
+    document.getElementById('tributeHeaderSub').innerText = "ADD A NOTE";
+    
+    // Populate Data
+    document.getElementById('confImg').src = item.img;
+    document.getElementById('confName').innerText = item.name.toUpperCase();
+    document.getElementById('confPrice').innerText = item.price + " 🪙";
+    document.getElementById('tributeNoteInput').value = ""; // Clear note
+};
+
+// 4. EXECUTE SEND
+window.executeTribute = function() {
+    if (!selectedTributeItem) return;
+    
+    const note = document.getElementById('tributeNoteInput').value;
+    const price = Number(selectedTributeItem.price);
+    
+    // Final Funds Check
+    if (gameStats.coins < price) {
+        window.triggerPoverty();
+        return;
+    }
+    
+    // Construct Message
+    const tributeMessage = `🎁 GIFT: ${selectedTributeItem.name}\n💰 COST: ${price}\n💌 "${note || "A silent tribute."}"`;
+
+    // Send to Backend (Using existing Bridge logic)
+    window.parent.postMessage({ 
+        type: "PURCHASE_ITEM", 
+        itemName: selectedTributeItem.name, 
+        cost: price, 
+        messageToDom: tributeMessage 
+    }, "*");
+
+    // UI Feedback
+    if(window.triggerSound) triggerSound('sfx-buy');
+    if(window.showSystemNotification) window.showSystemNotification("OFFERING SENT", `-${price} COINS`);
+    
+    // Close Store
+    window.closeTributeStore();
+};
+
 window.switchTab = switchTab;
 window.toggleStats = toggleStats;
 window.openSessionUI = openSessionUI;
