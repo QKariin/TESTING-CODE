@@ -734,14 +734,16 @@
                 </div>
             </div>
     
-            <!-- Action -->
-            <button class="mob-action-btn" onclick="closeRewardCard()">ACKNOWLEDGE</button>
+                 <button class="mob-action-btn" onclick="closeRewardCard()">ACKNOWLEDGE</button>
         </div>
     </div>
 
+</div> <!-- THIS CLOSES #MOBILE_APP (CORRECT SPOT) -->
+
+
 <!-- =========================================
      LUXURY TRIBUTE STORE (GLOBAL OVERLAY)
-     (Paste this at the bottom of <body>, outside all other apps)
+     (Now sitting OUTSIDE the app so Desktop can see it too)
      ========================================= -->
 <div id="tributeStoreOverlay" class="mob-frame hidden">
       
@@ -781,10 +783,8 @@
 
     </div> 
 </div>
-      
-    
-</div> <!-- Closes MOBILE_APP -->
-<!-- === PASTE THE FOOTER HERE (OUTSIDE THE APP) === -->
+
+<!-- === PERMANENT FOOTER (GLOBAL) === -->
 <div id="APP_FOOTER_NAV">
     <button onclick="window.toggleMobileView('home')" class="nav-icon-btn">
         <span>◈</span><span class="nav-lbl">PROFILE</span>
