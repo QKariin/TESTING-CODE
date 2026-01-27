@@ -1444,6 +1444,26 @@ if (window.visualViewport) {
         window.scrollTo(0, 0);
     });
 }
+  // --- EMERGENCY UI TOGGLE (Bypasses Main.js) ---
+window.toggleTributeStore = function() {
+    const overlay = document.getElementById('tributeStoreOverlay');
+    if (!overlay) return console.error("Overlay not found!");
+
+    if (overlay.classList.contains('hidden')) {
+        // OPEN
+        overlay.classList.remove('hidden');
+        
+        // Try to render items if main.js is alive
+        if (typeof renderTributeGrid === 'function') {
+            renderTributeGrid();
+        } else {
+            console.warn("Main.js not ready, showing empty store.");
+        }
+    } else {
+        // CLOSE
+        overlay.classList.add('hidden');
+    }
+};
   
     function checkDevice() {
         const isMobile = window.innerWidth <= 768;
