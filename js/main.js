@@ -1711,10 +1711,14 @@ window.triggerRankMock = function(customTitle) {
 // PART 2: FINAL APP MODE (NATIVE FLOW)
 // =========================================
 
+// =========================================
+// FINAL PART: APP NAVIGATION BAR (FORCE RENDER)
+// =========================================
+
 (function() {
     // 1. Force Visual Lock (Anti-Bounce)
     function lockVisuals() {
-        if (window.innerWidth > 1024) return; // Increased to 1024 to catch all phones
+        if (window.innerWidth > 768) return; // Mobile Only
 
         const lockStyles = {
             position: 'fixed',
@@ -1753,66 +1757,37 @@ window.triggerRankMock = function(customTitle) {
         }, { passive: false });
     }
 
-    // 2. Build The Footer (Smart "Two-Mode" Logic)
+    // 2. Build The Footer (with automatic restoration if removed)
     function buildAppFooter() {
-        // Run only on mobile/tablet
-        if (window.innerWidth > 1024) return;
+        // Run only on mobile
+        if (window.innerWidth > 768) return;
+        console.log("Building App Mode Footer...");
         
         // If exists, don't rebuild
         if (document.getElementById('app-mode-footer')) return;
-        
-        console.log("Building Smart Footer...");
+        console.log("App Mode Footer not found, creating...");
         
         const footer = document.createElement('div');
         footer.id = 'app-mode-footer';
         
-        // --- DETECT MODE ---
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-        // Base Styles (Common to both)
-        let styles = {
+        // CSS INJECTION (Max Z-Index to stay on top of everything)
+        Object.assign(footer.style, {
             display: 'flex', 
             justifyContent: 'space-around',
+            alignItems: 'center',
             position: 'fixed', 
+            bottom: '0', 
+            left: '0', 
+            width: '100%', 
+            height: '60px',
             background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
+            paddingBottom: 'env(safe-area-inset-bottom)', /* Handles iPhone Home Bar */
             zIndex: '2147483647', 
             borderTop: '1px solid rgba(197, 160, 89, 0.3)',
             backdropFilter: 'blur(10px)', 
             pointerEvents: 'auto', 
             touchAction: 'none'
-        };
-
-        if (isStandalone) {
-            // === MODE A: INSTALLED APP (Native Bar) ===
-            // Sits at very bottom, taller, padded for home bar
-            Object.assign(styles, {
-                bottom: '0',
-                left: '0',
-                width: '100%',
-                height: '85px', // Taller to avoid cut-off
-                paddingTop: '15px', // Push icons down from top
-                alignItems: 'flex-start', // Icons stick to top
-                paddingBottom: 'env(safe-area-inset-bottom)',
-                borderRadius: '0'
-            });
-        } else {
-            // === MODE B: BROWSER (Floating Pill) ===
-            // Floats up to avoid Safari/Chrome UI
-            Object.assign(styles, {
-                bottom: '30px',
-                left: '5%',
-                width: '90%',
-                height: '65px',
-                alignItems: 'center', // Center icons
-                paddingBottom: '0',
-                borderRadius: '40px',
-                border: '1px solid rgba(197, 160, 89, 0.5)', // Extra Gold border for pill
-                boxShadow: '0 10px 40px rgba(0,0,0,0.8)'
-            });
-        }
-
-        // Apply Styles
-        Object.assign(footer.style, styles);
+        });
 
         footer.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
@@ -1821,38 +1796,46 @@ window.triggerRankMock = function(customTitle) {
 
         footer.innerHTML = `
             <button onclick="window.toggleMobileView('home')" style="${btnStyle}">
-                <span style="font-size:1.4rem;color:#888;">◈</span>
+                <span style="font-size:1.4rem;color:#888;">◈</span><span>PROFILE</span>
             </button>
             <button onclick="window.toggleMobileView('record')" style="${btnStyle}">
-                <span style="font-size:1.4rem;color:#888;">▦</span>
+                <span style="font-size:1.4rem;color:#888;">▦</span><span>RECORD</span>
             </button>
             <button onclick="window.toggleMobileView('chat')" style="${centerStyle}">
-                <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:1px solid #ff003c;box-shadow:0 0 10px rgba(255,0,60,0.3); background:#000;">
+                <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:1px solid #ff003c;box-shadow:0 0 10px rgba(255,0,60,0.3);">
             </button>
             <button onclick="window.toggleMobileView('queen')" style="${btnStyle}">
-                <span style="font-size:1.4rem;color:#888;">♛</span>
+                <span style="font-size:1.4rem;color:#888;">♛</span><span>QUEEN</span>
             </button>
             <button onclick="window.toggleMobileView('global')" style="${btnStyle}">
-                <span style="font-size:1.4rem;color:#888;">⊕</span>
+                <span style="font-size:1.4rem;color:#888;">⊕</span><span>GLOBAL</span>
             </button>`;
         
-        // Append to HTML Root
-        document.documentElement.appendChild(footer);
+        // CRITICAL FIX: Append to document.documentElement instead of document.body
+        // This prevents the footer from being destroyed by render functions and view switches
+        // that manipulate body content
+        document.body.appendChild(footer);
+        console.log("App Mode Footer Built (isolated to <html>)",  document.getElementById('app-mode-footer'));
     }
     
-    // 2B. DEFENSIVE: Ensure footer persists
+    // 2B. DEFENSIVE: Use MutationObserver to detect when footer is removed and restore it
+    // The footer gets deleted when DOM structure changes (iframe rehydration, view switches, etc)
     function ensureFooterPersists() {
-        if (window.innerWidth > 1024) return;
+        if (window.innerWidth > 768) return; // Mobile only
         
+        // First, try a quick poll as fallback
         const pollFooter = setInterval(() => {
-            if (!document.getElementById('app-mode-footer') && window.innerWidth <= 1024) {
+            if (!document.getElementById('app-mode-footer') && window.innerWidth <= 768) {
                 buildAppFooter();
             }
         }, 500);
         
+        // Also watch body for mutations (catching when footer is removed)
         try {
             const observer = new MutationObserver((mutations) => {
+                // Check if app-mode-footer was in any removed nodes
                 let footerRemoved = false;
+                
                 mutations.forEach(mutation => {
                     if (mutation.removedNodes.length > 0) {
                         mutation.removedNodes.forEach(node => {
@@ -1864,27 +1847,40 @@ window.triggerRankMock = function(customTitle) {
                     }
                 });
                 
+                // If footer was removed, or if it's just missing now, rebuild it
                 if (footerRemoved || !document.getElementById('app-mode-footer')) {
-                    if (window.innerWidth <= 1024) {
+                    if (window.innerWidth <= 768) {
                         buildAppFooter();
                     }
                 }
             });
-            observer.observe(document.body, { childList: true, subtree: true, attributes: false, characterData: false });
-        } catch(e) {}
+            
+            // Watch body and html for any mutations
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: false,
+                characterData: false
+            });
+        } catch(e) {
+            console.warn("MutationObserver not supported, relying on polling");
+        }
     }
 
     // 3. Init
     window.addEventListener('load', () => { lockVisuals(); buildAppFooter(); ensureFooterPersists(); });
     window.addEventListener('resize', () => { lockVisuals(); buildAppFooter(); });
     
+    // Force run immediately in case load event passed
     lockVisuals(); 
     buildAppFooter();
-    ensureFooterPersists(); 
+    ensureFooterPersists(); // Start watching for footer removal
 
-    // 4. Interval Check
+    // 4. CONTINUOUS CHECK: Rebuild footer every 5 seconds as additional safety net
     setInterval(() => {
-        if (window.innerWidth <= 1024) {
+        console.log("Footer Check Interval");
+        if (window.innerWidth <= 768) {
+            console.log("Rebuilding App Footer from Interval");
             buildAppFooter();
         }
     }, 5000);
