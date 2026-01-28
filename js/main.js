@@ -1,6 +1,7 @@
 
 
 
+
 // main.js - FINAL COMPLETE VERSION (DESKTOP + MOBILE)
 
 import { CONFIG, URLS, LEVELS, FUNNY_SAYINGS, STREAM_PASSWORDS } from './config.js';
@@ -1056,20 +1057,6 @@ function updateStats() {
     // Header Stats (Visible)
     const mobPoints = document.getElementById('mobPoints');
     const mobCoins = document.getElementById('mobCoins');
-
-       // === PASTE IT HERE ===
-    const home1 = document.getElementById('home_recSlot1');
-    const home2 = document.getElementById('home_recSlot2');
-    const home3 = document.getElementById('home_recSlot3');
-    
-    const rec1 = document.getElementById('mobRec_Slot1');
-    const rec2 = document.getElementById('mobRec_Slot2');
-    const rec3 = document.getElementById('mobRec_Slot3');
-
-    if(home1 && rec1) home1.src = rec1.src;
-    if(home2 && rec2) home2.src = rec2.src;
-    if(home3 && rec3) home3.src = rec3.src;
-}
 
     // Drawer Stats (Hidden)
     const mobStreak = document.getElementById('mobStreak');
