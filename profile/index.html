@@ -1254,11 +1254,10 @@
             </div>
         </div>
 
-        <!-- *** INTERNAL SCROLLING WRAPPER *** -->
-        <!-- === SCROLLABLE CONTENT === -->
-        <div id="mobHomeScroll" style="flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 60px 20px 100px 20px; -webkit-overflow-scrolling: touch; box-sizing: border-box; gap: 25px;">      
+       <!-- === SCROLLABLE CONTENT === -->
+        <div id="mobHomeScroll" style="flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 60px 20px 100px 20px; -webkit-overflow-scrolling: touch; box-sizing: border-box; gap: 15px;">      
             
-            <!-- 1. IDENTITY (KEPT EXACTLY AS IS) -->
+            <!-- 1. IDENTITY (HALO) -->
             <div class="halo-section">
                 <div class="halo-ring">
                     <div id="mob_slaveName" class="halo-name">SLAVE</div>
@@ -1270,17 +1269,30 @@
                 </div>
             </div> 
 
-            <!-- 2. STATS (KEPT EXACTLY AS IS) -->
-            <div style="width:100%; display:flex; flex-direction:column; align-items:center; z-index:3; margin-top:-10px;">
+            <!-- 2. STATS BRIDGE (RESTORED COMPLETELY) -->
+            <div style="width:100%; display:flex; flex-direction:column; align-items:center; z-index:3;">
+                <!-- Merit/Net Card -->
                 <div class="halo-stats-card">
                     <div class="h-stat"><span class="h-val" id="mobPoints">0</span><span class="h-lbl">MERIT</span></div>
                     <div class="h-divider"></div>
                     <div class="h-stat"><span class="h-val" id="mobCoins">0</span><span class="h-lbl">NET</span></div>
                 </div>
+
+                <!-- The Toggle Button (I missed this before) -->
+                <div class="mob-stats-toggle-btn" onclick="toggleMobileStats()">
+                    SLAVE STATS <span id="mobStatsArrow">▼</span>
+                </div>
+
+                <!-- The Drawer (I missed this before) -->
+                <div id="mobStatsContent" class="mob-internal-drawer">
+                    <div class="drawer-row"><span class="d-lbl">CURRENT STREAK</span><span class="d-val" id="mobStreak">0</span></div>
+                    <div class="drawer-row"><span class="d-lbl">TOTAL SERVED</span><span class="d-val" id="mobTotal">0</span></div>
+                    <div class="drawer-row"><span class="d-lbl">KNEEL COUNT</span><span class="d-val" id="mobKneels">0</span></div>
+                </div>
             </div>
 
-            <!-- 3. KNEEL BUTTON (KEPT EXACTLY AS IS) -->
-            <div class="halo-stack" style="width:100%;">
+            <!-- 3. KNEEL BUTTON (EXACTLY AS IT WAS) -->
+            <div class="halo-stack" style="width:100%; margin-top: 15px;">
                 <div class="mob-kneel-bar mob-kneel-zone" 
                      onmousedown="if(window.handleHoldStart) window.handleHoldStart(event)" 
                      onmouseup="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
@@ -1300,7 +1312,7 @@
                  =================================================== -->
 
             <!-- 4. WIDGET: SLAVE RECORD (THE SHRINE) -->
-            <div class="dashboard-widget" onclick="window.toggleMobileView('record')">
+            <div class="dashboard-widget" onclick="window.toggleMobileView('record')" style="margin-top: 15px;">
                 <div class="widget-header">
                     <span class="w-title">SLAVE RECORD</span>
                     <span class="w-arrow">OPEN ›</span>
@@ -1335,7 +1347,7 @@
 
                 <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">LABOR</div>
                 <div id="shelfTasks" class="reward-shelf mob-horiz-scroll"></div>
-                
+
                 <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ENDURANCE</div>
                 <div id="shelfKneel" class="reward-shelf mob-horiz-scroll"></div>
 
