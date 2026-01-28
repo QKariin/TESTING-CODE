@@ -5,7 +5,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content" />
+  
+  <!-- 1. UPDATED VIEWPORT (Added viewport-fit=cover for iPhone Notch) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content, viewport-fit=cover" />
+  
+  <!-- 2. NEW APP MODE TAGS (This enables "Add to Home Screen" properly) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Command Console">
+  <meta name="theme-color" content="#000000">
+
   <title>Command Console</title>
   
   <script type="module" src="../js/main.js"></script>
@@ -19,7 +29,6 @@
   <link rel="stylesheet" href="../css/chat.css">
   <link rel="stylesheet" href="../css/profile.css">
   <link rel="stylesheet" href="../css/reward.css">
-
 <style>
 
   
