@@ -1707,7 +1707,189 @@ window.triggerRankMock = function(customTitle) {
     
     if(window.triggerSound) triggerSound('sfx-deny');
 };
+// =========================================
+// PART 2: FINAL APP MODE (NATIVE FLOW)
+// =========================================
 
+(function() {
+    // 1. Force Visual Lock (Anti-Bounce)
+    function lockVisuals() {
+        if (window.innerWidth > 1024) return; // Increased to 1024 to catch all phones
+
+        const lockStyles = {
+            position: 'fixed',
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden',
+            inset: '0',
+            overscrollBehavior: 'none',
+            touchAction: 'none', 
+            backgroundColor: '#000000'
+        };
+        Object.assign(document.documentElement.style, lockStyles);
+        Object.assign(document.body.style, lockStyles);
+
+        const allowedSelectors = '#mobHomeScroll, #mobGlobalScroll, #mobRecordScroll, .chat-body-frame, .qm-scroll-content, .mob-horiz-scroll, #gridOkay, #gridFailed';
+        const scrollables = document.querySelectorAll(allowedSelectors);
+        
+        scrollables.forEach(el => {
+            if (!el) return;
+            el.style.overflowY = 'auto';
+            el.style.webkitOverflowScrolling = 'touch';
+            el.style.overscrollBehavior = 'contain'; 
+            el.style.touchAction = 'pan-y'; 
+            
+            if (el.classList.contains('mob-horiz-scroll') || el.id.includes('grid')) {
+                el.style.touchAction = 'pan-x pan-y';
+                el.style.overflowX = 'auto';
+                el.style.overflowY = 'hidden';
+            }
+        });
+
+        document.addEventListener('touchmove', function(e) {
+            const target = e.target;
+            const scrollableParent = target.closest(allowedSelectors);
+            if (!scrollableParent && e.cancelable) e.preventDefault();
+        }, { passive: false });
+    }
+
+    // 2. Build The Footer (Smart "Two-Mode" Logic)
+    function buildAppFooter() {
+        // Run only on mobile/tablet
+        if (window.innerWidth > 1024) return;
+        
+        // If exists, don't rebuild
+        if (document.getElementById('app-mode-footer')) return;
+        
+        console.log("Building Smart Footer...");
+        
+        const footer = document.createElement('div');
+        footer.id = 'app-mode-footer';
+        
+        // --- DETECT MODE ---
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        // Base Styles (Common to both)
+        let styles = {
+            display: 'flex', 
+            justifyContent: 'space-around',
+            position: 'fixed', 
+            background: 'linear-gradient(to top, #000 40%, rgba(0,0,0,0.95))',
+            zIndex: '2147483647', 
+            borderTop: '1px solid rgba(197, 160, 89, 0.3)',
+            backdropFilter: 'blur(10px)', 
+            pointerEvents: 'auto', 
+            touchAction: 'none'
+        };
+
+        if (isStandalone) {
+            // === MODE A: INSTALLED APP (Native Bar) ===
+            // Sits at very bottom, taller, padded for home bar
+            Object.assign(styles, {
+                bottom: '0',
+                left: '0',
+                width: '100%',
+                height: '85px', // Taller to avoid cut-off
+                paddingTop: '15px', // Push icons down from top
+                alignItems: 'flex-start', // Icons stick to top
+                paddingBottom: 'env(safe-area-inset-bottom)',
+                borderRadius: '0'
+            });
+        } else {
+            // === MODE B: BROWSER (Floating Pill) ===
+            // Floats up to avoid Safari/Chrome UI
+            Object.assign(styles, {
+                bottom: '30px',
+                left: '5%',
+                width: '90%',
+                height: '65px',
+                alignItems: 'center', // Center icons
+                paddingBottom: '0',
+                borderRadius: '40px',
+                border: '1px solid rgba(197, 160, 89, 0.5)', // Extra Gold border for pill
+                boxShadow: '0 10px 40px rgba(0,0,0,0.8)'
+            });
+        }
+
+        // Apply Styles
+        Object.assign(footer.style, styles);
+
+        footer.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+        const btnStyle = "background:none; border:none; color:#666; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; -webkit-tap-highlight-color: transparent;";
+        const centerStyle = "background:none; border:none; color:#ff003c; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-family:'Cinzel',serif; font-size:0.55rem; width:20%; height:100%; cursor:pointer; -webkit-tap-highlight-color: transparent;";
+
+        footer.innerHTML = `
+            <button onclick="window.toggleMobileView('home')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">◈</span>
+            </button>
+            <button onclick="window.toggleMobileView('record')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">▦</span>
+            </button>
+            <button onclick="window.toggleMobileView('chat')" style="${centerStyle}">
+                <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" alt="Avatar" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:1px solid #ff003c;box-shadow:0 0 10px rgba(255,0,60,0.3); background:#000;">
+            </button>
+            <button onclick="window.toggleMobileView('queen')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">♛</span>
+            </button>
+            <button onclick="window.toggleMobileView('global')" style="${btnStyle}">
+                <span style="font-size:1.4rem;color:#888;">⊕</span>
+            </button>`;
+        
+        // Append to HTML Root
+        document.documentElement.appendChild(footer);
+    }
+    
+    // 2B. DEFENSIVE: Ensure footer persists
+    function ensureFooterPersists() {
+        if (window.innerWidth > 1024) return;
+        
+        const pollFooter = setInterval(() => {
+            if (!document.getElementById('app-mode-footer') && window.innerWidth <= 1024) {
+                buildAppFooter();
+            }
+        }, 500);
+        
+        try {
+            const observer = new MutationObserver((mutations) => {
+                let footerRemoved = false;
+                mutations.forEach(mutation => {
+                    if (mutation.removedNodes.length > 0) {
+                        mutation.removedNodes.forEach(node => {
+                            if (node.id === 'app-mode-footer' || 
+                                (node.nodeType === Node.ELEMENT_NODE && node.querySelector && node.querySelector('#app-mode-footer'))) {
+                                footerRemoved = true;
+                            }
+                        });
+                    }
+                });
+                
+                if (footerRemoved || !document.getElementById('app-mode-footer')) {
+                    if (window.innerWidth <= 1024) {
+                        buildAppFooter();
+                    }
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true, attributes: false, characterData: false });
+        } catch(e) {}
+    }
+
+    // 3. Init
+    window.addEventListener('load', () => { lockVisuals(); buildAppFooter(); ensureFooterPersists(); });
+    window.addEventListener('resize', () => { lockVisuals(); buildAppFooter(); });
+    
+    lockVisuals(); 
+    buildAppFooter();
+    ensureFooterPersists(); 
+
+    // 4. Interval Check
+    setInterval(() => {
+        if (window.innerWidth <= 1024) {
+            buildAppFooter();
+        }
+    }, 5000);
+
+})();
 // ==========================
 // REPLACE FROM LINE 1235 DOWN TO LINE 1270 WITH THIS:
 // ==========================
