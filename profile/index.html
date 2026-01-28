@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -84,34 +85,20 @@
         border-radius: 40px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.8);
     }
-    /* =========================================
-       DASHBOARD WIDGETS
-       ========================================= */
-   /* WIDGET STYLES */
-    .dashboard-widget {
-        width: 100%;
-        background: linear-gradient(180deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.95) 100%);
-        border: 1px solid #333; border-radius: 4px; padding: 15px; cursor: pointer; transition: border-color 0.3s;
-    }
-    .dashboard-widget:active { border-color: #c5a059; }
-    .widget-header { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
-    .w-title { font-family: 'Cinzel'; color: #c5a059; font-size: 0.8rem; letter-spacing: 2px; }
-    .w-arrow { font-family: 'Orbitron'; color: #666; font-size: 0.6rem; }
-    .mob-pyramid-stage.small-preview { height: 160px; margin-top: 0; transform: scale(0.9); transform-origin: center top; }
 
-    /* CHAT CARD */
-    .chat-widget-card {
-        width: 100%; display: flex; align-items: center; gap: 15px;
-        background: #000; border: 1px solid #c5a059; padding: 15px; border-radius: 4px;
-        box-shadow: 0 0 20px rgba(197, 160, 89, 0.1); cursor: pointer;
+    /* --- MODE B: APP (Native Bar) --- */
+    /* Sticks to bottom, taller, aligns top to avoid Home Bar cut-off */
+    .footer-app-mode {
+        align-items: flex-start; /* Stick icons to top */
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 85px; /* Taller height */
+        padding-top: 15px; /* Push icons down from top edge */
+        background: linear-gradient(to top, #000000 60%, rgba(0,0,0,0.9));
+        border-top: 1px solid rgba(197, 160, 89, 0.3);
+        padding-bottom: env(safe-area-inset-bottom);
     }
-    .cwc-left { position: relative; width: 60px; height: 60px; }
-    .cwc-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #333; }
-    .cwc-dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #00ff00; border: 2px solid #000; box-shadow: 0 0 5px #00ff00; }
-    .cwc-right { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-    .cwc-name { font-family: 'Cinzel'; font-size: 1.1rem; color: #fff; line-height: 1; }
-    .cwc-status { font-family: 'Orbitron'; font-size: 0.6rem; color: #00ff00; margin-top: 4px; letter-spacing: 1px; }
-    .cwc-prompt { font-family: 'Cinzel'; font-size: 0.7rem; color: #666; margin-top: 8px; font-style: italic; }
 
     /* SHARED BUTTON STYLES */
     .nav-icon-btn {
@@ -1229,10 +1216,9 @@
             </div>
         </div>
 
-       <!-- === SCROLLABLE CONTENT === -->
-        <div id="mobHomeScroll" style="flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 60px 20px 100px 20px; -webkit-overflow-scrolling: touch; box-sizing: border-box; gap: 15px;">      
-            
-            <!-- 1. IDENTITY (HALO) -->
+        <!-- *** INTERNAL SCROLLING WRAPPER *** -->
+        <div id="mobHomeScroll" style="flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 60px 20px 120px 20px; -webkit-overflow-scrolling: touch; box-sizing: border-box;">      
+            <!-- THE HALO -->
             <div class="halo-section">
                 <div class="halo-ring">
                     <div id="mob_slaveName" class="halo-name">SLAVE</div>
@@ -1244,21 +1230,18 @@
                 </div>
             </div> 
 
-            <!-- 2. STATS BRIDGE (RESTORED COMPLETELY) -->
+            <!-- STATS BRIDGE -->
             <div style="width:100%; display:flex; flex-direction:column; align-items:center; z-index:3;">
-                <!-- Merit/Net Card -->
                 <div class="halo-stats-card">
                     <div class="h-stat"><span class="h-val" id="mobPoints">0</span><span class="h-lbl">MERIT</span></div>
                     <div class="h-divider"></div>
                     <div class="h-stat"><span class="h-val" id="mobCoins">0</span><span class="h-lbl">NET</span></div>
                 </div>
 
-                <!-- The Toggle Button (I missed this before) -->
                 <div class="mob-stats-toggle-btn" onclick="toggleMobileStats()">
                     SLAVE STATS <span id="mobStatsArrow">▼</span>
                 </div>
 
-                <!-- The Drawer (I missed this before) -->
                 <div id="mobStatsContent" class="mob-internal-drawer">
                     <div class="drawer-row"><span class="d-lbl">CURRENT STREAK</span><span class="d-val" id="mobStreak">0</span></div>
                     <div class="drawer-row"><span class="d-lbl">TOTAL SERVED</span><span class="d-val" id="mobTotal">0</span></div>
@@ -1266,8 +1249,8 @@
                 </div>
             </div>
 
-            <!-- 3. KNEEL BUTTON (EXACTLY AS IT WAS) -->
-            <div class="halo-stack" style="width:100%; margin-top: 15px;">
+            <!-- ACTION STACK -->
+            <div class="halo-stack" style="padding: 0 20px; width:100%; margin-top:15px;">
                 <div class="mob-kneel-bar mob-kneel-zone" 
                      onmousedown="if(window.handleHoldStart) window.handleHoldStart(event)" 
                      onmouseup="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
@@ -1282,56 +1265,26 @@
                 </div>
              </div>
 
-            <!-- ===================================================
-                 NEW SECTION STARTS BELOW HERE
-                 =================================================== -->
-
-            <!-- 4. WIDGET: SLAVE RECORD (THE SHRINE) -->
-            <div class="dashboard-widget" onclick="window.toggleMobileView('record')" style="margin-top: 15px;">
-                <div class="widget-header">
-                    <span class="w-title">SLAVE RECORD</span>
-                    <span class="w-arrow">OPEN ›</span>
-                </div>
-                <!-- Mini Altar Preview -->
-                <div class="mob-pyramid-stage small-preview">
-                    <div class="mob-idol side"><img id="home_recSlot2" src=""><div class="mob-rank-badge">II</div></div>
-                    <div class="mob-idol side right"><img id="home_recSlot3" src=""><div class="mob-rank-badge">III</div></div>
-                    <div class="mob-idol center"><img id="home_recSlot1" src=""><div class="mob-rank-badge main">I</div></div>
-                </div>
-            </div>
-
-            <!-- 5. WIDGET: COMMS LINK (THE CHAT) -->
-            <div class="chat-widget-card" onclick="window.toggleMobileView('chat')">
-                <div class="cwc-left">
-                    <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="cwc-avatar">
-                    <div class="cwc-dot online"></div>
-                </div>
-                <div class="cwc-right">
-                    <div class="cwc-name">QUEEN KARIN</div>
-                    <div class="cwc-status">DIRECT CONNECTION AVAILABLE</div>
-                    <div class="cwc-prompt">TAP TO OPEN TERMINAL</div>
-                </div>
-            </div>
-
-            <!-- 6. SERVICE RECORD (TROPHIES) -->
-            <div class="mob-section-wrapper" style="width: 100%;">
+            <!-- 5. REWARDS TROPHY CASE -->
+            <div class="mob-section-wrapper" style="margin-top: 30px; width: 100%; padding-bottom: 20px;">
                 <div class="duty-label">SERVICE RECORD</div>
                 
+                <!-- Rank Shelf -->
                 <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666;">HIERARCHY</div>
                 <div id="shelfRanks" class="reward-shelf mob-horiz-scroll"></div>
 
+                <!-- Tasks Shelf -->
                 <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">LABOR</div>
                 <div id="shelfTasks" class="reward-shelf mob-horiz-scroll"></div>
 
+                <!-- Kneeling Shelf -->
                 <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ENDURANCE</div>
                 <div id="shelfKneel" class="reward-shelf mob-horiz-scroll"></div>
 
+                <!-- Spending Shelf -->
                 <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">SACRIFICE</div>
                 <div id="shelfSpend" class="reward-shelf mob-horiz-scroll"></div>
             </div>
-            
-            <div style="height: 50px;"></div>
-        </div>
 
             <!-- REWARD POPUP -->
             <div id="mobKneelReward" class="mob-reward-overlay hidden">
