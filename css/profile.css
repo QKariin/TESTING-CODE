@@ -226,6 +226,49 @@ body {
 .tribute-note-input { width: 100%; background: #111; border: 1px solid #444; color: white; font-family: 'Cinzel'; padding: 10px; min-height: 80px; resize: none; outline: none; }
 .tribute-note-input:focus { border-color: #c5a059; }
 
+/* =========================================
+       RESTORED: HALO STATS (MERIT / NET)
+       ========================================= */
+    .halo-stats-card {
+        position: relative; z-index: 3;
+        margin-top: -40px; /* Pulls it up into the ring */
+        width: 100%;
+        background: rgba(10, 10, 10, 0.85); 
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px;
+        display: flex; align-items: center; justify-content: space-around;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        backdrop-filter: blur(15px);
+        margin-bottom: 20px;
+    }
+
+    .h-stat { display: flex; flex-direction: column; align-items: center; }
+    .h-val { font-family: 'Orbitron', serif; font-size: 1.5rem; color: #fff; line-height: 1; }
+    .h-lbl { font-family: 'Orbitron', sans-serif; font-size: 0.5rem; color: #888; letter-spacing: 2px; margin-top: 4px; }
+    .h-divider { width: 1px; height: 30px; background: rgba(255,255,255,0.15); }
+
+    /* =========================================
+       RESTORED: GOLD SQUARES (STREAK GRID)
+       ========================================= */
+    .mob-grid-label-center { 
+        font-size: 0.5rem; color: #444; letter-spacing: 3px; margin-bottom: 5px; text-align: center; width: 100%; 
+    }
+    .mob-streak-strip {
+        display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; width: 70%; margin-bottom: 10px;
+    }
+    .streak-sq { 
+        height: 6px; 
+        background: rgba(255, 255, 255, 0.05); 
+        border: 1px solid rgba(255, 255, 255, 0.08); 
+        border-radius: 1px; 
+    }
+    .streak-sq.active { 
+        background: rgba(197, 160, 89, 0.6); 
+        border-color: #c5a059; 
+        box-shadow: 0 0 8px rgba(197, 160, 89, 0.2); /* The Gold Glow */
+    }
+
 /* --- HISTORY / TRILOGY (Desktop) --- */
 .trilogy-section { width: 100%; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
 .trilogy-label { position: absolute; top: 10px; left: 20px; z-index: 100; font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 4px; color: rgba(255,255,255,0.4); }
