@@ -200,7 +200,7 @@ body {
     position: fixed; z-index: 2147483647; background: #000; flex-direction: column; overflow: hidden;
 }
 /* Desktop Mode: Centered Popup */
-@media screen and (min-width: 769px) {
+@media screen and (max-width: 1024px) {
     #tributeStoreOverlay {
         top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 400px; height: 80vh; max-height: 800px;
