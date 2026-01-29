@@ -158,8 +158,11 @@ export async function renderChat(messages) {
 }
 
 export function forceBottom() {
-    const b = document.getElementById('chatBox');
-    if (b) b.scrollTop = b.scrollHeight;
+    const dBox = document.getElementById('chatBox');
+    const mBox = document.getElementById('mob_chatBox');
+    
+    if (dBox) dBox.scrollTop = dBox.scrollHeight;
+    if (mBox) mBox.scrollTop = mBox.scrollHeight;
 }
 
 export function loadMoreChat() {
@@ -170,11 +173,22 @@ export function loadMoreChat() {
 }
 
 export function sendChatMessage() {
-    const input = document.getElementById('chatMsgInput');
-    const txt = input?.value.trim();
-    if (!txt) return;
+    const dInput = document.getElementById('chatMsgInput');
+    const mInput = document.getElementById('mob_chatMsgInput');
+    
+    // Determine which input is being used
+    let activeInput = null;
+    if (dInput && dInput.value.trim() !== "") activeInput = dInput;
+    else if (mInput && mInput.value.trim() !== "") activeInput = mInput;
+    
+    if (!activeInput) return; // No text found
+
+    const txt = activeInput.value.trim();
     window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: txt }, "*");
-    input.value = "";
+    
+    // Clear BOTH inputs to be safe
+    if(dInput) dInput.value = "";
+    if(mInput) mInput.value = "";
 }
 
 export function handleChatKey(e) {
