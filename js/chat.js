@@ -11,25 +11,26 @@ import { getSignedUrl } from './media.js';
 import { mediaType } from './media.js';
 
 export async function renderChat(messages) {
-    // TARGET BOTH DESKTOP AND MOBILE
+    // 1. DEFINE TARGETS (Desktop & Mobile)
     const deskChat = document.getElementById('chatContent');
     const mobChat = document.getElementById('mob_chatContent');
     const ticker = document.getElementById('systemTicker');
+    const mobTicker = document.getElementById('mob_systemTicker');
 
     if (!messages) return;
-    // Need at least one container to exist
+    // We need at least one container to work
     if (!deskChat && !mobChat) return; 
 
-    // 1. SORTING
+    // 2. SORTING
     const sortedMessages = [...messages].sort(
         (a, b) => new Date(a._createdDate) - new Date(b._createdDate)
     );
 
-    // 2. ANTI-BLINK
+    // 3. ANTI-BLINK (Prevent re-render if data hasn't changed)
     const currentJson = JSON.stringify(sortedMessages);
     if (currentJson === lastChatJson) return;
 
-    // Check scroll on desktop only for logic (simplified)
+    // Check scroll position (Desktop acts as the "Brain" for logic)
     const dBox = document.getElementById('chatBox');
     const isAtBottom = dBox
         ? (dBox.scrollHeight - dBox.scrollTop - dBox.clientHeight < 150)
@@ -37,7 +38,7 @@ export async function renderChat(messages) {
 
     const wasInitialLoad = isInitialLoad;
 
-    // 3. NOTIFICATION LOGIC (Unchanged)
+    // 4. NOTIFICATION LOGIC
     if (!isInitialLoad && sortedMessages.length > 0) {
         const lastMsg = sortedMessages[sortedMessages.length - 1];
         const sender = (lastMsg.sender || "").toLowerCase().trim();
@@ -52,11 +53,11 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    // 4. SMART SLICING
-    const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit; // Mobile gets 20, Desktop gets limit
+    // 5. SMART SLICING
+    const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit; 
     const visibleMessages = sortedMessages.slice(-activeLimit);
 
-    // Proxy Bytescale URLs
+    // PROXY URLS (Bytescale signing)
     const signingPromises = visibleMessages.map(async (m) => {
         if (m.message?.startsWith("https://upcdn.io/")) {
             m.mediaUrl = await getSignedUrl(m.message);
@@ -64,25 +65,36 @@ export async function renderChat(messages) {
     });
     await Promise.all(signingPromises);
 
-    // 5. RENDER HTML (Generate String Once)
+    // 6. RENDER HTML
     let messagesHtml = visibleMessages.map(m => {
         let txt = DOMPurify.sanitize(m.message);
         const senderLower = (m.sender || "").toLowerCase();
         const isMe = senderLower === 'user' || senderLower === 'slave';
         
-        // INTERCEPTOR (Ticker)
+        // --- INTERCEPTOR (SYSTEM MESSAGES TO TICKER) ---
         const isSystem = senderLower === 'system';
         const isStatusUpdate = txt.includes("Verified") || txt.includes("Rejected") || txt.includes("FAILED") || txt.includes("earned");
 
         if (isSystem || isStatusUpdate) {
+            const tickerHtml = `<span style="color:#fff;">◈</span> ${txt}`;
+            
+            // Update Desktop Ticker
             if (ticker) {
                 ticker.classList.remove('hidden');
-                ticker.innerHTML = `<span style="color:#fff;">◈</span> ${txt}`;
+                ticker.innerHTML = tickerHtml;
                 ticker.classList.remove('ticker-flash');
                 void ticker.offsetWidth;
                 ticker.classList.add('ticker-flash');
             }
-            return '';
+            // Update Mobile Ticker (CRITICAL MISSING PIECE)
+            if (mobTicker) {
+                mobTicker.classList.remove('hidden');
+                mobTicker.innerHTML = tickerHtml;
+                mobTicker.classList.remove('ticker-flash');
+                void mobTicker.offsetWidth;
+                mobTicker.classList.add('ticker-flash');
+            }
+            return ''; // Remove from chat flow
         }
 
         txt = txt.replace(/\n/g, "<br>");
@@ -132,26 +144,23 @@ export async function renderChat(messages) {
         messagesHtml = btnHtml + messagesHtml;
     }
 
-    // --- APPLY TO BOTH ---
+    // 7. INJECT CONTENT INTO BOTH CONTAINERS
     if (deskChat) deskChat.innerHTML = messagesHtml;
     if (mobChat) mobChat.innerHTML = messagesHtml;
 
-    // SCROLL TO BOTTOM
-    if (wasInitialLoad || isAtBottom) {
-        forceBottom();
-    }
-
-    // APPLY TO DOM
-    chatContent.innerHTML = messagesHtml;
-
-    // Load Listeners
-    chatContent.querySelectorAll("img").forEach(img => {
-        img.addEventListener("load", () => setTimeout(forceBottom, 30));
-    });
-    chatContent.querySelectorAll("video").forEach(v => {
-        v.addEventListener("loadedmetadata", () => setTimeout(forceBottom, 30));
+    // 8. ATTACH LISTENERS TO BOTH (The Missing Piece!)
+    // This ensures that when images load on Mobile OR Desktop, it scrolls down.
+    [deskChat, mobChat].forEach(container => {
+        if (!container) return;
+        container.querySelectorAll("img").forEach(img => {
+            img.addEventListener("load", () => setTimeout(forceBottom, 30));
+        });
+        container.querySelectorAll("video").forEach(v => {
+            v.addEventListener("loadedmetadata", () => setTimeout(forceBottom, 30));
+        });
     });
 
+    // 9. SCROLL TO BOTTOM
     if (wasInitialLoad || isAtBottom) {
         forceBottom();
     }
