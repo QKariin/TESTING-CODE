@@ -959,47 +959,50 @@
                  </div>
             </div>
 
-            <!-- 2. CHAT WINDOW (MOVED UP) -->
             <!-- ============================================== 
-                 2. CHAT: TACTICAL DATA STREAM (Compact & Luxury)
+                 2. CHAT: CENTERED HEADER + BLINKING AVATAR DOT
                  ============================================== -->
             <div id="mobChatSection" style="
-                width: calc(100% + 40px); margin-left: -20px; 
+                margin-left: -20px; margin-right: -20px; width: auto; /* Perfect Full Width */
                 margin-bottom: 20px;
                 border-top: 1px solid #333; border-bottom: 1px solid #333;
                 background: #000;
             ">
-                <!-- 1. THE TRIGGER (The "Uplink" Bar) -->
+                <!-- 1. THE TRIGGER (CENTERED HEADER) -->
                 <div onclick="const p=document.getElementById('inlineChatPanel'); p.classList.toggle('hidden'); if(!p.classList.contains('hidden')){ var cb=document.getElementById('mob_chatBox'); if(cb) setTimeout(()=>{cb.scrollTop=cb.scrollHeight},100); }" style="
-                    padding: 12px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
-                    background: linear-gradient(90deg, #0a0a0a 0%, #111 100%);
+                    padding: 15px 0; cursor: pointer; 
+                    display: flex; align-items: center; justify-content: center; /* CENTERED CONTENT */
+                    background: linear-gradient(180deg, #111 0%, #050505 100%);
                 ">
                     <div style="display: flex; align-items: center; gap: 15px;">
-                        <!-- THE FOOTER AVATAR (Red/Gold Glow) -->
-                        <div style="position: relative; width: 45px; height: 45px;">
+                        <!-- AVATAR WITH BLINKING DOT -->
+                        <div style="position: relative; width: 50px; height: 50px;">
                             <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" 
-                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #ff003c; box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);">
-                            <div class="status-dot online" style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #00ff00; border-radius: 50%; border: 2px solid #000; box-shadow: 0 0 5px #00ff00;"></div>
+                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #c5a059; box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);">
+                            <!-- The Blinking Dot -->
+                            <div class="status-dot online blink-dot" style="
+                                position: absolute; bottom: 0; right: 0; 
+                                width: 12px; height: 12px; background: #00ff00; 
+                                border-radius: 50%; border: 2px solid #000; 
+                                box-shadow: 0 0 8px #00ff00;
+                            "></div>
                         </div>
                         
-                        <!-- TEXT: DATA STREAM STYLE -->
-                        <div style="display: flex; flex-direction: column;">
-                            <div style="font-family: 'Rajdhani'; font-weight: 700; font-size: 1rem; color: #fff; letter-spacing: 1px;">// SECURE_UPLINK</div>
-                            <div style="font-family: 'Orbitron'; font-size: 0.55rem; color: #666; letter-spacing: 2px;">CONNECTION ESTABLISHED</div>
+                        <!-- TEXT: QUEEN KARIN -->
+                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                            <div style="font-family: 'Cinzel'; font-weight: 700; font-size: 1.1rem; color: #fff; letter-spacing: 2px; line-height: 1;">QUEEN KARIN</div>
+                            <div style="font-family: 'Orbitron'; font-size: 0.6rem; color: #00ff00; letter-spacing: 2px; margin-top: 4px;">ONLINE</div>
                         </div>
                     </div>
-
-                    <!-- SUBTLE PULSE ICON instead of arrow -->
-                    <div style="width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 8px #00ff00; animation: pulse 2s infinite;"></div>
                 </div>
 
-                <!-- 2. THE CONSOLE (The Box) -->
+                <!-- 2. THE CONSOLE (Compact Mode) -->
                 <div id="inlineChatPanel" class="hidden" style="
                     width: 100%; height: 450px; background: #050505;
                     display: flex; flex-direction: column; animation: fadeIn 0.3s ease;
                     position: relative; border-top: 1px solid #333;
                 ">
-                    <!-- SYSTEM TICKER (Restored - Pinned Top) -->
+                    <!-- SYSTEM TICKER -->
                     <div id="systemTicker" class="system-ticker hidden" style="
                         background: rgba(20,20,0,0.3); color: #c5a059; font-size: 0.6rem; 
                         padding: 5px; text-align: center; border-bottom: 1px solid #333;
@@ -1041,6 +1044,9 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 3. COMPACT MODE STYLES & BLINK ANIMATION -->
+            <style>
 
             <!-- 3. CURRENT STATUS (LABOR CARD) -->
             <div style="width:100%;">
