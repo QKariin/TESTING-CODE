@@ -57,13 +57,41 @@
         #DESKTOP_APP { display: none !important; }
 
         /* THE NEW SINGLE SCROLL CONTAINER */
-        #viewMobileHome {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100dvh;
-            overflow-y: auto !important; /* This enables the scroll */
-            padding: 0;
-            display: flex; flex-direction: column; align-items: center; 
-            -ms-overflow-style: none; scrollbar-width: none;
-        }
+        /* =========================================
+       1. THE "APP SHELL" LOCK (STOPS WIX SCROLLING)
+       ========================================= */
+    
+    /* Lock the outer shell completely */
+    html, body {
+        position: fixed !important; 
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important; 
+        padding: 0 !important;
+        overflow: hidden !important; /* Kills the outer scrollbar */
+        overscroll-behavior: none !important; /* Kills the "Rubber Band" bounce on iOS */
+        touch-action: none; /* Disables browser zooming/panning */
+    }
+
+    /* The ONLY thing allowed to scroll */
+    #viewMobileHome {
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100vw; 
+        height: 100dvh; /* Dynamic Height handles the Address Bar jump */
+        
+        overflow-y: auto !important; /* This enables the internal scroll */
+        -webkit-overflow-scrolling: touch; /* Makes it smooth like an iPhone app */
+        
+        display: block; 
+        padding: 0; 
+        z-index: 1; 
+        background: #000;
+        
+        /* Stop horizontal wobbly scrolling */
+        overflow-x: hidden !important; 
+    }
 
         /* HIDE ALL SCROLLBARS */
         #viewMobileHome::-webkit-scrollbar,
