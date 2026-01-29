@@ -375,99 +375,96 @@
 
 
 /* =========================================
-   2. MOBILE OVERRIDE (FULL SCREEN + FOOTER FIX)
+   2. MOBILE OVERRIDE (INLINE WIDGET MODE)
    ========================================= */
 @media screen and (max-width: 768px) {
 
-    /* [FIX] SWAP HEADERS: Show Giant Mobile Header, Hide Desktop Bar */
+    /* SHOW MOBILE HEADER */
     .mob-chat-header { display: flex !important; }
     .right-header { display: none !important; }
 
-    /* MOBILE CHAT HEADER STYLING (Transferred from HTML) */
-    .mob-chat-header {
-        position: fixed; /* Sticks to top of chat card */
-        top: 0; left: 0; width: 100%; height: 65px;
-        background: rgba(10, 10, 10, 0.95);
-        border-bottom: 1px solid #333;
-        display: flex; align-items: center;
-        padding: 0 10px;
-        z-index: 5005; /* Above messages */
-        backdrop-filter: blur(10px);
-    }
-
-    .chat-back {
-        background: none; border: none; color: #c5a059;
-        font-size: 2rem; padding: 0 15px 5px 5px; cursor: pointer;
-        line-height: 1;
-    }
-
-    .chat-queen-profile { display: flex; align-items: center; gap: 10px; }
-    
-    .queen-av-wrap { position: relative; width: 40px; height: 40px; }
-    .queen-av-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #c5a059; }
-    
-    /* Online Dot */
-    .status-dot {
-        position: absolute; bottom: 0; right: 0;
-        width: 10px; height: 10px; border-radius: 50%;
-        border: 2px solid #000;
-        background: #666; /* Grey by default */
-    }
-    .status-dot.online { background: #00ff00; box-shadow: 0 0 5px #00ff00; }
-
-    .chat-meta-col { display: flex; flex-direction: column; }
-    .chat-queen-name { font-family: 'Cinzel'; font-size: 0.9rem; color: #fff; letter-spacing: 1px; }
-    .chat-status-text { font-family: 'Orbitron'; font-size: 0.55rem; color: #888; letter-spacing: 1px; }
-
-    /* ADJUST CHAT BODY PADDING (Important!) */
-    
-   /* CHANGED: Relative position so it fits in the widget box */
+    /* 1. CONTAINER: THE CAGE (Fits inside your Wall Box) */
     .chat-container, #chatCard {
         display: flex !important;
         flex-direction: column !important;
-        position: relative !important; /* WAS ABSOLUTE */
-        width: 100% !important;        /* WAS 100vw */
-        height: 100% !important;       /* WAS 100dvh */
+        position: relative !important; /* CRITICAL: Keeps it inside the div */
+        width: 100% !important;
+        height: 100% !important;       /* Fills the 550px height */
         z-index: 1 !important;
         background: #000 !important;
-        border: 1px solid #333 !important; /* Added border back */
+        border: none !important;
         margin: 0 !important;
         overflow: hidden !important;
     }
 
+    /* 2. HEADER: PINNED TO TOP OF CAGE */
+    .mob-chat-header {
+        position: absolute !important; /* CRITICAL: Sticks to box, not screen */
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 65px !important;
+        background: rgba(10, 10, 10, 0.95);
+        border-bottom: 1px solid #333;
+        display: flex; align-items: center;
+        padding: 0 10px;
+        z-index: 10 !important;
+    }
+
+    /* Header Elements */
+    .chat-back {
+        background: none; border: none; color: #c5a059;
+        font-size: 1.5rem; padding: 0 10px; cursor: pointer;
+    }
+    .chat-queen-profile { display: flex; align-items: center; gap: 10px; }
+    .queen-av-wrap { position: relative; width: 40px; height: 40px; }
+    .queen-av-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #c5a059; }
+    .status-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #000; background: #666; }
+    .status-dot.online { background: #00ff00; box-shadow: 0 0 5px #00ff00; }
+    .chat-meta-col { display: flex; flex-direction: column; }
+    .chat-queen-name { font-family: 'Cinzel'; font-size: 0.9rem; color: #fff; letter-spacing: 1px; }
+    .chat-status-text { font-family: 'Orbitron'; font-size: 0.55rem; color: #888; letter-spacing: 1px; }
+
+    /* 3. SCROLL AREA: FILLS MIDDLE OF CAGE */
     .chat-body-frame {
         width: 100% !important;
-        padding: 15px 10px !important;
+        height: 100% !important;
         
-        /* Adjusted padding for header/footer inside the box */
-        padding-top: 70px !important; 
-        padding-bottom: 70px !important; 
+        /* Padding creates space for the Absolute Header & Footer */
+        padding-top: 75px !important; 
+        padding-bottom: 75px !important; 
+        padding-left: 10px !important;
+        padding-right: 10px !important;
         
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
         box-sizing: border-box !important;
         scrollbar-width: none;
     }
+    .chat-body-frame::-webkit-scrollbar { display: none; }
 
-    /* INPUT AREA: Sit ON TOP of Footer */
+    /* System Ticker Adjustment */
+    .system-ticker { margin-top: 0; }
+
+    /* 4. INPUT FOOTER: PINNED TO BOTTOM OF CAGE */
    .chat-footer {
-        position: absolute !important; /* WAS FIXED */
-        bottom: 0 !important;          /* Sticks to bottom of WIDGET, not screen */
+        position: absolute !important; /* CRITICAL: Sticks to box bottom */
+        bottom: 0 !important;
         left: 0 !important;
         width: 100% !important;
         z-index: 20 !important;
-        padding: 8px 10px !important;
-        background: #000 !important; 
-        border-top: 1px solid #222 !important;
+        padding: 10px !important;
+        background: #111 !important; 
+        border-top: 1px solid #333 !important;
+        display: flex; gap: 10px; align-items: center;
     }
 
     .chat-input {
-        font-size: 16px !important; /* Prevents Zoom on iPhone */
+        font-size: 16px !important; 
         height: 40px !important;
     }
 
-
-    /* CLEAN UP MESSAGES FOR MOBILE */
+    /* MESSAGE STYLING (Preserved) */
     .msg {
         max-width: 88% !important;
         font-size: 0.65rem !important;
@@ -476,12 +473,9 @@
         border: none !important;
         box-shadow: none !important;
     }
-
-    /* Keep the Colored Lines */
     .m-slave { border-right: 2px solid var(--pink) !important; border-radius: 0 !important; }
     .m-queen { border-left: 2px solid var(--gold) !important; border-radius: 0 !important; }
-
-    /* Fix Service Messages */
+    
     .msg-system {
         font-size: 0.55rem !important;
         opacity: 0.6 !important;
