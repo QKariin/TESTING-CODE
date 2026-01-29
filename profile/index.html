@@ -984,11 +984,14 @@
                  </div>
             </div>
 
-           <div id="mobChatSection" style="width:100%; margin-top: 20px;">
+           <!-- ============================================== 
+                 6. INLINE CHAT (UNIQUE MOBILE IDs)
+                 ============================================== -->
+            <div id="mobChatSection" style="width:100%; margin-top: 20px;">
                 <div class="duty-label">SECURE CHANNEL</div>
                 
-                <!-- TRIGGER -->
-                <div onclick="const p=document.getElementById('inlineChatPanel'); p.classList.toggle('hidden');" style="
+                <!-- TRIGGER BUTTON -->
+                <div onclick="const p=document.getElementById('inlineChatPanel'); p.classList.toggle('hidden'); if(!p.classList.contains('hidden')){ var cb=document.getElementById('mob_chatBox'); if(cb) setTimeout(()=>{cb.scrollTop=cb.scrollHeight},100); }" style="
                     background: rgba(10,10,10,0.8); border: 1px solid rgba(255,255,255,0.1); 
                     padding: 15px; border-left: 3px solid #c5a059; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display:flex; flex-direction:column; gap:5px;">
@@ -998,61 +1001,62 @@
                     <div style="font-size:1.2rem; color:#666;">▼</div>
                 </div>
 
-                <!-- THE WIDGET BOX -->
+                <!-- THE CHAT BOX -->
                 <div id="inlineChatPanel" class="hidden" style="
-                    position: relative; width: 100%; height: 60vh; 
-                    margin-bottom: 20px; animation: fadeIn 0.3s ease;
+                    width: 100%; height: 550px; 
+                    border: 1px solid #333; border-top: none; background: #000;
+                    display: flex; flex-direction: column; 
+                    animation: fadeIn 0.3s ease; margin-bottom: 20px;
+                    position: relative;
                 ">
-                    <!-- 
-                       USING ORIGINAL CLASSES. 
-                       We will fix chat.css to make this fit inside the box. 
-                    -->
-                    <div class="chat-container">
-                        
-                        <!-- HEADER -->
-                        <div class="mob-chat-header">
-                            <div class="chat-queen-profile">
-                                <div class="queen-av-wrap">
-                                    <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="queen-av-img">
-                                    <div class="status-dot online"></div>
-                                </div>
-                                <div class="chat-meta-col">
-                                    <div class="chat-queen-name">QUEEN KARIN</div>
-                                    <div class="chat-status-text">ENCRYPTED</div>
-                                </div>
+                    <!-- HEADER -->
+                    <div class="mob-chat-header" style="position: absolute !important; top: 0; width: 100%; height: 65px; z-index: 10;">
+                        <div class="chat-queen-profile">
+                            <div class="queen-av-wrap">
+                                <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="queen-av-img">
+                                <div class="status-dot online"></div>
                             </div>
-                            <button onclick="document.getElementById('inlineChatPanel').classList.add('hidden')" class="chat-back" style="font-size:1.5rem;">▲</button>
+                            <div class="chat-meta-col">
+                                <div class="chat-queen-name">QUEEN KARIN</div>
+                                <div class="chat-status-text">ENCRYPTED</div>
+                            </div>
+                        </div>
+                        <button onclick="document.getElementById('inlineChatPanel').classList.add('hidden')" class="chat-back" style="font-size:1.5rem;">▲</button>
+                    </div>
+
+                    <!-- BODY (Uses mob_chatBox) -->
+                    <div id="mob_chatBox" class="chat-body-frame" style="
+                        position: absolute !important; top: 0; left: 0;
+                        width: 100% !important; height: 100% !important;
+                        padding-top: 70px !important; padding-bottom: 70px !important;
+                        overflow-y: auto !important; -webkit-overflow-scrolling: touch;
+                    ">
+                        <!-- Internal Overlays -->
+                        <div id="kneelRewardOverlay" class="hidden overlay-center"></div>
+                        <div id="chatMediaOverlay" class="hidden overlay-center"></div>
+                        <div id="tributeHuntOverlay" class="hidden overlay-center" style="
+                            position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 50; flex-direction: column; padding: 20px;
+                        ">
+                            <button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer; margin-bottom: 10px; font-size: 1.2rem;">CLOSE X</button>
+                            <div id="huntStoreGrid" class="store-grid" style="width: 100%; overflow-y: auto;"></div>
+                            <textarea id="huntNote" class="hidden"></textarea>
+                            <div id="huntProgress" class="hidden"></div>
                         </div>
 
-                        <!-- BODY -->
-                        <div id="chatBox" class="chat-body-frame">
-                            <div id="kneelRewardOverlay" class="hidden overlay-center"></div>
-                            <div id="chatMediaOverlay" class="hidden overlay-center"></div>
-                            
-                            <!-- Tribute Store Overlay -->
-                            <div id="tributeHuntOverlay" class="hidden overlay-center" style="
-                                position: absolute; inset: 0; background: rgba(0,0,0,0.95); 
-                                z-index: 50; flex-direction: column; padding: 20px;
-                            ">
-                                <button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer; margin-bottom: 10px; font-size: 1.2rem;">CLOSE X</button>
-                                <div id="huntStoreGrid" class="store-grid" style="width: 100%; overflow-y: auto;"></div>
-                                <textarea id="huntNote" class="hidden"></textarea>
-                                <div id="huntProgress" class="hidden"></div>
-                            </div>
-
-                            <div id="chatContent" class="chat-area"></div>
+                        <!-- MESSAGES CONTAINER (Uses mob_chatContent) -->
+                        <div id="mob_chatContent" class="chat-area"></div>
+                    </div>
+                    
+                    <!-- FOOTER -->
+                    <div class="chat-footer" style="position: absolute !important; bottom: 0; width: 100%; height: 65px; z-index: 20; background:#111;">
+                        <div class="chat-input-wrapper">
+                            <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()">+</button>
+                            <!-- INPUT (Uses mob_chatMsgInput) -->
+                            <input type="text" id="mob_chatMsgInput" class="chat-input" placeholder="Type..." onkeypress="handleChatKey(event)">
                         </div>
-
-                        <!-- FOOTER -->
-                        <div class="chat-footer">
-                            <div class="chat-input-wrapper">
-                                <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()">+</button>
-                                <input type="text" id="chatMsgInput" class="chat-input" placeholder="Type..." onkeypress="handleChatKey(event)">
-                            </div>
-                            <button class="chat-btn-tribute" onclick="window.toggleTributeHunt()">🎁</button>
-                            <button class="chat-btn-send" onclick="sendChatMessage()">></button>
-                            <input type="file" id="chatMediaInput" class="hidden" onchange="window.handleAdminUpload(this)">
-                        </div>
+                        <button class="chat-btn-tribute" onclick="window.toggleTributeHunt()">🎁</button>
+                        <button class="chat-btn-send" onclick="sendChatMessage()">></button>
+                        <input type="file" id="chatMediaInput" class="hidden" onchange="window.handleAdminUpload(this)">
                     </div>
                 </div>
             </div>
