@@ -777,21 +777,21 @@
   </div>
 </div> <!-- END DESKTOP_APP -->
 
-<!-- 🟢 MOBILE UNIVERSE (INLINE CHAT VERSION) -->
+<!-- 🟢 MOBILE UNIVERSE (FULL CODE - REORDERED) -->
 <div id="MOBILE_APP" style="display:none;">
     
     <!-- =======================================================
          DASHBOARD CONTAINER
          ======================================================= -->
-    <div id="viewMobileHome" style="position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; padding: 0; z-index: 1;">
+    <div id="viewMobileHome" style="position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; display: block; padding: 0; z-index: 1; background: #000;">
         
-        <!-- === FIXED LAYER (Background & HUD) === -->
+        <!-- === FIXED LAYER (Background) === -->
         <div class="mob-bg-layer">
             <img id="mob_bgPic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" class="bg-blur">
             <div class="bg-overlay"></div>
         </div>
 
-        <!-- TOP HUD (UNTOUCHED) -->
+        <!-- TOP HUD (Fixed) -->
         <div class="mob-hud-row">
             <div class="hud-circle slave" onclick="openLobby()">
                 <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png">
@@ -803,7 +803,7 @@
             </div>
         </div>
 
-        <!-- FLOATING AVATAR (SCROLLS TO CHAT) -->
+        <!-- FLOATING AVATAR (Bottom Right) -->
         <div onclick="const el = document.getElementById('mobChatSection'); el.scrollIntoView({behavior: 'smooth'}); document.getElementById('inlineChatPanel').classList.remove('hidden');" 
              style="
             position: fixed; bottom: 20px; right: 20px; z-index: 1000;
@@ -816,7 +816,9 @@
             <div id="floatStatusDot" class="status-dot online" style="position:absolute; bottom:5px; right:5px; width:12px; height:12px; border:2px solid #000;"></div>
         </div>
 
-        <!-- === POPUP OVERLAYS (Standard) === -->
+        <!-- === POPUP OVERLAYS (ALL 5 RESTORED) === -->
+        
+        <!-- 1. LOBBY -->
         <div id="lobbyOverlay" class="mob-reward-overlay hidden">
             <div class="mob-reward-card lobby-card">
                  <div id="lobbyMenu" class="lobby-content">
@@ -850,6 +852,7 @@
             </div>
         </div>
 
+        <!-- 2. QUEEN MENU -->
         <div id="queenOverlay" class="mob-reward-overlay hidden">
              <div class="mob-reward-card queen-card-layout">
                 <div class="mob-chat-header" style="width:100%; justify-content:space-between;">
@@ -859,6 +862,7 @@
              </div>
         </div>
 
+        <!-- 3. POVERTY -->
         <div id="povertyOverlay" class="mob-reward-overlay hidden">
             <div class="mob-reward-card" style="border-color: #ff003c; box-shadow: 0 0 30px rgba(255, 0, 60, 0.2);">
                 <div class="mob-hex-wrap small-reward" style="background: linear-gradient(135deg, #ff003c, #000);">
@@ -873,6 +877,21 @@
             </div>
         </div>
 
+        <!-- 4. KNEEL REWARD (RESTORED) -->
+        <div id="mobKneelReward" class="mob-reward-overlay hidden">
+            <div class="mob-reward-card">
+                <div class="mob-hex-wrap small-reward">
+                    <div class="mob-rank-stamp" style="right: auto; left: -5px; color: #fff; border-color: #fff;">AUTHORIZED</div>
+                </div>
+                <h2 class="mob-reward-title" style="color: #c5a059; font-family: 'Cinzel'; letter-spacing: 2px;">DEVOTION RECOGNIZED</h2>
+                <div class="mob-reward-actions" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                    <button onclick="window.claimKneelReward('coins')" class="mob-action-btn" style="border-color: #ffd700; color: #ffd700;">CLAIM COINS</button>
+                    <button onclick="window.claimKneelReward('points')" class="mob-action-btn" style="border-color: #fff; color: #fff;">CLAIM MERIT</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. TROPHY DETAILS -->
         <div id="rewardCardOverlay" class="mob-reward-overlay hidden" onclick="closeRewardCard()">
             <div class="mob-reward-card" onclick="event.stopPropagation()">
                 <div class="rc-header">
@@ -889,169 +908,67 @@
         </div>
 
         <!-- *** THE MAIN SCROLL *** -->
-        <div id="mobHomeScroll" style="flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 60px 20px 100px 20px; -webkit-overflow-scrolling: touch; box-sizing: border-box;">      
+        <div id="mobHomeScroll" style="width: 100%; display: flex; flex-direction: column; align-items: center; padding: 80px 20px 120px 20px; box-sizing: border-box;">      
             
-            <!-- 1. HALO (RESTORED EXACTLY) -->
-            <div class="halo-section">
-                <div class="halo-ring">
-                    <div id="mob_slaveName" class="halo-name">SLAVE</div>
-                    <div id="mob_rankStamp" class="halo-rank">INITIATE</div>
-                    <div class="mob-section-wrapper" style="width:100%;">
-                        <div class="mob-grid-label-center">DAILY PROGRESS</div>
-                        <div id="mob_streakGrid" class="mob-streak-strip"></div>
-                    </div>
-                </div>
-            </div> 
-
-            <!-- 2. STATS CARD -->
-            <div style="width:100%; display:flex; flex-direction:column; align-items:center; z-index:3;">
-                <div class="halo-stats-card">
-                    <div class="h-stat"><span class="h-val" id="mobPoints">0</span><span class="h-lbl">MERIT</span></div>
-                    <div class="h-divider"></div>
-                    <div class="h-stat"><span class="h-val" id="mobCoins">0</span><span class="h-lbl">NET</span></div>
-                </div>
-
-                <div class="mob-stats-toggle-btn" onclick="toggleMobileStats()">
-                    SLAVE STATS <span id="mobStatsArrow">▼</span>
-                </div>
-
-                <div id="mobStatsContent" class="mob-internal-drawer">
-                    <div class="drawer-row"><span class="d-lbl">CURRENT STREAK</span><span class="d-val" id="mobStreak">0</span></div>
-                    <div class="drawer-row"><span class="d-lbl">TOTAL SERVED</span><span class="d-val" id="mobTotal">0</span></div>
-                    <div class="drawer-row"><span class="d-lbl">KNEEL COUNT</span><span class="d-val" id="mobKneels">0</span></div>
-                </div>
-            </div>
-
-            <!-- 3. KNEEL BUTTON -->
-            <div class="halo-stack" style="padding: 0 20px; width:100%; margin-top:15px; margin-bottom: 30px;">
-                <div class="mob-kneel-bar mob-kneel-zone" 
-                     onmousedown="if(window.handleHoldStart) window.handleHoldStart(event)" 
-                     onmouseup="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
-                     onmouseleave="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
-                     ontouchstart="if(window.handleHoldStart) window.handleHoldStart(event)" 
-                     ontouchend="if(window.handleHoldEnd) window.handleHoldEnd(event)">
-                    <div id="mob_kneelFill" class="mob-bar-fill"></div>
-                    <div class="mob-bar-content">
-                        <span class="kneel-icon-sm">◈</span>
-                        <span id="mob_kneelText" class="kneel-text kneel-label">HOLD TO KNEEL</span>
-                    </div>
-                </div>
-             </div>
-
-            <!-- 4. THE ALTAR (Click to Expand) -->
-            <div style="width:100%;" onclick="document.getElementById('altarHistoryPanel').classList.toggle('hidden')">
-                <div class="duty-label">THE ALTAR</div>
-                <div class="mob-pyramid-stage" style="height: 240px; cursor:pointer;">
-                    <div class="mob-idol side"><img id="mobRec_Slot2" src=""><div class="mob-rank-badge">II</div></div>
-                    <div class="mob-idol side right"><img id="mobRec_Slot3" src=""><div class="mob-rank-badge">III</div></div>
-                    <div class="mob-idol center"><img id="mobRec_Slot1" src=""><div class="mob-rank-badge main">I</div></div>
-                </div>
-                <div style="text-align:center; font-family:'Cinzel'; font-size:0.6rem; color:#666; margin-top:-10px;">TAP TO REVEAL DATABASE</div>
-            </div>
-
-            <!-- HIDDEN DATABASE (Expands) -->
-            <div id="altarHistoryPanel" class="hidden" style="width:100%; animation:fadeIn 0.5s;">
-                <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ACCEPTED PROTOCOLS</div>
-                <div id="mobRec_Grid" class="mob-horiz-scroll"></div>
-                <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #ff003c; margin-top: 15px;">FAILED / DENIED</div>
-                <div id="mobRec_Heap" class="mob-horiz-scroll small"></div>
-            </div>
-
-            <!-- 5. CURRENT STATUS (LABOR CARD - RESTORED LOGIC) -->
-            <div style="width:100%; margin-top: 20px;">
-                 <div class="duty-label">CURRENT STATUS</div>
-                 <div class="luxury-card" style="padding: 15px;">
-                    
-                    <!-- 
-                        IDLE STATE 
-                        ID: qm_TaskIdle (Matches main.js line 1349)
-                    -->
-                    <div id="qm_TaskIdle" class="hidden" style="text-align:center;">
-                        <div class="txt-status-red" style="margin-bottom:10px;">UNPRODUCTIVE</div>
-                        <!-- BUTTON calls existing mobileRequestTask() -->
-                        <button class="lobby-btn" style="width:100%; border-color:#c5a059; color:#c5a059;" onclick="window.mobileRequestTask()">
-                            REQUEST TASK
-                        </button>
-                    </div>
-
-                    <!-- 
-                        WORKING STATE 
-                        ID: qm_TaskActive (Matches main.js line 1350)
-                    -->
-                    <div id="qm_TaskActive" class="hidden" style="text-align:center;">
-                        <div class="txt-status-green" style="margin-bottom:5px;">WORKING</div>
-                        
-                        <!-- 
-                            TASK TEXT
-                            ID: mobTaskText (Matches main.js line 1256) 
-                            This is where syncMobileDashboard() puts the text.
-                        -->
-                        <div id="mobTaskText" style="
-                            margin-bottom:10px; font-size:0.9rem; font-family:'Cinzel'; color:#fff;
-                            min-height:40px; display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.4;
-                            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
-                        ">
-                            AWAITING ORDERS...
+            <!-- 1. TOP BLOCK (HALO + KNEEL) -->
+            <div style="width:100%; display:flex; flex-direction:column; align-items:center;">
+                <div class="halo-section">
+                    <div class="halo-ring">
+                        <div id="mob_slaveName" class="halo-name">SLAVE</div>
+                        <div id="mob_rankStamp" class="halo-rank">INITIATE</div>
+                        <div class="mob-section-wrapper" style="width:100%;">
+                            <div class="mob-grid-label-center">DAILY PROGRESS</div>
+                            <div id="mob_streakGrid" class="mob-streak-strip"></div>
                         </div>
+                    </div>
+                </div> 
 
-                        <!-- 
-                            TIMER
-                            IDs: qm_timerH, qm_timerM, qm_timerS (Matches main.js line 1313)
-                        -->
-                        <div class="card-timer-row">
-                            <div id="qm_timerH" class="card-t-box">00</div>:
-                            <div id="qm_timerM" class="card-t-box">00</div>:
-                            <div id="qm_timerS" class="card-t-box">00</div>
-                        </div>
+                <!-- Stats Card -->
+                <div style="width:100%; display:flex; flex-direction:column; align-items:center; z-index:3;">
+                    <div class="halo-stats-card">
+                        <div class="h-stat"><span class="h-val" id="mobPoints">0</span><span class="h-lbl">MERIT</span></div>
+                        <div class="h-divider"></div>
+                        <div class="h-stat"><span class="h-val" id="mobCoins">0</span><span class="h-lbl">NET</span></div>
+                    </div>
 
-                        <!-- ACTIONS -->
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            <!-- 
-                                UPLOAD
-                                ID: mobBtnUpload (Matches main.js line 1276)
-                                Calls: mobileUploadEvidence() (Matches main.js line 1270)
-                            -->
-                            <button id="mobBtnUpload" class="btn-upload-sm" style="flex:1;" onclick="document.getElementById('evidenceInputMob').click()">
-                                UPLOAD
-                            </button>
-                            <input type="file" id="evidenceInputMob" hidden onchange="window.mobileUploadEvidence(this)">
-                            
-                            <!-- 
-                                SKIP
-                                Calls: mobileSkipTask() (Matches main.js line 1297)
-                            -->
-                            <button class="btn-skip-sm" style="flex:1;" onclick="window.mobileSkipTask()">
-                                FAILURE (-300)
-                            </button>
+                    <div class="mob-stats-toggle-btn" onclick="toggleMobileStats()">
+                        SLAVE STATS <span id="mobStatsArrow">▼</span>
+                    </div>
+
+                    <div id="mobStatsContent" class="mob-internal-drawer">
+                        <div class="drawer-row"><span class="d-lbl">CURRENT STREAK</span><span class="d-val" id="mobStreak">0</span></div>
+                        <div class="drawer-row"><span class="d-lbl">TOTAL SERVED</span><span class="d-val" id="mobTotal">0</span></div>
+                        <div class="drawer-row"><span class="d-lbl">KNEEL COUNT</span><span class="d-val" id="mobKneels">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Kneel Button -->
+                <div class="halo-stack" style="padding: 0 20px; width:100%; margin-top:15px; margin-bottom: 30px;">
+                    <div class="mob-kneel-bar mob-kneel-zone" 
+                         onmousedown="if(window.handleHoldStart) window.handleHoldStart(event)" 
+                         onmouseup="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
+                         onmouseleave="if(window.handleHoldEnd) window.handleHoldEnd(event)" 
+                         ontouchstart="if(window.handleHoldStart) window.handleHoldStart(event)" 
+                         ontouchend="if(window.handleHoldEnd) window.handleHoldEnd(event)">
+                        <div id="mob_kneelFill" class="mob-bar-fill"></div>
+                        <div class="mob-bar-content">
+                            <span class="kneel-icon-sm">◈</span>
+                            <span id="mob_kneelText" class="kneel-text kneel-label">HOLD TO KNEEL</span>
                         </div>
                     </div>
                  </div>
             </div>
-           
 
-           <!-- ============================================== 
-                 6. INLINE CHAT (UNIQUE MOBILE IDs)
-                 ============================================== -->
-            <!-- ============================================== 
-                 6. INLINE CHAT (FULL WIDTH + HEADER STYLE)
-                 ============================================== -->
+            <!-- 2. CHAT WINDOW (MOVED UP) -->
             <div id="mobChatSection" style="
-                width: calc(100% + 40px); /* Break out of padding */
-                margin-left: -20px;       /* Pull to edge */
-                margin-top: 20px;
+                width: calc(100% + 40px); /* Full Width */
+                margin-left: -20px; 
+                margin-bottom: 20px;
                 border-top: 1px solid #333;
                 border-bottom: 1px solid #333;
             ">
-                <!-- TRIGGER BUTTON (LOOKS LIKE HEADER NOW) -->
                 <div onclick="const p=document.getElementById('inlineChatPanel'); p.classList.toggle('hidden'); if(!p.classList.contains('hidden')){ var cb=document.getElementById('mob_chatBox'); if(cb) setTimeout(()=>{cb.scrollTop=cb.scrollHeight},100); }" style="
-                    background: #111; /* Header Background Color */
-                    padding: 10px 15px; 
-                    cursor: pointer; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: space-between;
-                ">
-                    <!-- LEFT: QUEEN PROFILE -->
+                    background: #111; padding: 10px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <div class="queen-av-wrap" style="position: relative; width: 40px; height: 40px;">
                             <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #c5a059;">
@@ -1062,36 +979,21 @@
                             <div style="font-family: 'Orbitron'; font-size: 0.6rem; color: #00ff00; letter-spacing: 1px;">ONLINE</div>
                         </div>
                     </div>
-
-                    <!-- RIGHT: ARROW -->
                     <div style="font-size:1.2rem; color:#666;">▼</div>
                 </div>
 
-                <!-- THE CHAT BOX (Height Reduced to 400px) -->
+                <!-- Chat Box (Unique IDs mob_) -->
                 <div id="inlineChatPanel" class="hidden" style="
-                    width: 100%; 
-                    height: 400px; /* REDUCED HEIGHT */
-                    background: #000;
-                    display: flex; flex-direction: column; 
-                    animation: fadeIn 0.3s ease;
-                    position: relative;
-                    border-top: 1px solid #333;
+                    width: 100%; height: 400px; background: #000;
+                    display: flex; flex-direction: column; animation: fadeIn 0.3s ease;
+                    position: relative; border-top: 1px solid #333;
                 ">
-                    <!-- 1. INTERNAL HEADER (Hidden visually or kept for close button? Keeping structure for spacing) -->
-                    <!-- We hide this visually since the Trigger acts as the header, but we keep the space/logic -->
-                    <div class="mob-chat-header" style="position: absolute !important; top: 0; width: 100%; height: 0px; z-index: 10; opacity: 0; pointer-events: none;"></div>
-
-                    <!-- 2. BODY (Adjusted padding since internal header is hidden) -->
                     <div id="mob_chatBox" class="chat-body-frame" style="
                         position: absolute !important; top: 0; left: 0;
                         width: 100% !important; height: 100% !important;
-                        padding-top: 15px !important; /* No top header space needed inside */
-                        padding-bottom: 70px !important;
+                        padding-top: 15px !important; padding-bottom: 70px !important;
                         overflow-y: auto !important; -webkit-overflow-scrolling: touch;
                     ">
-                        <!-- Internal Overlays -->
-                        <div id="kneelRewardOverlay" class="hidden overlay-center"></div>
-                        <div id="chatMediaOverlay" class="hidden overlay-center"></div>
                         <div id="tributeHuntOverlay" class="hidden overlay-center" style="
                             position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 50; flex-direction: column; padding: 20px;
                         ">
@@ -1100,12 +1002,9 @@
                             <textarea id="huntNote" class="hidden"></textarea>
                             <div id="huntProgress" class="hidden"></div>
                         </div>
-
-                        <!-- MESSAGES CONTAINER -->
                         <div id="mob_chatContent" class="chat-area"></div>
                     </div>
                     
-                    <!-- 3. FOOTER -->
                     <div class="chat-footer" style="position: absolute !important; bottom: 0; width: 100%; height: 65px; z-index: 20; background:#111; border-top: 1px solid #333;">
                         <div class="chat-input-wrapper">
                             <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()">+</button>
@@ -1118,17 +1017,70 @@
                 </div>
             </div>
 
-               
+            <!-- 3. CURRENT STATUS (LABOR CARD) -->
+            <div style="width:100%;">
+                 <div class="duty-label">CURRENT STATUS</div>
+                 <div class="luxury-card" style="padding: 15px 5px;">
+                    
+                    <div id="qm_TaskIdle" class="hidden" style="text-align:center;">
+                        <div class="txt-status-red" style="margin-bottom:10px;">UNPRODUCTIVE</div>
+                        <button class="lobby-btn" style="width:100%; border-color:#c5a059; color:#c5a059;" onclick="window.mobileRequestTask()">
+                            REQUEST TASK
+                        </button>
+                    </div>
 
-            <!-- 7. THE WALL (Queen's Grid) -->
-            <div style="width:100%; margin-top: 20px;">
-                <div class="duty-label">QUEEN'S WALL</div>
-                <div id="mobNewsGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%;">
-                    <!-- News items injected here -->
-                </div>
+                    <div id="qm_TaskActive" class="hidden" style="text-align:center;">
+                        <div class="txt-status-green" style="margin-bottom:5px;">WORKING</div>
+                        
+                        <div id="mobTaskText" style="
+                            margin-bottom:10px; min-height:40px; 
+                            display:flex; align-items:center; justify-content:center; 
+                            text-align:center; line-height:1.3;
+                            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+                        ">
+                            LOADING ORDER...
+                        </div>
+
+                        <div class="card-timer-row">
+                            <div id="qm_timerH" class="card-t-box">00</div>:
+                            <div id="qm_timerM" class="card-t-box">00</div>:
+                            <div id="qm_timerS" class="card-t-box">00</div>
+                        </div>
+
+                        <div style="display:flex; gap:5px; margin-top:10px;">
+                            <button id="mobBtnUpload" class="btn-upload-sm" style="flex:1;" onclick="document.getElementById('evidenceInputMob').click()">UPLOAD</button>
+                            <input type="file" id="evidenceInputMob" hidden onchange="window.mobileUploadEvidence(this)">
+                            <button class="btn-skip-sm" style="flex:1;" onclick="window.mobileSkipTask()">FAILURE (-300)</button>
+                        </div>
+                    </div>
+                 </div>
             </div>
 
-            <!-- 8. SERVICE RECORD (Trophies) -->
+            <!-- 4. THE ALTAR (PYRAMID) -->
+            <div style="width:100%; margin-top: 20px;" onclick="document.getElementById('altarHistoryPanel').classList.toggle('hidden')">
+                <div class="duty-label">THE ALTAR</div>
+                <div class="mob-pyramid-stage" style="height: 240px; cursor:pointer;">
+                    <div class="mob-idol side"><img id="mobRec_Slot2" src=""><div class="mob-rank-badge">II</div></div>
+                    <div class="mob-idol side right"><img id="mobRec_Slot3" src=""><div class="mob-rank-badge">III</div></div>
+                    <div class="mob-idol center"><img id="mobRec_Slot1" src=""><div class="mob-rank-badge main">I</div></div>
+                </div>
+                <div style="text-align:center; font-family:'Cinzel'; font-size:0.6rem; color:#666; margin-top:-10px;">TAP TO REVEAL DATABASE</div>
+            </div>
+
+            <div id="altarHistoryPanel" class="hidden" style="width:100%; animation:fadeIn 0.5s;">
+                <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ACCEPTED PROTOCOLS</div>
+                <div id="mobRec_Grid" class="mob-horiz-scroll"></div>
+                <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #ff003c; margin-top: 15px;">FAILED / DENIED</div>
+                <div id="mobRec_Heap" class="mob-horiz-scroll small"></div>
+            </div>
+
+            <!-- 5. THE WALL (NEWS GRID) -->
+            <div style="width:100%; margin-top: 20px;">
+                <div class="duty-label">QUEEN'S WALL</div>
+                <div id="mobNewsGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%;"></div>
+            </div>
+
+            <!-- 6. SERVICE RECORD (TROPHIES) -->
             <div style="width:100%; margin-top: 20px;">
                 <div class="duty-label">SERVICE RECORD</div>
                 
@@ -1145,7 +1097,7 @@
                 <div id="shelfSpend" class="reward-shelf mob-horiz-scroll"></div>
             </div>
             
-        </div> 
+        </div>
     </div>
     
     <!-- (Exchequer kept hidden) -->
