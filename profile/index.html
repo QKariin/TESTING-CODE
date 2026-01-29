@@ -252,8 +252,16 @@
             min-height: 50px; display: flex; align-items: center; justify-content: center;
             transition: all 0.3s ease;
         }
-        .text-pulse { animation: pulseText 1.5s infinite; color: #c5a059 !important; font-family: 'Orbitron' !important; }
-        @keyframes pulseText { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+           .text-pulse { 
+        animation: pulseText 4s infinite ease-in-out !important; /* Was 1.5s, now 4s */
+        color: #c5a059 !important; 
+    }
+    
+    @keyframes pulseText { 
+        0% { opacity: 0.6; text-shadow: 0 0 5px rgba(197, 160, 89, 0.2); } 
+        50% { opacity: 1; text-shadow: 0 0 20px rgba(197, 160, 89, 0.6); } 
+        100% { opacity: 0.6; text-shadow: 0 0 5px rgba(197, 160, 89, 0.2); } 
+    }
 
         /* Status Texts */
         .txt-status-red { color: #ff003c; font-family: 'Orbitron'; font-size: 0.8rem; letter-spacing: 1px; text-shadow: 0 0 5px rgba(255,0,60,0.4); }
