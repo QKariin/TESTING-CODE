@@ -957,30 +957,36 @@
                 <div id="mobRec_Heap" class="mob-horiz-scroll small"></div>
             </div>
 
-            <!-- 5. CURRENT STATUS (LABOR CARD - MATCHING MAIN.JS) -->
+            <!-- 5. CURRENT STATUS (LABOR CARD - LIVE SYNC) -->
             <div style="width:100%; margin-top: 20px;">
                  <div class="duty-label">CURRENT STATUS</div>
                  <div class="luxury-card" style="padding: 15px;">
                     
-                    <!-- IDLE STATE (ID: qm_TaskIdle - Checked main.js line 1349) -->
+                    <!-- IDLE STATE -->
                     <div id="qm_TaskIdle" class="hidden" style="text-align:center;">
                         <div class="txt-status-red" style="margin-bottom:10px;">UNPRODUCTIVE</div>
-                        <!-- BUTTON: Calls mobileRequestTask() from main.js line 1238 -->
                         <button class="lobby-btn" style="width:100%; border-color:#c5a059; color:#c5a059;" onclick="window.mobileRequestTask()">
                             REQUEST TASK
                         </button>
                     </div>
 
-                    <!-- WORKING STATE (ID: qm_TaskActive - Checked main.js line 1350) -->
+                    <!-- WORKING STATE -->
                     <div id="qm_TaskActive" class="hidden" style="text-align:center;">
                         <div class="txt-status-green" style="margin-bottom:5px;">WORKING</div>
                         
-                        <!-- TASK TEXT (ID: mobTaskText - Checked main.js line 1256) -->
-                        <div id="mobTaskText" style="margin-bottom:10px; font-size:0.8rem; min-height:40px; display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.4;">
-                            AWAITING ORDERS...
+                        <!-- 
+                           TASK TEXT (ID: mobTaskText)
+                           This is where the text like "Kneel for 10 mins" appears.
+                        -->
+                        <div id="mobTaskText" style="
+                            margin-bottom:10px; font-size:0.9rem; font-family:'Cinzel'; color:#fff;
+                            min-height:40px; display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.4;
+                            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+                        ">
+                            AWAITING DATA...
                         </div>
 
-                        <!-- TIMER (IDs: qm_timerH, M, S - Checked main.js line 1313) -->
+                        <!-- TIMER -->
                         <div class="card-timer-row">
                             <div id="qm_timerH" class="card-t-box">00</div>:
                             <div id="qm_timerM" class="card-t-box">00</div>:
@@ -989,15 +995,11 @@
 
                         <!-- ACTIONS -->
                         <div style="display:flex; gap:10px; margin-top:10px;">
-                            <!-- UPLOAD (ID: mobBtnUpload - Checked main.js line 1276) -->
-                            <!-- Calls mobileUploadEvidence() from main.js line 1270 -->
                             <button id="mobBtnUpload" class="btn-upload-sm" style="flex:1;" onclick="document.getElementById('evidenceInputMob').click()">
                                 UPLOAD
                             </button>
                             <input type="file" id="evidenceInputMob" hidden onchange="window.mobileUploadEvidence(this)">
                             
-                            <!-- SKIP -->
-                            <!-- Calls mobileSkipTask() from main.js line 1297 -->
                             <button class="btn-skip-sm" style="flex:1;" onclick="window.mobileSkipTask()">
                                 FAILURE (-300)
                             </button>
@@ -1005,6 +1007,8 @@
                     </div>
                  </div>
             </div>
+
+           
 
            <!-- ============================================== 
                  6. INLINE CHAT (UNIQUE MOBILE IDs)
