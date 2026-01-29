@@ -25,9 +25,12 @@
     /* =========================================
        CORE MOBILE LAYOUT (SINGLE SCROLL)
        ========================================= */
+ /* =========================================
+       1. FIXED LAYOUT & SCROLLING (The App Shell)
+       ========================================= */
     #MOBILE_APP { display: none; }
 
-    /* IOS SCROLL FIX */
+    /* Fix iOS Bounce */
     html, body {
         position: fixed; width: 100%; height: 100%; overflow: hidden;
         background-color: #000; margin: 0; padding: 0; overscroll-behavior: none;
@@ -37,16 +40,15 @@
         #DESKTOP_APP { display: none !important; }
         #MOBILE_APP { display: block !important; width: 100vw; height: 100dvh; }
 
-        /* THE MAIN SCROLL CONTAINER */
+        /* SCROLL CONTAINER */
         #viewMobileHome {
             position: fixed; top: 0; left: 0; width: 100%; height: 100dvh;
-            overflow-y: auto !important; /* ALLOWS SCROLL */
-            -webkit-overflow-scrolling: touch;
+            overflow-y: auto !important; -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
         #viewMobileHome::-webkit-scrollbar { display: none; }
 
-        /* FIXED BACKGROUND */
+        /* BACKGROUND LAYER */
         .mob-bg-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1; pointer-events: none;
@@ -57,17 +59,21 @@
         }
         .bg-overlay {
             position: absolute; inset: 0;
-            background: radial-gradient(circle at center, transparent 0%, #000 60%);
+            background: radial-gradient(circle at center, transparent 0%, #000 50%);
         }
 
-        /* HUD & TOP ICONS */
+        /* =========================================
+           2. HUD (RESTORED LAYERING)
+           ========================================= */
         .mob-hud-row {
-            display: flex; justify-content: space-between; padding: 15px 20px;
-            width: 100%; position: relative; z-index: 10;
+            position: absolute; top: 15px; left: 0; width: 100%;
+            display: flex; justify-content: space-between; padding: 0 20px; 
+            z-index: 10; /* Sits on top of Halo */
         }
         .hud-circle {
             width: 45px; height: 45px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
-            background: #000; position: relative; overflow: visible; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            background: #000; position: relative; overflow: visible; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
         .hud-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; opacity: 0.8; }
         .hud-gear { position: absolute; bottom: -5px; right: -5px; font-size: 0.8rem; color: #fff; text-shadow: 0 0 5px #000; }
@@ -78,152 +84,121 @@
         .hud-status-dot.online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
         .hud-status-dot.offline { background: #c5a059; box-shadow: 0 0 5px #c5a059; opacity: 0.5; }
 
-        /* HALO & KNEEL BUTTON */
-        .halo-section { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10px; }
+        /* =========================================
+           3. HALO & SQUARES (RESTORED)
+           ========================================= */
+        .halo-section {
+            position: relative; z-index: 2; margin-top: 60px; /* Pushed down for HUD */
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
         .halo-ring {
-            width: 280px; height: 280px; border-radius: 50%; border: 2px solid #c5a059;
+            width: 280px; height: 280px; border-radius: 50%; border: 2px solid #c5a059; 
             box-shadow: 0 0 30px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             background: radial-gradient(circle, rgba(197,160,89,0.1) 0%, transparent 50%);
         }
-        .halo-name { font-family: 'Cinzel', serif; font-size: 2.2rem; color: #fff; letter-spacing: 2px; line-height: 1; text-align: center; }
-        .halo-rank { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: #c5a059; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 5px; }
-        
-        /* STREAK STRIP INSIDE HALO */
-        .mob-streak-strip { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; width: 70%; margin-bottom: 5px; }
-        .streak-sq { height: 6px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1px; }
-        .streak-sq.active { background: rgba(197, 160, 89, 0.6); border-color: #c5a059; }
+        .halo-name {
+            font-family: 'Cinzel', serif; font-size: 2.2rem; color: #fff;
+            text-transform: uppercase; letter-spacing: 2px; line-height: 1; 
+            margin-bottom: 5px; text-align: center;
+        }
+        .halo-rank {
+            font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: #c5a059;
+            letter-spacing: 4px; text-transform: uppercase;
+        }
 
+        /* PROGRESS SQUARES (Centered) */
+        .mob-section-wrapper { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .mob-grid-label-center { 
+            font-size: 0.5rem; color: #444; letter-spacing: 3px; margin-bottom: 5px; text-align: center; width: 100%; 
+        }
+        .mob-streak-strip {
+            display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; width: 70%; margin-bottom: 10px;
+        }
+        .streak-sq { height: 6px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1px; }
+        .streak-sq.active { background: rgba(197, 160, 89, 0.6); border-color: #c5a059; box-shadow: 0 0 8px rgba(197, 160, 89, 0.2); }
+
+        /* =========================================
+           4. STATS CARD (RESTORED)
+           ========================================= */
+        .halo-stats-card {
+            position: relative; z-index: 3;
+            margin-top: -40px; /* Overlaps ring */
+            width: 90%; /* Fixed width */
+            background: rgba(10, 10, 10, 0.85); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px; padding: 10px;
+            display: flex; align-items: center; justify-content: space-around;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(15px);
+            margin-bottom: 15px;
+        }
+        .h-stat { display: flex; flex-direction: column; align-items: center; }
+        .h-val { font-family: 'Orbitron', serif; font-size: 1.5rem; color: #fff; line-height: 1; }
+        .h-lbl { font-family: 'Orbitron', sans-serif; font-size: 0.5rem; color: #888; letter-spacing: 2px; margin-top: 4px; }
+        .h-divider { width: 1px; height: 30px; background: rgba(255,255,255,0.15); }
+
+        /* =========================================
+           5. KNEEL BAR & BUTTONS (RESTORED)
+           ========================================= */
+        .halo-stack {
+            position: relative; z-index: 3; width: 100%;
+            display: flex; flex-direction: column; align-items: center; gap: 15px; padding: 0 20px;
+        }
         .mob-kneel-bar {
-            width: 100%; height: 50px; background: #080808; border: 1px solid #c5a059; border-radius: 4px;
-            position: relative; overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 10px rgba(197, 160, 89, 0.1); transition: 0.2s;
+            width: 100%; height: 50px;
+            background: #080808; border: 1px solid #c5a059; border-radius: 4px;
+            position: relative; overflow: hidden; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
+            transition: 0.2s;
         }
         .mob-kneel-bar:active { border-color: #fff; transform: scale(0.98); }
-        .mob-bar-fill { position: absolute; bottom: 0; left: 0; width: 0%; height: 100%; background: linear-gradient(90deg, #8b0000, #000000); z-index: 1; transition: width 0.1s linear; }
+        .mob-bar-fill {
+            position: absolute; bottom: 0; left: 0; width: 0%; height: 100%; 
+            background: linear-gradient(90deg, #8b0000, #000000); z-index: 1; transition: width 0.1s linear;
+        }
         .mob-bar-content { z-index: 2; display: flex; align-items: center; gap: 10px; }
-        .kneel-text { font-family: 'Cinzel', serif; letter-spacing: 3px; color: #ccc; }
         .kneel-icon-sm { color: #c5a059; font-size: 1.2rem; }
+        .kneel-text { font-family: 'Cinzel', serif; letter-spacing: 3px; color: #ccc; }
 
-        /* STATS DRAWER */
+        /* =========================================
+           6. UTILS & SCROLL ITEMS
+           ========================================= */
         .mob-stats-toggle-btn {
             background: transparent; border: 1px solid rgba(136, 136, 136, 0.3); color: #888;
-            font-family: 'Cinzel', serif; font-size: 0.75rem; padding: 8px 15px; cursor: pointer;
-            letter-spacing: 2px; border-radius: 4px; margin-bottom: 5px;
+            font-family: 'Cinzel', serif; font-size: 0.75rem; padding: 8px 0; width: 100%;
+            cursor: pointer; letter-spacing: 2px; text-align: center; border-radius: 4px;
         }
         .mob-internal-drawer {
-            width: 80%; max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s ease;
-            background: rgba(0,0,0,0.5); border-radius: 4px;
+            width: 100%; max-height: 0; opacity: 0; overflow: hidden;
+            transition: all 0.4s ease; background: transparent; 
         }
-        .mob-internal-drawer.open { max-height: 200px; opacity: 1; padding: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .mob-internal-drawer.open {
+            max-height: 200px; opacity: 1; margin-top: 10px; padding: 10px;
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+        }
         .drawer-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .d-lbl { font-size: 0.7rem; color: #888; font-family: 'Cinzel'; }
         .d-val { font-size: 0.8rem; color: #c5a059; font-family: 'Orbitron'; }
-
-        /* HEADERS FOR SECTIONS */
+        
         .duty-label {
-            font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.8rem; color: #888;
-            letter-spacing: 4px; text-transform: uppercase; text-align: center;
-            margin-bottom: 15px; position: relative; display: flex; align-items: center; justify-content: center; gap: 10px;
+            font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.8rem; color: #888; 
+            letter-spacing: 4px; text-transform: uppercase; text-align: center; margin: 20px 0 10px 0;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .duty-label::before, .duty-label::after { content: ''; height: 1px; width: 30px; background: #333; }
 
-        /* THE ALTAR (PYRAMID) */
-        .mob-pyramid-stage { position: relative; width: 100%; height: 260px; perspective: 1000px; margin-bottom: 10px; }
-        .mob-idol { position: absolute; background: #000; overflow: hidden; transition: all 0.3s ease; }
-        .mob-idol img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .mob-idol.center {
-            width: 160px; height: 230px; top: 0; left: 50%; transform: translateX(-50%); z-index: 20;
-            border: 2px solid #c5a059; box-shadow: 0 10px 40px rgba(0,0,0,0.9), 0 0 20px rgba(197, 160, 89, 0.2);
-        }
-        .mob-idol.side {
-            width: 130px; height: 190px; top: 50px; left: 10%; z-index: 5;
-            border: 1px solid #444; filter: brightness(0.5) grayscale(50%); transform: rotate(-6deg);
-        }
-        .mob-idol.side.right { left: auto; right: 10%; transform: rotate(6deg); }
-        .mob-rank-badge {
-            position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
-            background: #000; border: 1px solid #333; color: #888;
-            font-family: 'Cinzel', serif; font-size: 0.6rem; padding: 2px 6px; z-index: 30;
-        }
-        .mob-rank-badge.main { border-color: #c5a059; color: #c5a059; bottom: 10px; background: rgba(0,0,0,0.8); }
-
-        /* HORIZONTAL SCROLLS (HISTORY) */
-        .mob-horiz-scroll {
-            display: flex; flex-direction: row; overflow-x: auto; gap: 10px; width: 100%;
-            padding-bottom: 10px; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-        }
-        .mob-horiz-scroll::-webkit-scrollbar { display: none; }
-        
-        .mob-scroll-item {
-            flex: 0 0 100px; height: 140px; border: 1px solid #333; background: #111;
-            border-radius: 4px; overflow: hidden; position: relative;
-        }
-        .mob-scroll-item img { width: 100%; height: 100%; object-fit: cover; }
-        .mob-horiz-scroll.small .mob-scroll-item { flex: 0 0 70px; height: 70px; opacity: 0.6; }
-
-        /* LABOR CARD */
-        .luxury-card {
-            background: linear-gradient(180deg, rgba(30,30,30,0.6) 0%, rgba(10,10,10,0.9) 100%);
-            border: 1px solid rgba(197, 160, 89, 0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border-radius: 2px; padding: 20px 15px; width: 100%; box-sizing: border-box;
-        }
-        .txt-status-red { color: #ff003c; font-family: 'Orbitron'; letter-spacing: 1px; }
-        .txt-status-green { color: #00ff00; font-family: 'Orbitron'; letter-spacing: 1px; }
-        .card-timer-row { display: flex; justify-content: center; align-items: center; gap: 5px; color: #fff; font-family: 'Rajdhani'; font-size: 1.5rem; }
-        
-        .lobby-btn {
-            background: transparent; border: 1px solid #333; color: #ccc;
-            font-family: 'Cinzel', serif; font-size: 0.8rem; padding: 12px; cursor: pointer; letter-spacing: 2px;
-        }
-        .btn-upload-sm { background: transparent; border: 1px solid #c5a059; color: #c5a059; font-family: 'Cinzel'; padding: 10px; cursor: pointer; }
-        .btn-skip-sm { background: transparent; border: 1px solid #444; color: #666; font-family: 'Cinzel'; padding: 10px; cursor: pointer; }
-
-        /* THE WALL (NEWS GRID) */
-        #mobNewsGrid { padding-bottom: 40px; }
-        .news-item {
-            border: 1px solid #333; background: #000; min-height: 150px;
-            display: flex; flex-direction: column;
-        }
-        .news-img { width: 100%; height: 150px; object-fit: cover; }
-        .news-txt { padding: 10px; color: #888; font-family: 'Cinzel'; font-size: 0.7rem; }
-
-        /* CHAT OVERLAY */
-        .mob-chat-header {
-            display: flex; align-items: center; padding: 10px 15px; background: #111; border-bottom: 1px solid #333;
-        }
-        .queen-av-wrap { position: relative; width: 40px; height: 40px; margin-right: 10px; }
-        .queen-av-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .chat-meta-col { display: flex; flex-direction: column; }
-        .chat-queen-name { color: #fff; font-family: 'Cinzel'; font-size: 0.9rem; }
-        .chat-status-text { color: #00ff00; font-family: 'Orbitron'; font-size: 0.6rem; letter-spacing: 1px; }
-        
-        .chat-footer {
-            display: flex; align-items: center; padding: 10px; background: #111; border-top: 1px solid #333; gap: 10px;
-        }
-        .chat-input-wrapper { flex: 1; position: relative; display: flex; align-items: center; }
-        .chat-input {
-            width: 100%; background: #000; border: 1px solid #333; color: #fff;
-            padding: 10px 10px 10px 40px; font-family: 'Cinzel'; outline: none; border-radius: 20px;
-        }
-        .chat-btn-plus {
-            position: absolute; left: 5px; width: 30px; height: 30px; border-radius: 50%;
-            background: #222; border: 1px solid #444; color: #fff; cursor: pointer;
-        }
-        .chat-btn-send {
-            background: #c5a059; color: #000; border: none; width: 40px; height: 40px;
-            border-radius: 50%; font-weight: bold; cursor: pointer;
-        }
-
-        /* TROPHIES */
-        .reward-shelf { display: flex; gap: 10px; padding: 10px; width: 100%; overflow-x: auto; scrollbar-width: none; }
-        .reward-badge { flex: 0 0 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #111; border: 1px solid #333; }
-        .reward-badge.unlocked { border-color: #c5a059; background: rgba(197, 160, 89, 0.1); }
-        .rb-icon { width: 20px; height: 20px; fill: #555; }
-        .reward-badge.unlocked .rb-icon { fill: #c5a059; }
-
-        /* UTILS */
+        /* REST OF ELEMENTS (Chat, Wall, etc) */
         .hidden { display: none !important; }
+        
+        /* WALL & CHAT FIXES */
+        #mobNewsGrid { width: 100%; }
+        .mob-horiz-scroll { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; }
+        .reward-shelf { display: flex; gap: 10px; width: 100%; overflow-x: auto; }
+        
+        /* CHAT OVERLAY FORCE HIDE */
+        #chatCard { display: none !important; }
     }
 </style>
 </head>
