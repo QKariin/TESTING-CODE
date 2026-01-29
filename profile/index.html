@@ -960,55 +960,80 @@
             </div>
 
             <!-- 2. CHAT WINDOW (MOVED UP) -->
+            <!-- ============================================== 
+                 2. CHAT: TACTICAL DATA STREAM (Compact & Luxury)
+                 ============================================== -->
             <div id="mobChatSection" style="
-                width: calc(100% + 40px); /* Full Width */
-                margin-left: -20px; 
+                width: calc(100% + 40px); margin-left: -20px; 
                 margin-bottom: 20px;
-                border-top: 1px solid #333;
-                border-bottom: 1px solid #333;
+                border-top: 1px solid #333; border-bottom: 1px solid #333;
+                background: #000;
             ">
+                <!-- 1. THE TRIGGER (The "Uplink" Bar) -->
                 <div onclick="const p=document.getElementById('inlineChatPanel'); p.classList.toggle('hidden'); if(!p.classList.contains('hidden')){ var cb=document.getElementById('mob_chatBox'); if(cb) setTimeout(()=>{cb.scrollTop=cb.scrollHeight},100); }" style="
-                    background: #111; padding: 10px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div class="queen-av-wrap" style="position: relative; width: 40px; height: 40px;">
-                            <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #c5a059;">
-                            <div class="status-dot online" style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #00ff00; border-radius: 50%; border: 2px solid #000;"></div>
+                    padding: 12px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+                    background: linear-gradient(90deg, #0a0a0a 0%, #111 100%);
+                ">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <!-- THE FOOTER AVATAR (Red/Gold Glow) -->
+                        <div style="position: relative; width: 45px; height: 45px;">
+                            <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" 
+                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #ff003c; box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);">
+                            <div class="status-dot online" style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #00ff00; border-radius: 50%; border: 2px solid #000; box-shadow: 0 0 5px #00ff00;"></div>
                         </div>
+                        
+                        <!-- TEXT: DATA STREAM STYLE -->
                         <div style="display: flex; flex-direction: column;">
-                            <div style="font-family: 'Cinzel'; font-size: 0.9rem; color: #fff;">QUEEN KARIN</div>
-                            <div style="font-family: 'Orbitron'; font-size: 0.6rem; color: #00ff00; letter-spacing: 1px;">ONLINE</div>
+                            <div style="font-family: 'Rajdhani'; font-weight: 700; font-size: 1rem; color: #fff; letter-spacing: 1px;">// SECURE_UPLINK</div>
+                            <div style="font-family: 'Orbitron'; font-size: 0.55rem; color: #666; letter-spacing: 2px;">CONNECTION ESTABLISHED</div>
                         </div>
                     </div>
-                    <div style="font-size:1.2rem; color:#666;">▼</div>
+
+                    <!-- SUBTLE PULSE ICON instead of arrow -->
+                    <div style="width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 8px #00ff00; animation: pulse 2s infinite;"></div>
                 </div>
 
-                <!-- Chat Box (Unique IDs mob_) -->
+                <!-- 2. THE CONSOLE (The Box) -->
                 <div id="inlineChatPanel" class="hidden" style="
-                    width: 100%; height: 400px; background: #000;
+                    width: 100%; height: 450px; background: #050505;
                     display: flex; flex-direction: column; animation: fadeIn 0.3s ease;
                     position: relative; border-top: 1px solid #333;
                 ">
-                    <div id="mob_chatBox" class="chat-body-frame" style="
+                    <!-- SYSTEM TICKER (Restored - Pinned Top) -->
+                    <div id="systemTicker" class="system-ticker hidden" style="
+                        background: rgba(20,20,0,0.3); color: #c5a059; font-size: 0.6rem; 
+                        padding: 5px; text-align: center; border-bottom: 1px solid #333;
+                        font-family: 'Orbitron'; letter-spacing: 1px;
+                    "></div>
+
+                    <!-- MESSAGES AREA -->
+                    <div id="mob_chatBox" class="chat-body-frame compact-mode" style="
                         position: absolute !important; top: 0; left: 0;
                         width: 100% !important; height: 100% !important;
-                        padding-top: 15px !important; padding-bottom: 70px !important;
+                        padding-top: 30px !important; /* Space for Ticker */
+                        padding-bottom: 70px !important; /* Space for Footer */
+                        padding-left: 10px !important; padding-right: 10px !important;
                         overflow-y: auto !important; -webkit-overflow-scrolling: touch;
                     ">
+                        <!-- Overlays -->
                         <div id="tributeHuntOverlay" class="hidden overlay-center" style="
-                            position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 50; flex-direction: column; padding: 20px;
+                            position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 50; flex-direction: column; padding: 20px;
                         ">
-                            <button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer; margin-bottom: 10px; font-size: 1.2rem;">CLOSE X</button>
+                            <button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer; margin-bottom: 10px; font-size: 1.2rem;">CLOSE [X]</button>
                             <div id="huntStoreGrid" class="store-grid" style="width: 100%; overflow-y: auto;"></div>
                             <textarea id="huntNote" class="hidden"></textarea>
                             <div id="huntProgress" class="hidden"></div>
                         </div>
+
+                        <!-- Messages -->
                         <div id="mob_chatContent" class="chat-area"></div>
                     </div>
                     
-                    <div class="chat-footer" style="position: absolute !important; bottom: 0; width: 100%; height: 65px; z-index: 20; background:#111; border-top: 1px solid #333;">
+                    <!-- FOOTER -->
+                    <div class="chat-footer" style="position: absolute !important; bottom: 0; width: 100%; height: 65px; z-index: 20; background:#080808; border-top: 1px solid #222;">
                         <div class="chat-input-wrapper">
                             <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()">+</button>
-                            <input type="text" id="mob_chatMsgInput" class="chat-input" placeholder="Type..." onkeypress="handleChatKey(event)">
+                            <input type="text" id="mob_chatMsgInput" class="chat-input" placeholder="Transmit..." onkeypress="handleChatKey(event)">
                         </div>
                         <button class="chat-btn-tribute" onclick="window.toggleTributeHunt()">🎁</button>
                         <button class="chat-btn-send" onclick="sendChatMessage()">></button>
