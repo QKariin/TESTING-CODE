@@ -998,53 +998,47 @@
             </div>
 
            <!-- ============================================== 
-                 2. CHAT: RIGHT-ALIGNED ORBITAL HEADER
+                 2. CHAT: 100VW FULL WIDTH + LEFT ALIGNED HEADER
                  ============================================== -->
             <div id="mobChatSection" style="
-                margin-left: -20px; margin-right: -20px; width: auto; 
+                width: 100vw;               /* Force Physical Screen Width */
+                margin-left: calc(50% - 50vw); /* Magic centering trick to break out of parent */
+                margin-right: 0;
                 margin-bottom: 20px;
-                border-top: 1px solid #333; border-bottom: 1px solid #333;
+                border-top: 1px solid #333; 
+                border-bottom: 1px solid #333;
                 background: #000;
+                position: relative;         /* Ensure stacking context */
+                left: 0;                    /* Hard reset */
             ">
-                <!-- TRIGGER (RIGHT ALIGNED) -->
+                <!-- TRIGGER (LEFT ALIGNED) -->
                 <div onclick="const p=document.getElementById('inlineChatPanel'); p.classList.toggle('hidden'); if(!p.classList.contains('hidden')){ var cb=document.getElementById('mob_chatBox'); if(cb) setTimeout(()=>{cb.scrollTop=cb.scrollHeight},100); }" style="
-                    padding: 15px 20px; cursor: pointer; 
-                    display: flex; align-items: center; justify-content: space-between; /* Pushes items to edges */
-                    background: linear-gradient(90deg, #050505 0%, #111 100%);
+                    padding: 15px 20px; /* Added side padding */
+                    cursor: pointer; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: flex-start; /* MOVED TO LEFT */
+                    background: linear-gradient(180deg, #111 0%, #050505 100%);
                 ">
-                    <!-- LEFT: THE ARROW (Subtle) -->
-                    <div style="font-size: 0.8rem; color: #444; transform: scaleX(1.5);">▼</div>
-
-                    <!-- RIGHT: ORBITAL PROFILE -->
-                    <div style="display: flex; align-items: center; gap: 15px; text-align: right;">
-                        
-                        <!-- TEXT -->
-                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                            <div style="font-family: 'Cinzel'; font-weight: 700; font-size: 1rem; color: #fff; letter-spacing: 2px; line-height: 1;">QUEEN KARIN</div>
-                            <div style="font-family: 'Orbitron'; font-size: 0.55rem; color: #00ff00; letter-spacing: 2px; margin-top: 4px;">ONLINE</div>
-                        </div>
-
-                        <!-- ORBITAL AVATAR (Ring + Gap + Image) -->
-                        <div style="
-                            position: relative; width: 50px; height: 50px;
-                            border: 1px solid #c5a059; border-radius: 50%; /* The Ring */
-                            padding: 3px; /* The Gap */
-                            box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
-                        ">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="position: relative; width: 50px; height: 50px;">
                             <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" 
-                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;">
-                            
+                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #c5a059; box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);">
                             <div class="status-dot online blink-dot" style="
                                 position: absolute; bottom: 0; right: 0; 
-                                width: 10px; height: 10px; background: #00ff00; 
+                                width: 12px; height: 12px; background: #00ff00; 
                                 border-radius: 50%; border: 2px solid #000; 
-                                box-shadow: 0 0 5px #00ff00;
+                                box-shadow: 0 0 8px #00ff00;
                             "></div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                            <div style="font-family: 'Cinzel'; font-weight: 700; font-size: 1.1rem; color: #fff; letter-spacing: 2px; line-height: 1;">QUEEN KARIN</div>
+                            <div style="font-family: 'Orbitron'; font-size: 0.6rem; color: #00ff00; letter-spacing: 2px; margin-top: 4px;">ONLINE</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- THE CONSOLE (Unchanged Internal Logic) -->
+                <!-- THE CONSOLE (UNCHANGED) -->
                 <div id="inlineChatPanel" class="hidden" style="
                     width: 100%; height: 450px; background: #050505;
                     display: flex; flex-direction: column; animation: fadeIn 0.3s ease;
@@ -1057,7 +1051,7 @@
                         font-family: 'Orbitron'; letter-spacing: 1px;
                     "></div>
 
-                    <!-- MESSAGES -->
+                    <!-- MESSAGES AREA -->
                     <div id="mob_chatBox" class="chat-body-frame" style="
                         position: absolute !important; top: 0; left: 0;
                         width: 100% !important; height: 100% !important;
