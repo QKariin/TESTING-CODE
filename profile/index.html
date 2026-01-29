@@ -957,36 +957,47 @@
                 <div id="mobRec_Heap" class="mob-horiz-scroll small"></div>
             </div>
 
-            <!-- 5. CURRENT STATUS (LABOR CARD - LIVE SYNC) -->
+            <!-- 5. CURRENT STATUS (LABOR CARD - RESTORED LOGIC) -->
             <div style="width:100%; margin-top: 20px;">
                  <div class="duty-label">CURRENT STATUS</div>
                  <div class="luxury-card" style="padding: 15px;">
                     
-                    <!-- IDLE STATE -->
+                    <!-- 
+                        IDLE STATE 
+                        ID: qm_TaskIdle (Matches main.js line 1349)
+                    -->
                     <div id="qm_TaskIdle" class="hidden" style="text-align:center;">
                         <div class="txt-status-red" style="margin-bottom:10px;">UNPRODUCTIVE</div>
+                        <!-- BUTTON calls existing mobileRequestTask() -->
                         <button class="lobby-btn" style="width:100%; border-color:#c5a059; color:#c5a059;" onclick="window.mobileRequestTask()">
                             REQUEST TASK
                         </button>
                     </div>
 
-                    <!-- WORKING STATE -->
+                    <!-- 
+                        WORKING STATE 
+                        ID: qm_TaskActive (Matches main.js line 1350)
+                    -->
                     <div id="qm_TaskActive" class="hidden" style="text-align:center;">
                         <div class="txt-status-green" style="margin-bottom:5px;">WORKING</div>
                         
                         <!-- 
-                           TASK TEXT (ID: mobTaskText)
-                           This is where the text like "Kneel for 10 mins" appears.
+                            TASK TEXT
+                            ID: mobTaskText (Matches main.js line 1256) 
+                            This is where syncMobileDashboard() puts the text.
                         -->
                         <div id="mobTaskText" style="
                             margin-bottom:10px; font-size:0.9rem; font-family:'Cinzel'; color:#fff;
                             min-height:40px; display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.4;
                             border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
                         ">
-                            AWAITING DATA...
+                            AWAITING ORDERS...
                         </div>
 
-                        <!-- TIMER -->
+                        <!-- 
+                            TIMER
+                            IDs: qm_timerH, qm_timerM, qm_timerS (Matches main.js line 1313)
+                        -->
                         <div class="card-timer-row">
                             <div id="qm_timerH" class="card-t-box">00</div>:
                             <div id="qm_timerM" class="card-t-box">00</div>:
@@ -995,11 +1006,20 @@
 
                         <!-- ACTIONS -->
                         <div style="display:flex; gap:10px; margin-top:10px;">
+                            <!-- 
+                                UPLOAD
+                                ID: mobBtnUpload (Matches main.js line 1276)
+                                Calls: mobileUploadEvidence() (Matches main.js line 1270)
+                            -->
                             <button id="mobBtnUpload" class="btn-upload-sm" style="flex:1;" onclick="document.getElementById('evidenceInputMob').click()">
                                 UPLOAD
                             </button>
                             <input type="file" id="evidenceInputMob" hidden onchange="window.mobileUploadEvidence(this)">
                             
+                            <!-- 
+                                SKIP
+                                Calls: mobileSkipTask() (Matches main.js line 1297)
+                            -->
                             <button class="btn-skip-sm" style="flex:1;" onclick="window.mobileSkipTask()">
                                 FAILURE (-300)
                             </button>
@@ -1007,7 +1027,6 @@
                     </div>
                  </div>
             </div>
-
            
 
            <!-- ============================================== 
