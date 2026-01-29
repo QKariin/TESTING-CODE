@@ -959,14 +959,19 @@
                  </div>
             </div>
 
-            <!-- ============================================== 
-                 2. CHAT: WIDE VIEW (5px Padding, Timestamps Restored)
+           <!-- ============================================== 
+                 2. CHAT: FORCED FULL SCREEN WIDTH (100vw Fix)
                  ============================================== -->
             <div id="mobChatSection" style="
-                margin-left: -20px; margin-right: -20px; width: auto; 
+                width: 100vw;               /* Force Physical Screen Width */
+                margin-left: calc(50% - 50vw); /* Magic centering trick to break out of parent */
+                margin-right: 0;
                 margin-bottom: 20px;
-                border-top: 1px solid #333; border-bottom: 1px solid #333;
+                border-top: 1px solid #333; 
+                border-bottom: 1px solid #333;
                 background: #000;
+                position: relative;         /* Ensure stacking context */
+                left: 0;                    /* Hard reset */
             ">
                 <!-- TRIGGER (CENTERED HEADER) -->
                 <div onclick="const p=document.getElementById('inlineChatPanel'); p.classList.toggle('hidden'); if(!p.classList.contains('hidden')){ var cb=document.getElementById('mob_chatBox'); if(cb) setTimeout(()=>{cb.scrollTop=cb.scrollHeight},100); }" style="
@@ -1005,14 +1010,12 @@
                         font-family: 'Orbitron'; letter-spacing: 1px;
                     "></div>
 
-                    <!-- MESSAGES AREA (PADDING 5px ONLY) -->
-                    <!-- Removed 'compact-mode' class so timestamps return -->
+                    <!-- MESSAGES AREA -->
                     <div id="mob_chatBox" class="chat-body-frame" style="
                         position: absolute !important; top: 0; left: 0;
                         width: 100% !important; height: 100% !important;
                         padding-top: 30px !important; 
                         padding-bottom: 70px !important; 
-                        /* TIGHT SIDES */
                         padding-left: 5px !important; 
                         padding-right: 5px !important;
                         overflow-y: auto !important; -webkit-overflow-scrolling: touch;
