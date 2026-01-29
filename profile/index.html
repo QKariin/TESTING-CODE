@@ -1062,10 +1062,16 @@
                     <div id="qm_TaskActive" class="hidden" style="text-align:center;">
                         <div class="txt-status-green" style="margin-bottom:5px;">WORKING</div>
                         
-                        <!-- TASK TEXT -->
+                        <!-- 
+                           TASK TEXT FIX:
+                           Added 'flex-direction: column;' 
+                           This stops the text from splitting into side-by-side fields.
+                        -->
                         <div id="mobTaskText" style="
                             margin-bottom:10px; min-height:40px; 
-                            display:flex; align-items:center; justify-content:center; 
+                            display:flex; 
+                            flex-direction: column; /* <--- THE FIX */
+                            align-items:center; justify-content:center; 
                             text-align:center; line-height:1.3;
                             border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
                         ">
@@ -1083,7 +1089,7 @@
                         <div style="display:flex; gap:5px; margin-top:10px;">
                             <button id="mobBtnUpload" class="btn-upload-sm" style="flex:1;" onclick="document.getElementById('evidenceInputMob').click()">UPLOAD</button>
                             <input type="file" id="evidenceInputMob" hidden onchange="window.mobileUploadEvidence(this)">
-                            <button class="btn-skip-sm" style="flex:1;" onclick="window.mobileSkipTask()">FAILURE (-300)</button>
+                            <button class="btn-skip-sm" style="flex:1;" onclick="window.mobileSkipTask()">SKIP (-300)</button>
                         </div>
                     </div>
                  </div>
