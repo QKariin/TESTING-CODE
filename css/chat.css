@@ -425,6 +425,29 @@
     .chat-queen-name { font-family: 'Cinzel'; font-size: 0.9rem; color: #fff; letter-spacing: 1px; }
     .chat-status-text { font-family: 'Orbitron'; font-size: 0.55rem; color: #888; letter-spacing: 1px; }
 
+      .compact-mode .msg-row {
+                    margin-bottom: 4px !important; /* Very tight gap */
+                }
+                .compact-mode .msg {
+                    padding: 4px 10px !important; /* Slimmer text */
+                    font-size: 0.75rem !important; /* Tech font size */
+                    background: transparent !important; /* No bubbles */
+                    border: none !important;
+                }
+                /* Borders instead of bubbles */
+                .compact-mode .m-queen {
+                    border-left: 2px solid #c5a059 !important;
+                    color: #fff !important;
+                }
+                .compact-mode .m-slave {
+                    border-right: 2px solid #333 !important; /* Subtle grey for slave */
+                    color: #888 !important;
+                    text-align: right;
+                }
+                .compact-mode .msg-time {
+                    display: none; /* Hide time to save space (Optional) */
+                }
+
     /* 3. SCROLL AREA: FILLS MIDDLE OF CAGE */
     .chat-body-frame {
         width: 100% !important;
