@@ -1,4 +1,4 @@
-// tasks.js - MUTED VERSION (Does not send Task Text to Backend)
+// tasks.js - FIXED FOR MOBILE TASK TEXT SYNC
 
 import { 
     currentTask, pendingTaskState, taskDatabase, taskQueue, gameStats, 
@@ -62,9 +62,16 @@ export function restorePendingUI() {
     const idleMsg = document.getElementById('idleMessage');
     if(idleMsg) idleMsg.classList.add('hidden');
 
+    // --- FIX: UPDATE BOTH DESKTOP AND MOBILE TEXT ---
     const taskEl = document.getElementById('readyText');
-    if (taskEl && currentTask) {
-        taskEl.innerHTML = currentTask.text;
+    const mobTaskEl = document.getElementById('mobTaskText'); 
+    
+    if (currentTask) {
+        if (taskEl) taskEl.innerHTML = currentTask.text;
+        if (mobTaskEl) {
+            mobTaskEl.innerHTML = currentTask.text;
+            mobTaskEl.classList.remove('text-pulse'); // Stop "Loading" animation
+        }
     }
     
     // Timer Logic
@@ -74,7 +81,10 @@ export function restorePendingUI() {
     const newInterval = setInterval(() => {
         const diff = targetTime - Date.now();
         
-        // GET THE BOXES
+        // GET THE BOXES (Desktop & Mobile share these IDs now via sync or duplicate logic)
+        // Note: In your current HTML, Mobile uses qm_timerH. 
+        // We will target generic IDs here, main.js sync loop handles the rest, 
+        // BUT for safety we can target specific mobile IDs if main.js sync is slow.
         const tH = document.getElementById('timerH');
         const tM = document.getElementById('timerM');
         const tS = document.getElementById('timerS');
@@ -82,7 +92,6 @@ export function restorePendingUI() {
         if (diff <= 0) {
             clearInterval(newInterval);
             setCooldownInterval(null);
-            // Reset to 00 00 00
             if(tH) tH.innerText = "00";
             if(tM) tM.innerText = "00";
             if(tS) tS.innerText = "00";
@@ -94,7 +103,6 @@ export function restorePendingUI() {
         const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
         const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
         
-        // UPDATE SEPARATE BOXES
         if(tH) tH.innerText = h;
         if(tM) tM.innerText = m;
         if(tS) tS.innerText = s;
@@ -111,25 +119,21 @@ function applyPenaltyFail(reason) {
     const coinsEl = document.getElementById('coins');
     if (coinsEl) coinsEl.textContent = newBalance;
 
-    // --- FIX: DO NOT SEND TASK TEXT TO BACKEND ---
-    // This stops Velo from echoing it back to the chat.
     window.parent.postMessage({ 
         type: "taskSkipped", 
-        taskTitle: "REDACTED", // Muted
+        taskTitle: "REDACTED", 
         reason: reason
     }, "*");
 
     finishTask(false);
 }
 
-// --- RESULT HANDLER (CHAT ONLY) ---
 export function finishTask(success) {
     if (cooldownInterval) clearInterval(cooldownInterval);
     setTaskJustFinished(true);
     setPendingTaskState(null);
     setCooldownInterval(null);
     
-    // Close the drawer immediately
     if(window.toggleTaskDetails) window.toggleTaskDetails(false);
 
     if (success) {
@@ -180,17 +184,22 @@ export function cancelPendingTask() {
 export function resetTaskDisplay(success) {
     if(window.updateTaskUIState) window.updateTaskUIState(false);
     
+    // --- FIX: UPDATE BOTH DESKTOP AND MOBILE STATUS ---
     const tc = document.getElementById('readyText');
-    if(tc) {
-        const color = success ? '#c5a059' : '#8b0000';
-        const text = success ? 'COMPLETE' : 'FAILED';
-        tc.innerHTML = `<span style="color:${color}">${text}</span>`;
-    }
+    const mobTc = document.getElementById('mobTaskText');
+    
+    const color = success ? '#c5a059' : '#8b0000';
+    const text = success ? 'COMPLETE' : 'FAILED';
+    const html = `<span style="color:${color}">${text}</span>`;
+
+    if(tc) tc.innerHTML = html;
+    if(mobTc) mobTc.innerHTML = html;
     
     setCurrentTask(null);
     
     const timer = setTimeout(() => {
         if(tc) tc.innerText = "AWAITING ORDERS";
+        if(mobTc) mobTc.innerText = "AWAITING ORDERS"; // Reset Mobile text
         setResetUiTimer(null);
     }, 4000);
     
