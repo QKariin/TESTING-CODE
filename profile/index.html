@@ -958,27 +958,47 @@
             </div>
 
             <!-- 5. CURRENT STATUS (Labor Card) -->
+            <!-- 5. CURRENT STATUS (LABOR CARD - RESTORED) -->
             <div style="width:100%; margin-top: 20px;">
                  <div class="duty-label">CURRENT STATUS</div>
                  <div class="luxury-card" style="padding: 15px;">
+                    
+                    <!-- IDLE STATE -->
                     <div id="qm_TaskIdle" class="hidden" style="text-align:center;">
                         <div class="txt-status-red" style="margin-bottom:10px;">UNPRODUCTIVE</div>
                         <button class="lobby-btn" style="width:100%; border-color:#c5a059; color:#c5a059;" onclick="window.mobileRequestTask()">
                             REQUEST TASK
                         </button>
                     </div>
+
+                    <!-- WORKING STATE -->
                     <div id="qm_TaskActive" class="hidden" style="text-align:center;">
                         <div class="txt-status-green" style="margin-bottom:5px;">WORKING</div>
-                        <div id="mobTaskText" style="margin-bottom:10px; font-size:0.8rem;">LOADING...</div>
+                        
+                        <!-- THE TASK TEXT (Syncs with Desktop) -->
+                        <div id="mobTaskText" style="margin-bottom:10px; font-size:0.8rem; min-height:40px; display:flex; align-items:center; justify-content:center;">
+                            AWAITING ORDERS...
+                        </div>
+
+                        <!-- THE TIMER (Syncs with Desktop) -->
                         <div class="card-timer-row">
                             <div id="qm_timerH" class="card-t-box">00</div>:
                             <div id="qm_timerM" class="card-t-box">00</div>:
                             <div id="qm_timerS" class="card-t-box">00</div>
                         </div>
+
+                        <!-- ACTIONS -->
                         <div style="display:flex; gap:10px; margin-top:10px;">
-                            <button id="mobBtnUpload" class="btn-upload-sm" style="flex:1;" onclick="document.getElementById('evidenceInputMob').click()">UPLOAD</button>
+                            <!-- UPLOAD -->
+                            <button id="mobBtnUpload" class="btn-upload-sm" style="flex:1;" onclick="document.getElementById('evidenceInputMob').click()">
+                                UPLOAD
+                            </button>
                             <input type="file" id="evidenceInputMob" hidden onchange="window.mobileUploadEvidence(this)">
-                            <button class="btn-skip-sm" style="flex:1;" onclick="window.mobileSkipTask()">SKIP (-300)</button>
+                            
+                            <!-- SKIP -->
+                            <button class="btn-skip-sm" style="flex:1;" onclick="window.mobileSkipTask()">
+                                FAILURE (-300)
+                            </button>
                         </div>
                     </div>
                  </div>
