@@ -1341,43 +1341,41 @@ function getQuote(type, isUnlocked) {
         : insults[Math.floor(Math.random() * insults.length)];
 }
 // =========================================
-// NEW TRIBUTE SYSTEM (SMART TARGETING)
+// TRIBUTE SYSTEM (FIXED FOR MOBILE GRID)
 // =========================================
 
 window.toggleTributeHunt = function() {
-    let overlay, grid;
-
-    // 1. SMART SELECTOR
-    if (window.innerWidth <= 768) {
-        // If on Mobile, force look inside MOBILE_APP
-        overlay = document.querySelector('#MOBILE_APP #tributeHuntOverlay');
-        grid = document.querySelector('#MOBILE_APP #huntStoreGrid');
-    } else {
-        // If on Desktop, look for the standard ID (or Desktop wrapper)
-        overlay = document.getElementById('tributeHuntOverlay');
-        grid = document.getElementById('huntStoreGrid');
-    }
+    // 1. SMART TARGETING: Check if we are on Mobile
+    const isMobile = window.innerWidth <= 768;
     
-    // Safety Check
+    // 2. FIND THE CORRECT OVERLAY
+    // If mobile, look specifically inside #MOBILE_APP to avoid the Desktop one
+    const overlay = isMobile 
+        ? document.querySelector('#MOBILE_APP #tributeHuntOverlay') 
+        : document.getElementById('tributeHuntOverlay');
+        
+    const grid = isMobile 
+        ? document.querySelector('#MOBILE_APP #huntStoreGrid') 
+        : document.getElementById('huntStoreGrid');
+
     if (!overlay || !grid) {
-        console.error("Tribute Overlay not found for this device.");
+        console.error("Tribute Overlay not found.");
         return;
     }
 
+    // 3. TOGGLE LOGIC
     if (overlay.classList.contains('hidden')) {
-        // OPEN: Show overlay & Render Grid
         overlay.classList.remove('hidden');
-        renderTributeGrid(grid);
+        renderTributeGrid(grid); // Load items
     } else {
-        // CLOSE: Hide overlay
         overlay.classList.add('hidden');
+        if(isMobile) resetMobileFooter(); // Restore chat input
     }
 };
 
 function renderTributeGrid(gridContainer) {
-    // Check if items exist
     if (!window.WISHLIST_ITEMS || window.WISHLIST_ITEMS.length === 0) {
-        gridContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center; font-family:\'Cinzel\'">CONNECTION TO STORE FAILED...</div>';
+        gridContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">STORE OFFLINE</div>';
         return;
     }
 
@@ -1388,7 +1386,7 @@ function renderTributeGrid(gridContainer) {
         const el = document.createElement('div');
         el.className = 'store-item'; 
         
-        // VISUALS
+        // HTML Structure (Image + Price)
         el.innerHTML = `
             <img src="${item.img || item.image}" class="store-img">
             <div class="store-info">
@@ -1397,36 +1395,74 @@ function renderTributeGrid(gridContainer) {
             </div>
         `;
 
-        // CLICK ACTION (Instant Buy)
+        // Click Action -> Select Item
         el.onclick = function() {
-            purchaseTributeItem(item);
+            selectTributeItem(item, el);
         };
 
         gridContainer.appendChild(el);
     });
 }
 
-function purchaseTributeItem(item) {
-    // 1. Check Wealth
-    if ((gameStats.coins || 0) < item.price) {
+function selectTributeItem(item, element) {
+    // 1. Visual Highlight
+    document.querySelectorAll('.store-item').forEach(e => e.classList.remove('selected'));
+    element.classList.add('selected');
+
+    // 2. Mobile Logic: Hijack the Chat Footer
+    if (window.innerWidth <= 768) {
+        const inputWrap = document.querySelector('#mobChatSection .chat-input-wrapper');
+        const sendBtn = document.querySelector('#mobChatSection .chat-btn-send');
+        
+        if (inputWrap) {
+            inputWrap.innerHTML = `
+                <button onclick="window.confirmPurchase('${item.name}', ${item.price})" 
+                    style="width: 100%; background: #c5a059; border: none; color: #000; font-family: 'Orbitron'; font-weight: bold; height: 40px; border-radius: 4px; cursor: pointer;">
+                    CONFIRM TRIBUTE (-${item.price})
+                </button>
+            `;
+        }
+        if(sendBtn) sendBtn.style.display = 'none';
+    } 
+    // Desktop Logic (Instant Buy - Optional)
+    else {
+        // confirmPurchase(item.name, item.price); 
+    }
+}
+
+window.confirmPurchase = function(name, price) {
+    // Check Funds
+    if ((gameStats.coins || 0) < price) {
         if(window.triggerPoverty) window.triggerPoverty();
-        if(window.triggerSound) triggerSound('sfx-deny');
         return;
     }
 
-    // 2. Process Transaction
+    // Process Transaction
     window.parent.postMessage({ 
         type: "PURCHASE_ITEM", 
-        itemName: item.name, 
-        cost: item.price, 
-        messageToDom: `🎁 TRIBUTE: ${item.name} (${item.price})` 
+        itemName: name, 
+        cost: price, 
+        messageToDom: `🎁 TRIBUTE: ${name} (${price})` 
     }, "*");
 
-    // 3. UI Feedback
     if(window.triggerSound) triggerSound('sfx-buy');
     
-    // Close menu after buy
+    // Close Menu
     window.toggleTributeHunt();
+};
+
+function resetMobileFooter() {
+    const inputWrap = document.querySelector('#mobChatSection .chat-input-wrapper');
+    const sendBtn = document.querySelector('#mobChatSection .chat-btn-send');
+    
+    if (inputWrap) {
+        // Restore Input
+        inputWrap.innerHTML = `
+            <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()">+</button>
+            <input type="text" id="mob_chatMsgInput" class="chat-input" placeholder="Transmit..." onkeypress="handleChatKey(event)">
+        `;
+    }
+    if (sendBtn) sendBtn.style.display = 'block';
 }
 // =========================================
 // PART 1: MOBILE LOGIC (BRAIN & NAVIGATION)
