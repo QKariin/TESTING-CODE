@@ -1341,16 +1341,28 @@ function getQuote(type, isUnlocked) {
         : insults[Math.floor(Math.random() * insults.length)];
 }
 // =========================================
-// NEW TRIBUTE SYSTEM (GRID ONLY - NO TINDER)
+// NEW TRIBUTE SYSTEM (SMART TARGETING)
 // =========================================
 
 window.toggleTributeHunt = function() {
-    // 1. Target the overlay (Works for Desktop & Mobile if IDs match)
-    // We look for the one currently visible or active context
-    const overlay = document.getElementById('tributeHuntOverlay');
-    const grid = document.getElementById('huntStoreGrid');
+    let overlay, grid;
+
+    // 1. SMART SELECTOR
+    if (window.innerWidth <= 768) {
+        // If on Mobile, force look inside MOBILE_APP
+        overlay = document.querySelector('#MOBILE_APP #tributeHuntOverlay');
+        grid = document.querySelector('#MOBILE_APP #huntStoreGrid');
+    } else {
+        // If on Desktop, look for the standard ID (or Desktop wrapper)
+        overlay = document.getElementById('tributeHuntOverlay');
+        grid = document.getElementById('huntStoreGrid');
+    }
     
-    if (!overlay || !grid) return;
+    // Safety Check
+    if (!overlay || !grid) {
+        console.error("Tribute Overlay not found for this device.");
+        return;
+    }
 
     if (overlay.classList.contains('hidden')) {
         // OPEN: Show overlay & Render Grid
@@ -1363,8 +1375,9 @@ window.toggleTributeHunt = function() {
 };
 
 function renderTributeGrid(gridContainer) {
+    // Check if items exist
     if (!window.WISHLIST_ITEMS || window.WISHLIST_ITEMS.length === 0) {
-        gridContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">STORE OFFLINE</div>';
+        gridContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center; font-family:\'Cinzel\'">CONNECTION TO STORE FAILED...</div>';
         return;
     }
 
@@ -1373,7 +1386,7 @@ function renderTributeGrid(gridContainer) {
     window.WISHLIST_ITEMS.forEach(item => {
         // Create Item Card
         const el = document.createElement('div');
-        el.className = 'store-item'; // Uses the CSS we added to chat.css
+        el.className = 'store-item'; 
         
         // VISUALS
         el.innerHTML = `
@@ -1402,7 +1415,6 @@ function purchaseTributeItem(item) {
     }
 
     // 2. Process Transaction
-    // We send the purchase command to the backend
     window.parent.postMessage({ 
         type: "PURCHASE_ITEM", 
         itemName: item.name, 
@@ -1413,8 +1425,7 @@ function purchaseTributeItem(item) {
     // 3. UI Feedback
     if(window.triggerSound) triggerSound('sfx-buy');
     
-    // Optional: Close menu after buy? Or stay open? 
-    // Let's close it to show the chat confirmation
+    // Close menu after buy
     window.toggleTributeHunt();
 }
 // =========================================
