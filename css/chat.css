@@ -375,21 +375,21 @@
 
 
 /* =========================================
-   2. MOBILE OVERRIDE (INLINE WIDGET MODE)
+   2. MOBILE OVERRIDE (CHAT + TRIBUTE SYSTEM)
    ========================================= */
 @media screen and (max-width: 768px) {
 
-    /* SHOW MOBILE HEADER */
+    /* --- SHOW MOBILE HEADER --- */
     .mob-chat-header { display: flex !important; }
     .right-header { display: none !important; }
 
-    /* 1. CONTAINER: THE CAGE (Fits inside your Wall Box) */
+    /* --- 1. CHAT CONTAINER: THE CAGE --- */
     .chat-container, #chatCard {
         display: flex !important;
         flex-direction: column !important;
         position: relative !important; /* CRITICAL: Keeps it inside the div */
         width: 100% !important;
-        height: 100% !important;       /* Fills the 550px height */
+        height: 100% !important;       /* Fills the 450px height */
         z-index: 1 !important;
         background: #000 !important;
         border: none !important;
@@ -397,9 +397,9 @@
         overflow: hidden !important;
     }
 
-    /* 2. HEADER: PINNED TO TOP OF CAGE */
+    /* --- 2. HEADER: PINNED TO TOP --- */
     .mob-chat-header {
-        position: absolute !important; /* CRITICAL: Sticks to box, not screen */
+        position: absolute !important;
         top: 0 !important;
         left: 0 !important;
         width: 100% !important;
@@ -425,45 +425,22 @@
     .chat-queen-name { font-family: 'Cinzel'; font-size: 0.9rem; color: #fff; letter-spacing: 1px; }
     .chat-status-text { font-family: 'Orbitron'; font-size: 0.55rem; color: #888; letter-spacing: 1px; }
 
-          .blink-dot { animation: dotPulse 2s infinite ease-in-out; }
-                @keyframes dotPulse {
-                    0% { opacity: 1; box-shadow: 0 0 5px #00ff00; }
-                    50% { opacity: 0.4; box-shadow: 0 0 0px #00ff00; }
-                    100% { opacity: 1; box-shadow: 0 0 5px #00ff00; }
-                }
+    /* Blink Animation */
+    .blink-dot { animation: dotPulse 2s infinite ease-in-out; }
+    @keyframes dotPulse {
+        0% { opacity: 1; box-shadow: 0 0 5px #00ff00; }
+        50% { opacity: 0.4; box-shadow: 0 0 0px #00ff00; }
+        100% { opacity: 1; box-shadow: 0 0 5px #00ff00; }
+    }
 
-                /* Tight Chat Layout */
-                .compact-mode .msg-row { margin-bottom: 4px !important; }
-                .compact-mode .msg {
-                    padding: 6px 12px !important; 
-                    font-size: 0.8rem !important; 
-                    background: transparent !important; 
-                    border: none !important;
-                    line-height: 1.3 !important;
-                }
-                .compact-mode .m-queen {
-                    border-left: 3px solid #c5a059 !important; /* Thicker Gold Line */
-                    color: #fff !important;
-                    background: linear-gradient(90deg, rgba(197,160,89,0.1), transparent) !important;
-                }
-                .compact-mode .m-slave {
-                    border-right: 3px solid #333 !important;
-                    color: #999 !important;
-                    text-align: right;
-                }
-                .compact-mode .msg-time { display: none; } /* Clean look */
-
-    /* 3. SCROLL AREA: FILLS MIDDLE OF CAGE */
+    /* --- 3. SCROLL AREA: FILLS MIDDLE --- */
     .chat-body-frame {
         width: 100% !important;
         height: 100% !important;
-        
-        /* Padding creates space for the Absolute Header & Footer */
         padding-top: 75px !important; 
         padding-bottom: 75px !important; 
         padding-left: 10px !important;
         padding-right: 10px !important;
-        
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
         box-sizing: border-box !important;
@@ -471,12 +448,11 @@
     }
     .chat-body-frame::-webkit-scrollbar { display: none; }
 
-    /* System Ticker Adjustment */
     .system-ticker { margin-top: 0; }
 
-    /* 4. INPUT FOOTER: PINNED TO BOTTOM OF CAGE */
+    /* --- 4. INPUT FOOTER: PINNED TO BOTTOM --- */
    .chat-footer {
-        position: absolute !important; /* CRITICAL: Sticks to box bottom */
+        position: absolute !important;
         bottom: 0 !important;
         left: 0 !important;
         width: 100% !important;
@@ -492,7 +468,63 @@
         height: 40px !important;
     }
 
-    /* MESSAGE STYLING (Preserved) */
+    /* --- 5. TRIBUTE STORE GRID (THE MISSING PART) --- */
+    .store-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important; /* 2 Columns */
+        gap: 10px !important;
+        padding-bottom: 80px !important;
+        width: 100% !important;
+    }
+
+    .store-item {
+        background: rgba(20,20,20,0.9);
+        border: 1px solid #333;
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .store-item.selected {
+        border-color: #c5a059;
+        box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
+        transform: scale(0.98);
+    }
+
+    .store-img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        border-bottom: 1px solid #333;
+    }
+
+    .store-info {
+        padding: 8px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .store-name {
+        font-family: 'Cinzel', serif;
+        font-size: 0.65rem;
+        color: #ccc;
+        line-height: 1.2;
+    }
+
+    .store-price {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.8rem;
+        color: #c5a059;
+        font-weight: bold;
+    }
+
+    /* --- 6. MESSAGE STYLING --- */
     .msg {
         max-width: 88% !important;
         font-size: 0.65rem !important;
