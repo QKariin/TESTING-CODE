@@ -1341,51 +1341,82 @@ function getQuote(type, isUnlocked) {
         : insults[Math.floor(Math.random() * insults.length)];
 }
 // =========================================
-// PART 3: TRIBUTE & BACKEND FUNCTIONS (RESTORED)
+// NEW TRIBUTE SYSTEM (GRID ONLY - NO TINDER)
 // =========================================
 
-let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
-function toggleTributeHunt() { const overlay = document.getElementById('tributeHuntOverlay'); if (overlay.classList.contains('hidden')) { selectedReason = ""; selectedItem = null; if(document.getElementById('huntNote')) document.getElementById('huntNote').value = ""; overlay.classList.remove('hidden'); showTributeStep(1); } else { overlay.classList.add('hidden'); resetTributeFlow(); } }
-function showTributeStep(step) { document.querySelectorAll('.tribute-step').forEach(el => el.classList.add('hidden')); const target = document.getElementById('tributeStep' + step); if (target) target.classList.remove('hidden'); const progressEl = document.getElementById('huntProgress'); if (progressEl) progressEl.innerText = ["", "INTENTION", "THE HUNT", "CONFESSION"][step] || ""; }
-function selectTributeReason(reason) { selectedReason = reason; renderHuntStore(gameStats.coins); showTributeStep(2); }
-function setTributeNote(note) { showTributeStep(3); }
-function filterByBudget(max) { renderHuntStore(max); showTributeStep(3); }
-function renderHuntStore(budget) { const grid = document.getElementById('huntStoreGrid'); if (!grid) return; filteredItems = (window.WISHLIST_ITEMS || []).filter(item => Number(item.price || item.Price || 0) <= budget); currentHuntIndex = 0; if (filteredItems.length === 0) { grid.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">NO TRIBUTES IN THIS TIER...</div>'; return; } showTinderCard(); }
-function showTinderCard() { const grid = document.getElementById('huntStoreGrid'); const item = filteredItems[currentHuntIndex]; if (!item) { grid.innerHTML = `<div style="text-align:center; padding:40px;"><div style="font-size:2rem; margin-bottom:10px;">💨</div><div style="color:#666; font-size:0.7rem;">NO MORE ITEMS IN THIS TIER</div><button class="tab-btn" onclick="showTributeStep(2)" style="margin-top:15px; width:auto; padding:5px 15px;">CHANGE BUDGET</button></div>`; return; } grid.style.perspective = "1000px"; grid.innerHTML = `<div id="tinderCard" class="tinder-card-main"><div id="likeLabel" class="swipe-indicator like">SACRIFICE</div><div id="nopeLabel" class="swipe-indicator nope">SKIP</div><img src="${item.img || item.image}" draggable="false"><div class="tinder-card-info"><div style="color:var(--neon-yellow); font-size:1.8rem; font-weight:900;">${item.price} 🪙</div><div style="color:white; letter-spacing:2px; font-weight:bold; font-size:0.8rem;">${item.name.toUpperCase()}</div></div></div>`; initSwipeEvents(document.getElementById('tinderCard'), item); }
-function initSwipeEvents(card, item) { let startX = 0; let currentX = 0; const handleStart = (e) => { startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; card.style.transition = 'none'; }; const handleMove = (e) => { if (!startX) return; currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const diff = currentX - startX; card.style.transform = `translateX(${diff}px) rotate(${diff / 15}deg)`; const likeLabel = document.getElementById('likeLabel'); const nopeLabel = document.getElementById('nopeLabel'); if(likeLabel) likeLabel.style.opacity = diff > 0 ? (diff / 100) : 0; if(nopeLabel) nopeLabel.style.opacity = diff < 0 ? (Math.abs(diff) / 100) : 0; }; const handleEnd = () => { const diff = currentX - startX; card.style.transition = 'transform 0.4s ease, opacity 0.4s ease'; if (diff > 120) { card.style.transform = `translateX(600px) rotate(45deg)`; selectedItem = item; if(document.getElementById('huntSelectedImg')) document.getElementById('huntSelectedImg').src = item.img || item.image; if(document.getElementById('huntSelectedName')) document.getElementById('huntSelectedName').innerText = item.name.toUpperCase(); if(document.getElementById('huntSelectedPrice')) document.getElementById('huntSelectedPrice').innerText = item.price + " 🪙"; setTimeout(() => { showTributeStep(4); }, 200); } else if (diff < -120) { card.style.transform = `translateX(-600px) rotate(-45deg)`; card.style.opacity = "0"; currentHuntIndex++; setTimeout(() => { showTinderCard(); }, 300); } else { card.style.transform = `translateX(0) rotate(0)`; if(document.getElementById('likeLabel')) document.getElementById('likeLabel').style.opacity = 0; if(document.getElementById('nopeLabel')) document.getElementById('nopeLabel').style.opacity = 0; } startX = 0; }; card.addEventListener('mousedown', handleStart); card.addEventListener('touchstart', handleStart); window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove); window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd); }
-function toggleHuntNote(show) { const container = document.getElementById('huntNoteContainer'); const btn = document.getElementById('btnShowNote'); if (!container || !btn) return; if (show) { container.classList.remove('hidden'); btn.classList.add('hidden'); document.getElementById('huntNote').focus(); } else { container.classList.add('hidden'); btn.classList.remove('hidden'); } }
-function finalizeSacrifice() { 
-    const noteEl = document.getElementById('huntNote'); 
-    const note = noteEl ? noteEl.value.trim() : ""; 
+window.toggleTributeHunt = function() {
+    // 1. Target the overlay (Works for Desktop & Mobile if IDs match)
+    // We look for the one currently visible or active context
+    const overlay = document.getElementById('tributeHuntOverlay');
+    const grid = document.getElementById('huntStoreGrid');
     
-    if (!selectedItem || !selectedReason) return; 
-    
-    // *** THE FIX: USE POVERTY SYSTEM INSTEAD OF ALERT ***
-    if (gameStats.coins < selectedItem.price) { 
-        triggerSound('sfx-deny'); 
-        window.triggerPoverty(); 
-        return; 
-    } 
-    
-    const tributeMessage = `💝 TRIBUTE: ${selectedReason}\n🎁 ITEM: ${selectedItem.name}\n💰 COST: ${selectedItem.price}\n💌 "${note || "A silent tribute."}"`; 
-    
+    if (!overlay || !grid) return;
+
+    if (overlay.classList.contains('hidden')) {
+        // OPEN: Show overlay & Render Grid
+        overlay.classList.remove('hidden');
+        renderTributeGrid(grid);
+    } else {
+        // CLOSE: Hide overlay
+        overlay.classList.add('hidden');
+    }
+};
+
+function renderTributeGrid(gridContainer) {
+    if (!window.WISHLIST_ITEMS || window.WISHLIST_ITEMS.length === 0) {
+        gridContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">STORE OFFLINE</div>';
+        return;
+    }
+
+    gridContainer.innerHTML = ""; // Clear old content
+
+    window.WISHLIST_ITEMS.forEach(item => {
+        // Create Item Card
+        const el = document.createElement('div');
+        el.className = 'store-item'; // Uses the CSS we added to chat.css
+        
+        // VISUALS
+        el.innerHTML = `
+            <img src="${item.img || item.image}" class="store-img">
+            <div class="store-info">
+                <div class="store-name">${item.name.toUpperCase()}</div>
+                <div class="store-price">${item.price} 🪙</div>
+            </div>
+        `;
+
+        // CLICK ACTION (Instant Buy)
+        el.onclick = function() {
+            purchaseTributeItem(item);
+        };
+
+        gridContainer.appendChild(el);
+    });
+}
+
+function purchaseTributeItem(item) {
+    // 1. Check Wealth
+    if ((gameStats.coins || 0) < item.price) {
+        if(window.triggerPoverty) window.triggerPoverty();
+        if(window.triggerSound) triggerSound('sfx-deny');
+        return;
+    }
+
+    // 2. Process Transaction
+    // We send the purchase command to the backend
     window.parent.postMessage({ 
         type: "PURCHASE_ITEM", 
-        itemName: selectedItem.name, 
-        cost: selectedItem.price, 
-        messageToDom: tributeMessage 
-    }, "*"); 
-    
-    triggerSound('sfx-buy'); 
-    triggerCoinShower(); 
-    toggleTributeHunt(); 
-}
-function buyRealCoins(amount) { triggerSound('sfx-buy'); window.parent.postMessage({ type: "INITIATE_STRIPE_PAYMENT", amount: amount }, "*"); }
-function triggerCoinShower() { for (let i = 0; i < 40; i++) { const coin = document.createElement('div'); coin.className = 'coin-particle'; coin.innerHTML = `<svg style="width:100%; height:100%; fill:gold;"><use href="#icon-coin"></use></svg>`; coin.style.setProperty('--tx', `${Math.random() * 200 - 100}vw`); coin.style.setProperty('--ty', `${-(Math.random() * 80 + 20)}vh`); document.body.appendChild(coin); setTimeout(() => coin.remove(), 2000); } }
-function breakGlass(e) { if (e && e.stopPropagation) e.stopPropagation(); const overlay = document.getElementById('specialGlassOverlay'); if (overlay) overlay.classList.remove('active'); window.parent.postMessage({ type: "GLASS_BROKEN" }, "*"); }
-function submitSessionRequest() { const checked = document.querySelector('input[name="sessionType"]:checked'); if (!checked) return; window.parent.postMessage({ type: "SESSION_REQUEST", sessionType: checked.value, cost: checked.getAttribute('data-cost') }, "*"); }
-function resetTributeFlow() { selectedReason = ""; selectedNote = ""; selectedItem = null; const note = document.getElementById('huntNote'); if (note) note.value = ""; showTributeStep(1); }
+        itemName: item.name, 
+        cost: item.price, 
+        messageToDom: `🎁 TRIBUTE: ${item.name} (${item.price})` 
+    }, "*");
 
+    // 3. UI Feedback
+    if(window.triggerSound) triggerSound('sfx-buy');
+    
+    // Optional: Close menu after buy? Or stay open? 
+    // Let's close it to show the chat confirmation
+    window.toggleTributeHunt();
+}
 // =========================================
 // PART 1: MOBILE LOGIC (BRAIN & NAVIGATION)
 // =========================================
