@@ -178,58 +178,58 @@ export function renderDomVideos(videos) {
     }).join('');
 }
 
-// *** CRITICAL UPDATE: Renders to BOTH Desktop and Mobile grids ***
+// *** QUEEN'S WALL RENDERER (ALTAR STYLE FOR MOBILE) ***
 export function renderNews(posts) {
-    // Target both grids
     const deskGrid = document.getElementById('newsGrid');
-    const mobGrid = document.getElementById('mobNewsGrid');
     
-    if (!posts) return;
+    // Mobile Elements
+    const qImg1 = document.getElementById('qWall_Img1');
+    const qImg2 = document.getElementById('qWall_Img2');
+    const qImg3 = document.getElementById('qWall_Img3');
+    const mobScroll = document.getElementById('qWall_ScrollTrack');
 
-    // Helper to generate the HTML for a single post
-    const generatePostHTML = (p) => {
-        const mediaSource = p.page || p.url || p.media || p.image || p.thumbnail || p.cover;
-        const textContent = p.text || p.title || p.description || "";
-        
-        if (!mediaSource && !textContent) return "";
+    if (!posts || !Array.isArray(posts)) return;
 
-        const isVideo = typeof mediaSource === 'string' && 
-                        (mediaSource.toLowerCase().includes('.mp4') || 
-                         mediaSource.toLowerCase().includes('.mov'));
-        
-        const optimized = isVideo ? mediaSource : getOptimizedUrl(mediaSource, 400);
-
-        if (isVideo) {
-            return `
-                <div class="sg-item video-item">
-                    <video src="${optimized}" class="sg-img" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
-                    <div class="sg-icon">▶</div>
-                </div>`;
-        } else {
-            // Clean quotes for the onclick handler
-            const safeSrc = optimized || "";
-            const safeTxt = textContent.replace(/'/g, "\\'");
-            
-            return `
-                <div class="sg-item news-item" onclick="if(window.openModal) window.openModal('${safeSrc}', '${safeTxt}')">
-                    <img src="${safeSrc}" class="sg-img news-img" loading="lazy" onerror="this.style.display='none'">
-                    <div class="news-txt mobile-only" style="padding:10px; display:none;">${textContent.substring(0,50)}</div>
-                </div>`;
-        }
-    };
-
-    // 1. Render Desktop
+    // --- 1. DESKTOP RENDER (Standard Grid) ---
     if (deskGrid) {
-        deskGrid.innerHTML = posts.map(p => generatePostHTML(p)).join('');
+        deskGrid.innerHTML = posts.map(p => {
+            const src = p.page || p.url || p.media || p.image || p.thumbnail;
+            if(!src) return "";
+            const opt = getOptimizedUrl(src, 400);
+            return `<div class="sg-item" onclick="window.openChatPreview('${opt}', false)"><img src="${opt}" class="sg-img"></div>`;
+        }).join('');
     }
 
-    // 2. Render Mobile
-    if (mobGrid) {
-        mobGrid.innerHTML = posts.map(p => generatePostHTML(p)).join('');
-        
-        // Force display block on text for mobile version
-        const txts = mobGrid.querySelectorAll('.news-txt');
-        txts.forEach(t => t.style.display = 'block');
+    // --- 2. MOBILE RENDER (Pyramid + Scroll) ---
+    
+    // Helper to get safe image URL
+    const getSafeImg = (p) => {
+        const raw = p.image || p.img || p.thumbnail || p.cover || p.media || "";
+        if (raw.startsWith("wix:image")) {
+            try { return "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch(e) { return ""; }
+        }
+        return getOptimizedUrl(raw, 400);
+    };
+
+    // A. Fill the Pyramid (Top 3)
+    if (qImg1 && posts[0]) { qImg1.src = getSafeImg(posts[0]); qImg1.style.display = 'block'; }
+    if (qImg2 && posts[1]) { qImg2.src = getSafeImg(posts[1]); qImg2.style.display = 'block'; }
+    if (qImg3 && posts[2]) { qImg3.src = getSafeImg(posts[2]); qImg3.style.display = 'block'; }
+
+    // B. Fill the Horizontal Scroll (All items)
+    if (mobScroll) {
+        mobScroll.innerHTML = posts.map(p => {
+            const img = getSafeImg(p);
+            const txt = p.text || p.title || "Update";
+            if (!img) return "";
+            
+            // Reuse the scroll-item styling from your Altar
+            return `
+                <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${img}', '${txt.replace(/'/g, "\\'")}')">
+                    <img src="${img}" class="mob-scroll-img">
+                </div>
+            `;
+        }).join('');
     }
 }
 
