@@ -178,7 +178,7 @@ export function renderDomVideos(videos) {
     }).join('');
 }
 
-// *** QUEEN'S WALL RENDERER (SIMPLE SCROLL) ***
+// *** QUEEN'S WALL RENDERER (OPTIMIZED THUMBNAILS) ***
 export function renderNews(posts) {
     const deskGrid = document.getElementById('newsGrid');
     const mobScroll = document.getElementById('qWall_ScrollTrack');
@@ -188,49 +188,64 @@ export function renderNews(posts) {
         return;
     }
 
-    // --- HELPER: ROBUST MEDIA FINDER ---
-    const getMediaSrc = (p) => {
-        // 1. Check all keys
+    // --- HELPER: GENERATE THUMBNAIL VS MASTER ---
+    const getMediaData = (p) => {
+        // 1. Find the raw data key
         let raw = p.image || p.img || p.thumbnail || p.cover || p.poster || p.media || p.url || "";
         
-        // 2. Video Handling (Prefer Cover/Poster)
+        // 2. Video Handling: If it's a video, try to find a cover image first
         if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
             if (p.cover) raw = p.cover;
             else if (p.thumbnail) raw = p.thumbnail;
             else if (p.poster) raw = p.poster;
         }
 
-        // 3. Fix Wix URLs
+        // 3. WIX OPTIMIZATION LOGIC
         if (raw && raw.startsWith("wix:image")) {
-            try { 
-                return "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; 
-            } catch(e) { return ""; }
+            try {
+                // Extract Filename (e.g. "8b3d8_image.jpg")
+                const parts = raw.split('/');
+                const fileName = parts[3].split('#')[0]; 
+                
+                return {
+                    // FAST: Ask Wix for a small, compressed version (250x350, Quality 70)
+                    thumb: `https://static.wixstatic.com/media/${fileName}/v1/fill/w_250,h_350,al_c,q_70/${fileName}`,
+                    // HD: The original master file
+                    full: `https://static.wixstatic.com/media/${fileName}`
+                };
+            } catch(e) { 
+                return { thumb: "", full: "" }; 
+            }
         }
         
-        return raw ? getOptimizedUrl(raw, 400) : "";
+        // 4. Standard URL Fallback (External links)
+        const std = raw ? getOptimizedUrl(raw, 400) : "";
+        return { thumb: std, full: std };
     };
 
-    // --- 1. DESKTOP RENDER (Standard) ---
+    // --- 1. DESKTOP RENDER (Standard Grid) ---
     if (deskGrid) {
         deskGrid.innerHTML = posts.map(p => {
-            const src = getMediaSrc(p);
-            if(!src) return "";
-            return `<div class="sg-item" onclick="window.openChatPreview('${src}', false)"><img src="${src}" class="sg-img"></div>`;
+            const media = getMediaData(p);
+            if(!media.thumb) return "";
+            return `<div class="sg-item" onclick="window.openChatPreview('${media.full}', false)"><img src="${media.thumb}" class="sg-img"></div>`;
         }).join('');
     }
 
-    // --- 2. MOBILE RENDER (Just the Scroll) ---
+    // --- 2. MOBILE RENDER (Fast Scroll) ---
     if (mobScroll) {
         mobScroll.innerHTML = posts.map(p => {
-            const img = getMediaSrc(p);
+            const media = getMediaData(p);
             const txt = p.text || p.title || "Update";
             
             // Skip empty items
-            if (!img) return "";
+            if (!media.thumb) return "";
             
+            // IMG SRC = Low Res Thumbnail (Fast)
+            // ONCLICK = Full Res Master (Clear)
             return `
-                <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${img}', '${txt.replace(/'/g, "\\'")}')">
-                    <img src="${img}" class="mob-scroll-img" onerror="this.parentElement.style.display='none'">
+                <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${media.full}', '${txt.replace(/'/g, "\\'")}')">
+                    <img src="${media.thumb}" class="mob-scroll-img" loading="lazy" onerror="this.parentElement.style.display='none'">
                 </div>
             `;
         }).join('');
