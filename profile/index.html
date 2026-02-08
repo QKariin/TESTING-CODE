@@ -1069,13 +1069,20 @@
                         padding-right: 5px !important;
                         overflow-y: auto !important; -webkit-overflow-scrolling: touch;
                     ">
-                        <div id="tributeHuntOverlay" class="hidden overlay-center" style="
-                            position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 50; flex-direction: column; padding: 20px;
-                        ">
-                            <button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer; margin-bottom: 10px; font-size: 1.2rem;">CLOSE [X]</button>
-                            <div id="huntStoreGrid" class="store-grid" style="width: 100%; overflow-y: auto;"></div>
-                            <textarea id="huntNote" class="hidden"></textarea>
-                            <div id="huntProgress" class="hidden"></div>
+                        <!-- TRIBUTE OVERLAY (Clean Version) -->
+                        <div id="tributeHuntOverlay" class="hidden overlay-center" style="position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 50; flex-direction: column; padding: 20px;">
+                            
+                            <!-- HEADER -->
+                            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
+                                <span style="font-family:'Cinzel'; color:#c5a059;">TRIBUTE STORE</span>
+                                <button onclick="toggleTributeHunt()" style="color: white; background:none; border:none; cursor:pointer; font-family:'Orbitron'; font-size:1.2rem;">X</button>
+                            </div>
+                        
+                            <!-- THE GRID (Where items appear) -->
+                            <div id="huntStoreGrid" class="store-grid" style="width: 100%; overflow-y: auto; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                <!-- Javascript will fill this -->
+                            </div>
+                        
                         </div>
 
                         <div id="mob_chatContent" class="chat-area"></div>
