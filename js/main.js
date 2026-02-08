@@ -1566,7 +1566,6 @@ window.syncMobileDashboard = function() {
     if(dateEl) dateEl.innerText = new Date().toLocaleDateString().toUpperCase();
 
     // --- 1. PROTOCOL ---
-    // If we fixed the CMS issue, this will now work:
     const routineName = userProfile.routine || "NO PROTOCOL"; 
     const rDisplay = document.getElementById('mobRoutineDisplay');
     if(rDisplay) rDisplay.innerText = routineName.toUpperCase();
@@ -1574,7 +1573,7 @@ window.syncMobileDashboard = function() {
     // Status Check
     const nowHour = new Date().getHours();
     const isMorning = nowHour >= 7; 
-    const isDone = gameStats.routineDoneToday === true; // Requires simple memory flag
+    const isDone = gameStats.routineDoneToday === true; 
     const hasRoutine = userProfile.routine && userProfile.routine.trim().length > 0;
 
     const btnUpload = document.getElementById('btnRoutineUpload');
@@ -1597,35 +1596,34 @@ window.syncMobileDashboard = function() {
         if(msgDone) msgDone.classList.add('hidden');
     }
 
-     // --- 2. LABOR ---
+     // --- 2. LABOR (UPDATED FOR DASHBOARD IDs) ---
     const activeRow = document.getElementById('activeTimerRow'); // Desktop source
     const isWorking = activeRow && !activeRow.classList.contains('hidden');
     
-    const taskIdle = document.getElementById('qm_TaskIdle');
-    const taskActive = document.getElementById('qm_TaskActive');
+    // *** THE FIX: TARGET THE DASHBOARD CARDS, NOT THE MENU CARDS ***
+    const taskIdle = document.getElementById('dash_TaskIdle');
+    const activeCard = document.getElementById('dash_TaskActive'); // Fixed variable name
     
     // NEW: Get Task Text
     const mobTaskText = document.getElementById('mobTaskText');
 
     if (isWorking) {
         if(taskIdle) taskIdle.classList.add('hidden');
-        if(taskActive) taskActive.classList.remove('hidden');
+        if(activeCard) activeCard.classList.remove('hidden');
 
         // *** INJECT TASK TEXT ***
-        // We use the same source as the desktop (currentTask global var)
         if (mobTaskText && typeof currentTask !== 'undefined' && currentTask) {
             mobTaskText.innerText = currentTask.instruction || currentTask.text || "AWAITING ORDERS";
         } else if (mobTaskText) {
-            // Fallback if currentTask isn't ready yet, try reading desktop text
             const desktopText = document.getElementById('readyText');
             mobTaskText.innerText = desktopText ? desktopText.innerText : "PROCESSING...";
         }
 
     } else {
         if(taskIdle) taskIdle.classList.remove('hidden');
-        if(taskActive) taskActive.classList.add('hidden');
+        if(activeCard) activeCard.classList.add('hidden');
     }
-}; 
+};
 
 // PUT THIS AT THE VERY BOTTOM OF MAIN.JS
 window.handleRoutineUpload = function(input) {
