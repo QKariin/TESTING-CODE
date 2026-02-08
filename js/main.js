@@ -761,7 +761,7 @@ window.showSystemNotification = function(title, detail, isPenalty = false) {
     if (isPenalty) {
         // ANGRY RED LAYOUT
         contentHtml = `
-            <div class="angry-title">⚠️ ${title} ⚠️</div>
+            <div class="angry-title"> ${title}</div>
             <div class="angry-text">${detail}</div>
         `;
     } else {
