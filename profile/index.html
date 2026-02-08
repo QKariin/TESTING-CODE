@@ -675,12 +675,20 @@
                             <div id="mediaOverlayClose" onclick="closeChatPreview()" style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer;">X</div>
                             <div id="chatMediaOverlayContent"></div>
                         </div>
-                        <div id="tributeHuntOverlay" class="hidden overlay-center" style="background:#000; padding:20px; flex-direction:column;">
-                            <button onclick="toggleTributeHunt()" style="color: white; align-self:flex-end; font-family:'Orbitron'; background:none; border:none; cursor:pointer;">CLOSE</button>
-                            <div id="huntStoreGrid" class="store-grid" style="margin-top: 20px;"></div>
-                            <textarea id="huntNote" class="hidden"></textarea>
-                            <div id="huntProgress" class="hidden"></div>
-                        </div>
+                        <div id="tributeHuntOverlay" class="hidden overlay-center" style="position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 50; flex-direction: column; padding: 20px;">
+    
+                          <!-- HEADER -->
+                          <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
+                              <span style="font-family:'Cinzel'; color:#c5a059;">TRIBUTE STORE</span>
+                              <button onclick="toggleTributeHunt()" style="color: white; background:none; border:none; cursor:pointer; font-family:'Orbitron'; font-size:1.2rem;">X</button>
+                          </div>
+                      
+                          <!-- THE GRID (Where items appear) -->
+                          <div id="huntStoreGrid" class="store-grid" style="width: 100%; overflow-y: auto; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                              <!-- Javascript will fill this -->
+                          </div>
+                      
+                      </div>
                         <div id="chatContent" class="chat-area"></div>
                     </div>
 
