@@ -539,7 +539,7 @@
     .msg-system {
         font-size: 0.55rem !important;
         opacity: 0.6 !important;
-        background: transparent !important;
+        background: 000000 !important;
         border: none !important;
         border-bottom: 1px solid rgba(255,255,255,0.1) !important;
         width: 90% !important;
