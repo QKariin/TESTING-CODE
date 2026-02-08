@@ -471,7 +471,7 @@
     /* --- 5. TRIBUTE STORE GRID (THE MISSING PART) --- */
     .store-grid {
         display: grid !important;
-        grid-template-columns: 1fr 1fr !important; /* 2 Columns */
+        grid-template-columns: repeat(3, 1fr) !important;
         gap: 10px !important;
         padding-bottom: 80px !important;
         width: 100% !important;
