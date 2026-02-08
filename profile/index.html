@@ -1249,14 +1249,74 @@
             </div>
         </div>
 
-        <!-- 2. QUEEN MENU (DUTIES) -->
+        <!-- 2. QUEEN MENU (DAILY DUTIES) -->
         <div id="queenOverlay" class="mob-reward-overlay hidden">
-             <div class="mob-reward-card queen-card-layout">
-                <div class="mob-chat-header" style="width:100%; justify-content:space-between;">
-                    <div class="chat-queen-name">DAILY DUTIES</div>
-                    <button onclick="closeQueenMenu()" style="background:none;border:none;color:#fff;font-size:2rem;">×</button>
+             <div class="mob-reward-card queen-card-layout" style="width: 90%; max-height: 80vh; overflow-y: auto;">
+                
+                <!-- HEADER -->
+                <div class="mob-chat-header" style="width:100%; justify-content:space-between; margin-bottom: 20px; background: transparent; border: none; padding: 0;">
+                    <div class="chat-queen-name" style="color: #c5a059; font-size: 1.2rem;">DAILY DUTIES</div>
+                    <button onclick="closeQueenMenu()" style="background:none; border:none; color:#fff; font-size:2rem; cursor:pointer;">×</button>
                 </div>
-                <!-- Logic fills this dynamically -->
+        
+                <!-- 1. ROUTINE UPLOAD SECTION -->
+                <div style="width:100%; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 20px;">
+                    <div class="duty-label">MANDATORY PROTOCOL</div>
+                    
+                    <!-- Routine Name (Updated by JS) -->
+                    <div id="mobRoutineDisplay" style="color: white; font-family: 'Orbitron'; text-align: center; margin: 15px 0; font-size: 1.1rem; letter-spacing: 2px;">
+                        LOADING...
+                    </div>
+                    
+                    <!-- Action Area -->
+                    <div style="display:flex; flex-direction: column; align-items:center; gap: 10px;">
+                        <!-- Upload Button -->
+                        <button id="btnRoutineUpload" class="action-btn" onclick="document.getElementById('routineUploadInput').click()">
+                            UPLOAD PROOF
+                        </button>
+                        <input type="file" id="routineUploadInput" class="hidden" onchange="window.handleRoutineUpload(this)">
+                        
+                        <!-- Messages (Hidden/Shown by JS) -->
+                        <div id="routineTimeMsg" class="hidden" style="color:#666; font-size:0.7rem; font-style:italic;">
+                            WINDOW CLOSED
+                        </div>
+                        <div id="routineDoneMsg" class="hidden" style="color:#00ff00; font-size:0.9rem; font-family:'Orbitron'; text-shadow: 0 0 10px #00ff00;">
+                            ✔ SUBMITTED
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- 2. KNEELING COUNTER -->
+                <div style="width:100%; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 20px;">
+                    <div class="duty-label">KNEELING HOURS</div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="mob-kneel-bar" style="height: 35px; margin-top: 15px; cursor: default; background: #000; border: 1px solid #444;">
+                        <div id="kneelDailyFill" class="mob-bar-fill" style="width: 0%; background: #c5a059;"></div>
+                        <div class="mob-bar-content" style="width:100%; justify-content:center;">
+                            <span id="kneelDailyText" style="font-family:'Orbitron'; font-size:0.9rem; color:#fff; z-index:2;">0 / 8</span>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- 3. TASK COUNTERS (Using existing Stats IDs) -->
+                <div style="width:100%;">
+                    <div class="duty-label">LABOR COMPLETED</div>
+                    
+                    <div style="display:flex; justify-content:space-around; margin-top: 15px;">
+                        <div style="text-align:center;">
+                            <div style="font-size:0.6rem; color:#888; font-family:'Cinzel'; margin-bottom:5px;">CURRENT STREAK</div>
+                            <!-- Reuse the ID so JS updates it automatically -->
+                            <div id="mobStreak" style="font-size:1.8rem; color:white; font-family:'Orbitron';">0</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:0.6rem; color:#888; font-family:'Cinzel'; margin-bottom:5px;">TOTAL SERVED</div>
+                            <!-- Reuse the ID so JS updates it automatically -->
+                            <div id="mobTotal" style="font-size:1.8rem; color:#c5a059; font-family:'Orbitron';">0</div>
+                        </div>
+                    </div>
+                </div>
+        
              </div>
         </div>
 
