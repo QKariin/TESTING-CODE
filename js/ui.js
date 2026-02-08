@@ -179,10 +179,11 @@ export function renderDomVideos(videos) {
 }
 
 // *** QUEEN'S WALL RENDERER (ALTAR STYLE FOR MOBILE) ***
+// *** QUEEN'S WALL RENDERER (PYRAMID STYLE) ***
 export function renderNews(posts) {
     const deskGrid = document.getElementById('newsGrid');
     
-    // Mobile Elements
+    // Mobile Pyramid IDs
     const qImg1 = document.getElementById('qWall_Img1');
     const qImg2 = document.getElementById('qWall_Img2');
     const qImg3 = document.getElementById('qWall_Img3');
@@ -190,7 +191,7 @@ export function renderNews(posts) {
 
     if (!posts || !Array.isArray(posts)) return;
 
-    // --- 1. DESKTOP RENDER (Standard Grid) ---
+    // --- 1. DESKTOP RENDER (Grid) ---
     if (deskGrid) {
         deskGrid.innerHTML = posts.map(p => {
             const src = p.page || p.url || p.media || p.image || p.thumbnail;
@@ -200,11 +201,11 @@ export function renderNews(posts) {
         }).join('');
     }
 
-    // --- 2. MOBILE RENDER (Pyramid + Scroll) ---
-    
-    // Helper to get safe image URL
+    // --- 2. MOBILE RENDER (Pyramid) ---
+    // Helper to extract clean URL
     const getSafeImg = (p) => {
-        const raw = p.image || p.img || p.thumbnail || p.cover || p.media || "";
+        if (!p) return "";
+        const raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
         if (raw.startsWith("wix:image")) {
             try { return "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch(e) { return ""; }
         }
@@ -216,14 +217,13 @@ export function renderNews(posts) {
     if (qImg2 && posts[1]) { qImg2.src = getSafeImg(posts[1]); qImg2.style.display = 'block'; }
     if (qImg3 && posts[2]) { qImg3.src = getSafeImg(posts[2]); qImg3.style.display = 'block'; }
 
-    // B. Fill the Horizontal Scroll (All items)
+    // B. Fill the Drawer (All items)
     if (mobScroll) {
         mobScroll.innerHTML = posts.map(p => {
             const img = getSafeImg(p);
             const txt = p.text || p.title || "Update";
             if (!img) return "";
             
-            // Reuse the scroll-item styling from your Altar
             return `
                 <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${img}', '${txt.replace(/'/g, "\\'")}')">
                     <img src="${img}" class="mob-scroll-img">
