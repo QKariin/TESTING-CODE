@@ -1653,12 +1653,30 @@ window.syncMobileDashboard = function() {
     }
 };
 
-// PUT THIS AT THE VERY BOTTOM OF MAIN.JS
+// --- FORCE ROUTINE UPLOAD (SHORT TERM MEMORY FIX) ---
 window.handleRoutineUpload = function(input) {
-    if(input.files.length > 0) {
-        window.handleEvidenceUpload(input, "Routine"); 
-        gameStats.routineDoneToday = true; 
-        window.syncMobileDashboard();
+    // 1. Check if file exists
+    if (input.files && input.files.length > 0) {
+        
+        // 2. Send to Backend (The "Long Term" storage)
+        if(window.handleEvidenceUpload) {
+            window.handleEvidenceUpload(input, "Routine");
+        }
+
+        // 3. Force "Short Term" Memory (Tell the app it's done NOW)
+        if (window.gameStats) {
+            window.gameStats.routineDoneToday = true;
+        }
+
+        // 4. Visual Feedback (Hide Button, Show Checkmark)
+        const btn = document.getElementById('btnRoutineUpload');
+        const msg = document.getElementById('routineDoneMsg');
+        
+        if(btn) btn.classList.add('hidden');
+        if(msg) msg.classList.remove('hidden');
+
+        // 5. Update the rest of the dashboard
+        if(window.syncMobileDashboard) window.syncMobileDashboard();
     }
 };
 
