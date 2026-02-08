@@ -178,46 +178,68 @@ export function renderDomVideos(videos) {
     }).join('');
 }
 
-// *** QUEEN'S WALL RENDERER (ALTAR STYLE FOR MOBILE) ***
-// *** QUEEN'S WALL RENDERER (PYRAMID STYLE) ***
+// *** QUEEN'S WALL RENDERER (DESKTOP GRID + MOBILE PYRAMID) ***
 export function renderNews(posts) {
+    // 1. DESKTOP TARGET
     const deskGrid = document.getElementById('newsGrid');
     
-    // Mobile Pyramid IDs
-    const qImg1 = document.getElementById('qWall_Img1');
-    const qImg2 = document.getElementById('qWall_Img2');
-    const qImg3 = document.getElementById('qWall_Img3');
-    const mobScroll = document.getElementById('qWall_ScrollTrack');
+    // 2. MOBILE TARGETS (The Pyramid)
+    const q1 = document.getElementById('qWall_Img1'); // Center
+    const q2 = document.getElementById('qWall_Img2'); // Left
+    const q3 = document.getElementById('qWall_Img3'); // Right
+    const mobScroll = document.getElementById('qWall_ScrollTrack'); // Drawer
 
     if (!posts || !Array.isArray(posts)) return;
 
-    // --- 1. DESKTOP RENDER (Grid) ---
-    if (deskGrid) {
-        deskGrid.innerHTML = posts.map(p => {
-            const src = p.page || p.url || p.media || p.image || p.thumbnail;
-            if(!src) return "";
-            const opt = getOptimizedUrl(src, 400);
-            return `<div class="sg-item" onclick="window.openChatPreview('${opt}', false)"><img src="${opt}" class="sg-img"></div>`;
-        }).join('');
-    }
-
-    // --- 2. MOBILE RENDER (Pyramid) ---
-    // Helper to extract clean URL
+    // --- HELPER: CLEAN URLS ---
     const getSafeImg = (p) => {
-        if (!p) return "";
+        // Find the key
         const raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
+        if (!raw) return "";
+        
+        // Fix Wix URLs
         if (raw.startsWith("wix:image")) {
-            try { return "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch(e) { return ""; }
+            try { 
+                const parts = raw.split('/');
+                return "https://static.wixstatic.com/media/" + parts[3].split('#')[0]; 
+            } catch(e) { return ""; }
         }
+        // Fix Standard URLs
         return getOptimizedUrl(raw, 400);
     };
 
-    // A. Fill the Pyramid (Top 3)
-    if (qImg1 && posts[0]) { qImg1.src = getSafeImg(posts[0]); qImg1.style.display = 'block'; }
-    if (qImg2 && posts[1]) { qImg2.src = getSafeImg(posts[1]); qImg2.style.display = 'block'; }
-    if (qImg3 && posts[2]) { qImg3.src = getSafeImg(posts[2]); qImg3.style.display = 'block'; }
+    // --- RENDER DESKTOP (Standard Grid) ---
+    if (deskGrid) {
+        deskGrid.innerHTML = posts.map(p => {
+            const src = getSafeImg(p);
+            if(!src) return "";
+            return `<div class="sg-item" onclick="window.openChatPreview('${src}', false)"><img src="${src}" class="sg-img"></div>`;
+        }).join('');
+    }
 
-    // B. Fill the Drawer (All items)
+    // --- RENDER MOBILE (Pyramid Strategy) ---
+    
+    // A. Center Idol (Newest)
+    if (q1 && posts[0]) { 
+        q1.src = getSafeImg(posts[0]); 
+        q1.style.display = 'block'; 
+        // Optional: Click to open full view
+        q1.parentElement.onclick = () => window.openChatPreview(getSafeImg(posts[0]), false);
+    }
+
+    // B. Left Idol (2nd Newest)
+    if (q2 && posts[1]) { 
+        q2.src = getSafeImg(posts[1]); 
+        q2.style.display = 'block'; 
+    }
+
+    // C. Right Idol (3rd Newest)
+    if (q3 && posts[2]) { 
+        q3.src = getSafeImg(posts[2]); 
+        q3.style.display = 'block'; 
+    }
+
+    // D. The Drawer (All Posts)
     if (mobScroll) {
         mobScroll.innerHTML = posts.map(p => {
             const img = getSafeImg(p);
