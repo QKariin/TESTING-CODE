@@ -1612,10 +1612,10 @@ window.syncMobileDashboard = function() {
 
         // *** INJECT TASK TEXT ***
         if (mobTaskText && typeof currentTask !== 'undefined' && currentTask) {
-            mobTaskText.innerText = currentTask.instruction || currentTask.text || "AWAITING ORDERS";
+            mobTaskText.innerHTML = currentTask.instruction || currentTask.text || "AWAITING ORDERS";
         } else if (mobTaskText) {
             const desktopText = document.getElementById('readyText');
-            mobTaskText.innerText = desktopText ? desktopText.innerText : "PROCESSING...";
+            mobTaskText.innerHTML = desktopText ? desktopText.innerHTML : "PROCESSING...";
         }
 
     } else {
