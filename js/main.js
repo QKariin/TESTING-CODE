@@ -1976,4 +1976,6 @@ setInterval(() => {
         }
     }
 }, 500);
+
+window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
 window.parent.postMessage({ type: "UI_READY" }, "*");
