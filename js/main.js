@@ -1512,6 +1512,7 @@ window.toggleMobileView = function(viewName) {
     if (viewName === 'home' && home) {
         home.style.display = 'flex';
         if(window.syncMobileDashboard) window.syncMobileDashboard();
+        window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*"); 
     }
     else if (viewName === 'chat') {
         if(chatCard && mobileApp) {
