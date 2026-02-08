@@ -851,25 +851,42 @@ window.addEventListener("message", (event) => {
 
         if (data.type === "UPDATE_Q_FEED") {
             const feedData = data.domVideos || data.posts || data.feed;
-            
             if (feedData && Array.isArray(feedData)) {
-                // 1. Update Desktop (Existing Logic)
-                if(renderDomVideos) renderDomVideos(feedData);
-                if(renderNews) renderNews(feedData);
                 
-                // 2. Update Counter
+                // 1. Update Desktop (Keep existing logic)
+                if(typeof renderDomVideos === 'function') renderDomVideos(feedData);
+                if(typeof renderNews === 'function') renderNews(feedData);
+                
+                // 2. Update Post Counter
                 const pc = document.getElementById('cntPosts');
                 if (pc) pc.innerText = feedData.length;
 
-                // 3. *** NEW: UPDATE MOBILE WALL ***
+                // 3. UPDATE MOBILE WALL (With URL Cleaning)
                 const mobGrid = document.getElementById('mobNewsGrid');
                 if (mobGrid) {
-                    mobGrid.innerHTML = feedData.map(item => `
-                        <div class="news-item">
-                            <img src="${item.image || item.thumbnail}" class="news-img" onclick="openModal('${item.image}', '${item.text}')">
-                            <div class="news-txt">${item.text || "..."}</div>
+                    mobGrid.innerHTML = feedData.map(item => {
+                        // A. Find the image key (database keys vary)
+                        const rawSrc = item.image || item.img || item.thumbnail || item.poster || item.cover || "";
+                        
+                        // B. Clean the URL (Convert wix:image to https)
+                        // We use the helper function already imported at the top of main.js
+                        const cleanSrc = (typeof getOptimizedUrl === 'function') 
+                            ? getOptimizedUrl(rawSrc, 300) 
+                            : rawSrc; // Fallback if helper missing
+
+                        // C. Get Text
+                        const cleanText = item.text || item.title || item.description || "";
+
+                        // D. Don't show empty items
+                        if (!cleanSrc && !cleanText) return "";
+
+                        return `
+                        <div class="news-item" onclick="window.openModal('${cleanSrc}', '${cleanText.replace(/'/g, "\\'")}')">
+                            <img src="${cleanSrc}" class="news-img" onerror="this.style.display='none'">
+                            <div class="news-txt">${cleanText}</div>
                         </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 }
             }
         }
