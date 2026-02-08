@@ -178,77 +178,88 @@ export function renderDomVideos(videos) {
     }).join('');
 }
 
-// *** QUEEN'S WALL RENDERER (DESKTOP GRID + MOBILE PYRAMID) ***
+// *** QUEEN'S WALL RENDERER (ROBUST MEDIA HANDLER) ***
 export function renderNews(posts) {
-    // 1. DESKTOP TARGET
     const deskGrid = document.getElementById('newsGrid');
     
-    // 2. MOBILE TARGETS (The Pyramid)
+    // Mobile Pyramid IDs
     const q1 = document.getElementById('qWall_Img1'); // Center
     const q2 = document.getElementById('qWall_Img2'); // Left
     const q3 = document.getElementById('qWall_Img3'); // Right
-    const mobScroll = document.getElementById('qWall_ScrollTrack'); // Drawer
+    const mobScroll = document.getElementById('qWall_ScrollTrack');
 
     if (!posts || !Array.isArray(posts)) return;
 
-    // --- HELPER: CLEAN URLS ---
-    const getSafeImg = (p) => {
-        // Find the key
-        const raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
-        if (!raw) return "";
+    // --- HELPER: MASTER MEDIA EXTRACTOR ---
+    const getMediaSrc = (p) => {
+        // 1. Check all possible keys (Wix is inconsistent)
+        let raw = p.image || p.img || p.thumbnail || p.cover || p.poster || p.media || p.url || p.src || "";
         
-        // Fix Wix URLs
-        if (raw.startsWith("wix:image")) {
+        // 2. If it's a Video, try to find a specific thumbnail key first
+        const isVideo = typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'));
+        if (isVideo) {
+            // Prefer a dedicated cover image if available
+            if (p.cover) raw = p.cover;
+            else if (p.thumbnail) raw = p.thumbnail;
+            else if (p.poster) raw = p.poster;
+            // If still video, we will rely on the raw video URL (browser might not show thumbnail for img tag)
+        }
+
+        // 3. Fix Wix URLs (The Sensitive Part)
+        if (raw && raw.startsWith("wix:image")) {
             try { 
+                // Standard Wix Format: wix:image://v1/filename.jpg/fn.jpg#...
                 const parts = raw.split('/');
-                return "https://static.wixstatic.com/media/" + parts[3].split('#')[0]; 
+                // We want the part after v1/
+                const fileName = parts[3].split('#')[0]; 
+                return "https://static.wixstatic.com/media/" + fileName; 
             } catch(e) { return ""; }
         }
-        // Fix Standard URLs
-        return getOptimizedUrl(raw, 400);
+        
+        // 4. Return Standard URL
+        return raw ? getOptimizedUrl(raw, 400) : "";
     };
 
-    // --- RENDER DESKTOP (Standard Grid) ---
+    // --- 1. DESKTOP RENDER (Standard) ---
     if (deskGrid) {
         deskGrid.innerHTML = posts.map(p => {
-            const src = getSafeImg(p);
+            const src = getMediaSrc(p);
             if(!src) return "";
             return `<div class="sg-item" onclick="window.openChatPreview('${src}', false)"><img src="${src}" class="sg-img"></div>`;
         }).join('');
     }
 
-    // --- RENDER MOBILE (Pyramid Strategy) ---
+    // --- 2. MOBILE RENDER (Pyramid) ---
     
-    // A. Center Idol (Newest)
-    if (q1 && posts[0]) { 
-        q1.src = getSafeImg(posts[0]); 
-        q1.style.display = 'block'; 
-        // Optional: Click to open full view
-        q1.parentElement.onclick = () => window.openChatPreview(getSafeImg(posts[0]), false);
-    }
+    // A. Fill the Pyramid (Safe Check)
+    const setPyramidImg = (el, post) => {
+        if (!el || !post) return;
+        const src = getMediaSrc(post);
+        
+        if (src) {
+            el.src = src;
+            el.style.display = 'block';
+            // Safety: If image fails to load, hide it so no "broken icon" appears
+            el.onerror = () => { el.style.display = 'none'; };
+        } else {
+            el.style.display = 'none';
+        }
+    };
 
-    // B. Left Idol (2nd Newest)
-    if (q2 && posts[1]) { 
-        q2.src = getSafeImg(posts[1]); 
-        q2.style.display = 'block'; 
-    }
+    setPyramidImg(q1, posts[0]);
+    setPyramidImg(q2, posts[1]);
+    setPyramidImg(q3, posts[2]);
 
-    // C. Right Idol (3rd Newest)
-    if (q3 && posts[2]) { 
-        q3.src = getSafeImg(posts[2]); 
-        q3.style.display = 'block'; 
-    }
-
-    // D. The Drawer (All Posts)
+    // B. Fill the Drawer
     if (mobScroll) {
         mobScroll.innerHTML = posts.map(p => {
-            const img = getSafeImg(p);
+            const img = getMediaSrc(p);
             const txt = p.text || p.title || "Update";
             if (!img) return "";
             
             return `
                 <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${img}', '${txt.replace(/'/g, "\\'")}')">
-                    <img src="${img}" class="mob-scroll-img">
+                    <img src="${img}" class="mob-scroll-img" onerror="this.parentElement.style.display='none'">
                 </div>
             `;
         }).join('');
