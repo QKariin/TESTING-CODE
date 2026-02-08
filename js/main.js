@@ -1009,10 +1009,7 @@ window.handleHoldEnd = handleHoldEnd;
 window.claimKneelReward = claimKneelReward;
 window.updateKneelingStatus = updateKneelingStatus;
 window.toggleTributeHunt = toggleTributeHunt;
-window.selectTributeReason = selectTributeReason;
 window.setTributeNote = setTributeNote;
-window.filterByBudget = filterByBudget;
-window.showTributeStep = showTributeStep;
 window.toggleHuntNote = toggleHuntNote;
 window.finalizeSacrifice = finalizeSacrifice;
 window.resetTributeFlow = resetTributeFlow;
@@ -1347,14 +1344,90 @@ function getQuote(type, isUnlocked) {
 // =========================================
 
 let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
-function toggleTributeHunt() { const overlay = document.getElementById('tributeHuntOverlay'); if (overlay.classList.contains('hidden')) { selectedReason = ""; selectedItem = null; if(document.getElementById('huntNote')) document.getElementById('huntNote').value = ""; overlay.classList.remove('hidden'); showTributeStep(1); } else { overlay.classList.add('hidden'); resetTributeFlow(); } }
-function showTributeStep(step) { document.querySelectorAll('.tribute-step').forEach(el => el.classList.add('hidden')); const target = document.getElementById('tributeStep' + step); if (target) target.classList.remove('hidden'); const progressEl = document.getElementById('huntProgress'); if (progressEl) progressEl.innerText = ["", "INTENTION", "THE HUNT", "CONFESSION"][step] || ""; }
-function selectTributeReason(reason) { selectedReason = reason; renderHuntStore(gameStats.coins); showTributeStep(2); }
+// 1. TOGGLE: Opens the menu and immediately loads the grid
+window.toggleTributeHunt = function() {
+    // Detect environment
+    const isMobile = window.innerWidth <= 768;
+    const root = isMobile ? document.getElementById('MOBILE_APP') : document.getElementById('DESKTOP_APP');
+    
+    // Find the specific overlay inside the active root
+    const overlay = root.querySelector('#tributeHuntOverlay');
+    
+    if (!overlay) return;
+
+    if (overlay.classList.contains('hidden')) {
+        overlay.classList.remove('hidden');
+        renderSimpleStore(root); // Load items immediately
+    } else {
+        overlay.classList.add('hidden');
+    }
+};
+
+// 2. RENDER: Loops through wishlist and makes simple buttons
+window.renderSimpleStore = function(rootElement) {
+    const grid = rootElement.querySelector('#huntStoreGrid');
+    if (!grid) return;
+
+    grid.innerHTML = ""; // Clear old stuff
+
+    // Use global wishlist data
+    const items = window.WISHLIST_ITEMS || [];
+
+    if (items.length === 0) {
+        grid.innerHTML = "<div style='color:#666; width:200%; text-align:center;'>NO ITEMS LOADED</div>";
+        return;
+    }
+
+    items.forEach(item => {
+        // Create the card
+        const card = document.createElement('div');
+        card.className = "store-item"; // Reuse your existing CSS class
+        card.style.cursor = "pointer";
+        card.onclick = () => window.quickBuyItem(item); // Click to buy
+
+        card.innerHTML = `
+            <img src="${item.img || item.image}" style="width:100%; height:100px; object-fit:cover; opacity:0.8;">
+            <div style="padding:10px; text-align:center;">
+                <div style="color:#c5a059; font-family:'Orbitron'; font-weight:bold;">${item.price}</div>
+                <div style="color:#ccc; font-size:0.7rem; font-family:'Cinzel'; margin-top:5px;">${item.name.toUpperCase()}</div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+};
+
+// 3. BUY: Instant purchase logic
+window.quickBuyItem = function(item) {
+    // Check Money
+    if (window.gameStats.coins < item.price) {
+        triggerSound('sfx-deny');
+        window.triggerPoverty(); // Your existing poverty popup
+        return;
+    }
+
+    // Success Sound
+    triggerSound('sfx-buy');
+
+    // Send to Backend
+    window.parent.postMessage({ 
+        type: "PURCHASE_ITEM", 
+        itemName: item.name, 
+        cost: item.price, 
+        messageToDom: `🎁 TRIBUTE SENT: ${item.name} (${item.price})` 
+    }, "*");
+
+    // Visual Feedback (Coin Shower)
+    if(window.triggerCoinShower) window.triggerCoinShower();
+
+    // Close Menu
+    window.toggleTributeHunt();
+    
+    // Optional: Show Green Notification
+    if(window.showSystemNotification) window.showSystemNotification("TRIBUTE SENT", item.name);
+};
+
 function setTributeNote(note) { showTributeStep(3); }
-function filterByBudget(max) { renderHuntStore(max); showTributeStep(3); }
 function renderHuntStore(budget) { const grid = document.getElementById('huntStoreGrid'); if (!grid) return; filteredItems = (window.WISHLIST_ITEMS || []).filter(item => Number(item.price || item.Price || 0) <= budget); currentHuntIndex = 0; if (filteredItems.length === 0) { grid.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">NO TRIBUTES IN THIS TIER...</div>'; return; } showTinderCard(); }
-function showTinderCard() { const grid = document.getElementById('huntStoreGrid'); const item = filteredItems[currentHuntIndex]; if (!item) { grid.innerHTML = `<div style="text-align:center; padding:40px;"><div style="font-size:2rem; margin-bottom:10px;">💨</div><div style="color:#666; font-size:0.7rem;">NO MORE ITEMS IN THIS TIER</div><button class="tab-btn" onclick="showTributeStep(2)" style="margin-top:15px; width:auto; padding:5px 15px;">CHANGE BUDGET</button></div>`; return; } grid.style.perspective = "1000px"; grid.innerHTML = `<div id="tinderCard" class="tinder-card-main"><div id="likeLabel" class="swipe-indicator like">SACRIFICE</div><div id="nopeLabel" class="swipe-indicator nope">SKIP</div><img src="${item.img || item.image}" draggable="false"><div class="tinder-card-info"><div style="color:var(--neon-yellow); font-size:1.8rem; font-weight:900;">${item.price} 🪙</div><div style="color:white; letter-spacing:2px; font-weight:bold; font-size:0.8rem;">${item.name.toUpperCase()}</div></div></div>`; initSwipeEvents(document.getElementById('tinderCard'), item); }
-function initSwipeEvents(card, item) { let startX = 0; let currentX = 0; const handleStart = (e) => { startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; card.style.transition = 'none'; }; const handleMove = (e) => { if (!startX) return; currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; const diff = currentX - startX; card.style.transform = `translateX(${diff}px) rotate(${diff / 15}deg)`; const likeLabel = document.getElementById('likeLabel'); const nopeLabel = document.getElementById('nopeLabel'); if(likeLabel) likeLabel.style.opacity = diff > 0 ? (diff / 100) : 0; if(nopeLabel) nopeLabel.style.opacity = diff < 0 ? (Math.abs(diff) / 100) : 0; }; const handleEnd = () => { const diff = currentX - startX; card.style.transition = 'transform 0.4s ease, opacity 0.4s ease'; if (diff > 120) { card.style.transform = `translateX(600px) rotate(45deg)`; selectedItem = item; if(document.getElementById('huntSelectedImg')) document.getElementById('huntSelectedImg').src = item.img || item.image; if(document.getElementById('huntSelectedName')) document.getElementById('huntSelectedName').innerText = item.name.toUpperCase(); if(document.getElementById('huntSelectedPrice')) document.getElementById('huntSelectedPrice').innerText = item.price + " 🪙"; setTimeout(() => { showTributeStep(4); }, 200); } else if (diff < -120) { card.style.transform = `translateX(-600px) rotate(-45deg)`; card.style.opacity = "0"; currentHuntIndex++; setTimeout(() => { showTinderCard(); }, 300); } else { card.style.transform = `translateX(0) rotate(0)`; if(document.getElementById('likeLabel')) document.getElementById('likeLabel').style.opacity = 0; if(document.getElementById('nopeLabel')) document.getElementById('nopeLabel').style.opacity = 0; } startX = 0; }; card.addEventListener('mousedown', handleStart); card.addEventListener('touchstart', handleStart); window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove); window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd); }
 function toggleHuntNote(show) { const container = document.getElementById('huntNoteContainer'); const btn = document.getElementById('btnShowNote'); if (!container || !btn) return; if (show) { container.classList.remove('hidden'); btn.classList.add('hidden'); document.getElementById('huntNote').focus(); } else { container.classList.add('hidden'); btn.classList.remove('hidden'); } }
 function finalizeSacrifice() { 
     const noteEl = document.getElementById('huntNote'); 
@@ -1386,7 +1459,6 @@ function buyRealCoins(amount) { triggerSound('sfx-buy'); window.parent.postMessa
 function triggerCoinShower() { for (let i = 0; i < 40; i++) { const coin = document.createElement('div'); coin.className = 'coin-particle'; coin.innerHTML = `<svg style="width:100%; height:100%; fill:gold;"><use href="#icon-coin"></use></svg>`; coin.style.setProperty('--tx', `${Math.random() * 200 - 100}vw`); coin.style.setProperty('--ty', `${-(Math.random() * 80 + 20)}vh`); document.body.appendChild(coin); setTimeout(() => coin.remove(), 2000); } }
 function breakGlass(e) { if (e && e.stopPropagation) e.stopPropagation(); const overlay = document.getElementById('specialGlassOverlay'); if (overlay) overlay.classList.remove('active'); window.parent.postMessage({ type: "GLASS_BROKEN" }, "*"); }
 function submitSessionRequest() { const checked = document.querySelector('input[name="sessionType"]:checked'); if (!checked) return; window.parent.postMessage({ type: "SESSION_REQUEST", sessionType: checked.value, cost: checked.getAttribute('data-cost') }, "*"); }
-function resetTributeFlow() { selectedReason = ""; selectedNote = ""; selectedItem = null; const note = document.getElementById('huntNote'); if (note) note.value = ""; showTributeStep(1); }
 
 // =========================================
 // PART 1: MOBILE LOGIC (BRAIN & NAVIGATION)
