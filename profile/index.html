@@ -1199,42 +1199,16 @@
                 <div id="mobRec_Heap" class="mob-horiz-scroll small"></div>
             </div>
 
-            <!-- 5. QUEEN'S WALL (Altar Style) -->
-            <div style="width:100%; margin-top: 20px;">
-                <div class="duty-label">QUEEN'S WALL</div>
-            
-                <!-- THE STAGE (Top 3 Posts) -->
-                <div class="mob-pyramid-stage" style="height: 240px; cursor:pointer;" onclick="document.getElementById('qWall_HiddenPanel').classList.toggle('hidden')">
-                     
-                     <!-- Left (2nd Newest) -->
-                     <div class="mob-idol side">
-                        <img id="qWall_Img2" src="" style="display:none;" onerror="this.style.display='none'">
-                        <div class="mob-rank-badge">RECENT</div>
-                     </div>
-                     
-                     <!-- Right (3rd Newest) -->
-                     <div class="mob-idol side right">
-                        <img id="qWall_Img3" src="" style="display:none;" onerror="this.style.display='none'">
-                        <div class="mob-rank-badge">ARCHIVE</div>
-                     </div>
-                     
-                     <!-- Center (Newest) -->
-                     <div class="mob-idol center">
-                        <img id="qWall_Img1" src="" style="display:none;" onerror="this.style.display='none'">
-                        <div class="mob-rank-badge main">LATEST</div>
-                     </div>
-                </div>
-                
-                <div style="text-align:center; font-family:'Cinzel'; font-size:0.6rem; color:#666; margin-top:-10px;">TAP TO EXPAND FEED</div>
-            
-                <!-- THE HIDDEN SCROLL (Full History) -->
-                <div id="qWall_HiddenPanel" class="hidden" style="width:100%; animation:fadeIn 0.5s; margin-top: 15px;">
-                     <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666;">FULL ARCHIVE</div>
-                     <div id="qWall_ScrollTrack" class="mob-horiz-scroll">
-                        <!-- JS fills this -->
-                     </div>
-                </div>
-            </div>
+            <!-- 5. QUEEN'S WALL (Simple Horizontal Scroll) -->
+              <div style="width:100%; margin-top: 20px;">
+                  <div class="duty-label">QUEEN'S WALL</div>
+                  
+                  <!-- The Scroll Track (Visible Immediately) -->
+                  <div id="qWall_ScrollTrack" class="mob-horiz-scroll" style="margin-top: 15px; padding-bottom: 10px; min-height: 100px;">
+                      <!-- Javascript will fill this with images -->
+                      <div style="color:#333; font-size:0.7rem; padding:20px;">LOADING FEED...</div>
+                  </div>
+              </div>
 
             <!-- 6. SERVICE RECORD (TROPHIES) -->
             <div style="width:100%; margin-top: 20px;">
