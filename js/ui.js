@@ -1,13 +1,13 @@
 // UI management functions - FULL LOGIC WITH WISHLIST & VAULT SYNC & SLAVE RECORD FIX
 import { currentView, cmsHierarchyData, setCurrentView, WISHLIST_ITEMS, gameStats } from './state.js';
 import { CMS_HIERARCHY } from './config.js';
-import { renderGallery, loadMoreHistory } from './gallery.js'; // IMPORTED loadMoreHistory
+import { renderGallery, loadMoreHistory } from './gallery.js'; 
 import { getOptimizedUrl } from './media.js';
 import { renderVault } from '../profile/kneeling/reward.js';
 
 export function switchTab(mode) {
     // 1. Update the buttons
-    const allBtns = document.querySelectorAll('.tab-btn, .nav-btn'); // Added .nav-btn support for new layout
+    const allBtns = document.querySelectorAll('.tab-btn, .nav-btn'); 
     allBtns.forEach(b => b.classList.remove('active'));
     
     // 2. Update the "State" correctly
@@ -35,7 +35,7 @@ export function switchTab(mode) {
         });
     }
     
-    // 4. Hide all views - Including historySection
+    // 4. Hide all views
     const allViews = [
         'viewServingTop', 'viewNews', 'viewSession', 
         'viewVault', 'viewProtocol', 'viewBuy', 
@@ -46,11 +46,11 @@ export function switchTab(mode) {
         const el = document.getElementById(id);
         if (el) {
             el.classList.add('hidden');
-            el.style.display = 'none'; // Force hide to be safe
+            el.style.display = 'none'; 
         }
     });
 
-    // 5. THE CLEAN VIEW MAP (Added 'history')
+    // 5. THE CLEAN VIEW MAP
     const viewMap = {
         'serve': 'viewServingTop',
         'news': 'viewNews',
@@ -58,8 +58,8 @@ export function switchTab(mode) {
         'rewards': 'viewVault',    
         'protocol': 'viewProtocol',
         'buy': 'viewBuy',
-        'history': 'historySection', // NEW MAPPING
-        'vault': 'viewVault' // Added vault explicitly just in case
+        'history': 'historySection', 
+        'vault': 'viewVault'
     };
 
     const targetId = viewMap[mode];
@@ -68,7 +68,7 @@ export function switchTab(mode) {
         if (targetEl) {
             targetEl.classList.remove('hidden');
             
-            // New Layout Logic: Grids need Flex, Main Layout needs Block (or Flex Column)
+            // New Layout Logic
             if (['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId)) {
                 targetEl.style.display = 'flex';
                 targetEl.style.flexDirection = 'column';
@@ -78,7 +78,7 @@ export function switchTab(mode) {
         }
     }
        
-    // 6. TRIGGER RENDERS & MESSAGES
+    // 6. TRIGGER RENDERS
     if (mode === 'news') {
         window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
     }
@@ -88,37 +88,44 @@ export function switchTab(mode) {
     }
 }
 
-// --- THE WISHLIST RENDERER ---
+// --- THE WISHLIST RENDERER (Updated to match main.js logic) ---
 export function renderWishlist(maxBudget = 999999) {
-    const grid = document.getElementById('storeGrid');
-    if (!grid) return;
+    // Supports both Desktop 'storeGrid' and Mobile 'huntStoreGrid' if needed
+    const grids = [document.getElementById('storeGrid'), document.getElementById('huntStoreGrid')];
+    
+    // Filter items
+    const items = (WISHLIST_ITEMS || []).filter(i => i.price <= maxBudget);
 
-    // Filter by the budget chosen in Step 3
-    const items = WISHLIST_ITEMS.filter(i => i.price <= maxBudget);
+    grids.forEach(grid => {
+        if (!grid) return;
 
-    if (items.length === 0) {
-        grid.innerHTML = `<div style="grid-column: span 2; text-align:center; padding:40px; color:#666; font-family:'Rajdhani';">NOTHING FOUND IN THIS BUDGET.</div>`;
-        return;
-    }
+        if (items.length === 0) {
+            grid.innerHTML = `<div style="grid-column: span 2; text-align:center; padding:40px; color:#666; font-family:'Rajdhani';">NOTHING FOUND IN THIS BUDGET.</div>`;
+            return;
+        }
 
-    grid.innerHTML = items.map(item => {
-        const canAfford = gameStats.coins >= item.price;
-        const displayImg = getOptimizedUrl(item.img, 400);
+        grid.innerHTML = items.map(item => {
+            const canAfford = gameStats.coins >= item.price;
+            // Handle image URL safely
+            const displayImg = item.img || item.image || "";
+            const safeImg = getOptimizedUrl(displayImg, 400);
 
-        return `
-            <div class="store-item ${canAfford ? 'can-afford' : 'locked'}">
-                <div class="si-img-box">
-                    <img src="${displayImg}" class="si-img">
-                    <div class="si-price">${item.price} 🪙</div>
-                </div>
-                <div class="si-info">
-                    <div class="si-name">${item.name}</div>
-                    <button class="si-btn" onclick="window.buyItem('${item.id}')">
-                        TRIBUTE
-                    </button>
-                </div>
-            </div>`;
-    }).join('');
+            // UPDATED: Calls 'quickBuyItem' which we defined in main.js
+            return `
+                <div class="store-item ${canAfford ? 'can-afford' : 'locked'}" style="cursor:pointer;" onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}})">
+                    <div class="si-img-box">
+                        <img src="${safeImg}" class="si-img" onerror="this.style.display='none'">
+                        <div class="si-price">${item.price} 🪙</div>
+                    </div>
+                    <div class="si-info">
+                        <div class="si-name">${item.name}</div>
+                        <button class="si-btn">
+                            TRIBUTE
+                        </button>
+                    </div>
+                </div>`;
+        }).join('');
+    });
 }
 
 export function toggleStats() {
@@ -151,7 +158,7 @@ export function toggleSection(element) {
     }
 }
 
-// --- FLEXIBLE RENDERING FOR QKARIN FEED ---
+// --- FLEXIBLE RENDERING FOR QKARIN FEED (UPDATED FOR MOBILE) ---
 
 export function renderDomVideos(videos) {
     const reel = document.getElementById('domVideoReel');
@@ -171,13 +178,20 @@ export function renderDomVideos(videos) {
     }).join('');
 }
 
+// *** CRITICAL UPDATE: Renders to BOTH Desktop and Mobile grids ***
 export function renderNews(posts) {
-    const grid = document.getElementById('newsGrid');
-    if (!grid || !posts) return;
+    // Target both grids
+    const deskGrid = document.getElementById('newsGrid');
+    const mobGrid = document.getElementById('mobNewsGrid');
+    
+    if (!posts) return;
 
-    grid.innerHTML = posts.map(p => {
-        const mediaSource = p.page || p.url || p.media || p.image;
-        if (!mediaSource) return "";
+    // Helper to generate the HTML for a single post
+    const generatePostHTML = (p) => {
+        const mediaSource = p.page || p.url || p.media || p.image || p.thumbnail || p.cover;
+        const textContent = p.text || p.title || p.description || "";
+        
+        if (!mediaSource && !textContent) return "";
 
         const isVideo = typeof mediaSource === 'string' && 
                         (mediaSource.toLowerCase().includes('.mp4') || 
@@ -187,17 +201,36 @@ export function renderNews(posts) {
 
         if (isVideo) {
             return `
-                <div class="sg-item">
+                <div class="sg-item video-item">
                     <video src="${optimized}" class="sg-img" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>
                     <div class="sg-icon">▶</div>
                 </div>`;
         } else {
+            // Clean quotes for the onclick handler
+            const safeSrc = optimized || "";
+            const safeTxt = textContent.replace(/'/g, "\\'");
+            
             return `
-                <div class="sg-item" onclick="window.openChatPreview('${encodeURIComponent(mediaSource)}', false)">
-                    <img src="${optimized}" class="sg-img" loading="lazy" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png'">
+                <div class="sg-item news-item" onclick="if(window.openModal) window.openModal('${safeSrc}', '${safeTxt}')">
+                    <img src="${safeSrc}" class="sg-img news-img" loading="lazy" onerror="this.style.display='none'">
+                    <div class="news-txt mobile-only" style="padding:10px; display:none;">${textContent.substring(0,50)}</div>
                 </div>`;
         }
-    }).join('');
+    };
+
+    // 1. Render Desktop
+    if (deskGrid) {
+        deskGrid.innerHTML = posts.map(p => generatePostHTML(p)).join('');
+    }
+
+    // 2. Render Mobile
+    if (mobGrid) {
+        mobGrid.innerHTML = posts.map(p => generatePostHTML(p)).join('');
+        
+        // Force display block on text for mobile version
+        const txts = mobGrid.querySelectorAll('.news-txt');
+        txts.forEach(t => t.style.display = 'block');
+    }
 }
 
 // --- SESSION UI ---
