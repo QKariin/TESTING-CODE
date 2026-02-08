@@ -178,45 +178,35 @@ export function renderDomVideos(videos) {
     }).join('');
 }
 
-// *** QUEEN'S WALL RENDERER (ROBUST MEDIA HANDLER) ***
+// *** QUEEN'S WALL RENDERER (SIMPLE SCROLL) ***
 export function renderNews(posts) {
     const deskGrid = document.getElementById('newsGrid');
-    
-    // Mobile Pyramid IDs
-    const q1 = document.getElementById('qWall_Img1'); // Center
-    const q2 = document.getElementById('qWall_Img2'); // Left
-    const q3 = document.getElementById('qWall_Img3'); // Right
     const mobScroll = document.getElementById('qWall_ScrollTrack');
 
-    if (!posts || !Array.isArray(posts)) return;
+    if (!posts || !Array.isArray(posts)) {
+        if(mobScroll) mobScroll.innerHTML = "<div style='color:#666; padding:20px; font-size:0.7rem;'>NO UPDATES</div>";
+        return;
+    }
 
-    // --- HELPER: MASTER MEDIA EXTRACTOR ---
+    // --- HELPER: ROBUST MEDIA FINDER ---
     const getMediaSrc = (p) => {
-        // 1. Check all possible keys (Wix is inconsistent)
-        let raw = p.image || p.img || p.thumbnail || p.cover || p.poster || p.media || p.url || p.src || "";
+        // 1. Check all keys
+        let raw = p.image || p.img || p.thumbnail || p.cover || p.poster || p.media || p.url || "";
         
-        // 2. If it's a Video, try to find a specific thumbnail key first
-        const isVideo = typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'));
-        if (isVideo) {
-            // Prefer a dedicated cover image if available
+        // 2. Video Handling (Prefer Cover/Poster)
+        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
             if (p.cover) raw = p.cover;
             else if (p.thumbnail) raw = p.thumbnail;
             else if (p.poster) raw = p.poster;
-            // If still video, we will rely on the raw video URL (browser might not show thumbnail for img tag)
         }
 
-        // 3. Fix Wix URLs (The Sensitive Part)
+        // 3. Fix Wix URLs
         if (raw && raw.startsWith("wix:image")) {
             try { 
-                // Standard Wix Format: wix:image://v1/filename.jpg/fn.jpg#...
-                const parts = raw.split('/');
-                // We want the part after v1/
-                const fileName = parts[3].split('#')[0]; 
-                return "https://static.wixstatic.com/media/" + fileName; 
+                return "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; 
             } catch(e) { return ""; }
         }
         
-        // 4. Return Standard URL
         return raw ? getOptimizedUrl(raw, 400) : "";
     };
 
@@ -229,32 +219,13 @@ export function renderNews(posts) {
         }).join('');
     }
 
-    // --- 2. MOBILE RENDER (Pyramid) ---
-    
-    // A. Fill the Pyramid (Safe Check)
-    const setPyramidImg = (el, post) => {
-        if (!el || !post) return;
-        const src = getMediaSrc(post);
-        
-        if (src) {
-            el.src = src;
-            el.style.display = 'block';
-            // Safety: If image fails to load, hide it so no "broken icon" appears
-            el.onerror = () => { el.style.display = 'none'; };
-        } else {
-            el.style.display = 'none';
-        }
-    };
-
-    setPyramidImg(q1, posts[0]);
-    setPyramidImg(q2, posts[1]);
-    setPyramidImg(q3, posts[2]);
-
-    // B. Fill the Drawer
+    // --- 2. MOBILE RENDER (Just the Scroll) ---
     if (mobScroll) {
         mobScroll.innerHTML = posts.map(p => {
             const img = getMediaSrc(p);
             const txt = p.text || p.title || "Update";
+            
+            // Skip empty items
             if (!img) return "";
             
             return `
