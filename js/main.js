@@ -870,16 +870,33 @@ window.addEventListener("message", (event) => {
         
         if (payload) {
             if (data.profile && !ignoreBackendUpdates) {
+                
+                // --- THE MEMORY FIX: CHECK DATE ---
+                const lastDateStr = data.profile.lastRoutine || data.profile.lastRoutineSubmission;
+                if (lastDateStr) {
+                    const last = new Date(lastDateStr);
+                    const now = new Date();
+                    // Compare Day/Month/Year
+                    const isSameDay = last.getDate() === now.getDate() && 
+                                      last.getMonth() === now.getMonth() && 
+                                      last.getFullYear() === now.getFullYear();
+                    
+                    // Force the flag based on the database date
+                    data.profile.routineDoneToday = isSameDay;
+                } else {
+                    data.profile.routineDoneToday = false;
+                }
+
+                // Standard Data Setting
                 setGameStats(data.profile);
                 setUserProfile({
                     name: data.profile.name || "Slave",
                     hierarchy: data.profile.hierarchy || "HallBoy",
                     memberId: data.profile.memberId || "",
                     joined: data.profile.joined,
-                    profilePicture: data.profile.profilePicture, // <--- ADD THIS LINE
+                    profilePicture: data.profile.profilePicture, 
                     routine: data.profile.routine,
                     kneelHistory: data.profile.kneelHistory
-                    
                 });
                 
                 if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
@@ -902,6 +919,7 @@ window.addEventListener("message", (event) => {
                 renderRewardGrid();
                 if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
                 setStats(migrateGameStatsToStats(data.profile, stats));
+                
                 // *** DIRECT IMAGE SYNC (DESKTOP + MOBILE) ***
                 if(data.profile.profilePicture) {
                     const rawUrl = data.profile.profilePicture;
@@ -930,6 +948,9 @@ window.addEventListener("message", (event) => {
                     }
                 }
                 updateStats(); 
+                
+                // FORCE MOBILE UPDATE (So the Routine button hides if done)
+                if(window.syncMobileDashboard) window.syncMobileDashboard();
             }
 
             if (data.type === "INSTANT_REVEAL_SYNC") {
