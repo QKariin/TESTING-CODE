@@ -746,48 +746,47 @@ window.confirmLobbyAction = function() {
 
 // --- NOTIFICATION SYSTEM ---
 
-window.showSystemNotification = function(title, detail) {
-
+// --- NOTIFICATION SYSTEM (Green = Reward, Red = Penalty) ---
+window.showSystemNotification = function(title, detail, isPenalty = false) {
     const overlay = document.getElementById('celebrationOverlay');
-
     if(!overlay) return;
 
+    // 1. Determine Style Class
+    // If penalty, we add 'angry'. If not, just standard glass-card.
+    const containerClass = isPenalty ? "glass-card angry" : "glass-card";
+    
+    // 2. Build Internal HTML based on type
+    let contentHtml = "";
+    
+    if (isPenalty) {
+        // ANGRY RED LAYOUT
+        contentHtml = `
+            <div class="angry-title">⚠️ ${title} ⚠️</div>
+            <div class="angry-text">${detail}</div>
+        `;
+    } else {
+        // STANDARD GREEN LAYOUT (Original)
+        contentHtml = `
+            <div style="font-family:'Orbitron'; font-size:1.2rem; color:var(--neon-green); margin-bottom:10px; letter-spacing:2px; text-shadow:0 0 20px var(--neon-green);">
+                ${title}
+            </div>
+            <div style="font-family:'Cinzel'; font-size:0.9rem; color:#fff;">
+                ${detail}
+            </div>
+        `;
+    }
 
-
-    // Inject Dynamic HTML
-
-    overlay.innerHTML = `
-
-        <div class="glass-card" style="border: 1px solid var(--neon-green); text-align:center; padding: 30px; background: rgba(0,0,0,0.95); box-shadow: 0 0 30px rgba(0,255,0,0.2);">
-
-            <div style="font-family:'Orbitron'; font-size:1.2rem; color:var(--neon-green); margin-bottom:10px; letter-spacing:2px;">${title}</div>
-
-            <div style="font-family:'Cinzel'; font-size:0.9rem; color:#fff;">${detail}</div>
-
-        </div>
-
-    `;
-
-
-
-    // Show
-
+    // 3. Inject and Animate
+    overlay.innerHTML = `<div class="${containerClass}" style="text-align:center; padding: 30px; min-width: 280px;">${contentHtml}</div>`;
+    
     overlay.style.pointerEvents = "auto";
-
     overlay.style.opacity = '1';
 
-
-
-    // Hide after 3 seconds
-
+    // 4. Hide after 3.5 seconds
     setTimeout(() => {
-
         overlay.style.opacity = '0';
-
         overlay.style.pointerEvents = "none";
-
-    }, 3000);
-
+    }, 3500);
 };
 
 
@@ -1844,7 +1843,7 @@ window.mobileSkipTask = function() {
     
     // 4. SHOW NOTIFICATION
     if(window.showSystemNotification) {
-        window.showSystemNotification("PROTOCOL ABORTED", "PENALTY: -300");
+        window.showSystemNotification("Task ABORTED", "PENALTY: 300 coins", true);
     }
 
     // 5. CANCEL TASK (Backend)
