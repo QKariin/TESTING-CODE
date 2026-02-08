@@ -1426,35 +1426,7 @@ window.quickBuyItem = function(item) {
     if(window.showSystemNotification) window.showSystemNotification("TRIBUTE SENT", item.name);
 };
 
-function setTributeNote(note) { showTributeStep(3); }
-function renderHuntStore(budget) { const grid = document.getElementById('huntStoreGrid'); if (!grid) return; filteredItems = (window.WISHLIST_ITEMS || []).filter(item => Number(item.price || item.Price || 0) <= budget); currentHuntIndex = 0; if (filteredItems.length === 0) { grid.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">NO TRIBUTES IN THIS TIER...</div>'; return; } showTinderCard(); }
-function toggleHuntNote(show) { const container = document.getElementById('huntNoteContainer'); const btn = document.getElementById('btnShowNote'); if (!container || !btn) return; if (show) { container.classList.remove('hidden'); btn.classList.add('hidden'); document.getElementById('huntNote').focus(); } else { container.classList.add('hidden'); btn.classList.remove('hidden'); } }
-function finalizeSacrifice() { 
-    const noteEl = document.getElementById('huntNote'); 
-    const note = noteEl ? noteEl.value.trim() : ""; 
-    
-    if (!selectedItem || !selectedReason) return; 
-    
-    // *** THE FIX: USE POVERTY SYSTEM INSTEAD OF ALERT ***
-    if (gameStats.coins < selectedItem.price) { 
-        triggerSound('sfx-deny'); 
-        window.triggerPoverty(); 
-        return; 
-    } 
-    
-    const tributeMessage = `💝 TRIBUTE: ${selectedReason}\n🎁 ITEM: ${selectedItem.name}\n💰 COST: ${selectedItem.price}\n💌 "${note || "A silent tribute."}"`; 
-    
-    window.parent.postMessage({ 
-        type: "PURCHASE_ITEM", 
-        itemName: selectedItem.name, 
-        cost: selectedItem.price, 
-        messageToDom: tributeMessage 
-    }, "*"); 
-    
-    triggerSound('sfx-buy'); 
-    triggerCoinShower(); 
-    toggleTributeHunt(); 
-}
+
 function buyRealCoins(amount) { triggerSound('sfx-buy'); window.parent.postMessage({ type: "INITIATE_STRIPE_PAYMENT", amount: amount }, "*"); }
 function triggerCoinShower() { for (let i = 0; i < 40; i++) { const coin = document.createElement('div'); coin.className = 'coin-particle'; coin.innerHTML = `<svg style="width:100%; height:100%; fill:gold;"><use href="#icon-coin"></use></svg>`; coin.style.setProperty('--tx', `${Math.random() * 200 - 100}vw`); coin.style.setProperty('--ty', `${-(Math.random() * 80 + 20)}vh`); document.body.appendChild(coin); setTimeout(() => coin.remove(), 2000); } }
 function breakGlass(e) { if (e && e.stopPropagation) e.stopPropagation(); const overlay = document.getElementById('specialGlassOverlay'); if (overlay) overlay.classList.remove('active'); window.parent.postMessage({ type: "GLASS_BROKEN" }, "*"); }
