@@ -952,3 +952,43 @@ body {
     text-shadow: 0 0 15px rgba(197, 160, 89, 0.5);
     line-height: 1;
 }
+
+/* =========================================
+   PENALTY / DANGER NOTIFICATIONS
+   ========================================= */
+
+/* The Red Alert Card */
+.glass-card.angry {
+    border: 1px solid #ff003c !important; /* Neon Red */
+    background: radial-gradient(circle at center, rgba(30, 0, 0, 0.95) 0%, #000 100%) !important;
+    box-shadow: 0 0 50px rgba(255, 0, 60, 0.4), inset 0 0 20px rgba(255, 0, 60, 0.2) !important;
+    animation: violent-shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* The Text Styles */
+.angry-title {
+    color: #ff003c !important;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-shadow: 0 0 15px rgba(255, 0, 60, 0.8);
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.angry-text {
+    color: #fff !important;
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    border-top: 1px solid #ff003c;
+    padding-top: 10px;
+}
+
+/* The Shake Animation */
+@keyframes violent-shake {
+  10%, 90% { transform: translate3d(-2px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+  40%, 60% { transform: translate3d(6px, 0, 0); }
+}
