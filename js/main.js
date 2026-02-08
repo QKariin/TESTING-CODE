@@ -851,11 +851,26 @@ window.addEventListener("message", (event) => {
 
         if (data.type === "UPDATE_Q_FEED") {
             const feedData = data.domVideos || data.posts || data.feed;
+            
             if (feedData && Array.isArray(feedData)) {
-                renderDomVideos(feedData);
-                renderNews(feedData);
+                // 1. Update Desktop (Existing Logic)
+                if(renderDomVideos) renderDomVideos(feedData);
+                if(renderNews) renderNews(feedData);
+                
+                // 2. Update Counter
                 const pc = document.getElementById('cntPosts');
                 if (pc) pc.innerText = feedData.length;
+
+                // 3. *** NEW: UPDATE MOBILE WALL ***
+                const mobGrid = document.getElementById('mobNewsGrid');
+                if (mobGrid) {
+                    mobGrid.innerHTML = feedData.map(item => `
+                        <div class="news-item">
+                            <img src="${item.image || item.thumbnail}" class="news-img" onclick="openModal('${item.image}', '${item.text}')">
+                            <div class="news-txt">${item.text || "..."}</div>
+                        </div>
+                    `).join('');
+                }
             }
         }
 
