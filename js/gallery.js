@@ -160,25 +160,27 @@ export async function renderGallery() {
 
     if (!gridFailed || !gridOkay) return;
 
-    // Reset
+    // Reset Containers
     gridFailed.innerHTML = "";
     gridOkay.innerHTML = "";
     if(recGrid) recGrid.innerHTML = "";
     if(recHeap) recHeap.innerHTML = "";
 
-    // --- 2. GET DATA ---
-    const allItems = getGalleryList(); 
+    // --- 2. GET DATA (Filtered & Sorted by Date) ---
+    // Ensure we start with a clean Date Sort (Newest First)
+    const allItems = getGalleryList().sort((a, b) => {
+        return new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate);
+    });
 
     if (historySection) {
         if (allItems.length === 0) historySection.classList.add('solo-mode');
         else historySection.classList.remove('solo-mode');
     }
 
-    // Separate Lists
-    // "Accepted" includes Pending for now, so they show in the main list
+    // --- 3. SEPARATE LISTS ---
     const acceptedList = allItems.filter(i => {
         const s = (i.status || "").toLowerCase();
-        return !s.includes('rej') && !s.includes('fail'); 
+        return !s.includes('rej') && !s.includes('fail');
     });
     
     const deniedList = allItems.filter(i => {
@@ -186,118 +188,134 @@ export async function renderGallery() {
         return s.includes('rej') || s.includes('fail');
     });
 
-    // --- 3. HELPER: THUMBNAILS ---
-    const getThumb = async (item, size) => {
-        if (!item) return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
+    // --- 4. ALTAR SELECTION LOGIC (Newest High Score) ---
+    let bestOf = [];
+    let archiveList = [];
 
+    // Find the 'King' (Slot 1): The NEWEST item with >= 150 points
+    const kingIndex = acceptedList.findIndex(item => getPoints(item) >= 150);
+    
+    if (kingIndex !== -1) {
+        // We found a King.
+        bestOf.push(acceptedList[kingIndex]);
+        // Remove King from list so he isn't duplicated
+        let remaining = acceptedList.filter((_, idx) => idx !== kingIndex);
+        // Fill Slot 2 & 3 with the next newest items
+        bestOf.push(remaining[0], remaining[1]);
+        // The rest go to archive
+        archiveList = remaining.slice(2);
+    } else {
+        // No King found? Just take top 3 newest.
+        bestOf = acceptedList.slice(0, 3);
+        archiveList = acceptedList.slice(3);
+    }
+
+    // Clean undefined slots (if less than 3 items total)
+    bestOf = bestOf.filter(x => x !== undefined);
+
+    // --- 5. IMAGE LOADER (CRASH PROOF) ---
+    const getSafeImg = async (item, size) => {
+        if (!item) return PLACEHOLDER_IMG;
+        
         let raw = item.proofUrl || item.media || item.url || item.image || "";
         
-        // Video Cover Logic
+        // A. Video Handling
         if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
             if (item.cover) raw = item.cover;
             else if (item.thumbnail) raw = item.thumbnail;
-            else if (item.poster) raw = item.poster;
+            else return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; // Video Icon
         }
 
-        // Wix Fix
+        // B. Wix URL Fix (The Robust Split)
         if (raw && raw.startsWith('wix:image')) {
             try {
+                // Takes "wix:image://v1/FILENAME/..." and grabs FILENAME
                 const parts = raw.split('/');
-                const filename = parts[3].split('#')[0]; 
-                return `https://static.wixstatic.com/media/${filename}/v1/fill/w_${size},h_${size},al_c,q_75/file.jpg`;
-            } catch(e) {}
+                const id = parts[3].split('#')[0]; 
+                return `https://static.wixstatic.com/media/${id}/v1/fill/w_${size},h_${size},al_c,q_75/file.jpg`;
+            } catch(e) { 
+                return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; // Fallback if parse fails
+            }
         }
 
+        // C. Standard URL (Safe Try)
         try {
             return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
-        } catch (e) { return raw; }
-    };
-
-    // --- 4. ALTAR SORTING (THE FIX) ---
-    // Rule: "Latest with > 150 points" gets priority for Slot 1
-    let bestOf = [...acceptedList].sort((a, b) => {
-        const ptsA = getPoints(a);
-        const ptsB = getPoints(b);
-        const dateA = new Date(a.date || a._createdDate).getTime();
-        const dateB = new Date(b.date || b._createdDate).getTime();
-
-        // If both are High Value (>= 150), Newest wins
-        if (ptsA >= 150 && ptsB >= 150) return dateB - dateA;
-        
-        // If only A is High Value, A wins
-        if (ptsA >= 150) return -1;
-        // If only B is High Value, B wins
-        if (ptsB >= 150) return 1;
-
-        // Otherwise, simply highest points wins
-        return ptsB - ptsA;
-    }).slice(0, 3);
-
-    // What remains goes to archive (remove the 3 we just put on the altar)
-    const archiveList = acceptedList.filter(item => !bestOf.includes(item));
-
-    // --- 5. RENDER ALTAR ---
-    const renderSlot = async (slotObj, mobEl, item) => {
-        if (item) {
-            let thumb = await getThumb(item, 400);
-            let idx = allItems.indexOf(item);
-            
-            // Desktop
-            if(slotObj.card) { 
-                slotObj.card.style.display = 'flex'; 
-                slotObj.img.src = thumb; 
-                if(slotObj.ref) slotObj.ref.src = thumb; 
-                slotObj.card.onclick = () => window.openHistoryModal(idx); 
-            }
-            // Mobile
-            if(mobEl) { 
-                mobEl.src = thumb; 
-                mobEl.parentElement.onclick = () => window.openHistoryModal(idx); 
-                mobEl.style.display = 'block'; 
-            }
-        } else {
-            if(slotObj.card) slotObj.card.style.display = 'none';
-            if(mobEl) mobEl.style.display = 'none';
+        } catch (e) {
+            return raw; // Don't crash, just try the raw link
         }
     };
 
-    // Trigger Parallel Loading
-    renderSlot(slot1, mob1, bestOf[0]);
-    renderSlot(slot2, mob2, bestOf[1]);
-    renderSlot(slot3, mob3, bestOf[2]);
+    // --- 6. RENDER ALTAR (Sequentially to prevent race conditions) ---
+    // Slot 1
+    if (bestOf[0]) {
+        const t1 = await getSafeImg(bestOf[0], 400);
+        const idx = allItems.indexOf(bestOf[0]);
+        if(slot1.card) { slot1.card.style.display='flex'; slot1.img.src=t1; if(slot1.ref) slot1.ref.src=t1; slot1.card.onclick=()=>window.openHistoryModal(idx); }
+        if(mob1) { mob1.src=t1; mob1.parentElement.onclick=()=>window.openHistoryModal(idx); mob1.style.display='block'; }
+        if(rec1) { rec1.src=t1; rec1.onclick=()=>window.openHistoryModal(idx); } // Mobile Record Tab
+    } else {
+        if(slot1.card) slot1.card.style.display='none';
+        if(mob1) mob1.style.display='none';
+    }
 
-    // --- 6. RENDER LISTS (Archive & Heap) ---
+    // Slot 2
+    if (bestOf[1]) {
+        const t2 = await getSafeImg(bestOf[1], 300);
+        const idx = allItems.indexOf(bestOf[1]);
+        if(slot2.card) { slot2.card.style.display='flex'; slot2.img.src=t2; slot2.card.onclick=()=>window.openHistoryModal(idx); }
+        if(mob2) { mob2.src=t2; mob2.style.display='block'; mob2.parentElement.onclick=()=>window.openHistoryModal(idx); }
+        if(rec2) { rec2.src=t2; rec2.onclick=()=>window.openHistoryModal(idx); }
+    } else {
+        if(slot2.card) slot2.card.style.display='none';
+        if(mob2) mob2.style.display='none';
+    }
+
+    // Slot 3
+    if (bestOf[2]) {
+        const t3 = await getSafeImg(bestOf[2], 300);
+        const idx = allItems.indexOf(bestOf[2]);
+        if(slot3.card) { slot3.card.style.display='flex'; slot3.img.src=t3; slot3.card.onclick=()=>window.openHistoryModal(idx); }
+        if(mob3) { mob3.src=t3; mob3.style.display='block'; mob3.parentElement.onclick=()=>window.openHistoryModal(idx); }
+        if(rec3) { rec3.src=t3; rec3.onclick=()=>window.openHistoryModal(idx); }
+    } else {
+        if(slot3.card) slot3.card.style.display='none';
+        if(mob3) mob3.style.display='none';
+    }
+
+    // --- 7. RENDER LISTS (Batched) ---
     const renderChunk = async (list, isTrash) => {
-        const promises = list.map(async (item) => {
-            const src = await getThumb(item, 300);
+        // Pre-calculate HTML strings to avoid flicker
+        let deskHTML = "";
+        let mobHTML = "";
+
+        for (const item of list) {
+            const src = await getSafeImg(item, 250);
             const idx = allItems.indexOf(item);
             const isPending = (item.status || "").toLowerCase().includes('pending');
             
-            // DENIED FIX: Black & White Filter
+            // STYLES: Black/White for Denied
             const imgStyle = isTrash ? 'filter: grayscale(100%);' : '';
 
-            // Desktop HTML
-            const desk = `
+            // Desktop
+            deskHTML += `
                 <div class="${isTrash?'item-trash':'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
                     <img class="${isTrash?'trash-img':'blueprint-img'}" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">
                     ${isTrash?'<div class="trash-stamp">DENIED</div>':''}
                     ${isPending?'<div class="pending-overlay"><div class="pending-icon">⏳</div></div>':''}
                 </div>`;
             
-            // Mobile HTML
-            const mob = `
+            // Mobile
+            mobHTML += `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash?'height:80px; width:80px;':''}">
                     <img class="mob-scroll-img" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.style.opacity=0.3">
                     ${isPending?'<div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center;">⏳</div>':''}
                 </div>`;
-            return { desk, mob };
-        });
-
-        const results = await Promise.all(promises);
-        return { desk: results.map(r=>r.desk).join(''), mob: results.map(r=>r.mob).join('') };
+        }
+        return { desk: deskHTML, mob: mobHTML };
     };
 
-    // Fill Archive
+    // Render Archive
     if (archiveList.length > 0) {
         const html = await renderChunk(archiveList, false);
         if(gridOkay) gridOkay.innerHTML = html.desk;
@@ -307,7 +325,7 @@ export async function renderGallery() {
         if(gridOkay) gridOkay.innerHTML = empty;
     }
 
-    // Fill Heap (Denied)
+    // Render Heap
     if (deniedList.length > 0) {
         const html = await renderChunk(deniedList, true);
         if(gridFailed) gridFailed.innerHTML = html.desk;
