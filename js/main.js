@@ -52,6 +52,26 @@ const POVERTY_INSULTS = [
     "Access Denied. Reason: Poverty."
 ];
 
+// --- HELPER: CHECK IF ROUTINE IS DONE (6 AM RESET RULE) ---
+function checkRoutineStatus(lastUploadDateString) {
+    if (!lastUploadDateString) return false; // Never done
+
+    const last = new Date(lastUploadDateString);
+    const now = new Date();
+    
+    // Define "Duty Start Time" for the current moment
+    let dutyStart = new Date();
+    dutyStart.setHours(6, 0, 0, 0); // Today at 06:00:00
+
+    // If it is currently EARLY morning (e.g. 2 AM), the duty day started yesterday
+    if (now < dutyStart) {
+        dutyStart.setDate(dutyStart.getDate() - 1);
+    }
+
+    // If the last upload happened AFTER the duty window started, it counts.
+    return last >= dutyStart;
+}
+
 // ==========================
 // REPLACE window.triggerPoverty WITH THIS JAILBREAK VERSION
 // ==========================
@@ -1660,60 +1680,57 @@ window.syncMobileDashboard = function() {
     const dateEl = document.getElementById('dutyDateDisplay');
     if(dateEl) dateEl.innerText = new Date().toLocaleDateString().toUpperCase();
 
-    // --- 1. PROTOCOL ---
+    // --- 1. PROTOCOL STATUS (6 AM LOGIC) ---
     const routineName = userProfile.routine || "NO PROTOCOL"; 
     const rDisplay = document.getElementById('mobRoutineDisplay');
     if(rDisplay) rDisplay.innerText = routineName.toUpperCase();
 
-    // Status Check
-    const nowHour = new Date().getHours();
-    const isMorning = nowHour >= 7; 
-    const isDone = gameStats.routineDoneToday === true; 
+    // CHECK DATABASE DATE WITH 6 AM RULE
+    const lastDate = userProfile.lastRoutine || userProfile.lastRoutineSubmission; // Check both keys
+    const isDone = checkRoutineStatus(lastDate) || gameStats.routineDoneToday === true; // DB or Local Instant
+    
     const hasRoutine = userProfile.routine && userProfile.routine.trim().length > 0;
 
     const btnUpload = document.getElementById('btnRoutineUpload');
     const msgTime = document.getElementById('routineTimeMsg');
     const msgDone = document.getElementById('routineDoneMsg');
 
-    if(btnUpload) btnUpload.disabled = !hasRoutine;
-
-    if (isDone) {
-        if(btnUpload) btnUpload.classList.add('hidden');
-        if(msgTime) msgTime.classList.add('hidden');
-        if(msgDone) msgDone.classList.remove('hidden');
-    } else if (isMorning) {
-        if(btnUpload) btnUpload.classList.remove('hidden');
-        if(msgTime) msgTime.classList.add('hidden');
-        if(msgDone) msgDone.classList.add('hidden');
-    } else {
-        if(btnUpload) btnUpload.classList.add('hidden');
-        if(msgTime) msgTime.classList.remove('hidden');
-        if(msgDone) msgDone.classList.add('hidden');
+    if(btnUpload) {
+        if (!hasRoutine) {
+            btnUpload.classList.add('hidden');
+            if(msgTime) { msgTime.innerText = "NO PROTOCOL ASSIGNED"; msgTime.classList.remove('hidden'); }
+        } else if (isDone) {
+            // DONE FOR THE DAY -> HIDE BUTTON
+            btnUpload.classList.add('hidden');
+            if(msgTime) msgTime.classList.add('hidden');
+            if(msgDone) msgDone.classList.remove('hidden');
+        } else {
+            // NOT DONE -> SHOW BUTTON
+            btnUpload.classList.remove('hidden');
+            btnUpload.disabled = false;
+            if(msgTime) msgTime.classList.add('hidden');
+            if(msgDone) msgDone.classList.add('hidden');
+        }
     }
 
-     // --- 2. LABOR (UPDATED FOR DASHBOARD IDs) ---
-    const activeRow = document.getElementById('activeTimerRow'); // Desktop source
+     // --- 2. LABOR ---
+    const activeRow = document.getElementById('activeTimerRow'); 
     const isWorking = activeRow && !activeRow.classList.contains('hidden');
     
-    // *** THE FIX: TARGET THE DASHBOARD CARDS, NOT THE MENU CARDS ***
     const taskIdle = document.getElementById('dash_TaskIdle');
-    const activeCard = document.getElementById('dash_TaskActive'); // Fixed variable name
-    
-    // NEW: Get Task Text
+    const activeCard = document.getElementById('dash_TaskActive');
     const mobTaskText = document.getElementById('mobTaskText');
 
     if (isWorking) {
         if(taskIdle) taskIdle.classList.add('hidden');
         if(activeCard) activeCard.classList.remove('hidden');
 
-        // *** INJECT TASK TEXT ***
         if (mobTaskText && typeof currentTask !== 'undefined' && currentTask) {
             mobTaskText.innerHTML = currentTask.instruction || currentTask.text || "AWAITING ORDERS";
         } else if (mobTaskText) {
             const desktopText = document.getElementById('readyText');
             mobTaskText.innerHTML = desktopText ? desktopText.innerHTML : "PROCESSING...";
         }
-
     } else {
         if(taskIdle) taskIdle.classList.remove('hidden');
         if(activeCard) activeCard.classList.add('hidden');
@@ -1722,28 +1739,28 @@ window.syncMobileDashboard = function() {
 
 // --- FORCE ROUTINE UPLOAD (SHORT TERM MEMORY FIX) ---
 window.handleRoutineUpload = function(input) {
-    // 1. Check if file exists
     if (input.files && input.files.length > 0) {
         
-        // 2. Send to Backend (The "Long Term" storage)
+        // 1. Send to Backend
         if(window.handleEvidenceUpload) {
             window.handleEvidenceUpload(input, "Routine");
         }
 
-        // 3. Force "Short Term" Memory (Tell the app it's done NOW)
+        // 2. FORCE LOCK (Set local flag)
         if (window.gameStats) {
-            window.gameStats.routineDoneToday = true;
+            window.gameStats.routineDoneToday = true; // This overrides the DB check temporarily
+        }
+        
+        // 3. FORCE DATE UPDATE (For the 6am logic to work on re-check)
+        if (window.userProfile) {
+            window.userProfile.lastRoutine = new Date().toISOString();
         }
 
-        // 4. Visual Feedback (Hide Button, Show Checkmark)
-        const btn = document.getElementById('btnRoutineUpload');
-        const msg = document.getElementById('routineDoneMsg');
-        
-        if(btn) btn.classList.add('hidden');
-        if(msg) msg.classList.remove('hidden');
-
-        // 5. Update the rest of the dashboard
+        // 4. Update UI Immediately
         if(window.syncMobileDashboard) window.syncMobileDashboard();
+        
+        // 5. Celebration Notification
+        if(window.showSystemNotification) window.showSystemNotification("PROTOCOL ACCEPTED", "WINDOW LOCKED UNTIL 06:00");
     }
 };
 
