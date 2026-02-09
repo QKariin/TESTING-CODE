@@ -1281,123 +1281,93 @@ window.renderRewards = function() {
     const totalKneels = gameStats.kneelCount || 0;
     const totalSpent = gameStats.total_coins_spent || 0; 
 
-    // --- STRICT ROUTINE CALCULATION (NO MIXING) ---
+    // --- DAILY DISCIPLINE (STRICT FILTER) ---
     let streakCount = 0;
     let routinePhotos = [];
 
-    // 1. READ ONLY FROM SPECIFIC CMS FIELD
-    // We do NOT look at galleryData here. This prevents mixing normal tasks.
-    let rawHistory = userProfile.routineHistory || userProfile.routinehistory;
-    
-    if (rawHistory) {
-        // Parse if it's a string (Wix often sends arrays as JSON strings)
-        if (typeof rawHistory === 'string') {
-            try { routinePhotos = JSON.parse(rawHistory); } catch(e) { routinePhotos = []; }
-        } else if (Array.isArray(rawHistory)) {
-            routinePhotos = rawHistory;
-        }
-    }
+    if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
+        // STRICT FILTER: Only items where 'category' IS 'Routine'
+        // This prevents normal tasks from mixing in.
+        routinePhotos = galleryData.filter(i => i.category === 'Routine');
 
-    // 2. SORT BY DATE (Newest First)
-    routinePhotos.sort((a, b) => {
-        const dateA = new Date(a.date || a._createdDate || a);
-        const dateB = new Date(b.date || b._createdDate || b);
-        return dateB - dateA;
-    });
+        // Sort by Date (Newest First)
+        routinePhotos.sort((a, b) => {
+            const dateA = new Date(a.date || a._createdDate || 0);
+            const dateB = new Date(b.date || b._createdDate || 0);
+            return dateB - dateA;
+        });
 
-    // 3. CALCULATE STREAK (Using 6 AM Rule)
-    if (routinePhotos.length > 0) {
-        const getDutyDay = (d) => {
-            let date = new Date(d);
-            if (date.getHours() < 6) date.setDate(date.getDate() - 1);
-            return date.toISOString().split('T')[0];
-        };
+        // Calculate Streak (6 AM Rule)
+        if (routinePhotos.length > 0) {
+            const getDutyDay = (d) => {
+                let date = new Date(d);
+                if (date.getHours() < 6) date.setDate(date.getDate() - 1);
+                return date.toISOString().split('T')[0];
+            };
 
-        const todayCode = getDutyDay(new Date());
-        // Handle object format {date:..., proof:...} or simple string format
-        const newestItemDate = routinePhotos[0].date || routinePhotos[0]._createdDate || routinePhotos[0];
-        const lastCode = getDutyDay(newestItemDate);
+            const todayCode = getDutyDay(new Date());
+            const lastCode = getDutyDay(routinePhotos[0].date || routinePhotos[0]._createdDate);
 
-        // Check if the chain is alive (Uploaded Today or Yesterday)
-        const d1 = new Date(todayCode);
-        const d2 = new Date(lastCode);
-        const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
+            // Alive Check
+            const d1 = new Date(todayCode);
+            const d2 = new Date(lastCode);
+            const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
 
-        if (diffDays <= 1) {
-            streakCount = 1;
-            let currentCode = lastCode;
+            if (diffDays <= 1) {
+                streakCount = 1;
+                let currentCode = lastCode;
 
-            // Loop strictly through history
-            for (let i = 1; i < routinePhotos.length; i++) {
-                const itemDate = routinePhotos[i].date || routinePhotos[i]._createdDate || routinePhotos[i];
-                const nextCode = getDutyDay(itemDate);
-                
-                if (nextCode === currentCode) continue; // Ignore multiple uploads same day
-                
-                const dayA = new Date(currentCode);
-                const dayB = new Date(nextCode);
-                const gap = (dayA - dayB) / (1000 * 60 * 60 * 24);
+                for (let i = 1; i < routinePhotos.length; i++) {
+                    const nextCode = getDutyDay(routinePhotos[i].date || routinePhotos[i]._createdDate);
+                    if (nextCode === currentCode) continue; 
+                    
+                    const dayA = new Date(currentCode);
+                    const dayB = new Date(nextCode);
+                    const gap = (dayA - dayB) / (1000 * 60 * 60 * 24);
 
-                if (gap === 1) {
-                    streakCount++;
-                    currentCode = nextCode;
-                } else {
-                    break; // Streak broken
+                    if (gap === 1) {
+                        streakCount++;
+                        currentCode = nextCode;
+                    } else {
+                        break;
+                    }
                 }
             }
         }
     }
 
-    // --- UPDATE UI (DAILY DISCIPLINE ONLY) ---
+    // --- UPDATE UI (Luxury Style) ---
     const strVal = document.getElementById('dispStreakVal');
     const strBest = document.getElementById('dispBestStreak');
     const strShelf = document.getElementById('shelfRoutine');
 
-    // Update Counter
-    if (strVal) {
-        strVal.innerText = streakCount;
-        strVal.style.color = "#c5a059"; // Gold
-    }
-    
-    // Update Best Record
+    if (strVal) strVal.innerText = streakCount;
     if (strBest) strBest.innerText = Math.max(streakCount, gameStats.bestRoutineStreak || 0);
 
-    // Update Shelf Images
     if (strShelf) {
         if(routinePhotos.length === 0) {
-            strShelf.innerHTML = `<div style="color:#666; font-family:'Cinzel'; font-size:0.6rem; padding:10px; letter-spacing:1px;">NO DISCIPLINE LOGGED</div>`;
+            strShelf.innerHTML = `<div style="color:#666; font-family:'Cinzel'; font-size:0.6rem; padding:10px; letter-spacing:1px;">NO DATA LOGGED</div>`;
         } else {
             strShelf.innerHTML = routinePhotos.slice(0, 10).map(item => {
-                // Extract Image Source (Handle Objects vs Strings)
-                let rawSrc = "";
-                if (typeof item === 'object') {
-                    rawSrc = item.proof || item.file || item.image || item.url || "";
+                const src = item.proofUrl || item.url || item.image || item.proof || "";
+                if(!src) return "";
+
+                // Thumbnail Logic
+                let thumb = src;
+                if(src.startsWith('wix:image')) {
+                     try { thumb = `https://static.wixstatic.com/media/${src.split('/')[3].split('#')[0]}/v1/fill/w_150,h_150,q_70/thumb.jpg`; } catch(e){}
                 } else {
-                    rawSrc = item; // It's just a URL string
-                }
-                
-                if (!rawSrc) return "";
-
-                // Generate Thumbnail (Wix Resize)
-                let thumb = rawSrc;
-                if(rawSrc.startsWith('wix:image')) {
-                     try { 
-                         const id = rawSrc.split('/')[3].split('#')[0];
-                         thumb = `https://static.wixstatic.com/media/${id}/v1/fill/w_150,h_150,q_70/thumb.jpg`; 
-                     } catch(e){}
+                    // If it's a regular URL, try to optimize (optional)
+                    if(typeof getOptimizedUrl === 'function') thumb = getOptimizedUrl(src, 150);
                 }
 
-                // Render Plaque Image
-                return `
-                    <div style="flex-shrink:0; margin-right:8px; border:1px solid #333; border-radius:4px; overflow:hidden; width:90px; height:90px; background:#000;">
-                        <img src="${thumb}" style="width:100%; height:100%; object-fit:cover; filter:sepia(20%); opacity:0.8;">
-                    </div>`;
+                // Render with Dark Border (No Neon)
+                return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border:1px solid #333; border-radius:2px; flex-shrink:0; margin-right:8px; filter:sepia(20%) brightness(0.9);">`;
             }).join('');
         }
     }
 
-    // --- RENDER STANDARD SHELVES (PRESERVED) ---
-    // This part handles the bottom shelves (Ranks, Tasks, Kneels)
+    // --- STANDARD SHELVES (No Changes Here) ---
     const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabel) => {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -1408,10 +1378,11 @@ window.renderRewards = function() {
             const statusClass = isUnlocked ? "unlocked" : "locked";
             const isLegendary = index === data.length - 1 ? "legendary" : "";
             const displayCurrent = (typeLabel === 'rank') ? (isUnlocked ? 1 : 0) : currentVal;
-            
+            const displayTarget = (typeLabel === 'rank') ? 1 : targetVal;
+
             return `
                 <div class="reward-badge ${shapeClass} ${statusClass} ${isLegendary}" 
-                     onclick="window.openRewardCard('${item.name}', '${item.icon}', ${displayCurrent}, ${targetVal}, '${typeLabel}')">
+                     onclick="window.openRewardCard('${item.name}', '${item.icon}', ${displayCurrent}, ${displayTarget}, '${typeLabel}')">
                     <div class="rb-inner" style="display:flex; flex-direction:column; align-items:center;">
                         <svg class="rb-icon" viewBox="0 0 24 24"><path d="${item.icon}"/></svg>
                         <div class="rb-label">${item.name}</div>
