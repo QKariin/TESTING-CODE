@@ -1281,97 +1281,111 @@ window.renderRewards = function() {
     const totalKneels = gameStats.kneelCount || 0;
     const totalSpent = gameStats.total_coins_spent || 0; 
 
-    // --- NEW SECTION: DAILY ROUTINE STREAK CALCULATION ---
+    // --- NEW: CALCULATE ROUTINE STREAK (FROM SPECIFIC HISTORY) ---
     let streakCount = 0;
     let routinePhotos = [];
 
-    // Check if gallery exists before filtering
-    if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
-        // Filter for items tagged 'Routine' or 'Protocol'
-        routinePhotos = galleryData.filter(i => {
-            const tag = (i.type || i.tag || "").toLowerCase();
-            return tag.includes('routine') || tag.includes('protocol');
-        });
+    // Check specific Routine History first (The Truth)
+    let rawHistory = userProfile.routineHistory || userProfile.routinehistory;
+    
+    // Parse if it's a string
+    if (typeof rawHistory === 'string') {
+        try { routinePhotos = JSON.parse(rawHistory); } catch(e) { routinePhotos = []; }
+    } else if (Array.isArray(rawHistory)) {
+        routinePhotos = rawHistory;
+    }
 
-        // Sort by Date (Newest First) to calculate streak
-        routinePhotos.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
+    // Sort by Date (Newest First)
+    routinePhotos.sort((a, b) => new Date(b.date || b._createdDate || b) - new Date(a.date || a._createdDate || a));
 
-        // Calculate Streak Logic
-        if (routinePhotos.length > 0) {
-            const now = new Date();
-            const lastDate = new Date(routinePhotos[0].date || routinePhotos[0]._createdDate);
-            const diffHours = (now - lastDate) / (1000 * 60 * 60);
-            
-            // If last upload was within 48 hours, the streak is alive
-            if (diffHours < 48) { 
-                streakCount = 1; 
-                // Loop backwards to count consecutive days
-                for (let i = 0; i < routinePhotos.length - 1; i++) {
-                    const d1 = new Date(routinePhotos[i].date || routinePhotos[i]._createdDate);
-                    const d2 = new Date(routinePhotos[i+1].date || routinePhotos[i+1]._createdDate);
-                    const dayDiff = (d1 - d2) / (1000 * 60 * 60 * 24);
-                    
-                    // If the difference is roughly 1 day (0.8 to 1.2), add to streak
-                    if (dayDiff >= 0.8 && dayDiff <= 1.2) { 
-                        streakCount++; 
-                    } else if (dayDiff > 1.2) {
-                        break; // Gap too big, streak ends here
-                    }
+    // Calculate Consecutive Days (Using 6 AM Rule)
+    if (routinePhotos.length > 0) {
+        const getDutyDay = (d) => {
+            let date = new Date(d);
+            if (date.getHours() < 6) date.setDate(date.getDate() - 1);
+            return date.toISOString().split('T')[0];
+        };
+
+        const todayCode = getDutyDay(new Date());
+        const lastCode = getDutyDay(routinePhotos[0].date || routinePhotos[0]._createdDate || routinePhotos[0]);
+
+        // Check if alive
+        const d1 = new Date(todayCode);
+        const d2 = new Date(lastCode);
+        const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
+
+        if (diffDays <= 1) {
+            streakCount = 1;
+            let currentCode = lastCode;
+
+            // Loop back
+            for (let i = 1; i < routinePhotos.length; i++) {
+                const nextDateRaw = routinePhotos[i].date || routinePhotos[i]._createdDate || routinePhotos[i];
+                const nextCode = getDutyDay(nextDateRaw);
+                
+                if (nextCode === currentCode) continue; // Same day ignore
+                
+                const dayA = new Date(currentCode);
+                const dayB = new Date(nextCode);
+                const gap = (dayA - dayB) / (1000 * 60 * 60 * 24);
+
+                if (gap === 1) {
+                    streakCount++;
+                    currentCode = nextCode;
+                } else {
+                    break;
                 }
             }
         }
     }
 
-    // --- UPDATE ROUTINE UI (The New Shelf) ---
+    // --- UPDATE UI (LUXURY STYLE) ---
     const strVal = document.getElementById('dispStreakVal');
     const strBest = document.getElementById('dispBestStreak');
     const strShelf = document.getElementById('shelfRoutine');
 
-    if (strVal) strVal.innerText = streakCount;
+    if (strVal) {
+        strVal.innerText = streakCount;
+        // CHANGE COLOR TO GOLD
+        strVal.style.color = "#c5a059"; 
+        strVal.parentElement.style.borderColor = "#c5a059";
+        strVal.parentElement.style.background = "linear-gradient(180deg, #1a1a1a 0%, #000 100%)"; // Luxury Dark
+    }
     
-    // Best Streak: Use saved stats if higher, otherwise use current
     if (strBest) strBest.innerText = Math.max(streakCount, gameStats.bestRoutineStreak || 0);
 
     if (strShelf) {
-        strShelf.innerHTML = routinePhotos.slice(0, 7).map(item => {
-            const src = item.url || item.image || "";
-            // FAST THUMBNAIL LOGIC (Wix Resizer)
-            let thumb = src;
-            if(src.startsWith('wix:image')) {
-                 try { 
-                     const id = src.split('/')[3].split('#')[0];
-                     thumb = `https://static.wixstatic.com/media/${id}/v1/fill/w_150,h_150,q_70/thumb.jpg`; 
-                 } catch(e){}
-            }
-            return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border-radius:4px; border:1px solid #333; flex-shrink:0; margin-right:10px;">`;
-        }).join('');
+        if(routinePhotos.length === 0) {
+            strShelf.innerHTML = `<div style="color:#666; font-family:'Cinzel'; font-size:0.6rem; padding:10px; letter-spacing:1px;">NO DISCIPLINE LOGGED</div>`;
+        } else {
+            strShelf.innerHTML = routinePhotos.slice(0, 7).map(item => {
+                // Handle different data structures
+                const rawSrc = item.proof || item.url || item.image || (typeof item === 'string' ? item : "");
+                
+                // Thumbnail Logic
+                let thumb = rawSrc;
+                if(rawSrc.startsWith('wix:image')) {
+                     try { thumb = `https://static.wixstatic.com/media/${rawSrc.split('/')[3].split('#')[0]}/v1/fill/w_150,h_150,q_70/thumb.jpg`; } catch(e){}
+                }
+                
+                // GOLD BORDER STYLE
+                return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border:1px solid #444; border-radius:2px; flex-shrink:0; margin-right:8px; filter:sepia(20%);">`;
+            }).join('');
+        }
     }
-    // --- END NEW SECTION ---
 
-
-    // HELPER: BUILD SHELF (PRESERVED)
-    // shapeClass = 'shape-hex', 'shape-circle', etc.
+    // --- RENDER STANDARD SHELVES (PRESERVED) ---
     const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabel) => {
         const container = document.getElementById(containerId);
         if (!container) return;
         
         container.innerHTML = data.map((item, index) => {
-            // Determine Target Value
-            // For Ranks, target is simply the index (0, 1, 2). Current is User's Rank Index.
-            // For others, item.limit is the target.
             const targetVal = (typeLabel === 'rank') ? index : item.limit;
-            
-            // Logic for Ranks is slightly different (Current >= Target Index)
-            const isUnlocked = (typeLabel === 'rank') 
-                ? (currentVal >= index) 
-                : (currentVal >= targetVal);
-
+            const isUnlocked = (typeLabel === 'rank') ? (currentVal >= index) : (currentVal >= targetVal);
             const statusClass = isUnlocked ? "unlocked" : "locked";
             const isLegendary = index === data.length - 1 ? "legendary" : "";
             
             // Generate Click Handler
-            // We pass the raw data to the opener function
-            // Note: For Ranks, we visualize '1/1' if unlocked, '0/1' if locked for simplicity
             const displayCurrent = (typeLabel === 'rank') ? (isUnlocked ? 1 : 0) : currentVal;
             const displayTarget = (typeLabel === 'rank') ? 1 : targetVal;
 
@@ -1387,11 +1401,9 @@ window.renderRewards = function() {
         }).join('');
     };
 
-    // 2. RENDER CALLS (Updated with Type Labels and Current Values)
     const rankList = REWARD_DATA.ranks.map(r => r.name.toLowerCase());
     const myRankIndex = rankList.findIndex(r => r === currentRank.toLowerCase());
 
-    // Note: Passing 'currentVal' and 'typeLabel' now
     buildShelf('shelfRanks', REWARD_DATA.ranks, 'shape-hex', null, myRankIndex, 'rank');
     buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
     buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
