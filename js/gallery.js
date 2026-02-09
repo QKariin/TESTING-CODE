@@ -140,8 +140,6 @@ function renderStickerFilters() {
     filterBar.innerHTML = html;
 }
 
-// gallery.js - ASYNC RENDERER (SECURE, FILTERED, & MOBILE READY)
-
 export async function renderGallery() {
     if (!galleryData) return;
     
@@ -154,13 +152,9 @@ export async function renderGallery() {
     const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2') };
     const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3') };
 
-    // Mobile Targets
     const mob1 = document.getElementById('mobImgSlot1');
     const mob2 = document.getElementById('mobImgSlot2');
     const mob3 = document.getElementById('mobImgSlot3');
-    const rec1 = document.getElementById('mobRec_Slot1');
-    const rec2 = document.getElementById('mobRec_Slot2');
-    const rec3 = document.getElementById('mobRec_Slot3');
     const recGrid = document.getElementById('mobRec_Grid'); 
     const recHeap = document.getElementById('mobRec_Heap'); 
 
@@ -172,7 +166,7 @@ export async function renderGallery() {
     if(recGrid) recGrid.innerHTML = "";
     if(recHeap) recHeap.innerHTML = "";
 
-    // --- 2. GET FILTERED DATA (No Routines Here!) ---
+    // --- 2. GET FILTERED DATA (No Routines) ---
     const allItems = getGalleryList(); 
 
     if (historySection) {
@@ -194,36 +188,50 @@ export async function renderGallery() {
     const bestOf = acceptedList.slice(0, 3);
     const archiveList = acceptedList.slice(3);
 
-    // --- 3. HELPER: SECURE THUMBNAIL (Wix + Video Safe) ---
+    // --- 3. HELPER: ROBUST THUMBNAIL (THE FIX) ---
     const getSecureThumb = async (item, size) => {
-        if (!item) return "";
+        if (!item) return PLACEHOLDER_IMG;
+        
         let raw = item.proofUrl || item.media || item.url || item.image || "";
         
-        // Video Fix: Try to find a cover
+        // A. Video Handling (Try to find a cover)
         if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
             if (item.cover) raw = item.cover;
             else if (item.thumbnail) raw = item.thumbnail;
+            else return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; // Fallback Icon
         }
 
-        // Wix URL Fix (Fast Loading)
+        // B. Wix URL Fix (Regex Method - More Reliable)
         if (raw.startsWith('wix:image')) {
             try {
-                const parts = raw.split('/');
-                const id = parts[3].split('#')[0];
-                return `https://static.wixstatic.com/media/${id}/v1/fill/w_${size},h_${size},al_c,q_75/file.jpg`;
-            } catch(e) {}
+                // Regex: Find the file ID (alphanumeric + underscore + dot + extension)
+                // e.g. wix:image://v1/5b30b6_.../file.jpg#...
+                const matches = raw.match(/wix:image:\/\/v1\/([^/]+)\//);
+                if (matches && matches[1]) {
+                    const id = matches[1];
+                    // Construct valid HTTPS url with resizing
+                    return `https://static.wixstatic.com/media/${id}/v1/fill/w_${size},h_${size},al_c,q_70/file.jpg`;
+                } else {
+                    // Fail-safe: Just try to grab the 4th segment
+                    const parts = raw.split('/');
+                    const id = parts[3].split('#')[0];
+                    return `https://static.wixstatic.com/media/${id}`; // Master image (no resize)
+                }
+            } catch(e) { 
+                return PLACEHOLDER_IMG; 
+            }
         }
 
-        // Secure Signing (Bytescale)
+        // C. Standard/Bytescale URL (Needs Signing)
         try {
             return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
         } catch(e) {
+            // If signing fails, return raw URL as last resort (often works for public files)
             return raw; 
         }
     };
 
     // --- 4. RENDER PYRAMID (Top 3) ---
-    // Fetch in parallel for speed
     const [thumb1, thumb2, thumb3] = await Promise.all([
         getSecureThumb(bestOf[0], 400),
         getSecureThumb(bestOf[1], 300),
@@ -237,9 +245,8 @@ export async function renderGallery() {
         if(mob1) { mob1.src=thumb1; mob1.parentElement.onclick=()=>window.openHistoryModal(idx); mob1.style.display='block'; }
         if(rec1) { rec1.src=thumb1; rec1.onclick=()=>window.openHistoryModal(idx); }
     } else {
-        if(slot1.card) slot1.img.src = IMG_QUEEN_MAIN;
-        if(mob1) mob1.src = IMG_QUEEN_MAIN;
-        if(rec1) rec1.src = IMG_QUEEN_MAIN;
+        if(slot1.card) slot1.card.style.display='none';
+        if(mob1) mob1.style.display='none';
     }
 
     // Slot 2
@@ -267,7 +274,6 @@ export async function renderGallery() {
     }
 
     // --- 5. RENDER LISTS (Archive & Heap) ---
-    
     const renderChunk = async (list, isTrash) => {
         const promises = list.map(async (item) => {
             const src = await getSecureThumb(item, 250);
@@ -282,27 +288,16 @@ export async function renderGallery() {
         return { desk: res.map(r=>r.desk).join(''), mob: res.map(r=>r.mob).join('') };
     };
 
-    // Render Archive
     if (archiveList.length > 0) {
         const html = await renderChunk(archiveList, false);
         if(gridOkay) gridOkay.innerHTML = html.desk;
         if(recGrid) recGrid.innerHTML = html.mob;
-    } else {
-        // Empty Placeholders
-        let emptyHtml = "";
-        for(let i=0; i<6; i++) emptyHtml += `<div class="item-placeholder-slot"><img src="${IMG_MIDDLE_EMPTY}"></div>`;
-        if(gridOkay) gridOkay.innerHTML = emptyHtml;
     }
 
-    // Render Heap
     if (deniedList.length > 0) {
         const html = await renderChunk(deniedList, true);
         if(gridFailed) gridFailed.innerHTML = html.desk;
         if(recHeap) recHeap.innerHTML = html.mob;
-    } else {
-        let emptyHtml = "";
-        for(let i=0; i<6; i++) emptyHtml += `<div class="item-placeholder-slot"><img src="${IMG_BOTTOM_EMPTY}"></div>`;
-        if(gridFailed) gridFailed.innerHTML = emptyHtml;
     }
 }
 
