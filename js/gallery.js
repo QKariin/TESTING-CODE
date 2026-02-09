@@ -161,8 +161,8 @@ export async function renderGallery() {
     const rec1 = document.getElementById('mobRec_Slot1');
     const rec2 = document.getElementById('mobRec_Slot2');
     const rec3 = document.getElementById('mobRec_Slot3');
-    const recGrid = document.getElementById('mobRec_Grid'); // Middle (Archive)
-    const recHeap = document.getElementById('mobRec_Heap'); // Bottom (Heap)
+    const recGrid = document.getElementById('mobRec_Grid'); 
+    const recHeap = document.getElementById('mobRec_Heap'); 
 
     if (!gridFailed || !gridOkay) return;
 
@@ -179,47 +179,57 @@ export async function renderGallery() {
         else historySection.classList.remove('solo-mode');
     }
 
-    // --- 1. TOP 3 (THE ALTAR) ---
-    let bestOf = [...allItems]
-        .filter(item => {
-            const s = (item.status || "").toLowerCase();
-            return !s.includes('rej') && !s.includes('fail') && !s.includes('pending');
-        })
-        .sort((a, b) => getPoints(b) - getPoints(a))
-        .slice(0, 3);
+    // --- 1. SEPARATE LISTS ---
+    const deniedList = allItems.filter(item => {
+        const s = (item.status || "").toLowerCase();
+        return s.includes('rej') || s.includes('fail');
+    });
 
-    // --- THE FIX: ROBUST THUMBNAIL EXTRACTOR ---
+    // Candidates for Altar (Approved Only)
+    // NOTE: We exclude pending from Altar, they go to Archive
+    let candidates = allItems.filter(item => {
+        const s = (item.status || "").toLowerCase();
+        return !s.includes('rej') && !s.includes('fail') && !s.includes('pending');
+    });
+
+    // --- 2. ALTAR SORTING (THE FIX) ---
+    // Sort by Date Descending first
+    candidates.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
+
+    let bestOf = [];
+    
+    // Find the "King" (Newest item with score >= 150)
+    const kingIndex = candidates.findIndex(item => getPoints(item) >= 150);
+
+    if (kingIndex !== -1) {
+        bestOf.push(candidates[kingIndex]); // King takes Slot 1
+        candidates.splice(kingIndex, 1);    // Remove from pool
+    } else if (candidates.length > 0) {
+        bestOf.push(candidates.shift());    // Fallback: Newest takes Slot 1
+    }
+
+    // Fill Slot 2 & 3 with next newest
+    if(candidates.length > 0) bestOf.push(candidates.shift());
+    if(candidates.length > 0) bestOf.push(candidates.shift());
+
+    // The rest go to Archive (Plus pending items which we filtered out earlier)
+    const pendingList = allItems.filter(item => (item.status || "").toLowerCase().includes('pending'));
+    const archiveList = [...pendingList, ...candidates];
+    // Sort Archive by date again to mix pending/approved correctly
+    archiveList.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
+
+
+    // --- 3. THUMBNAIL HELPER (YOUR ORIGINAL LOGIC RESTORED) ---
     const getThumb = async (item, size) => {
-        if (!item) return PLACEHOLDER_IMG;
-
-        let raw = item.proofUrl || item.media || item.url || item.image || "";
-        
-        // 1. Video Handling: If it's a video, try to find a cover image first
+        // Just checking for video cover, otherwise use your exact original chain
+        let raw = item.proofUrl || item.media;
         if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
             if (item.cover) raw = item.cover;
             else if (item.thumbnail) raw = item.thumbnail;
             else if (item.poster) raw = item.poster;
-            else return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; // Generic Video Icon
         }
-
-        // 2. Wix URL Fix (Manual Extraction)
-        // Converts "wix:image://v1/ID/file.jpg#..." to "https://static.wixstatic.com/media/ID/v1/fill/..."
-        if (raw && raw.startsWith('wix:image')) {
-            try {
-                const parts = raw.split('/');
-                const id = parts[3].split('#')[0]; 
-                return `https://static.wixstatic.com/media/${id}/v1/fill/w_${size},h_${size},al_c,q_75/file.jpg`;
-            } catch(e) {
-                // If parsing fails, fall through to standard logic
-            }
-        }
-
-        // 3. Standard Logic (Bytescale / Public URLs)
-        try {
-            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
-        } catch(e) {
-            return raw; // Fallback to raw URL if signing fails
-        }
+        // Your original chain:
+        return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
     };
 
     // --- RANK 1 (Center) ---
@@ -270,32 +280,28 @@ export async function renderGallery() {
         if(rec3) rec3.src = IMG_STATUE_SIDE;
     }
 
-    // --- 2. MIDDLE (ARCHIVE) ---
-    const middleItems = allItems.filter(item => {
-        if (bestOf.includes(item)) return false; 
-        const s = (item.status || "").toLowerCase();
-        return !s.includes('rej') && !s.includes('fail');
-    });
-
+    // --- 4. RENDER MIDDLE (ARCHIVE) ---
     let desktopArchiveHtml = '';
     let mobileArchiveHtml = '';
 
-    if (middleItems.length > 0) {
-        // Use the new getThumb here too
-        const middlePromises = middleItems.map(item => getThumb(item, 300));
+    if (archiveList.length > 0) {
+        const middlePromises = archiveList.map(item => getThumb(item, 300));
         const middleThumbs = await Promise.all(middlePromises);
         
-        for (let i = 0; i < middleItems.length; i++) {
+        for (let i = 0; i < archiveList.length; i++) {
             const thumb = middleThumbs[i];
-            const realIndex = allItems.indexOf(middleItems[i]);
-            const isPending = (middleItems[i].status || "").toLowerCase().includes('pending');
-            const overlay = isPending ? `<div class="pending-overlay"><div class="pending-icon">⏳</div></div>` : ``;
-            const mobBadge = isPending ? `<div class="mob-pending-badge">⏳</div>` : ``;
+            const realIndex = allItems.indexOf(archiveList[i]);
+            const isPending = (archiveList[i].status || "").toLowerCase().includes('pending');
+            
+            // --- FIX 2: LUXURY PENDING INDICATOR ---
+            const overlay = isPending ? `<div class="pending-overlay"><div class="pending-badge">AWAITING<br>VERDICT</div></div>` : ``;
+            // Mobile simplified badge
+            const mobBadge = isPending ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;"><div style="color:var(--neon-yellow); font-size:0.5rem; border:1px solid var(--neon-yellow); padding:2px;">WATCHING</div></div>` : ``;
 
             // Desktop Blueprints
             desktopArchiveHtml += `
                 <div class="item-blueprint" onclick="window.openHistoryModal(${realIndex})">
-                    <img class="blueprint-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
+                    <img class="blueprint-img" src="${thumb}" loading="lazy">
                     <div class="bp-corner bl-tl"></div><div class="bp-corner bl-tr"></div>
                     <div class="bp-corner bl-bl"></div><div class="bp-corner bl-br"></div>
                     ${overlay}
@@ -304,7 +310,7 @@ export async function renderGallery() {
             // Mobile Horizontal Scroll Item
             mobileArchiveHtml += `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${realIndex})">
-                    <img class="mob-scroll-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
+                    <img class="mob-scroll-img" src="${thumb}" loading="lazy">
                     ${mobBadge}
                 </div>`;
         }
@@ -315,34 +321,32 @@ export async function renderGallery() {
     gridOkay.innerHTML = desktopArchiveHtml;
     if(recGrid) recGrid.innerHTML = mobileArchiveHtml;
 
-    // --- 3. BOTTOM (HEAP) - NOW SYNCED TO MOBILE ---
-    const failedItems = allItems.filter(item => {
-        const s = (item.status || "").toLowerCase();
-        return s.includes('rej') || s.includes('fail');
-    });
-
+    // --- 5. RENDER BOTTOM (HEAP/DENIED) ---
     let desktopFailedHtml = '';
     let mobileFailedHtml = '';
 
-    if (failedItems.length > 0) {
-        const failedPromises = failedItems.map(item => getThumb(item, 300));
+    if (deniedList.length > 0) {
+        const failedPromises = deniedList.map(item => getThumb(item, 300));
         const failedThumbs = await Promise.all(failedPromises);
         
-        for (let i = 0; i < failedItems.length; i++) {
+        for (let i = 0; i < deniedList.length; i++) {
             const thumb = failedThumbs[i];
-            const realIndex = allItems.indexOf(failedItems[i]);
+            const realIndex = allItems.indexOf(deniedList[i]);
             
+            // --- FIX 3: BLACK & WHITE FILTER ---
+            const bwStyle = 'filter: grayscale(100%);';
+
             // Desktop Trash
             desktopFailedHtml += `
                 <div class="item-trash" onclick="window.openHistoryModal(${realIndex})">
-                    <img class="trash-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
+                    <img class="trash-img" src="${thumb}" loading="lazy" style="${bwStyle}">
                     <div class="trash-stamp">DENIED</div>
                 </div>`;
             
             // Mobile Heap (Small)
             mobileFailedHtml += `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${realIndex})">
-                    <img class="mob-scroll-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
+                    <img class="mob-scroll-img" src="${thumb}" loading="lazy" style="${bwStyle}">
                 </div>`;
         }
     } else {
