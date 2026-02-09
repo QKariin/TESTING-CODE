@@ -64,7 +64,7 @@ function getSortedGallery() {
     return [...galleryData].sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
 }
 
-// --- HELPER: GET FILTERED LIST ---
+// --- HELPER: GET FILTERED LIST (UPDATED) ---
 function getGalleryList() {
     if (!galleryData || !Array.isArray(galleryData)) return [];
     
@@ -73,10 +73,17 @@ function getGalleryList() {
     
     let items = galleryData.filter(i => {
         const s = (i.status || "").toLowerCase();
-        return (s.includes('pending') || s.includes('app') || s.includes('rej') || s === "") && i.proofUrl;
+        // 1. Basic Status Check
+        const isVisible = (s.includes('pending') || s.includes('app') || s.includes('rej') || s === "") && i.proofUrl;
+        
+        // 2. STRICT CATEGORY FILTER (The Fix)
+        // If it is a "Routine", do NOT show it here. It belongs in the top shelf.
+        const isNotRoutine = (i.category || "").toLowerCase() !== 'routine';
+
+        return isVisible && isNotRoutine;
     });
 
-    // Apply Filter
+    // Apply Sticker Filter (Pending/Denied buttons)
     if (activeStickerFilter === "DENIED") {
         items = items.filter(item => (item.status || "").toLowerCase().includes('rej'));
     } else if (activeStickerFilter === "PENDING") {
