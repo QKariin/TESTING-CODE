@@ -1244,9 +1244,76 @@ window.renderRewards = function() {
     const totalKneels = gameStats.kneelCount || 0;
     const totalSpent = gameStats.total_coins_spent || 0; 
 
-    // HELPER: BUILD SHELF
+    // --- NEW SECTION: DAILY ROUTINE STREAK CALCULATION ---
+    let streakCount = 0;
+    let routinePhotos = [];
+
+    // Check if gallery exists before filtering
+    if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
+        // Filter for items tagged 'Routine' or 'Protocol'
+        routinePhotos = galleryData.filter(i => {
+            const tag = (i.type || i.tag || "").toLowerCase();
+            return tag.includes('routine') || tag.includes('protocol');
+        });
+
+        // Sort by Date (Newest First) to calculate streak
+        routinePhotos.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
+
+        // Calculate Streak Logic
+        if (routinePhotos.length > 0) {
+            const now = new Date();
+            const lastDate = new Date(routinePhotos[0].date || routinePhotos[0]._createdDate);
+            const diffHours = (now - lastDate) / (1000 * 60 * 60);
+            
+            // If last upload was within 48 hours, the streak is alive
+            if (diffHours < 48) { 
+                streakCount = 1; 
+                // Loop backwards to count consecutive days
+                for (let i = 0; i < routinePhotos.length - 1; i++) {
+                    const d1 = new Date(routinePhotos[i].date || routinePhotos[i]._createdDate);
+                    const d2 = new Date(routinePhotos[i+1].date || routinePhotos[i+1]._createdDate);
+                    const dayDiff = (d1 - d2) / (1000 * 60 * 60 * 24);
+                    
+                    // If the difference is roughly 1 day (0.8 to 1.2), add to streak
+                    if (dayDiff >= 0.8 && dayDiff <= 1.2) { 
+                        streakCount++; 
+                    } else if (dayDiff > 1.2) {
+                        break; // Gap too big, streak ends here
+                    }
+                }
+            }
+        }
+    }
+
+    // --- UPDATE ROUTINE UI (The New Shelf) ---
+    const strVal = document.getElementById('dispStreakVal');
+    const strBest = document.getElementById('dispBestStreak');
+    const strShelf = document.getElementById('shelfRoutine');
+
+    if (strVal) strVal.innerText = streakCount;
+    
+    // Best Streak: Use saved stats if higher, otherwise use current
+    if (strBest) strBest.innerText = Math.max(streakCount, gameStats.bestRoutineStreak || 0);
+
+    if (strShelf) {
+        strShelf.innerHTML = routinePhotos.slice(0, 7).map(item => {
+            const src = item.url || item.image || "";
+            // FAST THUMBNAIL LOGIC (Wix Resizer)
+            let thumb = src;
+            if(src.startsWith('wix:image')) {
+                 try { 
+                     const id = src.split('/')[3].split('#')[0];
+                     thumb = `https://static.wixstatic.com/media/${id}/v1/fill/w_150,h_150,q_70/thumb.jpg`; 
+                 } catch(e){}
+            }
+            return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border-radius:4px; border:1px solid #333; flex-shrink:0; margin-right:10px;">`;
+        }).join('');
+    }
+    // --- END NEW SECTION ---
+
+
+    // HELPER: BUILD SHELF (PRESERVED)
     // shapeClass = 'shape-hex', 'shape-circle', etc.
-    // UPDATED HELPER: BUILD SHELF WITH CLICK HANDLER
     const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabel) => {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -1292,7 +1359,7 @@ window.renderRewards = function() {
     buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
     buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
     buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', null, totalSpent, 'spend');
-    };
+};
 
 window.openRewardCard = function(name, iconPath, current, target, type) {
     const overlay = document.getElementById('rewardCardOverlay');
