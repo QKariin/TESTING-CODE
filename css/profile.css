@@ -16,8 +16,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
 
 body {
-    background: url('https://static.wixstatic.com/media/ce3e5b_c853f7c3a80746df915f15d186c31992~mv2.jpg') no-repeat center center fixed;
-    background: radial-gradient(circle at 80% 20%, #111 0%, var(--bg-void) 80%);
+    background: transparent;
     color: var(--text-white);
     font-family: 'Cinzel', serif; /* GLOBAL FONT CHANGE */
     height: 100vh;
