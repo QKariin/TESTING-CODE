@@ -219,6 +219,28 @@
             letter-spacing: 2px; cursor: pointer;
         }
 
+      /* --- GALLERY STICKER (Reward Badge) --- */
+          .gallery-sticker-badge {
+              position: absolute;
+              bottom: 5px;
+              right: 5px;
+              width: 35px;  /* Adjust size as needed */
+              height: 35px;
+              z-index: 5;
+              object-fit: contain;
+              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+              transform: rotate(-10deg); /* Slight tilt for realism */
+              pointer-events: none; /* Let clicks pass through to the card */
+          }
+          
+          /* Make it slightly smaller on mobile lists if needed */
+          .mob-scroll-item .gallery-sticker-badge {
+              width: 25px;
+              height: 25px;
+              bottom: 2px;
+              right: 2px;
+          }
+
      /* FIX QUEEN'S WALL ON MOBILE */
           #mobNewsGrid {
               display: grid !important;
