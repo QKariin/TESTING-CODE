@@ -23,27 +23,31 @@
 
 <style>
     /* =========================================
-       1. CORE LAYOUT & SCROLLING (RESTORED)
+       1. CORE LAYOUT & SCROLLING (CLEANED)
        ========================================= */
     #MOBILE_APP { display: none; }
 
-      /* --- CRITICAL IOS FIX: LOCK THE BODY --- */
+    /* --- CRITICAL APP SHELL LOCK (GLOBAL) --- */
+    /* This applies to BOTH Desktop and Mobile to stop the "Wix Scroll" */
     html, body {
         position: fixed !important; 
         width: 100% !important;
         height: 100% !important;
-        overflow: hidden !important;
+        overflow: hidden !important; /* Kills outer scrollbar */
         background-color: #000000 !important;
         margin: 0 !important;
         padding: 0 !important;
         top: 0 !important;
         left: 0 !important;
-        overscroll-behavior: none !important;
+        overscroll-behavior: none !important; /* Kills iOS bounce */
+        touch-action: none; /* Kills pinch-zoom on mobile */
     }
 
+    /* --- MOBILE SPECIFIC STYLES --- */
     @media screen and (max-width: 768px) {
+        
         #MOBILE_APP {
-            display: block !important; /* Changed from flex to block for Single Scroll */
+            display: block !important; 
             width: 100vw;
             height: 100dvh;
             position: fixed;
@@ -54,44 +58,29 @@
             font-family: 'Cinzel', serif;
             overflow: hidden;
         }
+        
         #DESKTOP_APP { display: none !important; }
 
-        /* THE NEW SINGLE SCROLL CONTAINER */
-        /* =========================================
-       1. THE "APP SHELL" LOCK (STOPS WIX SCROLLING)
-       ========================================= */
-    
-    /* Lock the outer shell completely */
-    html, body {
-        position: fixed !important; 
-        width: 100% !important;
-        height: 100% !important;
-        margin: 0 !important; 
-        padding: 0 !important;
-        overflow: hidden !important; /* Kills the outer scrollbar */
-        overscroll-behavior: none !important; /* Kills the "Rubber Band" bounce on iOS */
-        touch-action: none; /* Disables browser zooming/panning */
-    }
+        /* NOTE: I removed the duplicate 'html, body' block here. 
+           The global one at the top handles it perfectly. */
 
-    /* The ONLY thing allowed to scroll */
-    #viewMobileHome {
-        position: fixed; 
-        top: 0; 
-        left: 0; 
-        width: 100vw; 
-        height: 100dvh; /* Dynamic Height handles the Address Bar jump */
-        
-        overflow-y: auto !important; /* This enables the internal scroll */
-        -webkit-overflow-scrolling: touch; /* Makes it smooth like an iPhone app */
-        
-        display: block; 
-        padding: 0; 
-        z-index: 1; 
-        background: #000;
-        
-        /* Stop horizontal wobbly scrolling */
-        overflow-x: hidden !important; 
-    }
+        /* The ONLY thing allowed to scroll is the View Container */
+        #viewMobileHome {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100dvh; /* Dynamic Height for address bar */
+            
+            overflow-y: auto !important; /* Internal scroll allowed */
+            -webkit-overflow-scrolling: touch; /* Smooth iOS scroll */
+            
+            display: block; 
+            padding: 0; 
+            z-index: 1; 
+            background: #000;
+            overflow-x: hidden !important; 
+        }
 
         /* HIDE ALL SCROLLBARS */
         #viewMobileHome::-webkit-scrollbar,
@@ -104,24 +93,29 @@
         }
 
         /* =========================================
-           2. HALO DASHBOARD (RESTORED ORIGINAL)
+           2. HALO DASHBOARD
            ========================================= */
         .mob-bg-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; pointer-events: none; /* Changed z-index to -1 so buttons work */
+            z-index: -1; pointer-events: none;
+            /* TRANSPARENT BACKGROUND FIX */
+            background: transparent !important;
+            backdrop-filter: none !important;
         }
-        .bg-blur {
-            width: 100%; height: 100%; object-fit: cover;
-            filter: blur(10px) brightness(0.4); 
-            transform: scale(1.1); 
+        
+        /* HIDE THE USER PHOTO BG */
+        #mob_bgPic {
+            display: none !important; 
+            opacity: 0 !important;
         }
+
         .bg-overlay {
             position: absolute; inset: 0;
             background: radial-gradient(circle at center, transparent 0%, #000 50%);
         }
 
         .halo-section {
-            position: relative; z-index: 2; margin-top: 60px; /* Added margin for HUD */
+            position: relative; z-index: 2; margin-top: 60px;
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
         }
 
@@ -146,7 +140,7 @@
             letter-spacing: 4px; text-transform: uppercase;
         }
 
-        /* THE MISSING STATS CARD (Merit/Coins) */
+        /* STATS CARD */
         .halo-stats-card {
             position: relative; z-index: 3;
             margin-top: -40px;
