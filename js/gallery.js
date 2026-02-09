@@ -156,7 +156,6 @@ export async function renderGallery() {
     const mob2 = document.getElementById('mobImgSlot2');
     const mob3 = document.getElementById('mobImgSlot3');
     
-    // Mobile Record Targets
     const rec1 = document.getElementById('mobRec_Slot1');
     const rec2 = document.getElementById('mobRec_Slot2');
     const rec3 = document.getElementById('mobRec_Slot3');
@@ -165,14 +164,14 @@ export async function renderGallery() {
 
     if (!gridFailed || !gridOkay) return;
 
-    // Reset All Grids
+    // Reset Containers
     gridFailed.innerHTML = "";
     gridOkay.innerHTML = "";
     if(recGrid) recGrid.innerHTML = "";
     if(recHeap) recHeap.innerHTML = "";
 
     // --- 2. GET DATA ---
-    const allItems = getGalleryList(); // (This uses the filter we fixed earlier)
+    const allItems = getGalleryList(); 
 
     if (historySection) {
         if (allItems.length === 0) historySection.classList.add('solo-mode');
@@ -180,49 +179,45 @@ export async function renderGallery() {
     }
 
     // --- 3. SEPARATE LISTS ---
-    // Denied List (Strict)
+    // Denied (Black & White)
     const deniedList = allItems.filter(i => {
         const s = (i.status || "").toLowerCase();
         return s.includes('rej') || s.includes('fail');
     });
 
-    // Candidates for Altar/Archive (Approved OR Pending)
-    // FIX: We allow 'pending' here so the Altar isn't empty!
-    let candidates = allItems.filter(i => {
+    // Accepted/Pending (For Altar & Archive)
+    const candidates = allItems.filter(i => {
         const s = (i.status || "").toLowerCase();
         return !s.includes('rej') && !s.includes('fail');
     });
 
     // --- 4. ALTAR SORTING (King Logic) ---
-    // Sort by Date Descending first (Newest at top)
+    // First, Sort by Date Descending (Newest First)
     candidates.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
 
     let bestOf = [];
     
-    // Try to find the "King" (Newest item with score >= 150)
-    // We only look at APPROVED items for the King slot first
-    const kingIndex = candidates.findIndex(item => {
-        const isApp = !(item.status || "").toLowerCase().includes('pending');
-        return isApp && getPoints(item) >= 150;
-    });
+    // Find the "King" (Newest item with score >= 150)
+    // Note: We allow Pending items to be King if they are high value (unlikely, but safe)
+    const kingIndex = candidates.findIndex(item => getPoints(item) >= 150);
 
     if (kingIndex !== -1) {
-        // Found a King -> Slot 1
+        // Found a King -> Move to Slot 1
         bestOf.push(candidates[kingIndex]);
         candidates.splice(kingIndex, 1);
     } else {
-        // No King -> Take the absolute newest item (even if Pending)
+        // No King -> Take the absolute newest item
         if(candidates.length > 0) bestOf.push(candidates.shift());
     }
 
-    // Fill Slot 2 & 3 with next newest
+    // Fill Slot 2 & 3 with next newest items
     if(candidates.length > 0) bestOf.push(candidates.shift());
     if(candidates.length > 0) bestOf.push(candidates.shift());
 
     // The rest go to Archive
     const archiveList = candidates;
 
-    // --- 5. THUMBNAIL HELPER (WIX FIX) ---
+    // --- 5. IMAGE LOADER (ASYNC + WIX FIX) ---
     const getThumb = async (item, size) => {
         if (!item) return PLACEHOLDER_IMG;
 
@@ -232,21 +227,19 @@ export async function renderGallery() {
         if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
             if (item.cover) raw = item.cover;
             else if (item.thumbnail) raw = item.thumbnail;
-            else return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; // Video Icon
+            else return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; 
         }
 
-        // Wix URL Fix (Manual Split = Safest)
+        // Wix URL Fix
         if (raw && raw.startsWith('wix:image')) {
             try {
-                // Split by "/" and get the ID part
                 const parts = raw.split('/');
-                // ID is usually index 3: wix:image://v1/ID/file.jpg...
                 const id = parts[3].split('#')[0]; 
                 return `https://static.wixstatic.com/media/${id}/v1/fill/w_${size},h_${size},al_c,q_75/file.jpg`;
             } catch(e) {}
         }
 
-        // Standard URL Signing
+        // Standard URL Signing (Bytescale)
         try {
             return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
         } catch(e) {
@@ -254,63 +247,66 @@ export async function renderGallery() {
         }
     };
 
-    // --- 6. RENDER ALTAR (Sequentially) ---
-    
-    // Slot 1 (Center)
+    // --- 6. RENDER ALTAR (Parallel Loading) ---
+    const [t1, t2, t3] = await Promise.all([
+        getThumb(bestOf[0], 400),
+        getThumb(bestOf[1], 300),
+        getThumb(bestOf[2], 300)
+    ]);
+
+    // Slot 1
     if (bestOf[0]) {
-        let thumb = await getThumb(bestOf[0], 400);
         let idx = allItems.indexOf(bestOf[0]);
         // Desktop
-        if(slot1.card) { slot1.card.style.display='flex'; slot1.img.src=thumb; if(slot1.ref) slot1.ref.src=thumb; slot1.card.onclick=()=>window.openHistoryModal(idx); }
+        if(slot1.card) { slot1.card.style.display='flex'; slot1.img.src=t1; if(slot1.ref) slot1.ref.src=t1; slot1.card.onclick=()=>window.openHistoryModal(idx); }
         // Mobile Home
-        if(mob1) { mob1.src=thumb; mob1.parentElement.onclick=()=>window.openHistoryModal(idx); mob1.style.display='block'; }
+        if(mob1) { mob1.src=t1; mob1.parentElement.onclick=()=>window.openHistoryModal(idx); mob1.style.display='block'; }
         // Mobile Record
-        if(rec1) { rec1.src=thumb; rec1.onclick=()=>window.openHistoryModal(idx); }
+        if(rec1) { rec1.src=t1; rec1.onclick=()=>window.openHistoryModal(idx); }
     } else {
         if(slot1.card) slot1.card.style.display='none';
         if(mob1) mob1.style.display='none';
         if(rec1) rec1.src=IMG_QUEEN_MAIN;
     }
 
-    // Slot 2 (Left)
+    // Slot 2
     if (bestOf[1]) {
-        let thumb = await getThumb(bestOf[1], 300);
         let idx = allItems.indexOf(bestOf[1]);
-        if(slot2.card) { slot2.card.style.display='flex'; slot2.img.src=thumb; slot2.card.onclick=()=>window.openHistoryModal(idx); }
-        if(mob2) { mob2.src=thumb; mob2.style.display='block'; mob2.parentElement.onclick=()=>window.openHistoryModal(idx); }
-        if(rec2) { rec2.src=thumb; rec2.onclick=()=>window.openHistoryModal(idx); }
+        if(slot2.card) { slot2.card.style.display='flex'; slot2.img.src=t2; slot2.card.onclick=()=>window.openHistoryModal(idx); }
+        if(mob2) { mob2.src=t2; mob2.style.display='block'; mob2.parentElement.onclick=()=>window.openHistoryModal(idx); }
+        if(rec2) { rec2.src=t2; rec2.onclick=()=>window.openHistoryModal(idx); }
     } else {
         if(slot2.card) slot2.card.style.display='none';
         if(mob2) mob2.style.display='none';
         if(rec2) rec2.src=IMG_STATUE_SIDE;
     }
 
-    // Slot 3 (Right)
+    // Slot 3
     if (bestOf[2]) {
-        let thumb = await getThumb(bestOf[2], 300);
         let idx = allItems.indexOf(bestOf[2]);
-        if(slot3.card) { slot3.card.style.display='flex'; slot3.img.src=thumb; slot3.card.onclick=()=>window.openHistoryModal(idx); }
-        if(mob3) { mob3.src=thumb; mob3.style.display='block'; mob3.parentElement.onclick=()=>window.openHistoryModal(idx); }
-        if(rec3) { rec3.src=thumb; rec3.onclick=()=>window.openHistoryModal(idx); }
+        if(slot3.card) { slot3.card.style.display='flex'; slot3.img.src=t3; slot3.card.onclick=()=>window.openHistoryModal(idx); }
+        if(mob3) { mob3.src=t3; mob3.style.display='block'; mob3.parentElement.onclick=()=>window.openHistoryModal(idx); }
+        if(rec3) { rec3.src=t3; rec3.onclick=()=>window.openHistoryModal(idx); }
     } else {
         if(slot3.card) slot3.card.style.display='none';
         if(mob3) mob3.style.display='none';
         if(rec3) rec3.src=IMG_STATUE_SIDE;
     }
 
-    // --- 7. RENDER LISTS ---
+    // --- 7. RENDER LISTS (Batched) ---
     const renderChunk = async (list, isTrash) => {
         const promises = list.map(async (item) => {
             const src = await getThumb(item, 250);
             const idx = allItems.indexOf(item);
             const isPending = (item.status || "").toLowerCase().includes('pending');
             
-            // STYLES
-            const imgStyle = isTrash ? 'filter: grayscale(100%);' : '';
+            // STYLE: Black & White for Denied
+            const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
             
-            // LUXURY BADGE (CSS class 'pending-badge' needs to be in CSS)
+            // STYLE: Pending Badges
             const overlay = isPending ? `<div class="pending-overlay"><div class="pending-badge">AWAITING<br>VERDICT</div></div>` : ``;
-            const mobBadge = isPending ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;"><div style="color:var(--neon-yellow); font-size:0.5rem; border:1px solid var(--neon-yellow); padding:2px;">WAIT</div></div>` : ``;
+            // Mobile badge is absolute positioning over the image
+            const mobBadge = isPending ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;"><div class="pending-badge" style="font-size:0.4rem; padding:3px; border-width:1px;">WATCHING</div></div>` : ``;
 
             // Desktop
             const desk = `
