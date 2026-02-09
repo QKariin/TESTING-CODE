@@ -1285,19 +1285,25 @@ window.renderRewards = function() {
     let streakCount = 0;
     let routinePhotos = [];
 
+    // 1. DATA SOURCE: We look at the full history (Gallery)
     if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
-        // STRICT FILTER: Only items where 'category' IS 'Routine'
-        // This prevents normal tasks from mixing in.
-        routinePhotos = galleryData.filter(i => i.category === 'Routine');
+        
+        // 2. THE FILTER: STRICT CATEGORY CHECK
+        // This is the fix. It ignores text. It only checks the official category tag.
+        routinePhotos = galleryData.filter(item => {
+            // Check if the backend saved it as 'Routine' (Case sensitive safety)
+            const cat = (item.category || "").toLowerCase();
+            return cat === 'routine';
+        });
 
-        // Sort by Date (Newest First)
+        // 3. SORT (Newest First)
         routinePhotos.sort((a, b) => {
             const dateA = new Date(a.date || a._createdDate || 0);
             const dateB = new Date(b.date || b._createdDate || 0);
             return dateB - dateA;
         });
 
-        // Calculate Streak (6 AM Rule)
+        // 4. CALCULATE STREAK (Logic: Yesterday/Today chain)
         if (routinePhotos.length > 0) {
             const getDutyDay = (d) => {
                 let date = new Date(d);
@@ -1306,13 +1312,14 @@ window.renderRewards = function() {
             };
 
             const todayCode = getDutyDay(new Date());
+            // Use the newest photo's date
             const lastCode = getDutyDay(routinePhotos[0].date || routinePhotos[0]._createdDate);
 
-            // Alive Check
             const d1 = new Date(todayCode);
             const d2 = new Date(lastCode);
             const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
 
+            // If uploaded Today or Yesterday, the streak is alive
             if (diffDays <= 1) {
                 streakCount = 1;
                 let currentCode = lastCode;
@@ -1336,17 +1343,24 @@ window.renderRewards = function() {
         }
     }
 
-    // --- UPDATE UI (Luxury Style) ---
+    // --- UPDATE UI (LUXURY STYLE) ---
     const strVal = document.getElementById('dispStreakVal');
     const strBest = document.getElementById('dispBestStreak');
     const strShelf = document.getElementById('shelfRoutine');
 
-    if (strVal) strVal.innerText = streakCount;
+    if (strVal) {
+        strVal.innerText = streakCount;
+        strVal.style.color = "#c5a059"; 
+        // Force the parent box to look Luxury (Gold/Black)
+        strVal.parentElement.style.borderColor = "#c5a059";
+        strVal.parentElement.style.background = "linear-gradient(180deg, #1a1a1a 0%, #000 100%)";
+    }
+    
     if (strBest) strBest.innerText = Math.max(streakCount, gameStats.bestRoutineStreak || 0);
 
     if (strShelf) {
         if(routinePhotos.length === 0) {
-            strShelf.innerHTML = `<div style="color:#666; font-family:'Cinzel'; font-size:0.6rem; padding:10px; letter-spacing:1px;">NO DATA LOGGED</div>`;
+            strShelf.innerHTML = `<div style="color:#666; font-family:'Cinzel'; font-size:0.6rem; padding:10px; letter-spacing:1px;">NO DISCIPLINE LOGGED</div>`;
         } else {
             strShelf.innerHTML = routinePhotos.slice(0, 10).map(item => {
                 const src = item.proofUrl || item.url || item.image || item.proof || "";
@@ -1357,17 +1371,16 @@ window.renderRewards = function() {
                 if(src.startsWith('wix:image')) {
                      try { thumb = `https://static.wixstatic.com/media/${src.split('/')[3].split('#')[0]}/v1/fill/w_150,h_150,q_70/thumb.jpg`; } catch(e){}
                 } else {
-                    // If it's a regular URL, try to optimize (optional)
                     if(typeof getOptimizedUrl === 'function') thumb = getOptimizedUrl(src, 150);
                 }
 
-                // Render with Dark Border (No Neon)
-                return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border:1px solid #333; border-radius:2px; flex-shrink:0; margin-right:8px; filter:sepia(20%) brightness(0.9);">`;
+                // Render Image (Gold/Dark Border)
+                return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border:1px solid #444; border-radius:2px; flex-shrink:0; margin-right:8px; filter:sepia(20%) brightness(0.9);">`;
             }).join('');
         }
     }
 
-    // --- STANDARD SHELVES (No Changes Here) ---
+    // --- RENDER STANDARD SHELVES (PRESERVED) ---
     const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabel) => {
         const container = document.getElementById(containerId);
         if (!container) return;
