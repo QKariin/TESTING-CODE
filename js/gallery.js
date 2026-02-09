@@ -143,7 +143,7 @@ function renderStickerFilters() {
 export async function renderGallery() {
     if (!galleryData) return;
     
-    // --- 1. TARGETS ---
+    // Desktop Targets
     const gridFailed = document.getElementById('gridFailed'); 
     const gridOkay = document.getElementById('gridOkay');     
     const historySection = document.getElementById('historySection');
@@ -152,10 +152,13 @@ export async function renderGallery() {
     const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2') };
     const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3') };
 
+    // Mobile Home Targets
     const mob1 = document.getElementById('mobImgSlot1');
     const mob2 = document.getElementById('mobImgSlot2');
     const mob3 = document.getElementById('mobImgSlot3');
-    const rec1 = document.getElementById('mobRec_Slot1'); // Added Mobile Record slots
+
+    // Mobile Record Targets
+    const rec1 = document.getElementById('mobRec_Slot1');
     const rec2 = document.getElementById('mobRec_Slot2');
     const rec3 = document.getElementById('mobRec_Slot3');
     const recGrid = document.getElementById('mobRec_Grid'); 
@@ -163,13 +166,13 @@ export async function renderGallery() {
 
     if (!gridFailed || !gridOkay) return;
 
-    // Reset
+    // Reset All Grids
     gridFailed.innerHTML = "";
     gridOkay.innerHTML = "";
     if(recGrid) recGrid.innerHTML = "";
     if(recHeap) recHeap.innerHTML = "";
 
-    // --- 2. GET DATA (Filtered) ---
+    // 1. Get Data (Using your existing filter)
     const allItems = getGalleryList(); 
 
     if (historySection) {
@@ -177,168 +180,185 @@ export async function renderGallery() {
         else historySection.classList.remove('solo-mode');
     }
 
-    // --- 3. HELPER: BULLETPROOF IMAGE EXTRACTOR ---
-    const getRobustImg = (item) => {
-        if (!item) return PLACEHOLDER_IMG;
-        
-        // 1. Get raw string
-        let raw = item.proofUrl || item.media || item.url || item.image || "";
-        
-        // 2. Video? Return Icon
-        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
-            if (item.cover) raw = item.cover;
-            else return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; 
-        }
+    // --- FIX 1: ALTAR SORTING (Newest >= 150 Points) ---
+    // Filter out denied/pending for the altar
+    const candidates = allItems.filter(item => {
+        const s = (item.status || "").toLowerCase();
+        return !s.includes('rej') && !s.includes('fail') && !s.includes('pending');
+    });
 
-        // 3. Wix Image? FORCE CLEAN URL
-        // Don't try to sign it. Just strip the garbage.
-        if (raw && raw.startsWith('wix:image')) {
-            try {
-                // Split by "/"
-                const parts = raw.split('/');
-                // The ID is always after "v1/"
-                // Example: wix:image://v1/11062b_.../file.jpg
-                const id = parts[3].split('#')[0]; 
-                return `https://static.wixstatic.com/media/${id}`;
-            } catch(e) {
-                return PLACEHOLDER_IMG;
-            }
-        }
+    let bestOf = [];
+    
+    // Find the "King" (Newest item with score >= 150)
+    // We sort by date desc first to find the most recent one
+    candidates.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
+    
+    const kingIndex = candidates.findIndex(item => getPoints(item) >= 150);
 
-        // 4. Standard URL? Return as is.
-        return raw || PLACEHOLDER_IMG;
+    if (kingIndex !== -1) {
+        // Found a recent high score -> Slot 1
+        bestOf.push(candidates[kingIndex]);
+        // Remove king from candidates
+        candidates.splice(kingIndex, 1);
+    } else {
+        // No high score -> Just take the newest
+        if(candidates.length > 0) bestOf.push(candidates.shift());
+    }
+
+    // Fill Slot 2 & 3 with whatever is left (next newest)
+    if(candidates.length > 0) bestOf.push(candidates.shift());
+    if(candidates.length > 0) bestOf.push(candidates.shift());
+
+
+    // --- THUMBNAIL HELPER (Preserving your Async Logic but fixing Wix URLs) ---
+    const getThumb = async (item, size) => {
+        let raw = item.proofUrl || item.media || "";
+        
+        // Fix Wix URL so getOptimizedUrl doesn't break
+        if (raw.startsWith('wix:image')) {
+            try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch(e){}
+        }
+        
+        try {
+            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
+        } catch(e) {
+            return raw; // Fallback if signing fails
+        }
     };
 
-    // --- 4. SEPARATE LISTS ---
-    const acceptedList = allItems.filter(i => {
-        const s = (i.status || "").toLowerCase();
+    // --- RANK 1 (Center) ---
+    if (bestOf[0]) {
+        let thumb = await getThumb(bestOf[0], 400);
+        let realIndex = allItems.indexOf(bestOf[0]);
+
+        // Desktop
+        if(slot1.card) {
+            slot1.card.style.display = 'flex';
+            slot1.img.src = thumb;
+            if(slot1.ref) slot1.ref.src = thumb;
+            slot1.card.onclick = () => window.openHistoryModal(realIndex);
+            slot1.img.style.filter = "none";
+        }
+        // Mobile Sync
+        if(mob1) { mob1.src = thumb; mob1.onclick = () => window.openHistoryModal(realIndex); mob1.style.display = 'block'; }
+        if(rec1) { rec1.src = thumb; rec1.onclick = () => window.openHistoryModal(realIndex); }
+    } else {
+        if(slot1.card) { slot1.img.src = IMG_QUEEN_MAIN; if(slot1.ref) slot1.ref.src = IMG_QUEEN_MAIN; }
+        if(mob1) mob1.src = IMG_QUEEN_MAIN;
+        if(rec1) rec1.src = IMG_QUEEN_MAIN;
+    }
+
+    // --- RANK 2 (Left) ---
+    if (bestOf[1]) {
+        let thumb = await getThumb(bestOf[1], 300);
+        let realIndex = allItems.indexOf(bestOf[1]);
+        if(slot2.card) { slot2.card.style.display = 'flex'; slot2.img.src = thumb; slot2.card.onclick = () => window.openHistoryModal(realIndex); }
+        if(mob2) { mob2.src = thumb; mob2.onclick = () => window.openHistoryModal(realIndex); mob2.style.display = 'block'; }
+        if(rec2) { rec2.src = thumb; rec2.onclick = () => window.openHistoryModal(realIndex); }
+    } else {
+        if(slot2.img) slot2.img.src = IMG_STATUE_SIDE;
+        if(mob2) mob2.src = IMG_STATUE_SIDE;
+        if(rec2) rec2.src = IMG_STATUE_SIDE;
+    }
+
+    // --- RANK 3 (Right) ---
+    if (bestOf[2]) {
+        let thumb = await getThumb(bestOf[2], 300);
+        let realIndex = allItems.indexOf(bestOf[2]);
+        if(slot3.card) { slot3.card.style.display = 'flex'; slot3.img.src = thumb; slot3.card.onclick = () => window.openHistoryModal(realIndex); }
+        if(mob3) { mob3.src = thumb; mob3.onclick = () => window.openHistoryModal(realIndex); mob3.style.display = 'block'; }
+        if(rec3) { rec3.src = thumb; rec3.onclick = () => window.openHistoryModal(realIndex); }
+    } else {
+        if(slot3.img) slot3.img.src = IMG_STATUE_SIDE;
+        if(mob3) mob3.src = IMG_STATUE_SIDE;
+        if(rec3) rec3.src = IMG_STATUE_SIDE;
+    }
+
+    // --- 2. MIDDLE (ARCHIVE) ---
+    const middleItems = allItems.filter(item => {
+        if (bestOf.includes(item)) return false; 
+        const s = (item.status || "").toLowerCase();
         return !s.includes('rej') && !s.includes('fail');
     });
+
+    let desktopArchiveHtml = '';
+    let mobileArchiveHtml = '';
+
+    if (middleItems.length > 0) {
+        const middlePromises = middleItems.map(item => getThumb(item, 300));
+        const middleThumbs = await Promise.all(middlePromises);
+        
+        for (let i = 0; i < middleItems.length; i++) {
+            const thumb = middleThumbs[i];
+            const realIndex = allItems.indexOf(middleItems[i]);
+            const isPending = (middleItems[i].status || "").toLowerCase().includes('pending');
+            
+            // --- FIX 2: LUXURY PENDING INDICATOR ---
+            const overlay = isPending ? `<div class="pending-overlay"><div class="pending-badge">AWAITING<br>VERDICT</div></div>` : ``;
+            const mobBadge = isPending ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;"><div class="pending-badge" style="font-size:0.4rem; padding:3px;">WATCHING</div></div>` : ``;
+
+            // Desktop Blueprints
+            desktopArchiveHtml += `
+                <div class="item-blueprint" onclick="window.openHistoryModal(${realIndex})">
+                    <img class="blueprint-img" src="${thumb}" loading="lazy">
+                    <div class="bp-corner bl-tl"></div><div class="bp-corner bl-tr"></div>
+                    <div class="bp-corner bl-bl"></div><div class="bp-corner bl-br"></div>
+                    ${overlay}
+                </div>`;
+            
+            // Mobile Horizontal Scroll Item
+            mobileArchiveHtml += `
+                <div class="mob-scroll-item" onclick="window.openHistoryModal(${realIndex})">
+                    <img class="mob-scroll-img" src="${thumb}" loading="lazy">
+                    ${mobBadge}
+                </div>`;
+        }
+    } else {
+        for(let i=0; i<6; i++) desktopArchiveHtml += `<div class="item-placeholder-slot"><img src="${IMG_MIDDLE_EMPTY}"></div>`;
+    }
     
-    const deniedList = allItems.filter(i => {
-        const s = (i.status || "").toLowerCase();
+    gridOkay.innerHTML = desktopArchiveHtml;
+    if(recGrid) recGrid.innerHTML = mobileArchiveHtml;
+
+    // --- 3. BOTTOM (HEAP) - DENIED ---
+    const failedItems = allItems.filter(item => {
+        const s = (item.status || "").toLowerCase();
         return s.includes('rej') || s.includes('fail');
     });
 
-    // --- 5. ALTAR SORTING (Newest High Score) ---
-    // Sort by Date Descending first
-    acceptedList.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
+    let desktopFailedHtml = '';
+    let mobileFailedHtml = '';
 
-    let bestOf = [];
-    let archiveList = [];
-
-    if (acceptedList.length > 0) {
-        // Try to find a recent High Value item for Slot 1
-        // Look in the first 5 items only (keep it relevant)
-        const recentHighIndex = acceptedList.slice(0, 5).findIndex(item => getPoints(item) >= 150);
+    if (failedItems.length > 0) {
+        const failedPromises = failedItems.map(item => getThumb(item, 300));
+        const failedThumbs = await Promise.all(failedPromises);
         
-        if (recentHighIndex !== -1) {
-            // Found a King
-            bestOf.push(acceptedList[recentHighIndex]);
-            // Remove him from list
-            acceptedList.splice(recentHighIndex, 1);
-        } else {
-            // No King, take the newest
-            bestOf.push(acceptedList.shift());
-        }
-
-        // Fill Slot 2 & 3 with next newest
-        if (acceptedList.length > 0) bestOf.push(acceptedList.shift());
-        if (acceptedList.length > 0) bestOf.push(acceptedList.shift());
-        
-        // Remainder goes to archive
-        archiveList = acceptedList;
-    }
-
-    // --- 6. RENDER ALTAR (No Async Waiting) ---
-    // We use the sync helper so it's instant and doesn't break
-    const renderSlot = (slotObj, mobEl, recEl, item) => {
-        if (item) {
-            const src = getRobustImg(item);
-            const idx = allItems.indexOf(item);
+        for (let i = 0; i < failedItems.length; i++) {
+            const thumb = failedThumbs[i];
+            const realIndex = allItems.indexOf(failedItems[i]);
             
-            // Desktop
-            if(slotObj.card) { 
-                slotObj.card.style.display = 'flex'; 
-                slotObj.img.src = src; 
-                if(slotObj.ref) slotObj.ref.src = src; 
-                slotObj.card.onclick = () => window.openHistoryModal(idx); 
-            }
-            // Mobile Home
-            if(mobEl) { 
-                mobEl.src = src; 
-                mobEl.parentElement.onclick = () => window.openHistoryModal(idx); 
-                mobEl.style.display = 'block'; 
-            }
-            // Mobile Record
-            if(recEl) {
-                recEl.src = src;
-                recEl.onclick = () => window.openHistoryModal(idx);
-            }
-        } else {
-            if(slotObj.card) slotObj.card.style.display = 'none';
-            if(mobEl) mobEl.style.display = 'none';
-            // Don't hide recEl usually, or set to placeholder
+            // --- FIX 3: BLACK & WHITE FILTER ---
+            const bwStyle = 'filter: grayscale(100%) brightness(0.7);';
+
+            // Desktop Trash
+            desktopFailedHtml += `
+                <div class="item-trash" onclick="window.openHistoryModal(${realIndex})">
+                    <img class="trash-img" src="${thumb}" loading="lazy" style="${bwStyle}">
+                    <div class="trash-stamp">DENIED</div>
+                </div>`;
+            
+            // Mobile Heap (Small)
+            mobileFailedHtml += `
+                <div class="mob-scroll-item" onclick="window.openHistoryModal(${realIndex})">
+                    <img class="mob-scroll-img" src="${thumb}" loading="lazy" style="${bwStyle}">
+                </div>`;
         }
-    };
-
-    renderSlot(slot1, mob1, rec1, bestOf[0]);
-    renderSlot(slot2, mob2, rec2, bestOf[1]);
-    renderSlot(slot3, mob3, rec3, bestOf[2]);
-
-    // --- 7. RENDER GRIDS ---
-    const createCard = (item, isTrash) => {
-        const src = getRobustImg(item);
-        const idx = allItems.indexOf(item);
-        const isPending = (item.status || "").toLowerCase().includes('pending');
-        
-        const imgStyle = isTrash ? 'filter: grayscale(100%);' : '';
-
-        // NEW LUXURY PENDING INDICATOR
-        const pendingHtml = isPending ? 
-            `<div class="pending-overlay">
-                <div class="pending-badge">AWAITING<br>VERDICT</div>
-             </div>` : '';
-
-        const desk = `
-            <div class="${isTrash?'item-trash':'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
-                <img class="${isTrash?'trash-img':'blueprint-img'}" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">
-                ${isTrash?'<div class="trash-stamp">DENIED</div>':''}
-                ${pendingHtml}
-            </div>`;
-        
-        const mob = `
-            <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash?'height:80px; width:80px;':''}">
-                <img class="mob-scroll-img" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.style.opacity=0.3">
-                ${pendingHtml}
-            </div>`;
-        
-        return { desk, mob };
-    };
-
-    // Fill Archive
-    if (archiveList.length > 0) {
-        archiveList.forEach(item => {
-            const html = createCard(item, false);
-            if(gridOkay) gridOkay.innerHTML += html.desk;
-            if(recGrid) recGrid.innerHTML += html.mob;
-        });
     } else {
-        let empty = ""; for(let i=0; i<6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_MIDDLE_EMPTY}"></div>`;
-        if(gridOkay) gridOkay.innerHTML = empty;
+        for(let i=0; i<6; i++) desktopFailedHtml += `<div class="item-placeholder-slot"><img src="${IMG_BOTTOM_EMPTY}"></div>`;
     }
-
-    // Fill Heap
-    if (deniedList.length > 0) {
-        deniedList.forEach(item => {
-            const html = createCard(item, true);
-            if(gridFailed) gridFailed.innerHTML += html.desk;
-            if(recHeap) recHeap.innerHTML += html.mob;
-        });
-    } else {
-        let empty = ""; for(let i=0; i<6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_BOTTOM_EMPTY}"></div>`;
-        if(gridFailed) gridFailed.innerHTML = empty;
-    }
+    
+    gridFailed.innerHTML = desktopFailedHtml;
+    if(recHeap) recHeap.innerHTML = mobileFailedHtml;
 }
 
 // --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
