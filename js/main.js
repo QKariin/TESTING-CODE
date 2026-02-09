@@ -846,10 +846,7 @@ window.addEventListener("message", (event) => {
                 badge.className = data.online ? "chat-status-text chat-online" : "chat-status-text"; 
             }
             if(ring) ring.className = data.online ? "dom-status-ring ring-active" : "dom-status-ring ring-inactive";
-            if(domBadge) { 
-                domBadge.innerHTML = data.online ? '<span class="status-dot"></span> ONLINE' : `<span class="status-dot"></span> ${data.text}`; 
-                domBadge.className = data.online ? "dom-status status-online" : "dom-status"; 
-            }
+            if(domBadge) domBadge.className = data.online ? "dom-status status-online" : "dom-status"; 
 
             const mobText = document.getElementById('mobChatStatusText');
             const mobDot = document.getElementById('mobChatOnlineDot');
@@ -877,22 +874,77 @@ window.addEventListener("message", (event) => {
         const payload = data.profile || data.galleryData || data.pendingState ? data : (data.type === "UPDATE_FULL_DATA" ? data : null);
         
         if (payload) {
+            // 1. SET GALLERY
+            if (payload.galleryData) {
+                setGalleryData(payload.galleryData);
+                const currentGalleryJson = JSON.stringify(payload.galleryData);
+                if (currentGalleryJson !== lastGalleryJson) {
+                    setLastGalleryJson(currentGalleryJson);
+                    renderGallery();
+                }
+            }
+
+            // 2. PROFILE UPDATE & TRUTH CHECK
             if (data.profile && !ignoreBackendUpdates) {
                 
-                // --- THE FIX: NEWER DATE WINS ---
-                // If we have a local date in memory that is NEWER than what the DB sent, keep the local one.
-                // This prevents the "Blink" where the button reappears.
-                if (typeof userProfile !== 'undefined' && userProfile.lastRoutine) {
-                    const localTime = new Date(userProfile.lastRoutine).getTime();
-                    const incomingTime = data.profile.lastRoutine ? new Date(data.profile.lastRoutine).getTime() : 0;
+                // --- THE TRUTH CHECK (Using routineHistory) ---
+                let confirmedDate = data.profile.lastRoutine || "";
+
+                // A. Check the explicit 'routineHistory' field
+                if (data.profile.routineHistory || data.profile.routinehistory) {
+                    let rh = data.profile.routineHistory || data.profile.routinehistory;
                     
-                    // If local is fresher, FORCE the incoming data to match local
-                    if (localTime > incomingTime) {
-                        data.profile.lastRoutine = userProfile.lastRoutine;
+                    // If it's a JSON string, parse it
+                    if (typeof rh === 'string' && (rh.startsWith('[') || rh.startsWith('{'))) {
+                        try { rh = JSON.parse(rh); } catch(e){}
+                    }
+
+                    // If it's an Array (List of uploads), get the newest one
+                    if (Array.isArray(rh) && rh.length > 0) {
+                        // Sort Descending (Newest First)
+                        rh.sort((a, b) => new Date(b.date || b._createdDate || b) - new Date(a.date || a._createdDate || a));
+                        const newest = rh[0];
+                        const rDate = newest.date || newest._createdDate || newest; // Handle object or string date
+                        
+                        // If this is newer than what we had, use it
+                        if (!confirmedDate || new Date(rDate) > new Date(confirmedDate)) {
+                            confirmedDate = rDate;
+                        }
+                    } 
+                    // If it's just a single date string
+                    else if (typeof rh === 'string' && rh.length > 5) {
+                         if (!confirmedDate || new Date(rh) > new Date(confirmedDate)) {
+                            confirmedDate = rh;
+                        }
                     }
                 }
 
-                // Standard Data Setting
+                // B. Fallback: Scan Gallery (Just in case CMS field is empty)
+                if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
+                    const recentRoutine = galleryData.find(i => {
+                        const tag = (i.type || i.tag || "").toLowerCase();
+                        return tag.includes('routine') || tag.includes('protocol');
+                    });
+                    if (recentRoutine) {
+                        const galleryDate = recentRoutine.date || recentRoutine._createdDate;
+                        if (!confirmedDate || new Date(galleryDate) > new Date(confirmedDate)) {
+                            confirmedDate = galleryDate;
+                        }
+                    }
+                }
+
+                // C. Protect Local Updates (Prevent the "Blink")
+                if (typeof userProfile !== 'undefined' && userProfile.lastRoutine) {
+                    const localTime = new Date(userProfile.lastRoutine).getTime();
+                    const incomingTime = confirmedDate ? new Date(confirmedDate).getTime() : 0;
+                    if (localTime > incomingTime) confirmedDate = userProfile.lastRoutine;
+                }
+
+                // Apply the Truth
+                data.profile.lastRoutine = confirmedDate;
+
+                // --- END TRUTH CHECK ---
+
                 setGameStats(data.profile);
                 setUserProfile({
                     name: data.profile.name || "Slave",
@@ -902,21 +954,17 @@ window.addEventListener("message", (event) => {
                     profilePicture: data.profile.profilePicture, 
                     routine: data.profile.routine,
                     kneelHistory: data.profile.kneelHistory,
-                    lastRoutine: data.profile.lastRoutine // Ensure this is passed through
+                    lastRoutine: confirmedDate // SAVE IT
                 });
                 
                 if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
                 
                 if (data.profile.activeRevealMap) {
-                    let map = [];
-                    try { map = (typeof data.profile.activeRevealMap === 'string') ? JSON.parse(data.profile.activeRevealMap) : data.profile.activeRevealMap; } catch(e) { map = []; }
-                    setActiveRevealMap(map);
+                    try { setActiveRevealMap(JSON.parse(data.profile.activeRevealMap)); } catch(e) { setActiveRevealMap([]); }
                 }
                 
                 if (data.profile.rewardVault) {
-                    let vault = [];
-                    try { vault = (typeof data.profile.rewardVault === 'string') ? JSON.parse(data.profile.rewardVault) : data.profile.rewardVault; } catch(e) { vault = []; }
-                    setVaultItems(vault);
+                    try { setVaultItems(JSON.parse(data.profile.rewardVault)); } catch(e) { setVaultItems([]); }
                 }
 
                 setLibraryProgressIndex(data.profile.libraryProgressIndex || 1);
@@ -940,7 +988,6 @@ window.addEventListener("message", (event) => {
                         const uri = rawUrl.split('/')[3].split('#')[0];
                         finalUrl = `https://static.wixstatic.com/media/${uri}`;
                     }
-        
                     if(mobPic) mobPic.src = finalUrl;
                     if(mobBg) mobBg.src = finalUrl;
                     if(hudPic) hudPic.src = finalUrl;
@@ -949,7 +996,7 @@ window.addEventListener("message", (event) => {
                 }
                 updateStats(); 
                 
-                // FORCE MOBILE UPDATE (With the Protected Date)
+                // TRIGGER UI REFRESH (Locks button based on routineHistory date)
                 if(window.syncMobileDashboard) window.syncMobileDashboard();
             }
 
@@ -963,16 +1010,6 @@ window.addEventListener("message", (event) => {
                         renderRewardGrid(); 
                     });
                 }, 50); 
-            }
-
-            if (payload.galleryData) {
-                const currentGalleryJson = JSON.stringify(payload.galleryData);
-                if (currentGalleryJson !== lastGalleryJson) {
-                    setLastGalleryJson(currentGalleryJson);
-                    setGalleryData(payload.galleryData);
-                    renderGallery();
-                    updateStats();
-                }
             }
 
             if (payload.pendingState !== undefined) {
