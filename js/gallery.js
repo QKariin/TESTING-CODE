@@ -143,180 +143,212 @@ function renderStickerFilters() {
 export async function renderGallery() {
     if (!galleryData) return;
     
-    // --- 1. TARGETS ---
+    // --- 1. TARGETS (Kept exactly as you had them) ---
     const gridFailed = document.getElementById('gridFailed'); 
     const gridOkay = document.getElementById('gridOkay');     
     const historySection = document.getElementById('historySection');
     
-    // Mobile Targets
-    const mob1 = document.getElementById('mobImgSlot1');
-    const mob2 = document.getElementById('mobImgSlot2');
-    const mob3 = document.getElementById('mobImgSlot3');
-    const recGrid = document.getElementById('mobRec_Grid'); 
-    const recHeap = document.getElementById('mobRec_Heap'); 
-
-    // Desktop Altar Slots
     const slot1 = { card: document.getElementById('altarSlot1'), img: document.getElementById('imgSlot1'), ref: document.getElementById('reflectSlot1') };
     const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2') };
     const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3') };
 
-    // --- 2. GET DATA (Filtered) ---
-    // Ensure getGalleryList is defined in the file (it excludes Routines)
-    const allItems = getGalleryList(); 
+    // Mobile Home Targets
+    const mob1 = document.getElementById('mobImgSlot1');
+    const mob2 = document.getElementById('mobImgSlot2');
+    const mob3 = document.getElementById('mobImgSlot3');
 
-    // Solo Mode Toggle (If empty)
+    // Mobile Record Targets
+    const rec1 = document.getElementById('mobRec_Slot1');
+    const rec2 = document.getElementById('mobRec_Slot2');
+    const rec3 = document.getElementById('mobRec_Slot3');
+    const recGrid = document.getElementById('mobRec_Grid'); 
+    const recHeap = document.getElementById('mobRec_Heap'); 
+
+    if (!gridFailed || !gridOkay) return;
+
+    // Reset All Grids
+    gridFailed.innerHTML = "";
+    gridOkay.innerHTML = "";
+    if(recGrid) recGrid.innerHTML = "";
+    if(recHeap) recHeap.innerHTML = "";
+
+    const allItems = getGalleryList(); // (This uses the filter we fixed earlier)
+
     if (historySection) {
         if (allItems.length === 0) historySection.classList.add('solo-mode');
         else historySection.classList.remove('solo-mode');
     }
 
-    // --- 3. HELPER: SAFER THUMBNAIL LOADER ---
-    const getSafeImg = async (item, size) => {
-        if (!item) return PLACEHOLDER_IMG;
-        
+    // --- 2. TOP 3 FILTER ---
+    let bestOf = [...allItems]
+        .filter(item => {
+            const s = (item.status || "").toLowerCase();
+            return !s.includes('rej') && !s.includes('fail') && !s.includes('pending');
+        })
+        .sort((a, b) => getPoints(b) - getPoints(a))
+        .slice(0, 3);
+
+    // --- 3. THE FIX: UPGRADED THUMBNAIL HELPER ---
+    // This replaces your old getThumb. It handles Wix junk and Video covers.
+    const getThumb = async (item, size) => {
+        if (!item) return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; // Placeholder
+
+        // A. Find the Source
         let raw = item.proofUrl || item.media || item.url || item.image || "";
         
-        // A. Video Handling
+        // B. Video Logic: Look for a cover image first
         if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
             if (item.cover) raw = item.cover;
             else if (item.thumbnail) raw = item.thumbnail;
-            else return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; 
+            else if (item.poster) raw = item.poster;
         }
 
-        // B. Wix Handling (Simple Split)
+        // C. Wix URL Cleaner (The part that fixes broken images)
         if (raw && raw.startsWith('wix:image')) {
             try {
+                // Strip the weird "wix:image://v1/..." wrapper
                 const parts = raw.split('/');
-                const id = parts[3].split('#')[0];
-                return `https://static.wixstatic.com/media/${id}/v1/fill/w_${size},h_${size},al_c,q_75/file.jpg`;
+                // The filename is usually the 4th part
+                const filename = parts[3].split('#')[0]; 
+                return `https://static.wixstatic.com/media/${filename}/v1/fill/w_${size},h_${size},al_c,q_75/file.jpg`;
             } catch(e) { 
-                return raw; // Fallback to raw if split fails
+                // If regex fails, fall back to standard logic below
             }
         }
 
-        // C. Secure Signing (Bytescale)
-        // Wraps in a try/catch to ensure it never crashes the gallery
+        // D. Default Logic (Secure Signing)
         try {
             return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
-        } catch(e) {
-            return raw; 
+        } catch (e) {
+            return raw; // If signing fails, return raw link so it at least tries to load
         }
     };
 
-    // --- 4. SEPARATE LISTS ---
-    const acceptedList = allItems.filter(i => {
-        const s = (i.status || "").toLowerCase();
+    // --- 4. RENDER SLOT 1 (Center) ---
+    if (bestOf[0]) {
+        let thumb = await getThumb(bestOf[0], 400);
+        let realIndex = allItems.indexOf(bestOf[0]);
+
+        // Desktop
+        if(slot1.card) {
+            slot1.card.style.display = 'flex';
+            slot1.img.src = thumb;
+            if(slot1.ref) slot1.ref.src = thumb;
+            slot1.card.onclick = () => window.openHistoryModal(realIndex);
+            slot1.img.style.filter = "none";
+        }
+        // Mobile Sync
+        if(mob1) { mob1.src = thumb; mob1.onclick = () => window.openHistoryModal(realIndex); }
+        if(rec1) { rec1.src = thumb; rec1.onclick = () => window.openHistoryModal(realIndex); }
+    } else {
+        if(slot1.card) { slot1.img.src = IMG_QUEEN_MAIN; if(slot1.ref) slot1.ref.src = IMG_QUEEN_MAIN; }
+        if(mob1) mob1.src = IMG_QUEEN_MAIN;
+        if(rec1) rec1.src = IMG_QUEEN_MAIN;
+    }
+
+    // --- 5. RENDER SLOT 2 (Left) ---
+    if (bestOf[1]) {
+        let thumb = await getThumb(bestOf[1], 300);
+        let realIndex = allItems.indexOf(bestOf[1]);
+        if(slot2.card) { slot2.card.style.display = 'flex'; slot2.img.src = thumb; slot2.card.onclick = () => window.openHistoryModal(realIndex); }
+        if(mob2) { mob2.src = thumb; mob2.onclick = () => window.openHistoryModal(realIndex); }
+        if(rec2) { rec2.src = thumb; rec2.onclick = () => window.openHistoryModal(realIndex); }
+    } else {
+        if(slot2.img) slot2.img.src = IMG_STATUE_SIDE;
+        if(mob2) mob2.src = IMG_STATUE_SIDE;
+        if(rec2) rec2.src = IMG_STATUE_SIDE;
+    }
+
+    // --- 6. RENDER SLOT 3 (Right) ---
+    if (bestOf[2]) {
+        let thumb = await getThumb(bestOf[2], 300);
+        let realIndex = allItems.indexOf(bestOf[2]);
+        if(slot3.card) { slot3.card.style.display = 'flex'; slot3.img.src = thumb; slot3.card.onclick = () => window.openHistoryModal(realIndex); }
+        if(mob3) { mob3.src = thumb; mob3.onclick = () => window.openHistoryModal(realIndex); }
+        if(rec3) { rec3.src = thumb; rec3.onclick = () => window.openHistoryModal(realIndex); }
+    } else {
+        if(slot3.img) slot3.img.src = IMG_STATUE_SIDE;
+        if(mob3) mob3.src = IMG_STATUE_SIDE;
+        if(rec3) rec3.src = IMG_STATUE_SIDE;
+    }
+
+    // --- 7. RENDER ARCHIVE (Middle) ---
+    const middleItems = allItems.filter(item => {
+        if (bestOf.includes(item)) return false; 
+        const s = (item.status || "").toLowerCase();
         return !s.includes('rej') && !s.includes('fail');
     });
+
+    let desktopArchiveHtml = '';
+    let mobileArchiveHtml = '';
+
+    if (middleItems.length > 0) {
+        // Resolve thumbs in parallel for speed
+        const middlePromises = middleItems.map(item => getThumb(item, 300));
+        const middleThumbs = await Promise.all(middlePromises);
+        
+        for (let i = 0; i < middleItems.length; i++) {
+            const thumb = middleThumbs[i];
+            const realIndex = allItems.indexOf(middleItems[i]);
+            const isPending = (middleItems[i].status || "").toLowerCase().includes('pending');
+            const overlay = isPending ? `<div class="pending-overlay"><div class="pending-icon">⏳</div></div>` : ``;
+            const mobBadge = isPending ? `<div class="mob-pending-badge">⏳</div>` : ``;
+
+            desktopArchiveHtml += `
+                <div class="item-blueprint" onclick="window.openHistoryModal(${realIndex})">
+                    <img class="blueprint-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
+                    <div class="bp-corner bl-tl"></div><div class="bp-corner bl-tr"></div>
+                    <div class="bp-corner bl-bl"></div><div class="bp-corner bl-br"></div>
+                    ${overlay}
+                </div>`;
+            
+            mobileArchiveHtml += `
+                <div class="mob-scroll-item" onclick="window.openHistoryModal(${realIndex})">
+                    <img class="mob-scroll-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
+                    ${mobBadge}
+                </div>`;
+        }
+    } else {
+        for(let i=0; i<6; i++) desktopArchiveHtml += `<div class="item-placeholder-slot"><img src="${IMG_MIDDLE_EMPTY}"></div>`;
+    }
     
-    const deniedList = allItems.filter(i => {
-        const s = (i.status || "").toLowerCase();
+    if (gridOkay) gridOkay.innerHTML = desktopArchiveHtml;
+    if (recGrid) recGrid.innerHTML = mobileArchiveHtml;
+
+    // --- 8. RENDER HEAP (Bottom/Denied) ---
+    const failedItems = allItems.filter(item => {
+        const s = (item.status || "").toLowerCase();
         return s.includes('rej') || s.includes('fail');
     });
 
-    const bestOf = acceptedList.slice(0, 3);
-    const archiveList = acceptedList.slice(3);
+    let desktopFailedHtml = '';
+    let mobileFailedHtml = '';
 
-    // --- 5. RENDER PYRAMID (Top 3) ---
-    const [t1, t2, t3] = await Promise.all([
-        getSafeImg(bestOf[0], 400),
-        getSafeImg(bestOf[1], 300),
-        getSafeImg(bestOf[2], 300)
-    ]);
-
-    // Slot 1 (Center)
-    if (bestOf[0]) {
-        let idx = allItems.indexOf(bestOf[0]);
-        if(slot1.card) { slot1.card.style.display='flex'; slot1.img.src=t1; if(slot1.ref) slot1.ref.src=t1; slot1.card.onclick=()=>window.openHistoryModal(idx); }
-        if(mob1) { mob1.src=t1; mob1.parentElement.onclick=()=>window.openHistoryModal(idx); mob1.style.display='block'; }
-        if(rec1) { rec1.src=t1; rec1.onclick=()=>window.openHistoryModal(idx); } // Mobile Record Sync
-    } else {
-        if(slot1.card) slot1.card.style.display='none';
-        if(mob1) mob1.style.display='none';
-        if(rec1) rec1.src=IMG_QUEEN_MAIN;
-    }
-
-    // Slot 2
-    if (bestOf[1]) {
-        let idx = allItems.indexOf(bestOf[1]);
-        if(slot2.card) { slot2.card.style.display='flex'; slot2.img.src=t2; slot2.card.onclick=()=>window.openHistoryModal(idx); }
-        if(mob2) { mob2.src=t2; mob2.style.display='block'; mob2.parentElement.onclick=()=>window.openHistoryModal(idx); }
-        if(rec2) { rec2.src=t2; rec2.onclick=()=>window.openHistoryModal(idx); }
-    } else {
-        if(slot2.card) slot2.card.style.display='none';
-        if(mob2) mob2.style.display='none';
-        if(rec2) rec2.src=IMG_STATUE_SIDE;
-    }
-
-    // Slot 3
-    if (bestOf[2]) {
-        let idx = allItems.indexOf(bestOf[2]);
-        if(slot3.card) { slot3.card.style.display='flex'; slot3.img.src=t3; slot3.card.onclick=()=>window.openHistoryModal(idx); }
-        if(mob3) { mob3.src=t3; mob3.style.display='block'; mob3.parentElement.onclick=()=>window.openHistoryModal(idx); }
-        if(rec3) { rec3.src=t3; rec3.onclick=()=>window.openHistoryModal(idx); }
-    } else {
-        if(slot3.card) slot3.card.style.display='none';
-        if(mob3) mob3.style.display='none';
-        if(rec3) rec3.src=IMG_STATUE_SIDE;
-    }
-
-    // --- 6. RENDER GRIDS (Batched) ---
-    const renderChunk = async (list, isTrash) => {
-        // Map data to HTML promises
-        const promises = list.map(async (item) => {
-            const src = await getSafeImg(item, 250);
-            const idx = allItems.indexOf(item);
-            const isPending = (item.status || "").includes('pending');
+    if (failedItems.length > 0) {
+        const failedPromises = failedItems.map(item => getThumb(item, 300));
+        const failedThumbs = await Promise.all(failedPromises);
+        
+        for (let i = 0; i < failedItems.length; i++) {
+            const thumb = failedThumbs[i];
+            const realIndex = allItems.indexOf(failedItems[i]);
             
-            // Desktop HTML
-            const desk = `
-                <div class="${isTrash?'item-trash':'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
-                    <img class="${isTrash?'trash-img':'blueprint-img'}" src="${src}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
-                    ${isTrash?'<div class="trash-stamp">DENIED</div>':''}
-                    ${isPending?'<div class="pending-overlay"><div class="pending-icon">⏳</div></div>':''}
+            desktopFailedHtml += `
+                <div class="item-trash" onclick="window.openHistoryModal(${realIndex})">
+                    <img class="trash-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
+                    <div class="trash-stamp">DENIED</div>
                 </div>`;
             
-            // Mobile HTML
-            const mob = `
-                <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash?'height:80px; width:80px;':''}">
-                    <img class="mob-scroll-img" src="${src}" loading="lazy" onerror="this.style.opacity=0.3">
-                    ${isPending?'<div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center;">⏳</div>':''}
+            mobileFailedHtml += `
+                <div class="mob-scroll-item" onclick="window.openHistoryModal(${realIndex})">
+                    <img class="mob-scroll-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
                 </div>`;
-            return { desk, mob };
-        });
-
-        // Resolve all
-        const results = await Promise.all(promises);
-        return {
-            desk: results.map(r => r.desk).join(''),
-            mob: results.map(r => r.mob).join('')
-        };
-    };
-
-    // Fill Containers
-    if (gridOkay) gridOkay.innerHTML = "";
-    if (recGrid) recGrid.innerHTML = "";
-    if (gridFailed) gridFailed.innerHTML = "";
-    if (recHeap) recHeap.innerHTML = "";
-
-    if (archiveList.length > 0) {
-        const html = await renderChunk(archiveList, false);
-        if(gridOkay) gridOkay.innerHTML = html.desk;
-        if(recGrid) recGrid.innerHTML = html.mob;
+        }
     } else {
-        // Placeholders
-        let empty = ""; for(let i=0; i<6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_MIDDLE_EMPTY}"></div>`;
-        if(gridOkay) gridOkay.innerHTML = empty;
+        for(let i=0; i<6; i++) desktopFailedHtml += `<div class="item-placeholder-slot"><img src="${IMG_BOTTOM_EMPTY}"></div>`;
     }
-
-    if (deniedList.length > 0) {
-        const html = await renderChunk(deniedList, true);
-        if(gridFailed) gridFailed.innerHTML = html.desk;
-        if(recHeap) recHeap.innerHTML = html.mob;
-    } else {
-        let empty = ""; for(let i=0; i<6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_BOTTOM_EMPTY}"></div>`;
-        if(gridFailed) gridFailed.innerHTML = empty;
-    }
+    
+    if (gridFailed) gridFailed.innerHTML = desktopFailedHtml;
+    if (recHeap) recHeap.innerHTML = mobileFailedHtml;
 }
 
 // --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
