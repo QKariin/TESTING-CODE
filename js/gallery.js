@@ -155,29 +155,61 @@ export async function renderGallery() {
     const mob1 = document.getElementById('mobImgSlot1');
     const mob2 = document.getElementById('mobImgSlot2');
     const mob3 = document.getElementById('mobImgSlot3');
+    const rec1 = document.getElementById('mobRec_Slot1'); // Added Mobile Record slots
+    const rec2 = document.getElementById('mobRec_Slot2');
+    const rec3 = document.getElementById('mobRec_Slot3');
     const recGrid = document.getElementById('mobRec_Grid'); 
     const recHeap = document.getElementById('mobRec_Heap'); 
 
     if (!gridFailed || !gridOkay) return;
 
-    // Reset Containers
+    // Reset
     gridFailed.innerHTML = "";
     gridOkay.innerHTML = "";
     if(recGrid) recGrid.innerHTML = "";
     if(recHeap) recHeap.innerHTML = "";
 
-    // --- 2. GET DATA (Filtered & Sorted by Date) ---
-    // Ensure we start with a clean Date Sort (Newest First)
-    const allItems = getGalleryList().sort((a, b) => {
-        return new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate);
-    });
+    // --- 2. GET DATA (Filtered) ---
+    const allItems = getGalleryList(); 
 
     if (historySection) {
         if (allItems.length === 0) historySection.classList.add('solo-mode');
         else historySection.classList.remove('solo-mode');
     }
 
-    // --- 3. SEPARATE LISTS ---
+    // --- 3. HELPER: BULLETPROOF IMAGE EXTRACTOR ---
+    const getRobustImg = (item) => {
+        if (!item) return PLACEHOLDER_IMG;
+        
+        // 1. Get raw string
+        let raw = item.proofUrl || item.media || item.url || item.image || "";
+        
+        // 2. Video? Return Icon
+        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
+            if (item.cover) raw = item.cover;
+            else return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; 
+        }
+
+        // 3. Wix Image? FORCE CLEAN URL
+        // Don't try to sign it. Just strip the garbage.
+        if (raw && raw.startsWith('wix:image')) {
+            try {
+                // Split by "/"
+                const parts = raw.split('/');
+                // The ID is always after "v1/"
+                // Example: wix:image://v1/11062b_.../file.jpg
+                const id = parts[3].split('#')[0]; 
+                return `https://static.wixstatic.com/media/${id}`;
+            } catch(e) {
+                return PLACEHOLDER_IMG;
+            }
+        }
+
+        // 4. Standard URL? Return as is.
+        return raw || PLACEHOLDER_IMG;
+    };
+
+    // --- 4. SEPARATE LISTS ---
     const acceptedList = allItems.filter(i => {
         const s = (i.status || "").toLowerCase();
         return !s.includes('rej') && !s.includes('fail');
@@ -188,148 +220,121 @@ export async function renderGallery() {
         return s.includes('rej') || s.includes('fail');
     });
 
-    // --- 4. ALTAR SELECTION LOGIC (Newest High Score) ---
+    // --- 5. ALTAR SORTING (Newest High Score) ---
+    // Sort by Date Descending first
+    acceptedList.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
+
     let bestOf = [];
     let archiveList = [];
 
-    // Find the 'King' (Slot 1): The NEWEST item with >= 150 points
-    const kingIndex = acceptedList.findIndex(item => getPoints(item) >= 150);
-    
-    if (kingIndex !== -1) {
-        // We found a King.
-        bestOf.push(acceptedList[kingIndex]);
-        // Remove King from list so he isn't duplicated
-        let remaining = acceptedList.filter((_, idx) => idx !== kingIndex);
-        // Fill Slot 2 & 3 with the next newest items
-        bestOf.push(remaining[0], remaining[1]);
-        // The rest go to archive
-        archiveList = remaining.slice(2);
-    } else {
-        // No King found? Just take top 3 newest.
-        bestOf = acceptedList.slice(0, 3);
-        archiveList = acceptedList.slice(3);
-    }
-
-    // Clean undefined slots (if less than 3 items total)
-    bestOf = bestOf.filter(x => x !== undefined);
-
-    // --- 5. IMAGE LOADER (CRASH PROOF) ---
-    const getSafeImg = async (item, size) => {
-        if (!item) return PLACEHOLDER_IMG;
+    if (acceptedList.length > 0) {
+        // Try to find a recent High Value item for Slot 1
+        // Look in the first 5 items only (keep it relevant)
+        const recentHighIndex = acceptedList.slice(0, 5).findIndex(item => getPoints(item) >= 150);
         
-        let raw = item.proofUrl || item.media || item.url || item.image || "";
+        if (recentHighIndex !== -1) {
+            // Found a King
+            bestOf.push(acceptedList[recentHighIndex]);
+            // Remove him from list
+            acceptedList.splice(recentHighIndex, 1);
+        } else {
+            // No King, take the newest
+            bestOf.push(acceptedList.shift());
+        }
+
+        // Fill Slot 2 & 3 with next newest
+        if (acceptedList.length > 0) bestOf.push(acceptedList.shift());
+        if (acceptedList.length > 0) bestOf.push(acceptedList.shift());
         
-        // A. Video Handling
-        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
-            if (item.cover) raw = item.cover;
-            else if (item.thumbnail) raw = item.thumbnail;
-            else return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; // Video Icon
-        }
-
-        // B. Wix URL Fix (The Robust Split)
-        if (raw && raw.startsWith('wix:image')) {
-            try {
-                // Takes "wix:image://v1/FILENAME/..." and grabs FILENAME
-                const parts = raw.split('/');
-                const id = parts[3].split('#')[0]; 
-                return `https://static.wixstatic.com/media/${id}/v1/fill/w_${size},h_${size},al_c,q_75/file.jpg`;
-            } catch(e) { 
-                return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; // Fallback if parse fails
-            }
-        }
-
-        // C. Standard URL (Safe Try)
-        try {
-            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
-        } catch (e) {
-            return raw; // Don't crash, just try the raw link
-        }
-    };
-
-    // --- 6. RENDER ALTAR (Sequentially to prevent race conditions) ---
-    // Slot 1
-    if (bestOf[0]) {
-        const t1 = await getSafeImg(bestOf[0], 400);
-        const idx = allItems.indexOf(bestOf[0]);
-        if(slot1.card) { slot1.card.style.display='flex'; slot1.img.src=t1; if(slot1.ref) slot1.ref.src=t1; slot1.card.onclick=()=>window.openHistoryModal(idx); }
-        if(mob1) { mob1.src=t1; mob1.parentElement.onclick=()=>window.openHistoryModal(idx); mob1.style.display='block'; }
-        if(rec1) { rec1.src=t1; rec1.onclick=()=>window.openHistoryModal(idx); } // Mobile Record Tab
-    } else {
-        if(slot1.card) slot1.card.style.display='none';
-        if(mob1) mob1.style.display='none';
+        // Remainder goes to archive
+        archiveList = acceptedList;
     }
 
-    // Slot 2
-    if (bestOf[1]) {
-        const t2 = await getSafeImg(bestOf[1], 300);
-        const idx = allItems.indexOf(bestOf[1]);
-        if(slot2.card) { slot2.card.style.display='flex'; slot2.img.src=t2; slot2.card.onclick=()=>window.openHistoryModal(idx); }
-        if(mob2) { mob2.src=t2; mob2.style.display='block'; mob2.parentElement.onclick=()=>window.openHistoryModal(idx); }
-        if(rec2) { rec2.src=t2; rec2.onclick=()=>window.openHistoryModal(idx); }
-    } else {
-        if(slot2.card) slot2.card.style.display='none';
-        if(mob2) mob2.style.display='none';
-    }
-
-    // Slot 3
-    if (bestOf[2]) {
-        const t3 = await getSafeImg(bestOf[2], 300);
-        const idx = allItems.indexOf(bestOf[2]);
-        if(slot3.card) { slot3.card.style.display='flex'; slot3.img.src=t3; slot3.card.onclick=()=>window.openHistoryModal(idx); }
-        if(mob3) { mob3.src=t3; mob3.style.display='block'; mob3.parentElement.onclick=()=>window.openHistoryModal(idx); }
-        if(rec3) { rec3.src=t3; rec3.onclick=()=>window.openHistoryModal(idx); }
-    } else {
-        if(slot3.card) slot3.card.style.display='none';
-        if(mob3) mob3.style.display='none';
-    }
-
-    // --- 7. RENDER LISTS (Batched) ---
-    const renderChunk = async (list, isTrash) => {
-        // Pre-calculate HTML strings to avoid flicker
-        let deskHTML = "";
-        let mobHTML = "";
-
-        for (const item of list) {
-            const src = await getSafeImg(item, 250);
+    // --- 6. RENDER ALTAR (No Async Waiting) ---
+    // We use the sync helper so it's instant and doesn't break
+    const renderSlot = (slotObj, mobEl, recEl, item) => {
+        if (item) {
+            const src = getRobustImg(item);
             const idx = allItems.indexOf(item);
-            const isPending = (item.status || "").toLowerCase().includes('pending');
             
-            // STYLES: Black/White for Denied
-            const imgStyle = isTrash ? 'filter: grayscale(100%);' : '';
-
             // Desktop
-            deskHTML += `
-                <div class="${isTrash?'item-trash':'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
-                    <img class="${isTrash?'trash-img':'blueprint-img'}" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">
-                    ${isTrash?'<div class="trash-stamp">DENIED</div>':''}
-                    ${isPending?'<div class="pending-overlay"><div class="pending-icon">⏳</div></div>':''}
-                </div>`;
-            
-            // Mobile
-            mobHTML += `
-                <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash?'height:80px; width:80px;':''}">
-                    <img class="mob-scroll-img" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.style.opacity=0.3">
-                    ${isPending?'<div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center;">⏳</div>':''}
-                </div>`;
+            if(slotObj.card) { 
+                slotObj.card.style.display = 'flex'; 
+                slotObj.img.src = src; 
+                if(slotObj.ref) slotObj.ref.src = src; 
+                slotObj.card.onclick = () => window.openHistoryModal(idx); 
+            }
+            // Mobile Home
+            if(mobEl) { 
+                mobEl.src = src; 
+                mobEl.parentElement.onclick = () => window.openHistoryModal(idx); 
+                mobEl.style.display = 'block'; 
+            }
+            // Mobile Record
+            if(recEl) {
+                recEl.src = src;
+                recEl.onclick = () => window.openHistoryModal(idx);
+            }
+        } else {
+            if(slotObj.card) slotObj.card.style.display = 'none';
+            if(mobEl) mobEl.style.display = 'none';
+            // Don't hide recEl usually, or set to placeholder
         }
-        return { desk: deskHTML, mob: mobHTML };
     };
 
-    // Render Archive
+    renderSlot(slot1, mob1, rec1, bestOf[0]);
+    renderSlot(slot2, mob2, rec2, bestOf[1]);
+    renderSlot(slot3, mob3, rec3, bestOf[2]);
+
+    // --- 7. RENDER GRIDS ---
+    const createCard = (item, isTrash) => {
+        const src = getRobustImg(item);
+        const idx = allItems.indexOf(item);
+        const isPending = (item.status || "").toLowerCase().includes('pending');
+        
+        const imgStyle = isTrash ? 'filter: grayscale(100%);' : '';
+
+        // NEW LUXURY PENDING INDICATOR
+        const pendingHtml = isPending ? 
+            `<div class="pending-overlay">
+                <div class="pending-badge">AWAITING<br>VERDICT</div>
+             </div>` : '';
+
+        const desk = `
+            <div class="${isTrash?'item-trash':'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
+                <img class="${isTrash?'trash-img':'blueprint-img'}" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">
+                ${isTrash?'<div class="trash-stamp">DENIED</div>':''}
+                ${pendingHtml}
+            </div>`;
+        
+        const mob = `
+            <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash?'height:80px; width:80px;':''}">
+                <img class="mob-scroll-img" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.style.opacity=0.3">
+                ${pendingHtml}
+            </div>`;
+        
+        return { desk, mob };
+    };
+
+    // Fill Archive
     if (archiveList.length > 0) {
-        const html = await renderChunk(archiveList, false);
-        if(gridOkay) gridOkay.innerHTML = html.desk;
-        if(recGrid) recGrid.innerHTML = html.mob;
+        archiveList.forEach(item => {
+            const html = createCard(item, false);
+            if(gridOkay) gridOkay.innerHTML += html.desk;
+            if(recGrid) recGrid.innerHTML += html.mob;
+        });
     } else {
         let empty = ""; for(let i=0; i<6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_MIDDLE_EMPTY}"></div>`;
         if(gridOkay) gridOkay.innerHTML = empty;
     }
 
-    // Render Heap
+    // Fill Heap
     if (deniedList.length > 0) {
-        const html = await renderChunk(deniedList, true);
-        if(gridFailed) gridFailed.innerHTML = html.desk;
-        if(recHeap) recHeap.innerHTML = html.mob;
+        deniedList.forEach(item => {
+            const html = createCard(item, true);
+            if(gridFailed) gridFailed.innerHTML += html.desk;
+            if(recHeap) recHeap.innerHTML += html.mob;
+        });
     } else {
         let empty = ""; for(let i=0; i<6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_BOTTOM_EMPTY}"></div>`;
         if(gridFailed) gridFailed.innerHTML = empty;
