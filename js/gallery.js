@@ -188,8 +188,38 @@ export async function renderGallery() {
         .sort((a, b) => getPoints(b) - getPoints(a))
         .slice(0, 3);
 
+    // --- THE FIX: ROBUST THUMBNAIL EXTRACTOR ---
     const getThumb = async (item, size) => {
-        return await getSignedUrl(getThumbnail(getOptimizedUrl(item.proofUrl || item.media, size)));
+        if (!item) return PLACEHOLDER_IMG;
+
+        let raw = item.proofUrl || item.media || item.url || item.image || "";
+        
+        // 1. Video Handling: If it's a video, try to find a cover image first
+        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
+            if (item.cover) raw = item.cover;
+            else if (item.thumbnail) raw = item.thumbnail;
+            else if (item.poster) raw = item.poster;
+            else return "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; // Generic Video Icon
+        }
+
+        // 2. Wix URL Fix (Manual Extraction)
+        // Converts "wix:image://v1/ID/file.jpg#..." to "https://static.wixstatic.com/media/ID/v1/fill/..."
+        if (raw && raw.startsWith('wix:image')) {
+            try {
+                const parts = raw.split('/');
+                const id = parts[3].split('#')[0]; 
+                return `https://static.wixstatic.com/media/${id}/v1/fill/w_${size},h_${size},al_c,q_75/file.jpg`;
+            } catch(e) {
+                // If parsing fails, fall through to standard logic
+            }
+        }
+
+        // 3. Standard Logic (Bytescale / Public URLs)
+        try {
+            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
+        } catch(e) {
+            return raw; // Fallback to raw URL if signing fails
+        }
     };
 
     // --- RANK 1 (Center) ---
@@ -251,7 +281,8 @@ export async function renderGallery() {
     let mobileArchiveHtml = '';
 
     if (middleItems.length > 0) {
-        const middlePromises = middleItems.map(item => getSignedUrl(getOptimizedUrl(item.proofUrl || item.media, 300)));
+        // Use the new getThumb here too
+        const middlePromises = middleItems.map(item => getThumb(item, 300));
         const middleThumbs = await Promise.all(middlePromises);
         
         for (let i = 0; i < middleItems.length; i++) {
@@ -264,7 +295,7 @@ export async function renderGallery() {
             // Desktop Blueprints
             desktopArchiveHtml += `
                 <div class="item-blueprint" onclick="window.openHistoryModal(${realIndex})">
-                    <img class="blueprint-img" src="${thumb}" loading="lazy">
+                    <img class="blueprint-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
                     <div class="bp-corner bl-tl"></div><div class="bp-corner bl-tr"></div>
                     <div class="bp-corner bl-bl"></div><div class="bp-corner bl-br"></div>
                     ${overlay}
@@ -273,7 +304,7 @@ export async function renderGallery() {
             // Mobile Horizontal Scroll Item
             mobileArchiveHtml += `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${realIndex})">
-                    <img class="mob-scroll-img" src="${thumb}" loading="lazy">
+                    <img class="mob-scroll-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
                     ${mobBadge}
                 </div>`;
         }
@@ -294,7 +325,7 @@ export async function renderGallery() {
     let mobileFailedHtml = '';
 
     if (failedItems.length > 0) {
-        const failedPromises = failedItems.map(item => getSignedUrl(getOptimizedUrl(item.proofUrl || item.media, 300)));
+        const failedPromises = failedItems.map(item => getThumb(item, 300));
         const failedThumbs = await Promise.all(failedPromises);
         
         for (let i = 0; i < failedItems.length; i++) {
@@ -304,14 +335,14 @@ export async function renderGallery() {
             // Desktop Trash
             desktopFailedHtml += `
                 <div class="item-trash" onclick="window.openHistoryModal(${realIndex})">
-                    <img class="trash-img" src="${thumb}" loading="lazy">
+                    <img class="trash-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
                     <div class="trash-stamp">DENIED</div>
                 </div>`;
             
             // Mobile Heap (Small)
             mobileFailedHtml += `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${realIndex})">
-                    <img class="mob-scroll-img" src="${thumb}" loading="lazy">
+                    <img class="mob-scroll-img" src="${thumb}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
                 </div>`;
         }
     } else {
@@ -321,7 +352,6 @@ export async function renderGallery() {
     gridFailed.innerHTML = desktopFailedHtml;
     if(recHeap) recHeap.innerHTML = mobileFailedHtml;
 }
-
 // --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
 export function loadMoreHistory() {
     setHistoryLimit(historyLimit + 25);
