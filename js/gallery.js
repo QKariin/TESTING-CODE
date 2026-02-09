@@ -73,14 +73,14 @@ function getGalleryList() {
     
     let items = galleryData.filter(i => {
         const s = (i.status || "").toLowerCase();
-        // 1. Basic Status Check
-        const isVisible = (s.includes('pending') || s.includes('app') || s.includes('rej') || s === "") && i.proofUrl;
         
-        // 2. STRICT CATEGORY FILTER (The Fix)
-        // If it is a "Routine", do NOT show it here. It belongs in the top shelf.
+        // 1. MUST HAVE PROOF AND VALID STATUS
+        const isValid = (s.includes('pending') || s.includes('app') || s.includes('rej') || s === "") && i.proofUrl;
+        
+        // 2. STRICTLY EXCLUDE ROUTINES (They live on the top shelf now)
         const isNotRoutine = (i.category || "").toLowerCase() !== 'routine';
 
-        return isVisible && isNotRoutine;
+        return isValid && isNotRoutine;
     });
 
     // Apply Sticker Filter (Pending/Denied buttons)
