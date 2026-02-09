@@ -64,26 +64,39 @@ function getSortedGallery() {
     return [...galleryData].sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
 }
 
-// --- HELPER: GET FILTERED LIST (UPDATED) ---
+// --- HELPER: GET FILTERED LIST (SEPARATED BY BUTTON TYPE) ---
 function getGalleryList() {
     if (!galleryData || !Array.isArray(galleryData)) return [];
     
-    // Normalize ALL items first
+    // Normalize data structure first
     galleryData.forEach(normalizeGalleryItem);
     
+    // FILTER: This determines what shows in the Service Record (Altar)
     let items = galleryData.filter(i => {
-        const s = (i.status || "").toLowerCase();
-        
-        // 1. MUST HAVE PROOF AND VALID STATUS
-        const isValid = (s.includes('pending') || s.includes('app') || s.includes('rej') || s === "") && i.proofUrl;
-        
-        // 2. STRICTLY EXCLUDE ROUTINES (They live on the top shelf now)
-        const isNotRoutine = (i.category || "").toLowerCase() !== 'routine';
+        // 1. Basic Check: Must have an image
+        if (!i.proofUrl) return false;
 
-        return isValid && isNotRoutine;
+        // 2. STATUS CHECK: Show Pending, Approved, or Rejected
+        const s = (i.status || "").toLowerCase();
+        const isVisibleStatus = s.includes('pending') || s.includes('app') || s.includes('rej') || s === "";
+        if (!isVisibleStatus) return false;
+
+        // 3. THE SEPARATOR (Based on which button was used)
+        const cat = (i.category || "").toLowerCase();
+        const txt = (i.text || "").toLowerCase();
+
+        // If it was uploaded via the "Routine" button -> HIDE IT from here
+        // (It belongs in the top "Daily Discipline" shelf)
+        if (cat === 'routine') return false; 
+
+        // Double Safety: If the text says "Daily Routine", HIDE IT
+        if (txt.includes('daily routine')) return false;
+
+        // Otherwise, it's a normal Task -> SHOW IT
+        return true;
     });
 
-    // Apply Sticker Filter (Pending/Denied buttons)
+    // Apply Sticker Filters (The buttons at the top of history)
     if (activeStickerFilter === "DENIED") {
         items = items.filter(item => (item.status || "").toLowerCase().includes('rej'));
     } else if (activeStickerFilter === "PENDING") {
@@ -92,6 +105,7 @@ function getGalleryList() {
         items = items.filter(item => item.sticker === activeStickerFilter);
     }
 
+    // Sort Newest First
     return items.sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
 }
 
