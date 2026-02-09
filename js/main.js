@@ -835,9 +835,8 @@ window.addEventListener("message", (event) => {
             renderWishlist();
         }
 
-        // UPDATED STATUS HANDLER (DESKTOP + MOBILE)
+        // STATUS UPDATES
         if (data.type === "UPDATE_DOM_STATUS") {
-            // 1. Desktop Updates
             const badge = document.getElementById('chatStatusBadge');
             const ring = document.getElementById('chatStatusRing');
             const domBadge = document.getElementById('domStatusBadge');
@@ -852,35 +851,24 @@ window.addEventListener("message", (event) => {
                 domBadge.className = data.online ? "dom-status status-online" : "dom-status"; 
             }
 
-            // 2. Mobile Updates (The New Header)
             const mobText = document.getElementById('mobChatStatusText');
             const mobDot = document.getElementById('mobChatOnlineDot');
-            const hudDot = document.getElementById('hudDomStatus'); // The Dashboard Circle
+            const hudDot = document.getElementById('hudDomStatus'); 
 
             if(mobText) {
                 mobText.innerText = data.online ? "ONLINE NOW" : data.text.toUpperCase();
                 mobText.style.color = data.online ? "#00ff00" : "#888";
             }
             
-            const dotClass = data.online ? 'status-dot online' : 'status-dot'; // Reuse class logic
-            if(mobDot) mobDot.className = dotClass;
-            
-            // Update Dashboard HUD too
+            if(mobDot) mobDot.className = data.online ? 'status-dot online' : 'status-dot';
             if(hudDot) hudDot.className = data.online ? 'hud-status-dot online' : 'hud-status-dot offline';
         }
 
         if (data.type === "UPDATE_Q_FEED") {
             const feedData = data.domVideos || data.posts || data.feed;
-            
             if (feedData && Array.isArray(feedData)) {
-                
-                // 1. Update Video Reel (Desktop)
                 if (typeof renderDomVideos === 'function') renderDomVideos(feedData);
-                
-                // 2. Update Walls (Desktop & Mobile) - DELEGATE TO UI.JS
                 if (typeof renderNews === 'function') renderNews(feedData);
-                
-                // 3. Update Counter
                 const pc = document.getElementById('cntPosts');
                 if (pc) pc.innerText = feedData.length;
             }
@@ -891,20 +879,17 @@ window.addEventListener("message", (event) => {
         if (payload) {
             if (data.profile && !ignoreBackendUpdates) {
                 
-                // --- THE MEMORY FIX: CHECK DATE ---
-                const lastDateStr = data.profile.lastRoutine || data.profile.lastRoutineSubmission;
-                if (lastDateStr) {
-                    const last = new Date(lastDateStr);
-                    const now = new Date();
-                    // Compare Day/Month/Year
-                    const isSameDay = last.getDate() === now.getDate() && 
-                                      last.getMonth() === now.getMonth() && 
-                                      last.getFullYear() === now.getFullYear();
+                // --- THE FIX: NEWER DATE WINS ---
+                // If we have a local date in memory that is NEWER than what the DB sent, keep the local one.
+                // This prevents the "Blink" where the button reappears.
+                if (typeof userProfile !== 'undefined' && userProfile.lastRoutine) {
+                    const localTime = new Date(userProfile.lastRoutine).getTime();
+                    const incomingTime = data.profile.lastRoutine ? new Date(data.profile.lastRoutine).getTime() : 0;
                     
-                    // Force the flag based on the database date
-                    data.profile.routineDoneToday = isSameDay;
-                } else {
-                    data.profile.routineDoneToday = false;
+                    // If local is fresher, FORCE the incoming data to match local
+                    if (localTime > incomingTime) {
+                        data.profile.lastRoutine = userProfile.lastRoutine;
+                    }
                 }
 
                 // Standard Data Setting
@@ -916,7 +901,8 @@ window.addEventListener("message", (event) => {
                     joined: data.profile.joined,
                     profilePicture: data.profile.profilePicture, 
                     routine: data.profile.routine,
-                    kneelHistory: data.profile.kneelHistory
+                    kneelHistory: data.profile.kneelHistory,
+                    lastRoutine: data.profile.lastRoutine // Ensure this is passed through
                 });
                 
                 if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
@@ -940,19 +926,15 @@ window.addEventListener("message", (event) => {
                 if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
                 setStats(migrateGameStatsToStats(data.profile, stats));
                 
-                // *** DIRECT IMAGE SYNC (DESKTOP + MOBILE) ***
                 if(data.profile.profilePicture) {
                     const rawUrl = data.profile.profilePicture;
-                    
-                    // 1. Update Desktop (Existing Logic)
                     const picEl = document.getElementById('profilePic');
                     if(picEl) picEl.src = getOptimizedUrl(rawUrl, 150);
         
-                    // 2. Update Mobile (Direct Injection)
-                    const mobPic = document.getElementById('mob_profilePic'); // Hexagon
-                    const mobBg = document.getElementById('mob_bgPic');       // Background
+                    const mobPic = document.getElementById('mob_profilePic');
+                    const mobBg = document.getElementById('mob_bgPic');       
+                    const hudPic = document.getElementById('hudSlavePic'); 
                     
-                    // Decode Wix URL if needed
                     let finalUrl = rawUrl;
                     if (rawUrl.startsWith("wix:image")) {
                         const uri = rawUrl.split('/')[3].split('#')[0];
@@ -961,15 +943,13 @@ window.addEventListener("message", (event) => {
         
                     if(mobPic) mobPic.src = finalUrl;
                     if(mobBg) mobBg.src = finalUrl;
+                    if(hudPic) hudPic.src = finalUrl;
                     
-                    // 3. Force Save to Memory (Safe Way)
-                    if(typeof userProfile !== 'undefined') {
-                        userProfile.profilePicture = rawUrl;
-                    }
+                    if(typeof userProfile !== 'undefined') userProfile.profilePicture = rawUrl;
                 }
                 updateStats(); 
                 
-                // FORCE MOBILE UPDATE (So the Routine button hides if done)
+                // FORCE MOBILE UPDATE (With the Protected Date)
                 if(window.syncMobileDashboard) window.syncMobileDashboard();
             }
 
