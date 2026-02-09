@@ -1676,44 +1676,74 @@ window.triggerKneel = function() {
 window.syncMobileDashboard = function() {
     if (!gameStats || !userProfile) return;
 
-    // --- HEADER DATA ---
+    // --- HEADER ---
     const dateEl = document.getElementById('dutyDateDisplay');
     if(dateEl) dateEl.innerText = new Date().toLocaleDateString().toUpperCase();
 
-    // --- 1. PROTOCOL STATUS (6 AM LOGIC) ---
+    // --- 1. PROTOCOL STATUS (6 AM LOCK) ---
     const routineName = userProfile.routine || "NO PROTOCOL"; 
     const rDisplay = document.getElementById('mobRoutineDisplay');
     if(rDisplay) rDisplay.innerText = routineName.toUpperCase();
 
-    // CHECK DATABASE DATE WITH 6 AM RULE
-    const lastDate = userProfile.lastRoutine || userProfile.lastRoutineSubmission; // Check both keys
-    const isDone = checkRoutineStatus(lastDate) || gameStats.routineDoneToday === true; // DB or Local Instant
+    // A. Define the 6 AM Logic
+    const check6AmLock = (dateStr) => {
+        if(!dateStr) return false;
+        const last = new Date(dateStr);
+        const now = new Date();
+        
+        // Duty Day starts at 6:00 AM
+        let dutyStart = new Date();
+        dutyStart.setHours(6, 0, 0, 0);
+        
+        // If now is 4 AM, the duty day started Yesterday at 6 AM
+        if (now < dutyStart) dutyStart.setDate(dutyStart.getDate() - 1);
+        
+        // If upload is newer than the duty start, it's DONE.
+        return last >= dutyStart;
+    };
+
+    // B. Check Status
+    const lastDate = userProfile.lastRoutine || userProfile.lastRoutineSubmission;
+    // We check the Date OR the local flag (for instant feedback)
+    const isDone = check6AmLock(lastDate) || gameStats.routineDoneToday === true;
     
     const hasRoutine = userProfile.routine && userProfile.routine.trim().length > 0;
 
+    // C. Update UI Elements
     const btnUpload = document.getElementById('btnRoutineUpload');
-    const msgTime = document.getElementById('routineTimeMsg');
-    const msgDone = document.getElementById('routineDoneMsg');
+    const msgTime = document.getElementById('routineTimeMsg'); // "Window Closed"
+    const msgDone = document.getElementById('routineDoneMsg'); // "Accepted"
 
     if(btnUpload) {
         if (!hasRoutine) {
+            // Case: No routine assigned
             btnUpload.classList.add('hidden');
             if(msgTime) { msgTime.innerText = "NO PROTOCOL ASSIGNED"; msgTime.classList.remove('hidden'); }
-        } else if (isDone) {
-            // DONE FOR THE DAY -> HIDE BUTTON
-            btnUpload.classList.add('hidden');
+            if(msgDone) msgDone.classList.add('hidden');
+        } 
+        else if (isDone) {
+            // Case: DONE -> LOCK BUTTON
+            btnUpload.classList.add('hidden'); // Hide button
+            
             if(msgTime) msgTime.classList.add('hidden');
-            if(msgDone) msgDone.classList.remove('hidden');
-        } else {
-            // NOT DONE -> SHOW BUTTON
+            
+            if(msgDone) {
+                // YOUR CUSTOM TEXT
+                msgDone.innerHTML = `<span style="color:var(--neon-green)">ACCEPTED.</span><br><span style="color:#666; font-size:0.7rem;">LOCKED UNTIL 06:00</span>`;
+                msgDone.classList.remove('hidden');
+            }
+        } 
+        else {
+            // Case: NOT DONE -> SHOW BUTTON
             btnUpload.classList.remove('hidden');
             btnUpload.disabled = false;
+            
             if(msgTime) msgTime.classList.add('hidden');
             if(msgDone) msgDone.classList.add('hidden');
         }
     }
 
-     // --- 2. LABOR ---
+     // --- 2. LABOR (Task Logic) ---
     const activeRow = document.getElementById('activeTimerRow'); 
     const isWorking = activeRow && !activeRow.classList.contains('hidden');
     
@@ -1737,7 +1767,7 @@ window.syncMobileDashboard = function() {
     }
 };
 
-// --- FORCE ROUTINE UPLOAD (SHORT TERM MEMORY FIX) ---
+// --- HANDLE ROUTINE UPLOAD (Immediate Lock) ---
 window.handleRoutineUpload = function(input) {
     if (input.files && input.files.length > 0) {
         
@@ -1746,21 +1776,21 @@ window.handleRoutineUpload = function(input) {
             window.handleEvidenceUpload(input, "Routine");
         }
 
-        // 2. FORCE LOCK (Set local flag)
-        if (window.gameStats) {
-            window.gameStats.routineDoneToday = true; // This overrides the DB check temporarily
+        // 2. CRITICAL: Update the Timestamp LOCALLY right now
+        // This makes the "6 AM Logic" see it as Done immediately
+        const now = new Date().toISOString();
+        
+        if (window.userProfile) {
+            window.userProfile.lastRoutine = now; // Update main profile memory
+            window.userProfile.lastRoutineSubmission = now; // Safety for alternate keys
         }
         
-        // 3. FORCE DATE UPDATE (For the 6am logic to work on re-check)
-        if (window.userProfile) {
-            window.userProfile.lastRoutine = new Date().toISOString();
+        if (window.gameStats) {
+            gameStats.routineDoneToday = true; // Legacy flag
         }
 
-        // 4. Update UI Immediately
+        // 3. Update the Dashboard (This will run the logic, see the new date, and lock the button)
         if(window.syncMobileDashboard) window.syncMobileDashboard();
-        
-        // 5. Celebration Notification
-        if(window.showSystemNotification) window.showSystemNotification("PROTOCOL ACCEPTED", "WINDOW LOCKED UNTIL 06:00");
     }
 };
 
