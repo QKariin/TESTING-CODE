@@ -254,10 +254,16 @@ export function renderNews(posts) {
                 const heroTitle = heroPost.title || heroPost.text || "ROYAL DECREE";
                 const heroDate = heroPost._createdDate ? new Date(heroPost._createdDate).toLocaleDateString() : "RECENT";
 
+                // Determine if video
+                const isVideo = heroMedia.full.includes('.mp4') || heroMedia.full.includes('.mov') || heroMedia.full.includes('.webm');
+                const mediaTag = isVideo
+                    ? `<video src="${heroMedia.full}" class="hero-img" autoplay muted loop playsinline></video>`
+                    : `<img src="${heroMedia.full}" class="hero-img" onerror="this.closest('.news-hero-section').style.display='none'">`;
+
                 const heroHTML = `
                 <div class="news-hero-section" onclick="window.openChatPreview('${heroMedia.full}', false)">
                     <div class="hero-image-wrapper">
-                        <img src="${heroMedia.full}" class="hero-img" onerror="this.closest('.news-hero-section').style.display='none'">
+                        ${mediaTag}
                         <div class="hero-overlay-grad"></div>
                     </div>
                     <div class="hero-content">
@@ -279,10 +285,15 @@ export function renderNews(posts) {
                 const txt = p.title || p.text || "Update";
                 if (!media.raw) return "";
 
+                const isVideo = media.full.includes('.mp4') || media.full.includes('.mov') || media.full.includes('.webm');
+                const mediaTag = isVideo
+                    ? `<video src="${media.thumb}" class="magazine-img" autoplay muted loop playsinline></video>`
+                    : `<img src="${media.thumb}" class="magazine-img" loading="lazy" onerror="this.closest('.magazine-card').style.display='none'">`;
+
                 return `
                     <div class="magazine-card" onclick="window.openChatPreview('${media.full}', false)">
                         <div class="mag-img-box">
-                            <img src="${media.thumb}" class="magazine-img" loading="lazy" onerror="this.closest('.magazine-card').style.display='none'">
+                            ${mediaTag}
                             <div class="mag-overlay">
                                 <span class="mag-view-btn">VIEW</span>
                             </div>
