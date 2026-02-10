@@ -70,22 +70,23 @@
 
         /* The ONLY thing allowed to scroll is the View Container */
         /* The ONLY thing allowed to scroll is the View Container */
+        /* The ONLY thing allowed to scroll is the View Container */
         #viewMobileHome {
             position: fixed; 
             top: 0; 
             left: 0; 
-            width: 100vw; 
-            height: 100dvh; /* Dynamic Height for address bar */
+            width: 100%; /* CHANGED FROM 100vw TO 100% */
+            height: 100dvh; 
             
-            overflow-y: auto !important; /* Internal scroll allowed */
+            overflow-y: auto !important; 
             overflow-x: hidden !important; 
             
-            /* --- THE SCROLL FIXES --- */
-            -webkit-overflow-scrolling: touch !important; /* Smooth iOS momentum */
-            touch-action: pan-y !important; /* ALLOW vertical scrolling here */
-            overscroll-behavior: none !important; /* Prevent parent bounce */
+            /* SCROLL PHYSICS */
+            -webkit-overflow-scrolling: touch !important; 
+            touch-action: pan-y !important; 
+            overscroll-behavior: none !important; 
             
-            /* GPU ACCELERATION (Prevents Jitter) */
+            /* GPU */
             will-change: scroll-position;
             transform: translateZ(0);
             
@@ -1055,8 +1056,8 @@
 
           <!-- CHAT SECTION: HEADER -> TICKER -> TOGGLE -->
             <div id="mobChatSection" style="
-                width: 100vw;
-                margin-left: calc(50% - 50vw);
+                width: 100%;
+                margin: 0;
                 background: #000;
                 border-top: 1px solid #333;
                 border-bottom: 1px solid #333;
