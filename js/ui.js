@@ -225,7 +225,18 @@ export function renderNews(posts) {
 
         // Helper for Desktop logic (High Quality)
         const getDesktopMedia = (p) => {
-            const raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
+            let raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
+
+            // VIDEO HANDLING: If raw is a video, find a static image fallback
+            if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm'))) {
+                // Try to find a specific cover/poster first
+                if (p.cover) raw = p.cover;
+                else if (p.thumbnail) raw = p.thumbnail;
+                else if (p.poster) raw = p.poster;
+                // If raw is STILL a video (no cover found), we can't display it in an <img> tag easily without a generated thumb.
+                // We will let getOptimizedUrl try to handle it (if it's Wix/Cloudinary), otherwise it might fail.
+            }
+
             // Desktop wants higher res
             return {
                 thumb: getOptimizedUrl(raw, 600),
