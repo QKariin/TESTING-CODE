@@ -180,23 +180,26 @@ export async function renderGallery() {
         else historySection.classList.remove('solo-mode');
     }
 
-    // --- 3. SEPARATE LISTS ---
+    // --- 3. SEPARATE LISTS (STRICTER) ---
     // A. Denied/Failed
     const deniedList = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
-        return s.includes('rej') || s.includes('fail');
+        return s.includes('rej') || s.includes('fail') || s.includes('deni');
     });
 
-    // B. Pending
+    // B. Pending (Expanded Keywords)
     const pendingList = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
-        return s.includes('pending');
+        return s.includes('pending') || s.includes('wait') || s.includes('review') || s.includes('process');
     });
 
-    // C. Accepted (Candidates for Top 3)
+    // C. Accepted (Specific Exclusion & Catch-all for valid legacy items)
     const candidates = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
-        return !s.includes('rej') && !s.includes('fail') && !s.includes('pending');
+        // Must NOT be denied AND NOT be pending
+        const isDenied = s.includes('rej') || s.includes('fail') || s.includes('deni');
+        const isPending = s.includes('pending') || s.includes('wait') || s.includes('review') || s.includes('process');
+        return !isDenied && !isPending;
     });
 
     // --- 4. ALTAR SORTING (Top 3 from Candidates) ---
@@ -218,24 +221,35 @@ export async function renderGallery() {
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
-    // --- 5. IMAGE LOADER ---
+    // --- 5. IMAGE LOADER (ROBUST WIX PARSING) ---
     const getThumb = async (item, size) => {
         if (!item) return PLACEHOLDER_IMG;
         let raw = item.proofUrl || item.media || item.url || "";
 
-        // Video Cover Check
-        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video'))) {
-            if (item.cover) raw = item.cover;
-            else if (item.thumbnail) raw = item.thumbnail;
-            else if (item.poster) raw = item.poster;
+        // 1. VIDEO CHECK (File extension OR Wix Video ID)
+        if (typeof raw === 'string') {
+            if (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video')) {
+                // Return thumb/cover for video preview if available, otherwise raw (which might be the video itself)
+                if (item.cover) raw = item.cover;
+                else if (item.thumbnail) raw = item.thumbnail;
+                else if (item.poster) raw = item.poster;
+
+                // If we still have a video URL and need a thumb, we let the video render directly later (in main render loop)
+                // OR we try to fetch a Wix generated thumb if possible.
+            }
         }
 
-        // Wix Check (Manual Parsing)
-        if (raw && typeof raw === 'string' && raw.startsWith('wix:image')) {
-            try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
+        // 2. WIX IMAGE PARSING (Regex)
+        // Format: wix:image://v1/<uri>/<filename>#originWidth=<w>&originHeight=<h>
+        if (typeof raw === 'string' && raw.startsWith('wix:image')) {
+            const match = raw.match(/wix:image:\/\/v1\/([^/]+)\//);
+            if (match && match[1]) {
+                const uri = match[1];
+                raw = `https://static.wixstatic.com/media/${uri}`;
+            }
         }
 
-        try { return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size))); } catch (e) { return raw; }
+        return getOptimizedUrl(raw, size);
     };
 
     // --- 6. RENDER TRACKS (Function) ---
