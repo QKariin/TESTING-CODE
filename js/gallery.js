@@ -1,13 +1,13 @@
 
 // gallery.js - TRILOGY LAYOUT (FIXED)
 import { mediaType } from './media.js';
-import { 
-    galleryData, 
+import {
+    galleryData,
     historyLimit,
     currentHistoryIndex,
     touchStartX,
-    setCurrentHistoryIndex, 
-    setHistoryLimit, 
+    setCurrentHistoryIndex,
+    setHistoryLimit,
     setTouchStartX,
     gameStats,
     setGameStats,
@@ -41,13 +41,13 @@ function normalizeGalleryItem(item) {
     // Use item ID/timestamp as cache key to avoid re-normalizing
     const cacheKey = item._id || item._createdDate;
     if (normalizedCache.has(cacheKey)) return;
-    
+
     // Search for photos in any possible field
     if (item.proofUrl && typeof item.proofUrl === 'string' && item.proofUrl.length > 5) {
         normalizedCache.add(cacheKey);
         return;
     }
-    
+
     const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src', 'attachment', 'photo'];
     for (let key of candidates) {
         if (item[key] && typeof item[key] === 'string' && item[key].length > 5) {
@@ -67,10 +67,10 @@ function getSortedGallery() {
 // --- HELPER: GET FILTERED LIST (SEPARATED BY BUTTON TYPE) ---
 function getGalleryList() {
     if (!galleryData || !Array.isArray(galleryData)) return [];
-    
+
     // Normalize data structure first
     galleryData.forEach(normalizeGalleryItem);
-    
+
     // FILTER: This determines what shows in the Service Record (Altar)
     let items = galleryData.filter(i => {
         // 1. Basic Check: Must have an image
@@ -87,7 +87,7 @@ function getGalleryList() {
 
         // If it was uploaded via the "Routine" button -> HIDE IT from here
         // (It belongs in the top "Daily Discipline" shelf)
-        if (cat === 'routine') return false; 
+        if (cat === 'routine') return false;
 
         // Double Safety: If the text says "Daily Routine", HIDE IT
         if (txt.includes('daily routine')) return false;
@@ -132,7 +132,7 @@ function renderStickerFilters() {
     `;
 
     stickers.forEach(url => {
-        if(url === STICKER_DENIED) return;
+        if (url === STICKER_DENIED) return;
         const isActive = (activeStickerFilter === url) ? 'active' : '';
         html += `<div class="filter-circle ${isActive}" onclick="window.setGalleryFilter('${url}')"><img src="${url}"></div>`;
     });
@@ -142,12 +142,12 @@ function renderStickerFilters() {
 
 export async function renderGallery() {
     if (!galleryData) return;
-    
+
     // --- 1. TARGETS ---
-    const gridFailed = document.getElementById('gridFailed'); 
-    const gridOkay = document.getElementById('gridOkay');     
+    const gridFailed = document.getElementById('gridFailed');
+    const gridOkay = document.getElementById('gridOkay');
     const historySection = document.getElementById('historySection');
-    
+
     const slot1 = { card: document.getElementById('altarSlot1'), img: document.getElementById('imgSlot1'), ref: document.getElementById('reflectSlot1') };
     const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2') };
     const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3') };
@@ -155,23 +155,23 @@ export async function renderGallery() {
     const mob1 = document.getElementById('mobImgSlot1');
     const mob2 = document.getElementById('mobImgSlot2');
     const mob3 = document.getElementById('mobImgSlot3');
-    
+
     const rec1 = document.getElementById('mobRec_Slot1');
     const rec2 = document.getElementById('mobRec_Slot2');
     const rec3 = document.getElementById('mobRec_Slot3');
-    const recGrid = document.getElementById('mobRec_Grid'); 
-    const recHeap = document.getElementById('mobRec_Heap'); 
+    const recGrid = document.getElementById('mobRec_Grid');
+    const recHeap = document.getElementById('mobRec_Heap');
 
     if (!gridFailed || !gridOkay) return;
 
     // Reset
     gridFailed.innerHTML = "";
     gridOkay.innerHTML = "";
-    if(recGrid) recGrid.innerHTML = "";
-    if(recHeap) recHeap.innerHTML = "";
+    if (recGrid) recGrid.innerHTML = "";
+    if (recHeap) recHeap.innerHTML = "";
 
     // --- 2. GET DATA ---
-    const allItems = getGalleryList(); 
+    const allItems = getGalleryList();
 
     if (historySection) {
         if (allItems.length === 0) historySection.classList.add('solo-mode');
@@ -193,20 +193,20 @@ export async function renderGallery() {
     candidates.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
 
     let bestOf = [];
-    
+
     // Slot 1: Newest item with >= 150 points
     const kingIndex = candidates.findIndex(item => getPoints(item) >= 150);
 
     if (kingIndex !== -1) {
-        bestOf.push(candidates[kingIndex]); 
-        candidates.splice(kingIndex, 1);    
+        bestOf.push(candidates[kingIndex]);
+        candidates.splice(kingIndex, 1);
     } else if (candidates.length > 0) {
-        bestOf.push(candidates.shift());    
+        bestOf.push(candidates.shift());
     }
 
     // Slot 2 & 3: Next newest items
-    if(candidates.length > 0) bestOf.push(candidates.shift());
-    if(candidates.length > 0) bestOf.push(candidates.shift());
+    if (candidates.length > 0) bestOf.push(candidates.shift());
+    if (candidates.length > 0) bestOf.push(candidates.shift());
 
     // Archive: Everything else + Pending items
     const pendingList = allItems.filter(item => (item.status || "").toLowerCase().includes('pending'));
@@ -225,11 +225,11 @@ export async function renderGallery() {
         }
         // Wix Check
         if (raw && raw.startsWith('wix:image')) {
-            try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch(e){}
+            try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
         }
         try {
             return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
-        } catch(e) { return raw; }
+        } catch (e) { return raw; }
     };
 
     // --- 6. RENDER ALTAR ---
@@ -237,12 +237,12 @@ export async function renderGallery() {
         if (item) {
             let thumb = await getThumb(item, 400);
             let idx = allItems.indexOf(item);
-            if(slotObj.card) { slotObj.card.style.display='flex'; slotObj.img.src=thumb; if(slotObj.ref) slotObj.ref.src=thumb; slotObj.card.onclick=()=>window.openHistoryModal(idx); }
-            if(mobEl) { mobEl.src=thumb; mobEl.parentElement.onclick=()=>window.openHistoryModal(idx); mobEl.style.display='block'; }
-            if(recEl) { recEl.src=thumb; recEl.onclick=()=>window.openHistoryModal(idx); }
+            if (slotObj.card) { slotObj.card.style.display = 'flex'; slotObj.img.src = thumb; if (slotObj.ref) slotObj.ref.src = thumb; slotObj.card.onclick = () => window.openHistoryModal(idx); }
+            if (mobEl) { mobEl.src = thumb; mobEl.parentElement.onclick = () => window.openHistoryModal(idx); mobEl.style.display = 'block'; }
+            if (recEl) { recEl.src = thumb; recEl.onclick = () => window.openHistoryModal(idx); }
         } else {
-            if(slotObj.card) slotObj.card.style.display='none';
-            if(mobEl) mobEl.style.display='none';
+            if (slotObj.card) slotObj.card.style.display = 'none';
+            if (mobEl) mobEl.style.display = 'none';
         }
     };
     renderSlot(slot1, mob1, rec1, bestOf[0]);
@@ -255,10 +255,10 @@ export async function renderGallery() {
             const src = await getThumb(item, 300);
             const idx = allItems.indexOf(item);
             const isPending = (item.status || "").toLowerCase().includes('pending');
-            
+
             // STYLES
             const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
-            
+
             // PENDING OVERLAY
             const overlay = isPending ? `<div class="pending-overlay"><div class="pending-badge">AWAITING<br>VERDICT</div></div>` : ``;
             const mobBadge = isPending ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;"><div class="pending-badge" style="font-size:0.4rem; padding:3px; border-width:1px;">WATCHING</div></div>` : ``;
@@ -270,19 +270,30 @@ export async function renderGallery() {
                 stickerHtml = `<img src="${item.sticker}" class="gallery-sticker-badge">`;
             }
 
+            // DETECT VIDEO
+            const isVideo = typeof src === 'string' && (src.includes('.mp4') || src.includes('.mov') || src.includes('.webm'));
+
+            const deskMedia = isVideo
+                ? `<video class="${isTrash ? 'trash-img' : 'blueprint-img'}" src="${src}" autoplay muted loop playsinline style="${imgStyle} object-fit:cover;"></video>`
+                : `<img class="${isTrash ? 'trash-img' : 'blueprint-img'}" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">`;
+
+            const mobMedia = isVideo
+                ? `<video class="mob-scroll-img" src="${src}" autoplay muted loop playsinline style="${imgStyle} object-fit:cover;"></video>`
+                : `<img class="mob-scroll-img" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.style.opacity=0.3">`;
+
             // Desktop HTML
             const desk = `
-                <div class="${isTrash?'item-trash':'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
-                    <img class="${isTrash?'trash-img':'blueprint-img'}" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">
+                <div class="${isTrash ? 'item-trash' : 'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
+                    ${deskMedia}
                     ${stickerHtml} <!-- Sticker Here -->
-                    ${isTrash?'<div class="trash-stamp">DENIED</div>':''}
+                    ${isTrash ? '<div class="trash-stamp">DENIED</div>' : ''}
                     ${overlay}
                 </div>`;
-            
+
             // Mobile HTML
             const mob = `
-                <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash?'height:80px; width:80px;':''}">
-                    <img class="mob-scroll-img" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.style.opacity=0.3">
+                <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash ? 'height:80px; width:80px;' : ''}">
+                    ${mobMedia}
                     ${stickerHtml} <!-- Sticker Here -->
                     ${mobBadge}
                 </div>`;
@@ -290,27 +301,27 @@ export async function renderGallery() {
         });
 
         const results = await Promise.all(promises);
-        return { desk: results.map(r=>r.desk).join(''), mob: results.map(r=>r.mob).join('') };
+        return { desk: results.map(r => r.desk).join(''), mob: results.map(r => r.mob).join('') };
     };
 
     // Render Archive
     if (archiveList.length > 0) {
         const html = await renderChunk(archiveList, false);
-        if(gridOkay) gridOkay.innerHTML = html.desk;
-        if(recGrid) recGrid.innerHTML = html.mob;
+        if (gridOkay) gridOkay.innerHTML = html.desk;
+        if (recGrid) recGrid.innerHTML = html.mob;
     } else {
-        let empty = ""; for(let i=0; i<6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_MIDDLE_EMPTY}"></div>`;
-        if(gridOkay) gridOkay.innerHTML = empty;
+        let empty = ""; for (let i = 0; i < 6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_MIDDLE_EMPTY}"></div>`;
+        if (gridOkay) gridOkay.innerHTML = empty;
     }
 
     // Render Heap
     if (deniedList.length > 0) {
         const html = await renderChunk(deniedList, true);
-        if(gridFailed) gridFailed.innerHTML = html.desk;
-        if(recHeap) recHeap.innerHTML = html.mob;
+        if (gridFailed) gridFailed.innerHTML = html.desk;
+        if (recHeap) recHeap.innerHTML = html.mob;
     } else {
-        let empty = ""; for(let i=0; i<6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_BOTTOM_EMPTY}"></div>`;
-        if(gridFailed) gridFailed.innerHTML = empty;
+        let empty = ""; for (let i = 0; i < 6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_BOTTOM_EMPTY}"></div>`;
+        if (gridFailed) gridFailed.innerHTML = empty;
     }
 }
 // --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
@@ -321,7 +332,7 @@ export function loadMoreHistory() {
 }
 
 // --- REDEMPTION LOGIC ---
-window.atoneForTask = function(index) {
+window.atoneForTask = function (index) {
     const items = getGalleryList();
     const task = items[index];
     if (!task) return;
@@ -336,40 +347,40 @@ window.atoneForTask = function(index) {
     setGameStats({ ...gameStats, coins: gameStats.coins - 100 });
 
     const coinEl = document.getElementById('coins');
-    if(coinEl) coinEl.innerText = gameStats.coins;
+    if (coinEl) coinEl.innerText = gameStats.coins;
 
-    const restoredTask = { 
-        text: task.text, 
-        category: 'redemption', 
-        timestamp: Date.now() 
+    const restoredTask = {
+        text: task.text,
+        category: 'redemption',
+        timestamp: Date.now()
     };
     setCurrentTask(restoredTask);
 
-    const endTimeVal = Date.now() + 86400000; 
-    const newPendingState = { 
-        task: restoredTask, 
-        endTime: endTimeVal, 
-        status: "PENDING" 
+    const endTimeVal = Date.now() + 86400000;
+    const newPendingState = {
+        task: restoredTask,
+        endTime: endTimeVal,
+        status: "PENDING"
     };
     setPendingTaskState(newPendingState);
 
-    window.closeModal(); 
-    
-    if(window.restorePendingUI) window.restorePendingUI();
-    if(window.updateTaskUIState) window.updateTaskUIState(true);
-    if(window.toggleTaskDetails) window.toggleTaskDetails(true);
+    window.closeModal();
 
-    window.parent.postMessage({ 
-        type: "PURCHASE_ITEM", 
+    if (window.restorePendingUI) window.restorePendingUI();
+    if (window.updateTaskUIState) window.updateTaskUIState(true);
+    if (window.toggleTaskDetails) window.toggleTaskDetails(true);
+
+    window.parent.postMessage({
+        type: "PURCHASE_ITEM",
         itemName: "Redemption",
         cost: 100,
-        messageToDom: "Slave paid 100 coins to retry failed task." 
+        messageToDom: "Slave paid 100 coins to retry failed task."
     }, "*");
 
-    window.parent.postMessage({ 
-        type: "savePendingState", 
-        pendingState: newPendingState, 
-        consumeQueue: false 
+    window.parent.postMessage({
+        type: "savePendingState",
+        pendingState: newPendingState,
+        consumeQueue: false
     }, "*");
 };
 
@@ -386,9 +397,9 @@ export async function openHistoryModal(index) {
     const isVideo = mediaType(url) === 'video';
     url = await getSignedUrl(url);
     const mediaContainer = document.getElementById('modalMediaContainer');
-    
+
     if (mediaContainer) {
-        mediaContainer.innerHTML = isVideo ? 
+        mediaContainer.innerHTML = isVideo ?
             `<video src="${url}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:contain;"></video>` :
             `<img src="${url}" style="width:100%; height:100%; object-fit:contain;">`;
     }
@@ -396,7 +407,7 @@ export async function openHistoryModal(index) {
     // 2. Setup Data
     const pts = getPoints(item);
     const status = (item.status || "").toLowerCase();
-    
+
     // CRITICAL FIX: Add 'deni' and 'refus' to ensure the button shows for "Denied" tasks
     const isRejected = status.includes('rej') || status.includes('fail') || status.includes('deni') || status.includes('refus');
 
@@ -405,7 +416,7 @@ export async function openHistoryModal(index) {
     if (overlay) {
         let verdictText = item.adminComment || "Logged without commentary.";
         // If rejected but no comment, show default text
-        if(isRejected && !item.adminComment) verdictText = "Submission rejected. Standards not met.";
+        if (isRejected && !item.adminComment) verdictText = "Submission rejected. Standards not met.";
 
         // --- REDEMPTION BUTTON GENERATOR ---
         let redemptionBtn = '';
@@ -451,30 +462,30 @@ export async function openHistoryModal(index) {
         glassModal.onclick = (e) => window.closeModal(e);
         glassModal.classList.add('active');
         glassModal.classList.remove('inspect-mode');
-        
+
         // *** ADD THIS LINE: LOCK THE DASHBOARD ***
-        document.getElementById('viewMobileHome').style.overflow = 'hidden'; 
+        document.getElementById('viewMobileHome').style.overflow = 'hidden';
     }
 }
 
 // REPLACE OR ADD toggleDirective (Fixes the text swapping)
 // REPLACE YOUR toggleDirective FUNCTION WITH THIS
-window.toggleDirective = function(index) {
-    const items = getGalleryList(); 
+window.toggleDirective = function (index) {
+    const items = getGalleryList();
     const item = items[index];
     if (!item) return;
 
     const box = document.getElementById('verdictBox');
-    
+
     // Check current view state
     if (box.dataset.view === 'task') {
         // Switch back to Verdict (Admin comments are usually plain text, so innerText is fine here, but you can change to innerHTML if needed)
         let verdictText = item.adminComment || "Logged without commentary.";
         const status = (item.status || "").toLowerCase();
-        if((status.includes('rej') || status.includes('fail')) && !item.adminComment) {
-             verdictText = "Submission rejected. Standards not met.";
+        if ((status.includes('rej') || status.includes('fail')) && !item.adminComment) {
+            verdictText = "Submission rejected. Standards not met.";
         }
-        
+
         box.innerText = `"${verdictText}"`;
         box.style.color = "#eee";
         box.style.fontStyle = "italic";
@@ -484,7 +495,7 @@ window.toggleDirective = function(index) {
         // --- THE FIX IS HERE --- 
         // We change .innerText to .innerHTML so the <p> and <br> tags render correctly
         box.innerHTML = item.text || "No directive data available.";
-        
+
         box.style.color = "#ccc";
         box.style.fontStyle = "normal";
         box.dataset.view = 'task';
@@ -500,7 +511,7 @@ export function toggleHistoryView(view) {
     const views = ['modalInfoView', 'modalFeedbackView', 'modalTaskView'];
     views.forEach(id => {
         const el = document.getElementById(id);
-        if(el) el.classList.add('hidden');
+        if (el) el.classList.add('hidden');
     });
 
     if (view === 'proof') {
@@ -515,20 +526,20 @@ export function toggleHistoryView(view) {
         if (view === 'task') targetId = 'modalTaskView';
 
         const target = document.getElementById(targetId);
-        if(target) target.classList.remove('hidden');
+        if (target) target.classList.remove('hidden');
     }
 }
 
 // REPLACE your closeModal with this simple version
 export function closeModal(e) {
-    if(e && e.stopPropagation) e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
 
     const modal = document.getElementById('glassModal');
     if (modal) {
         modal.classList.remove('active');
         modal.classList.remove('inspect-mode');
     }
-    
+
     const media = document.getElementById('modalMediaContainer');
     if (media) media.innerHTML = "";
 
@@ -540,19 +551,19 @@ export function closeModal(e) {
 function forceClose() {
     const modal = document.getElementById('glassModal');
     if (modal) modal.classList.remove('active');
-    
+
     const media = document.getElementById('modalMediaContainer');
     if (media) media.innerHTML = "";
 }
 
-export function openModal() {}
+export function openModal() { }
 
 export function initModalSwipeDetection() {
     const modalEl = document.getElementById('glassModal');
     if (!modalEl) return;
 
     modalEl.addEventListener('touchstart', e => setTouchStartX(e.changedTouches[0].screenX), { passive: true });
-    
+
     modalEl.addEventListener('touchend', e => {
         const touchEndX = e.changedTouches[0].screenX;
         const diff = touchStartX - touchEndX;
@@ -560,10 +571,10 @@ export function initModalSwipeDetection() {
         if (Math.abs(diff) > 80) {
             let historyItems = getGalleryList();
             let nextIndex = currentHistoryIndex;
-            
-            if (diff > 0) nextIndex++; 
-            else nextIndex--; 
-            
+
+            if (diff > 0) nextIndex++;
+            else nextIndex--;
+
             if (nextIndex >= 0 && nextIndex < historyItems.length) {
                 openHistoryModal(nextIndex);
             }
@@ -572,7 +583,7 @@ export function initModalSwipeDetection() {
 }
 
 // ADD THIS FUNCTION
-window.toggleInspectMode = function() {
+window.toggleInspectMode = function () {
     const modal = document.getElementById('glassModal');
     if (modal) {
         modal.classList.toggle('inspect-mode');
@@ -581,7 +592,7 @@ window.toggleInspectMode = function() {
 
 // --- PASTE THIS AT THE VERY BOTTOM OF gallery.js ---
 
-window.addEventListener('click', function(e) {
+window.addEventListener('click', function (e) {
     const modal = document.getElementById('glassModal');
     const card = document.getElementById('modalUI');
 
@@ -601,7 +612,7 @@ window.addEventListener('click', function(e) {
             modal.classList.remove('inspect-mode');
             return;
         }
-    
+
     }
 
     window.closeModal();
@@ -609,7 +620,7 @@ window.addEventListener('click', function(e) {
 
 // --- PASTE AT BOTTOM OF gallery.js ---
 
-window.toggleMobileMenu = function() {
+window.toggleMobileMenu = function () {
     const sidebar = document.querySelector('.layout-left');
     if (sidebar) {
         sidebar.classList.toggle('mobile-open');
@@ -626,39 +637,39 @@ document.addEventListener('click', (e) => {
 
 // ... inside renderGallery ...
 
-    // --- SYNC MOBILE ALTAR ---
-    const mob1 = document.getElementById('mobImgSlot1');
-    const mob2 = document.getElementById('mobImgSlot2');
-    const mob3 = document.getElementById('mobImgSlot3');
+// --- SYNC MOBILE ALTAR ---
+const mob1 = document.getElementById('mobImgSlot1');
+const mob2 = document.getElementById('mobImgSlot2');
+const mob3 = document.getElementById('mobImgSlot3');
 
-    // Slot 1 (Center)
-    if (mob1) {
-        if (bestOf[0]) {
-            // Re-use logic for thumbnail
-            let thumb = getThumbnail(getOptimizedUrl(bestOf[0].proofUrl || bestOf[0].media, 400));
-            mob1.src = thumb;
-            mob1.style.filter = "none";
-            mob1.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[0]));
-        } else {
-            // Set default Queen image if empty
-            mob1.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
-            mob1.style.filter = "grayscale(100%) brightness(0.5)";
-        }
+// Slot 1 (Center)
+if (mob1) {
+    if (bestOf[0]) {
+        // Re-use logic for thumbnail
+        let thumb = getThumbnail(getOptimizedUrl(bestOf[0].proofUrl || bestOf[0].media, 400));
+        mob1.src = thumb;
+        mob1.style.filter = "none";
+        mob1.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[0]));
+    } else {
+        // Set default Queen image if empty
+        mob1.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
+        mob1.style.filter = "grayscale(100%) brightness(0.5)";
     }
+}
 
-    // Slot 2 (Left)
-    if (mob2 && bestOf[1]) {
-        let thumb = getThumbnail(getOptimizedUrl(bestOf[1].proofUrl || bestOf[1].media, 300));
-        mob2.src = thumb;
-        mob2.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[1]));
-    }
+// Slot 2 (Left)
+if (mob2 && bestOf[1]) {
+    let thumb = getThumbnail(getOptimizedUrl(bestOf[1].proofUrl || bestOf[1].media, 300));
+    mob2.src = thumb;
+    mob2.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[1]));
+}
 
-    // Slot 3 (Right)
-    if (mob3 && bestOf[2]) {
-        let thumb = getThumbnail(getOptimizedUrl(bestOf[2].proofUrl || bestOf[2].media, 300));
-        mob3.src = thumb;
-        mob3.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[2]));
-    }
+// Slot 3 (Right)
+if (mob3 && bestOf[2]) {
+    let thumb = getThumbnail(getOptimizedUrl(bestOf[2].proofUrl || bestOf[2].media, 300));
+    mob3.src = thumb;
+    mob3.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[2]));
+}
 
 // FORCE WINDOW EXPORTS
 window.renderGallery = renderGallery;
@@ -667,8 +678,8 @@ window.toggleHistoryView = toggleHistoryView;
 window.closeModal = closeModal;
 window.atoneForTask = window.atoneForTask;
 window.loadMoreHistory = loadMoreHistory;
-window.setGalleryFilter = function(filterType) {
+window.setGalleryFilter = function (filterType) {
     activeStickerFilter = filterType;
-    renderGallery(); 
+    renderGallery();
     console.log("render render", filterType);
 };
