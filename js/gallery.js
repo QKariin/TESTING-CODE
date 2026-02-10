@@ -451,6 +451,9 @@ export async function openHistoryModal(index) {
         glassModal.onclick = (e) => window.closeModal(e);
         glassModal.classList.add('active');
         glassModal.classList.remove('inspect-mode');
+        
+        // *** ADD THIS LINE: LOCK THE DASHBOARD ***
+        document.getElementById('viewMobileHome').style.overflow = 'hidden'; 
     }
 }
 
@@ -518,19 +521,19 @@ export function toggleHistoryView(view) {
 
 // REPLACE your closeModal with this simple version
 export function closeModal(e) {
-    // If we have an event (e), stop it from triggering other things
     if(e && e.stopPropagation) e.stopPropagation();
 
-    // Force Close Everything
     const modal = document.getElementById('glassModal');
     if (modal) {
         modal.classList.remove('active');
-        modal.classList.remove('inspect-mode'); // Reset inspect mode too
+        modal.classList.remove('inspect-mode');
     }
     
-    // Clear the Media/Video to stop it playing in background
     const media = document.getElementById('modalMediaContainer');
     if (media) media.innerHTML = "";
+
+    // *** ADD THIS LINE: UNLOCK THE DASHBOARD ***
+    document.getElementById('viewMobileHome').style.overflow = 'auto';
 }
 
 // Helper to ensure clean closing
