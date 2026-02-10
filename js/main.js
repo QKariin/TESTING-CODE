@@ -816,6 +816,7 @@ window.addEventListener("message", (event) => {
     try {
         const data = event.data;
 
+        // 1. CHAT & RULES
         if (data.type === "CHAT_ECHO" && data.msgObj) renderChat([data.msgObj], true);
 
         if (data.type === 'UPDATE_RULES') {
@@ -826,6 +827,7 @@ window.addEventListener("message", (event) => {
             }
         }
 
+        // 2. INIT STATIC DATA
         if (data.type === "INIT_TASKS") {
             setTaskDatabase(data.tasks || []);
         }
@@ -835,7 +837,7 @@ window.addEventListener("message", (event) => {
             renderWishlist();
         }
 
-        // STATUS UPDATES
+        // 3. STATUS UPDATES (Header Signals)
         if (data.type === "UPDATE_DOM_STATUS") {
             const badge = document.getElementById('chatStatusBadge');
             const ring = document.getElementById('chatStatusRing');
@@ -871,10 +873,11 @@ window.addEventListener("message", (event) => {
             }
         }
 
+        // 4. MAIN DATA SYNC (Profile & Stats)
         const payload = data.profile || data.galleryData || data.pendingState ? data : (data.type === "UPDATE_FULL_DATA" ? data : null);
         
         if (payload) {
-            // 1. SET GALLERY
+            // A. GALLERY
             if (payload.galleryData) {
                 setGalleryData(payload.galleryData);
                 const currentGalleryJson = JSON.stringify(payload.galleryData);
@@ -884,68 +887,46 @@ window.addEventListener("message", (event) => {
                 }
             }
 
-            // 2. PROFILE UPDATE & TRUTH CHECK
+            // B. PROFILE
             if (data.profile && !ignoreBackendUpdates) {
                 
-                // --- THE TRUTH CHECK (Using routineHistory) ---
+                // --- TRUTH CHECK (Routine Date) ---
                 let confirmedDate = data.profile.lastRoutine || "";
-
-                // A. Check the explicit 'routineHistory' field
+                
+                // Check specific routineHistory field
                 if (data.profile.routineHistory || data.profile.routinehistory) {
                     let rh = data.profile.routineHistory || data.profile.routinehistory;
-                    
-                    // If it's a JSON string, parse it
                     if (typeof rh === 'string' && (rh.startsWith('[') || rh.startsWith('{'))) {
                         try { rh = JSON.parse(rh); } catch(e){}
                     }
-
-                    // If it's an Array (List of uploads), get the newest one
                     if (Array.isArray(rh) && rh.length > 0) {
-                        // Sort Descending (Newest First)
                         rh.sort((a, b) => new Date(b.date || b._createdDate || b) - new Date(a.date || a._createdDate || a));
                         const newest = rh[0];
-                        const rDate = newest.date || newest._createdDate || newest; // Handle object or string date
-                        
-                        // If this is newer than what we had, use it
-                        if (!confirmedDate || new Date(rDate) > new Date(confirmedDate)) {
-                            confirmedDate = rDate;
-                        }
-                    } 
-                    // If it's just a single date string
-                    else if (typeof rh === 'string' && rh.length > 5) {
-                         if (!confirmedDate || new Date(rh) > new Date(confirmedDate)) {
-                            confirmedDate = rh;
-                        }
+                        const rDate = newest.date || newest._createdDate || newest;
+                        if (!confirmedDate || new Date(rDate) > new Date(confirmedDate)) confirmedDate = rDate;
                     }
                 }
-
-                // B. Fallback: Scan Gallery (Just in case CMS field is empty)
-                if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
-                    const recentRoutine = galleryData.find(i => {
-                        const tag = (i.type || i.tag || "").toLowerCase();
-                        return tag.includes('routine') || tag.includes('protocol');
-                    });
-                    if (recentRoutine) {
-                        const galleryDate = recentRoutine.date || recentRoutine._createdDate;
-                        if (!confirmedDate || new Date(galleryDate) > new Date(confirmedDate)) {
-                            confirmedDate = galleryDate;
-                        }
-                    }
-                }
-
-                // C. Protect Local Updates (Prevent the "Blink")
+                
+                // Protect Local Updates
                 if (typeof userProfile !== 'undefined' && userProfile.lastRoutine) {
                     const localTime = new Date(userProfile.lastRoutine).getTime();
                     const incomingTime = confirmedDate ? new Date(confirmedDate).getTime() : 0;
                     if (localTime > incomingTime) confirmedDate = userProfile.lastRoutine;
                 }
-
-                // Apply the Truth
                 data.profile.lastRoutine = confirmedDate;
 
-                // --- END TRUTH CHECK ---
+                // --- INTEGRATION: MAP CMS FIELDS TO GAME STATS ---
+                // This ensures the Hierarchy Modal can read the progress
+                setGameStats({
+                    ...data.profile, // Load everything
+                    
+                    // Explicit Mappings for Hierarchy Logic
+                    total_coins_spent: data.profile.tributetotal || 0, // NEW CMS FIELD
+                    routine_streak: data.profile.routinestreak || 0,   // NEW CMS FIELD
+                    kneelCount: data.profile.kneelCount || 0,
+                    taskdom_completed: data.profile.taskdom_completed_tasks || 0
+                });
 
-                setGameStats(data.profile);
                 setUserProfile({
                     name: data.profile.name || "Slave",
                     hierarchy: data.profile.hierarchy || "HallBoy",
@@ -954,7 +935,8 @@ window.addEventListener("message", (event) => {
                     profilePicture: data.profile.profilePicture, 
                     routine: data.profile.routine,
                     kneelHistory: data.profile.kneelHistory,
-                    lastRoutine: confirmedDate // SAVE IT
+                    lastRoutine: confirmedDate,
+                    routineHistory: data.profile.routineHistory // Save full history for display
                 });
                 
                 if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
@@ -974,6 +956,7 @@ window.addEventListener("message", (event) => {
                 if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
                 setStats(migrateGameStatsToStats(data.profile, stats));
                 
+                // Profile Pic Sync
                 if(data.profile.profilePicture) {
                     const rawUrl = data.profile.profilePicture;
                     const picEl = document.getElementById('profilePic');
@@ -996,7 +979,7 @@ window.addEventListener("message", (event) => {
                 }
                 updateStats(); 
                 
-                // TRIGGER UI REFRESH (Locks button based on routineHistory date)
+                // TRIGGER UI REFRESH
                 if(window.syncMobileDashboard) window.syncMobileDashboard();
             }
 
@@ -1010,6 +993,16 @@ window.addEventListener("message", (event) => {
                         renderRewardGrid(); 
                     });
                 }, 50); 
+            }
+
+            if (payload.galleryData) {
+                const currentGalleryJson = JSON.stringify(payload.galleryData);
+                if (currentGalleryJson !== lastGalleryJson) {
+                    setLastGalleryJson(currentGalleryJson);
+                    setGalleryData(payload.galleryData);
+                    renderGallery();
+                    updateStats();
+                }
             }
 
             if (payload.pendingState !== undefined) {
