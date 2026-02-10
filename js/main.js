@@ -1241,109 +1241,169 @@ const ICONS = {
     spend: "M12,2L2,12L12,22L22,12L12,2Z M12,18L6,12L12,6L18,12L12,18Z" // Diamond Gem
 };
 
+// --- HIERARCHY RULES (THE DARK PSYCHOLOGY EDITION) ---
 const REWARD_DATA = {
     ranks: [
-        { name: "INITIATE", icon: ICONS.rank },
-        { name: "FOOTMAN", icon: ICONS.rank },
-        { name: "SILVERMAN", icon: ICONS.rank },
-        { name: "BUTLER", icon: ICONS.rank },
-        { name: "CHAMBERLAIN", icon: ICONS.rank },
-        { name: "SECRETARY", icon: ICONS.rank },
-        { name: "QUEEN'S CHAMPION", icon: ICONS.rank }
+        { 
+            name: "HALL BOY", 
+            icon: ICONS.rank,
+            tax: 20,
+            req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
+            benefits: [
+                "Silence is mandatory.",
+                "Access to The Terminal."
+            ]
+        },
+        { 
+            name: "FOOTMAN", 
+            icon: ICONS.rank,
+            tax: 15,
+            req: { tasks: 5, kneels: 10, points: 500, spent: 1000, streak: 0 },
+            benefits: [
+                "Identity Grant: You may have a face.", 
+                "Protocol Alpha: Daily Routine access.", 
+                "Voice cost reduced to 15."
+            ]
+        },
+        { 
+            name: "SILVERMAN", 
+            icon: ICONS.rank,
+            tax: 10,
+            req: { tasks: 25, kneels: 65, points: 2500, spent: 10000, streak: 3 },
+            benefits: [
+                "Visual Tribute: Permission to send PHOTOS.",
+                "Gilded Chains: Pending tasks marked Gold.",
+                "Voice cost reduced to 10."
+            ]
+        },
+        { 
+            name: "BUTLER", 
+            icon: ICONS.rank,
+            tax: 5,
+            req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 7 },
+            benefits: [
+                "Kinetic Submission: Permission to send VIDEOS.",
+                "Forbidden Knowledge: Access 'The Vault'.",
+                "Voice cost reduced to 5."
+            ]
+        },
+        { 
+            name: "CHAMBERLAIN", 
+            icon: ICONS.rank,
+            tax: 0,
+            req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 14 },
+            benefits: [
+                "Royal Mercy: Failure penalty halved.",
+                "The Free Tongue: Speak without tax.",
+                "Priority status in queue."
+            ]
+        },
+        { 
+            name: "SECRETARY", 
+            icon: ICONS.rank,
+            tax: 0,
+            req: { tasks: 500, kneels: 1500, points: 100000, spent: 500000, streak: 30 },
+            benefits: [
+                "The Golden Voice: Your chat shines Gold.",
+                "System Command: Actions broadcast to all.",
+                "Direct line to the Throne."
+            ]
+        },
+        { 
+            name: "QUEEN'S CHAMPION", 
+            icon: ICONS.rank,
+            tax: 0,
+            req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 60 },
+            benefits: [
+                "Absolute Authority.",
+                "Manifest Will: Request Custom Directives.",
+                "Total Ownership."
+            ]
+        }
     ],
-    tasks: [
-        { limit: 10, name: "LABORER", icon: ICONS.task },
-        { limit: 50, name: "TOOL", icon: ICONS.task },
-        { limit: 100, name: "DRONE", icon: ICONS.task },
-        { limit: 500, name: "MACHINE", icon: ICONS.task },
-        { limit: 1000, name: "ARCHITECT", icon: ICONS.task }
-    ],
-    kneeling: [
-        { limit: 10, name: "BENT", icon: ICONS.kneel },
-        { limit: 50, name: "SORE", icon: ICONS.kneel },
-        { limit: 100, name: "TRAINED", icon: ICONS.kneel },
-        { limit: 500, name: "FURNITURE", icon: ICONS.kneel },
-        { limit: 1000, name: "STATUE", icon: ICONS.kneel }
-    ],
-    spending: [
-        { limit: 1000, name: "TITHE", icon: ICONS.spend },
-        { limit: 10000, name: "SUPPORTER", icon: ICONS.spend },
-        { limit: 50000, name: "PATRON", icon: ICONS.spend },
-        { limit: 100000, name: "FINANCIER", icon: ICONS.spend },
-        { limit: 500000, name: "WHALE", icon: ICONS.spend }
-    ]
+    // Keep legacy arrays if needed for old logic
+    tasks: [], kneeling: [], spending: []
 };
 
 window.renderRewards = function() {
     // 1. GET DATA
-    const currentRank = userProfile?.hierarchy || "Hall Boy";
+    const currentRank = (userProfile?.hierarchy || "Hall Boy").toUpperCase();
     const totalTasks = gameStats.taskdom_completed || 0;
     const totalKneels = gameStats.kneelCount || 0;
     const totalSpent = gameStats.total_coins_spent || 0; 
 
-    // --- DAILY DISCIPLINE (STRICT FILTER) ---
+    // ============================================================
+    // PART A: DAILY DISCIPLINE (The Streak)
+    // ============================================================
     let streakCount = 0;
     let routinePhotos = [];
 
-    // 1. DATA SOURCE: We look at the full history (Gallery)
-    if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
-        
-        // 2. THE FILTER: STRICT CATEGORY CHECK
-        // This is the fix. It ignores text. It only checks the official category tag.
-        routinePhotos = galleryData.filter(item => {
-            // Check if the backend saved it as 'Routine' (Case sensitive safety)
-            const cat = (item.category || "").toLowerCase();
-            return cat === 'routine';
-        });
+    // 1. DATA SOURCE: Prefer specific history, fallback to gallery
+    let rawHistory = userProfile.routineHistory || userProfile.routinehistory;
+    
+    if (rawHistory) {
+        // Parse if JSON string
+        if (typeof rawHistory === 'string') {
+            try { routinePhotos = JSON.parse(rawHistory); } catch(e) { routinePhotos = []; }
+        } else if (Array.isArray(rawHistory)) {
+            routinePhotos = rawHistory;
+        }
+    } 
+    // Fallback: Strict Filter on Gallery
+    else if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
+        routinePhotos = galleryData.filter(item => (item.category || "").toLowerCase() === 'routine');
+    }
 
-        // 3. SORT (Newest First)
-        routinePhotos.sort((a, b) => {
-            const dateA = new Date(a.date || a._createdDate || 0);
-            const dateB = new Date(b.date || b._createdDate || 0);
-            return dateB - dateA;
-        });
+    // 2. SORT (Newest First)
+    routinePhotos.sort((a, b) => {
+        const dateA = new Date(a.date || a._createdDate || a);
+        const dateB = new Date(b.date || b._createdDate || b);
+        return dateB - dateA;
+    });
 
-        // 4. CALCULATE STREAK (Logic: Yesterday/Today chain)
-        if (routinePhotos.length > 0) {
-            const getDutyDay = (d) => {
-                let date = new Date(d);
-                if (date.getHours() < 6) date.setDate(date.getDate() - 1);
-                return date.toISOString().split('T')[0];
-            };
+    // 3. CALCULATE STREAK (6 AM Rule)
+    if (routinePhotos.length > 0) {
+        const getDutyDay = (d) => {
+            let date = new Date(d);
+            if (date.getHours() < 6) date.setDate(date.getDate() - 1);
+            return date.toISOString().split('T')[0];
+        };
 
-            const todayCode = getDutyDay(new Date());
-            // Use the newest photo's date
-            const lastCode = getDutyDay(routinePhotos[0].date || routinePhotos[0]._createdDate);
+        const todayCode = getDutyDay(new Date());
+        // Handle object format vs string format
+        const newestDate = routinePhotos[0].date || routinePhotos[0]._createdDate || routinePhotos[0];
+        const lastCode = getDutyDay(newestItemDate);
 
-            const d1 = new Date(todayCode);
-            const d2 = new Date(lastCode);
-            const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
+        // Check if alive (Today or Yesterday)
+        const d1 = new Date(todayCode);
+        const d2 = new Date(lastCode);
+        const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
 
-            // If uploaded Today or Yesterday, the streak is alive
-            if (diffDays <= 1) {
-                streakCount = 1;
-                let currentCode = lastCode;
+        if (diffDays <= 1) {
+            streakCount = 1;
+            let currentCode = lastCode;
 
-                for (let i = 1; i < routinePhotos.length; i++) {
-                    const nextCode = getDutyDay(routinePhotos[i].date || routinePhotos[i]._createdDate);
-                    if (nextCode === currentCode) continue; 
-                    
-                    const dayA = new Date(currentCode);
-                    const dayB = new Date(nextCode);
-                    const gap = (dayA - dayB) / (1000 * 60 * 60 * 24);
+            for (let i = 1; i < routinePhotos.length; i++) {
+                const itemDate = routinePhotos[i].date || routinePhotos[i]._createdDate || routinePhotos[i];
+                const nextCode = getDutyDay(itemDate);
+                
+                if (nextCode === currentCode) continue; 
+                
+                const dayA = new Date(currentCode);
+                const dayB = new Date(nextCode);
+                const gap = (dayA - dayB) / (1000 * 60 * 60 * 24);
 
-                    if (gap === 1) {
-                        streakCount++;
-                        currentCode = nextCode;
-                    } else {
-                        break;
-                    }
+                if (gap === 1) {
+                    streakCount++;
+                    currentCode = nextCode;
+                } else {
+                    break;
                 }
             }
         }
     }
 
-    // --- UPDATE UI (LUXURY STYLE) ---
+    // 4. RENDER ROUTINE UI
     const strVal = document.getElementById('dispStreakVal');
     const strBest = document.getElementById('dispBestStreak');
     const strShelf = document.getElementById('shelfRoutine');
@@ -1351,51 +1411,106 @@ window.renderRewards = function() {
     if (strVal) {
         strVal.innerText = streakCount;
         strVal.style.color = "#c5a059"; 
-        // Force the parent box to look Luxury (Gold/Black)
-        strVal.parentElement.style.borderColor = "#c5a059";
-        strVal.parentElement.style.background = "linear-gradient(180deg, #1a1a1a 0%, #000 100%)";
+        // Force Luxury Styling on parent box
+        if(strVal.parentElement) {
+            strVal.parentElement.style.borderColor = "#c5a059";
+            strVal.parentElement.style.background = "linear-gradient(180deg, #1a1a1a 0%, #000 100%)";
+        }
     }
     
     if (strBest) strBest.innerText = Math.max(streakCount, gameStats.bestRoutineStreak || 0);
 
     if (strShelf) {
-        if(routinePhotos.length === 0) {
-            strShelf.innerHTML = `<div style="color:#666; font-family:'Cinzel'; font-size:0.6rem; padding:10px; letter-spacing:1px;">NO DISCIPLINE LOGGED</div>`;
+        if (routinePhotos.length === 0) {
+            strShelf.innerHTML = `<div style="color:#666; font-family:'Cinzel'; font-size:0.6rem; padding:10px; letter-spacing:1px;">SUBMISSION REQUIRED</div>`;
         } else {
             strShelf.innerHTML = routinePhotos.slice(0, 10).map(item => {
-                const src = item.proofUrl || item.url || item.image || item.proof || "";
-                if(!src) return "";
+                let rawSrc = (typeof item === 'object') ? (item.proof || item.url || item.image) : item;
+                if (!rawSrc) return "";
 
-                // Thumbnail Logic
-                let thumb = src;
-                if(src.startsWith('wix:image')) {
-                     try { thumb = `https://static.wixstatic.com/media/${src.split('/')[3].split('#')[0]}/v1/fill/w_150,h_150,q_70/thumb.jpg`; } catch(e){}
-                } else {
-                    if(typeof getOptimizedUrl === 'function') thumb = getOptimizedUrl(src, 150);
+                // WIX URL FIXER (Same as Gallery)
+                let thumb = rawSrc;
+                if (rawSrc.startsWith('wix:image')) {
+                     try { 
+                         const id = rawSrc.split('/')[3].split('#')[0];
+                         thumb = `https://static.wixstatic.com/media/${id}/v1/fill/w_150,h_150,q_70/thumb.jpg`; 
+                     } catch(e){}
                 }
 
-                // Render Image (Gold/Dark Border)
                 return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border:1px solid #444; border-radius:2px; flex-shrink:0; margin-right:8px; filter:sepia(20%) brightness(0.9);">`;
             }).join('');
         }
     }
 
-    // --- RENDER STANDARD SHELVES (PRESERVED) ---
+    // ============================================================
+    // PART B: HIERARCHY PODIUM (Past / Present / Future)
+    // ============================================================
+    const shelfRank = document.getElementById('shelfRanks');
+    if (shelfRank) {
+        const rankList = REWARD_DATA.ranks.map(r => r.name);
+        let currentIdx = rankList.indexOf(currentRank);
+        if (currentIdx === -1) currentIdx = 0; 
+
+        let html = "";
+
+        // 1. PREVIOUS (Small, Dim)
+        if (currentIdx > 0) {
+            const prev = REWARD_DATA.ranks[currentIdx - 1];
+            html += `
+            <div class="reward-badge shape-hex unlocked" style="transform:scale(0.8); opacity:0.5; filter:grayscale(100%); margin:0 5px;"
+                 onclick="window.openHierarchyCard('${prev.name}', ${streakCount})">
+                <div class="rb-inner">
+                    <svg class="rb-icon" viewBox="0 0 24 24"><path d="${prev.icon}"/></svg>
+                    <div class="rb-label">${prev.name}</div>
+                </div>
+            </div>`;
+        }
+
+        // 2. CURRENT (Big, Gold)
+        const curr = REWARD_DATA.ranks[currentIdx];
+        html += `
+        <div class="reward-badge shape-hex unlocked" style="transform:scale(1.2); z-index:10; border-color:#c5a059; box-shadow:0 0 25px rgba(197, 160, 89, 0.25); margin:0 10px;"
+             onclick="window.openHierarchyCard('${curr.name}', ${streakCount})">
+            <div class="rb-inner">
+                <svg class="rb-icon" viewBox="0 0 24 24" style="fill:#c5a059;"><path d="${curr.icon}"/></svg>
+                <div class="rb-label" style="color:#fff; text-shadow:0 0 5px #c5a059;">${curr.name}</div>
+            </div>
+        </div>`;
+
+        // 3. NEXT (Small, Locked)
+        if (currentIdx < REWARD_DATA.ranks.length - 1) {
+            const next = REWARD_DATA.ranks[currentIdx + 1];
+            html += `
+            <div class="reward-badge shape-hex locked" style="transform:scale(0.8); opacity:0.8; margin:0 5px;"
+                 onclick="window.openHierarchyCard('${next.name}', ${streakCount})">
+                <div class="rb-inner">
+                    <div style="font-size:1.2rem; margin-bottom:5px;">🔒</div>
+                    <div class="rb-label">${next.name}</div>
+                </div>
+            </div>`;
+        }
+
+        shelfRank.innerHTML = html;
+        shelfRank.style.justifyContent = "center"; // Center the podium
+        shelfRank.style.overflow = "visible";      // Allow glow to bleed out
+    }
+
+    // ============================================================
+    // PART C: STANDARD SHELVES (Tasks, Kneel, Spend)
+    // ============================================================
     const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabel) => {
         const container = document.getElementById(containerId);
         if (!container) return;
         
         container.innerHTML = data.map((item, index) => {
-            const targetVal = (typeLabel === 'rank') ? index : item.limit;
-            const isUnlocked = (typeLabel === 'rank') ? (currentVal >= index) : (currentVal >= targetVal);
+            const targetVal = item.limit;
+            const isUnlocked = currentVal >= targetVal;
             const statusClass = isUnlocked ? "unlocked" : "locked";
             const isLegendary = index === data.length - 1 ? "legendary" : "";
-            const displayCurrent = (typeLabel === 'rank') ? (isUnlocked ? 1 : 0) : currentVal;
-            const displayTarget = (typeLabel === 'rank') ? 1 : targetVal;
-
+            
             return `
                 <div class="reward-badge ${shapeClass} ${statusClass} ${isLegendary}" 
-                     onclick="window.openRewardCard('${item.name}', '${item.icon}', ${displayCurrent}, ${displayTarget}, '${typeLabel}')">
+                     onclick="window.openRewardCard('${item.name}', '${item.icon}', ${currentVal}, ${targetVal}, '${typeLabel}')">
                     <div class="rb-inner" style="display:flex; flex-direction:column; align-items:center;">
                         <svg class="rb-icon" viewBox="0 0 24 24"><path d="${item.icon}"/></svg>
                         <div class="rb-label">${item.name}</div>
@@ -1405,10 +1520,6 @@ window.renderRewards = function() {
         }).join('');
     };
 
-    const rankList = REWARD_DATA.ranks.map(r => r.name.toLowerCase());
-    const myRankIndex = rankList.findIndex(r => r === currentRank.toLowerCase());
-
-    buildShelf('shelfRanks', REWARD_DATA.ranks, 'shape-hex', null, myRankIndex, 'rank');
     buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
     buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
     buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', null, totalSpent, 'spend');
