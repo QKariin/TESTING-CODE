@@ -38,24 +38,29 @@ function getPoints(item) {
 let normalizedCache = new Set();
 
 function normalizeGalleryItem(item) {
+    if (!item) return;
+
+    // 1. Ensure Status is a String
+    if (!item.status) item.status = "";
+
     // Use item ID/timestamp as cache key to avoid re-normalizing
     const cacheKey = item._id || item._createdDate;
     if (normalizedCache.has(cacheKey)) return;
 
-    // Search for photos in any possible field
-    if (item.proofUrl && typeof item.proofUrl === 'string' && item.proofUrl.length > 5) {
-        normalizedCache.add(cacheKey);
-        return;
-    }
+    // 2. Find Proof URL (Aggressive Search)
+    if (!item.proofUrl || item.proofUrl.length < 5) {
+        const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src', 'attachment', 'photo', 'cover', 'thumbnail', 'poster'];
+        for (let key of candidates) {
+            if (item[key] && typeof item[key] === 'string' && item[key].length > 5) {
+                // Ignore "Avatar" unless it's the only thing
+                if (key === 'avatar' && !item.media && !item.evidence) continue;
 
-    const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src', 'attachment', 'photo'];
-    for (let key of candidates) {
-        if (item[key] && typeof item[key] === 'string' && item[key].length > 5) {
-            item.proofUrl = item[key];
-            normalizedCache.add(cacheKey);
-            return;
+                item.proofUrl = item[key];
+                break;
+            }
         }
     }
+    normalizedCache.add(cacheKey);
 }
 
 // --- HELPER: SORTED LIST ---
@@ -73,26 +78,16 @@ function getGalleryList() {
 
     // FILTER: This determines what shows in the Service Record (Altar)
     let items = galleryData.filter(i => {
-        // 1. Basic Check: Must have an image
-        if (!i.proofUrl) return false;
+        // 1. Basic Check: Must have data
+        if (!i) return false;
 
-        // 2. STATUS CHECK: Show Pending, Approved, or Rejected
-        const s = (i.status || "").toLowerCase();
-        const isVisibleStatus = s.includes('pending') || s.includes('app') || s.includes('rej') || s === "";
-        if (!isVisibleStatus) return false;
-
-        // 3. THE SEPARATOR (Based on which button was used)
+        // 2. THE SEPARATOR (Based on category)
         const cat = (i.category || "").toLowerCase();
         const txt = (i.text || "").toLowerCase();
 
-        // If it was uploaded via the "Routine" button -> HIDE IT from here
-        // (It belongs in the top "Daily Discipline" shelf)
-        if (cat === 'routine') return false;
+        // Hide "Routine" uploads from here
+        if (cat === 'routine' || txt.includes('daily routine')) return false;
 
-        // Double Safety: If the text says "Daily Routine", HIDE IT
-        if (txt.includes('daily routine')) return false;
-
-        // Otherwise, it's a normal Task -> SHOW IT
         return true;
     });
 
@@ -181,25 +176,32 @@ export async function renderGallery() {
     }
 
     // --- 3. SEPARATE LISTS (STRICTER) ---
-    // A. Denied/Failed
+    /* 
+       LOGIC:
+       - FAILED: Explicit "Fail", "Reject", "Denied"
+       - PENDING: Explicit "Pending", "Wait", "Review" OR Empty Status (Assume pending if new)
+       - ACCEPTED: Everything else (Approved, Completed, or Legacy valid)
+    */
+
+    // A. Denied
     const deniedList = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
-        return s.includes('rej') || s.includes('fail') || s.includes('deni');
+        return s.includes('rej') || s.includes('fail') || s.includes('deni') || s.includes('refus');
     });
 
-    // B. Pending (Expanded Keywords)
+    // B. Pending
     const pendingList = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
+        // If status is empty, treat as Pending (safer than Accepted)
+        if (s === "") return true;
         return s.includes('pending') || s.includes('wait') || s.includes('review') || s.includes('process');
     });
 
-    // C. Accepted (Specific Exclusion & Catch-all for valid legacy items)
+    // C. Accepted (Candidates)
     const candidates = allItems.filter(item => {
-        const s = (item.status || "").toLowerCase();
-        // Must NOT be denied AND NOT be pending
-        const isDenied = s.includes('rej') || s.includes('fail') || s.includes('deni');
-        const isPending = s.includes('pending') || s.includes('wait') || s.includes('review') || s.includes('process');
-        return !isDenied && !isPending;
+        if (deniedList.includes(item)) return false;
+        if (pendingList.includes(item)) return false;
+        return true;
     });
 
     // --- 4. ALTAR SORTING (Top 3 from Candidates) ---
@@ -224,32 +226,46 @@ export async function renderGallery() {
     // --- 5. IMAGE LOADER (ROBUST WIX PARSING) ---
     const getThumb = async (item, size) => {
         if (!item) return PLACEHOLDER_IMG;
-        let raw = item.proofUrl || item.media || item.url || "";
 
-        // 1. VIDEO CHECK (File extension OR Wix Video ID)
-        if (typeof raw === 'string') {
-            if (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video')) {
-                // Return thumb/cover for video preview if available, otherwise raw (which might be the video itself)
+        // 1. Get Raw Data
+        let raw = item.proofUrl;
+        if (!raw || raw.length < 5) raw = item.media || item.url || item.image || "";
+
+        // 2. Fallback to Placeholder
+        if (!raw || raw.length < 5) return PLACEHOLDER_IMG;
+
+        // 3. Wix Video Handling
+        if (typeof raw === 'string' && raw.startsWith('wix:video')) {
+            const parts = raw.split('posterUri=');
+            if (parts.length > 1) {
+                const posterId = parts[1].split('&')[0];
+                raw = `https://static.wixstatic.com/media/${posterId}`;
+            } else {
                 if (item.cover) raw = item.cover;
                 else if (item.thumbnail) raw = item.thumbnail;
                 else if (item.poster) raw = item.poster;
-
-                // If we still have a video URL and need a thumb, we let the video render directly later (in main render loop)
-                // OR we try to fetch a Wix generated thumb if possible.
             }
         }
 
-        // 2. WIX IMAGE PARSING (Regex)
-        // Format: wix:image://v1/<uri>/<filename>#originWidth=<w>&originHeight=<h>
-        if (typeof raw === 'string' && raw.startsWith('wix:image')) {
+        // 4. Wix Image Handling (Regex)
+        else if (typeof raw === 'string' && raw.startsWith('wix:image')) {
             const match = raw.match(/wix:image:\/\/v1\/([^/]+)\//);
             if (match && match[1]) {
-                const uri = match[1];
-                raw = `https://static.wixstatic.com/media/${uri}`;
+                return `https://static.wixstatic.com/media/${match[1]}`;
             }
         }
 
-        return getOptimizedUrl(raw, size);
+        // Clean up URL
+        if (typeof raw === 'string' && raw.startsWith('http')) {
+            try { return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size))); } catch (e) { return raw; }
+        }
+
+        // Filename only
+        if (typeof raw === 'string' && !raw.includes('/') && raw.includes('.')) {
+            return `https://static.wixstatic.com/media/${raw}`;
+        }
+
+        return raw;
     };
 
     // --- 6. RENDER TRACKS (Function) ---
