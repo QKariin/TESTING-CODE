@@ -2,7 +2,7 @@
 import { currentView, cmsHierarchyData, setCurrentView, WISHLIST_ITEMS, gameStats } from './state.js';
 import { CMS_HIERARCHY } from './config.js';
 import { renderGallery, loadMoreHistory } from './gallery.js';
-import { getOptimizedUrl } from './media.js';
+import { getOptimizedUrl, getThumbnail, getSignedUrl } from './media.js';
 import { renderVault } from '../profile/kneeling/reward.js';
 
 export function switchTab(mode) {
@@ -180,7 +180,7 @@ export function renderDomVideos(videos) {
 }
 
 // *** QUEEN'S WALL RENDERER (ROYAL GAZETTE STYLE) ***
-export function renderNews(posts) {
+export async function renderNews(posts) {
     const deskGrid = document.getElementById('newsGrid');
     const mobScroll = document.getElementById('qWall_ScrollTrack');
 
@@ -190,102 +190,83 @@ export function renderNews(posts) {
         return;
     }
 
-    // --- 1. MOBILE RENDER (SAFE RESTORATION) ---
-    // We use the simpler, robust logic that allows fallbacks
+    // --- ALTAR LOGIC COPIED FROM GALLERY.JS ---
+    const getThumb = async (item, size) => {
+        let raw = item.image || item.img || item.thumbnail || item.cover || item.media || item.url || "";
+
+        // Video Cover Check
+        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video'))) {
+            if (item.cover) raw = item.cover;
+            else if (item.thumbnail) raw = item.thumbnail;
+            else if (item.poster) raw = item.poster;
+        }
+
+        // Wix Check (Manual Parsing - The "Altar" Way)
+        if (raw && raw.startsWith('wix:image')) {
+            try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
+        }
+
+        try {
+            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
+        } catch (e) { return raw; }
+    };
+
+    // --- 1. PRE-PROCESS DATA (ASYNC) ---
+    // We resolve all URLs first to avoid partial rendering
+    const processedPosts = await Promise.all(posts.map(async p => {
+        const thumb = await getThumb(p, 400); // Mobile/Grid size
+        const full = await getThumb(p, 1200); // Desktop Hero size
+        let raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
+        return { ...p, _thumbUrl: thumb, _fullUrl: full, _rawUrl: raw };
+    }));
+
+    // --- 2. MOBILE RENDER (SAFE RESTORATION) ---
     if (mobScroll) {
-        mobScroll.innerHTML = posts.map(p => {
-            // 1. Get Raw
-            const raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
-            if (!raw) return "";
-
-            // 2. Use Global Optimizer (Safe Fallback built-in)
-            // Mobile needs smaller images (400px is good balance)
-            const thumb = getOptimizedUrl(raw, 400);
-            // Full res for the modal
-            const full = getOptimizedUrl(raw, 1000);
-
+        mobScroll.innerHTML = processedPosts.map(p => {
+            if (!p._thumbUrl) return "";
             const txt = p.text || p.title || "Update";
 
             return `
-                <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${full}', '${txt.replace(/'/g, "\\'")}')">
-                    <img src="${thumb}" class="mob-scroll-img" loading="lazy" onerror="this.parentElement.style.display='none'">
+                <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${p._fullUrl}', '${txt.replace(/'/g, "\\'")}')">
+                    <img src="${p._thumbUrl}" class="mob-scroll-img" loading="lazy" onerror="this.parentElement.style.display='none'">
                 </div>
             `;
         }).join('');
     }
 
-    // --- 2. DESKTOP RENDER (ROYAL GAZETTE LAYOUT) ---
+    // --- 3. DESKTOP RENDER (ROYAL GAZETTE LAYOUT) ---
     if (deskGrid) {
-        // Clear & Clean Class
         deskGrid.innerHTML = "";
         deskGrid.className = "";
 
         const layoutWrapper = document.createElement("div");
         layoutWrapper.className = "royal-gazette-layout";
 
-        // Helper for Desktop logic (Safe & High Quality)
-        const getDesktopMedia = (p) => {
-            let raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
-
-            // VIDEO HANDLING: If raw is a video, find a static image fallback
-            if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm'))) {
-                // Try to find a specific cover/poster first
-                if (p.cover) raw = p.cover;
-                else if (p.thumbnail) raw = p.thumbnail;
-                else if (p.poster) raw = p.poster;
-                // If no cover, we let it pass through to be handled by the <video> tag logic downstream
-            }
-
-            // WIX SAFE HANDLING:
-            // 1. Full Res: Use the MASTER URL (No crop/resize params) to ensure it loads 100% of the time.
-            // 2. Thumb: Use 400px (Matches Mobile) to ensuring consistency if 600/1200 were failing.
-            let full = "";
-            let thumb = "";
-
-            if (raw && raw.startsWith("wix:image")) {
-                try {
-                    const id = raw.split('/')[3].split('#')[0]; // Use simple split match mobile
-                    full = `https://static.wixstatic.com/media/${id}`;
-                    thumb = `https://static.wixstatic.com/media/${id}/v1/fill/w_400,h_400,al_c,q_80/${id}`; // Match mobile exactly
-                } catch (e) {
-                    // Fallback if parsing fails
-                    full = getOptimizedUrl(raw, 1000);
-                    thumb = getOptimizedUrl(raw, 400); // Mobile fallback
-                }
-            } else {
-                // Non-Wix
-                full = getOptimizedUrl(raw, 1000);
-                thumb = getOptimizedUrl(raw, 400); // Desktop wants higher res but we stick to safe 400
-            }
-
-            return {
-                thumb: thumb,
-                full: full,
-                raw: raw
-            };
-        };
-
         // A. HERO SECTION (Latest Post)
-        if (posts.length > 0) {
-            const heroPost = posts[0];
-            const heroMedia = getDesktopMedia(heroPost);
+        if (processedPosts.length > 0) {
+            const heroPost = processedPosts[0];
+            const heroTitle = heroPost.title || heroPost.text || "ROYAL DECREE";
+            const heroDate = heroPost._createdDate ? new Date(heroPost._createdDate).toLocaleDateString() : "RECENT";
 
-            if (heroMedia.raw) { // Only show if there is an image
-                const heroTitle = heroPost.title || heroPost.text || "ROYAL DECREE";
-                const heroDate = heroPost._createdDate ? new Date(heroPost._createdDate).toLocaleDateString() : "RECENT";
-
+            if (heroPost._fullUrl) { // Only show if we explicitly have a full URL
                 // Determine if video
-                const isVideo = heroMedia.full.toLowerCase().includes('.mp4') ||
-                    heroMedia.full.toLowerCase().includes('.mov') ||
-                    heroMedia.full.toLowerCase().includes('.webm') ||
-                    (heroMedia.raw && heroMedia.raw.startsWith('wix:video'));
+                const isVideo = heroPost._rawUrl.toLowerCase().includes('.mp4') ||
+                    heroPost._rawUrl.toLowerCase().includes('.mov') ||
+                    heroPost._rawUrl.toLowerCase().includes('.webm') ||
+                    heroPost._rawUrl.startsWith('wix:video');
+
+                // For video, we try to construct the direct video URL if possible
+                let videoSrc = heroPost._fullUrl;
+                if (isVideo && heroPost._rawUrl.startsWith('wix:video')) {
+                    try { videoSrc = `https://video.wixstatic.com/video/${heroPost._rawUrl.split('/')[3].split('#')[0]}/mp4/file.mp4`; } catch (e) { }
+                }
 
                 const mediaTag = isVideo
-                    ? `<video src="${heroMedia.full}" class="hero-img" autoplay muted loop playsinline></video>`
-                    : `<img src="${heroMedia.full}" class="hero-img" onerror="this.closest('.news-hero-section').style.display='none'">`;
+                    ? `<video src="${videoSrc}" class="hero-img" autoplay muted loop playsinline></video>`
+                    : `<img src="${heroPost._fullUrl}" class="hero-img" onerror="this.closest('.news-hero-section').style.display='none'">`;
 
                 const heroHTML = `
-                <div class="news-hero-section" onclick="window.openChatPreview('${heroMedia.full}', false)">
+                <div class="news-hero-section" onclick="window.openChatPreview('${heroPost._fullUrl}', false)">
                     <div class="hero-image-wrapper">
                         ${mediaTag}
                         <div class="hero-overlay-grad"></div>
@@ -301,25 +282,29 @@ export function renderNews(posts) {
         }
 
         // B. MASONRY GRID (Older Posts)
-        if (posts.length > 1) {
+        if (processedPosts.length > 1) {
             const gridHTML = `
             <div class="news-magazine-grid">
-                ${posts.slice(1).map(p => {
-                const media = getDesktopMedia(p);
+                ${processedPosts.slice(1).map(p => {
+                if (!p._thumbUrl) return "";
                 const txt = p.title || p.text || "Update";
-                if (!media.raw) return "";
 
-                const isVideo = media.full.toLowerCase().includes('.mp4') ||
-                    media.full.toLowerCase().includes('.mov') ||
-                    media.full.toLowerCase().includes('.webm') ||
-                    (media.raw && media.raw.startsWith('wix:video'));
+                const isVideo = p._rawUrl.toLowerCase().includes('.mp4') ||
+                    p._rawUrl.toLowerCase().includes('.mov') ||
+                    p._rawUrl.toLowerCase().includes('.webm') ||
+                    p._rawUrl.startsWith('wix:video');
+
+                let videoSrc = p._thumbUrl; // Default to thumb for video poster/src
+                if (isVideo && p._rawUrl.startsWith('wix:video')) {
+                    try { videoSrc = `https://video.wixstatic.com/video/${p._rawUrl.split('/')[3].split('#')[0]}/mp4/file.mp4`; } catch (e) { }
+                }
 
                 const mediaTag = isVideo
-                    ? `<video src="${media.thumb}" class="magazine-img" autoplay muted loop playsinline></video>`
-                    : `<img src="${media.thumb}" class="magazine-img" loading="lazy" onerror="this.closest('.magazine-card').style.display='none'">`;
+                    ? `<video src="${videoSrc}" class="magazine-img" autoplay muted loop playsinline></video>`
+                    : `<img src="${p._thumbUrl}" class="magazine-img" loading="lazy" onerror="this.closest('.magazine-card').style.display='none'">`;
 
                 return `
-                    <div class="magazine-card" onclick="window.openChatPreview('${media.full}', false)">
+                    <div class="magazine-card" onclick="window.openChatPreview('${p._fullUrl}', false)">
                         <div class="mag-img-box">
                             ${mediaTag}
                             <div class="mag-overlay">
