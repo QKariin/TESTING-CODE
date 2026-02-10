@@ -2140,3 +2140,19 @@ setInterval(() => {
 
 window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
 window.parent.postMessage({ type: "UI_READY" }, "*");
+
+window.toggleMobileChat = function(open) {
+    const btn = document.getElementById('btnEnterChatPanel');
+    const panel = document.getElementById('inlineChatPanel');
+    const scrollBox = document.getElementById('mob_chatBox');
+
+    if (open) {
+        btn.classList.add('hidden');       // Hide Button
+        panel.classList.remove('hidden');  // Show Chat
+        // Auto-scroll to bottom
+        if(scrollBox) setTimeout(() => { scrollBox.scrollTop = scrollBox.scrollHeight; }, 50);
+    } else {
+        btn.classList.remove('hidden');    // Show Button
+        panel.classList.add('hidden');     // Hide Chat
+    }
+};
