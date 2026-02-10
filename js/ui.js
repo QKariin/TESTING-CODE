@@ -223,7 +223,7 @@ export function renderNews(posts) {
         const layoutWrapper = document.createElement("div");
         layoutWrapper.className = "royal-gazette-layout";
 
-        // Helper for Desktop logic (High Quality)
+        // Helper for Desktop logic (Safe & High Quality)
         const getDesktopMedia = (p) => {
             let raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
 
@@ -233,14 +233,34 @@ export function renderNews(posts) {
                 if (p.cover) raw = p.cover;
                 else if (p.thumbnail) raw = p.thumbnail;
                 else if (p.poster) raw = p.poster;
-                // If raw is STILL a video (no cover found), we can't display it in an <img> tag easily without a generated thumb.
-                // We will let getOptimizedUrl try to handle it (if it's Wix/Cloudinary), otherwise it might fail.
+                // If no cover, we let it pass through to be handled by the <video> tag logic downstream
             }
 
-            // Desktop wants higher res
+            // WIX SAFE HANDLING:
+            // 1. Full Res: Use the MASTER URL (No crop/resize params) to ensure it loads 100% of the time.
+            // 2. Thumb: Use 400px (Matches Mobile) to ensuring consistency if 600/1200 were failing.
+            let full = "";
+            let thumb = "";
+
+            if (raw && raw.startsWith("wix:image")) {
+                try {
+                    const id = raw.split('/')[3].split('#')[0]; // Use simple split match mobile
+                    full = `https://static.wixstatic.com/media/${id}`;
+                    thumb = `https://static.wixstatic.com/media/${id}/v1/fill/w_400,h_400,al_c,q_80/${id}`; // Match mobile exactly
+                } catch (e) {
+                    // Fallback if parsing fails
+                    full = getOptimizedUrl(raw, 1000);
+                    thumb = getOptimizedUrl(raw, 400); // Mobile fallback
+                }
+            } else {
+                // Non-Wix
+                full = getOptimizedUrl(raw, 1000);
+                thumb = getOptimizedUrl(raw, 400); // Desktop wants higher res but we stick to safe 400
+            }
+
             return {
-                thumb: getOptimizedUrl(raw, 600),
-                full: getOptimizedUrl(raw, 1200),
+                thumb: thumb,
+                full: full,
                 raw: raw
             };
         };
@@ -255,7 +275,11 @@ export function renderNews(posts) {
                 const heroDate = heroPost._createdDate ? new Date(heroPost._createdDate).toLocaleDateString() : "RECENT";
 
                 // Determine if video
-                const isVideo = heroMedia.full.includes('.mp4') || heroMedia.full.includes('.mov') || heroMedia.full.includes('.webm');
+                const isVideo = heroMedia.full.toLowerCase().includes('.mp4') ||
+                    heroMedia.full.toLowerCase().includes('.mov') ||
+                    heroMedia.full.toLowerCase().includes('.webm') ||
+                    (heroMedia.raw && heroMedia.raw.startsWith('wix:video'));
+
                 const mediaTag = isVideo
                     ? `<video src="${heroMedia.full}" class="hero-img" autoplay muted loop playsinline></video>`
                     : `<img src="${heroMedia.full}" class="hero-img" onerror="this.closest('.news-hero-section').style.display='none'">`;
@@ -285,7 +309,11 @@ export function renderNews(posts) {
                 const txt = p.title || p.text || "Update";
                 if (!media.raw) return "";
 
-                const isVideo = media.full.includes('.mp4') || media.full.includes('.mov') || media.full.includes('.webm');
+                const isVideo = media.full.toLowerCase().includes('.mp4') ||
+                    media.full.toLowerCase().includes('.mov') ||
+                    media.full.toLowerCase().includes('.webm') ||
+                    (media.raw && media.raw.startsWith('wix:video'));
+
                 const mediaTag = isVideo
                     ? `<video src="${media.thumb}" class="magazine-img" autoplay muted loop playsinline></video>`
                     : `<img src="${media.thumb}" class="magazine-img" loading="lazy" onerror="this.closest('.magazine-card').style.display='none'">`;
