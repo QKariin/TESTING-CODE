@@ -949,26 +949,30 @@
         </div>
 
         <!-- FLOATING AVATAR (ORBITAL DESIGN - SCROLLS TO CHAT) -->
-        <div onclick="const el = document.getElementById('mobChatSection'); el.scrollIntoView({behavior: 'smooth'}); document.getElementById('inlineChatPanel').classList.remove('hidden');" 
-             style="
-            position: fixed; bottom: 20px; right: 20px; z-index: 1000;
-            width: 70px; height: 70px; 
-            border-radius: 50%; 
-            background: #000;
-            border: 1px solid #c5a059; /* The Outer Ring */
-            box-shadow: 0 0 20px rgba(197, 160, 89, 0.4);
-            padding: 4px; /* The Gap between ring and image */
-            cursor: pointer;
-        ">
-            <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" 
-                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-            
-            <!-- Blinking Dot attached to the Ring -->
-            <div id="floatStatusDot" class="status-dot online blink-dot" style="
-                position: absolute; bottom: 0; right: 0; 
-                width: 14px; height: 14px; background: #00ff00; 
-                border-radius: 50%; border: 2px solid #000; box-shadow: 0 0 5px #00ff00;
-            "></div>
+        <div id="mobFloatingChatTrigger" onclick="const el = document.getElementById('mobChatSection'); el.scrollIntoView({behavior: 'smooth'}); document.getElementById('inlineChatPanel').classList.remove('hidden');" 
+         style="
+        position: fixed; 
+        bottom: 30px; 
+        right: 20px; 
+        z-index: 2147483646; /* High z-index */
+        width: 70px; height: 70px; 
+        border-radius: 50%; 
+        background: #000;
+        border: 1px solid #c5a059; 
+        box-shadow: 0 0 20px rgba(197, 160, 89, 0.4);
+        padding: 4px; 
+        cursor: pointer;
+        /* THIS PREVENTS JITTER */
+        transform: translateZ(0); 
+    ">
+        <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" 
+             style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+        
+        <div id="floatStatusDot" class="status-dot online blink-dot" style="
+            position: absolute; bottom: 0; right: 0; 
+            width: 14px; height: 14px; background: #00ff00; 
+            border-radius: 50%; border: 2px solid #000; box-shadow: 0 0 5px #00ff00;
+        "></div>
         </div>
 
         <!-- 3. POVERTY -->
