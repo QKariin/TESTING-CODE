@@ -210,7 +210,7 @@ export function renderNews(posts) {
                 const fileName = parts[3].split('#')[0];
 
                 return {
-                    // FAST: Ask Wix for a small, compressed version
+                    // FAST: Ask Wix for a small, compressed version (250x350, Quality 70)
                     thumb: `https://static.wixstatic.com/media/${fileName}/v1/fill/w_400,h_600,al_c,q_80/${fileName}`,
                     // HD: The original master file
                     full: `https://static.wixstatic.com/media/${fileName}`
@@ -222,10 +222,7 @@ export function renderNews(posts) {
 
         // 4. Standard URL Fallback (External links)
         const std = raw ? getOptimizedUrl(raw, 600) : "";
-
-        // For non-Wix, 'full' is just the raw URL (or optimized if you prefer)
-        // We use standard optimization for consistency
-        return { thumb: std, full: raw && raw.startsWith('http') ? raw : std };
+        return { thumb: std, full: std };
     };
 
     // --- 1. DESKTOP RENDER (ROYAL GAZETTE LAYOUT) ---
