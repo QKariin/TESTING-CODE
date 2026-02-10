@@ -274,6 +274,28 @@
               -webkit-overflow-scrolling: touch;
               overscroll-behavior: contain;
           }
+
+      /* --- JAIL LOGIC --- */
+            /* Forces the overlay to stick inside the trophy box */
+            #trophySectionJail #rewardCardOverlay {
+                position: absolute !important; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                height: 100%;
+                z-index: 50; 
+                background: rgba(0, 0, 0, 0.98) !important;
+                padding-top: 20px !important;
+                align-items: flex-start !important;
+            }
+            
+            /* Adjust card size to fit the jail */
+            #trophySectionJail .mob-reward-card {
+                width: 95% !important;
+                max-height: 95% !important;
+                margin: 0 auto !important;
+                border: 1px solid #c5a059;
+            }
       /* --- GALLERY STICKER (Reward Badge) --- */
           .gallery-sticker-badge {
               position: absolute;
@@ -1278,49 +1300,61 @@
                   </div>
               </div>
 
-            <!-- 6. SERVICE RECORD (TROPHIES) -->
-            <div style="width:100%; margin-top: 20px;">
-                <div class="duty-label">SLAVE RECORDS</div>
+            <!-- 6. SERVICE RECORD (SPLIT LAYOUT) -->
+<div style="width:100%; margin-top: 20px;">
+    
+    <div class="duty-label">SLAVE RECORDS</div>
 
-                <<!-- ROUTINE STREAK SHELF (LUXURY GOLD EDITION) -->
-                    <div style="width:100%; margin-bottom: 20px;">
-                        <div class="duty-label" style="color:#c5a059; border-color:rgba(197, 160, 89, 0.3);">DAILY DISCIPLINE</div>
-                        
-                        <div style="display:flex; gap:15px; align-items:center;">
-                            <!-- THE COUNTER (Left - Gold & Black) -->
-                            <div style="flex: 0 0 90px; height: 90px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid #c5a059; background:linear-gradient(180deg, #1a1a1a 0%, #000 100%); border-radius:4px; box-shadow: 0 0 15px rgba(197, 160, 89, 0.1);">
-                                <div id="dispStreakVal" style="font-family:'Orbitron'; font-size:2rem; color:#c5a059; line-height:1; text-shadow:0 0 10px rgba(197, 160, 89, 0.3);">0</div>
-                                <div style="font-family:'Cinzel'; font-size:0.55rem; color:#888; margin-top:5px; letter-spacing:2px;">STREAK</div>
-                            </div>
-                    
-                            <!-- THE PROOF (Right - Horizontal Scroll) -->
-                            <div id="shelfRoutine" class="mob-horiz-scroll" style="flex:1; height:90px; align-items:center;">
-                                <!-- JS will fill photos here -->
-                                <div style="color:#444; font-size:0.6rem; padding:10px; font-family:'Cinzel';">AWAITING PROOF</div>
-                            </div>
-                        </div>
-                        
-                        <!-- BEST STREAK TEXT -->
-                        <div style="text-align:center; font-family:'Cinzel'; font-size:0.6rem; color:#666; margin-top:5px; letter-spacing:1px;">
-                            PERSONAL BEST: <span id="dispBestStreak" style="color:#888;">0</span> DAYS
-                        </div>
-                    </div>
-                
-                <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666;">HIERARCHY</div>
-                <div id="shelfRanks" class="reward-shelf mob-horiz-scroll"></div>
-
-                <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">LABOR MEDALS</div>
-                <div id="shelfTasks" class="reward-shelf mob-horiz-scroll"></div>
-                
-                <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ENDURANCE</div>
-                <div id="shelfKneel" class="reward-shelf mob-horiz-scroll"></div>
-
-                <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">SACRIFICE</div>
-                <div id="shelfSpend" class="reward-shelf mob-horiz-scroll"></div>
+    <!-- PART A: DAILY DISCIPLINE (Stays Visible) -->
+    <div style="width:100%; margin-bottom: 20px;">
+        <div class="duty-label" style="color:#c5a059; border-color:rgba(197, 160, 89, 0.3);">DAILY DISCIPLINE</div>
+        
+        <div style="display:flex; gap:15px; align-items:center;">
+            <!-- THE COUNTER -->
+            <div style="flex: 0 0 90px; height: 90px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid #c5a059; background:linear-gradient(180deg, #1a1a1a 0%, #000 100%); border-radius:4px; box-shadow: 0 0 15px rgba(197, 160, 89, 0.1);">
+                <div id="dispStreakVal" style="font-family:'Orbitron'; font-size:2rem; color:#c5a059; line-height:1; text-shadow:0 0 10px rgba(197, 160, 89, 0.3);">0</div>
+                <div style="font-family:'Cinzel'; font-size:0.55rem; color:#888; margin-top:5px; letter-spacing:2px;">STREAK</div>
             </div>
-            
+    
+            <!-- THE PROOF -->
+            <div id="shelfRoutine" class="mob-horiz-scroll" style="flex:1; height:90px; align-items:center;">
+                <div style="color:#444; font-size:0.6rem; padding:10px; font-family:'Cinzel';">AWAITING PROOF</div>
+            </div>
+        </div>
+        
+        <div style="text-align:center; font-family:'Cinzel'; font-size:0.6rem; color:#666; margin-top:5px; letter-spacing:1px;">
+            PERSONAL BEST: <span id="dispBestStreak" style="color:#888;">0</span> DAYS
         </div>
     </div>
+
+    <!-- PART B: THE TROPHY JAIL (Modal covers ONLY this part) -->
+    <div id="trophySectionJail" style="position: relative; width: 100%; min-height: 400px; overflow: hidden;">
+        
+        <!-- HIERARCHY -->
+        <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666;">HIERARCHY</div>
+        <div id="shelfRanks" class="reward-shelf mob-horiz-scroll"></div>
+
+        <!-- LABOR -->
+        <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">LABOR MEDALS</div>
+        <div id="shelfTasks" class="reward-shelf mob-horiz-scroll"></div>
+        
+        <!-- ENDURANCE -->
+        <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ENDURANCE</div>
+        <div id="shelfKneel" class="reward-shelf mob-horiz-scroll"></div>
+
+        <!-- SACRIFICE -->
+        <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">SACRIFICE</div>
+        <div id="shelfSpend" class="reward-shelf mob-horiz-scroll"></div>
+
+        <!-- THE MODAL (Moved Inside the Jail) -->
+        <div id="rewardCardOverlay" class="mob-reward-overlay hidden" onclick="closeRewardCard()">
+            <div class="mob-reward-card" onclick="event.stopPropagation()">
+                <!-- JS fills this -->
+            </div>
+        </div>
+
+    </div> 
+</div>
     
     <!-- (Exchequer kept hidden) -->
     <div id="mobExchequer" class="mob-reward-overlay hidden" style="z-index: 2147483640;">
