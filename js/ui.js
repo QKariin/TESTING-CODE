@@ -257,7 +257,7 @@ export function renderNews(posts) {
                 const heroHTML = `
                 <div class="news-hero-section" onclick="window.openChatPreview('${heroMedia.full}', false)">
                     <div class="hero-image-wrapper">
-                        <img src="${heroMedia.full}" class="hero-img">
+                        <img src="${heroMedia.full}" class="hero-img" onerror="this.closest('.news-hero-section').style.display='none'">
                         <div class="hero-overlay-grad"></div>
                     </div>
                     <div class="hero-content">
@@ -282,7 +282,7 @@ export function renderNews(posts) {
                 return `
                     <div class="magazine-card" onclick="window.openChatPreview('${media.full}', false)">
                         <div class="mag-img-box">
-                            <img src="${media.thumb}" class="magazine-img" loading="lazy">
+                            <img src="${media.thumb}" class="magazine-img" loading="lazy" onerror="this.closest('.magazine-card').style.display='none'">
                             <div class="mag-overlay">
                                 <span class="mag-view-btn">VIEW</span>
                             </div>
