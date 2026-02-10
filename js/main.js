@@ -1083,9 +1083,46 @@ function updateStats() {
 
     if (!subName || !userProfile || !gameStats) return;
 
+    // --- VISUAL PROMOTION LOGIC (Universal) ---
+    // Calculate 6 AM Streak for accurate visual checking
+    const routinePhotos = (userProfile.routineHistory ? JSON.parse(userProfile.routineHistory) : []);
+    let visualStreak = gameStats.taskdom_streak || 0;
+
+    // Use the same routine streak logic as renderRewards if available
+    // (Simplified here for performance, or assume gameStats is up to date)
+    // Actually, determineRank uses 'routinestreak', let's use what we have.
+    // Ideally we assume 'streakCount' from global scope if calculated, else fallback
+    let effectiveStreak = (typeof window.streakCount !== 'undefined') ? window.streakCount : (gameStats.taskdom_streak || 0);
+
+    let visualRank = userProfile.hierarchy || "Hall Boy";
+    if (typeof REWARD_DATA !== 'undefined' && REWARD_DATA.ranks) {
+        const clean = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        const dbClean = clean(visualRank);
+        let currentIdx = REWARD_DATA.ranks.findIndex(r => clean(r.name) === dbClean);
+        if (currentIdx === -1) currentIdx = 0;
+
+        let qualifiedIdx = -1;
+        for (let i = REWARD_DATA.ranks.length - 1; i >= 0; i--) {
+            const r = REWARD_DATA.ranks[i].req;
+            // Note: routine streak is key for hierarchy now
+            if (gameStats.taskdom_completed >= r.tasks &&
+                gameStats.kneelCount >= r.kneels &&
+                gameStats.points >= r.points &&
+                gameStats.total_coins_spent >= r.spent &&
+                effectiveStreak >= r.streak) {
+                qualifiedIdx = i;
+                break;
+            }
+        }
+
+        if (qualifiedIdx > currentIdx) {
+            visualRank = REWARD_DATA.ranks[qualifiedIdx].name;
+        }
+    }
+
     // Update Basic Desktop Elements
     subName.textContent = userProfile.name || "Slave";
-    if (subHierarchy) subHierarchy.textContent = userProfile.hierarchy || "HallBoy";
+    if (subHierarchy) subHierarchy.textContent = visualRank; // VISUAL PROMOTION
     if (coinsEl) coinsEl.textContent = gameStats.coins ?? 0;
     if (pointsEl) pointsEl.textContent = gameStats.points ?? 0;
 
@@ -1120,7 +1157,7 @@ function updateStats() {
 
     // FILL MOBILE TEXT DATA
     if (mobName) mobName.innerText = userProfile.name || "SLAVE";
-    if (mobRank) mobRank.innerText = userProfile.hierarchy || "INITIATE";
+    if (mobRank) mobRank.innerText = visualRank; // VISUAL PROMOTION
 
     if (mobPoints) mobPoints.innerText = gameStats.points || 0;
     if (mobCoins) mobCoins.innerText = gameStats.coins || 0;
