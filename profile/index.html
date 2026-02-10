@@ -234,6 +234,21 @@
             letter-spacing: 2px; cursor: pointer;
         }
 
+      /* FIX MODAL SCROLL GLITCH */
+          #glassModal {
+              /* Prevent scroll from passing through to the dashboard */
+              overscroll-behavior: contain !important;
+              
+              /* Force GPU to prevent rendering glitches */
+              will-change: transform;
+              transform: translateZ(0);
+          }
+          
+          /* If the text box inside needs scrolling, let it scroll smoothly */
+          .theater-text-box, .modal-verdict-box {
+              -webkit-overflow-scrolling: touch;
+              overscroll-behavior: contain;
+          }
       /* --- GALLERY STICKER (Reward Badge) --- */
           .gallery-sticker-badge {
               position: absolute;
