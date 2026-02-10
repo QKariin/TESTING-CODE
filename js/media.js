@@ -41,7 +41,7 @@ export function getThumbnail(url) {
 
   // Only operate on Bytescale URLs
   if (isBytescaleUrl(url)) return getThumbnailBytescale(url);
-  
+
   return url;
 }
 
@@ -73,8 +73,12 @@ export function getOptimizedUrl(url, width = 400) {
 
   // 4. WIX IMAGES
   if (url.startsWith("wix:image://v1/")) {
-    const id = url.split("/")[3].split("#")[0];
-    return `https://static.wixstatic.com/media/${id}/v1/fill/w_${width},h_${width},al_c,q_80,usm_0.66_1.00_0.01,enc_auto/${id}`;
+    // Regex safely extracts the ID, ignoring complex filenames
+    const match = url.match(/wix:image:\/\/v1\/([^\/#]+)/);
+    if (match && match[1]) {
+      const id = match[1];
+      return `https://static.wixstatic.com/media/${id}/v1/fill/w_${width},h_${width},al_c,q_80,usm_0.66_1.00_0.01,enc_auto/${id}`;
+    }
   }
 
   // 5. WIX VIDEOS
@@ -92,7 +96,7 @@ export function getOptimizedUrl(url, width = 400) {
 
 export async function getSignedUrl(url) {
   if (!url) return "";
-  
+
   // Only sign Bytescale URLs
   if (isBytescaleUrl(url)) {
     return await getBytescaleSignedUrl(url);
