@@ -461,17 +461,48 @@
               
         .hidden { display: none !important; }
 
+        /* 1. OVERLAY: ALIGN TO TOP (Instead of Center) */
         .mob-reward-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 9999; 
-            display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(8px); animation: fadeIn 0.3s ease;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0,0,0,0.95); 
+            z-index: 2147483647; /* Highest Level */
+            
+            /* THE ALIGNMENT FIX */
+            display: flex; 
+            justify-content: center;
+            align-items: flex-start !important; /* Pushes content to the top */
+            padding-top: 80px !important;       /* Adds space so it doesn't hit the very top edge */
+            
+            backdrop-filter: blur(8px); 
+            animation: fadeIn 0.3s ease;
         }
-        .mob-reward-card {
-            background: rgba(20, 20, 20, 0.95); border: 1px solid #c5a059;
-            padding: 40px 20px; border-radius: 4px; text-align: center; width: 85%;
+        
+        /* 2. THE CARD: ENABLE SCROLLING (The Right Circle Fix) */
+        /* Applies to both Lobby and Queen Menu */
+        .mob-reward-card, .queen-card-layout, .lobby-card {
+            background: #111; 
+            border: 1px solid #c5a059;
+            padding: 20px; 
+            border-radius: 8px; 
+            text-align: center; 
+            width: 90%;
             box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
-            display: flex; flex-direction: column; align-items: center; gap: 20px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 20px;
+        
+            /* THE SCROLL FIX */
+            max-height: 80vh !important;       /* Limits height to 80% of screen */
+            overflow-y: auto !important;       /* Enables vertical scrolling */
+            -webkit-overflow-scrolling: touch !important; /* Smooth scroll on iPhone */
+            
+            /* PREVENTS CLIPPING */
+            margin-bottom: 50px; 
         }
 
         /* REWARDS TROPHY CASE STYLES */
