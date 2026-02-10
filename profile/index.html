@@ -1053,92 +1053,98 @@
                  </div>
             </div>
 
-           <!-- ============================================== 
-                 2. CHAT: 100VW FULL WIDTH + LEFT ALIGNED HEADER
-                 ============================================== -->
+          <!-- CHAT SECTION: HEADER -> TICKER -> TOGGLE -->
             <div id="mobChatSection" style="
-                width: 100vw;               /* Force Physical Screen Width */
-                margin-left: calc(50% - 50vw); /* Magic centering trick to break out of parent */
-                margin-right: 0;
-                margin-bottom: 20px;
-                border-top: 1px solid #333; 
-                border-bottom: 1px solid #333;
+                width: 100vw;
+                margin-left: calc(50% - 50vw);
                 background: #000;
-                position: relative;         /* Ensure stacking context */
-                left: 0;                    /* Hard reset */
+                border-top: 1px solid #333;
+                border-bottom: 1px solid #333;
+                display: flex;
+                flex-direction: column;
             ">
-                <!-- TRIGGER (LEFT ALIGNED) -->
-                <div onclick="const p=document.getElementById('inlineChatPanel'); p.classList.toggle('hidden'); if(!p.classList.contains('hidden')){ var cb=document.getElementById('mob_chatBox'); if(cb) setTimeout(()=>{cb.scrollTop=cb.scrollHeight},100); }" style="
-                    padding: 15px 20px; /* Added side padding */
-                    cursor: pointer; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: flex-start; /* MOVED TO LEFT */
+                
+                <!-- 1. HEADER (Static - Always Visible) -->
+                <div style="
+                    padding: 10px 20px;
+                    display: flex; align-items: center; gap: 15px;
                     background: linear-gradient(180deg, #111 0%, #050505 100%);
                 ">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <div style="position: relative; width: 50px; height: 50px;">
-                            <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" 
-                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #c5a059; box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);">
-                            <div class="status-dot online blink-dot" style="
-                                position: absolute; bottom: 0; right: 0; 
-                                width: 12px; height: 12px; background: #00ff00; 
-                                border-radius: 50%; border: 2px solid #000; 
-                                box-shadow: 0 0 8px #00ff00;
-                            "></div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                            <div style="font-family: 'Cinzel'; font-weight: 700; font-size: 1.1rem; color: #fff; letter-spacing: 2px; line-height: 1;">QUEEN KARIN</div>
-                            <div style="font-family: 'Orbitron'; font-size: 0.6rem; color: #00ff00; letter-spacing: 2px; margin-top: 4px;">ONLINE</div>
-                        </div>
+                    <div style="position: relative; width: 45px; height: 45px;">
+                        <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" 
+                             style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #c5a059;">
+                        <div id="mobChatOnlineDot" class="status-dot online" style="position: absolute; bottom: 0; right: 0;"></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="font-family: 'Cinzel'; font-weight: 700; font-size: 1rem; color: #fff;">QUEEN KARIN</div>
+                        <div id="mobChatStatusText" style="font-family: 'Orbitron'; font-size: 0.55rem; color: #888;">ONLINE</div>
                     </div>
                 </div>
-
-                <!-- THE CONSOLE (UNCHANGED) -->
+            
+                <!-- 2. SERVICE MESSAGE (Static - Always Visible) -->
+                <!-- Moved OUT of the hidden panel so it sits between Header and Trigger -->
+                <div id="mob_systemTicker" class="system-ticker" style="
+                    width: 100%;
+                    padding: 6px 0;
+                    background: #080808;
+                    border-top: 1px solid #222;
+                    border-bottom: 1px solid #222;
+                    color: #c5a059;
+                    font-family: 'Orbitron';
+                    font-size: 0.6rem;
+                    text-align: center;
+                    letter-spacing: 2px;
+                ">SYSTEM ONLINE</div>
+            
+                <!-- 3. THE SWAP ZONE (Button vs Chat) -->
+                
+                <!-- A. THE BUTTON (Default View) -->
+                <div id="btnEnterChatPanel" onclick="window.toggleMobileChat(true)" style="
+                    width: 100%;
+                    padding: 12px;
+                    text-align: center;
+                    background: #000;
+                    color: #666;
+                    font-family: 'Orbitron';
+                    font-size: 0.7rem;
+                    letter-spacing: 3px;
+                    cursor: pointer;
+                    transition: 0.2s;
+                ">
+                    ▼ ENTER CHAT
+                </div>
+            
+                <!-- B. THE CHAT BOX (Hidden View) -->
                 <div id="inlineChatPanel" class="hidden" style="
                     width: 100%; height: 450px; background: #050505;
-                    display: flex; flex-direction: column; animation: fadeIn 0.3s ease;
-                    position: relative; border-top: 1px solid #333;
+                    display: flex; flex-direction: column;
+                    position: relative;
                 ">
-                    <!-- SYSTEM TICKER -->
-                    <div id="mob_systemTicker" class="system-ticker hidden" style="
-                        background: rgba(20,20,0,0.3); color: #c5a059; font-size: 0.6rem; 
-                        padding: 5px; text-align: center; border-bottom: 1px solid #333;
-                        font-family: 'Orbitron'; letter-spacing: 1px;
-                    "></div>
-
-                    <!-- MESSAGES AREA -->
+                    <!-- Messages Area -->
                     <div id="mob_chatBox" class="chat-body-frame" style="
-                        position: absolute !important; top: 0; left: 0;
-                        width: 100% !important; height: 100% !important;
-                        padding-top: 30px !important; 
-                        padding-bottom: 70px !important; 
-                        padding-left: 5px !important; 
-                        padding-right: 5px !important;
-                        overflow-y: auto !important; -webkit-overflow-scrolling: touch;
+                        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                        padding-bottom: 70px; overflow-y: auto; -webkit-overflow-scrolling: touch;
                     ">
-                        <!-- TRIBUTE OVERLAY (Clean Version) -->
+                        <!-- Tribute Overlay (Inside Chat) -->
                         <div id="tributeHuntOverlay" class="hidden overlay-center" style="position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 50; flex-direction: column; padding: 20px;">
-                            
-                            <!-- HEADER -->
                             <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
                                 <span style="font-family:'Cinzel'; color:#c5a059;">TRIBUTE STORE</span>
                                 <button onclick="toggleTributeHunt()" style="color: white; background:none; border:none; cursor:pointer; font-family:'Orbitron'; font-size:1.2rem;">X</button>
                             </div>
-                        
-                            <!-- THE GRID (Where items appear) -->
-                            <div id="huntStoreGrid" class="store-grid" style="width: 100%; overflow-y: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;">
-
-                                <!-- Javascript will fill this -->
-                            </div>
-                        
+                            <div id="huntStoreGrid" class="store-grid" style="width: 100%; overflow-y: auto; display:grid; grid-template-columns: repeat(3, 1fr); gap:5px;"></div>
                         </div>
-
+            
                         <div id="mob_chatContent" class="chat-area"></div>
                     </div>
                     
-                    <!-- FOOTER -->
-                    <div class="chat-footer" style="position: absolute !important; bottom: 0; width: 100%; height: 65px; z-index: 20; background:#080808; border-top: 1px solid #222;">
+                    <!-- Close Bar (Optional, to collapse it back) -->
+                    <div onclick="window.toggleMobileChat(false)" style="
+                        position: absolute; top: 0; right: 10px; z-index: 25;
+                        color: #333; font-size: 1.5rem; cursor: pointer;
+                    ">×</div>
+            
+                    <!-- Input Footer -->
+                    <div class="chat-footer" style="position: absolute; bottom: 0; width: 100%; height: 65px; z-index: 20; background:#080808; border-top: 1px solid #222;">
                         <div class="chat-input-wrapper">
                             <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()">+</button>
                             <input type="text" id="mob_chatMsgInput" class="chat-input" placeholder="Transmit..." onkeypress="handleChatKey(event)">
@@ -1148,6 +1154,7 @@
                         <input type="file" id="chatMediaInput" class="hidden" onchange="window.handleAdminUpload(this)">
                     </div>
                 </div>
+            
             </div>
 
             <!-- 5. CURRENT STATUS (LABOR CARD - FIXED TEXT RENDERING) -->
