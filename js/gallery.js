@@ -1,685 +1,1787 @@
-
-// gallery.js - TRILOGY LAYOUT (FIXED)
-import { mediaType } from './media.js';
-import {
-    galleryData,
-    historyLimit,
-    currentHistoryIndex,
-    touchStartX,
-    setCurrentHistoryIndex,
-    setHistoryLimit,
-    setTouchStartX,
-    gameStats,
-    setGameStats,
-    setCurrentTask,
-    setPendingTaskState
-} from './state.js';
-import { triggerSound } from './utils.js';
-import { getOptimizedUrl, getThumbnail, getSignedUrl } from './media.js';
-
-// STICKERS
-const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
-const STICKER_DENIED = "https://static.wixstatic.com/media/ce3e5b_63a0c8320e29416896d071d5b46541d7~mv2.png";
-const PLACEHOLDER_IMG = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
-const IMG_QUEEN_MAIN = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
-const IMG_STATUE_SIDE = "https://static.wixstatic.com/media/ce3e5b_5424edc9928d49e5a3c3a102cb4e3525~mv2.png";
-const IMG_MIDDLE_EMPTY = "https://static.wixstatic.com/media/ce3e5b_1628753a2b5743f1bef739cc392c67b5~mv2.webp";
-const IMG_BOTTOM_EMPTY = "https://static.wixstatic.com/media/ce3e5b_33f53711eece453da8f3d04caddd7743~mv2.png";
-
-let activeStickerFilter = "ALL";
-
-// --- HELPER: POINTS ---
-function getPoints(item) {
-    let val = item.points || item.score || item.value || item.amount || item.reward || 0;
-    return Number(val);
+/* =========================================
+   1. VARIABLES & RESET
+   ========================================= */
+:root {
+    --bg-void: #050505;
+    --gold: #c5a059;
+    --silver: #888888;
+    /* New Standard */
+    --silver-dim: rgba(136, 136, 136, 0.2);
+    --text-white: #e0e0e0;
+    --glass: rgba(15, 15, 15, 0.95);
+    --neon-green: #00ff00;
+    --neon-red: #ff003c;
 }
 
-// --- HELPER: NORMALIZE DATA (FIXED) ---
-let normalizedCache = new Set();
-
-function normalizeGalleryItem(item) {
-    // Use item ID/timestamp as cache key to avoid re-normalizing
-    const cacheKey = item._id || item._createdDate;
-    if (normalizedCache.has(cacheKey)) return;
-
-    // Search for photos in any possible field
-    if (item.proofUrl && typeof item.proofUrl === 'string' && item.proofUrl.length > 5) {
-        normalizedCache.add(cacheKey);
-        return;
-    }
-
-    const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src', 'attachment', 'photo'];
-    for (let key of candidates) {
-        if (item[key] && typeof item[key] === 'string' && item[key].length > 5) {
-            item.proofUrl = item[key];
-            normalizedCache.add(cacheKey);
-            return;
-        }
-    }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    outline: none;
 }
 
-// --- HELPER: SORTED LIST ---
-function getSortedGallery() {
-    if (!galleryData) return [];
-    return [...galleryData].sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
+body {
+    background: transparent;
+    color: var(--text-white);
+    font-family: 'Cinzel', serif;
+    /* GLOBAL FONT CHANGE */
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
 }
 
-// --- HELPER: GET FILTERED LIST (SEPARATED BY BUTTON TYPE) ---
-function getGalleryList() {
-    if (!galleryData || !Array.isArray(galleryData)) return [];
-
-    // Normalize data structure first
-    galleryData.forEach(normalizeGalleryItem);
-
-    // FILTER: This determines what shows in the Service Record (Altar)
-    let items = galleryData.filter(i => {
-        // 1. Basic Check: Must have an image
-        if (!i.proofUrl) return false;
-
-        // 2. STATUS CHECK: Show Pending, Approved, or Rejected
-        const s = (i.status || "").toLowerCase();
-        const isVisibleStatus = s.includes('pending') || s.includes('app') || s.includes('rej') || s === "";
-        if (!isVisibleStatus) return false;
-
-        // 3. THE SEPARATOR (Based on which button was used)
-        const cat = (i.category || "").toLowerCase();
-        const txt = (i.text || "").toLowerCase();
-
-        // If it was uploaded via the "Routine" button -> HIDE IT from here
-        // (It belongs in the top "Daily Discipline" shelf)
-        if (cat === 'routine') return false;
-
-        // Double Safety: If the text says "Daily Routine", HIDE IT
-        if (txt.includes('daily routine')) return false;
-
-        // Otherwise, it's a normal Task -> SHOW IT
-        return true;
-    });
-
-    // Apply Sticker Filters (The buttons at the top of history)
-    if (activeStickerFilter === "DENIED") {
-        items = items.filter(item => (item.status || "").toLowerCase().includes('rej'));
-    } else if (activeStickerFilter === "PENDING") {
-        items = items.filter(item => (item.status || "").toLowerCase().includes('pending'));
-    } else if (activeStickerFilter !== "ALL") {
-        items = items.filter(item => item.sticker === activeStickerFilter);
-    }
-
-    // Sort Newest First
-    return items.sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
+.app-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
-// --- RENDERERS ---
-function renderStickerFilters() {
-    const filterBar = document.getElementById('stickerFilterBar');
-    if (!filterBar || !galleryData) return;
-
-    const stickers = new Set();
-    galleryData.forEach(item => {
-        if (item.sticker && item.sticker.length > 10) stickers.add(item.sticker);
-    });
-
-    let html = `
-        <div class="filter-circle ${activeStickerFilter === 'ALL' ? 'active' : ''}" onclick="window.setGalleryFilter('ALL')">
-            <span class="filter-all-text">ALL</span>
-        </div>
-        <div class="filter-circle ${activeStickerFilter === 'PENDING' ? 'active' : ''}" onclick="window.setGalleryFilter('PENDING')" style="${activeStickerFilter === 'PENDING' ? 'border-color:var(--neon-yellow);' : ''}">
-            <span class="filter-all-text" style="color:var(--neon-yellow); font-size:0.5rem;">WAIT</span>
-        </div>
-        <div class="filter-circle ${activeStickerFilter === 'DENIED' ? 'active' : ''}" onclick="window.setGalleryFilter('DENIED')" style="${activeStickerFilter === 'DENIED' ? 'border-color:var(--neon-red);' : ''}">
-            <span class="filter-all-text" style="color:var(--neon-red); font-size:0.5rem;">DENY</span>
-        </div>
-    `;
-
-    stickers.forEach(url => {
-        if (url === STICKER_DENIED) return;
-        const isActive = (activeStickerFilter === url) ? 'active' : '';
-        html += `<div class="filter-circle ${isActive}" onclick="window.setGalleryFilter('${url}')"><img src="${url}"></div>`;
-    });
-
-    filterBar.innerHTML = html;
+.hidden {
+    display: none !important;
 }
 
-export async function renderGallery() {
-    if (!galleryData) return;
+/* =========================================
+   2. LEFT PILLAR (RESTORED HIERARCHY & NEW STATS)
+   ========================================= */
 
-    // --- 1. TARGETS ---
-    const gridFailed = document.getElementById('gridFailed');
-    const gridOkay = document.getElementById('gridOkay');
-    const historySection = document.getElementById('historySection');
+.layout-left {
+    width: 25%;
+    min-width: 300px;
+    height: 100%;
 
-    const slot1 = { card: document.getElementById('altarSlot1'), img: document.getElementById('imgSlot1'), ref: document.getElementById('reflectSlot1') };
-    const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2') };
-    const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3') };
+    /* THE FIX: Fit the photo to the space */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png');
+    background-size: cover;
+    /* Scales the photo to fill the whole area */
+    background-position: center;
+    /* Keeps the focus in the middle */
+    background-repeat: no-repeat;
+    /* Prevents the image from tiling */
 
-    const mob1 = document.getElementById('mobImgSlot1');
-    const mob2 = document.getElementById('mobImgSlot2');
-    const mob3 = document.getElementById('mobImgSlot3');
-
-    const rec1 = document.getElementById('mobRec_Slot1');
-    const rec2 = document.getElementById('mobRec_Slot2');
-    const rec3 = document.getElementById('mobRec_Slot3');
-    const recGrid = document.getElementById('mobRec_Grid');
-    const recHeap = document.getElementById('mobRec_Heap');
-
-    if (!gridFailed || !gridOkay) return;
-
-    // Reset
-    gridFailed.innerHTML = "";
-    gridOkay.innerHTML = "";
-    if (recGrid) recGrid.innerHTML = "";
-    if (recHeap) recHeap.innerHTML = "";
-
-    // --- 2. GET DATA ---
-    const allItems = getGalleryList();
-
-    if (historySection) {
-        if (allItems.length === 0) historySection.classList.add('solo-mode');
-        else historySection.classList.remove('solo-mode');
-    }
-
-    // --- 3. SEPARATE LISTS ---
-    const deniedList = allItems.filter(item => {
-        const s = (item.status || "").toLowerCase();
-        return s.includes('rej') || s.includes('fail');
-    });
-
-    const candidates = allItems.filter(item => {
-        const s = (item.status || "").toLowerCase();
-        return !s.includes('rej') && !s.includes('fail') && !s.includes('pending');
-    });
-
-    // --- 4. ALTAR SORTING (Your Logic: Newest High Score -> Recent History) ---
-    candidates.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
-
-    let bestOf = [];
-
-    // Slot 1: Newest item with >= 150 points
-    const kingIndex = candidates.findIndex(item => getPoints(item) >= 150);
-
-    if (kingIndex !== -1) {
-        bestOf.push(candidates[kingIndex]);
-        candidates.splice(kingIndex, 1);
-    } else if (candidates.length > 0) {
-        bestOf.push(candidates.shift());
-    }
-
-    // Slot 2 & 3: Next newest items
-    if (candidates.length > 0) bestOf.push(candidates.shift());
-    if (candidates.length > 0) bestOf.push(candidates.shift());
-
-    // Archive: Everything else + Pending items
-    const pendingList = allItems.filter(item => (item.status || "").toLowerCase().includes('pending'));
-    const archiveList = [...pendingList, ...candidates];
-    // Re-sort archive by date so pending/approved are mixed naturally
-    archiveList.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
-
-    // --- 5. IMAGE LOADER ---
-    const getThumb = async (item, size) => {
-        let raw = item.proofUrl || item.media;
-        // Video Cover Check
-        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
-            if (item.cover) raw = item.cover;
-            else if (item.thumbnail) raw = item.thumbnail;
-            else if (item.poster) raw = item.poster;
-        }
-        // Wix Check
-        if (raw && raw.startsWith('wix:image')) {
-            try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
-        }
-        try {
-            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
-        } catch (e) { return raw; }
-    };
-
-    // --- 6. RENDER ALTAR ---
-    const renderSlot = async (slotObj, mobEl, recEl, item) => {
-        if (item) {
-            let thumb = await getThumb(item, 400);
-            let idx = allItems.indexOf(item);
-            if (slotObj.card) { slotObj.card.style.display = 'flex'; slotObj.img.src = thumb; if (slotObj.ref) slotObj.ref.src = thumb; slotObj.card.onclick = () => window.openHistoryModal(idx); }
-            if (mobEl) { mobEl.src = thumb; mobEl.parentElement.onclick = () => window.openHistoryModal(idx); mobEl.style.display = 'block'; }
-            if (recEl) { recEl.src = thumb; recEl.onclick = () => window.openHistoryModal(idx); }
-        } else {
-            if (slotObj.card) slotObj.card.style.display = 'none';
-            if (mobEl) mobEl.style.display = 'none';
-        }
-    };
-    renderSlot(slot1, mob1, rec1, bestOf[0]);
-    renderSlot(slot2, mob2, rec2, bestOf[1]);
-    renderSlot(slot3, mob3, rec3, bestOf[2]);
-
-    // --- 7. RENDER LISTS (WITH STICKERS) ---
-    const renderChunk = async (list, isTrash) => {
-        const promises = list.map(async (item) => {
-            const src = await getThumb(item, 300);
-            const idx = allItems.indexOf(item);
-            const isPending = (item.status || "").toLowerCase().includes('pending');
-
-            // STYLES
-            const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
-
-            // PENDING OVERLAY
-            const overlay = isPending ? `<div class="pending-overlay"><div class="pending-badge">AWAITING<br>VERDICT</div></div>` : ``;
-            const mobBadge = isPending ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;"><div class="pending-badge" style="font-size:0.4rem; padding:3px; border-width:1px;">WATCHING</div></div>` : ``;
-
-            // *** THE NEW PART: REWARD STICKER ***
-            let stickerHtml = "";
-            if (item.sticker && !isTrash && !isPending) {
-                // If it has a sticker URL, show it
-                stickerHtml = `<img src="${item.sticker}" class="gallery-sticker-badge">`;
-            }
-
-            // DETECT VIDEO
-            const isVideo = typeof src === 'string' && (src.includes('.mp4') || src.includes('.mov') || src.includes('.webm'));
-
-            const deskMedia = isVideo
-                ? `<video class="${isTrash ? 'trash-img' : 'blueprint-img'}" src="${src}" autoplay muted loop playsinline style="${imgStyle} object-fit:cover;"></video>`
-                : `<img class="${isTrash ? 'trash-img' : 'blueprint-img'}" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">`;
-
-            const mobMedia = isVideo
-                ? `<video class="mob-scroll-img" src="${src}" autoplay muted loop playsinline style="${imgStyle} object-fit:cover;"></video>`
-                : `<img class="mob-scroll-img" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.style.opacity=0.3">`;
-
-            // Desktop HTML
-            const desk = `
-                <div class="${isTrash ? 'item-trash' : 'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
-                    ${deskMedia}
-                    ${stickerHtml} <!-- Sticker Here -->
-                    ${isTrash ? '<div class="trash-stamp">DENIED</div>' : ''}
-                    ${overlay}
-                </div>`;
-
-            // Mobile HTML
-            const mob = `
-                <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash ? 'height:80px; width:80px;' : ''}">
-                    ${mobMedia}
-                    ${stickerHtml} <!-- Sticker Here -->
-                    ${mobBadge}
-                </div>`;
-            return { desk, mob };
-        });
-
-        const results = await Promise.all(promises);
-        return { desk: results.map(r => r.desk).join(''), mob: results.map(r => r.mob).join('') };
-    };
-
-    // Render Archive
-    if (archiveList.length > 0) {
-        const html = await renderChunk(archiveList, false);
-        if (gridOkay) gridOkay.innerHTML = html.desk;
-        if (recGrid) recGrid.innerHTML = html.mob;
-    } else {
-        let empty = ""; for (let i = 0; i < 6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_MIDDLE_EMPTY}"></div>`;
-        if (gridOkay) gridOkay.innerHTML = empty;
-    }
-
-    // Render Heap
-    if (deniedList.length > 0) {
-        const html = await renderChunk(deniedList, true);
-        if (gridFailed) gridFailed.innerHTML = html.desk;
-        if (recHeap) recHeap.innerHTML = html.mob;
-    } else {
-        let empty = ""; for (let i = 0; i < 6; i++) empty += `<div class="item-placeholder-slot"><img src="${IMG_BOTTOM_EMPTY}"></div>`;
-        if (gridFailed) gridFailed.innerHTML = empty;
-    }
-}
-// --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
-export function loadMoreHistory() {
-    setHistoryLimit(historyLimit + 25);
-    renderGallery();
-    console.log("Increased history limit to", historyLimit);
+    box-shadow: inset 20px 0 50px rgba(0, 0, 0, 0.8);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    flex-shrink: 0;
+    z-index: 10;
+    position: relative;
+    overflow-y: auto;
 }
 
-// --- REDEMPTION LOGIC ---
-window.atoneForTask = function (index) {
-    const items = getGalleryList();
-    const task = items[index];
-    if (!task) return;
-
-    if (gameStats.coins < 100) {
-        triggerSound('sfx-deny');
-        alert("Insufficient Capital. You need 100 coins to atone.");
-        return;
-    }
-
-    triggerSound('coinSound');
-    setGameStats({ ...gameStats, coins: gameStats.coins - 100 });
-
-    const coinEl = document.getElementById('coins');
-    if (coinEl) coinEl.innerText = gameStats.coins;
-
-    const restoredTask = {
-        text: task.text,
-        category: 'redemption',
-        timestamp: Date.now()
-    };
-    setCurrentTask(restoredTask);
-
-    const endTimeVal = Date.now() + 86400000;
-    const newPendingState = {
-        task: restoredTask,
-        endTime: endTimeVal,
-        status: "PENDING"
-    };
-    setPendingTaskState(newPendingState);
-
-    window.closeModal();
-
-    if (window.restorePendingUI) window.restorePendingUI();
-    if (window.updateTaskUIState) window.updateTaskUIState(true);
-    if (window.toggleTaskDetails) window.toggleTaskDetails(true);
-
-    window.parent.postMessage({
-        type: "PURCHASE_ITEM",
-        itemName: "Redemption",
-        cost: 100,
-        messageToDom: "Slave paid 100 coins to retry failed task."
-    }, "*");
-
-    window.parent.postMessage({
-        type: "savePendingState",
-        pendingState: newPendingState,
-        consumeQueue: false
-    }, "*");
-};
-
-// REPLACE openHistoryModal
-export async function openHistoryModal(index) {
-    const items = getGalleryList();
-    if (!items[index]) return;
-
-    setCurrentHistoryIndex(index);
-    const item = items[index];
-
-    // 1. Setup Background Media
-    let url = item.proofUrl || item.media;
-    const isVideo = mediaType(url) === 'video';
-    url = await getSignedUrl(url);
-    const mediaContainer = document.getElementById('modalMediaContainer');
-
-    if (mediaContainer) {
-        mediaContainer.innerHTML = isVideo ?
-            `<video src="${url}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:contain;"></video>` :
-            `<img src="${url}" style="width:100%; height:100%; object-fit:contain;">`;
-    }
-
-    // 2. Setup Data
-    const pts = getPoints(item);
-    const status = (item.status || "").toLowerCase();
-
-    // CRITICAL FIX: Add 'deni' and 'refus' to ensure the button shows for "Denied" tasks
-    const isRejected = status.includes('rej') || status.includes('fail') || status.includes('deni') || status.includes('refus');
-
-    // 3. Build UI
-    const overlay = document.getElementById('modalGlassOverlay');
-    if (overlay) {
-        let verdictText = item.adminComment || "Logged without commentary.";
-        // If rejected but no comment, show default text
-        if (isRejected && !item.adminComment) verdictText = "Submission rejected. Standards not met.";
-
-        // --- REDEMPTION BUTTON GENERATOR ---
-        let redemptionBtn = '';
-        if (isRejected) {
-            redemptionBtn = `
-                <button onclick="event.stopPropagation(); window.atoneForTask(${index})" 
-                        class="btn-glass-silver" 
-                        style="border-color:var(--neon-red); color:var(--neon-red); box-shadow: 0 0 10px rgba(255,0,60,0.1);">
-                    SEEK REDEMPTION (-100 🪙)
-                </button>`;
-        }
-
-        overlay.innerHTML = `
-            <!-- FIX 1: Add stopPropagation here so clicks inside the box DON'T close the modal -->
-            <div class="modal-center-col" id="modalUI">
-                
-                <div class="modal-merit-title">${isRejected ? "CAPITAL DEDUCTED" : "MERIT ACQUIRED"}</div>
-                <div class="modal-merit-value" style="color:${isRejected ? '#ff003c' : 'var(--gold)'}">
-                    ${isRejected ? "0" : "+" + pts}
-                </div>
-
-                <div class="modal-verdict-box" id="verdictBox">
-                    "${verdictText}"
-                </div>
-
-                <div class="modal-btn-stack">
-                    <button onclick="event.stopPropagation(); window.toggleDirective(${index})" class="btn-glass-silver">THE DIRECTIVE</button>
-                    
-                    <button onclick="event.stopPropagation(); window.toggleInspectMode()" class="btn-glass-silver">INSPECT OFFERING</button>
-                    
-                    ${redemptionBtn}
-                    
-                    <!-- This button forces close specifically -->
-                    <button onclick="window.closeModal()" class="btn-glass-silver btn-glass-red">DISMISS</button>
-                </div>
-            </div>
-        `;
-    }
-
-    // FIX 2: Activate the background click to close
-    const glassModal = document.getElementById('glassModal');
-    if (glassModal) {
-        glassModal.onclick = (e) => window.closeModal(e);
-        glassModal.classList.add('active');
-        glassModal.classList.remove('inspect-mode');
-
-        // *** ADD THIS LINE: LOCK THE DASHBOARD ***
-        document.getElementById('viewMobileHome').style.overflow = 'hidden';
-    }
+/* AVATAR */
+.avatar-container {
+    width: 160px;
+    height: 185px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 2;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    padding: 3px;
+    background: linear-gradient(to bottom, var(--gold), #fff);
 }
 
-// REPLACE OR ADD toggleDirective (Fixes the text swapping)
-// REPLACE YOUR toggleDirective FUNCTION WITH THIS
-window.toggleDirective = function (index) {
-    const items = getGalleryList();
-    const item = items[index];
-    if (!item) return;
+.avatar-container::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background: #000;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    z-index: -1;
+}
 
-    const box = document.getElementById('verdictBox');
+#profilePic {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    filter: sepia(30%) contrast(1.1) brightness(0.9);
+    z-index: 1;
+}
 
-    // Check current view state
-    if (box.dataset.view === 'task') {
-        // Switch back to Verdict (Admin comments are usually plain text, so innerText is fine here, but you can change to innerHTML if needed)
-        let verdictText = item.adminComment || "Logged without commentary.";
-        const status = (item.status || "").toLowerCase();
-        if ((status.includes('rej') || status.includes('fail')) && !item.adminComment) {
-            verdictText = "Submission rejected. Standards not met.";
-        }
+/* HIERARCHY (RESTORED STAMP STYLE) */
+.hierarchy-top {
+    font-family: 'Black Ops One', 'Orbitron', sans-serif;
+    /* Stencil Font */
+    font-size: 1rem;
+    font-weight: 700;
+    color: rgba(197, 160, 89, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 4px;
 
-        box.innerText = `"${verdictText}"`;
-        box.style.color = "#eee";
-        box.style.fontStyle = "italic";
-        box.dataset.view = 'verdict';
-    } else {
-        // Switch to Task/Directive
-        // --- THE FIX IS HERE --- 
-        // We change .innerText to .innerHTML so the <p> and <br> tags render correctly
-        box.innerHTML = item.text || "No directive data available.";
+    /* The Stamp Look */
+    border: 2px solid rgba(197, 160, 89, 0.4);
+    padding: 5px 15px;
+    transform: rotate(-3deg);
+    margin-bottom: 30px;
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
 
-        box.style.color = "#ccc";
-        box.style.fontStyle = "normal";
-        box.dataset.view = 'task';
-    }
-};
+.identity-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.6rem;
+    color: #fff;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+    text-align: center;
+    z-index: 2;
+}
 
-// --- VIEW HELPERS ---
-export function toggleHistoryView(view) {
-    const modal = document.getElementById('glassModal');
-    const overlay = document.getElementById('modalGlassOverlay');
-    if (!modal || !overlay) return;
+/* STATS ROW */
+.stats-stack-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 30px;
+    padding: 15px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
 
-    const views = ['modalInfoView', 'modalFeedbackView', 'modalTaskView'];
-    views.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-    });
+.stat-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-    if (view === 'proof') {
-        modal.classList.add('proof-mode-active');
-        overlay.classList.add('clean');
-    } else {
-        modal.classList.remove('proof-mode-active');
-        overlay.classList.remove('clean');
+.stat-divider {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, #444, transparent);
+    opacity: 0.5;
+}
 
-        let targetId = 'modalInfoView';
-        if (view === 'feedback') targetId = 'modalFeedbackView';
-        if (view === 'task') targetId = 'modalTaskView';
+.stat-lbl {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    color: #666;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
 
-        const target = document.getElementById(targetId);
-        if (target) target.classList.remove('hidden');
+.stat-val {
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    color: #ccc;
+    font-weight: 700;
+}
+
+/* KNEEL BUTTON */
+.kneel-sidebar-wrapper {
+    width: 100%;
+    height: 50px;
+    margin-bottom: 30px;
+}
+
+.kneel-bar-graphic {
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.graphic-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0%;
+    background: linear-gradient(90deg, #8b0000, #ff003c);
+    z-index: 1;
+    transition: width 0.1s linear;
+}
+
+.graphic-text {
+    position: relative;
+    z-index: 2;
+    font-family: 'Cinzel', serif;
+    color: var(--gold);
+    letter-spacing: 4px;
+    font-size: 0.9rem;
+    pointer-events: none;
+    text-shadow: 0 0 5px black;
+}
+
+/* STATS PANEL (Containing Progress) */
+.stats-toggle-btn {
+    background: transparent;
+    border: none;
+    color: #666;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: 0.3s;
+    width: 100%;
+}
+
+.stats-toggle-btn:hover {
+    color: var(--gold);
+}
+
+.stats-panel {
+    display: none;
+    width: 100%;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #222;
+    margin-bottom: 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+#statsContent.open {
+    display: block !important;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Progress Bar inside Panel */
+.progress-section {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.prog-bg {
+    width: 100%;
+    height: 4px;
+    background: #111;
+    border: 1px solid #333;
+}
+
+.prog-fill {
+    height: 100%;
+    width: 0%;
+    background: #666;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    transition: width 0.5s ease-out;
+}
+
+/* Stat Lines */
+.stat-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 4px;
+    font-family: 'Cinzel', serif;
+}
+
+/* Slave Since Footer (Centered) */
+.stat-footer {
+    margin-top: 20px;
+    text-align: center;
+    border-top: 1px solid #333;
+    padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* NAV MENU */
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: #555;
+    text-align: left;
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: 0.3s;
+    padding: 12px 10px;
+    border-left: 1px solid transparent;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+    color: #ccc;
+    border-left-color: #888;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), transparent);
+    padding-left: 20px;
+}
+
+/* =========================================
+   3. RIGHT STAGE
+   ========================================= */
+.layout-right {
+    flex-grow: 1;
+    height: 100vh;
+    /* Force it to match screen height exactly */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    /* No Global Scrollbar */
+    background: transparent;
+}
+
+.glass-card {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid #333;
+}
+
+.content-stage {
+    /* Flex Logic: Fill space below header */
+    flex: 1 !important;
+
+    /* THE FIX: Lock the height so it can't grow past the screen */
+    height: 100% !important;
+    overflow: hidden !important;
+
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0 !important;
+}
+
+.view-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Ensures the Chat Container inside stays trapped */
+}
+
+/* =========================================
+   4. TASK RIBBON & CONTROLS (STABLE TIMER FIX)
+   ========================================= */
+
+/* The Header Bar */
+.task-ribbon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    height: 100px;
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid var(--gold-dim);
+    position: relative;
+    z-index: 100;
+}
+
+/* --- COLUMNS (LOCKED WIDTHS) --- */
+/* We use flex-basis to FORCE the width so it never moves */
+
+.ribbon-left {
+    flex: 0 0 30%;
+    /* Fixed 30% */
+    max-width: 30%;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.ribbon-center {
+    width: 40%;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* Forces the fixed box to center */
+    position: relative;
+}
+
+.ribbon-right {
+    flex: 0 0 30%;
+    /* Fixed 30% */
+    max-width: 30%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 10px;
+}
+
+/* --- TYPOGRAPHY (REVERTED TO LUXURY) --- */
+
+.ribbon-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    color: #555;
+    letter-spacing: 3px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+/* Status Text - Back to Cinzel/Orbitron blend for stability */
+.status-text-lg {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.status-unproductive {
+    color: #666;
+}
+
+.status-working {
+    color: var(--neon-green);
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.4);
+    font-family: 'Orbitron', sans-serif;
+    /* Tech font for active state */
+}
+
+/* Idle Message */
+.ribbon-status {
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #666;
+    letter-spacing: 1px;
+    font-style: italic;
+}
+
+/* --- THE TIMER (FIXED STABILITY) --- */
+/* =========================================
+   FIXED TIMER BOXES (MECHANICAL LOOK)
+   ========================================= */
+
+.timer-box-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    /* Space between boxes */
+    margin-bottom: 5px;
+}
+
+/* THE BOX ITSELF */
+.t-box {
+    width: 50px;
+    /* FIXED WIDTH - CANNOT MOVE */
+    height: 50px;
+    background: linear-gradient(145deg, #111, #050505);
+    /* Deep depth */
+    border: 1px solid #444;
+    border-radius: 4px;
+
+    /* Text Styling */
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.8rem;
+    line-height: 50px;
+    /* Vertically center */
+    text-align: center;
+
+    /* Glow effect */
+    box-shadow: inset 0 0 10px #000, 0 0 5px rgba(255, 255, 255, 0.05);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+/* THE SEPARATOR (:) */
+.t-sep {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.5rem;
+    color: #666;
+    margin-top: -3px;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0.3;
     }
 }
 
-// REPLACE your closeModal with this simple version
-export function closeModal(e) {
-    if (e && e.stopPropagation) e.stopPropagation();
+/* Toggle Link */
+.see-task-link {
+    font-family: 'Cinzel', serif;
+    /* Restored Luxury Font for link */
+    font-weight: 700;
+    font-size: 0.65rem;
+    color: var(--gold);
+    cursor: pointer;
+    margin-top: 5px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 
-    const modal = document.getElementById('glassModal');
-    if (modal) {
-        modal.classList.remove('active');
-        modal.classList.remove('inspect-mode');
-    }
-
-    const media = document.getElementById('modalMediaContainer');
-    if (media) media.innerHTML = "";
-
-    // *** ADD THIS LINE: UNLOCK THE DASHBOARD ***
-    document.getElementById('viewMobileHome').style.overflow = 'auto';
+    /* Center this too */
+    display: block;
+    width: 100%;
+    text-align: center;
+    pointer-events: auto;
 }
 
-// Helper to ensure clean closing
-function forceClose() {
-    const modal = document.getElementById('glassModal');
-    if (modal) modal.classList.remove('active');
-
-    const media = document.getElementById('modalMediaContainer');
-    if (media) media.innerHTML = "";
+.see-task-link:hover {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
-export function openModal() { }
-
-export function initModalSwipeDetection() {
-    const modalEl = document.getElementById('glassModal');
-    if (!modalEl) return;
-
-    modalEl.addEventListener('touchstart', e => setTouchStartX(e.changedTouches[0].screenX), { passive: true });
-
-    modalEl.addEventListener('touchend', e => {
-        const touchEndX = e.changedTouches[0].screenX;
-        const diff = touchStartX - touchEndX;
-
-        if (Math.abs(diff) > 80) {
-            let historyItems = getGalleryList();
-            let nextIndex = currentHistoryIndex;
-
-            if (diff > 0) nextIndex++;
-            else nextIndex--;
-
-            if (nextIndex >= 0 && nextIndex < historyItems.length) {
-                openHistoryModal(nextIndex);
-            }
-        }
-    }, { passive: true });
+/* --- DRAWER --- */
+.task-detail-panel {
+    position: relative;
+    width: 100%;
+    background: #000;
+    border: 1px solid #333;
+    border-top: none;
+    z-index: 50;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
 }
 
-// ADD THIS FUNCTION
-window.toggleInspectMode = function () {
-    const modal = document.getElementById('glassModal');
-    if (modal) {
-        modal.classList.toggle('inspect-mode');
-    }
-};
+.task-detail-panel.open {
+    display: flex;
+    animation: slideDown 0.3s ease-out;
+}
 
-// --- PASTE THIS AT THE VERY BOTTOM OF gallery.js ---
-
-window.addEventListener('click', function (e) {
-    const modal = document.getElementById('glassModal');
-    const card = document.getElementById('modalUI');
-
-    // 1. If Modal is NOT open, stop here. Do nothing.
-    if (!modal || !modal.classList.contains('active')) return;
-
-    // 2. CHECK: Did we click INSIDE the Black Card (Text/Buttons)?
-    if (card && card.contains(e.target)) {
-        return;
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
 
-    // 3. CHECK: Are we in INSPECT MODE? (Photo only)
-    if (modal.classList.contains('inspect-mode')) {
-        // If we clicked the BLURRED BACKGROUND or IMAGE (Inside the modal wrapper)
-        if (modal.contains(e.target)) {
-            // User wants to revert back to the text card
-            modal.classList.remove('inspect-mode');
-            return;
-        }
-
-    }
-
-    window.closeModal();
-}, true); // 'true' ensures we catch the click before other listeners stop it
-
-// --- PASTE AT BOTTOM OF gallery.js ---
-
-window.toggleMobileMenu = function () {
-    const sidebar = document.querySelector('.layout-left');
-    if (sidebar) {
-        sidebar.classList.toggle('mobile-open');
-    }
-};
-
-// Use event delegation instead of adding listeners to each button
-document.addEventListener('click', (e) => {
-    if (e.target.closest('.nav-btn, .kneel-bar-graphic')) {
-        const sidebar = document.querySelector('.layout-left');
-        if (sidebar) sidebar.classList.remove('mobile-open');
-    }
-});
-
-// ... inside renderGallery ...
-
-// --- SYNC MOBILE ALTAR ---
-const mob1 = document.getElementById('mobImgSlot1');
-const mob2 = document.getElementById('mobImgSlot2');
-const mob3 = document.getElementById('mobImgSlot3');
-
-// Slot 1 (Center)
-if (mob1) {
-    if (bestOf[0]) {
-        // Re-use logic for thumbnail
-        let thumb = getThumbnail(getOptimizedUrl(bestOf[0].proofUrl || bestOf[0].media, 400));
-        mob1.src = thumb;
-        mob1.style.filter = "none";
-        mob1.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[0]));
-    } else {
-        // Set default Queen image if empty
-        mob1.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
-        mob1.style.filter = "grayscale(100%) brightness(0.5)";
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-// Slot 2 (Left)
-if (mob2 && bestOf[1]) {
-    let thumb = getThumbnail(getOptimizedUrl(bestOf[1].proofUrl || bestOf[1].media, 300));
-    mob2.src = thumb;
-    mob2.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[1]));
+.drawer-task-text,
+#readyText {
+    font-family: 'Cinzel', serif;
+    /* Restored Luxury Font */
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: #fff;
+    text-align: center;
+    line-height: 1.5;
+    max-width: 90%;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
-// Slot 3 (Right)
-if (mob3 && bestOf[2]) {
-    let thumb = getThumbnail(getOptimizedUrl(bestOf[2].proofUrl || bestOf[2].media, 300));
-    mob3.src = thumb;
-    mob3.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[2]));
+.panel-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-// FORCE WINDOW EXPORTS
-window.renderGallery = renderGallery;
-window.openHistoryModal = openHistoryModal;
-window.toggleHistoryView = toggleHistoryView;
-window.closeModal = closeModal;
-window.atoneForTask = window.atoneForTask;
-window.loadMoreHistory = loadMoreHistory;
-window.setGalleryFilter = function (filterType) {
-    activeStickerFilter = filterType;
-    renderGallery();
-    console.log("render render", filterType);
-};
+.text-btn {
+    background: transparent;
+    border: none;
+    color: #666;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    letter-spacing: 2px;
+}
+
+.text-btn:hover {
+    color: white;
+}
+
+.btn-skip-small {
+    background: transparent;
+    border: 1px solid #333;
+    color: #666;
+    padding: 10px 25px;
+    font-family: 'Orbitron';
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-skip-small:hover {
+    color: var(--neon-red);
+    border-color: var(--neon-red);
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
+}
+
+/* --- BUTTONS --- */
+.action-btn {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 12px 25px;
+    font-family: 'Cinzel';
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    width: 100%;
+}
+
+.action-btn:hover {
+    background: var(--gold);
+    color: #000;
+    box-shadow: 0 0 15px var(--gold);
+}
+
+/* Split Action Deck */
+#uploadBtnContainer {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(197, 160, 89, 0.4);
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 12px 5px;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-ghost:hover {
+    border-color: #fff;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-upload {
+    background: rgba(255, 215, 0, 0.15);
+    flex: 1;
+    padding: 12px 5px;
+    white-space: nowrap;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* =========================================
+   6. OTHER VIEWS (Store, Gallery, etc)
+   ========================================= */
+.store-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.store-item {
+    border: 1px solid #333;
+    padding: 20px;
+    text-align: center;
+    background: rgba(20, 20, 20, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.si-btn {
+    background: transparent;
+    border: 1px solid #666;
+    color: #888;
+    padding: 8px;
+    width: 100%;
+    cursor: pointer;
+    font-family: 'Cinzel';
+}
+
+.si-btn:hover {
+    border-color: #fff;
+    color: #fff;
+}
+
+/* =========================================
+   7. HISTORY: THE TRILOGY (FULL RESTORATION)
+   ========================================= */
+
+/* --- SHARED CONTAINER (SEAMLESS) --- */
+/* --- TRILOGY SECTIONS (ARCHIVE / PENDING / HEAP) --- */
+.trilogy-section {
+    flex: 1;
+    position: relative;
+    border-bottom: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+    /* Ensure space */
+}
+
+.trilogy-label {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    z-index: 10;
+    padding: 5px 10px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.label-archive {
+    color: #00ff00;
+    border-color: rgba(0, 255, 0, 0.3);
+}
+
+.label-pending {
+    color: #c5a059;
+    border-color: rgba(197, 160, 89, 0.3);
+}
+
+/* NEW */
+.label-heap {
+    color: #ff003c;
+    border-color: rgba(255, 0, 60, 0.3);
+}
+
+.horizontal-scroll-track {
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+    padding-right: 20px;
+    gap: 15px;
+}
+
+/* Scrollbar Hide */
+.horizontal-scroll-track::-webkit-scrollbar {
+    height: 8px;
+    background: #000;
+}
+
+.horizontal-scroll-track::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+.horizontal-scroll-track::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.archive-track {
+    background: linear-gradient(180deg, #050505 0%, #000 100%);
+}
+
+.pending-track {
+    background: linear-gradient(180deg, #050505 0%, #111 100%);
+    border-top: 1px solid #222;
+}
+
+/* NEW */
+.heap-track {
+    background: #000;
+}
+
+#gridPerfect::-webkit-scrollbar,
+#gridFailed::-webkit-scrollbar,
+#gridOkay::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* =========================================
+   TOP: THE GOLDEN TRIPTYCH (Square Altar)
+   ========================================= */
+.section-altar.triptych-stage {
+    flex: 0 0 260px !important;
+    height: 260px !important;
+    min-height: 260px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: relative !important;
+    background: transparent !important;
+    z-index: 10;
+    overflow: visible !important;
+    border-bottom: 1px solid rgba(197, 160, 89, 0.1) !important;
+}
+
+.altar-halo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 550px;
+    height: 350px;
+    background: radial-gradient(closest-side, rgba(255, 215, 0, 0.15), transparent);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.altar-card {
+    position: absolute;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+.altar-card::after {
+    display: none !important;
+}
+
+.altar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: none !important;
+}
+
+.center-idol {
+    width: 180px;
+    height: 180px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.25);
+}
+
+.left-offering,
+.right-offering {
+    width: 130px;
+    height: 130px;
+    top: 50%;
+    z-index: 10;
+    opacity: 0.9;
+}
+
+.left-offering {
+    left: 50%;
+    transform: translate(-140%, -50%);
+}
+
+.right-offering {
+    left: 50%;
+    transform: translate(40%, -50%);
+}
+
+.reflection-mask {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    overflow: hidden !important;
+    transform: scaleY(-1);
+    opacity: 0.4;
+    mask-image: linear-gradient(to top, transparent 0%, black 100%);
+    -webkit-mask-image: linear-gradient(to top, transparent 0%, black 100%);
+    pointer-events: none;
+    margin-top: 5px;
+    z-index: 0;
+}
+
+.reflect-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.gold-bar {
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(90deg, #8a6e3c, #ffd700, #fffdd0, #ffd700, #8a6e3c);
+    z-index: 30;
+    position: relative;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.inner-hairline {
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+    z-index: 26;
+}
+
+
+/* =========================================
+   MIDDLE: THE ARCHIVE (STRICT FIX)
+   ========================================= */
+.section-archive {
+    flex: 1;
+    position: relative;
+}
+
+/* The Container (Strict Cage) */
+.item-blueprint {
+    /* THE FIX: Lock the width */
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+    flex-shrink: 0 !important;
+    /* Never let it squash or grow */
+
+    height: 210px !important;
+    margin-right: 15px;
+    position: relative;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden !important;
+    /* FORCE CROP */
+}
+
+/* Image Layer */
+.blueprint-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    /* Key property to crop, not stretch */
+    opacity: 0.5;
+    filter: grayscale(100%);
+    transition: all 0.4s ease;
+    z-index: 1;
+    display: block;
+}
+
+.item-blueprint:hover .blueprint-img {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: scale(1.05);
+}
+
+/* LAYOUT: The Technical Corners */
+.bp-corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: rgba(255, 255, 255, 0.5);
+    border-style: solid;
+    z-index: 10;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.bl-tl {
+    top: 5px;
+    left: 5px;
+    border-width: 2px 0 0 2px;
+}
+
+.bl-tr {
+    top: 5px;
+    right: 5px;
+    border-width: 2px 2px 0 0;
+}
+
+.bl-bl {
+    bottom: 5px;
+    left: 5px;
+    border-width: 0 0 2px 2px;
+}
+
+.bl-br {
+    bottom: 5px;
+    right: 5px;
+    border-width: 0 2px 2px 0;
+}
+
+.item-blueprint:hover .bp-corner {
+    border-color: var(--gold);
+    width: 15px;
+    height: 15px;
+}
+
+/* LAYOUT: Stickers */
+.pending-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 20;
+}
+
+.pending-icon {
+    font-size: 2rem;
+    animation: pulse 2s infinite;
+}
+
+/* Approved Watermark */
+.item-blueprint:not(:has(.pending-overlay))::after {
+    content: 'LOGGED';
+    position: absolute;
+    bottom: 15px;
+    right: 10px;
+    font-family: 'Black Ops One', cursive;
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 2px 5px;
+    transform: rotate(-10deg);
+    pointer-events: none;
+    z-index: 15;
+}
+
+.item-blueprint:hover::after {
+    color: var(--gold);
+    border-color: var(--gold);
+    opacity: 1;
+}
+
+/* =========================================
+   BOTTOM: THE HEAP (RESTORED TRASH LAYOUT)
+   ========================================= */
+.section-heap {
+    flex: 1;
+    position: relative;
+}
+
+#gridFailed {
+    gap: 0 !important;
+    padding-left: 60px;
+}
+
+/* The Container (Overlapping) */
+.item-trash {
+    min-width: 120px;
+    height: 160px;
+    margin-right: -50px !important;
+    /* Stacked */
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    transform-origin: bottom center;
+    border: 1px solid #333;
+    background: #050505;
+}
+
+/* Image Layer */
+.trash-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%) brightness(0.5);
+    opacity: 0.7;
+}
+
+/* LAYOUT: The Stamp (Restored) */
+.trash-stamp {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    border: 3px solid var(--neon-red);
+    color: var(--neon-red);
+    font-family: 'Black Ops One';
+    font-size: 1rem;
+    padding: 5px;
+    opacity: 0.8;
+    z-index: 10;
+    text-shadow: 0 0 10px black;
+}
+
+/* Hover Effects */
+.item-trash:hover {
+    margin-right: 15px !important;
+    transform: translateY(-30px) scale(1.1) rotate(0deg) !important;
+    z-index: 100;
+    border-color: var(--neon-red);
+}
+
+.item-trash:hover .trash-img {
+    filter: grayscale(0%);
+    opacity: 1;
+}
+
+/* Rotations */
+.item-trash:nth-child(odd) {
+    transform: rotate(3deg);
+}
+
+.item-trash:nth-child(even) {
+    transform: rotate(-2deg);
+}
+
+
+/* =========================================
+   PLACEHOLDERS (Matching Sizes)
+   ========================================= */
+.item-placeholder-slot {
+    flex-shrink: 0;
+    margin-right: 15px;
+    border: 1px solid rgba(50, 50, 50, 0.5);
+    background: rgba(0, 0, 0, 0.5);
+    overflow: hidden !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.item-placeholder-slot img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block;
+}
+
+#gridOkay .item-placeholder-slot {
+    width: 120px !important;
+    height: 210px !important;
+}
+
+/* Middle */
+#gridFailed .item-placeholder-slot {
+    width: 120px !important;
+    height: 160px !important;
+}
+
+/* Bottom */
+
+/* =========================================
+   SOLO MODE: EMPTY GALLERY STATE
+   ========================================= */
+
+/* Hide Middle & Bottom when Solo Mode is active */
+#historySection.solo-mode .section-archive,
+#historySection.solo-mode .section-heap {
+    display: none !important;
+}
+
+/* Stretch Top Section to Fill Screen */
+#historySection.solo-mode .section-altar.triptych-stage {
+    flex: 1 !important;
+    /* Take all available space */
+    height: 100% !important;
+    /* Full Height */
+    min-height: 100% !important;
+    border-bottom: none !important;
+    padding-bottom: 50px;
+    /* Visual balance */
+}
+
+/* Optional: Scale up the Altar slightly in Solo Mode for drama */
+#historySection.solo-mode .center-idol {
+    transform: translate(-50%, -50%) scale(1.2);
+}
+
+#historySection.solo-mode .left-offering {
+    transform: translate(-140%, -50%) scale(1.1);
+}
+
+#historySection.solo-mode .right-offering {
+    transform: translate(40%, -50%) scale(1.1);
+}
+
+/* =========================================
+   NEW MODAL: THE THRONE ROOM (Center Layout)
+   ========================================= */
+
+/* The Main Wrapper (Background) */
+.glass-modal {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 999;
+    background: #000;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.glass-modal.active {
+    display: flex;
+    animation: fadeIn 0.3s;
+}
+
+/* The Blurred Background Image */
+.modal-bg-photo {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    filter: blur(15px) brightness(0.6);
+    /* Heavy Blur */
+    transition: filter 0.3s ease;
+}
+
+/* The Overlay Layer (Holds the Content) */
+.modal-glass-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* CENTER EVERYTHING */
+    background: rgba(0, 0, 0, 0.4);
+    transition: opacity 0.3s;
+}
+
+/* --- THE CENTER COLUMN (The Glass Stack) --- */
+.modal-center-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 90%;
+    max-width: 450px;
+    padding: 30px;
+    background: rgba(10, 10, 10, 0.85);
+    /* Dark Glass */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(20px);
+    z-index: 200;
+}
+
+/* 1. TOP: TITLE & POINTS */
+.modal-merit-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    color: #888;
+    letter-spacing: 3px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.modal-merit-value {
+    font-family: 'Cinzel', serif;
+    font-size: 3rem;
+    color: var(--gold);
+    font-weight: 700;
+    text-shadow: 0 0 20px rgba(197, 160, 89, 0.4);
+    margin-bottom: 25px;
+    line-height: 1;
+}
+
+/* 2. MIDDLE: THE JUDGMENT (Verdict) */
+.modal-verdict-box {
+    width: 100%;
+    margin-bottom: 30px;
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #eee;
+    text-align: center;
+    font-style: italic;
+}
+
+/* 3. BOTTOM: BUTTON STACK */
+.modal-btn-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.btn-glass-silver {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ccc;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    padding: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.btn-glass-silver:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+/* Red Close Button */
+.btn-glass-red {
+    border-color: rgba(255, 0, 60, 0.5);
+    color: #ff003c;
+}
+
+.btn-glass-red:hover {
+    background: rgba(255, 0, 60, 0.1);
+    border-color: #ff003c;
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.3);
+}
+
+/* INSPECT MODE (Hide UI, Unblur BG) */
+.glass-modal.inspect-mode .modal-glass-overlay {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.glass-modal.inspect-mode .modal-bg-photo {
+    filter: blur(0px) brightness(1);
+    cursor: zoom-out;
+}
+
+/* Reward Overlays (Z-Index Fix) */
+#kneelRewardOverlay {
+    background: rgba(0, 0, 0, 0.95) !important;
+    z-index: 99999 !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#kneelRewardOverlay .action-btn {
+    border-color: var(--gold);
+    color: var(--gold);
+    margin: 0 10px;
+    background: black;
+    position: relative;
+    z-index: 100000;
+}
+
+#kneelRewardOverlay h2 {
+    color: white !important;
+    font-family: 'Cinzel', serif;
+    z-index: 100000;
+}
+
+.glass-card.punishment {
+    border-color: #ff003c !important;
+    box-shadow: 0 0 50px rgba(255, 0, 60, 0.4) !important;
+}
+
+/* =========================================
+   STICKER FILTER BAR
+   ========================================= */
+.filter-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    /* Space for scrollbar if needed */
+    scrollbar-width: none;
+    /* Hide scrollbar Firefox */
+}
+
+.filter-row::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar Chrome */
+
+.filter-circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 1px solid #333;
+    background: #050505;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.filter-circle img {
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
+    pointer-events: none;
+    filter: drop-shadow(0 0 2px black);
+}
+
+/* Selected State */
+.filter-circle.active {
+    border-color: var(--gold);
+    background: rgba(197, 160, 89, 0.1);
+    box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
+    transform: scale(1.1);
+}
+
+/* "ALL" Button Text */
+.filter-all-text {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #666;
+}
+
+.filter-circle.active .filter-all-text {
+    color: var(--gold);
+}
+
+/* --- THE MERIT PLAQUE --- */
+.merit-plaque {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.85);
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 2px 8px;
+    border-top-left-radius: 4px;
+    border-top: 1px solid var(--gold);
+    border-left: 1px solid var(--gold);
+    z-index: 20;
+    box-shadow: -2px -2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Pending "Ghost" Styling */
+.gallery-item.is-pending img.gi-thumb,
+.gallery-item.is-pending video.gi-thumb {
+    filter: grayscale(100%) brightness(0.6);
+    /* Dimmed */
+}
+
+.pending-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.pending-icon {
+    font-size: 1.5rem;
+    text-shadow: 0 0 10px var(--neon-yellow);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.5;
+        transform: scale(0.9);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    100% {
+        opacity: 0.5;
+        transform: scale(0.9);
+    }
+}
+
+/* The Main Container */
+.dossier-layout {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    align-items: stretch;
+}
+
+/* Sidebar for Data */
+.dossier-sidebar {
+    width: 350px;
+    background: rgba(10, 10, 10, 0.9);
+    border-left: 1px solid rgba(197, 160, 89, 0.3);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    z-index: 5;
+    margin-left: auto;
+    /* Pushes it to the right */
+}
+
+/* Data Blocks */
+.dossier-block {
+    margin-bottom: 15px;
+}
+
+.dossier-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+/* Fix the "Everything at once" - Absolute stacking */
+.sub-view {
+    transition: opacity 0.3s ease;
+}
+
+.sub-view.hidden {
+    display: none !important;
+}
+
+/* Merit Points Styling */
+.m-points-lg {
+    text-shadow: 0 0 15px rgba(197, 160, 89, 0.5);
+    line-height: 1;
+}
+
+/* =========================================
+   PENALTY / DANGER NOTIFICATIONS
+   ========================================= */
+
+/* The Red Alert Card */
+.glass-card.angry {
+    border: 1px solid #ff003c !important;
+    /* Neon Red */
+    background: radial-gradient(circle at center, rgba(30, 0, 0, 0.95) 0%, #000 100%) !important;
+    box-shadow: 0 0 50px rgba(255, 0, 60, 0.4), inset 0 0 20px rgba(255, 0, 60, 0.2) !important;
+    animation: violent-shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+/* The Text Styles */
+.angry-title {
+    color: #ff003c !important;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-shadow: 0 0 15px rgba(255, 0, 60, 0.8);
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.angry-text {
+    color: #fff !important;
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    border-top: 1px solid #ff003c;
+    padding-top: 10px;
+}
+
+/* The Shake Animation */
+@keyframes violent-shake {
+
+    10%,
+    90% {
+        transform: translate3d(-2px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(6px, 0, 0);
+    }
+}
+
+/* =========================================
+   8. ROYAL GAZETTE LAYOUT (NEW QUEEN'S WALL)
+   ========================================= */
+
+/* The Wrapper */
+.royal-gazette-layout {
+    width: 100%;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding-bottom: 50px;
+}
+
+/* --- HERO SECTION (Featured Article) --- */
+.news-hero-section {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    border: 1px solid var(--gold);
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    transition: all 0.4s ease;
+}
+
+.news-hero-section:hover {
+    box-shadow: 0 15px 50px rgba(197, 160, 89, 0.3);
+    border-color: #fff;
+    transform: translateY(-2px);
+}
+
+.hero-image-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.news-hero-section:hover .hero-img {
+    transform: scale(1.05);
+}
+
+/* Gradient Overlay for Text Readability */
+.hero-overlay-grad {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 100%);
+    pointer-events: none;
+}
+
+.hero-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 30px;
+    z-index: 10;
+}
+
+.hero-label {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--gold);
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.hero-title {
+    font-family: 'Cinzel', serif;
+    color: #fff;
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 5px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+    max-width: 90%;
+}
+
+.hero-meta {
+    font-family: 'Cinzel', serif;
+    color: #888;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+/* --- MAGAZINE GRID (Masonry Style) --- */
+.news-magazine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+.magazine-card {
+    background: #080808;
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.magazine-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.mag-img-box {
+    width: 100%;
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid #222;
+}
+
+.magazine-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+    filter: brightness(0.8);
+}
+
+.magazine-card:hover .magazine-img {
+    transform: scale(1.1);
+    filter: brightness(1);
+}
+
+/* Hover Overlay Button */
+.mag-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.magazine-card:hover .mag-overlay {
+    opacity: 1;
+}
+
+.mag-view-btn {
+    border: 1px solid #fff;
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    padding: 8px 20px;
+    letter-spacing: 2px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.mag-footer {
+    padding: 15px;
+    background: linear-gradient(180deg, #111 0%, #050505 100%);
+    flex-grow: 1;
+}
+
+.mag-text {
+    font-family: 'Cinzel', serif;
+    color: #ccc;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    transition: color 0.3s;
+}
+
+.magazine-card:hover .mag-text {
+    color: var(--gold);
+}
