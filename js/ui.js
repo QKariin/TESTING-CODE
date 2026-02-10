@@ -190,61 +190,59 @@ export function renderNews(posts) {
         return;
     }
 
-    // --- HELPER: GENERATE THUMBNAIL VS MASTER ---
-    const getMediaData = (p) => {
-        // 1. Find the raw data key
-        let raw = p.image || p.img || p.thumbnail || p.cover || p.poster || p.media || p.url || "";
+    // --- 1. MOBILE RENDER (SAFE RESTORATION) ---
+    // We use the simpler, robust logic that allows fallbacks
+    if (mobScroll) {
+        mobScroll.innerHTML = posts.map(p => {
+            // 1. Get Raw
+            const raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
+            if (!raw) return "";
 
-        // 2. Video Handling: If it's a video, try to find a cover image first
-        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
-            if (p.cover) raw = p.cover;
-            else if (p.thumbnail) raw = p.thumbnail;
-            else if (p.poster) raw = p.poster;
-        }
+            // 2. Use Global Optimizer (Safe Fallback built-in)
+            // Mobile needs smaller images (400px is good balance)
+            const thumb = getOptimizedUrl(raw, 400);
+            // Full res for the modal
+            const full = getOptimizedUrl(raw, 1000);
 
-        // 3. WIX OPTIMIZATION LOGIC
-        if (raw && raw.startsWith("wix:image")) {
-            try {
-                // Extract Filename (e.g. "8b3d8_image.jpg")
-                const parts = raw.split('/');
-                const fileName = parts[3].split('#')[0];
+            const txt = p.text || p.title || "Update";
 
-                return {
-                    // FAST: Ask Wix for a small, compressed version (250x350, Quality 70)
-                    thumb: `https://static.wixstatic.com/media/${fileName}/v1/fill/w_400,h_600,al_c,q_80/${fileName}`,
-                    // HD: The original master file
-                    full: `https://static.wixstatic.com/media/${fileName}`
-                };
-            } catch (e) {
-                return { thumb: "", full: "" };
-            }
-        }
+            return `
+                <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${full}', '${txt.replace(/'/g, "\\'")}')">
+                    <img src="${thumb}" class="mob-scroll-img" loading="lazy" onerror="this.parentElement.style.display='none'">
+                </div>
+            `;
+        }).join('');
+    }
 
-        // 4. Standard URL Fallback (External links)
-        const std = raw ? getOptimizedUrl(raw, 600) : "";
-        return { thumb: std, full: std };
-    };
-
-    // --- 1. DESKTOP RENDER (ROYAL GAZETTE LAYOUT) ---
+    // --- 2. DESKTOP RENDER (ROYAL GAZETTE LAYOUT) ---
     if (deskGrid) {
-        // Clear previous content
+        // Clear & Clean Class
         deskGrid.innerHTML = "";
+        deskGrid.className = "";
 
-        // Remove old grid class if present and add new container handling
-        deskGrid.className = ""; // Reset class to avoid conflict
-
-        // Create Highlight Wrapper
         const layoutWrapper = document.createElement("div");
         layoutWrapper.className = "royal-gazette-layout";
 
-        // 1. HERO SECTION (Latest Post)
+        // Helper for Desktop logic (High Quality)
+        const getDesktopMedia = (p) => {
+            const raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
+            // Desktop wants higher res
+            return {
+                thumb: getOptimizedUrl(raw, 600),
+                full: getOptimizedUrl(raw, 1200),
+                raw: raw
+            };
+        };
+
+        // A. HERO SECTION (Latest Post)
         if (posts.length > 0) {
             const heroPost = posts[0];
-            const heroMedia = getMediaData(heroPost);
-            const heroTitle = heroPost.title || heroPost.text || "ROYAL DECREE";
-            const heroDate = heroPost._createdDate ? new Date(heroPost._createdDate).toLocaleDateString() : "RECENT";
+            const heroMedia = getDesktopMedia(heroPost);
 
-            if (heroMedia.full) {
+            if (heroMedia.raw) { // Only show if there is an image
+                const heroTitle = heroPost.title || heroPost.text || "ROYAL DECREE";
+                const heroDate = heroPost._createdDate ? new Date(heroPost._createdDate).toLocaleDateString() : "RECENT";
+
                 const heroHTML = `
                 <div class="news-hero-section" onclick="window.openChatPreview('${heroMedia.full}', false)">
                     <div class="hero-image-wrapper">
@@ -261,14 +259,14 @@ export function renderNews(posts) {
             }
         }
 
-        // 2. MASONRY GRID (Older Posts)
+        // B. MASONRY GRID (Older Posts)
         if (posts.length > 1) {
             const gridHTML = `
             <div class="news-magazine-grid">
                 ${posts.slice(1).map(p => {
-                const media = getMediaData(p);
+                const media = getDesktopMedia(p);
                 const txt = p.title || p.text || "Update";
-                if (!media.thumb) return "";
+                if (!media.raw) return "";
 
                 return `
                     <div class="magazine-card" onclick="window.openChatPreview('${media.full}', false)">
@@ -287,27 +285,7 @@ export function renderNews(posts) {
             layoutWrapper.innerHTML += gridHTML;
         }
 
-        // Inject into DOM
         deskGrid.appendChild(layoutWrapper);
-    }
-
-    // --- 2. MOBILE RENDER (Fast Scroll) ---
-    if (mobScroll) {
-        mobScroll.innerHTML = posts.map(p => {
-            const media = getMediaData(p);
-            const txt = p.text || p.title || "Update";
-
-            // Skip empty items
-            if (!media.thumb) return "";
-
-            // IMG SRC = Low Res Thumbnail (Fast)
-            // ONCLICK = Full Res Master (Clear)
-            return `
-                <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${media.full}', '${txt.replace(/'/g, "\\'")}')">
-                    <img src="${media.thumb}" class="mob-scroll-img" loading="lazy" onerror="this.parentElement.style.display='none'">
-                </div>
-            `;
-        }).join('');
     }
 }
 
