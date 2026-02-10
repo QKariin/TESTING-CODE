@@ -1229,11 +1229,7 @@ function updateStats() {
 // =========================================
 // REWARD SYSTEM CONFIG & RENDER
 // =========================================
-// =========================================
-// LUXURY REWARD SYSTEM (SVG + SHAPES)
-// =========================================
 
-// SVG PATHS (Simplified for performance)
 const ICONS = {
     rank: "M12 2l-10 9h20l-10-9zm0 5l6 5.5h-12l6-5.5z M12 14l-8 7h16l-8-7z", // Chevron Stack
     task: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z", // Check Circle
@@ -1241,88 +1237,134 @@ const ICONS = {
     spend: "M12,2L2,12L12,22L22,12L12,2Z M12,18L6,12L12,6L18,12L12,18Z" // Diamond Gem
 };
 
-// --- HIERARCHY RULES (THE DARK PSYCHOLOGY EDITION) ---
+// --- CONFIGURATION: RANKS & MEDALS ---
 const REWARD_DATA = {
+    // 1. THE HIERARCHY (Main Event)
     ranks: [
         { 
-            name: "HALL BOY", 
-            icon: ICONS.rank,
-            tax: 20,
+            name: "HALL BOY", icon: ICONS.rank, tax: 20,
             req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
-            benefits: [
-                "Silence is mandatory.",
-                "Access to The Terminal."
-            ]
+            benefits: ["Silence is mandatory.", "Access to The Terminal."]
         },
         { 
-            name: "FOOTMAN", 
-            icon: ICONS.rank,
-            tax: 15,
+            name: "FOOTMAN", icon: ICONS.rank, tax: 15,
             req: { tasks: 5, kneels: 10, points: 500, spent: 1000, streak: 0 },
-            benefits: [
-                "Identity Grant: You may have a face.", 
-                "Protocol Alpha: Daily Routine access.", 
-                "Voice cost reduced to 15."
-            ]
+            benefits: ["Identity Grant: You may have a face.", "Protocol Alpha: Daily Routine access.", "Voice cost reduced to 15."]
         },
         { 
-            name: "SILVERMAN", 
-            icon: ICONS.rank,
-            tax: 10,
+            name: "SILVERMAN", icon: ICONS.rank, tax: 10,
             req: { tasks: 25, kneels: 65, points: 2500, spent: 10000, streak: 3 },
-            benefits: [
-                "Visual Tribute: Permission to send PHOTOS.",
-                "Gilded Chains: Pending tasks marked Gold.",
-                "Voice cost reduced to 10."
-            ]
+            benefits: ["Visual Tribute: Send PHOTOS.", "Gilded Chains: Pending tasks Gold.", "Voice cost reduced to 10."]
         },
         { 
-            name: "BUTLER", 
-            icon: ICONS.rank,
-            tax: 5,
+            name: "BUTLER", icon: ICONS.rank, tax: 5,
             req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 7 },
-            benefits: [
-                "Kinetic Submission: Permission to send VIDEOS.",
-                "Forbidden Knowledge: Access 'The Vault'.",
-                "Voice cost reduced to 5."
-            ]
+            benefits: ["Kinetic Submission: Send VIDEOS.", "Forbidden Knowledge: Access Vault.", "Voice cost reduced to 5."]
         },
         { 
-            name: "CHAMBERLAIN", 
-            icon: ICONS.rank,
-            tax: 0,
+            name: "CHAMBERLAIN", icon: ICONS.rank, tax: 0,
             req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 14 },
-            benefits: [
-                "Royal Mercy: Failure penalty halved.",
-                "The Free Tongue: Speak without tax.",
-                "Priority status in queue."
-            ]
+            benefits: ["Royal Mercy: Penalties halved.", "The Free Tongue: Tax removed.", "Priority status."]
         },
         { 
-            name: "SECRETARY", 
-            icon: ICONS.rank,
-            tax: 0,
+            name: "SECRETARY", icon: ICONS.rank, tax: 0,
             req: { tasks: 500, kneels: 1500, points: 100000, spent: 500000, streak: 30 },
-            benefits: [
-                "The Golden Voice: Your chat shines Gold.",
-                "System Command: Actions broadcast to all.",
-                "Direct line to the Throne."
-            ]
+            benefits: ["The Golden Voice.", "System Command.", "Direct Throne Line."]
         },
         { 
-            name: "QUEEN'S CHAMPION", 
-            icon: ICONS.rank,
-            tax: 0,
+            name: "QUEEN'S CHAMPION", icon: ICONS.rank, tax: 0,
             req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 60 },
-            benefits: [
-                "Absolute Authority.",
-                "Manifest Will: Request Custom Directives.",
-                "Total Ownership."
-            ]
+            benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."]
         }
     ],
-    // Keep legacy arrays if needed for old logic
-    tasks: [], kneeling: [], spending: []
+
+    // 2. THE MEDALS (Side Quests - Restored)
+    tasks: [
+        { limit: 10, name: "LABORER", icon: ICONS.task },
+        { limit: 50, name: "TOOL", icon: ICONS.task },
+        { limit: 100, name: "DRONE", icon: ICONS.task },
+        { limit: 500, name: "MACHINE", icon: ICONS.task },
+        { limit: 1000, name: "ARCHITECT", icon: ICONS.task }
+    ],
+    kneeling: [
+        { limit: 10, name: "BENT", icon: ICONS.kneel },
+        { limit: 50, name: "SORE", icon: ICONS.kneel },
+        { limit: 100, name: "TRAINED", icon: ICONS.kneel },
+        { limit: 500, name: "FURNITURE", icon: ICONS.kneel },
+        { limit: 1000, name: "STATUE", icon: ICONS.kneel }
+    ],
+    spending: [
+        { limit: 1000, name: "TITHE", icon: ICONS.spend },
+        { limit: 10000, name: "SUPPORTER", icon: ICONS.spend },
+        { limit: 50000, name: "PATRON", icon: ICONS.spend },
+        { limit: 100000, name: "FINANCIER", icon: ICONS.spend },
+        { limit: 500000, name: "WHALE", icon: ICONS.spend }
+    ]
+};
+
+// --- OPEN HIERARCHY MODAL (The Checklist) ---
+window.openHierarchyCard = function(rankName, currentStreak) {
+    const rankObj = REWARD_DATA.ranks.find(r => r.name === rankName);
+    if (!rankObj) return;
+
+    const overlay = document.getElementById('rewardCardOverlay');
+    const container = overlay.querySelector('.mob-reward-card');
+    
+    // 1. Get Stats
+    const stats = {
+        tasks: gameStats.taskdom_completed || 0,
+        kneels: gameStats.kneelCount || 0,
+        points: gameStats.points || 0,
+        spent: gameStats.total_coins_spent || 0,
+        streak: currentStreak || 0
+    };
+
+    // 2. Build Row Helper
+    const buildRow = (label, curr, target, icon) => {
+        if (target <= 0) return ""; 
+        const pct = Math.min((curr / target) * 100, 100);
+        const isDone = curr >= target;
+        const color = isDone ? "#00ff00" : "#c5a059"; 
+        
+        return `
+        <div style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${isDone ? '#fff' : '#888'};">
+                <span>${icon} ${label}</span>
+                <span style="color:${color}">${curr.toLocaleString()} / ${target.toLocaleString()}</span>
+            </div>
+            <div style="width:100%; height:6px; background:#000; border:1px solid #333; border-radius:3px; overflow:hidden;">
+                <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40;"></div>
+            </div>
+        </div>`;
+    };
+
+    // 3. Inject HTML
+    container.innerHTML = `
+        <div style="width:100%; text-align:center; border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:15px;">
+            <div style="font-family:'Cinzel'; font-size:1.2rem; color:#fff; letter-spacing:2px;">${rankObj.name}</div>
+            <div style="font-family:'Orbitron'; font-size:0.6rem; color:#666; margin-top:5px;">CLASSIFICATION DETAILS</div>
+        </div>
+
+        <div style="width:100%; text-align:left; background:rgba(255,255,255,0.02); padding:15px; border-radius:4px; border:1px solid #333;">
+            <div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>
+            ${buildRow("LABOR", stats.tasks, rankObj.req.tasks, "🛠️")}
+            ${buildRow("ENDURANCE", stats.kneels, rankObj.req.kneels, "🧎")}
+            ${buildRow("MERIT", stats.points, rankObj.req.points, "✨")}
+            ${buildRow("SACRIFICE", stats.spent, rankObj.req.spent, "💰")}
+            ${buildRow("CONSISTENCY", stats.streak, rankObj.req.streak, "🔥")}
+        </div>
+
+        <div style="width:100%; text-align:left; margin-top:15px; padding:0 10px;">
+            <div style="font-size:0.55rem; color:#c5a059; margin-bottom:5px; font-family:'Orbitron';">PRIVILEGES GRANTED</div>
+            <ul style="color:#ccc; font-size:0.7rem; font-family:'Cinzel'; padding-left:15px; line-height:1.6;">
+                ${rankObj.benefits.map(b => `<li>${b}</li>`).join('')}
+            </ul>
+        </div>
+
+        <button class="mob-action-btn" onclick="document.getElementById('rewardCardOverlay').classList.add('hidden')" style="margin-top:20px;">ACKNOWLEDGE</button>
+    `;
+
+    overlay.classList.remove('hidden');
 };
 
 window.renderRewards = function() {
@@ -1342,14 +1384,12 @@ window.renderRewards = function() {
     let rawHistory = userProfile.routineHistory || userProfile.routinehistory;
     
     if (rawHistory) {
-        // Parse if JSON string
         if (typeof rawHistory === 'string') {
             try { routinePhotos = JSON.parse(rawHistory); } catch(e) { routinePhotos = []; }
         } else if (Array.isArray(rawHistory)) {
             routinePhotos = rawHistory;
         }
     } 
-    // Fallback: Strict Filter on Gallery
     else if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
         routinePhotos = galleryData.filter(item => (item.category || "").toLowerCase() === 'routine');
     }
@@ -1370,11 +1410,9 @@ window.renderRewards = function() {
         };
 
         const todayCode = getDutyDay(new Date());
-        // Handle object format vs string format
         const newestDate = routinePhotos[0].date || routinePhotos[0]._createdDate || routinePhotos[0];
-        const lastCode = getDutyDay(newestItemDate);
+        const lastCode = getDutyDay(newestDate);
 
-        // Check if alive (Today or Yesterday)
         const d1 = new Date(todayCode);
         const d2 = new Date(lastCode);
         const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
@@ -1386,7 +1424,6 @@ window.renderRewards = function() {
             for (let i = 1; i < routinePhotos.length; i++) {
                 const itemDate = routinePhotos[i].date || routinePhotos[i]._createdDate || routinePhotos[i];
                 const nextCode = getDutyDay(itemDate);
-                
                 if (nextCode === currentCode) continue; 
                 
                 const dayA = new Date(currentCode);
@@ -1411,7 +1448,6 @@ window.renderRewards = function() {
     if (strVal) {
         strVal.innerText = streakCount;
         strVal.style.color = "#c5a059"; 
-        // Force Luxury Styling on parent box
         if(strVal.parentElement) {
             strVal.parentElement.style.borderColor = "#c5a059";
             strVal.parentElement.style.background = "linear-gradient(180deg, #1a1a1a 0%, #000 100%)";
@@ -1428,7 +1464,7 @@ window.renderRewards = function() {
                 let rawSrc = (typeof item === 'object') ? (item.proof || item.url || item.image) : item;
                 if (!rawSrc) return "";
 
-                // WIX URL FIXER (Same as Gallery)
+                // WIX URL FIXER
                 let thumb = rawSrc;
                 if (rawSrc.startsWith('wix:image')) {
                      try { 
@@ -1491,8 +1527,8 @@ window.renderRewards = function() {
         }
 
         shelfRank.innerHTML = html;
-        shelfRank.style.justifyContent = "center"; // Center the podium
-        shelfRank.style.overflow = "visible";      // Allow glow to bleed out
+        shelfRank.style.justifyContent = "center"; 
+        shelfRank.style.overflow = "visible";      
     }
 
     // ============================================================
@@ -1520,9 +1556,10 @@ window.renderRewards = function() {
         }).join('');
     };
 
-    buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
-    buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
-    buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', null, totalSpent, 'spend');
+    // Ensure arrays exist before mapping
+    if(REWARD_DATA.tasks) buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
+    if(REWARD_DATA.kneeling) buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
+    if(REWARD_DATA.spending) buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', null, totalSpent, 'spend');
 };
 
 window.openRewardCard = function(name, iconPath, current, target, type) {
