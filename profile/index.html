@@ -234,6 +234,31 @@
             letter-spacing: 2px; cursor: pointer;
         }
 
+          /* FIX MOBILE CHAT SCROLL GLITCH */
+          #mob_chatBox {
+              /* 1. TRAP THE SCROLL (Stop it from moving the dashboard) */
+              overscroll-behavior: contain !important;
+              
+              /* 2. FORCE GPU (Smoothness) */
+              will-change: scroll-position;
+              transform: translateZ(0);
+              
+              /* 3. STRICT VERTICAL ONLY */
+              touch-action: pan-y !important;
+              
+              /* 4. ENSURE WIDTH SAFETY */
+              width: 100% !important;
+              max-width: 100% !important;
+              overflow-x: hidden !important;
+          }
+          
+          /* Ensure the wrapper doesn't cause issues either */
+          #inlineChatPanel {
+              width: 100% !important;
+              max-width: 100% !important;
+              overflow: hidden !important; /* No scrolling on the wrapper, only the box */
+          }
+      
       /* FIX MODAL SCROLL GLITCH */
           #glassModal {
               /* Prevent scroll from passing through to the dashboard */
