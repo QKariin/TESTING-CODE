@@ -179,13 +179,14 @@ export function renderDomVideos(videos) {
     }).join('');
 }
 
-// *** QUEEN'S WALL RENDERER (OPTIMIZED THUMBNAILS) ***
+// *** QUEEN'S WALL RENDERER (ROYAL GAZETTE STYLE) ***
 export function renderNews(posts) {
     const deskGrid = document.getElementById('newsGrid');
     const mobScroll = document.getElementById('qWall_ScrollTrack');
 
     if (!posts || !Array.isArray(posts)) {
         if (mobScroll) mobScroll.innerHTML = "<div style='color:#666; padding:20px; font-size:0.7rem;'>NO UPDATES</div>";
+        if (deskGrid) deskGrid.innerHTML = "<div style='color:#666; padding:40px; text-align:center; font-family:\"Cinzel\";'>THE QUEEN HAS NOT SPOKEN.</div>";
         return;
     }
 
@@ -210,7 +211,7 @@ export function renderNews(posts) {
 
                 return {
                     // FAST: Ask Wix for a small, compressed version (250x350, Quality 70)
-                    thumb: `https://static.wixstatic.com/media/${fileName}/v1/fill/w_250,h_350,al_c,q_70/${fileName}`,
+                    thumb: `https://static.wixstatic.com/media/${fileName}/v1/fill/w_400,h_600,al_c,q_80/${fileName}`,
                     // HD: The original master file
                     full: `https://static.wixstatic.com/media/${fileName}`
                 };
@@ -220,17 +221,74 @@ export function renderNews(posts) {
         }
 
         // 4. Standard URL Fallback (External links)
-        const std = raw ? getOptimizedUrl(raw, 400) : "";
+        const std = raw ? getOptimizedUrl(raw, 600) : "";
         return { thumb: std, full: std };
     };
 
-    // --- 1. DESKTOP RENDER (Standard Grid) ---
+    // --- 1. DESKTOP RENDER (ROYAL GAZETTE LAYOUT) ---
     if (deskGrid) {
-        deskGrid.innerHTML = posts.map(p => {
-            const media = getMediaData(p);
-            if (!media.thumb) return "";
-            return `<div class="sg-item" onclick="window.openChatPreview('${media.full}', false)"><img src="${media.thumb}" class="sg-img"></div>`;
-        }).join('');
+        // Clear previous content
+        deskGrid.innerHTML = "";
+
+        // Remove old grid class if present and add new container handling
+        deskGrid.className = ""; // Reset class to avoid conflict
+
+        // Create Highlight Wrapper
+        const layoutWrapper = document.createElement("div");
+        layoutWrapper.className = "royal-gazette-layout";
+
+        // 1. HERO SECTION (Latest Post)
+        if (posts.length > 0) {
+            const heroPost = posts[0];
+            const heroMedia = getMediaData(heroPost);
+            const heroTitle = heroPost.title || heroPost.text || "ROYAL DECREE";
+            const heroDate = heroPost._createdDate ? new Date(heroPost._createdDate).toLocaleDateString() : "RECENT";
+
+            if (heroMedia.full) {
+                const heroHTML = `
+                <div class="news-hero-section" onclick="window.openChatPreview('${heroMedia.full}', false)">
+                    <div class="hero-image-wrapper">
+                        <img src="${heroMedia.full}" class="hero-img">
+                        <div class="hero-overlay-grad"></div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="hero-label">LATEST TRANSMISSION</div>
+                        <div class="hero-title">${heroTitle}</div>
+                        <div class="hero-meta">${heroDate}</div>
+                    </div>
+                </div>`;
+                layoutWrapper.innerHTML += heroHTML;
+            }
+        }
+
+        // 2. MASONRY GRID (Older Posts)
+        if (posts.length > 1) {
+            const gridHTML = `
+            <div class="news-magazine-grid">
+                ${posts.slice(1).map(p => {
+                const media = getMediaData(p);
+                const txt = p.title || p.text || "Update";
+                if (!media.thumb) return "";
+
+                return `
+                    <div class="magazine-card" onclick="window.openChatPreview('${media.full}', false)">
+                        <div class="mag-img-box">
+                            <img src="${media.thumb}" class="magazine-img" loading="lazy">
+                            <div class="mag-overlay">
+                                <span class="mag-view-btn">VIEW</span>
+                            </div>
+                        </div>
+                        <div class="mag-footer">
+                            <div class="mag-text">${txt.substring(0, 50)}${txt.length > 50 ? '...' : ''}</div>
+                        </div>
+                    </div>`;
+            }).join('')}
+            </div>`;
+            layoutWrapper.innerHTML += gridHTML;
+        }
+
+        // Inject into DOM
+        deskGrid.appendChild(layoutWrapper);
     }
 
     // --- 2. MOBILE RENDER (Fast Scroll) ---
