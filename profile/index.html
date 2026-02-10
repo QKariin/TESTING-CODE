@@ -43,6 +43,10 @@
         touch-action: none; /* Kills pinch-zoom on mobile */
     }
 
+  .mobile-only-trigger {
+    display: none !important;
+}
+
     /* --- MOBILE SPECIFIC STYLES --- */
     @media screen and (max-width: 768px) {
         
@@ -104,7 +108,9 @@
         /* =========================================
            2. HALO DASHBOARD
            ========================================= */
-        
+         .mobile-only-trigger {
+        display: block !important;
+    }
 
         .halo-section {
             position: relative; z-index: 2; margin-top: 60px;
@@ -948,34 +954,7 @@
             </div>
         </div>
 
-        <!-- 3. THE FLOATING AVATAR (FIXED TO TOP) -->
-    <div id="mobFloatingChatTrigger" onclick="const el = document.getElementById('mobChatSection'); el.scrollIntoView({behavior: 'smooth'}); document.getElementById('inlineChatPanel').classList.remove('hidden');" 
-         style="
-        position: fixed; 
-        
-        /* --- CHANGED FROM BOTTOM TO TOP --- */
-        top: 80px;  /* 80px pushes it below the top HUD. Change to 20px to hit the ceiling. */
-        right: 20px; 
-        
-        z-index: 1000; /* Floats above scroll content */
-        width: 60px; height: 60px; /* Slightly smaller for top area? Adjust as needed */
-        border-radius: 50%; 
-        background: #000;
-        border: 1px solid #c5a059; 
-        box-shadow: 0 5px 20px rgba(0,0,0,0.5); /* Shadow downwards */
-        padding: 3px; 
-        cursor: pointer;
-        transform: translateZ(0); /* GPU Lock */
-    ">
-        <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" 
-             style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-        
-        <div id="floatStatusDot" class="status-dot online blink-dot" style="
-            position: absolute; bottom: 0; right: 0; 
-            width: 12px; height: 12px; background: #00ff00; 
-            border-radius: 50%; border: 2px solid #000; box-shadow: 0 0 5px #00ff00;
-        "></div>
-    </div>
+       
 
         <!-- 3. POVERTY -->
         <div id="povertyOverlay" class="mob-reward-overlay hidden">
@@ -1464,6 +1443,33 @@
         </div>
 
 </div> <!-- END MOBILE_APP -->
+
+   <!-- FLOATING AVATAR (ROOT LEVEL - FIXED POSITION) -->
+<div id="mobFloatingChatTrigger" class="mobile-only-trigger" 
+     onclick="const el = document.getElementById('mobChatSection'); if(el) { el.scrollIntoView({behavior: 'smooth'}); document.getElementById('inlineChatPanel').classList.remove('hidden'); }" 
+     style="
+    position: fixed; 
+    top: 90px; /* Adjust this to move it up/down */
+    right: 20px; 
+    z-index: 2147483647; /* Maximum Z-Index */
+    width: 60px; height: 60px; 
+    border-radius: 50%; 
+    background: #000;
+    border: 1px solid #c5a059; 
+    box-shadow: 0 5px 20px rgba(0,0,0,0.8); 
+    padding: 3px; 
+    cursor: pointer;
+    /* No transforms here, just pure fixed position */
+">
+    <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" 
+         style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+    
+    <div id="floatStatusDot" class="status-dot online blink-dot" style="
+        position: absolute; bottom: 0; right: 0; 
+        width: 12px; height: 12px; background: #00ff00; 
+        border-radius: 50%; border: 2px solid #000; box-shadow: 0 0 5px #00ff00;
+    "></div>
+</div>
 <script>
 
 // =========================================
