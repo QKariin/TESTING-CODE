@@ -146,19 +146,20 @@ export async function renderGallery() {
     // --- 1. TARGETS ---
     const gridFailed = document.getElementById('gridFailed');
     const gridOkay = document.getElementById('gridOkay');
-    const gridPending = document.getElementById('gridPending'); // NEW TARGET
+    const gridPending = document.getElementById('gridPending');
     const historySection = document.getElementById('historySection');
 
-    // Altar Slots
+    // Altar Slots (Desktop)
     const slot1 = { card: document.getElementById('altarSlot1'), img: document.getElementById('imgSlot1'), ref: document.getElementById('reflectSlot1') };
     const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2') };
     const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3') };
 
-    // Mobile Slots
+    // Mobile Altar Slots
     const mob1 = document.getElementById('mobImgSlot1');
     const mob2 = document.getElementById('mobImgSlot2');
     const mob3 = document.getElementById('mobImgSlot3');
 
+    // Mobile Lists
     const recGrid = document.getElementById('mobRec_Grid');
     const recHeap = document.getElementById('mobRec_Heap');
 
@@ -219,24 +220,28 @@ export async function renderGallery() {
 
     // --- 5. IMAGE LOADER ---
     const getThumb = async (item, size) => {
-        let raw = item.proofUrl || item.media;
+        if (!item) return PLACEHOLDER_IMG;
+        let raw = item.proofUrl || item.media || item.url || "";
+
         // Video Cover Check
-        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
+        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video'))) {
             if (item.cover) raw = item.cover;
             else if (item.thumbnail) raw = item.thumbnail;
             else if (item.poster) raw = item.poster;
         }
-        // Wix Check
-        if (raw && raw.startsWith('wix:image')) {
+
+        // Wix Check (Manual Parsing)
+        if (raw && typeof raw === 'string' && raw.startsWith('wix:image')) {
             try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
         }
-        try {
-            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
-        } catch (e) { return raw; }
+
+        try { return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size))); } catch (e) { return raw; }
     };
 
-    // --- 6. RENDER LISTS (WITH STICKERS) ---
+    // --- 6. RENDER TRACKS (Function) ---
     const renderChunk = async (list, isTrash) => {
+        if (!list || list.length === 0) return { desk: "", mob: "" };
+
         const promises = list.map(async (item) => {
             const src = await getThumb(item, 300);
             const idx = allItems.indexOf(item);
@@ -249,15 +254,14 @@ export async function renderGallery() {
             const overlay = isPending ? `<div class="pending-overlay"><div class="pending-badge">AWAITING<br>VERDICT</div></div>` : ``;
             const mobBadge = isPending ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;"><div class="pending-badge" style="font-size:0.4rem; padding:3px; border-width:1px;">WATCHING</div></div>` : ``;
 
-            // *** THE NEW PART: REWARD STICKER ***
+            // REWARD STICKER
             let stickerHtml = "";
             if (item.sticker && !isTrash && !isPending) {
-                // If it has a sticker URL, show it
                 stickerHtml = `<img src="${item.sticker}" class="gallery-sticker-badge">`;
             }
 
             // DETECT VIDEO
-            const isVideo = typeof src === 'string' && (src.includes('.mp4') || src.includes('.mov') || src.includes('.webm'));
+            const isVideo = typeof src === 'string' && (src.includes('.mp4') || src.includes('.mov') || src.includes('.webm') || src.startsWith('wix:video'));
 
             const deskMedia = isVideo
                 ? `<video class="${isTrash ? 'trash-img' : 'blueprint-img'}" src="${src}" autoplay muted loop playsinline style="${imgStyle} object-fit:cover;"></video>`
@@ -271,7 +275,7 @@ export async function renderGallery() {
             const desk = `
                 <div class="${isTrash ? 'item-trash' : 'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
                     ${deskMedia}
-                    ${stickerHtml} <!-- Sticker Here -->
+                    ${stickerHtml}
                     ${isTrash ? '<div class="trash-stamp">DENIED</div>' : ''}
                     ${overlay}
                 </div>`;
@@ -280,7 +284,7 @@ export async function renderGallery() {
             const mob = `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash ? 'height:80px; width:80px;' : ''}">
                     ${mobMedia}
-                    ${stickerHtml} <!-- Sticker Here -->
+                    ${stickerHtml}
                     ${mobBadge}
                 </div>`;
             return { desk, mob };
@@ -290,26 +294,27 @@ export async function renderGallery() {
         return { desk: results.map(r => r.desk).join(''), mob: results.map(r => r.mob).join('') };
     };
 
-    // --- RENDER LISTS ---
-    // 1. Render Accepted (remaining candidates)
+    // --- 7. EXECUTE RENDERS ---
+
+    // A. Accepted (Candidates)
     const acceptedHTML = await renderChunk(candidates, false);
     gridOkay.innerHTML = acceptedHTML.desk;
-    if (recGrid) recGrid.innerHTML = acceptedHTML.mob;
+    if (recGrid) recGrid.innerHTML += acceptedHTML.mob; // Append to top list
 
-    // 2. Render Pending (NEW)
-    if (gridPending) {
+    // B. Pending
+    if (pendingList.length > 0) {
         const pendingHTML = await renderChunk(pendingList, false);
-        gridPending.innerHTML = pendingHTML.desk;
-        // Optional: Add to mobile if needed, or keep mobile mixed? 
-        // For now, mobile splits accepted/denied. We can add pending to 'recGrid' top if desired.
+        if (gridPending) gridPending.innerHTML = pendingHTML.desk;
+        // MOBILE: Prepend to Top List (recGrid) so they start the list
+        if (recGrid) recGrid.innerHTML = pendingHTML.mob + recGrid.innerHTML;
     }
 
-    // 3. Render Denied
+    // C. Denied (Heap)
     const deniedHTML = await renderChunk(deniedList, true);
     gridFailed.innerHTML = deniedHTML.desk;
     if (recHeap) recHeap.innerHTML = deniedHTML.mob;
 
-    // --- RENDER ALTAR (TOP 3) ---
+    // --- 8. RENDER DESKTOP ALTAR ---
     const renderAltarSlot = async (item, slotObj, isMain) => {
         if (!item || !slotObj.card) {
             if (slotObj.card) slotObj.card.style.display = 'none';
@@ -319,16 +324,9 @@ export async function renderGallery() {
 
         let url = await getThumb(item, isMain ? 800 : 400);
 
-        // Video check (poster)
-        if (typeof url === 'string' && (url.includes('.mp4') || url.includes('.mov'))) {
-            // For altar, we want the poster image primarily, unless we want video on altar?
-            // stick to image for now, or use thumb
-        }
-
         if (slotObj.img) slotObj.img.src = url;
         if (slotObj.ref) slotObj.ref.src = url;
 
-        // Score Plaque
         const scoreEl = document.getElementById(isMain ? 'scoreSlot1' : (slotObj === slot2 ? 'scoreSlot2' : 'scoreSlot3'));
         if (scoreEl) scoreEl.innerText = getPoints(item);
     };
@@ -337,10 +335,23 @@ export async function renderGallery() {
     await renderAltarSlot(bestOf[1], slot2, false);
     await renderAltarSlot(bestOf[2], slot3, false);
 
-    // Mobile Altar
-    if (mob1 && bestOf[0]) mob1.src = await getThumb(bestOf[0], 400);
-    if (mob2 && bestOf[1]) mob2.src = await getThumb(bestOf[1], 300);
-    if (mob3 && bestOf[2]) mob3.src = await getThumb(bestOf[2], 300);
+    // --- 9. RENDER MOBILE ALTAR (INSIDE THE FUNCTION NOW) ---
+    const renderMobSlot = async (item, el, size) => {
+        if (!el) return;
+        if (item) {
+            let url = await getThumb(item, size);
+            el.src = url;
+            el.style.filter = "none";
+            el.onclick = () => window.openHistoryModal(allItems.indexOf(item));
+        } else {
+            el.src = IMG_QUEEN_MAIN; // Fallback
+            el.style.filter = "grayscale(100%) brightness(0.5)";
+        }
+    };
+
+    await renderMobSlot(bestOf[0], mob1, 400);
+    await renderMobSlot(bestOf[1], mob2, 300);
+    await renderMobSlot(bestOf[2], mob3, 300);
 }
 // --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
 export function loadMoreHistory() {
@@ -348,6 +359,13 @@ export function loadMoreHistory() {
     renderGallery();
     console.log("Increased history limit to", historyLimit);
 }
+
+// --- FORCE WINDOW EXPORTS ---
+window.renderGallery = renderGallery;
+window.setGalleryFilter = function (filterType) {
+    activeStickerFilter = filterType;
+    renderGallery();
+};
 
 // --- REDEMPTION LOGIC ---
 window.atoneForTask = function (index) {
@@ -653,51 +671,11 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ... inside renderGallery ...
 
-// --- SYNC MOBILE ALTAR ---
-const mob1 = document.getElementById('mobImgSlot1');
-const mob2 = document.getElementById('mobImgSlot2');
-const mob3 = document.getElementById('mobImgSlot3');
-
-// Slot 1 (Center)
-if (mob1) {
-    if (bestOf[0]) {
-        // Re-use logic for thumbnail
-        let thumb = getThumbnail(getOptimizedUrl(bestOf[0].proofUrl || bestOf[0].media, 400));
-        mob1.src = thumb;
-        mob1.style.filter = "none";
-        mob1.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[0]));
-    } else {
-        // Set default Queen image if empty
-        mob1.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
-        mob1.style.filter = "grayscale(100%) brightness(0.5)";
-    }
-}
-
-// Slot 2 (Left)
-if (mob2 && bestOf[1]) {
-    let thumb = getThumbnail(getOptimizedUrl(bestOf[1].proofUrl || bestOf[1].media, 300));
-    mob2.src = thumb;
-    mob2.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[1]));
-}
-
-// Slot 3 (Right)
-if (mob3 && bestOf[2]) {
-    let thumb = getThumbnail(getOptimizedUrl(bestOf[2].proofUrl || bestOf[2].media, 300));
-    mob3.src = thumb;
-    mob3.onclick = () => window.openHistoryModal(allItems.indexOf(bestOf[2]));
-}
-
-// FORCE WINDOW EXPORTS
+// --- FORCE WINDOW EXPORTS ---
 window.renderGallery = renderGallery;
 window.openHistoryModal = openHistoryModal;
 window.toggleHistoryView = toggleHistoryView;
 window.closeModal = closeModal;
-window.atoneForTask = window.atoneForTask;
 window.loadMoreHistory = loadMoreHistory;
-window.setGalleryFilter = function (filterType) {
-    activeStickerFilter = filterType;
-    renderGallery();
-    console.log("render render", filterType);
-};
+// atoneForTask, toggleInspectMode, setGalleryFilter, toggleMobileMenu are already on window
