@@ -1302,12 +1302,18 @@ const REWARD_DATA = {
     ]
 };
 
-// --- OPEN HIERARCHY MODAL (The Checklist) ---
+// --- OPEN HIERARCHY MODAL (Targeting the Jail) ---
 window.openHierarchyCard = function(rankName, currentStreak) {
     const rankObj = REWARD_DATA.ranks.find(r => r.name === rankName);
     if (!rankObj) return;
 
-    const overlay = document.getElementById('rewardCardOverlay');
+    // FIX: Look specifically inside the Trophy Jail
+    const overlay = document.querySelector('#trophySectionJail #rewardCardOverlay');
+    if (!overlay) {
+        console.error("Jailed overlay not found! Check HTML."); 
+        return; 
+    }
+    
     const container = overlay.querySelector('.mob-reward-card');
     
     // 1. Get Stats
@@ -1361,7 +1367,7 @@ window.openHierarchyCard = function(rankName, currentStreak) {
             </ul>
         </div>
 
-        <button class="mob-action-btn" onclick="document.getElementById('rewardCardOverlay').classList.add('hidden')" style="margin-top:20px;">ACKNOWLEDGE</button>
+        <button class="mob-action-btn" onclick="window.closeRewardCard()" style="margin-top:20px;">ACKNOWLEDGE</button>
     `;
 
     overlay.classList.remove('hidden');
@@ -1563,47 +1569,52 @@ window.renderRewards = function() {
 };
 
 window.openRewardCard = function(name, iconPath, current, target, type) {
-    const overlay = document.getElementById('rewardCardOverlay');
+    // FIX: Look specifically inside the Trophy Jail
+    const overlay = document.querySelector('#trophySectionJail #rewardCardOverlay');
+    if (!overlay) return;
+    
     const container = overlay.querySelector('.mob-reward-card');
     
-    // Elements
-    const elIcon = document.getElementById('rcIcon');
-    const elTitle = document.getElementById('rcTitle');
-    const elStatus = document.getElementById('rcStatus');
-    const elQuote = document.getElementById('rcQuote');
-    const elCurrent = document.getElementById('rcCurrent');
-    const elTarget = document.getElementById('rcTarget');
-    const elFill = document.getElementById('rcFill');
-
     // Logic
     const isUnlocked = current >= target;
     const percentage = Math.min((current / target) * 100, 100);
 
-    // 1. Set Visuals
-    elIcon.innerHTML = `<svg viewBox="0 0 24 24"><path d="${iconPath}"/></svg>`;
-    elTitle.innerText = name;
-    
-    if (isUnlocked) {
-        container.classList.add('unlocked-mode');
-        elStatus.innerText = "ACQUIRED";
-        elQuote.innerHTML = getQuote(type, true); // Get Praise
-    } else {
-        container.classList.remove('unlocked-mode');
-        elStatus.innerText = "LOCKED";
-        elQuote.innerHTML = getQuote(type, false); // Get Insult
-    }
+    // Get Quote Helper
+    const getQuote = (t, unlock) => {
+        if(unlock) return "Accepted. You may continue.";
+        return "You are not there yet. Suffer more.";
+    };
 
-    // 2. Set Progress
-    elCurrent.innerText = current.toLocaleString(); // Adds commas (1,000)
-    elTarget.innerText = "/ " + target.toLocaleString();
-    elFill.style.width = percentage + "%";
+    // Inject HTML
+    container.innerHTML = `
+        <div class="rc-header">
+            <div class="rc-icon-large"><svg viewBox="0 0 24 24"><path d="${iconPath}"/></svg></div>
+            <div class="rc-meta">
+                <div class="rc-title">${name}</div>
+                <div class="rc-status" style="color:${isUnlocked ? '#00ff00' : '#666'}">${isUnlocked ? "ACQUIRED" : "LOCKED"}</div>
+            </div>
+        </div>
+        <div class="rc-quote">${getQuote(type, isUnlocked)}</div>
+        <div class="rc-progress-wrap">
+            <div class="rc-progress-labels"><span id="rcCurrent">${current.toLocaleString()}</span><span id="rcTarget">/ ${target.toLocaleString()}</span></div>
+            <div class="rc-track"><div class="rc-fill" style="width:${percentage}%"></div></div>
+        </div>
+        <button class="mob-action-btn" onclick="window.closeRewardCard()">ACKNOWLEDGE</button>
+    `;
 
-    // 3. Show
+    // Remove old classes just in case
+    container.classList.remove('unlocked-mode');
+    if (isUnlocked) container.classList.add('unlocked-mode');
+
     overlay.classList.remove('hidden');
 };
 
 window.closeRewardCard = function() {
-    document.getElementById('rewardCardOverlay').classList.add('hidden');
+    // Target the specific jailed overlay
+    const overlay = document.querySelector('#trophySectionJail #rewardCardOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
 };
 
 // Helper: Generates Flavor Text
