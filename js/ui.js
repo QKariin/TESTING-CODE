@@ -202,19 +202,21 @@ export function renderNews(posts) {
             else if (p.poster) raw = p.poster;
         }
 
-        // 3. WIX OPTIMIZATION LOGIC (Updated for Robustness)
-        if (typeof raw === 'string' && raw.startsWith("wix:image")) {
-            // Regex matches "wix:image://v1/" followed by the ID (everything up to / or #)
-            const match = raw.match(/wix:image:\/\/v1\/([^\/#]+)/);
-            if (match && match[1]) {
-                const id = match[1];
+        // 3. WIX OPTIMIZATION LOGIC
+        if (raw && raw.startsWith("wix:image")) {
+            try {
+                // Extract Filename (e.g. "8b3d8_image.jpg")
+                const parts = raw.split('/');
+                const fileName = parts[3].split('#')[0];
+
                 return {
                     // FAST: Ask Wix for a small, compressed version
-                    // We use the ID at the end to avoid "naming" issues the user mentioned
-                    thumb: `https://static.wixstatic.com/media/${id}/v1/fill/w_450,h_600,al_c,q_80,enc_auto/${id}`,
+                    thumb: `https://static.wixstatic.com/media/${fileName}/v1/fill/w_400,h_600,al_c,q_80/${fileName}`,
                     // HD: The original master file
-                    full: `https://static.wixstatic.com/media/${id}`
+                    full: `https://static.wixstatic.com/media/${fileName}`
                 };
+            } catch (e) {
+                return { thumb: "", full: "" };
             }
         }
 
