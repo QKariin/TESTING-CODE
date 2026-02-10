@@ -19,25 +19,57 @@ export async function renderChat(messages) {
     if (!messages) return;
     if (!deskChat && !mobChat) return; 
 
-    // 1. SORT
+    // 1. SORT ALL MESSAGES BY TIME
     const sortedMessages = [...messages].sort(
         (a, b) => new Date(a._createdDate) - new Date(b._createdDate)
     );
 
-    // 2. ANTI-BLINK
-    const currentJson = JSON.stringify(sortedMessages);
+    // 2. SEPARATE THE STREAMS (The Logic Fix)
+    
+    // Stream A: System Messages (For the Ticker)
+    const systemMessages = sortedMessages.filter(m => (m.sender || "").toLowerCase() === 'system');
+    
+    // Stream B: Conversation (For the Chat Window)
+    const conversationMessages = sortedMessages.filter(m => (m.sender || "").toLowerCase() !== 'system');
+
+    // 3. UPDATE TICKER (Top Bar)
+    // We take the ABSOLUTE LATEST system message, no matter how old it is vs conversation
+    if (systemMessages.length > 0) {
+        const latestSys = systemMessages[systemMessages.length - 1];
+        const txt = DOMPurify.sanitize(latestSys.message);
+        const tickerHtml = `<span style="color:#fff;">◈</span> ${txt}`;
+
+        if (ticker) {
+            ticker.classList.remove('hidden');
+            ticker.innerHTML = tickerHtml;
+            // Trigger Flash Animation
+            ticker.classList.remove('ticker-flash');
+            void ticker.offsetWidth;
+            ticker.classList.add('ticker-flash');
+        }
+        if (mobTicker) {
+            mobTicker.classList.remove('hidden');
+            mobTicker.innerHTML = tickerHtml;
+            // Trigger Flash Animation
+            mobTicker.classList.remove('ticker-flash');
+            void mobTicker.offsetWidth; 
+            mobTicker.classList.add('ticker-flash');
+        }
+    }
+
+    // 4. ANTI-BLINK (Check against Conversation Stream only)
+    const currentJson = JSON.stringify(conversationMessages);
     if (currentJson === lastChatJson) return;
 
-    // 3. SCROLL CHECK
+    // 5. SCROLL CHECK
     const dBox = document.getElementById('chatBox');
     const isAtBottom = dBox ? (dBox.scrollHeight - dBox.scrollTop - dBox.clientHeight < 150) : true;
     const wasInitialLoad = isInitialLoad;
 
-    // 4. NOTIFICATION SOUND
-    if (!isInitialLoad && sortedMessages.length > 0) {
-        const lastMsg = sortedMessages[sortedMessages.length - 1];
-        const sender = (lastMsg.sender || "").toLowerCase().trim();
-        if (lastMsg._id !== lastNotifiedMessageId && (sender === 'admin' || sender === 'queen')) {
+    // 6. NOTIFICATIONS (Sound)
+    if (!isInitialLoad && conversationMessages.length > 0) {
+        const lastMsg = conversationMessages[conversationMessages.length - 1];
+        if (lastMsg._id !== lastNotifiedMessageId) {
             triggerSound('msgSound');
             setLastNotifiedMessageId(lastMsg._id);
         }
@@ -46,55 +78,18 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    // 5. SLICING (Show last 20)
+    // 7. SLICING (Show Last X Conversation Items)
+    // We slice from conversationMessages, so even if there are 100 system logs, 
+    // we still show 20 real chat messages.
     const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit; 
-    const visibleMessages = sortedMessages.slice(-activeLimit);
+    const visibleMessages = conversationMessages.slice(-activeLimit);
 
-    // 6. RENDER LOOP
-    let messagesHtml = visibleMessages.map((m, index) => {
+    // 8. RENDER CHAT BUBBLES
+    let messagesHtml = visibleMessages.map((m) => {
         let txt = DOMPurify.sanitize(m.message);
         const senderLower = (m.sender || "").toLowerCase();
         const isMe = senderLower === 'user' || senderLower === 'slave';
-        const isSystem = senderLower === 'system';
-        const isLatest = index === visibleMessages.length - 1;
-
-        // --- TICKER LOGIC (The Fix) ---
-        // Only the VERY LATEST system message goes to the Ticker.
-        // Older ones stay in history as logs.
-        if (isSystem && isLatest) {
-            const tickerHtml = `<span style="color:#fff;">◈</span> ${txt}`;
-            if (ticker) {
-                ticker.classList.remove('hidden');
-                ticker.innerHTML = tickerHtml;
-                ticker.classList.remove('ticker-flash');
-                void ticker.offsetWidth;
-                ticker.classList.add('ticker-flash');
-            }
-            if (mobTicker) {
-                mobTicker.classList.remove('hidden');
-                mobTicker.innerHTML = tickerHtml;
-                mobTicker.classList.remove('ticker-flash');
-                void mobTicker.offsetWidth;
-                mobTicker.classList.add('ticker-flash');
-            }
-            // We return empty string here so it doesn't duplicate in the chat box
-            return ''; 
-        }
-
-        // --- HISTORY LOGS (Old System Messages) ---
-        if (isSystem) {
-            // Render as a small system log instead of a bubble
-            const isBad = txt.includes("FAILED") || txt.includes("Rejected") || txt.includes("PENALTY");
-            const color = isBad ? "#ff003c" : "#c5a059";
-            return `
-                <div class="msg-row system-row">
-                    <div class="msg-system" style="color:${color}; border-color:${color}40;">
-                        ${txt}
-                    </div>
-                </div>`;
-        }
-
-        // --- NORMAL CHAT BUBBLES ---
+        
         txt = txt.replace(/\n/g, "<br>");
         const timeStr = new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const msgClass = isMe ? 'm-slave' : 'm-queen';
@@ -114,15 +109,15 @@ export async function renderChat(messages) {
     }).join(''); 
 
     // LOAD MORE BUTTON
-    if (sortedMessages.length > visibleMessages.length) {
+    if (conversationMessages.length > visibleMessages.length) {
         messagesHtml = `<div style="width:100%; text-align:center; padding:10px;"><button onclick="window.loadMoreChat()" style="background:transparent; border:none; color:#666; font-size:0.6rem;">▲ LOAD HISTORY</button></div>` + messagesHtml;
     }
 
-    // 7. INJECT
+    // 9. INJECT
     if (deskChat) deskChat.innerHTML = messagesHtml;
     if (mobChat) mobChat.innerHTML = messagesHtml;
 
-    // 8. SCROLL
+    // 10. SCROLL
     if (wasInitialLoad || isAtBottom) forceBottom();
 }
 
