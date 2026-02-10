@@ -1406,57 +1406,13 @@ window.openHierarchyCard = function (rankName, currentStreak) {
 };
 
 // --- NEW: DESKTOP RECORD RENDERER ---
+// --- NEW: DESKTOP RECORD RENDERER ---
 window.renderDesktopRecord = function () {
-    const gridOkay = document.getElementById('gridOkay');
-    const gridFailed = document.getElementById('gridFailed');
-
-    if (!gridOkay && !gridFailed) return; // Not on desktop or elements missing
-
-    // 1. Get Data (Same source as mobile)
-    let historyItems = [];
-    if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
-        historyItems = galleryData;
-    } else if (userProfile && (userProfile.routineHistory || userProfile.routinehistory)) {
-        try { historyItems = JSON.parse(userProfile.routineHistory || userProfile.routinehistory); } catch (e) { }
-    }
-
-    // 2. Filter
-    // "Archive" (Okay) = Approved or Pending
-    // "Heap" (Failed) = Rejected
-    const okayItems = historyItems.filter(i => (i.status || "").toLowerCase() !== 'rejected');
-    const failedItems = historyItems.filter(i => (i.status || "").toLowerCase() === 'rejected');
-
-    // 3. Render Helper
-    const buildDesktopTile = (item) => {
-        let src = item.proof || item.url || item.image || "";
-        if (src.startsWith('wix:image')) {
-            try { src = `https://static.wixstatic.com/media/${src.split('/')[3].split('#')[0]}/v1/fill/w_150,h_150,q_70/thumb.jpg`; } catch (e) { }
-        }
-
-        const dateStr = new Date(item.date || item._createdDate || Date.now()).toLocaleDateString();
-        const status = (item.status || "PENDING").toUpperCase();
-        const color = status === 'APPROVED' ? '#00ff00' : (status === 'REJECTED' ? '#ff003c' : '#c5a059');
-
-        return `
-            <div class="mob-scroll-item" style="flex: 0 0 140px; height: 180px; margin-right: 15px; border: 1px solid #333; background: #050505; position: relative; overflow: hidden; border-radius: 4px;">
-                <img src="${src}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;">
-                <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); padding: 5px; border-top: 1px solid #333;">
-                    <div style="color: ${color}; font-family: 'Orbitron'; font-size: 0.6rem; margin-bottom: 2px;">${status}</div>
-                    <div style="color: #666; font-family: 'Cinzel'; font-size: 0.5rem;">${dateStr}</div>
-                </div>
-            </div>
-        `;
-    };
-
-    // 4. Inject
-    if (gridOkay) {
-        if (okayItems.length === 0) gridOkay.innerHTML = `<div style="color:#444; font-family:'Cinzel'; padding:20px;">NO RECORD FOUND</div>`;
-        else gridOkay.innerHTML = okayItems.map(buildDesktopTile).join('');
-    }
-
-    if (gridFailed) {
-        if (failedItems.length === 0) gridFailed.innerHTML = `<div style="color:#444; font-family:'Cinzel'; padding:20px;">CLEAN RECORD</div>`;
-        else gridFailed.innerHTML = failedItems.map(buildDesktopTile).join('');
+    // CRITICAL FIX: Redirect to the robust gallery.js renderer
+    if (window.renderGallery) {
+        window.renderGallery();
+    } else {
+        console.warn("renderGallery not found, skipping desktop record render.");
     }
 };
 
