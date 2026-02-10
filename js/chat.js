@@ -11,41 +11,34 @@ import { getSignedUrl } from './media.js';
 import { mediaType } from './media.js';
 
 export async function renderChat(messages) {
-    // 1. DEFINE TARGETS (Desktop & Mobile)
     const deskChat = document.getElementById('chatContent');
     const mobChat = document.getElementById('mob_chatContent');
     const ticker = document.getElementById('systemTicker');
     const mobTicker = document.getElementById('mob_systemTicker');
 
     if (!messages) return;
-    // We need at least one container to work
     if (!deskChat && !mobChat) return; 
 
-    // 2. SORTING
+    // 1. SORT
     const sortedMessages = [...messages].sort(
         (a, b) => new Date(a._createdDate) - new Date(b._createdDate)
     );
 
-    // 3. ANTI-BLINK (Prevent re-render if data hasn't changed)
+    // 2. ANTI-BLINK
     const currentJson = JSON.stringify(sortedMessages);
     if (currentJson === lastChatJson) return;
 
-    // Check scroll position (Desktop acts as the "Brain" for logic)
+    // 3. SCROLL CHECK
     const dBox = document.getElementById('chatBox');
-    const isAtBottom = dBox
-        ? (dBox.scrollHeight - dBox.scrollTop - dBox.clientHeight < 150)
-        : true;
-
+    const isAtBottom = dBox ? (dBox.scrollHeight - dBox.scrollTop - dBox.clientHeight < 150) : true;
     const wasInitialLoad = isInitialLoad;
 
-    // 4. NOTIFICATION LOGIC
+    // 4. NOTIFICATION SOUND
     if (!isInitialLoad && sortedMessages.length > 0) {
         const lastMsg = sortedMessages[sortedMessages.length - 1];
         const sender = (lastMsg.sender || "").toLowerCase().trim();
         if (lastMsg._id !== lastNotifiedMessageId && (sender === 'admin' || sender === 'queen')) {
             triggerSound('msgSound');
-            const glassOverlay = document.getElementById('specialGlassOverlay');
-            if (glassOverlay) glassOverlay.classList.add('active');
             setLastNotifiedMessageId(lastMsg._id);
         }
     }
@@ -53,32 +46,23 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    // 5. SMART SLICING
+    // 5. SLICING (Show last 20)
     const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit; 
     const visibleMessages = sortedMessages.slice(-activeLimit);
 
-    // PROXY URLS (Bytescale signing)
-    const signingPromises = visibleMessages.map(async (m) => {
-        if (m.message?.startsWith("https://upcdn.io/")) {
-            m.mediaUrl = await getSignedUrl(m.message);
-        }
-    });
-    await Promise.all(signingPromises);
-
-    // 6. RENDER HTML
-    let messagesHtml = visibleMessages.map(m => {
+    // 6. RENDER LOOP
+    let messagesHtml = visibleMessages.map((m, index) => {
         let txt = DOMPurify.sanitize(m.message);
         const senderLower = (m.sender || "").toLowerCase();
         const isMe = senderLower === 'user' || senderLower === 'slave';
-        
-        // --- INTERCEPTOR (SYSTEM MESSAGES TO TICKER) ---
         const isSystem = senderLower === 'system';
-        const isStatusUpdate = txt.includes("Verified") || txt.includes("Rejected") || txt.includes("FAILED") || txt.includes("earned");
+        const isLatest = index === visibleMessages.length - 1;
 
-        if (isSystem || isStatusUpdate) {
+        // --- TICKER LOGIC (The Fix) ---
+        // Only the VERY LATEST system message goes to the Ticker.
+        // Older ones stay in history as logs.
+        if (isSystem && isLatest) {
             const tickerHtml = `<span style="color:#fff;">◈</span> ${txt}`;
-            
-            // Update Desktop Ticker
             if (ticker) {
                 ticker.classList.remove('hidden');
                 ticker.innerHTML = tickerHtml;
@@ -86,7 +70,6 @@ export async function renderChat(messages) {
                 void ticker.offsetWidth;
                 ticker.classList.add('ticker-flash');
             }
-            // Update Mobile Ticker (CRITICAL MISSING PIECE)
             if (mobTicker) {
                 mobTicker.classList.remove('hidden');
                 mobTicker.innerHTML = tickerHtml;
@@ -94,76 +77,53 @@ export async function renderChat(messages) {
                 void mobTicker.offsetWidth;
                 mobTicker.classList.add('ticker-flash');
             }
-            return ''; // Remove from chat flow
+            // We return empty string here so it doesn't duplicate in the chat box
+            return ''; 
         }
 
-        txt = txt.replace(/\n/g, "<br>");
-
-        // TRIBUTE CARD
-        if (txt.includes("TRIBUTE:")) {
-            const lines = txt.split('<br>');
-            const item = lines.find(l => l.includes('ITEM:'))?.replace('ITEM:', '').trim() || "Tribute";
-            const cost = lines.find(l => l.includes('COST:'))?.replace('COST:', '').trim() || "0";
+        // --- HISTORY LOGS (Old System Messages) ---
+        if (isSystem) {
+            // Render as a small system log instead of a bubble
+            const isBad = txt.includes("FAILED") || txt.includes("Rejected") || txt.includes("PENALTY");
+            const color = isBad ? "#ff003c" : "#c5a059";
             return `
-                <div class="msg-row mr-out">
-                    <div class="tribute-card">
-                        <div class="tribute-card-title">Sacrifice Validated</div>
-                        <div style="color:white; font-family:'Orbitron'; font-size:1rem; margin:10px 0;">${item}</div>
-                        <div style="color:var(--gold); font-weight:bold;">${cost} 🪙</div>
+                <div class="msg-row system-row">
+                    <div class="msg-system" style="color:${color}; border-color:${color}40;">
+                        ${txt}
                     </div>
                 </div>`;
         }
 
-        // NORMAL MESSAGES
+        // --- NORMAL CHAT BUBBLES ---
+        txt = txt.replace(/\n/g, "<br>");
         const timeStr = new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const msgClass = isMe ? 'm-slave' : 'm-queen';
         let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
 
-        // MEDIA
+        // Media Handling
         if (m.message && (m.message.startsWith('http') || m.mediaUrl)) {
             const srcUrl = m.mediaUrl || m.message;
-            const isVideo = mediaType(srcUrl) === "video";
-            const isImage = mediaType(srcUrl) === "image";
-
-            if (isVideo) {
-                contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black; overflow:hidden;"><video src="${srcUrl}" controls style="max-width:100%; display:block;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', true)"></video></div>`;
-            } else if (isImage) {
-                contentHtml = `<div class="msg ${msgClass}" style="padding:0; overflow:hidden;"><img src="${srcUrl}" style="max-width:100%; display:block;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"></div>`;
-            } else if (m.message.startsWith('http')) {
-                contentHtml = `<div class="msg ${msgClass}"><a href="${srcUrl}" target="_blank">${srcUrl}</a></div>`;
+            if (mediaType(srcUrl) === "video") {
+                contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%;"></video></div>`;
+            } else if (mediaType(srcUrl) === "image") {
+                contentHtml = `<div class="msg ${msgClass}" style="padding:0;"><img src="${srcUrl}" style="max-width:100%;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"></div>`;
             }
-            return `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}"><div class="msg-col" style="justify-content:${isMe ? 'flex-end' : 'flex-start'};">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
-        } else {
-            return `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}"><div class="msg-col" style="align-items: ${isMe ? 'flex-end' : 'flex-start'}; width: 100%;"><div class="msg">${txt}</div><div class="msg-time">${timeStr}</div></div></div>`;
         }
+
+        return `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}"><div class="msg-col" style="align-items:${isMe?'flex-end':'flex-start'};">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
     }).join(''); 
 
     // LOAD MORE BUTTON
     if (sortedMessages.length > visibleMessages.length) {
-        const btnHtml = `<div style="width:100%; text-align:center; padding:10px 0;"><button onclick="window.loadMoreChat()" style="background:transparent; border:none; color:var(--gold); font-size:0.55rem; padding:10px;">▲ ACCESS ARCHIVE</button></div>`;
-        messagesHtml = btnHtml + messagesHtml;
+        messagesHtml = `<div style="width:100%; text-align:center; padding:10px;"><button onclick="window.loadMoreChat()" style="background:transparent; border:none; color:#666; font-size:0.6rem;">▲ LOAD HISTORY</button></div>` + messagesHtml;
     }
 
-    // 7. INJECT CONTENT INTO BOTH CONTAINERS
+    // 7. INJECT
     if (deskChat) deskChat.innerHTML = messagesHtml;
     if (mobChat) mobChat.innerHTML = messagesHtml;
 
-    // 8. ATTACH LISTENERS TO BOTH (The Missing Piece!)
-    // This ensures that when images load on Mobile OR Desktop, it scrolls down.
-    [deskChat, mobChat].forEach(container => {
-        if (!container) return;
-        container.querySelectorAll("img").forEach(img => {
-            img.addEventListener("load", () => setTimeout(forceBottom, 30));
-        });
-        container.querySelectorAll("video").forEach(v => {
-            v.addEventListener("loadedmetadata", () => setTimeout(forceBottom, 30));
-        });
-    });
-
-    // 9. SCROLL TO BOTTOM
-    if (wasInitialLoad || isAtBottom) {
-        forceBottom();
-    }
+    // 8. SCROLL
+    if (wasInitialLoad || isAtBottom) forceBottom();
 }
 
 export function forceBottom() {
