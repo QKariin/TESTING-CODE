@@ -7,19 +7,19 @@
 // main.js - FINAL COMPLETE VERSION (DESKTOP + MOBILE)
 
 import { CONFIG, URLS, LEVELS, FUNNY_SAYINGS, STREAM_PASSWORDS } from './config.js';
-import { 
-    gameStats, stats, userProfile, currentTask, taskDatabase, galleryData, 
-    pendingTaskState, taskJustFinished, cooldownInterval, ignoreBackendUpdates, 
-    lastChatJson, lastGalleryJson, isInitialLoad, chatLimit, lastNotifiedMessageId, 
-    historyLimit, pendingLimit, currentView, resetUiTimer, taskQueue, 
-    audioUnlocked, cmsHierarchyData, WISHLIST_ITEMS, lastWorshipTime, 
+import {
+    gameStats, stats, userProfile, currentTask, taskDatabase, galleryData,
+    pendingTaskState, taskJustFinished, cooldownInterval, ignoreBackendUpdates,
+    lastChatJson, lastGalleryJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
+    historyLimit, pendingLimit, currentView, resetUiTimer, taskQueue,
+    audioUnlocked, cmsHierarchyData, WISHLIST_ITEMS, lastWorshipTime,
     currentHistoryIndex, touchStartX, isLocked, COOLDOWN_MINUTES,
-    setGameStats, setStats, setUserProfile, setCurrentTask, setTaskDatabase, 
-    setGalleryData, setPendingTaskState, setTaskJustFinished, setIgnoreBackendUpdates, 
-    setLastChatJson, setLastGalleryJson, setIsInitialLoad, setChatLimit, 
-    setLastNotifiedMessageId, setHistoryLimit, setCurrentView, setResetUiTimer, 
-    setTaskQueue, setCmsHierarchyData, setWishlistItems, setLastWorshipTime, 
-    setCurrentHistoryIndex, setTouchStartX, setIsLocked, setCooldownInterval, setActiveRevealMap, setVaultItems, setCurrentLibraryMedia, setLibraryProgressIndex 
+    setGameStats, setStats, setUserProfile, setCurrentTask, setTaskDatabase,
+    setGalleryData, setPendingTaskState, setTaskJustFinished, setIgnoreBackendUpdates,
+    setLastChatJson, setLastGalleryJson, setIsInitialLoad, setChatLimit,
+    setLastNotifiedMessageId, setHistoryLimit, setCurrentView, setResetUiTimer,
+    setTaskQueue, setCmsHierarchyData, setWishlistItems, setLastWorshipTime,
+    setCurrentHistoryIndex, setTouchStartX, setIsLocked, setCooldownInterval, setActiveRevealMap, setVaultItems, setCurrentLibraryMedia, setLibraryProgressIndex
 } from './state.js';
 import { renderRewardGrid, runTargetingAnimation } from '../profile/kneeling/reward.js';
 import { triggerSound, migrateGameStatsToStats } from './utils.js';
@@ -33,9 +33,9 @@ import { Bridge } from './bridge.js';
 import { getOptimizedUrl } from './media.js';
 
 const KINK_LIST = [
-    "JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership", 
-    "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation", 
-    "Task submission", "CBT", "Training", "Power exchange", "Verbal domination", 
+    "JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership",
+    "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation",
+    "Task submission", "CBT", "Training", "Power exchange", "Verbal domination",
     "Protocol", "Obedience", "Psychological domination"
 ];
 
@@ -58,7 +58,7 @@ function checkRoutineStatus(lastUploadDateString) {
 
     const last = new Date(lastUploadDateString);
     const now = new Date();
-    
+
     // Define "Duty Start Time" for the current moment
     let dutyStart = new Date();
     dutyStart.setHours(6, 0, 0, 0); // Today at 06:00:00
@@ -76,15 +76,15 @@ function checkRoutineStatus(lastUploadDateString) {
 // REPLACE window.triggerPoverty WITH THIS JAILBREAK VERSION
 // ==========================
 
-window.triggerPoverty = function() {
+window.triggerPoverty = function () {
     const overlay = document.getElementById('povertyOverlay');
     const text = document.getElementById('povertyInsult');
-    
+
     // Pick random insult
     const insult = POVERTY_INSULTS[Math.floor(Math.random() * POVERTY_INSULTS.length)];
-    if(text) text.innerText = `"${insult}"`;
+    if (text) text.innerText = `"${insult}"`;
 
-    if(overlay) {
+    if (overlay) {
         // *** THE FIX: Move overlay to Body so it is never hidden by a parent view ***
         if (overlay.parentElement !== document.body) {
             document.body.appendChild(overlay);
@@ -95,9 +95,9 @@ window.triggerPoverty = function() {
     }
 };
 
-window.closePoverty = function() {
+window.closePoverty = function () {
     const overlay = document.getElementById('povertyOverlay');
-    if(overlay) {
+    if (overlay) {
         overlay.classList.add('hidden');
         overlay.style.display = 'none';
     }
@@ -107,44 +107,44 @@ window.closePoverty = function() {
 // REPLACE WINDOW.GOTOEXCHEQUER (Around Line 56) WITH THIS:
 // ==========================
 
-window.goToExchequer = function() {
+window.goToExchequer = function () {
     // 1. Close any blocking overlays (Poverty, Queen Menu)
     window.closePoverty();
-    if(window.closeQueenMenu) window.closeQueenMenu();
+    if (window.closeQueenMenu) window.closeQueenMenu();
 
     // 2. Switch to the Global View (Mobile) instead of 'buy' (Desktop)
     // This prevents the "Black Screen" crash
-    if(window.toggleMobileView) window.toggleMobileView('global');
+    if (window.toggleMobileView) window.toggleMobileView('global');
 
     // 3. Force open the Store Overlay immediately after switching views
     setTimeout(() => {
-        if(window.openExchequer) window.openExchequer();
+        if (window.openExchequer) window.openExchequer();
     }, 200);
 };
 
 // --- 2. CRITICAL UI FUNCTIONS ---
 
-window.toggleTaskDetails = function(forceOpen = null) {
+window.toggleTaskDetails = function (forceOpen = null) {
     if (window.event) window.event.stopPropagation();
     const panel = document.getElementById('taskDetailPanel');
-    const link = document.querySelector('.see-task-link'); 
-    const chatBox = document.getElementById('chatBox'); 
+    const link = document.querySelector('.see-task-link');
+    const chatBox = document.getElementById('chatBox');
     if (!panel) return;
     const isOpen = panel.classList.contains('open');
     let shouldOpen = (forceOpen === true) ? true : (forceOpen === false ? false : !isOpen);
 
     if (shouldOpen) {
         panel.classList.add('open');
-        if(chatBox) chatBox.classList.add('focused-task');
-        if(link) { link.innerHTML = "▲ HIDE DIRECTIVE ▲"; link.style.opacity = "1"; }
+        if (chatBox) chatBox.classList.add('focused-task');
+        if (link) { link.innerHTML = "▲ HIDE DIRECTIVE ▲"; link.style.opacity = "1"; }
     } else {
         panel.classList.remove('open');
-        if(chatBox) chatBox.classList.remove('focused-task');
-        if(link) { link.innerHTML = "▼ SEE DIRECTIVE ▼"; link.style.opacity = "1"; }
+        if (chatBox) chatBox.classList.remove('focused-task');
+        if (link) { link.innerHTML = "▼ SEE DIRECTIVE ▼"; link.style.opacity = "1"; }
     }
 };
 
-window.updateTaskUIState = function(isActive) {
+window.updateTaskUIState = function (isActive) {
     const statusText = document.getElementById('mainStatusText');
     const idleMsg = document.getElementById('idleMessage');
     const timerRow = document.getElementById('activeTimerRow');
@@ -167,7 +167,7 @@ window.updateTaskUIState = function(isActive) {
     }
 };
 
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
     const card = document.getElementById('taskCard');
     const panel = document.getElementById('taskDetailPanel');
     if (event.target.closest('.see-task-link')) return;
@@ -192,14 +192,14 @@ document.addEventListener('click', () => {
     }
 }, { once: true });
 
-const resizer = new ResizeObserver(() => { 
-    if(window.parent) window.parent.postMessage({ iframeHeight: document.body.scrollHeight }, '*'); 
+const resizer = new ResizeObserver(() => {
+    if (window.parent) window.parent.postMessage({ iframeHeight: document.body.scrollHeight }, '*');
 });
 resizer.observe(document.body);
 
 function initDomProfile() {
     const frame = document.getElementById('twitchFrame');
-    if(frame && !frame.src) {
+    if (frame && !frame.src) {
         const parents = ["qkarin.com", "www.qkarin.com", "entire-ecosystem.vercel.app", "html-components.wixusercontent.com", "filesusr.com", "editor.wix.com", "manage.wix.com", "localhost"];
         let parentString = "";
         parents.forEach(p => parentString += `&parent=${p}`);
@@ -212,8 +212,8 @@ initDomProfile();
 
 Bridge.listen((data) => {
     const ignoreList = ["CHAT_ECHO", "UPDATE_FULL_DATA", "UPDATE_DOM_STATUS", "instantUpdate", "instantReviewSuccess"];
-    if (ignoreList.includes(data.type)) return; 
-    window.postMessage(data, "*"); 
+    if (ignoreList.includes(data.type)) return;
+    window.postMessage(data, "*");
 });
 
 // =========================================
@@ -234,7 +234,7 @@ let selectedRoutineValue = ""; // <--- NEW VARIABLE TO STORE SELECTION
 
 // 1. NAVIGATION
 
-window.openLobby = function() {
+window.openLobby = function () {
 
     document.getElementById('lobbyOverlay').classList.remove('hidden');
 
@@ -244,7 +244,7 @@ window.openLobby = function() {
 
 
 
-window.closeLobby = function() {
+window.closeLobby = function () {
 
     document.getElementById('lobbyOverlay').classList.add('hidden');
 
@@ -252,7 +252,7 @@ window.closeLobby = function() {
 
 
 
-window.backToLobbyMenu = function() {
+window.backToLobbyMenu = function () {
 
     document.getElementById('lobbyMenu').classList.remove('hidden');
 
@@ -268,11 +268,11 @@ let selectedKinks = new Set(); // Store selections
 
 
 
-window.showLobbyAction = function(type) {
+window.showLobbyAction = function (type) {
 
     currentActionType = type;
 
-    
+
 
     const prompt = document.getElementById('lobbyPrompt');
 
@@ -296,9 +296,9 @@ window.showLobbyAction = function(type) {
 
     routineArea.classList.add('hidden');
 
-    if(kinkArea) kinkArea.classList.add('hidden');
+    if (kinkArea) kinkArea.classList.add('hidden');
 
-    
+
 
     // Switch View
 
@@ -316,7 +316,7 @@ window.showLobbyAction = function(type) {
 
         currentActionCost = 100;
 
-    } 
+    }
 
     else if (type === 'photo') {
 
@@ -348,7 +348,7 @@ window.showLobbyAction = function(type) {
 
         window.checkRoutineDropdown();
 
-        return; 
+        return;
 
     }
 
@@ -358,7 +358,7 @@ window.showLobbyAction = function(type) {
 
         prompt.innerText = "Select your perversions.";
 
-        if(kinkArea) {
+        if (kinkArea) {
 
             kinkArea.classList.remove('hidden');
 
@@ -384,7 +384,7 @@ function renderKinkGrid() {
 
     const grid = document.getElementById('kinkGrid');
 
-    if(!grid) return;
+    if (!grid) return;
 
     grid.innerHTML = ""; // Clear
 
@@ -412,7 +412,7 @@ function renderKinkGrid() {
 
 // NEW: TOGGLE SELECTION
 
-window.toggleKinkSelection = function(el, value) {
+window.toggleKinkSelection = function (el, value) {
 
     if (selectedKinks.has(value)) {
 
@@ -428,7 +428,7 @@ window.toggleKinkSelection = function(el, value) {
 
     }
 
-    
+
 
     // Update Price (100 per kink)
 
@@ -442,19 +442,19 @@ window.toggleKinkSelection = function(el, value) {
 
 // 3. HANDLE ROUTINE TILE SELECTION (FIXED)
 
-window.selectRoutineItem = function(el, value) {
+window.selectRoutineItem = function (el, value) {
 
     // 1. Visually deselect all others
 
     document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('selected'));
 
-    
+
 
     // 2. Select clicked
 
     el.classList.add('selected');
 
-    
+
 
     // 3. Save Value to Variable (Not Element)
 
@@ -468,7 +468,7 @@ window.selectRoutineItem = function(el, value) {
 
     const costDisplay = document.getElementById('lobbyCostDisplay');
 
-    
+
 
     if (value === 'custom') {
 
@@ -484,7 +484,7 @@ window.selectRoutineItem = function(el, value) {
 
     }
 
-    
+
 
     costDisplay.innerText = currentActionCost;
 
@@ -494,7 +494,7 @@ window.selectRoutineItem = function(el, value) {
 
 // 4. EXECUTE ACTION (FIXED ROUTINE SELECTION)
 
-window.confirmLobbyAction = function() {
+window.confirmLobbyAction = function () {
 
     // 1. Check Funds
 
@@ -522,9 +522,9 @@ window.confirmLobbyAction = function() {
 
         // USE THE GLOBAL VARIABLE FROM TILE SELECTION
 
-        let taskName = selectedRoutineValue; 
+        let taskName = selectedRoutineValue;
 
-        
+
 
         // If Custom, read the input box
 
@@ -534,11 +534,11 @@ window.confirmLobbyAction = function() {
 
         }
 
-        
+
 
         // If still empty, stop here
 
-        if(!taskName) return;
+        if (!taskName) return;
 
 
 
@@ -550,11 +550,11 @@ window.confirmLobbyAction = function() {
 
         // Send to Wix
 
-        window.parent.postMessage({ 
+        window.parent.postMessage({
 
-            type: "UPDATE_CMS_FIELD", 
+            type: "UPDATE_CMS_FIELD",
 
-            field: "routine", 
+            field: "routine",
 
             value: taskName,
 
@@ -564,37 +564,37 @@ window.confirmLobbyAction = function() {
 
         }, "*");
 
-        
+
 
         // Immediate UI Update
 
         userProfile.routine = taskName; // Update memory
 
-        
+
 
         const btn = document.getElementById('btnDailyRoutine');
 
         const noMsg = document.getElementById('noRoutineMsg');
 
-        
 
-        if(btn) {
+
+        if (btn) {
 
             btn.classList.remove('hidden');
 
             // Update button text inside the Queen Menu
 
-            const txt = document.getElementById('routineBtnText'); 
+            const txt = document.getElementById('routineBtnText');
 
-            if(txt) txt.innerText = "SUBMIT: " + taskName.toUpperCase();
+            if (txt) txt.innerText = "SUBMIT: " + taskName.toUpperCase();
 
         }
 
-        if(noMsg) noMsg.style.display = 'none';
+        if (noMsg) noMsg.style.display = 'none';
 
-    } 
+    }
 
-    
+
 
     // --- B. PHOTO LOGIC ---
 
@@ -610,25 +610,25 @@ window.confirmLobbyAction = function() {
 
 
 
-            window.parent.postMessage({ 
+            window.parent.postMessage({
 
-                type: "PROCESS_PAYMENT", 
+                type: "PROCESS_PAYMENT",
 
-                cost: 500, 
+                cost: 500,
 
-                note: "Photo Change" 
+                note: "Photo Change"
 
             }, "*");
 
-            
 
-            if(window.handleProfileUpload) window.handleProfileUpload(fileInput);
+
+            if (window.handleProfileUpload) window.handleProfileUpload(fileInput);
 
         } else { return; }
 
     }
 
-    
+
 
     // --- C. NAME LOGIC ---
 
@@ -636,9 +636,9 @@ window.confirmLobbyAction = function() {
 
         const text = document.getElementById('lobbyInputText').value;
 
-        if(!text) return;
+        if (!text) return;
 
-        
+
 
         notifyTitle = "IDENTITY REWRITTEN";
 
@@ -646,11 +646,11 @@ window.confirmLobbyAction = function() {
 
 
 
-        window.parent.postMessage({ 
+        window.parent.postMessage({
 
-            type: "UPDATE_CMS_FIELD", 
+            type: "UPDATE_CMS_FIELD",
 
-            field: "title_fld", 
+            field: "title_fld",
 
             value: text,
 
@@ -668,15 +668,15 @@ window.confirmLobbyAction = function() {
 
         const halo = document.getElementById('mob_slaveName'); // Halo uses same ID usually
 
-        if(el) el.innerText = text;
+        if (el) el.innerText = text;
 
-        if(halo) halo.innerText = text;
+        if (halo) halo.innerText = text;
 
         userProfile.name = text;
 
     }
 
-    
+
 
     // --- D. KINKS LOGIC ---
 
@@ -686,7 +686,7 @@ window.confirmLobbyAction = function() {
 
         if (typeof selectedKinks === 'undefined' || selectedKinks.size === 0) return;
 
-        
+
 
         const kinkString = Array.from(selectedKinks).join(", ");
 
@@ -696,11 +696,11 @@ window.confirmLobbyAction = function() {
 
 
 
-        window.parent.postMessage({ 
+        window.parent.postMessage({
 
-            type: "UPDATE_CMS_FIELD", 
+            type: "UPDATE_CMS_FIELD",
 
-            field: "kink", 
+            field: "kink",
 
             value: kinkString,
 
@@ -720,7 +720,7 @@ window.confirmLobbyAction = function() {
 
         const text = document.getElementById('lobbyInputText').value;
 
-        if(!text) return;
+        if (!text) return;
 
 
 
@@ -730,15 +730,15 @@ window.confirmLobbyAction = function() {
 
 
 
-        window.parent.postMessage({ 
+        window.parent.postMessage({
 
-            type: "PURCHASE_ITEM", 
+            type: "PURCHASE_ITEM",
 
-            itemName: currentActionType.toUpperCase() + ": " + text, 
+            itemName: currentActionType.toUpperCase() + ": " + text,
 
-            cost: currentActionCost, 
+            cost: currentActionCost,
 
-            messageToDom: "Limits: " + text 
+            messageToDom: "Limits: " + text
 
         }, "*");
 
@@ -750,11 +750,11 @@ window.confirmLobbyAction = function() {
 
     window.closeLobby();
 
-    
+
 
     // Trigger the Green Notification
 
-    if(window.showSystemNotification) {
+    if (window.showSystemNotification) {
 
         window.showSystemNotification(notifyTitle, notifyText);
 
@@ -767,17 +767,17 @@ window.confirmLobbyAction = function() {
 // --- NOTIFICATION SYSTEM ---
 
 // --- NOTIFICATION SYSTEM (Green = Reward, Red = Penalty) ---
-window.showSystemNotification = function(title, detail, isPenalty = false) {
+window.showSystemNotification = function (title, detail, isPenalty = false) {
     const overlay = document.getElementById('celebrationOverlay');
-    if(!overlay) return;
+    if (!overlay) return;
 
     // 1. Determine Style Class
     // If penalty, we add 'angry'. If not, just standard glass-card.
     const containerClass = isPenalty ? "glass-card angry" : "glass-card";
-    
+
     // 2. Build Internal HTML based on type
     let contentHtml = "";
-    
+
     if (isPenalty) {
         // ANGRY RED LAYOUT
         contentHtml = `
@@ -798,7 +798,7 @@ window.showSystemNotification = function(title, detail, isPenalty = false) {
 
     // 3. Inject and Animate
     overlay.innerHTML = `<div class="${containerClass}" style="text-align:center; padding: 30px; min-width: 280px;">${contentHtml}</div>`;
-    
+
     overlay.style.pointerEvents = "auto";
     overlay.style.opacity = '1';
 
@@ -833,7 +833,7 @@ window.addEventListener("message", (event) => {
         }
         if (data.type === "INIT_WISHLIST" || data.wishlist) {
             setWishlistItems(data.wishlist || []);
-            window.WISHLIST_ITEMS = data.wishlist || []; 
+            window.WISHLIST_ITEMS = data.wishlist || [];
             renderWishlist();
         }
 
@@ -842,25 +842,25 @@ window.addEventListener("message", (event) => {
             const badge = document.getElementById('chatStatusBadge');
             const ring = document.getElementById('chatStatusRing');
             const domBadge = document.getElementById('domStatusBadge');
-            
-            if(badge) { 
-                badge.innerHTML = data.online ? "ONLINE" : data.text; 
-                badge.className = data.online ? "chat-status-text chat-online" : "chat-status-text"; 
+
+            if (badge) {
+                badge.innerHTML = data.online ? "ONLINE" : data.text;
+                badge.className = data.online ? "chat-status-text chat-online" : "chat-status-text";
             }
-            if(ring) ring.className = data.online ? "dom-status-ring ring-active" : "dom-status-ring ring-inactive";
-            if(domBadge) domBadge.className = data.online ? "dom-status status-online" : "dom-status"; 
+            if (ring) ring.className = data.online ? "dom-status-ring ring-active" : "dom-status-ring ring-inactive";
+            if (domBadge) domBadge.className = data.online ? "dom-status status-online" : "dom-status";
 
             const mobText = document.getElementById('mobChatStatusText');
             const mobDot = document.getElementById('mobChatOnlineDot');
-            const hudDot = document.getElementById('hudDomStatus'); 
+            const hudDot = document.getElementById('hudDomStatus');
 
-            if(mobText) {
+            if (mobText) {
                 mobText.innerText = data.online ? "ONLINE NOW" : data.text.toUpperCase();
                 mobText.style.color = data.online ? "#00ff00" : "#888";
             }
-            
-            if(mobDot) mobDot.className = data.online ? 'status-dot online' : 'status-dot';
-            if(hudDot) hudDot.className = data.online ? 'hud-status-dot online' : 'hud-status-dot offline';
+
+            if (mobDot) mobDot.className = data.online ? 'status-dot online' : 'status-dot';
+            if (hudDot) hudDot.className = data.online ? 'hud-status-dot online' : 'hud-status-dot offline';
         }
 
         if (data.type === "UPDATE_Q_FEED") {
@@ -875,7 +875,7 @@ window.addEventListener("message", (event) => {
 
         // 4. MAIN DATA SYNC (Profile & Stats)
         const payload = data.profile || data.galleryData || data.pendingState ? data : (data.type === "UPDATE_FULL_DATA" ? data : null);
-        
+
         if (payload) {
             // A. GALLERY
             if (payload.galleryData) {
@@ -889,15 +889,15 @@ window.addEventListener("message", (event) => {
 
             // B. PROFILE
             if (data.profile && !ignoreBackendUpdates) {
-                
+
                 // --- TRUTH CHECK (Routine Date) ---
                 let confirmedDate = data.profile.lastRoutine || "";
-                
+
                 // Check specific routineHistory field
                 if (data.profile.routineHistory || data.profile.routinehistory) {
                     let rh = data.profile.routineHistory || data.profile.routinehistory;
                     if (typeof rh === 'string' && (rh.startsWith('[') || rh.startsWith('{'))) {
-                        try { rh = JSON.parse(rh); } catch(e){}
+                        try { rh = JSON.parse(rh); } catch (e) { }
                     }
                     if (Array.isArray(rh) && rh.length > 0) {
                         rh.sort((a, b) => new Date(b.date || b._createdDate || b) - new Date(a.date || a._createdDate || a));
@@ -906,7 +906,7 @@ window.addEventListener("message", (event) => {
                         if (!confirmedDate || new Date(rDate) > new Date(confirmedDate)) confirmedDate = rDate;
                     }
                 }
-                
+
                 // Protect Local Updates
                 if (typeof userProfile !== 'undefined' && userProfile.lastRoutine) {
                     const localTime = new Date(userProfile.lastRoutine).getTime();
@@ -919,7 +919,7 @@ window.addEventListener("message", (event) => {
                 // This ensures the Hierarchy Modal can read the progress
                 setGameStats({
                     ...data.profile, // Load everything
-                    
+
                     // Explicit Mappings for Hierarchy Logic
                     total_coins_spent: data.profile.tributetotal || 0, // NEW CMS FIELD
                     routine_streak: data.profile.routinestreak || 0,   // NEW CMS FIELD
@@ -932,21 +932,21 @@ window.addEventListener("message", (event) => {
                     hierarchy: data.profile.hierarchy || "HallBoy",
                     memberId: data.profile.memberId || "",
                     joined: data.profile.joined,
-                    profilePicture: data.profile.profilePicture, 
+                    profilePicture: data.profile.profilePicture,
                     routine: data.profile.routine,
                     kneelHistory: data.profile.kneelHistory,
                     lastRoutine: confirmedDate,
                     routineHistory: data.profile.routineHistory // Save full history for display
                 });
-                
+
                 if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
-                
+
                 if (data.profile.activeRevealMap) {
-                    try { setActiveRevealMap(JSON.parse(data.profile.activeRevealMap)); } catch(e) { setActiveRevealMap([]); }
+                    try { setActiveRevealMap(JSON.parse(data.profile.activeRevealMap)); } catch (e) { setActiveRevealMap([]); }
                 }
-                
+
                 if (data.profile.rewardVault) {
-                    try { setVaultItems(JSON.parse(data.profile.rewardVault)); } catch(e) { setVaultItems([]); }
+                    try { setVaultItems(JSON.parse(data.profile.rewardVault)); } catch (e) { setVaultItems([]); }
                 }
 
                 setLibraryProgressIndex(data.profile.libraryProgressIndex || 1);
@@ -955,44 +955,44 @@ window.addEventListener("message", (event) => {
                 renderRewardGrid();
                 if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
                 setStats(migrateGameStatsToStats(data.profile, stats));
-                
+
                 // Profile Pic Sync
-                if(data.profile.profilePicture) {
+                if (data.profile.profilePicture) {
                     const rawUrl = data.profile.profilePicture;
                     const picEl = document.getElementById('profilePic');
-                    if(picEl) picEl.src = getOptimizedUrl(rawUrl, 150);
-        
+                    if (picEl) picEl.src = getOptimizedUrl(rawUrl, 150);
+
                     const mobPic = document.getElementById('mob_profilePic');
-                    const mobBg = document.getElementById('mob_bgPic');       
-                    const hudPic = document.getElementById('hudSlavePic'); 
-                    
+                    const mobBg = document.getElementById('mob_bgPic');
+                    const hudPic = document.getElementById('hudSlavePic');
+
                     let finalUrl = rawUrl;
                     if (rawUrl.startsWith("wix:image")) {
                         const uri = rawUrl.split('/')[3].split('#')[0];
                         finalUrl = `https://static.wixstatic.com/media/${uri}`;
                     }
-                    if(mobPic) mobPic.src = finalUrl;
-                    if(mobBg) mobBg.src = finalUrl;
-                    if(hudPic) hudPic.src = finalUrl;
-                    
-                    if(typeof userProfile !== 'undefined') userProfile.profilePicture = rawUrl;
+                    if (mobPic) mobPic.src = finalUrl;
+                    if (mobBg) mobBg.src = finalUrl;
+                    if (hudPic) hudPic.src = finalUrl;
+
+                    if (typeof userProfile !== 'undefined') userProfile.profilePicture = rawUrl;
                 }
-                updateStats(); 
-                
+                updateStats();
+
                 // TRIGGER UI REFRESH
-                if(window.syncMobileDashboard) window.syncMobileDashboard();
+                if (window.syncMobileDashboard) window.syncMobileDashboard();
             }
 
             if (data.type === "INSTANT_REVEAL_SYNC") {
                 if (data.currentLibraryMedia) setCurrentLibraryMedia(data.currentLibraryMedia);
-                renderRewardGrid(); 
+                renderRewardGrid();
                 setTimeout(() => {
                     const winnerId = data.activeRevealMap[data.activeRevealMap.length - 1];
                     runTargetingAnimation(winnerId, () => {
                         setActiveRevealMap(data.activeRevealMap || []);
-                        renderRewardGrid(); 
+                        renderRewardGrid();
                     });
-                }, 50); 
+                }, 50);
             }
 
             if (payload.galleryData) {
@@ -1015,7 +1015,7 @@ window.addEventListener("message", (event) => {
                     } else if (!resetUiTimer) {
                         window.updateTaskUIState(false);
                         const rt = document.getElementById('readyText');
-                        if(rt) rt.innerText = "AWAITING ORDERS";
+                        if (rt) rt.innerText = "AWAITING ORDERS";
                     }
                 }
             }
@@ -1032,11 +1032,11 @@ window.addEventListener("message", (event) => {
                 });
             });
         }
-    } catch(err) { console.error("Main error:", err); }
+    } catch (err) { console.error("Main error:", err); }
 });
 
 // --- EXPORTS & HELPERS ---
-window.handleUploadStart = function(inputElement) {
+window.handleUploadStart = function (inputElement) {
     if (inputElement.files && inputElement.files.length > 0) {
         const btn = document.getElementById('btnUpload');
         if (btn) { btn.innerHTML = '...'; btn.style.background = '#333'; btn.style.color = '#ffd700'; btn.style.cursor = 'wait'; }
@@ -1081,7 +1081,7 @@ function updateStats() {
     const coinsEl = document.getElementById('coins');
     const pointsEl = document.getElementById('points');
 
-    if (!subName || !userProfile || !gameStats) return; 
+    if (!subName || !userProfile || !gameStats) return;
 
     // Update Basic Desktop Elements
     subName.textContent = userProfile.name || "Slave";
@@ -1104,7 +1104,7 @@ function updateStats() {
     const mobName = document.getElementById('mob_slaveName');
     const mobRank = document.getElementById('mob_rankStamp');
     const mobPic = document.getElementById('mob_profilePic'); // Center Hexagon
-    
+
     // Header Stats (Visible)
     const mobPoints = document.getElementById('mobPoints');
     const mobCoins = document.getElementById('mobCoins');
@@ -1121,7 +1121,7 @@ function updateStats() {
     // FILL MOBILE TEXT DATA
     if (mobName) mobName.innerText = userProfile.name || "SLAVE";
     if (mobRank) mobRank.innerText = userProfile.hierarchy || "INITIATE";
-    
+
     if (mobPoints) mobPoints.innerText = gameStats.points || 0;
     if (mobCoins) mobCoins.innerText = gameStats.coins || 0;
 
@@ -1131,13 +1131,13 @@ function updateStats() {
 
     // Daily Duties Logic
     const dailyKneels = (gameStats.kneelHistory ? JSON.parse(gameStats.kneelHistory).hours?.length || 0 : 0);
-    if (mobDailyKneels) mobDailyKneels.innerText = dailyKneels  + " / 8";
+    if (mobDailyKneels) mobDailyKneels.innerText = dailyKneels + " / 8";
 
     if (kneelDailyFill) {
         const percent = Math.min((dailyKneels / 8) * 100, 100);
         kneelDailyFill.style.width = percent + "%";
     }
-    
+
     // --- [FIX] PROFILE PICTURE LOGIC (SYNC ALL 3 IMAGES) ---
     if (userProfile.profilePicture) {
         let rawUrl = userProfile.profilePicture;
@@ -1151,7 +1151,7 @@ function updateStats() {
 
         // 1. Update the Big Hexagon (Dashboard Center)
         if (mobPic) mobPic.src = finalUrl;
-        
+
         // 2. Update the Background Blur
         const mobBg = document.getElementById('mob_bgPic');
         if (mobBg) mobBg.src = finalUrl;
@@ -1167,7 +1167,7 @@ function updateStats() {
 
     // --- GRID SYNC (TRUST THE BACKEND) ---
     const grid = document.getElementById('mob_streakGrid');
-    if(grid) {
+    if (grid) {
         grid.innerHTML = '';
         let loggedHours = [];
         const now = new Date();
@@ -1176,20 +1176,20 @@ function updateStats() {
             try {
                 const hObj = JSON.parse(userProfile.kneelHistory);
                 loggedHours = hObj.hours || [];
-            } catch(e) { console.error("Grid parse error", e); }
+            } catch (e) { console.error("Grid parse error", e); }
         }
 
-        for(let i=0; i<24; i++) {
+        for (let i = 0; i < 24; i++) {
             const sq = document.createElement('div');
             sq.className = 'streak-sq';
-            
+
             // 1. Is this hour logged? (Gold)
             if (loggedHours.includes(i)) {
                 sq.classList.add('active');
             }
             // 2. Has this hour passed? (Dim/Dark)
             else if (i < now.getHours()) {
-                sq.style.opacity = "0.3"; 
+                sq.style.opacity = "0.3";
                 sq.style.borderColor = "#333";
             }
             // 3. Future hours are normal style
@@ -1200,22 +1200,22 @@ function updateStats() {
     // 4. DESKTOP EXTRAS (Progress Bar etc)
     const sinceEl = document.getElementById('slaveSinceDate');
     if (sinceEl && userProfile.joined) {
-         try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch(e) { sinceEl.textContent = "--/--/--"; }
+        try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch (e) { sinceEl.textContent = "--/--/--"; }
     }
 
     if (typeof LEVELS !== 'undefined' && LEVELS.length > 0) {
         let nextLevel = LEVELS.find(l => l.min > gameStats.points) || LEVELS[LEVELS.length - 1];
         const nln = document.getElementById('nextLevelName');
         const pnd = document.getElementById('pointsNeeded');
-        
-        if(nln) nln.innerText = nextLevel.name;
-        if(pnd) pnd.innerText = Math.max(0, nextLevel.min - gameStats.points) + " to go";
-        
+
+        if (nln) nln.innerText = nextLevel.name;
+        if (pnd) pnd.innerText = Math.max(0, nextLevel.min - gameStats.points) + " to go";
+
         const pb = document.getElementById('progressBar');
         const progress = ((gameStats.points - 0) / (nextLevel.min - 0)) * 100;
         if (pb) pb.style.width = Math.min(100, Math.max(0, progress)) + "%";
     }
-    
+
     updateKneelingStatus();
 }
 
@@ -1234,37 +1234,37 @@ const ICONS = {
 const REWARD_DATA = {
     // 1. THE HIERARCHY (Main Event)
     ranks: [
-        { 
+        {
             name: "HALL BOY", icon: ICONS.rank, tax: 20,
             req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
             benefits: ["Silence is mandatory.", "Access to The Terminal."]
         },
-        { 
+        {
             name: "FOOTMAN", icon: ICONS.rank, tax: 15,
             req: { tasks: 5, kneels: 10, points: 500, spent: 1000, streak: 0 },
             benefits: ["Identity Grant: You may have a face.", "Protocol Alpha: Daily Routine access.", "Voice cost reduced to 15."]
         },
-        { 
+        {
             name: "SILVERMAN", icon: ICONS.rank, tax: 10,
             req: { tasks: 25, kneels: 65, points: 2500, spent: 10000, streak: 3 },
             benefits: ["Visual Tribute: Send PHOTOS.", "Gilded Chains: Pending tasks Gold.", "Voice cost reduced to 10."]
         },
-        { 
+        {
             name: "BUTLER", icon: ICONS.rank, tax: 5,
             req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 7 },
             benefits: ["Kinetic Submission: Send VIDEOS.", "Forbidden Knowledge: Access Vault.", "Voice cost reduced to 5."]
         },
-        { 
+        {
             name: "CHAMBERLAIN", icon: ICONS.rank, tax: 0,
             req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 14 },
             benefits: ["Royal Mercy: Penalties halved.", "The Free Tongue: Tax removed.", "Priority status."]
         },
-        { 
+        {
             name: "SECRETARY", icon: ICONS.rank, tax: 0,
             req: { tasks: 500, kneels: 1500, points: 100000, spent: 500000, streak: 30 },
             benefits: ["The Golden Voice.", "System Command.", "Direct Throne Line."]
         },
-        { 
+        {
             name: "QUEEN'S CHAMPION", icon: ICONS.rank, tax: 0,
             req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 60 },
             benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."]
@@ -1296,19 +1296,19 @@ const REWARD_DATA = {
 };
 
 // --- OPEN HIERARCHY MODAL (Targeting the Jail) ---
-window.openHierarchyCard = function(rankName, currentStreak) {
+window.openHierarchyCard = function (rankName, currentStreak) {
     const rankObj = REWARD_DATA.ranks.find(r => r.name === rankName);
     if (!rankObj) return;
 
     // FIX: Look specifically inside the Trophy Jail
     const overlay = document.querySelector('#trophySectionJail #rewardCardOverlay');
     if (!overlay) {
-        console.error("Jailed overlay not found! Check HTML."); 
-        return; 
+        console.error("Jailed overlay not found! Check HTML.");
+        return;
     }
-    
+
     const container = overlay.querySelector('.mob-reward-card');
-    
+
     // 1. Get Stats
     const stats = {
         tasks: gameStats.taskdom_completed || 0,
@@ -1320,11 +1320,11 @@ window.openHierarchyCard = function(rankName, currentStreak) {
 
     // 2. Build Row Helper
     const buildRow = (label, curr, target, icon) => {
-        if (target <= 0) return ""; 
+        if (target <= 0) return "";
         const pct = Math.min((curr / target) * 100, 100);
         const isDone = curr >= target;
-        const color = isDone ? "#00ff00" : "#c5a059"; 
-        
+        const color = isDone ? "#00ff00" : "#c5a059";
+
         return `
         <div style="margin-bottom:12px;">
             <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${isDone ? '#fff' : '#888'};">
@@ -1366,12 +1366,12 @@ window.openHierarchyCard = function(rankName, currentStreak) {
     overlay.classList.remove('hidden');
 };
 
-window.renderRewards = function() {
+window.renderRewards = function () {
     // 1. GET DATA
     const currentRank = (userProfile?.hierarchy || "Hall Boy").toUpperCase();
     const totalTasks = gameStats.taskdom_completed || 0;
     const totalKneels = gameStats.kneelCount || 0;
-    const totalSpent = gameStats.total_coins_spent || 0; 
+    const totalSpent = gameStats.total_coins_spent || 0;
 
     // ============================================================
     // PART A: DAILY DISCIPLINE (The Streak)
@@ -1381,14 +1381,14 @@ window.renderRewards = function() {
 
     // 1. DATA SOURCE: Prefer specific history, fallback to gallery
     let rawHistory = userProfile.routineHistory || userProfile.routinehistory;
-    
+
     if (rawHistory) {
         if (typeof rawHistory === 'string') {
-            try { routinePhotos = JSON.parse(rawHistory); } catch(e) { routinePhotos = []; }
+            try { routinePhotos = JSON.parse(rawHistory); } catch (e) { routinePhotos = []; }
         } else if (Array.isArray(rawHistory)) {
             routinePhotos = rawHistory;
         }
-    } 
+    }
     else if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
         routinePhotos = galleryData.filter(item => (item.category || "").toLowerCase() === 'routine');
     }
@@ -1423,8 +1423,8 @@ window.renderRewards = function() {
             for (let i = 1; i < routinePhotos.length; i++) {
                 const itemDate = routinePhotos[i].date || routinePhotos[i]._createdDate || routinePhotos[i];
                 const nextCode = getDutyDay(itemDate);
-                if (nextCode === currentCode) continue; 
-                
+                if (nextCode === currentCode) continue;
+
                 const dayA = new Date(currentCode);
                 const dayB = new Date(nextCode);
                 const gap = (dayA - dayB) / (1000 * 60 * 60 * 24);
@@ -1446,13 +1446,13 @@ window.renderRewards = function() {
 
     if (strVal) {
         strVal.innerText = streakCount;
-        strVal.style.color = "#c5a059"; 
-        if(strVal.parentElement) {
+        strVal.style.color = "#c5a059";
+        if (strVal.parentElement) {
             strVal.parentElement.style.borderColor = "#c5a059";
             strVal.parentElement.style.background = "linear-gradient(180deg, #1a1a1a 0%, #000 100%)";
         }
     }
-    
+
     if (strBest) strBest.innerText = Math.max(streakCount, gameStats.bestRoutineStreak || 0);
 
     if (strShelf) {
@@ -1466,10 +1466,10 @@ window.renderRewards = function() {
                 // WIX URL FIXER
                 let thumb = rawSrc;
                 if (rawSrc.startsWith('wix:image')) {
-                     try { 
-                         const id = rawSrc.split('/')[3].split('#')[0];
-                         thumb = `https://static.wixstatic.com/media/${id}/v1/fill/w_150,h_150,q_70/thumb.jpg`; 
-                     } catch(e){}
+                    try {
+                        const id = rawSrc.split('/')[3].split('#')[0];
+                        thumb = `https://static.wixstatic.com/media/${id}/v1/fill/w_150,h_150,q_70/thumb.jpg`;
+                    } catch (e) { }
                 }
 
                 return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border:1px solid #444; border-radius:2px; flex-shrink:0; margin-right:8px; filter:sepia(20%) brightness(0.9);">`;
@@ -1482,9 +1482,30 @@ window.renderRewards = function() {
     // ============================================================
     const shelfRank = document.getElementById('shelfRanks');
     if (shelfRank) {
-        const rankList = REWARD_DATA.ranks.map(r => r.name);
-        let currentIdx = rankList.indexOf(currentRank);
-        if (currentIdx === -1) currentIdx = 0; 
+        // --- ROBUST MATCHING (Fixes "Hall Boy" vs "HallBoy" vs "Newbie") ---
+        const clean = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        const userClean = clean(userProfile?.hierarchy || "Hall Boy");
+
+        let currentIdx = REWARD_DATA.ranks.findIndex(r => clean(r.name) === userClean);
+
+        // Final Fallback: If "Newbie" or unknown, verify stats against requirements locally
+        if (currentIdx === -1) {
+            // Check if they qualify for any rank based on stats (Auto-Fix Display)
+            // Reverse loop to find highest matching rank
+            for (let i = REWARD_DATA.ranks.length - 1; i >= 0; i--) {
+                const r = REWARD_DATA.ranks[i].req;
+                if (gameStats.taskdom_completed >= r.tasks &&
+                    gameStats.kneelCount >= r.kneels &&
+                    gameStats.points >= r.points &&
+                    gameStats.total_coins_spent >= r.spent &&
+                    streakCount >= r.streak) {
+                    currentIdx = i;
+                    break;
+                }
+            }
+            // If still nothing, default to 0 (Hall Boy)
+            if (currentIdx === -1) currentIdx = 0;
+        }
 
         let html = "";
 
@@ -1526,8 +1547,8 @@ window.renderRewards = function() {
         }
 
         shelfRank.innerHTML = html;
-        shelfRank.style.justifyContent = "center"; 
-        shelfRank.style.overflow = "visible";      
+        shelfRank.style.justifyContent = "center";
+        shelfRank.style.overflow = "visible";
     }
 
     // ============================================================
@@ -1536,13 +1557,13 @@ window.renderRewards = function() {
     const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabel) => {
         const container = document.getElementById(containerId);
         if (!container) return;
-        
+
         container.innerHTML = data.map((item, index) => {
             const targetVal = item.limit;
             const isUnlocked = currentVal >= targetVal;
             const statusClass = isUnlocked ? "unlocked" : "locked";
             const isLegendary = index === data.length - 1 ? "legendary" : "";
-            
+
             return `
                 <div class="reward-badge ${shapeClass} ${statusClass} ${isLegendary}" 
                      onclick="window.openRewardCard('${item.name}', '${item.icon}', ${currentVal}, ${targetVal}, '${typeLabel}')">
@@ -1556,25 +1577,25 @@ window.renderRewards = function() {
     };
 
     // Ensure arrays exist before mapping
-    if(REWARD_DATA.tasks) buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
-    if(REWARD_DATA.kneeling) buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
-    if(REWARD_DATA.spending) buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', null, totalSpent, 'spend');
+    if (REWARD_DATA.tasks) buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
+    if (REWARD_DATA.kneeling) buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
+    if (REWARD_DATA.spending) buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', null, totalSpent, 'spend');
 };
 
-window.openRewardCard = function(name, iconPath, current, target, type) {
+window.openRewardCard = function (name, iconPath, current, target, type) {
     // FIX: Look specifically inside the Trophy Jail
     const overlay = document.querySelector('#trophySectionJail #rewardCardOverlay');
     if (!overlay) return;
-    
+
     const container = overlay.querySelector('.mob-reward-card');
-    
+
     // Logic
     const isUnlocked = current >= target;
     const percentage = Math.min((current / target) * 100, 100);
 
     // Get Quote Helper
     const getQuote = (t, unlock) => {
-        if(unlock) return "Accepted. You may continue.";
+        if (unlock) return "Accepted. You may continue.";
         return "You are not there yet. Suffer more.";
     };
 
@@ -1602,7 +1623,7 @@ window.openRewardCard = function(name, iconPath, current, target, type) {
     overlay.classList.remove('hidden');
 };
 
-window.closeRewardCard = function() {
+window.closeRewardCard = function () {
     // Target the specific jailed overlay
     const overlay = document.querySelector('#trophySectionJail #rewardCardOverlay');
     if (overlay) {
@@ -1629,8 +1650,8 @@ function getQuote(type, isUnlocked) {
     if (type === 'spend' && !isUnlocked) return "Your wallet is too full. Empty it.";
     if (type === 'kneel' && !isUnlocked) return "Your knees are too strong. Break them.";
 
-    return isUnlocked 
-        ? praise[Math.floor(Math.random() * praise.length)] 
+    return isUnlocked
+        ? praise[Math.floor(Math.random() * praise.length)]
         : insults[Math.floor(Math.random() * insults.length)];
 }
 // =========================================
@@ -1639,14 +1660,14 @@ function getQuote(type, isUnlocked) {
 
 let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
 // 1. TOGGLE: Opens the menu and immediately loads the grid
-window.toggleTributeHunt = function() {
+window.toggleTributeHunt = function () {
     // Detect environment
     const isMobile = window.innerWidth <= 768;
     const root = isMobile ? document.getElementById('MOBILE_APP') : document.getElementById('DESKTOP_APP');
-    
+
     // Find the specific overlay inside the active root
     const overlay = root.querySelector('#tributeHuntOverlay');
-    
+
     if (!overlay) return;
 
     if (overlay.classList.contains('hidden')) {
@@ -1658,7 +1679,7 @@ window.toggleTributeHunt = function() {
 };
 
 // 2. RENDER: Loops through wishlist and makes simple buttons
-window.renderSimpleStore = function(rootElement) {
+window.renderSimpleStore = function (rootElement) {
     const grid = rootElement.querySelector('#huntStoreGrid');
     if (!grid) return;
 
@@ -1691,7 +1712,7 @@ window.renderSimpleStore = function(rootElement) {
 };
 
 // 3. BUY: Instant purchase logic
-window.quickBuyItem = function(item) {
+window.quickBuyItem = function (item) {
     // Check Money
     if (window.gameStats.coins < item.price) {
         triggerSound('sfx-deny');
@@ -1703,21 +1724,21 @@ window.quickBuyItem = function(item) {
     triggerSound('sfx-buy');
 
     // Send to Backend
-    window.parent.postMessage({ 
-        type: "PURCHASE_ITEM", 
-        itemName: item.name, 
-        cost: item.price, 
-        messageToDom: `🎁 TRIBUTE SENT: ${item.name} (${item.price})` 
+    window.parent.postMessage({
+        type: "PURCHASE_ITEM",
+        itemName: item.name,
+        cost: item.price,
+        messageToDom: `🎁 TRIBUTE SENT: ${item.name} (${item.price})`
     }, "*");
 
     // Visual Feedback (Coin Shower)
-    if(window.triggerCoinShower) window.triggerCoinShower();
+    if (window.triggerCoinShower) window.triggerCoinShower();
 
     // Close Menu
     window.toggleTributeHunt();
-    
+
     // Optional: Show Green Notification
-    if(window.showSystemNotification) window.showSystemNotification("TRIBUTE SENT", item.name);
+    if (window.showSystemNotification) window.showSystemNotification("TRIBUTE SENT", item.name);
 };
 
 
@@ -1731,16 +1752,16 @@ function submitSessionRequest() { const checked = document.querySelector('input[
 // =========================================
 
 // 5. STATS EXPANDER (SIMPLE TOGGLE)
-window.toggleMobileStats = function() {
+window.toggleMobileStats = function () {
     const drawer = document.getElementById('mobStatsContent');
     const arrow = document.getElementById('mobStatsArrow');
-    
-    if(drawer) {
+
+    if (drawer) {
         // Toggle the class that handles the animation (CSS)
         drawer.classList.toggle('open');
-        
+
         // Rotate Arrow
-        if(arrow) {
+        if (arrow) {
             arrow.innerText = drawer.classList.contains('open') ? "▲" : "▼";
         }
     }
@@ -1750,7 +1771,7 @@ window.toggleMobileStats = function() {
 // REPLACE window.toggleMobileView WITH THIS VERSION
 // ==========================
 
-window.toggleMobileView = function(viewName) {
+window.toggleMobileView = function (viewName) {
     // 1. CLEANUP POPOVERS
     if (window.closeLobby) window.closeLobby();
     if (window.closeQueenMenu) window.closeQueenMenu();
@@ -1760,18 +1781,18 @@ window.toggleMobileView = function(viewName) {
     const home = document.getElementById('viewMobileHome');
     const mobRecord = document.getElementById('viewMobileRecord');
     const mobGlobal = document.getElementById('viewMobileGlobal');
-    
+
     // Desktop/Shared Views to hide
     const chatCard = document.getElementById('chatCard');
     const mobileApp = document.getElementById('MOBILE_APP');
     const history = document.getElementById('historySection');
     const news = document.getElementById('viewNews');
     const protocol = document.getElementById('viewProtocol');
-    
+
     // 3. HIDE EVERYTHING (Aggressive Reset)
     const views = [home, mobRecord, mobGlobal, history, news, protocol];
-    views.forEach(el => { 
-        if(el) el.style.display = 'none'; 
+    views.forEach(el => {
+        if (el) el.style.display = 'none';
     });
 
     if (chatCard) chatCard.style.setProperty('display', 'none', 'important');
@@ -1779,11 +1800,11 @@ window.toggleMobileView = function(viewName) {
     // 4. SHOW TARGET VIEW
     if (viewName === 'home' && home) {
         home.style.display = 'flex';
-        if(window.syncMobileDashboard) window.syncMobileDashboard();
-        window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*"); 
+        if (window.syncMobileDashboard) window.syncMobileDashboard();
+        window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
     }
     else if (viewName === 'chat') {
-        if(chatCard && mobileApp) {
+        if (chatCard && mobileApp) {
             if (chatCard.parentElement !== mobileApp) mobileApp.appendChild(chatCard);
             chatCard.style.removeProperty('display');
             chatCard.style.display = 'flex';
@@ -1794,7 +1815,7 @@ window.toggleMobileView = function(viewName) {
     }
     else if (viewName === 'record' && mobRecord) {
         mobRecord.style.display = 'flex';
-        if(window.renderGallery) window.renderGallery();
+        if (window.renderGallery) window.renderGallery();
     }
     else if (viewName === 'queen' && news) {
         news.style.display = 'block';
@@ -1802,25 +1823,25 @@ window.toggleMobileView = function(viewName) {
     // *** THE FIX FOR GLOBAL ***
     else if (viewName === 'global' && mobGlobal) {
         mobGlobal.style.display = 'flex';
-        
+
         // FORCE STYLES VIA JS (Fixes "Invisible" issue)
         mobGlobal.style.backgroundColor = "#000";
         mobGlobal.style.color = "#fff";
         mobGlobal.style.zIndex = "100";
-        
+
         // Paint the headers inside it manually to be safe
         const headers = mobGlobal.querySelectorAll('.mob-name, .mob-header, div');
         headers.forEach(h => h.style.color = "#fff");
-        
+
         const card = mobGlobal.querySelector('.mob-card');
-        if(card) {
+        if (card) {
             card.style.border = "1px solid #333";
             card.style.background = "rgba(20,20,20,0.8)";
             card.style.padding = "20px";
             card.style.borderRadius = "8px";
         }
     }
-    
+
     // 5. SIDEBAR CLEANUP
     const sidebar = document.querySelector('.layout-left');
     if (sidebar) sidebar.classList.remove('mobile-open');
@@ -1828,17 +1849,17 @@ window.toggleMobileView = function(viewName) {
 };
 
 // QUEEN'S MENU NAVIGATION
-window.openQueenMenu = function() {
+window.openQueenMenu = function () {
     const menu = document.getElementById('queenOverlay');
     if (menu) {
         menu.classList.remove('hidden');
         menu.style.display = 'flex';
         // Force a data refresh so the progress bar updates
-        if(window.syncMobileDashboard) window.syncMobileDashboard();
+        if (window.syncMobileDashboard) window.syncMobileDashboard();
     }
 };
 
-window.closeQueenMenu = function() {
+window.closeQueenMenu = function () {
     const menu = document.getElementById('queenOverlay');
     if (menu) {
         menu.classList.add('hidden');
@@ -1846,11 +1867,11 @@ window.closeQueenMenu = function() {
     }
 };
 // 3. KNEEL BUTTON
-window.triggerKneel = function() {
+window.triggerKneel = function () {
     const sidebar = document.querySelector('.layout-left');
     const realBtn = document.querySelector('.kneel-bar-graphic');
-    
-    if (sidebar) sidebar.classList.add('mobile-open'); 
+
+    if (sidebar) sidebar.classList.add('mobile-open');
 
     if (realBtn) {
         realBtn.style.boxShadow = "0 0 20px var(--neon-red)";
@@ -1858,31 +1879,31 @@ window.triggerKneel = function() {
     }
 };
 
-window.syncMobileDashboard = function() {
+window.syncMobileDashboard = function () {
     if (!gameStats || !userProfile) return;
 
     // --- HEADER ---
     const dateEl = document.getElementById('dutyDateDisplay');
-    if(dateEl) dateEl.innerText = new Date().toLocaleDateString().toUpperCase();
+    if (dateEl) dateEl.innerText = new Date().toLocaleDateString().toUpperCase();
 
     // --- 1. PROTOCOL STATUS (6 AM LOCK) ---
-    const routineName = userProfile.routine || "NO PROTOCOL"; 
+    const routineName = userProfile.routine || "NO PROTOCOL";
     const rDisplay = document.getElementById('mobRoutineDisplay');
-    if(rDisplay) rDisplay.innerText = routineName.toUpperCase();
+    if (rDisplay) rDisplay.innerText = routineName.toUpperCase();
 
     // A. Define the 6 AM Logic
     const check6AmLock = (dateStr) => {
-        if(!dateStr) return false;
+        if (!dateStr) return false;
         const last = new Date(dateStr);
         const now = new Date();
-        
+
         // Duty Day starts at 6:00 AM
         let dutyStart = new Date();
         dutyStart.setHours(6, 0, 0, 0);
-        
+
         // If now is 4 AM, the duty day started Yesterday at 6 AM
         if (now < dutyStart) dutyStart.setDate(dutyStart.getDate() - 1);
-        
+
         // If upload is newer than the duty start, it's DONE.
         return last >= dutyStart;
     };
@@ -1891,7 +1912,7 @@ window.syncMobileDashboard = function() {
     const lastDate = userProfile.lastRoutine || userProfile.lastRoutineSubmission;
     // We check the Date OR the local flag (for instant feedback)
     const isDone = check6AmLock(lastDate) || gameStats.routineDoneToday === true;
-    
+
     const hasRoutine = userProfile.routine && userProfile.routine.trim().length > 0;
 
     // C. Update UI Elements
@@ -1899,46 +1920,46 @@ window.syncMobileDashboard = function() {
     const msgTime = document.getElementById('routineTimeMsg'); // "Window Closed"
     const msgDone = document.getElementById('routineDoneMsg'); // "Accepted"
 
-    if(btnUpload) {
+    if (btnUpload) {
         if (!hasRoutine) {
             // Case: No routine assigned
             btnUpload.classList.add('hidden');
-            if(msgTime) { msgTime.innerText = "NO PROTOCOL ASSIGNED"; msgTime.classList.remove('hidden'); }
-            if(msgDone) msgDone.classList.add('hidden');
-        } 
+            if (msgTime) { msgTime.innerText = "NO PROTOCOL ASSIGNED"; msgTime.classList.remove('hidden'); }
+            if (msgDone) msgDone.classList.add('hidden');
+        }
         else if (isDone) {
             // Case: DONE -> LOCK BUTTON
             btnUpload.classList.add('hidden'); // Hide button
-            
-            if(msgTime) msgTime.classList.add('hidden');
-            
-            if(msgDone) {
+
+            if (msgTime) msgTime.classList.add('hidden');
+
+            if (msgDone) {
                 // YOUR CUSTOM TEXT
                 msgDone.innerHTML = `<span style="color:var(--neon-green)">ACCEPTED.</span><br><span style="color:#666; font-size:0.7rem;">LOCKED UNTIL 06:00</span>`;
                 msgDone.classList.remove('hidden');
             }
-        } 
+        }
         else {
             // Case: NOT DONE -> SHOW BUTTON
             btnUpload.classList.remove('hidden');
             btnUpload.disabled = false;
-            
-            if(msgTime) msgTime.classList.add('hidden');
-            if(msgDone) msgDone.classList.add('hidden');
+
+            if (msgTime) msgTime.classList.add('hidden');
+            if (msgDone) msgDone.classList.add('hidden');
         }
     }
 
-     // --- 2. LABOR (Task Logic) ---
-    const activeRow = document.getElementById('activeTimerRow'); 
+    // --- 2. LABOR (Task Logic) ---
+    const activeRow = document.getElementById('activeTimerRow');
     const isWorking = activeRow && !activeRow.classList.contains('hidden');
-    
+
     const taskIdle = document.getElementById('dash_TaskIdle');
     const activeCard = document.getElementById('dash_TaskActive');
     const mobTaskText = document.getElementById('mobTaskText');
 
     if (isWorking) {
-        if(taskIdle) taskIdle.classList.add('hidden');
-        if(activeCard) activeCard.classList.remove('hidden');
+        if (taskIdle) taskIdle.classList.add('hidden');
+        if (activeCard) activeCard.classList.remove('hidden');
 
         if (mobTaskText && typeof currentTask !== 'undefined' && currentTask) {
             mobTaskText.innerHTML = currentTask.instruction || currentTask.text || "AWAITING ORDERS";
@@ -1947,35 +1968,35 @@ window.syncMobileDashboard = function() {
             mobTaskText.innerHTML = desktopText ? desktopText.innerHTML : "PROCESSING...";
         }
     } else {
-        if(taskIdle) taskIdle.classList.remove('hidden');
-        if(activeCard) activeCard.classList.add('hidden');
+        if (taskIdle) taskIdle.classList.remove('hidden');
+        if (activeCard) activeCard.classList.add('hidden');
     }
 };
 
 // --- HANDLE ROUTINE UPLOAD (Immediate Lock) ---
-window.handleRoutineUpload = function(input) {
+window.handleRoutineUpload = function (input) {
     if (input.files && input.files.length > 0) {
-        
+
         // 1. Send to Backend
-        if(window.handleEvidenceUpload) {
+        if (window.handleEvidenceUpload) {
             window.handleEvidenceUpload(input, "Routine");
         }
 
         // 2. CRITICAL: Update the Timestamp LOCALLY right now
         // This makes the "6 AM Logic" see it as Done immediately
         const now = new Date().toISOString();
-        
+
         if (window.userProfile) {
             window.userProfile.lastRoutine = now; // Update main profile memory
             window.userProfile.lastRoutineSubmission = now; // Safety for alternate keys
         }
-        
+
         if (window.gameStats) {
             gameStats.routineDoneToday = true; // Legacy flag
         }
 
         // 3. Update the Dashboard (This will run the logic, see the new date, and lock the button)
-        if(window.syncMobileDashboard) window.syncMobileDashboard();
+        if (window.syncMobileDashboard) window.syncMobileDashboard();
     }
 };
 
@@ -1983,9 +2004,9 @@ window.handleRoutineUpload = function(input) {
 // EXCHEQUER LOGIC (MOBILE)
 // ==========================
 
-window.openExchequer = function() {
+window.openExchequer = function () {
     const store = document.getElementById('mobExchequer');
-    
+
     if (store) {
         // 1. JAILBREAK: Move store to Body so it is never hidden by parent views
         if (store.parentElement !== document.body) {
@@ -1993,17 +2014,17 @@ window.openExchequer = function() {
         }
 
         // 2. FORCE Z-INDEX: Make sure it sits on top (just under the poverty alert)
-        store.style.zIndex = "2147483640"; 
+        store.style.zIndex = "2147483640";
 
         // 3. SHOW IT
         store.classList.remove('hidden');
-        store.style.display = 'flex'; 
+        store.style.display = 'flex';
     } else {
         console.error("Exchequer Overlay not found! Check HTML IDs.");
     }
 };
 
-window.closeExchequer = function() {
+window.closeExchequer = function () {
     const store = document.getElementById('mobExchequer');
     if (store) {
         store.classList.add('hidden');
@@ -2013,12 +2034,12 @@ window.closeExchequer = function() {
 
 // --- RANK DEFINITIONS (MATCHING YOUR IMAGE) ---
 const HIERARCHY_LEVELS = [
-    "Hall Boy", 
-    "Footman", 
-    "Silverman", 
-    "Butler", 
-    "Chamberlain", 
-    "Secretary", 
+    "Hall Boy",
+    "Footman",
+    "Silverman",
+    "Butler",
+    "Chamberlain",
+    "Secretary",
     "Queen's Champion"
 ];
 
@@ -2030,14 +2051,14 @@ const RANK_INSULTS = [
     "Earn your stripes before you try to impress me."
 ];
 
-window.handleMediaPlus = function() {
+window.handleMediaPlus = function () {
     // Get Rank (Default to Hall Boy if missing)
     let currentRank = userProfile?.hierarchy || "Hall Boy";
-    
+
     // Normalize string (Case insensitive check)
     const rankIndex = HIERARCHY_LEVELS.findIndex(r => r.toLowerCase() === currentRank.toLowerCase());
     console.log("Current Rank:", currentRank, "Index:", rankIndex);
-    
+
     // SILVERMAN IS INDEX 2. BUTLER IS INDEX 3.
     const SILVERMAN_IDX = 2;
     const BUTLER_IDX = 3;
@@ -2050,7 +2071,7 @@ window.handleMediaPlus = function() {
 
     // 2. CONFIGURE INPUT BASED ON RANK
     const fileInput = document.getElementById('chatMediaInput');
-    
+
     if (rankIndex < BUTLER_IDX) {
         // SILVERMAN: Photos Only
         fileInput.setAttribute("accept", "image/*");
@@ -2065,7 +2086,7 @@ window.handleMediaPlus = function() {
     fileInput.click();
 };
 
-window.triggerRankMock = function(customTitle) {
+window.triggerRankMock = function (customTitle) {
     const overlay = document.getElementById('povertyOverlay');
     const title = overlay.querySelector('.mob-reward-title');
     const text = document.getElementById('povertyInsult');
@@ -2075,35 +2096,35 @@ window.triggerRankMock = function(customTitle) {
 
     const insult = RANK_INSULTS[Math.floor(Math.random() * RANK_INSULTS.length)];
 
-    if(title) {
+    if (title) {
         title.innerText = customTitle || "RANK INSUFFICIENT";
         title.style.color = "#888";
     }
-    if(text) text.innerText = `"${insult}"`;
-    if(stamp) {
+    if (text) text.innerText = `"${insult}"`;
+    if (stamp) {
         stamp.innerText = "SILENCE";
         stamp.style.borderColor = "#888";
     }
-    
+
     if (overlay.parentElement !== document.body) document.body.appendChild(overlay);
     overlay.classList.remove('hidden');
     overlay.style.display = 'flex';
-    
-    if(window.triggerSound) triggerSound('sfx-deny');
+
+    if (window.triggerSound) triggerSound('sfx-deny');
 };
 
 // 1. GLOBAL VARIABLE (Must be attached to window)
-window.isRequestingTask = false; 
+window.isRequestingTask = false;
 
-window.mobileRequestTask = function() {
+window.mobileRequestTask = function () {
     // 1. SAFETY CHECK
     if (!window.gameStats) return;
 
     // 2. POVERTY CHECK (Added parseInt for safety)
     if (parseInt(gameStats.coins || 0) < 300) {
-        window.triggerPoverty(); 
-        if(window.triggerSound) triggerSound('sfx-deny');
-        return; 
+        window.triggerPoverty();
+        if (window.triggerSound) triggerSound('sfx-deny');
+        return;
     }
 
     // 3. LOCK THE UI (Stop the interval from resetting it)
@@ -2124,80 +2145,80 @@ window.mobileRequestTask = function() {
 
     // Text Pulse
     const txt = document.getElementById('mobTaskText');
-    if(txt) {
+    if (txt) {
         txt.innerHTML = "ESTABLISHING LINK...";
-        txt.className = "text-pulse"; 
+        txt.className = "text-pulse";
     }
 
     // 5. EXECUTE AFTER DELAY
     setTimeout(() => {
         // Generate the task (starts the desktop timer)
-        if(window.getRandomTask) window.getRandomTask(); 
-        
+        if (window.getRandomTask) window.getRandomTask();
+
         // Wait a moment for the Desktop DOM to actually update, then unlock
-        setTimeout(() => { 
+        setTimeout(() => {
             window.isRequestingTask = false;
-            if(window.syncMobileDashboard) window.syncMobileDashboard(); 
+            if (window.syncMobileDashboard) window.syncMobileDashboard();
         }, 1000); // 1 second buffer
     }, 800);
 };
 
-window.mobileUploadEvidence = function(input) {
+window.mobileUploadEvidence = function (input) {
     if (input.files && input.files.length > 0) {
-        
+
         // 1. Trigger the Backend Upload
         window.handleEvidenceUpload(input);
 
         // 2. UI FEEDBACK
         const btn = document.getElementById('mobBtnUpload');
-        if(btn) btn.innerText = "SENDING...";
+        if (btn) btn.innerText = "SENDING...";
 
         // 3. SHOW SUCCESS & CLOSE TASK (After 1.5 seconds)
         setTimeout(() => {
             // Show Green Notification
-            if(window.showSystemNotification) {
+            if (window.showSystemNotification) {
                 window.showSystemNotification("EVIDENCE SENT", "STATUS: PENDING REVIEW");
             }
-            
+
             // RESET UI TO "UNACTIVE"
-            window.updateTaskUIState(false); 
-            
+            window.updateTaskUIState(false);
+
             // Reset Button Text
-            if(btn) btn.innerText = "UPLOAD";
-            
+            if (btn) btn.innerText = "UPLOAD";
+
             // Force Mobile Sync
             window.syncMobileDashboard();
         }, 1500);
     }
 };
 
-window.mobileSkipTask = function() {
+window.mobileSkipTask = function () {
     console.log("Skip Clicked");
 
     // 1. CHECK FUNDS (Need 300)
     if (parseInt(gameStats.coins || 0) < 300) {
-        window.triggerPoverty(); 
+        window.triggerPoverty();
         return;
     }
 
     // 2. DEDUCT COINS
     gameStats.coins -= 300;
-    if(window.updateStats) window.updateStats(); // Refresh headers immediately
+    if (window.updateStats) window.updateStats(); // Refresh headers immediately
 
     // 3. PLAY SOUND & INSULT
     triggerSound('sfx-deny');
-    
+
     // 4. SHOW NOTIFICATION
-    if(window.showSystemNotification) {
+    if (window.showSystemNotification) {
         window.showSystemNotification("Task ABORTED", "PENALTY: 300 coins", true);
     }
 
     // 5. CANCEL TASK (Backend)
-    if(window.cancelPendingTask) window.cancelPendingTask(); 
-    
+    if (window.cancelPendingTask) window.cancelPendingTask();
+
     // 6. FORCE UI RESET (Crucial Fix)
     window.updateTaskUIState(false);
-    if(window.syncMobileDashboard) window.syncMobileDashboard();
+    if (window.syncMobileDashboard) window.syncMobileDashboard();
 };
 
 // TIMER SYNC & VISUALIZATION (UPDATED TO HANDLE ALL IDS)
@@ -2206,7 +2227,7 @@ setInterval(() => {
     const desktopH = document.getElementById('timerH');
     const desktopM = document.getElementById('timerM');
     const desktopS = document.getElementById('timerS');
-    
+
     // 2. Mobile Dashboard Elements (DASH_)
     const dH = document.getElementById('dash_timerH');
     const dM = document.getElementById('dash_timerM');
@@ -2216,7 +2237,7 @@ setInterval(() => {
     const qH = document.getElementById('qm_timerH');
     const qM = document.getElementById('qm_timerM');
     const qS = document.getElementById('qm_timerS');
-    
+
     // 4. Update Values
     if (desktopH) {
         const hTxt = desktopH.innerText;
@@ -2224,54 +2245,54 @@ setInterval(() => {
         const sTxt = desktopS.innerText;
 
         // Update Dashboard
-        if(dH) { dH.innerText = hTxt; dM.innerText = mTxt; dS.innerText = sTxt; }
-        
+        if (dH) { dH.innerText = hTxt; dM.innerText = mTxt; dS.innerText = sTxt; }
+
         // Update Queen Menu Card
-        if(qH) { qH.innerText = hTxt; qM.innerText = mTxt; qS.innerText = sTxt; }
+        if (qH) { qH.innerText = hTxt; qM.innerText = mTxt; qS.innerText = sTxt; }
 
         // Update Rings (Dashboard)
         const hVal = parseInt(hTxt) || 0;
         const mVal = parseInt(mTxt) || 0;
         const sVal = parseInt(sTxt) || 0;
-        
+
         const ringH = document.getElementById('ring_H');
         const ringM = document.getElementById('ring_M');
         const ringS = document.getElementById('ring_S');
-        
-        if(ringH) ringH.style.background = `conic-gradient(#c5a059 ${(hVal/24)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
-        if(ringM) ringM.style.background = `conic-gradient(#c5a059 ${(mVal/60)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
-        if(ringS) ringS.style.background = `conic-gradient(#c5a059 ${(sVal/60)*360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+
+        if (ringH) ringH.style.background = `conic-gradient(#c5a059 ${(hVal / 24) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if (ringM) ringM.style.background = `conic-gradient(#c5a059 ${(mVal / 60) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if (ringS) ringS.style.background = `conic-gradient(#c5a059 ${(sVal / 60) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
     }
 
     // --- VISIBILITY SYNC (THE FIX) ---
-    
+
     // IF WE ARE CURRENTLY REQUESTING A TASK, DO NOT RUN THIS LOGIC
-    if (window.isRequestingTask === true) return; 
+    if (window.isRequestingTask === true) return;
 
     const activeRow = document.getElementById('activeTimerRow');
     if (!activeRow) return;
 
     const isWorking = !activeRow.classList.contains('hidden');
-    
+
     // A. Update Dashboard (dash_ IDs)
     const dashIdle = document.getElementById('dash_TaskIdle');
     const dashActive = document.getElementById('dash_TaskActive');
-    
+
     if (dashIdle && dashActive) {
         if (isWorking) {
             dashIdle.classList.add('hidden');
             dashActive.classList.remove('hidden');
             const light = document.getElementById('mob_statusLight');
             const text = document.getElementById('mob_statusText');
-            if(light) light.className = 'status-light green';
-            if(text) text.innerText = "WORKING";
+            if (light) light.className = 'status-light green';
+            if (text) text.innerText = "WORKING";
         } else {
             dashIdle.classList.remove('hidden');
             dashActive.classList.add('hidden');
             const light = document.getElementById('mob_statusLight');
             const text = document.getElementById('mob_statusText');
-            if(light) light.className = 'status-light red';
-            if(text) text.innerText = "UNPRODUCTIVE";
+            if (light) light.className = 'status-light red';
+            if (text) text.innerText = "UNPRODUCTIVE";
         }
     }
 
@@ -2279,7 +2300,7 @@ setInterval(() => {
     const qmIdle = document.getElementById('qm_TaskIdle');
     const qmActive = document.getElementById('qm_TaskActive');
 
-    if(qmIdle && qmActive) {
+    if (qmIdle && qmActive) {
         if (isWorking) {
             qmIdle.classList.add('hidden');
             qmActive.classList.remove('hidden');
@@ -2293,7 +2314,7 @@ setInterval(() => {
 window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
 window.parent.postMessage({ type: "UI_READY" }, "*");
 
-window.toggleMobileChat = function(open) {
+window.toggleMobileChat = function (open) {
     const btn = document.getElementById('btnEnterChatPanel');
     const panel = document.getElementById('inlineChatPanel');
     const scrollBox = document.getElementById('mob_chatBox');
@@ -2302,7 +2323,7 @@ window.toggleMobileChat = function(open) {
         btn.classList.add('hidden');       // Hide Button
         panel.classList.remove('hidden');  // Show Chat
         // Auto-scroll to bottom
-        if(scrollBox) setTimeout(() => { scrollBox.scrollTop = scrollBox.scrollHeight; }, 50);
+        if (scrollBox) setTimeout(() => { scrollBox.scrollTop = scrollBox.scrollHeight; }, 50);
     } else {
         btn.classList.remove('hidden');    // Show Button
         panel.classList.add('hidden');     // Hide Chat
