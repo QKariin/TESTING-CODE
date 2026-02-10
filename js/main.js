@@ -1488,24 +1488,28 @@ window.renderRewards = function () {
 
         let currentIdx = REWARD_DATA.ranks.findIndex(r => clean(r.name) === userClean);
 
-        // Final Fallback: If "Newbie" or unknown, verify stats against requirements locally
-        if (currentIdx === -1) {
-            // Check if they qualify for any rank based on stats (Auto-Fix Display)
-            // Reverse loop to find highest matching rank
-            for (let i = REWARD_DATA.ranks.length - 1; i >= 0; i--) {
-                const r = REWARD_DATA.ranks[i].req;
-                if (gameStats.taskdom_completed >= r.tasks &&
-                    gameStats.kneelCount >= r.kneels &&
-                    gameStats.points >= r.points &&
-                    gameStats.total_coins_spent >= r.spent &&
-                    streakCount >= r.streak) {
-                    currentIdx = i;
-                    break;
-                }
+        // --- VISUAL PROMOTION (PRE-CALCULATE) ---
+        // Even if DB says "Hall Boy", if they qualify for "Footman", SHOW IT.
+        let qualifiedIdx = -1;
+        for (let i = REWARD_DATA.ranks.length - 1; i >= 0; i--) {
+            const r = REWARD_DATA.ranks[i].req;
+            if (gameStats.taskdom_completed >= r.tasks &&
+                gameStats.kneelCount >= r.kneels &&
+                gameStats.points >= r.points &&
+                gameStats.total_coins_spent >= r.spent &&
+                streakCount >= r.streak) {
+                qualifiedIdx = i;
+                break;
             }
-            // If still nothing, default to 0 (Hall Boy)
-            if (currentIdx === -1) currentIdx = 0;
         }
+
+        // If DB rank is lower than qualified rank, upgrade the visual
+        if (qualifiedIdx > currentIdx) {
+            currentIdx = qualifiedIdx;
+        }
+
+        // Final Safety: Default to 0
+        if (currentIdx === -1) currentIdx = 0;
 
         let html = "";
 
