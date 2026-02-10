@@ -1,18 +1,18 @@
 // UI management functions - FULL LOGIC WITH WISHLIST & VAULT SYNC & SLAVE RECORD FIX
 import { currentView, cmsHierarchyData, setCurrentView, WISHLIST_ITEMS, gameStats } from './state.js';
 import { CMS_HIERARCHY } from './config.js';
-import { renderGallery, loadMoreHistory } from './gallery.js'; 
+import { renderGallery, loadMoreHistory } from './gallery.js';
 import { getOptimizedUrl } from './media.js';
 import { renderVault } from '../profile/kneeling/reward.js';
 
 export function switchTab(mode) {
     // 1. Update the buttons
-    const allBtns = document.querySelectorAll('.tab-btn, .nav-btn'); 
+    const allBtns = document.querySelectorAll('.tab-btn, .nav-btn');
     allBtns.forEach(b => b.classList.remove('active'));
-    
+
     // 2. Update the "State" correctly
     setCurrentView(mode);
-    
+
     allBtns.forEach(btn => {
         const onclickAttr = btn.getAttribute('onclick') || "";
         if (onclickAttr.includes(`'${mode}'`)) {
@@ -34,19 +34,19 @@ export function switchTab(mode) {
             }
         });
     }
-    
+
     // 4. Hide all views
     const allViews = [
-        'viewServingTop', 'viewNews', 'viewSession', 
-        'viewVault', 'viewProtocol', 'viewBuy', 
+        'viewServingTop', 'viewNews', 'viewSession',
+        'viewVault', 'viewProtocol', 'viewBuy',
         'viewTribute', 'viewHierarchy', 'viewRewards', 'historySection'
     ];
-    
+
     allViews.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.classList.add('hidden');
-            el.style.display = 'none'; 
+            el.style.display = 'none';
         }
     });
 
@@ -55,10 +55,11 @@ export function switchTab(mode) {
         'serve': 'viewServingTop',
         'news': 'viewNews',
         'session': 'viewSession',
-        'rewards': 'viewVault',    
+        'rewards': 'viewVault',
         'protocol': 'viewProtocol',
         'buy': 'viewBuy',
-        'history': 'historySection', 
+        'history': 'historySection',
+        'record': 'historySection', // FIX: Button calls 'record', not 'history'
         'vault': 'viewVault'
     };
 
@@ -67,7 +68,7 @@ export function switchTab(mode) {
         const targetEl = document.getElementById(targetId);
         if (targetEl) {
             targetEl.classList.remove('hidden');
-            
+
             // New Layout Logic
             if (['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId)) {
                 targetEl.style.display = 'flex';
@@ -77,14 +78,14 @@ export function switchTab(mode) {
             }
         }
     }
-       
+
     // 6. TRIGGER RENDERS
     if (mode === 'news') {
         window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
     }
-    
+
     if (mode === 'rewards' || mode === 'vault') {
-        renderVault(); 
+        renderVault();
     }
 }
 
@@ -92,7 +93,7 @@ export function switchTab(mode) {
 export function renderWishlist(maxBudget = 999999) {
     // Supports both Desktop 'storeGrid' and Mobile 'huntStoreGrid' if needed
     const grids = [document.getElementById('storeGrid'), document.getElementById('huntStoreGrid')];
-    
+
     // Filter items
     const items = (WISHLIST_ITEMS || []).filter(i => i.price <= maxBudget);
 
@@ -136,7 +137,7 @@ export function toggleStats() {
 export function toggleSection(element) {
     const allItems = document.querySelectorAll('.protocol-item');
     const isActive = element.classList.contains('active');
-    
+
     if (!isActive) {
         allItems.forEach(item => {
             if (item === element) {
@@ -163,11 +164,11 @@ export function toggleSection(element) {
 export function renderDomVideos(videos) {
     const reel = document.getElementById('domVideoReel');
     if (!reel || !videos) return;
-    
+
     reel.innerHTML = videos.slice(0, 10).map(v => {
         const src = v.page || v.url || v.media || v.image;
         if (!src) return "";
-        
+
         const optimized = getOptimizedUrl(src, 100);
         return `
             <div class="hl-item">
@@ -184,7 +185,7 @@ export function renderNews(posts) {
     const mobScroll = document.getElementById('qWall_ScrollTrack');
 
     if (!posts || !Array.isArray(posts)) {
-        if(mobScroll) mobScroll.innerHTML = "<div style='color:#666; padding:20px; font-size:0.7rem;'>NO UPDATES</div>";
+        if (mobScroll) mobScroll.innerHTML = "<div style='color:#666; padding:20px; font-size:0.7rem;'>NO UPDATES</div>";
         return;
     }
 
@@ -192,7 +193,7 @@ export function renderNews(posts) {
     const getMediaData = (p) => {
         // 1. Find the raw data key
         let raw = p.image || p.img || p.thumbnail || p.cover || p.poster || p.media || p.url || "";
-        
+
         // 2. Video Handling: If it's a video, try to find a cover image first
         if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
             if (p.cover) raw = p.cover;
@@ -205,19 +206,19 @@ export function renderNews(posts) {
             try {
                 // Extract Filename (e.g. "8b3d8_image.jpg")
                 const parts = raw.split('/');
-                const fileName = parts[3].split('#')[0]; 
-                
+                const fileName = parts[3].split('#')[0];
+
                 return {
                     // FAST: Ask Wix for a small, compressed version (250x350, Quality 70)
                     thumb: `https://static.wixstatic.com/media/${fileName}/v1/fill/w_250,h_350,al_c,q_70/${fileName}`,
                     // HD: The original master file
                     full: `https://static.wixstatic.com/media/${fileName}`
                 };
-            } catch(e) { 
-                return { thumb: "", full: "" }; 
+            } catch (e) {
+                return { thumb: "", full: "" };
             }
         }
-        
+
         // 4. Standard URL Fallback (External links)
         const std = raw ? getOptimizedUrl(raw, 400) : "";
         return { thumb: std, full: std };
@@ -227,7 +228,7 @@ export function renderNews(posts) {
     if (deskGrid) {
         deskGrid.innerHTML = posts.map(p => {
             const media = getMediaData(p);
-            if(!media.thumb) return "";
+            if (!media.thumb) return "";
             return `<div class="sg-item" onclick="window.openChatPreview('${media.full}', false)"><img src="${media.thumb}" class="sg-img"></div>`;
         }).join('');
     }
@@ -237,10 +238,10 @@ export function renderNews(posts) {
         mobScroll.innerHTML = posts.map(p => {
             const media = getMediaData(p);
             const txt = p.text || p.title || "Update";
-            
+
             // Skip empty items
             if (!media.thumb) return "";
-            
+
             // IMG SRC = Low Res Thumbnail (Fast)
             // ONCLICK = Full Res Master (Clear)
             return `
@@ -256,14 +257,14 @@ export function renderNews(posts) {
 
 export function openSessionUI() {
     const overlay = document.getElementById('sessionOverlay');
-    if(overlay) overlay.classList.add('active');
+    if (overlay) overlay.classList.add('active');
     const costDisp = document.getElementById('sessionCostDisplay');
-    if(costDisp) costDisp.innerText = "3000";
+    if (costDisp) costDisp.innerText = "3000";
 }
 
 export function closeSessionUI() {
     const overlay = document.getElementById('sessionOverlay');
-    if(overlay) overlay.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
 }
 
 export function updateSessionCost() {
@@ -271,6 +272,6 @@ export function updateSessionCost() {
     if (checked) {
         const cost = checked.getAttribute('data-cost');
         const costDisp = document.getElementById('sessionCostDisplay');
-        if(costDisp) costDisp.innerText = cost;
+        if (costDisp) costDisp.innerText = cost;
     }
 }
