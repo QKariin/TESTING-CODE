@@ -1305,27 +1305,7 @@
     
     <div class="duty-label">SLAVE RECORDS</div>
 
-    <!-- PART A: DAILY DISCIPLINE (Stays Visible) -->
-    <div style="width:100%; margin-bottom: 20px;">
-        <div class="duty-label" style="color:#c5a059; border-color:rgba(197, 160, 89, 0.3);">DAILY DISCIPLINE</div>
-        
-        <div style="display:flex; gap:15px; align-items:center;">
-            <!-- THE COUNTER -->
-            <div style="flex: 0 0 90px; height: 90px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid #c5a059; background:linear-gradient(180deg, #1a1a1a 0%, #000 100%); border-radius:4px; box-shadow: 0 0 15px rgba(197, 160, 89, 0.1);">
-                <div id="dispStreakVal" style="font-family:'Orbitron'; font-size:2rem; color:#c5a059; line-height:1; text-shadow:0 0 10px rgba(197, 160, 89, 0.3);">0</div>
-                <div style="font-family:'Cinzel'; font-size:0.55rem; color:#888; margin-top:5px; letter-spacing:2px;">STREAK</div>
-            </div>
     
-            <!-- THE PROOF -->
-            <div id="shelfRoutine" class="mob-horiz-scroll" style="flex:1; height:90px; align-items:center;">
-                <div style="color:#444; font-size:0.6rem; padding:10px; font-family:'Cinzel';">AWAITING PROOF</div>
-            </div>
-        </div>
-        
-        <div style="text-align:center; font-family:'Cinzel'; font-size:0.6rem; color:#666; margin-top:5px; letter-spacing:1px;">
-            PERSONAL BEST: <span id="dispBestStreak" style="color:#888;">0</span> DAYS
-        </div>
-    </div>
 
     <!-- PART B: THE TROPHY JAIL (Modal covers ONLY this part) -->
     <div id="trophySectionJail" style="position: relative; width: 100%; min-height: 400px; overflow: hidden;">
@@ -1333,6 +1313,28 @@
         <!-- HIERARCHY -->
         <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666;">HIERARCHY</div>
         <div id="shelfRanks" class="reward-shelf mob-horiz-scroll"></div>
+
+        <!-- PART A: DAILY DISCIPLINE (Stays Visible) -->
+        <div style="width:100%; margin-bottom: 20px;">
+            <div class="duty-label" style="color:#c5a059; border-color:rgba(197, 160, 89, 0.3);">DAILY DISCIPLINE</div>
+            
+            <div style="display:flex; gap:15px; align-items:center;">
+                <!-- THE COUNTER -->
+                <div style="flex: 0 0 90px; height: 90px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid #c5a059; background:linear-gradient(180deg, #1a1a1a 0%, #000 100%); border-radius:4px; box-shadow: 0 0 15px rgba(197, 160, 89, 0.1);">
+                    <div id="dispStreakVal" style="font-family:'Orbitron'; font-size:2rem; color:#c5a059; line-height:1; text-shadow:0 0 10px rgba(197, 160, 89, 0.3);">0</div>
+                    <div style="font-family:'Cinzel'; font-size:0.55rem; color:#888; margin-top:5px; letter-spacing:2px;">STREAK</div>
+                </div>
+        
+                <!-- THE PROOF -->
+                <div id="shelfRoutine" class="mob-horiz-scroll" style="flex:1; height:90px; align-items:center;">
+                    <div style="color:#444; font-size:0.6rem; padding:10px; font-family:'Cinzel';">AWAITING PROOF</div>
+                </div>
+            </div>
+            
+            <div style="text-align:center; font-family:'Cinzel'; font-size:0.6rem; color:#666; margin-top:5px; letter-spacing:1px;">
+                PERSONAL BEST: <span id="dispBestStreak" style="color:#888;">0</span> DAYS
+            </div>
+        </div>
 
         <!-- LABOR -->
         <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">LABOR MEDALS</div>
