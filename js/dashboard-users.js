@@ -106,8 +106,9 @@ export async function updateDetail(u) {
     setText('dMirrorStreak', u.streak || 0);
     setText('dMirrorStreakCard', u.streak || 0); // Added: Grid Card
 
-    setText('dMirrorStatTotal', u.totalTasks || 0);
-    setText('dMirrorStatCompleted', u.completed || 0);
+    setText('dMirrorStatTotal', u.totalTasks || (u.history ? u.history.length : 0));
+    const completedCount = u.completed || (u.history ? u.history.filter(h => h.status === 'approve').length : 0);
+    setText('dMirrorStatCompleted', completedCount);
     setText('dMirrorStatSkipped', u.skipped || 0);
 
     const isRoutineDone = u.routineDoneToday === true;
