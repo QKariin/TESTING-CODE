@@ -1782,11 +1782,14 @@ window.quickBuyItem = function (item) {
     triggerSound('sfx-buy');
 
     // Send to Backend
+    // Send to Backend
     window.parent.postMessage({
         type: "PURCHASE_ITEM",
         itemName: item.name,
         cost: item.price,
-        messageToDom: `🎁 TRIBUTE SENT: ${item.name} (${item.price})`
+        itemImage: item.img || item.image, // Pass the image
+        // We still send a text fallback for messageToDom just in case, but real magic is in profile.js
+        messageToDom: `🎁 TRIBUTE SENT: ${item.name}`
     }, "*");
 
     // Visual Feedback (Coin Shower)
