@@ -250,7 +250,7 @@ export async function renderGallery() {
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
-// --- 5. IMAGE LOADER (SEQUENTIAL & ROBUST) ---
+    // --- 5. IMAGE LOADER (SEQUENTIAL & ROBUST) ---
     const getThumb = async (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
 
@@ -274,7 +274,7 @@ export async function renderGallery() {
             } catch (e) {
                 // If signing fails, return the unsigned JPG link. 
                 // It is better to try loading an image than a raw video.
-                return thumbUrl; 
+                return thumbUrl;
             }
         }
 
@@ -296,22 +296,16 @@ export async function renderGallery() {
         }
     };
 
-    // --- 6. RENDER TRACKS (SEQUENTIAL LOADING - THE TRAFFIC FIX) ---
-    const renderChunk = async (list, isTrash) => {
+    // --- 6. RENDER TRACKS (INSTANT RENDER + LAZY LOAD) ---
+    const renderChunk = (list, isTrash) => {
+        // NOTE: removed 'async' because we are not waiting for network here
         if (!list || list.length === 0) return { desk: "", mob: "" };
 
         let deskHTML = "";
         let mobHTML = "";
 
-        // *** FIX 2: SEQUENTIAL LOOP ***
-        // Instead of 'Promise.all' (Parallel), we use a standard Loop.
-        // This loads Item 1, THEN Item 2, THEN Item 3...
-        // It prevents the "Traffic Jam" that blocks your images.
+        // Simple loop, no awaiting. Builds HTML instantly.
         for (const item of list) {
-            
-            // This 'await' is what saves the backend from crashing
-            const src = await getThumb(item, 300); 
-            
             const idx = allItems.indexOf(item);
             const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
 
@@ -319,12 +313,6 @@ export async function renderGallery() {
             const rawUrl = (item.proofUrl || item.media || "").toLowerCase();
             const isVideo = rawUrl.includes('video') || rawUrl.includes('.mp4') || rawUrl.includes('.mov');
             const videoIcon = isVideo ? `<div class="video-indicator">▶</div>` : "";
-
-            const mediaHtml = `<img class="${isTrash ? 'trash-img' : 'blueprint-img'}" 
-                                   src="${src}" 
-                                   loading="lazy" 
-                                   style="${imgStyle}" 
-                                   onerror="this.src='${PLACEHOLDER_IMG}'">`;
 
             const isPending = (item.status || "").toLowerCase().includes('pending');
             const overlay = isPending ? `<div class="pending-overlay"><div class="pending-badge">AWAITING<br>VERDICT</div></div>` : ``;
@@ -335,7 +323,18 @@ export async function renderGallery() {
                 stickerHtml = `<img src="${item.sticker}" class="gallery-sticker-badge">`;
             }
 
-            // Append to strings
+            // Get Raw URL safely
+            let safeRaw = item.proofUrl || item.media || "";
+            if (typeof safeRaw === 'object') safeRaw = safeRaw.src || "";
+
+            // HTML: We use PLACEHOLDER_IMG as src, and store real URL in data-raw
+            // Added class 'lazy-gallery-img' so we can find it later
+            const mediaHtml = `<img class="lazy-gallery-img ${isTrash ? 'trash-img' : 'blueprint-img'}" 
+                                   src="${PLACEHOLDER_IMG}" 
+                                   data-raw="${safeRaw}"
+                                   loading="lazy" 
+                                   style="${imgStyle}">`;
+
             deskHTML += `
                 <div class="${isTrash ? 'item-trash' : 'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
                     ${mediaHtml}
@@ -347,7 +346,10 @@ export async function renderGallery() {
 
             mobHTML += `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash ? 'height:80px; width:80px;' : ''}">
-                    <img src="${src}" class="mob-scroll-img" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">
+                    <img class="lazy-gallery-img mob-scroll-img" 
+                         src="${PLACEHOLDER_IMG}" 
+                         data-raw="${safeRaw}"
+                         style="${imgStyle}">
                     ${videoIcon}
                     ${stickerHtml}
                     ${mobBadge}
@@ -357,25 +359,64 @@ export async function renderGallery() {
         return { desk: deskHTML, mob: mobHTML };
     };
 
+    // --- HYDRATION WORKER (FIXES IMAGES ONE BY ONE) ---
+    async function hydrateGalleryImages() {
+        // 1. Find all images that need loading
+        const images = document.querySelectorAll('.lazy-gallery-img[data-raw]');
+        if (images.length === 0) return;
+
+        console.log(`Hydrating ${images.length} gallery items...`);
+
+        // 2. Loop through them
+        for (const img of images) {
+            // Check if already handled
+            if (img.dataset.loaded === "true") continue;
+
+            const raw = img.dataset.raw;
+            if (!raw || raw === "undefined") continue;
+
+            try {
+                // 3. Call the magic getThumb function
+                // We reuse the item structure just for the function signature
+                const realUrl = await getThumb({ proofUrl: raw }, 300);
+
+                // 4. Update the Image
+                img.src = realUrl;
+                img.dataset.loaded = "true"; // Mark as done
+
+                // 5. Tiny pause to let the backend breathe (100ms)
+                // This prevents the "One Picture" bug
+                await new Promise(r => setTimeout(r, 100));
+
+            } catch (e) {
+                console.error("Hydration failed for", raw);
+            }
+        }
+    }
+
     // --- 7. EXECUTE RENDERS ---
 
     // A. Accepted (Candidates)
-    const acceptedHTML = await renderChunk(candidates, false);
+    const acceptedHTML = renderChunk(candidates, false);
     gridOkay.innerHTML = acceptedHTML.desk;
     if (recGrid) recGrid.innerHTML += acceptedHTML.mob; // Append to top list
 
     // B. Pending
     if (pendingList.length > 0) {
-        const pendingHTML = await renderChunk(pendingList, false);
+        const pendingHTML = renderChunk(pendingList, false);
         if (gridPending) gridPending.innerHTML = pendingHTML.desk;
         // MOBILE: Prepend to Top List (recGrid) so they start the list
         if (recGrid) recGrid.innerHTML = pendingHTML.mob + recGrid.innerHTML;
     }
 
     // C. Denied (Heap)
-    const deniedHTML = await renderChunk(deniedList, true);
+    const deniedHTML = renderChunk(deniedList, true);
     gridFailed.innerHTML = deniedHTML.desk;
     if (recHeap) recHeap.innerHTML = deniedHTML.mob;
+
+    // *** NEW: TRIGGER THE HYDRATION WORKER ***
+    // This runs in the background while the user looks at the page
+    hydrateGalleryImages();
 
     // --- 8. RENDER DESKTOP ALTAR ---
     // --- 8. RENDER DESKTOP ALTAR ---
