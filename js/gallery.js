@@ -52,8 +52,8 @@ function normalizeGalleryItem(item) {
         const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src', 'attachment', 'photo', 'cover', 'thumbnail', 'poster'];
         for (let key of candidates) {
             if (item[key] && typeof item[key] === 'string' && item[key].length > 5) {
-                // Ignore "Avatar" unless it's the only thing
-                if (key === 'avatar' && !item.media && !item.evidence) continue;
+                // Ignore "Avatar" completely - User does not want profile pics as evidence
+                if (key === 'avatar') continue;
 
                 item.proofUrl = item[key];
                 break;
@@ -216,22 +216,20 @@ export async function renderGallery() {
         return true;
     });
 
-    // --- 4. ALTAR SORTING (Top 3 from Candidates) ---
-    candidates.sort((a, b) => new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate));
+    // --- 4. ALTAR SORTING (HIGHEST RATED) ---
+    // User Request: "pictures with an highest rating"
+    // Sort by Points (Desc) -> Date (Desc)
+    candidates.sort((a, b) => {
+        const statsA = getPoints(a);
+        const statsB = getPoints(b);
+        if (statsB !== statsA) return statsB - statsA; // Higher score first
+        return new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate); // Then newer
+    });
 
     let bestOf = [];
 
-    // Slot 1: Newest item with >= 150 points
-    const kingIndex = candidates.findIndex(item => getPoints(item) >= 150);
-
-    if (kingIndex !== -1) {
-        bestOf.push(candidates[kingIndex]);
-        candidates.splice(kingIndex, 1);
-    } else if (candidates.length > 0) {
-        bestOf.push(candidates.shift());
-    }
-
-    // Slot 2 & 3: Next newest items
+    // Take top 3 highest rated items
+    if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
@@ -370,9 +368,9 @@ export async function renderGallery() {
         // SAFETY: If url is a video and we failed to get a poster, fallback to placeholder
         // (Altar items use <img> tags and cannot render raw video files)
         if (typeof url === 'string' && (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || url.startsWith('wix:video'))) {
-            // Try to use item.cover or fallback
-            if (item.cover) url = await getSignedUrl(item.cover);
-            else if (item.thumbnail) url = await getSignedUrl(item.thumbnail);
+            // Try to use item.cover or fallback via getThumb (recursive for robust parsing)
+            if (item.cover) url = await getThumb({ proofUrl: item.cover }, isMain ? 800 : 400);
+            else if (item.thumbnail) url = await getThumb({ proofUrl: item.thumbnail }, isMain ? 800 : 400);
             else url = PLACEHOLDER_IMG;
         }
 
