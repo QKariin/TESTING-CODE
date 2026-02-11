@@ -1,2530 +1,460 @@
-/* Dashboard CSS - Complete Styles */
-html,
-body {
-    font-size: 12px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background: #000 !important;
-    /* This turns the grey zones black */
-    overflow: hidden;
-    /* Prevents double scrollbars */
-}
-
-/* --- CORE THEME --- */
-:root {
-    --bg: #050505;
-    --panel: #0a0a0a;
-    --border: #333;
-    --pink: #ff00de;
-    --green: #39ff14;
-    --red: #ff003c;
-    --blue: #00f3ff;
-    --yellow: #ffd700;
-    --grey: #888888;
-}
-
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    scrollbar-width: none;
-}
-
-::-webkit-scrollbar {
-    display: none;
-}
-
-.d-none {
-    display: none !important;
-}
-
-.hidden-input {
-    display: none;
-}
-
-/* LAYOUT */
-.layout {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-width: 100% !important;
-    /* Kills any "Max Width" logic */
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden;
-}
-
-/* THE NEW BUTTON ON THE RIGHT (Library side) */
-.dr-fast-top-btn {
-    width: 24px;
-    height: 24px;
-    border: 1px solid var(--pink);
-    color: var(--pink);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6rem;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: 0.2s;
-    background: transparent;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.chat-panel {
-    position: relative;
-}
-
-.dr-fast-top-btn:hover {
-    background: var(--pink);
-    color: black;
-    box-shadow: 0 0 10px var(--pink);
-}
-
-/* THE SLOT PICKER BUTTONS */
-.slot-btn {
-    width: 45px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #111;
-    border: 1px solid #333;
-    color: white;
-    font-family: 'Orbitron';
-    font-size: 1rem;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: 0.2s;
-}
-
-.slot-btn:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-    background: rgba(0, 243, 255, 0.1);
-    transform: scale(1.1);
-}
-
-.sidebar {
-    background: rgba(15, 15, 15, 0.98);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    z-index: 50;
-    height: 100% !important;
-    min-height: 0;
-    min-width: 320px;
-}
-
-.content {
-    position: relative;
-    height: 100% !important;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    z-index: 5;
-    background: radial-gradient(circle at center, #111 0%, #000 100%);
-}
-
-/* SIDEBAR ELEMENTS */
-.sb-dash-btn {
-    padding: 15px;
-    border-bottom: 1px solid #222;
-    text-align: center;
-    font-weight: 900;
-    letter-spacing: 3px;
-    color: white;
-    cursor: pointer;
-    background: #111;
-    font-size: 1rem;
-    flex-shrink: 0;
-    transition: 0.2s;
-}
-
-.sb-dash-btn:hover {
-    background: #222;
-    color: var(--pink);
-}
-
-.sb-head {
-    padding: 10px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    font-weight: bold;
-    letter-spacing: 1px;
-    color: #666;
-    font-size: 0.8rem;
-    font-family: 'Rajdhani';
-    flex-shrink: 0;
-}
-
-.user-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    color: #ffffff !important;
-    gap: 6px;
-}
-
-/* USER ITEMS */
-.user-list.focus-mode .u-item.active {
-    background: linear-gradient(90deg, #111 0%, #000 100%) !important;
-    transform: scale(1.05) translateX(5px);
-    z-index: 100;
-    box-shadow: 0 5px 30px rgba(0, 0, 0, 1);
-    border-color: var(--pink);
-}
-
-.u-item {
-    padding: 12px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid transparent;
-    transition: all 0.2s;
-    position: relative;
-    flex-shrink: 0;
-}
-
-.u-item:hover {
-    background: rgba(30, 30, 30, 0.8);
-    border-color: #555;
-    transform: translateX(2px);
-}
-
-.u-item.active {
-    background: rgba(255, 0, 222, 0.1);
-    border-color: var(--pink);
-}
-
-.u-item.queen-item {
-    border-left: 3px solid var(--yellow);
-    background: rgba(255, 215, 0, 0.05);
-    margin-bottom: 10px;
-}
-
-.u-avatar-main {
-    display: flex;
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    background: #111;
-    border: 2px solid #333;
-    margin-right: 12px;
-    flex-shrink: 0;
-    overflow: hidden;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-.u-avatar-main img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.notif-dot {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 12px;
-    height: 12px;
-    background: var(--pink);
-    border-radius: 50%;
-    border: 2px solid #000;
-    z-index: 10;
-    display: none;
-    box-shadow: 0 0 5px var(--pink);
-}
-
-.has-msg .notif-dot {
-    display: block;
-}
-
-.u-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex: 1;
-    overflow: hidden;
-}
-
-.u-name {
-    font-family: 'Orbitron', sans-serif !important;
-    font-size: 0.85rem !important;
-    font-weight: bold;
-    color: #ffffff !important;
-    line-height: 1.1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.dr-enforce-btn {
-    background: transparent !important;
-    /* Transparent background */
-    border: 1px solid var(--blue) !important;
-    /* Blue border */
-    color: var(--blue) !important;
-    display: inline-flex !important;
-    /* Forces icon and text on one line */
-    align-items: center !important;
-    gap: 5px !important;
-    font-size: 0.6rem !important;
-    padding: 2px 8px !important;
-    cursor: pointer !important;
-    border-radius: 3px !important;
-    font-family: 'Orbitron', sans-serif !important;
-    white-space: nowrap !important;
-}
-
-.dr-enforce-btn:hover {
-    background: rgba(0, 243, 255, 0.1) !important;
-}
-
-.u-seen {
-    font-size: 0.6rem;
-    color: #777;
-    font-family: 'Rajdhani';
-    margin-top: 3px;
-    text-transform: uppercase;
-    font-weight: bold;
-}
-
-.online {
-    color: var(--green);
-    text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
-}
-
-.u-right-col {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center;
-    gap: 8px;
-}
-
-.icon-box {
-    width: 16px;
-    height: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.svg-icon {
-    width: 100%;
-    height: 100%;
-    fill: #333;
-    /* Default OFF color */
-    transition: fill 0.2s;
-}
-
-.active-blue {
-    fill: var(--blue) !important;
-}
-
-.active-pink {
-    fill: var(--pink) !important;
-}
-
-.active-msg {
-    fill: var(--pink) !important;
-}
-
-.icon-dim {
-    opacity: 0.15;
-    fill: #555;
-}
-
-/* DASHBOARD HOME */
-#viewHome {
-    display: grid;
-    grid-template-rows: 90px auto 1fr;
-    gap: 20px;
-    padding: 20px;
-    height: 100%;
-    overflow: hidden;
-    max-height: 100dvh;
-}
-
-.stats-deck {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    flex-shrink: 0;
-}
-
-.d-stat-card {
-    background: rgba(20, 20, 20, 0.8);
-    border: 1px solid #333;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.dsc-val {
-    font-size: 2rem;
-    font-weight: 900;
-    line-height: 1;
-}
-
-.dsc-lbl {
-    font-family: 'Rajdhani';
-    font-size: 0.7rem;
-    color: #666;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    font-weight: bold;
-    margin-top: 5px;
-}
-
-.gold {
-    color: var(--yellow);
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-}
-
-.green {
-    color: var(--green);
-    text-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
-}
-
-.blue {
-    color: var(--blue);
-    text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
-}
-
-.red {
-    color: var(--red);
-    text-shadow: 0 0 10px rgba(255, 0, 60, 0.3);
-}
-
-/* PROTOCOL DECK */
-.protocol-deck {
-    background: rgba(20, 20, 20, 0.6);
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 15px;
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
-    align-items: center;
-    min-height: 80px;
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.pd-label {
-    width: 150px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border-right: 1px solid #333;
-    padding-right: 15px;
-}
-
-.pd-title {
-    color: var(--pink);
-    font-weight: 900;
-    letter-spacing: 1px;
-    font-size: 0.9rem;
-}
-
-.pd-sub {
-    color: #666;
-    font-family: 'Rajdhani';
-    font-size: 0.7rem;
-    text-transform: uppercase;
-}
-
-.pd-controls {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.pd-column-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-items: flex-start;
-    justify-content: center;
-}
-
-.pd-row-subgroup {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    align-items: center;
-}
-
-.pd-input-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #000;
-    padding: 2px 10px;
-    border-radius: 4px;
-    border: 1px solid #333;
-    height: 30px;
-}
-
-.pd-input {
-    background: transparent;
-    border: none;
-    color: white;
-    width: 60px;
-    font-family: 'Orbitron';
-    font-weight: bold;
-    text-align: right;
-    outline: none;
-    font-size: 0.9rem;
-}
-
-.pd-switch {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-family: 'Rajdhani';
-    font-size: 0.7rem;
-    color: #888;
-    user-select: none;
-    font-weight: bold;
-    margin-left: 2px;
-}
-
-.pd-checkbox {
-    width: 14px;
-    height: 14px;
-    border: 1px solid #555;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.pd-checkbox.checked {
-    background: var(--green);
-    border-color: var(--green);
-}
-
-.pd-checkbox svg {
-    width: 10px;
-    height: 10px;
-    fill: black;
-    display: none;
-}
-
-.pd-checkbox.checked svg {
-    display: block;
-}
-
-.pd-action-btn {
-    padding: 12px 25px;
-    border-radius: 4px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    cursor: pointer;
-    border: none;
-    background: #222;
-    color: #666;
-    transition: 0.2s;
-    border: 1px solid #444;
-    font-size: 1rem;
-}
-
-.pd-action-btn.engage:hover {
-    background: var(--pink);
-    color: black;
-    border-color: var(--pink);
-    box-shadow: 0 0 10px var(--pink);
-}
-
-.pd-action-btn.active-btn {
-    background: var(--red);
-    color: white;
-    border-color: var(--red);
-    box-shadow: 0 0 10px var(--red);
-    animation: pulseBtn 2s infinite;
-}
-
-.pd-ex-btn {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #111;
-    border: 1px solid #333;
-    color: var(--red);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.pd-ex-btn svg {
-    width: 16px;
-    height: 16px;
-    fill: var(--red);
-}
-
-.pd-ex-btn:hover {
-    border-color: var(--red);
-    background: rgba(255, 0, 60, 0.1);
-}
-
-.pd-broadcast-btn {
-    padding: 12px 25px;
-    border-radius: 4px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    cursor: pointer;
-    background: #111;
-    color: var(--pink);
-    border: 1px solid var(--pink);
-    transition: 0.2s;
-    font-size: 1rem;
-    font-family: 'Rajdhani';
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.pd-broadcast-btn:hover {
-    background: var(--pink);
-    color: black;
-    box-shadow: 0 0 15px var(--pink);
-}
-
-.ex-list {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    max-height: 300px;
-    overflow-y: auto;
-    padding: 10px;
-}
-
-.ex-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px;
-    background: #111;
-    border: 1px solid #333;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.ex-item.selected {
-    border-color: var(--red);
-    background: rgba(255, 0, 60, 0.1);
-}
-
-.ex-check {
-    width: 16px;
-    height: 16px;
-    border: 1px solid #555;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    color: var(--red);
-}
-
-@keyframes pulseBtn {
-    0% {
-        opacity: 1;
+// js/dashboard-users.js - USER DATA CONTROLLER
+
+import {
+    users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
+    availableDailyTasks,
+    setCooldownInterval, setHistLimit, setLastHistoryJson, setArmoryTarget
+} from './dashboard-state.js';
+import { clean, raw, formatTimer } from './dashboard-utils.js';
+import { Bridge } from './bridge.js';
+import { getOptimizedUrl, getSignedUrl } from './media.js';
+
+// --- STABILITY CACHE ---
+// Prevents flickering of "System Tasks" when refreshing
+let cachedFillers = [];
+let fillerUserId = null;
+const mainDashboardExpandedTasks = new Set();
+
+// =========================================
+// MAIN UPDATE FUNCTION (Populates All Tabs)
+// =========================================
+export async function updateDetail(u) {
+    if (!u) return;
+
+    // --- 1. VITALS MIRROR (Top Header & Stats) ---
+    const now = Date.now();
+    const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+    let diff = Math.floor((now - ls) / 60000);
+    let status = (ls > 0 && diff < 2) ? "ONLINE" : (ls > 0 ? diff + " MIN AGO" : "OFFLINE");
+    const isOnline = status === "ONLINE";
+
+    // 1. HEADER BASICS
+    const profPic = document.getElementById('dProfilePic');
+    if (profPic) profPic.src = u.profilePicture || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+
+    setText('dMirrorHierarchy', "LVL " + (u.level || 1)); // Stamp
+    setText('dMirrorName', u.name || "SLAVE");
+
+    const stEl = document.getElementById('dMirrorStatus');
+    if (stEl) {
+        stEl.innerText = status;
+        stEl.style.color = isOnline ? '#00ff00' : '#666';
     }
 
-    50% {
-        opacity: 0.7;
-    }
+    // 2. MAIN STATS
+    setText('dMirrorPoints', (u.points || 0).toLocaleString());
+    setText('dMirrorWallet', (u.coins || 0).toLocaleString());
 
-    100% {
-        opacity: 1;
+    // 3. KNEELING
+    const totalKneel = u.kneelCount || 0;
+    const kneelHrs = (totalKneel * 0.25).toFixed(1);
+    setText('dMirrorKneel', `${kneelHrs}h`);
+
+    // 4. PROGRESS BAR & LEVEL
+    const currentPoints = u.points || 0;
+    // Simple level logic for display (matches main.js roughly)
+    // Level = 1 + floor(points / 1000) for example, or fetch from config if avail
+    // For now assuming linear 1000 per level for visualization
+    const level = Math.floor(currentPoints / 1000) + 1;
+    const nextLevelPoints = level * 1000;
+    const pointsNeeded = nextLevelPoints - currentPoints;
+    const progressPercent = Math.min(100, Math.max(0, (currentPoints % 1000) / 10)); // 0-100%
+
+    setText('dMirrorNextLevel', "LEVEL " + (level + 1));
+    setText('dMirrorPointsNeeded', `${pointsNeeded} to go`);
+
+    const pBar = document.getElementById('dMirrorProgress');
+    if (pBar) pBar.style.width = `${progressPercent}%`;
+
+    // 5. EXTENDED STATS
+    setText('dMirrorStreak', u.streak || 0);
+    setText('dMirrorStatTotal', u.totalTasks || 0);
+    setText('dMirrorStatCompleted', u.tasksCompleted || 0);
+    setText('dMirrorStatSkipped', u.tasksSkipped || 0);
+
+    const isRoutineDone = u.routineDoneToday === true;
+    setText('dMirrorRoutine', isRoutineDone ? "DONE" : "PENDING");
+    const rEl = document.getElementById('dMirrorRoutine');
+    if (rEl) rEl.style.color = isRoutineDone ? '#00ff00' : '#666';
+
+    // 6. FOOTER
+    setText('dMirrorSlaveSince', u.joinDate ? new Date(u.joinDate).toLocaleDateString() : "--/--/--");
+
+    // --- 2. TAB: OPS (Operations) ---
+    updateReviewQueue(u);
+    updateActiveTask(u);
+    updateTaskQueue(u);
+    updateDailyProtocol(u);
+
+    // --- 3. TAB: INTEL (Data) ---
+    updateTelemetry(u);
+    updateDossier(u);
+    updateInventory(u);
+
+    // --- 4. TAB: RECORD (History) ---
+    updateAltar(u);
+    updateTrophies(u);
+    updateHistory(u);
+}
+
+// Helper to safely set text
+function setText(id, txt) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = txt;
+}
+
+// =========================================
+// TAB 1: OPS (OPERATIONS)
+// =========================================
+async function updateReviewQueue(u) {
+    const qSec = document.getElementById('userQueueSec');
+    if (!qSec) return;
+
+    if (u.reviewQueue && u.reviewQueue.length > 0) {
+        // Sign URLs for thumbnails
+        const signingPromises = u.reviewQueue.map(async t => {
+            if (t.proofUrl) {
+                t.thumbSigned = await getSignedUrl(getOptimizedUrl(t.proofUrl, 150));
+                t.fullSigned = await getSignedUrl(t.proofUrl);
+            }
+        });
+        await Promise.all(signingPromises);
+
+        qSec.style.display = 'flex';
+        qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` +
+            u.reviewQueue.map(t => `<div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false, '${t.fullSigned}')">
+                    <img src="${t.thumbSigned}" class="pend-thumb">
+                    <div class="pend-info"><div class="pend-act">PENDING</div><div class="pend-txt">${clean(t.text)}</div></div>
+                </div>`).join('');
+    } else {
+        qSec.style.display = 'none';
     }
 }
 
-.pd-progress-area {
-    flex: 1;
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0 20px;
-}
-
-.pd-progress-bar {
-    width: 100%;
-    height: 8px;
-    background: #222;
-    border-radius: 10px;
-    overflow: hidden;
-    position: relative;
-}
-
-.pd-progress-fill {
-    height: 100%;
-    width: 0%;
-    background: var(--yellow);
-    box-shadow: 0 0 10px var(--yellow);
-    transition: width 0.5s;
-}
-
-.pd-prog-txt {
-    font-family: 'Share Tech Mono';
-    font-size: 0.7rem;
-    color: var(--yellow);
-    text-align: center;
-    margin-top: 4px;
-}
-
-/* DASHBOARD PANELS */
-.dash-split {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    min-height: 0;
-    overflow: hidden;
-    height: 100%;
-}
-
-.dash-panel {
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid #333;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    height: 100%;
-    max-height: 100%;
-    position: relative;
-}
-
-.dp-head {
-    padding: 12px;
-    background: #111;
-    border-bottom: 1px solid #333;
-    font-family: 'Share Tech Mono';
-    color: #888;
-    font-size: 0.8rem;
-    display: flex;
-    justify-content: space-between;
-    flex-shrink: 0;
-}
-
-.dp-body {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 10px;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.ops-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 10px;
-    padding: 5px;
-}
-
-.mon-card {
-    background: rgba(10, 10, 10, 0.95);
-    border: 1px solid #333;
-    border-radius: 10px;
-    padding: 15px 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.2s;
-    height: 160px;
-}
-
-.mon-card:hover {
-    transform: translateY(-3px);
-    background: #222;
-}
-
-.mon-card.red {
-    border-color: var(--red);
-    box-shadow: inset 0 0 20px rgba(255, 0, 60, 0.1);
-}
-
-.mon-card.blue {
-    border-color: var(--blue);
-    box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.1);
-}
-
-.mon-badge {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    font-size: 0.55rem;
-    font-weight: 900;
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.badge-r {
-    background: var(--red);
-    color: black;
-}
-
-.badge-b {
-    background: var(--blue);
-    color: black;
-}
-
-.mon-av-box {
-    width: 50px;
-    height: 50px;
-    margin-bottom: 8px;
-    position: relative;
-}
-
-.mon-av {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #333;
-}
-
-.mon-card.red .mon-av {
-    border-color: var(--red);
-}
-
-.mon-card.blue .mon-av {
-    border-color: var(--blue);
-}
-
-.mon-name {
-    font-weight: 900;
-    font-size: 0.9rem;
-    color: white;
-    line-height: 1.1;
-    margin-bottom: 5px;
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.mon-detail {
-    font-family: 'Rajdhani';
-    font-size: 0.75rem;
-    color: #aaa;
-    line-height: 1.1;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.mon-timer {
-    margin-top: auto;
-    font-family: 'Orbitron';
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: white;
-}
-
-/* FEED LOG */
-.feed-log {
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-family: 'Share Tech Mono';
-    font-size: 0.8rem;
-}
-
-.feed-trib-card {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    background: linear-gradient(90deg, rgba(255, 215, 0, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
-    border-left: 3px solid var(--yellow);
-    padding: 10px 12px;
-    margin-bottom: 5px;
-    border-radius: 0 6px 6px 0;
-}
-
-.feed-buy-card {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    background: linear-gradient(90deg, rgba(57, 255, 20, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
-    border-left: 3px solid var(--green);
-    padding: 10px 12px;
-    margin-bottom: 5px;
-    border-radius: 0 6px 6px 0;
-}
-
-.ft-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid #333;
-    flex-shrink: 0;
-    background: #000;
-}
-
-.feed-trib-card .ft-avatar {
-    border-color: var(--yellow);
-}
-
-.feed-buy-card .ft-avatar {
-    border-color: var(--green);
-}
-
-.ft-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.ft-top {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    font-size: 0.7rem;
-    color: #666;
-    font-family: 'Rajdhani';
-    font-weight: bold;
-    text-transform: uppercase;
-}
-
-.ft-main {
-    font-size: 1.2rem;
-    font-weight: 900;
-    color: var(--yellow);
-    margin-top: 0;
-    line-height: 1;
-}
-
-.fb-main {
-    font-size: 1.1rem;
-    font-weight: 900;
-    color: var(--green);
-    margin-top: 0;
-    line-height: 1;
-}
-
-.ft-sub {
-    font-family: 'Rajdhani';
-    font-size: 0.85rem;
-    color: #ccc;
-    margin-top: 2px;
-}
-
-/* USER VIEW */
-#viewUser {
-    display: none;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    background: rgba(5, 5, 5, 0.95);
-    z-index: 50;
-}
-
-#viewUser.active {
-    display: flex;
-}
-
-.user-head {
-    background: rgba(8, 8, 8, 0.95);
-    border-bottom: 1px solid var(--border);
-    padding: 15px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    z-index: 10;
-    position: relative;
-}
-
-.mob-back-btn {
-    display: none;
-    position: absolute;
-    left: 10px;
-    top: 10px;
-    background: transparent;
-    border: 1px solid #444;
-    color: #888;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    cursor: pointer;
-}
-
-.uh-info-side {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    width: 100%;
-}
-
-.uh-main {
-    font-size: 2.2rem;
-    font-weight: 900;
-    color: white;
-    line-height: 1;
-}
-
-.uh-sub {
-    color: var(--pink);
-    font-size: 0.9rem;
-    letter-spacing: 3px;
-    margin-top: 2px;
-    text-transform: uppercase;
-}
-
-.uh-seen {
-    color: #555;
-    font-size: 0.7rem;
-    margin-top: 2px;
-    font-family: 'Rajdhani';
-}
-
-.uh-joined {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 0.65rem;
-    color: #444;
-    font-family: 'Rajdhani';
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.app-icon-btn {
-    position: absolute;
-    top: 15px;
-    left: 20px;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    display: none;
-    transition: 0.2s;
-}
-
-.app-icon-btn img {
-    width: 100%;
-    height: 100%;
-}
-
-.split {
-    display: grid;
-    grid-template-columns: 1fr 400px;
-    flex: 1;
-    min-height: 0;
-    border-bottom: 1px solid #333;
-    overflow: hidden;
-}
-
-.chat-panel {
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background: #0a0a0a;
-    min-height: 0;
-}
-
-.cp-head {
-    padding: 6px;
-    text-align: center;
-    font-size: 0.65rem;
-    font-weight: 900;
-    letter-spacing: 3px;
-    color: #666;
-    background: #111;
-    border-bottom: 1px solid #222;
-}
-
-.c-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    background: transparent;
-}
-
-.msg-row {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    margin-bottom: 12px;
-    max-width: 100%;
-    align-items: flex-end;
-}
-
-.mr-out {
-    flex-direction: row-reverse;
-}
-
-.mr-in {
-    flex-direction: row;
-}
-
-.chat-av {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-    border: 1px solid #333;
-}
-
-.chat-av-placeholder {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #222;
-    border: 1px solid #444;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #666;
-    font-weight: bold;
-    font-size: 0.8rem;
-    flex-shrink: 0;
-}
-
-.msg {
-    max-width: 80%;
-    padding: 8px 12px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.95rem;
-    line-height: 1.35;
-    position: relative;
-    overflow-wrap: break-word;
-    word-break: normal;
-    white-space: pre-wrap;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-}
-
-.msg img,
-.msg video {
-    max-width: 200px !important;
-    max-height: 200px !important;
-    width: auto;
-    height: auto;
-    border-radius: 8px;
-    border: 1px solid #333;
-    display: block;
-    cursor: pointer;
-    margin-top: 5px;
-}
-
-.m-out {
-    background: var(--pink);
-    color: black !important;
-    border-radius: 12px 12px 2px 12px;
-    text-shadow: none;
-    font-weight: 600;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.m-in {
-    background: #222;
-    color: #e0e0e0;
-    border-radius: 12px 12px 12px 2px;
-    border: 1px solid #333;
-}
-
-.msg-sys {
-    width: 100%;
-    align-self: center;
-    text-align: center;
-    margin: 6px 0;
-    font-family: 'Rajdhani';
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 4px 0;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #888;
-    opacity: 0.9;
-    text-shadow: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.sys-icon {
-    width: 16px;
-    height: 16px;
-    fill: #666;
-}
-
-.msg-gold {
-    width: 90%;
-    align-self: center;
-    text-align: center;
-    margin: 10px 0;
-    padding: 10px;
-    background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(255, 215, 0, 0.1) 100%);
-    border: 1px solid var(--yellow);
-    border-radius: 6px;
-    color: var(--yellow);
-    font-family: 'Orbitron';
-    font-size: 0.9rem;
-    font-weight: 900;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-}
-
-.gold-icon {
-    width: 24px;
-    height: 24px;
-    fill: var(--yellow);
-}
-
-.msg-green {
-    width: 90%;
-    align-self: center;
-    text-align: center;
-    margin: 10px 0;
-    padding: 10px;
-    background: linear-gradient(90deg, rgba(57, 255, 20, 0.1) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(57, 255, 20, 0.1) 100%);
-    border: 1px solid var(--green);
-    border-radius: 6px;
-    color: var(--green);
-    font-family: 'Orbitron';
-    font-size: 0.9rem;
-    font-weight: 900;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-}
-
-.green-icon {
-    width: 24px;
-    height: 24px;
-    fill: var(--green);
-}
-
-.msg-meta {
-    font-size: 0.6rem;
-    color: #666;
-    margin-top: 2px;
-    font-family: 'Rajdhani';
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    padding: 0 4px;
-}
-
-.m-out .msg-meta {
-    color: rgba(0, 0, 0, 0.6) !important;
-}
-
-.c-foot {
-    padding: 10px;
-    border-top: 1px solid #333;
-    display: flex;
-    gap: 8px;
-    background: #111;
-    flex-shrink: 0;
-    align-items: center;
-    position: relative;
-}
-
-.inp {
-    flex: 1;
-    background: black;
-    border: 1px solid #333;
-    color: white;
-    padding: 10px;
-    border-radius: 4px;
-    font-family: 'Rajdhani';
-    font-size: 0.9rem;
-    outline: none;
-    height: 40px;
-}
-
-.btn-send {
-    height: 40px;
-    width: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #222;
-    color: white;
-    border: 1px solid #333;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
-}
-
-.btn-plus {
-    height: 40px;
-    width: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #222;
-    color: var(--pink);
-    border: 1px solid #333;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1.2rem;
-    font-weight: bold;
-    transition: 0.2s;
-}
-
-.btn-plus:hover {
-    border-color: var(--pink);
-    background: rgba(255, 0, 222, 0.1);
-}
-
-#plusMenu {
-    position: absolute;
-    bottom: 60px;
-    left: 10px;
-    background: rgba(10, 10, 10, 0.95);
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 5px;
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    backdrop-filter: blur(5px);
-    z-index: 50;
-    width: 140px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-}
-
-#plusMenu.show {
-    display: flex;
-    animation: popUp 0.2s ease-out;
-}
-
-.menu-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    background: transparent;
-    border: none;
-    color: #ccc;
-    font-family: 'Rajdhani';
-    font-weight: bold;
-    font-size: 0.9rem;
-    cursor: pointer;
-    border-radius: 4px;
-    text-align: left;
-    width: 100%;
-}
-
-.menu-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.menu-btn svg {
-    width: 16px;
-    height: 16px;
-    fill: #ccc;
-}
-
-.menu-btn:hover svg {
-    fill: white;
-}
-
-/* =========================================
-   ADMIN COMMAND CENTER (TABBED LAYOUT)
-   ========================================= */
-
-/* MAIN PANEL CONTAINER */
-.action-panel {
-    display: flex;
-    flex-direction: column;
-    background: #080808;
-    border-left: 1px solid #333;
-    height: 100%;
-    overflow: hidden;
-    /* Internal views handle scrolling */
-    padding: 0;
-    /* Padding moved to internal views */
-}
-
-/* --- 1. PREMIUM VITALS GRID (TOP FIXED) --- */
-.ap-vitals-premium {
-    padding: 10px;
-    background: #000;
-    border-bottom: 1px solid #222;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    flex-shrink: 0;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    z-index: 20;
-}
-
-.pv-card {
-    background: #080808;
-    border: 1px solid #222;
-    border-radius: 6px;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    position: relative;
-    min-height: 70px;
-}
-
-.pv-card.gold {
-    border-bottom: 2px solid var(--yellow);
-}
-
-.pv-card.blue {
-    border-bottom: 2px solid var(--blue);
-}
-
-.pv-card.green {
-    border-bottom: 2px solid var(--green);
-}
-
-.pv-card.red {
-    border-bottom: 2px solid var(--red);
-}
-
-.pv-lbl {
-    font-family: 'Rajdhani';
-    font-size: 0.55rem;
-    color: #555;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-weight: bold;
-    margin-bottom: 2px;
-}
-
-.pv-val {
-    font-family: 'Orbitron';
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: white;
-    line-height: 1;
-}
-
-.pv-sub {
-    font-family: 'Rajdhani';
-    font-size: 0.6rem;
-    color: #777;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-}
-
-.gold .pv-val {
-    color: var(--yellow);
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
-}
-
-.blue .pv-val {
-    color: var(--blue);
-}
-
-.green .pv-val {
-    color: var(--green);
-}
-
-.red .pv-val {
-    color: var(--red);
-}
-
-/* CONTROLS FOR MONEY */
-.pv-ctrl {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    display: flex;
-    gap: 2px;
-}
-
-.pv-ctrl button {
-    width: 14px;
-    height: 14px;
-    background: #111;
-    border: 1px solid #333;
-    color: #666;
-    font-size: 0.6rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border-radius: 2px;
-}
-
-.pv-ctrl button:hover {
-    background: #222;
-    color: white;
-    border-color: #555;
-}
-
-/* --- 2. NAVIGATION TABS --- */
-.ap-nav {
-    display: flex;
-    border-bottom: 1px solid #333;
-    background: #0a0a0a;
-    flex-shrink: 0;
-}
-
-.ap-tab {
-    flex: 1;
-    background: transparent;
-    border: none;
-    padding: 12px;
-    color: #555;
-    font-family: 'Orbitron';
-    font-size: 0.7rem;
-    letter-spacing: 2px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: 0.3s;
-}
-
-.ap-tab:hover {
-    color: #ccc;
-    background: rgba(255, 255, 255, 0.02);
-}
-
-.ap-tab.active {
-    color: var(--blue);
-    border-bottom-color: var(--blue);
-    background: rgba(0, 243, 255, 0.05);
-    font-weight: bold;
-}
-
-/* --- 3. VIEW CONTAINER --- */
-.ap-content {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-}
-
-.ap-view {
-    position: absolute;
-    inset: 0;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    /* Custom Scrollbar */
-    scrollbar-width: thin;
-    scrollbar-color: #333 #000;
-}
-
-.ap-view.hidden {
-    display: none !important;
-}
-
-
-/* =========================================
-   PROFILE MIRROR STYLES (Ported from profile.css)
-   ========================================= */
-
-/* 1. HEADER */
-.ap-mirror-header {
-    padding: 20px;
-    text-align: center;
-    border-bottom: 1px solid #333;
-    background: linear-gradient(180deg, #111 0%, #050505 100%);
-}
-
-.avatar-container {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 15px;
-    position: relative;
-    /* Hexagon Clip Path */
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    background: linear-gradient(to bottom, #c5a059, #fff);
-    padding: 2px;
-}
-
-.avatar-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    background: #000;
-}
-
-.rank-badge {
-    position: absolute;
-    bottom: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #000;
-    color: #c5a059;
-    font-family: 'Orbitron';
-    font-size: 0.6rem;
-    padding: 2px 8px;
-    border: 1px solid #c5a059;
-    border-radius: 4px;
-    z-index: 10;
-}
-
-/* 2. VITALS GRID */
-.ap-vitals-mirror {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 15px;
-    background: #080808;
-}
-
-.vm-card {
-    background: #111;
-    border: 1px solid #333;
-    padding: 15px 5px;
-    text-align: center;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 80px;
-}
-
-.vm-ctrl {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    display: flex;
-    gap: 2px;
-}
-
-.vm-ctrl button {
-    background: #222;
-    border: 1px solid #444;
-    color: #ccc;
-    cursor: pointer;
-    font-size: 10px;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.2s;
-}
-
-.vm-ctrl button:hover {
-    background: #333;
-    border-color: #666;
-    color: #fff;
-}
-
-
-/* --- 4. SECTION COMPONENTS (NEW) --- */
-.sec-box {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid #333;
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 5px;
-}
-
-.sec-title {
-    font-size: 0.65rem;
-    color: #666;
-    margin-bottom: 8px;
-    letter-spacing: 1px;
-    font-weight: bold;
-    text-transform: uppercase;
-    border-bottom: 1px solid #222;
-    padding-bottom: 4px;
-}
-
-/* ALTAR SLOTS */
-.altar-admin-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 5px;
-}
-
-.aa-slot {
-    flex: 1;
-    height: 70px;
-    border: 1px dashed #444;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #444;
-    font-family: 'Cinzel';
-    cursor: pointer;
-    background-size: cover;
-    background-position: center;
-    transition: 0.2s;
-    font-size: 0.8rem;
-}
-
-.aa-slot:hover {
-    border-color: var(--gold);
-    color: var(--gold);
-}
-
-/* TELEMETRY GRID */
-.telemetry-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.t-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #111;
-    padding: 8px;
-    border-radius: 4px;
-}
-
-.t-stat span {
-    font-size: 0.5rem;
-    color: #666;
-    font-family: 'Orbitron';
-}
-
-.t-stat strong {
-    font-size: 1rem;
-    color: #fff;
-    font-family: 'Rajdhani';
-}
-
-/* =========================================
-   LEGACY COMPONENTS (KEPT SAFE)
-   ========================================= */
-
-/* STAT BOXES (Reused in Intel Tab) */
-.stats-row {
-    display: flex;
-    gap: 5px;
-    justify-content: space-between;
-}
-
-.stat-box {
-    flex: 1;
-    background: #111;
-    border: 1px solid #333;
-    padding: 6px;
-    border-radius: 4px;
-    text-align: center;
-}
-
-.stat-val {
-    font-size: 1rem;
-    font-weight: 900;
-    color: white;
-    line-height: 1;
-}
-
-.stat-lbl {
-    font-size: 0.5rem;
-    color: #666;
-    font-family: 'Rajdhani';
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-top: 2px;
-}
-
-/* MINI ACTIVE TASK (OPS TAB) - FIXED TEXT WRAP */
-.mini-active {
-    display: flex;
-    align-items: center;
-    /* Keep items centered vertically */
-    gap: 8px;
-    border: 1px solid var(--blue);
-    background: rgba(0, 243, 255, 0.05);
-    padding: 8px;
-    border-radius: 4px;
-    margin-bottom: 5px;
-    height: auto;
-    /* Allow box to grow */
-}
-
-.ma-status {
-    font-size: 0.55rem;
-    color: var(--blue);
-    font-weight: 900;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    letter-spacing: 1px;
-    flex-shrink: 0;
-    /* Prevent status from squashing */
-}
-
-.ma-mid {
-    flex: 1;
-    min-width: 0;
-    /* Critical for wrapping inside flex */
-}
-
-.ma-txt {
-    font-family: 'Rajdhani';
-    font-size: 0.85rem;
-    color: #fff;
-    font-weight: bold;
-
-    /* THE FIX: Allow wrapping */
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    line-height: 1.2;
-}
-
-.ma-timer {
-    font-family: 'Orbitron';
-    font-size: 0.85rem;
-    color: var(--blue);
-    font-weight: bold;
-    margin-top: 2px;
-}
-
-.ma-ctrl {
-    display: flex;
-    gap: 4px;
-    align-items: flex-start;
-    /* Aligns buttons to top if text is long */
-}
-
-.ma-btn {
-    padding: 4px 8px;
-    background: #000;
-    border: 1px solid #444;
-    color: #aaa;
-    font-size: 0.6rem;
-    cursor: pointer;
-    border-radius: 3px;
-    font-family: 'Orbitron';
-    transition: 0.2s;
-}
-
-.ma-btn:hover {
-    color: white;
-    border-color: white;
-}
-
-/* QUEUE COMPONENTS (OPS TAB) */
-.task-queue-box {
-    border: 1px solid #333;
-    padding: 10px;
-    border-radius: 6px;
-    background: #0a0a0a;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.clickable-title {
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.clickable-title:hover {
-    color: #fff !important;
-    text-decoration: underline;
-}
-
-.q-list-vertical {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.q-input-row {
-    display: flex;
-    gap: 5px;
-    margin-top: 5px;
-}
-
-.q-input {
-    flex: 1;
-    background: #111;
-    border: 1px solid #333;
-    color: white;
-    padding: 6px;
-    font-family: 'Rajdhani';
-    font-size: 0.8rem;
-}
-
-.q-add-btn {
-    background: var(--blue);
-    border: none;
-    color: black;
-    font-weight: bold;
-    width: 30px;
-    cursor: pointer;
-}
-
-/* QUEUE BUTTONS (Inside List) */
-.q-btn {
-    padding: 6px 2px;
-    font-weight: bold;
-    border-radius: 3px;
-    cursor: pointer;
-    font-family: 'Rajdhani';
-    border: 1px solid #333;
-    background: #161616;
-    color: white;
-    font-size: 0.7rem;
-    text-align: center;
-    flex: 1;
-    min-width: 35px;
-    height: 35px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.q-btn:hover {
-    background: #222;
-    border-color: #666;
-}
-
-.q-minus {
-    border-color: var(--pink);
-    color: var(--pink);
-}
-
-.q-btn-img {
-    aspect-ratio: 1/1;
-    background: #000;
-    border: 1px solid #333;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-    transition: 0.2s;
-    flex: 1;
-    min-width: 35px;
-    height: 35px;
-}
-
-.q-btn-img:hover {
-    border-color: var(--green);
-    background: #111;
-}
-
-.q-btn-img img {
-    width: 70%;
-    height: 70%;
-    object-fit: contain;
-}
-
-.q-btn-img span {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    font-size: 0.55rem;
-    color: var(--green);
-    font-weight: 900;
-    line-height: 1;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 1px 2px;
-    border-radius: 2px;
-}
-
-.q-btn-img svg {
-    width: 24px;
-    height: 24px;
-    fill: #444;
-}
-
-/* PENDING CARDS & HISTORY */
-.pend-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-}
-
-.pend-card {
-    display: flex;
-    gap: 12px;
-    background: rgba(255, 0, 60, 0.05);
-    border: 1px solid var(--red);
-    padding: 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    align-items: center;
-    box-shadow: 0 0 10px rgba(255, 0, 60, 0.1);
-    width: 100%;
-    transition: 0.2s;
-    height: 60px;
-}
-
-.pend-card:hover {
-    background: rgba(255, 0, 60, 0.1);
-    transform: translateX(2px);
-}
-
-.pend-thumb {
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
-    object-fit: cover;
-    border: 1px solid #333;
-    background: #000;
-    flex-shrink: 0;
-}
-
-.pend-info {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 0;
-}
-
-.pend-txt {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    color: #eee;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.2;
-    font-weight: bold;
-    width: 100%;
-}
-
-.pend-act {
-    font-size: 0.6rem;
-    color: var(--red);
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.history-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-    margin-top: 5px;
-}
-
-.load-more-btn {
-    width: 100%;
-    padding: 8px;
-    background: #111;
-    border: 1px solid #333;
-    color: #666;
-    font-size: 0.7rem;
-    cursor: pointer;
-    margin-top: 10px;
-    font-family: 'Orbitron';
-}
-
-.load-more-btn:hover {
-    color: white;
-    border-color: white;
-}
-
-.pts-grid {
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    align-items: center;
-    min-height: 40px;
-}
-
-/* ============================================================
-   ULTRA-COMPACT TACTICAL TASK CARD (NEW MICRO-LOGIC)
-   ============================================================ */
-
-/* THE CARD: Micro-sized, Independent block */
-.q-item-line {
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 3px 8px !important;
-    /* MICRO PADDING */
-    background: rgba(10, 10, 10, 0.95) !important;
-    border: 1px solid #222 !important;
-    border-radius: 4px !important;
-    margin-bottom: 3px !important;
-    height: auto !important;
-    /* Critical for unrolling */
-    min-height: 45px !important;
-    position: relative !important;
-    transition: 0.2s ease-in-out;
-    width: 100% !important;
-}
-
-/* Queen Orders: Solid Pink Glow */
-.q-item-line.direct-order {
-    border-color: var(--pink) !important;
-    background: rgba(255, 0, 222, 0.02) !important;
-}
-
-/* System Tasks: Dashed Grey */
-.q-item-line.filler-task {
-    border-style: dashed !important;
-    opacity: 0.5;
-}
-
-/* 1. HEADER ROW: Icon | Badge | X */
-.dr-card-header {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
-    border-bottom: 1px solid #1a1a1a !important;
-    padding-bottom: 2px !important;
-    margin-bottom: 3px !important;
-}
-
-.q-handle {
-    font-size: 0.6rem !important;
-    color: var(--pink);
-    width: 15px;
-}
-
-.q-badge-queen {
-    font-size: 0.35rem !important;
-    font-weight: 900;
-    color: black;
-    background: var(--pink);
-    padding: 0px 3px;
-    border-radius: 1px;
-    letter-spacing: 1px;
-}
-
-.q-del {
-    color: #444;
-    cursor: pointer;
-    font-size: 0.8rem !important;
-    line-height: 1;
-}
-
-/* 2. THE TEXT: Micro Serif (2-Line Clamp) */
-.q-txt-line {
-    font-family: 'Georgia', 'Times New Roman', serif !important;
-    font-size: 0.65rem !important;
-    /* MICRO FONT */
-    line-height: 1.2 !important;
-    color: #888 !important;
-    display: block;
-    overflow: visible !important;
-    transition: color 0.3s;
-    flex: none !important;
-}
-
-/* 3. THE NUCLEAR UNROLL (EXPANSION STATE) */
-.q-item-line.is-expanded {
-    background: #000 !important;
-    border-color: var(--blue) !important;
-    box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
-    z-index: 100;
-}
-
-.q-item-line.is-expanded .q-txt-line {
-    display: block !important;
-    -webkit-line-clamp: unset !important;
-    /* SHOW EVERYTHING */
-    overflow: visible !important;
-    color: #fff !important;
-    max-height: none !important;
-}
-
-/* 4. THE ARROW CONTROLS */
-.dr-mirror-arrow {
-    width: 100% !important;
-    text-align: center !important;
-    font-size: 0.4rem !important;
-    color: #222 !important;
-    cursor: pointer !important;
-    line-height: 1;
-    margin-top: 2px;
-}
-
-.is-expanded .dr-mirror-arrow {
-    transform: rotate(180deg);
-    color: var(--pink) !important;
-}
-
-/* ============================================================
-   HISTORY & FOOTER (RESTORED)
-   ============================================================ */
-.history-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 5px;
-}
-
-.h-card-mini {
-    height: 100px;
-    background: #111;
-    border: 1px solid #333;
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-}
-
-.h-card-mini img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0.7;
-    transition: 0.2s;
-}
-
-.h-card-mini:hover img {
-    opacity: 1;
-}
-
-.h-badge {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 2px;
-    font-size: 0.5rem;
-    text-align: center;
-    font-weight: 900;
-    text-transform: uppercase;
-    background: rgba(0, 0, 0, 0.8);
-}
-
-.hb-app {
-    color: var(--green);
-}
-
-.hb-rej {
-    color: var(--red);
-}
-
-.hb-skip {
-    color: var(--blue);
-}
-
-.load-more-btn {
-    width: 100%;
-    padding: 8px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    color: #666;
-    font-size: 0.7rem;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 5px;
-}
-
-.load-more-btn:hover {
-    background: #222;
-    color: #aaa;
-}
-
-.app-toggle-container {
-    margin-top: auto;
-    padding-top: 15px;
-    border-top: 1px solid #333;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-}
-
-.app-toggle-lbl {
-    font-family: 'Rajdhani';
-    font-weight: bold;
-    font-size: 0.8rem;
-    color: #888;
-}
-
-.sticker-case {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 6px;
-}
-
-.my-sticker {
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
-    border: 1px solid #333;
-    background: #111;
-    padding: 2px;
-}
-
-.my-sticker img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-/* 1. The Header Trigger on the main Dashboard */
-.clickable-title {
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.clickable-title:hover {
-    text-shadow: 0 0 15px var(--blue);
-    transform: translateX(5px);
-}
-
-/* --- REWARD PROTOCOL OVERLAY FIX --- */
-#reviewRewardOverlay {
-    display: none;
-    /* Hidden by default */
-    position: absolute;
-    inset: 0;
-    background: rgba(5, 5, 5, 0.98);
-    z-index: 100;
-    flex-direction: column;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-/* Ensure the sticker grid is tight and micro-sized */
-.sticker-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-    gap: 10px;
-    margin-bottom: 15px;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 8px;
-}
-
-.sticker-card {
-    background: #111;
-    border: 1px solid #333;
-    padding: 5px;
-    border-radius: 4px;
-    cursor: pointer;
-    text-align: center;
-    transition: 0.2s;
-}
-
-.sticker-card.selected {
-    border-color: var(--green);
-    background: rgba(57, 255, 20, 0.1);
-}
-
-.stk-img {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-}
-
-.stk-name {
-    font-size: 0.5rem;
-    color: #666;
-    font-family: 'Rajdhani';
-    text-transform: uppercase;
-    margin-top: 3px;
-}
-
-/* The Inputs (Points & Comment) */
-.rw-inp {
-    width: 100%;
-    background: #000;
-    border: 1px solid #333;
-    color: var(--green);
-    padding: 10px;
-    border-radius: 4px;
-    font-family: 'Orbitron';
-    font-size: 0.8rem;
-    margin-bottom: 10px;
-    outline: none;
-}/* =========================================
-   PROFILE MIRROR STYLES (Ported from profile.css)
-   ========================================= */
-
-/* 1. HEADER */
-.ap-mirror-header {
-    padding: 20px;
-    text-align: center;
-    border-bottom: 1px solid #333;
-    background: linear-gradient(180deg, #111 0%, #050505 100%);
-}
-
-.avatar-container {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 15px;
-    position: relative;
-    /* Hexagon Clip Path to match profile */
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    background: linear-gradient(to bottom, #c5a059, #fff);
-    padding: 2px;
-}
-
-.avatar-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    background: #000;
-}
-
-.rank-badge {
-    position: absolute;
-    bottom: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #000;
-    color: #c5a059;
-    font-family: 'Orbitron';
-    font-size: 0.6rem;
-    padding: 2px 8px;
-    border: 1px solid #c5a059;
-    border-radius: 4px;
-    z-index: 10;
-}
-
-/* 2. VITALS GRID */
-.ap-vitals-mirror {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 15px;
-    background: #080808;
-}
-
-.vm-card {
-    background: #111;
-    border: 1px solid #333;
-    padding: 15px 5px;
-    text-align: center;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 80px;
-}
-
-.vm-ctrl {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    display: flex;
-    gap: 2px;
-}
-
-.vm-ctrl button {
-    background: #222;
-    border: 1px solid #444;
-    color: #ccc;
-    cursor: pointer;
-    font-size: 10px;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.2s;
-}
-
-.vm-ctrl button:hover {
-    background: #333;
-    border-color: #666;
-    color: #fff;
-}
-
-/* 3. NAVIGATION TABS (MIRROR) */
-.ap-nav button.ap-tab {
-    flex: 1;
-    padding: 12px;
-    background: transparent;
-    border: none;
-    color: #666;
-    font-family: 'Orbitron';
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: 0.3s;
-    font-size: 0.7rem;
-    letter-spacing: 2px;
-}
-
-.ap-nav button.ap-tab:hover {
-    color: #ccc;
-    background: rgba(255, 255, 255, 0.02);
-}
-
-.ap-nav button.ap-tab.active {
-    color: #c5a059;
-    border-bottom-color: #c5a059;
-    background: rgba(197, 160, 89, 0.05);
-}
-
-/* 4. UTILITIES */
-.ap-mirror-text-gold {
-    color: #c5a059;
-    font-family: 'Cinzel', serif;
-}
-
-.ap-mirror-text-neon {
-    color: #00ff00;
-    font-family: 'Orbitron', sans-serif;
-    text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
-}
+function updateActiveTask(u) {
+    if (cooldownInterval) clearInterval(cooldownInterval);
+    const activeText = document.getElementById('dActiveText');
+    const activeTimer = document.getElementById('dActiveTimer');
+
+    if (!activeText) return;
+
+    if (u.activeTask && u.endTime && u.endTime > Date.now()) {
+        activeText.innerText = clean(u.activeTask.text);
+
+        const tick = () => {
+            const diff = u.endTime - Date.now();
+            if (diff <= 0) {
+                activeTimer.innerText = "00:00";
+                clearInterval(cooldownInterval);
+                return;
+            }
+            activeTimer.innerText = formatTimer(diff);
+        };
+        tick();
+        const interval = setInterval(tick, 1000);
+        setCooldownInterval(interval);
+    } else {
+        activeText.innerText = "IDLE";
+        activeTimer.innerText = "--:--";
+    }
+}
+
+function updateTaskQueue(u) {
+    const listContainer = document.getElementById('qListContainer');
+    if (!listContainer) return;
+
+    let personalTasks = u.taskQueue || [];
+
+    // Filler Logic (Random tasks to make it look busy if empty)
+    if (fillerUserId !== u.memberId || cachedFillers.length === 0) {
+        cachedFillers = (availableDailyTasks || []).sort(() => 0.5 - Math.random()).slice(0, 10);
+        fillerUserId = u.memberId;
+    }
+
+    const displayTasks = [...personalTasks, ...cachedFillers.slice(0, Math.max(0, 10 - personalTasks.length))];
+
+    listContainer.innerHTML = displayTasks.map((t, idx) => {
+        const isPersonal = idx < personalTasks.length;
+        const niceText = clean(t);
+        const isExpanded = mainDashboardExpandedTasks.has(niceText);
+
+        return `
+            <div class="mini-active" style="border:1px solid ${isPersonal ? '#333' : '#222'}; opacity:${isPersonal ? 1 : 0.5}; margin-bottom:5px;">
+                <div class="ma-status" style="color:${isPersonal ? 'var(--gold)' : '#555'}">${isPersonal ? 'CMD' : 'AUTO'}</div>
+                <div class="ma-mid">
+                    <div class="ma-txt" style="white-space:normal; cursor:pointer;" onclick="toggleMainTaskExpansion(this, '${raw(niceText)}')">${niceText}</div>
+                </div>
+                ${isPersonal ? `<button class="ma-btn" onclick="deleteQueueItem('${u.memberId}', ${idx})" style="color:red;">&times;</button>` : ''}
+            </div>`;
+    }).join('');
+}
+
+function updateDailyProtocol(u) {
+    // 1. Update List
+    const container = document.getElementById('userRoutineList');
+
+    // 2. Update Header (Sync)
+    const isDone = u.routineDoneToday === true;
+    const color = isDone ? 'var(--green)' : '#666'; // List color
+    const headColor = isDone ? 'var(--green)' : 'var(--red)'; // Header color
+    const icon = isDone ? 'COMPLETED' : 'PENDING';
+
+    // Sync Header
+    setText('dRoutineStatus', isDone ? "DONE" : "PENDING");
+    const rStatEl = document.getElementById('dRoutineStatus');
+    if (rStatEl) rStatEl.style.color = headColor;
+
+    if (!container) return; // Exit if list container missing
+
+    if (!u.routine) {
+        container.innerHTML = '<div style="color:#666; font-size:0.7rem; text-align:center; padding:10px;">NO ROUTINE ASSIGNED</div>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border:1px solid #333; border-left:3px solid ${color};">
+            <div style="font-family:'Cinzel'; color:#fff; font-size:0.9rem;">${u.routine.toUpperCase()}</div>
+            <div style="color:${color}; font-weight:bold; font-size:0.7rem; font-family:'Orbitron';">${icon}</div>
+        </div>
+    `;
+}
+
+// =========================================
+// TAB 2: INTEL (DATA)
+// =========================================
+function updateTelemetry(u) {
+    const total = u.kneelCount || 0;
+    const hours = (total * 0.25).toFixed(1); // Assuming 15m per kneel
+
+    setText('dTotalKneel', `${hours} HRS`);
+    // Need kneelHistory array from Velo to do this properly, defaulting for now
+    setText('dLastKneel', u.lastKneelDate ? new Date(u.lastKneelDate).toLocaleDateString() : "NEVER");
+}
+
+function updateDossier(u) {
+    const grid = document.getElementById('dossierGrid');
+    if (!grid) return;
+
+    let content = "";
+    if (u.kinks) content += `<div style="margin-bottom:10px;"><div style="color:var(--blue); font-size:0.6rem; margin-bottom:2px;">KINKS</div><div style="color:#ccc; font-size:0.8rem; line-height:1.2;">${u.kinks}</div></div>`;
+    if (u.limits) content += `<div><div style="color:var(--red); font-size:0.6rem; margin-bottom:2px;">LIMITS</div><div style="color:#ccc; font-size:0.8rem; line-height:1.2;">${u.limits}</div></div>`;
+
+    if (!content) content = '<div style="color:#444; font-size:0.7rem;">FILE EMPTY</div>';
+    grid.innerHTML = content;
+}
+
+function updateInventory(u) {
+    const grid = document.getElementById('inventoryGrid');
+    if (!grid) return;
+
+    // Handle string or array parsing for purchased items
+    let items = [];
+    if (u.purchasedItems) {
+        if (Array.isArray(u.purchasedItems)) items = u.purchasedItems;
+        else if (typeof u.purchasedItems === 'string') {
+            try { items = JSON.parse(u.purchasedItems); } catch (e) { }
+        }
+    }
+
+    if (items.length === 0) {
+        grid.innerHTML = '<div style="color:#444; font-size:0.7rem; text-align:center;">NO TRIBUTES</div>';
+        return;
+    }
+
+    grid.innerHTML = items.map(i => `
+        <div style="background:#111; border:1px solid #333; padding:5px; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <div style="font-size:0.7rem; color:var(--gold); font-family:'Cinzel';">${i.name || i.itemName || "Item"}</div>
+            <div style="font-size:0.6rem; color:#666;">${i.price || i.cost || 0}</div>
+        </div>
+    `).join('');
+}
+
+// =========================================
+// TAB 3: RECORD (HISTORY & GLORY)
+// =========================================
+function updateAltar(u) {
+    // This connects to the HTML slots we made
+    // Future expansion: Make these droppable targets
+}
+
+function updateTrophies(u) {
+    const container = document.getElementById('userStickerCase');
+    if (!container) return;
+
+    // Ranks Visualizer
+    const ranks = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Queen's Champion"];
+    const current = u.hierarchy || "";
+    const idx = ranks.findIndex(r => r.toLowerCase() === current.toLowerCase());
+
+    let html = '<div style="display:flex; gap:5px; flex-wrap:wrap;">';
+    ranks.forEach((r, i) => {
+        const unlocked = i <= idx;
+        const color = unlocked ? "var(--gold)" : "#333";
+        const bg = unlocked ? "rgba(197, 160, 89, 0.1)" : "transparent";
+        html += `<div style="border:1px solid ${color}; background:${bg}; padding:4px 8px; font-size:0.6rem; color:${color}; border-radius:4px;" title="${r}">
+            ${i + 1}
+        </div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+async function updateHistory(u) {
+    const currentJson = JSON.stringify(u.history || []);
+    if (currentJson !== lastHistoryJson || histLimit > 10) {
+        setLastHistoryJson(currentJson);
+        const hGrid = document.getElementById('userHistoryGrid');
+        if (!hGrid) return;
+
+        const cleanHist = (u.history || []).filter(h => h.status && h.status !== 'fail');
+        const historyToShow = cleanHist.slice(0, histLimit);
+
+        // Show/Hide Load More
+        const loadBtn = document.getElementById('loadMoreHist');
+        if (loadBtn) loadBtn.style.display = (cleanHist.length > histLimit) ? 'block' : 'none';
+
+        // Sign URLs
+        const signingPromises = historyToShow.map(async h => {
+            if (h.proofUrl && h.proofUrl.startsWith('https://upcdn')) h.thumbSigned = await getSignedUrl(getOptimizedUrl(h.proofUrl, 150));
+            else h.thumbSigned = getOptimizedUrl(h.proofUrl, 150);
+        });
+        await Promise.all(signingPromises);
+
+        hGrid.innerHTML = historyToShow.length > 0 ? historyToShow.map(h => {
+            const cls = h.status === 'approve' ? 'hb-app' : 'hb-rej';
+            const img = h.thumbSigned || '';
+            // Only show if image exists
+            if (!img) return '';
+            return `<div class="h-card-mini" style="position:relative; width:100%; aspect-ratio:1/1; background:black; border:1px solid #333; cursor:pointer;" 
+                     onclick='openModal(null, null, "${h.proofUrl}", "${h.proofType || 'text'}", "${raw(h.text)}", true, "${h.status}")'>
+                <img src="${img}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;">
+                <div class="h-badge ${cls}" style="position:absolute; bottom:0; left:0; width:100%; font-size:0.5rem; text-align:center;">${h.status.toUpperCase()}</div>
+            </div>`;
+        }).join('') : '<div style="color:#444; font-size:0.7rem; padding:10px;">No history records.</div>';
+    }
+}
+
+// =========================================
+// ACTION FUNCTIONS (EXPOSED TO WINDOW)
+// =========================================
+export function addQueueTask() {
+    // 1. Target the input inside OPS tab
+    const input = document.querySelector('#tabOps #qInput') || document.getElementById('qInput');
+
+    if (!input) return console.error("Input #qInput not found!");
+
+    if (!currId) {
+        alert("Select a Slave first.");
+        return;
+    }
+
+    const txt = input.value.trim();
+
+    // 2. SMART GATEWAY LOGIC
+    if (!txt) {
+        // SCENARIO A: Input is Empty -> OPEN DATABASE (Armory)
+        console.log("Input empty. Opening Task Gallery for QUEUE...");
+
+        // Tell the system: "Whatever I click next goes to the QUEUE"
+        setArmoryTarget('queue');
+
+        // Open the Modal
+        if (window.openTaskGallery) {
+            window.openTaskGallery();
+        } else {
+            console.error("openTaskGallery function not found on window!");
+        }
+        return;
+    }
+
+    // SCENARIO B: Input has Text -> ADD MANUAL TASK
+    const u = users.find(x => x.memberId === currId);
+    if (u) {
+        if (!u.taskQueue) u.taskQueue = [];
+
+        // Add to local
+        u.taskQueue.push(txt);
+
+        // Send to Backend
+        window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
+
+        // Instant Bridge
+        if (window.Bridge) {
+            window.Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
+        }
+
+        // Cleanup
+        input.value = '';
+        updateDetail(u);
+    }
+}
+export function deleteQueueItem(memberId, index) {
+    const u = users.find(x => x.memberId === memberId);
+    if (u?.taskQueue) {
+        u.taskQueue.splice(index, 1);
+        window.parent.postMessage({ type: "updateTaskQueue", memberId: memberId, queue: u.taskQueue }, "*");
+        Bridge.send("updateTaskQueue", { memberId: memberId, queue: u.taskQueue });
+        updateDetail(u);
+    }
+}
+
+export function toggleMainTaskExpansion(btn, taskText) {
+    const card = btn.closest('.mini-active'); // Adjust to match your HTML
+    // Logic to expand text if needed, for now just placeholder
+}
+
+export function modPoints(amount) {
+    if (!currId) return;
+    window.parent.postMessage({ type: "adjustPoints", memberId: currId, amount: amount }, "*");
+}
+
+export function loadMoreHist() {
+    setHistLimit(histLimit + 10);
+    const u = users.find(x => x.memberId === currId);
+    if (u) updateDetail(u);
+}
+
+export function openQueueTask(memberId, index) {
+    const u = users.find(x => x.memberId === memberId);
+    if (u?.taskQueue?.[index]) {
+        // Assuming you have an openModal import or global availability
+        // window.openModal(...) 
+    }
+}
+
+// --- CONTROL FUNCTIONS ---
+export function adjustWallet(action) {
+    if (!currId) return;
+    const amount = (action === 'add') ? 100 : -100;
+    // Optimistic Update
+    const u = users.find(x => x.memberId === currId);
+    if (u) {
+        u.coins = (u.coins || 0) + amount;
+        updateDetail(u);
+    }
+    window.parent.postMessage({ type: "adjustCoins", memberId: currId, amount: amount }, "*");
+}
+
+export function adjustKneel(action) {
+    if (!currId) return;
+    const amount = (action === 'add') ? 4 : -4; // 4 units = 1 hour
+
+    const u = users.find(x => x.memberId === currId);
+    if (u) {
+        u.kneelCount = (u.kneelCount || 0) + amount;
+        if (u.kneelCount < 0) u.kneelCount = 0;
+        updateDetail(u);
+    }
+    window.parent.postMessage({ type: "adjustKneel", memberId: currId, amount: amount }, "*");
+}
+
+// --- CRITICAL: BIND TO WINDOW SCOPE ---
+window.updateDetail = updateDetail;
+window.addQueueTask = addQueueTask;
+window.deleteQueueItem = deleteQueueItem;
+window.modPoints = modPoints;
+window.loadMoreHist = loadMoreHist;
+window.openQueueTask = openQueueTask;
+window.toggleMainTaskExpansion = toggleMainTaskExpansion;
+window.adjustWallet = adjustWallet;
+window.adjustKneel = adjustKneel;
