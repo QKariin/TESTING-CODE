@@ -250,38 +250,45 @@ export async function renderGallery() {
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
-    // --- 5. IMAGE LOADER (LIGHTWEIGHT WIX OPTIMIZATION) ---
-    // Converts everything to a static, resized JPEG from Wix servers
+    // --- 5. IMAGE LOADER (HYBRID: WIX OPTIMIZED + EXTERNAL SUPPORT) ---
+    // Converts Wix media to static resized JPEGs, but respects external URLs.
     const getThumb = (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
 
         let raw = item.proofUrl || item.media || item.url || item.image || "";
         if (!raw || raw.length < 5) return PLACEHOLDER_IMG;
 
+        // 1. EXTERNAL URL PASS-THROUGH (Fixes "Avatar Replacement" bug)
+        if (raw.startsWith('http') && !raw.includes('wix:')) {
+             // If it's an image file, use it directly (UpCDN, Firebase, etc.)
+             if (/\.(jpg|jpeg|png|webp|gif)$/i.test(raw.split('?')[0])) {
+                 return raw; 
+             }
+             // If it's an external video, we can't get a poster easily without a service.
+             // But we can try to return the raw URL if it might be an image service.
+             // For now, we return it to let the <img> tag try to load it.
+             return raw; 
+        }
+
         let finalId = "";
 
-        // Extract Wix ID from Images
+        // 2. Extract Wix ID from Images
         if (raw.startsWith('wix:image')) {
             finalId = raw.split('/')[3];
-        }
-        // Extract Wix ID from Video Posters
+        } 
+        // 3. Extract Wix ID from Video Posters
         else if (raw.startsWith('wix:video')) {
             const posterMatch = raw.match(/posterUri=([^&]+)/);
             finalId = posterMatch ? posterMatch[1] : "";
         }
-        // Handle Filenames or Full URLs
+        // 4. Handle Filenames (Assumed to be on Wix if not http)
         else {
-            // If it's a full URL, we try to extract the filename relative to Wix
-            // CAUTION: This assumes the file exists on Wix servers. 
-            // If it's an external URL (UpCDN), this might fail unless Wix proxies it.
-            // But per user request, we use this logic:
             finalId = raw.split('/').pop().split('?')[0];
         }
 
         if (!finalId) return PLACEHOLDER_IMG;
 
         // Build the Optimized Thumbnail URL
-        // fit/w_SIZE = Resizes it | q_70 = Lowers quality slightly for speed
         return `https://static.wixstatic.com/media/${finalId}/v1/fill/w_${size},h_${size},al_c,q_70/thumb.jpg`;
     };
 
