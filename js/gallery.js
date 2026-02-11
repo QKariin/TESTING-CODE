@@ -327,6 +327,15 @@ export async function renderGallery() {
             let safeRaw = item.proofUrl || item.media || "";
             if (typeof safeRaw === 'object') safeRaw = safeRaw.src || "";
 
+            // *** CRITICAL FIX: PRE-SELECT POSTER FOR VIDEOS ***
+            // The hydration worker doesn't have the full 'item' object, 
+            // so we must resolve the video poster HERE before saving to data-raw.
+            if (safeRaw.includes('.mp4') || safeRaw.includes('.mov') || safeRaw.includes('.webm') || safeRaw.startsWith('wix:video')) {
+                if (item.cover) safeRaw = item.cover;
+                else if (item.thumbnail) safeRaw = item.thumbnail;
+                else if (item.poster) safeRaw = item.poster;
+            }
+
             // HTML: We use PLACEHOLDER_IMG as src, and store real URL in data-raw
             // Added class 'lazy-gallery-img' so we can find it later
             // ADDED onerror handler just in case
