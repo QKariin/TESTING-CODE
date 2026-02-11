@@ -1407,13 +1407,17 @@ window.openHierarchyCard = function (rankName, currentStreak) {
 
 // --- NEW: DESKTOP RECORD RENDERER ---
 // --- NEW: DESKTOP RECORD RENDERER ---
+let isRenderPending = false;
 window.renderDesktopRecord = function () {
-    // CRITICAL FIX: Redirect to the robust gallery.js renderer
-    if (window.renderGallery) {
-        window.renderGallery();
-    } else {
-        console.warn("renderGallery not found, skipping desktop record render.");
-    }
+    // PREVENT BLINKING: Debounce 3-second triggers
+    if (isRenderPending) return;
+
+    // If called, wait a moment to see if other calls come in, then render once
+    isRenderPending = true;
+    requestAnimationFrame(() => {
+        if (window.renderGallery) window.renderGallery();
+        isRenderPending = false;
+    });
 };
 
 window.renderRewards = function () {
