@@ -26,36 +26,34 @@ export async function updateDetail(u) {
     const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
     let diff = Math.floor((now - ls) / 60000);
     let status = (ls > 0 && diff < 2) ? "ONLINE" : (ls > 0 ? diff + " MIN AGO" : "OFFLINE");
+    const isOnline = status === "ONLINE";
 
-    const lsEl = document.getElementById('lastSeen');
-    if (lsEl) {
-        lsEl.innerText = status;
-        lsEl.className = (status === "ONLINE") ? "uh-seen online" : "uh-seen";
+    // MIRROR HEADER
+    const profPic = document.getElementById('dProfilePic');
+    if (profPic) profPic.src = u.profilePicture || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+
+    setText('dRankBadge', u.hierarchy || "SLAVE");
+    setText('dMirrorName', u.name || "SLAVE");
+
+    const stEl = document.getElementById('dMirrorStatus');
+    if (stEl) {
+        stEl.innerText = status;
+        stEl.style.color = isOnline ? '#00ff00' : '#666';
     }
 
-    // Basic Info
-    setText('dName', u.name);
-    setText('dRank', u.hierarchy || "SLAVE");
-    setText('dWalletVal', u.coins || 0);
+    // MIRROR VITALS
+    setText('dMirrorWallet', (u.coins || 0).toLocaleString());
 
-    // PREMIUM HEADER STATS
-    setText('dStreak', u.streak || 0);
-    setText('dPoints', u.points || 0);
-
-    // Routine Header Status
-    const isRoutineDone = u.routineDoneToday === true;
-    const rName = u.routine ? u.routine.toUpperCase() : "NONE";
-    setText('dRoutineStatus', isRoutineDone ? "DONE" : "PENDING");
-    setText('dRoutineName', rName);
-
-    // Kneeling Header (Logic reused from telemetry)
     const totalKneel = u.kneelCount || 0;
     const kneelHrs = (totalKneel * 0.25).toFixed(1);
-    setText('dTotalKneel', `${kneelHrs}h`);
-    setText('dLastKneel', u.lastKneelDate ? new Date(u.lastKneelDate).toLocaleDateString() : "--");
+    setText('dMirrorKneel', `${kneelHrs}h`);
 
-    const rStatEl = document.getElementById('dRoutineStatus');
-    if (rStatEl) rStatEl.style.color = isRoutineDone ? 'var(--green)' : 'var(--red)';
+    const isRoutineDone = u.routineDoneToday === true;
+    setText('dMirrorRoutine', isRoutineDone ? "DONE" : "PENDING");
+    const rEl = document.getElementById('dMirrorRoutine');
+    if (rEl) rEl.style.color = isRoutineDone ? '#00ff00' : '#666';
+
+    setText('dMirrorStreak', u.streak || 0);
 
     // --- 2. TAB: OPS (Operations) ---
     updateReviewQueue(u);
@@ -399,6 +397,32 @@ export function openQueueTask(memberId, index) {
     }
 }
 
+// --- CONTROL FUNCTIONS ---
+export function adjustWallet(action) {
+    if (!currId) return;
+    const amount = (action === 'add') ? 100 : -100;
+    // Optimistic Update
+    const u = users.find(x => x.memberId === currId);
+    if (u) {
+        u.coins = (u.coins || 0) + amount;
+        updateDetail(u);
+    }
+    window.parent.postMessage({ type: "adjustCoins", memberId: currId, amount: amount }, "*");
+}
+
+export function adjustKneel(action) {
+    if (!currId) return;
+    const amount = (action === 'add') ? 4 : -4; // 4 units = 1 hour
+
+    const u = users.find(x => x.memberId === currId);
+    if (u) {
+        u.kneelCount = (u.kneelCount || 0) + amount;
+        if (u.kneelCount < 0) u.kneelCount = 0;
+        updateDetail(u);
+    }
+    window.parent.postMessage({ type: "adjustKneel", memberId: currId, amount: amount }, "*");
+}
+
 // --- CRITICAL: BIND TO WINDOW SCOPE ---
 window.updateDetail = updateDetail;
 window.addQueueTask = addQueueTask;
@@ -407,3 +431,5 @@ window.modPoints = modPoints;
 window.loadMoreHist = loadMoreHist;
 window.openQueueTask = openQueueTask;
 window.toggleMainTaskExpansion = toggleMainTaskExpansion;
+window.adjustWallet = adjustWallet;
+window.adjustKneel = adjustKneel;
