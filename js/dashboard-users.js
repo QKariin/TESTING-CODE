@@ -515,32 +515,5 @@ window.toggleMainTaskExpansion = toggleMainTaskExpansion;
 window.adjustWallet = adjustWallet;
 window.adjustKneel = adjustKneel;
 
-// --- HIERARCHY CYCLE (MANUAL OVERRIDE) ---
-function cycleHierarchy() {
-    if (!currId) return;
-    const u = users.find(x => x.memberId === currId);
-    if (!u) return;
-
-    // Use LEVELS from config
-    const rankNames = LEVELS.map(l => l.name); // ["HallBoy", "Footman"...]
-
-    // Find current index based on name (case insensitive match just in case)
-    let current = (u.hierarchy || "HallBoy");
-    let idx = rankNames.findIndex(r => r.toUpperCase() === current.toUpperCase());
-    if (idx === -1) idx = 0;
-
-    let nextIdx = (idx + 1) % rankNames.length;
-    let newRank = rankNames[nextIdx];
-
-    // Optimistic Update
-    u.hierarchy = newRank;
-    setText('dMirrorHierarchy', newRank.toUpperCase());
-
-    // Backend Sync
-    window.parent.postMessage({
-        type: "updateHierarchy",
-        memberId: currId,
-        newRank: newRank
-    }, "*");
-}
-window.cycleHierarchy = cycleHierarchy;
+// --- HIERARCHY IS NOW STRICTLY CALCULATED IN updateDetail ---
+// No manual override allowed.
