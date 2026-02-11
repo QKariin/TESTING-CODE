@@ -296,22 +296,23 @@ export async function renderGallery() {
         }
     };
 
-    // --- 6. RENDER TRACKS (INSTANT RENDER + LAZY LOAD) ---
-    const renderChunk = (list, isTrash) => {
-        // NOTE: removed 'async' because we are not waiting for network here
+    // --- 6. RENDER TRACKS (ASYNC PARALLEL - RESTORED) ---
+    const renderChunk = async (list, isTrash) => {
         if (!list || list.length === 0) return { desk: "", mob: "" };
 
-        let deskHTML = "";
-        let mobHTML = "";
-
-        // Simple loop, no awaiting. Builds HTML instantly.
-        for (const item of list) {
+        // We process all items in parallel to resolve their URLs
+        const promises = list.map(async (item) => {
             const idx = allItems.indexOf(item);
+
+            // 1. Get the Resolved URL (Async)
+            // This handles Wix, Bytescale, Video Posters, everything.
+            let src = await getThumb(item, 300);
+
             const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
 
             // Video Indicator
-            const rawUrl = (item.proofUrl || item.media || "").toLowerCase();
-            const isVideo = rawUrl.includes('video') || rawUrl.includes('.mp4') || rawUrl.includes('.mov');
+            const raw = (item.proofUrl || item.media || item.url || "").toLowerCase();
+            const isVideo = raw.includes('video') || raw.includes('.mp4') || raw.includes('.mov');
             const videoIcon = isVideo ? `<div class="video-indicator">▶</div>` : "";
 
             const isPending = (item.status || "").toLowerCase().includes('pending');
@@ -323,119 +324,60 @@ export async function renderGallery() {
                 stickerHtml = `<img src="${item.sticker}" class="gallery-sticker-badge">`;
             }
 
-            // Get Raw URL safely
-            let safeRaw = item.proofUrl || item.media || "";
-            if (typeof safeRaw === 'object') safeRaw = safeRaw.src || "";
-
-            // *** CRITICAL FIX: PRE-SELECT POSTER FOR VIDEOS ***
-            // The hydration worker doesn't have the full 'item' object, 
-            // so we must resolve the video poster HERE before saving to data-raw.
-            if (safeRaw.includes('.mp4') || safeRaw.includes('.mov') || safeRaw.includes('.webm') || safeRaw.startsWith('wix:video')) {
-                if (item.cover) safeRaw = item.cover;
-                else if (item.thumbnail) safeRaw = item.thumbnail;
-                else if (item.poster) safeRaw = item.poster;
-            }
-
-            // HTML: We use PLACEHOLDER_IMG as src, and store real URL in data-raw
-            // Added class 'lazy-gallery-img' so we can find it later
-            // ADDED onerror handler just in case
-            const mediaHtml = `<img class="lazy-gallery-img ${isTrash ? 'trash-img' : 'blueprint-img'}" 
-                                   src="${PLACEHOLDER_IMG}" 
-                                   data-raw="${safeRaw}"
-                                   loading="lazy" 
-                                   style="${imgStyle}"
-                                   onerror="this.src='${PLACEHOLDER_IMG}'">`;
-
-            deskHTML += `
+            const desk = `
                 <div class="${isTrash ? 'item-trash' : 'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
-                    ${mediaHtml}
+                    <img class="${isTrash ? 'trash-img' : 'blueprint-img'}" 
+                         src="${src}" 
+                         loading="lazy" 
+                         style="${imgStyle}"
+                         onerror="this.src='${PLACEHOLDER_IMG}'">
                     ${videoIcon}
                     ${stickerHtml}
                     ${isTrash ? '<div class="trash-stamp">DENIED</div>' : ''}
                     ${overlay}
                 </div>`;
 
-            mobHTML += `
+            const mob = `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash ? 'height:80px; width:80px;' : ''}">
-                    <img class="lazy-gallery-img mob-scroll-img" 
-                         src="${PLACEHOLDER_IMG}" 
-                         data-raw="${safeRaw}"
-                         style="${imgStyle}"
+                    <img src="${src}" class="mob-scroll-img" 
+                         loading="lazy" 
+                         style="${imgStyle}" 
                          onerror="this.src='${PLACEHOLDER_IMG}'">
                     ${videoIcon}
                     ${stickerHtml}
                     ${mobBadge}
                 </div>`;
-        }
 
-        return { desk: deskHTML, mob: mobHTML };
+            return { desk, mob };
+        });
+
+        const results = await Promise.all(promises);
+        return {
+            desk: results.map(r => r.desk).join(''),
+            mob: results.map(r => r.mob).join('')
+        };
     };
-
-    // --- HYDRATION WORKER (FIXES IMAGES ONE BY ONE) ---
-    async function hydrateGalleryImages() {
-        // 1. Find all images that need loading
-        const images = document.querySelectorAll('.lazy-gallery-img[data-raw]');
-        if (images.length === 0) return;
-
-        console.log(`Hydrating ${images.length} gallery items...`);
-
-        // 2. Loop through them
-        for (const img of images) {
-            // Check if already handled
-            if (img.dataset.loaded === "true") continue;
-
-            const raw = img.dataset.raw;
-            if (!raw || raw === "undefined") {
-                img.dataset.loaded = "true"; // Skip invalid
-                continue;
-            }
-
-            try {
-                // 3. Call the magic getThumb function
-                // We reuse the item structure just for the function signature
-                const realUrl = await getThumb({ proofUrl: raw }, 300);
-
-                // 4. Update the Image
-                if (realUrl) {
-                    img.src = realUrl;
-                } else {
-                    console.warn("Hydration returned empty URL for", raw);
-                }
-                img.dataset.loaded = "true"; // Mark as done
-
-                // 5. Tiny pause (Speed up to 10ms)
-                await new Promise(r => setTimeout(r, 10));
-
-            } catch (e) {
-                console.error("Hydration failed for", raw, e);
-                img.dataset.loaded = "true"; // Mark as failed so we don't retry forever
-            }
-        }
-    }
 
     // --- 7. EXECUTE RENDERS ---
 
     // A. Accepted (Candidates)
-    const acceptedHTML = renderChunk(candidates, false);
+    // Note: Added 'await' because renderChunk is async again
+    const acceptedHTML = await renderChunk(candidates, false);
     gridOkay.innerHTML = acceptedHTML.desk;
-    if (recGrid) recGrid.innerHTML += acceptedHTML.mob; // Append to top list
+    if (recGrid) recGrid.innerHTML += acceptedHTML.mob;
 
     // B. Pending
     if (pendingList.length > 0) {
-        const pendingHTML = renderChunk(pendingList, false);
+        const pendingHTML = await renderChunk(pendingList, false);
         if (gridPending) gridPending.innerHTML = pendingHTML.desk;
-        // MOBILE: Prepend to Top List (recGrid) so they start the list
         if (recGrid) recGrid.innerHTML = pendingHTML.mob + recGrid.innerHTML;
     }
 
     // C. Denied (Heap)
-    const deniedHTML = renderChunk(deniedList, true);
+    const deniedHTML = await renderChunk(deniedList, true);
     gridFailed.innerHTML = deniedHTML.desk;
     if (recHeap) recHeap.innerHTML = deniedHTML.mob;
 
-    // *** NEW: TRIGGER THE HYDRATION WORKER ***
-    // This runs in the background while the user looks at the page
-    hydrateGalleryImages();
 
     // --- 8. RENDER DESKTOP ALTAR ---
     // --- 8. RENDER DESKTOP ALTAR ---
