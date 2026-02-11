@@ -32,7 +32,7 @@ export async function updateDetail(u) {
     const profPic = document.getElementById('dProfilePic');
     if (profPic) profPic.src = u.profilePicture || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
 
-    setText('dMirrorHierarchy', "LVL " + (u.level || 1)); // Stamp
+    setText('dMirrorHierarchy', (u.hierarchy || "SLAVE").toUpperCase()); // Fixed: u.level -> u.hierarchy
     setText('dMirrorName', u.name || "SLAVE");
 
     const stEl = document.getElementById('dMirrorStatus');
@@ -53,8 +53,6 @@ export async function updateDetail(u) {
     // 4. PROGRESS BAR & LEVEL
     const currentPoints = u.points || 0;
     // Simple level logic for display (matches main.js roughly)
-    // Level = 1 + floor(points / 1000) for example, or fetch from config if avail
-    // For now assuming linear 1000 per level for visualization
     const level = Math.floor(currentPoints / 1000) + 1;
     const nextLevelPoints = level * 1000;
     const pointsNeeded = nextLevelPoints - currentPoints;
@@ -69,8 +67,8 @@ export async function updateDetail(u) {
     // 5. EXTENDED STATS
     setText('dMirrorStreak', u.streak || 0);
     setText('dMirrorStatTotal', u.totalTasks || 0);
-    setText('dMirrorStatCompleted', u.tasksCompleted || 0);
-    setText('dMirrorStatSkipped', u.tasksSkipped || 0);
+    setText('dMirrorStatCompleted', u.completed || 0); // Fixed: u.tasksCompleted -> u.completed
+    setText('dMirrorStatSkipped', u.skipped || 0); // Fixed: u.tasksSkipped -> u.skipped (will be 0 if not sent)
 
     const isRoutineDone = u.routineDoneToday === true;
     setText('dMirrorRoutine', isRoutineDone ? "DONE" : "PENDING");
@@ -78,7 +76,7 @@ export async function updateDetail(u) {
     if (rEl) rEl.style.color = isRoutineDone ? '#00ff00' : '#666';
 
     // 6. FOOTER
-    setText('dMirrorSlaveSince', u.joinDate ? new Date(u.joinDate).toLocaleDateString() : "--/--/--");
+    setText('dMirrorSlaveSince', u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "--/--/--"); // Fixed: u.joinDate -> u.joinedDate
 
     // --- 2. TAB: OPS (Operations) ---
     updateReviewQueue(u);
