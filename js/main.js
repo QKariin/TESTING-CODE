@@ -2279,6 +2279,12 @@ window.mobileSkipTask = function () {
     if (window.syncMobileDashboard) window.syncMobileDashboard();
 };
 
+// TRIBUTE TO THE "BLINKING" VERSION (Force Refresh Loop)
+// The user requested this specifically because it ensures images eventually load.
+setInterval(() => {
+    if (window.renderGallery) window.renderGallery();
+}, 3000);
+
 // TIMER SYNC & VISUALIZATION (UPDATED TO HANDLE ALL IDS)
 setInterval(() => {
     // 1. Get Source (Desktop Hidden Elements)
