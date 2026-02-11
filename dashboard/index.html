@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -193,6 +192,11 @@
                             </div>
                         </div>
                         <div class="c-body" id="adminChatBox"></div>
+                        <!-- HIERARCHY STAMP -->
+                        <div class="hierarchy-top" id="mirrorRank">SLAVE</div>
+                        <div id="lastSeen"
+                            style="text-align:center; font-family:'Rajdhani'; font-size:0.7rem; color:#666; margin-top:-20px; margin-bottom:20px; letter-spacing:1px;">
+                            OFFLINE</div>
                         <div class="c-foot">
                             <div id="plusMenu" class="d-none">
                                 <label class="menu-btn" for="adminMediaInput">
@@ -213,48 +217,98 @@
                         </div>
                     </div>
 
-                    <!-- NEW RIGHT PANEL: TABBED COMMAND CENTER -->
-                    <div class="action-panel">
+                    <!-- NEW RIGHT PANEL: USER PROFILE MIRROR -->
+                    <div class="action-panel"
+                        style="background:#050505; display:flex; flex-direction:column; height:100%;">
 
-                        <!-- 1. PREMIUM VITALS GRID (Always Visible) -->
-                        <div class="ap-vitals-premium">
-                            <!-- COINS -->
-                            <div class="pv-card gold">
-                                <div class="pv-lbl">CAPITAL</div>
-                                <div class="pv-val" id="dWalletVal">0</div>
-                                <div class="pv-ctrl">
-                                    <button onclick="adjustWallet('sub')">-</button>
-                                    <button onclick="adjustWallet('add')">+</button>
+                        <!-- 1. PROFILE HEADER (MIRROR) -->
+                        <div class="ap-mirror-header"
+                            style="padding:20px; text-align:center; border-bottom:1px solid #333; background: linear-gradient(180deg, #111 0%, #050505 100%);">
+                            <!-- AVATAR -->
+                            <div class="avatar-container"
+                                style="width:100px; height:100px; margin:0 auto 15px; position:relative;">
+                                <img id="dProfilePic"
+                                    src="https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"
+                                    style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid #c5a059; box-shadow:0 0 20px rgba(197,160,89,0.3);">
+                                <div class="rank-badge" id="dRankBadge"
+                                    style="position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); 
+                                            background:#000; color:#c5a059; font-family:'Orbitron'; font-size:0.6rem; padding:2px 8px; border:1px solid #c5a059; border-radius:10px;">
+                                    SLAVE
+                                </div>
+                            </div>
+
+                            <!-- NAME & STATUS -->
+                            <div id="dMirrorName"
+                                style="font-family:'Cinzel'; color:#fff; font-size:1.2rem; letter-spacing:2px; margin-bottom:5px;">
+                                SLAVE</div>
+                            <div id="dMirrorStatus"
+                                style="font-family:'Orbitron'; color:#00ff00; font-size:0.7rem; letter-spacing:1px;">
+                                ONLINE</div>
+                        </div>
+
+                        <!-- 2. VITALS GRID (MIRROR) -->
+                        <div class="ap-vitals-mirror"
+                            style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:15px; background:#080808;">
+
+                            <!-- CAPITAL -->
+                            <div class="vm-card"
+                                style="background:#111; border:1px solid #333; padding:10px; text-align:center; position:relative;">
+                                <div style="color:#c5a059; font-family:'Cinzel'; font-size:0.7rem;">CAPITAL</div>
+                                <div id="dMirrorWallet"
+                                    style="color:#fff; font-family:'Rajdhani'; font-size:1.5rem; font-weight:bold;">0
+                                </div>
+                                <!-- Admin Control -->
+                                <div class="vm-ctrl"
+                                    style="position:absolute; top:5px; right:5px; display:flex; gap:2px;">
+                                    <button onclick="adjustWallet('add')"
+                                        style="background:#222; border:none; color:#00ff00; cursor:pointer; font-size:10px;">+</button>
+                                    <button onclick="adjustWallet('sub')"
+                                        style="background:#222; border:none; color:#ff003c; cursor:pointer; font-size:10px;">-</button>
                                 </div>
                             </div>
 
                             <!-- KNEELING -->
-                            <div class="pv-card blue">
-                                <div class="pv-lbl">KNEELING</div>
-                                <div class="pv-val" id="dTotalKneel">0h</div>
-                                <div class="pv-sub" id="dLastKneel">--</div>
+                            <div class="vm-card"
+                                style="background:#111; border:1px solid #333; padding:10px; text-align:center; position:relative;">
+                                <div style="color:#00f3ff; font-family:'Cinzel'; font-size:0.7rem;">KNEELING</div>
+                                <div id="dMirrorKneel"
+                                    style="color:#fff; font-family:'Rajdhani'; font-size:1.5rem; font-weight:bold;">0h
+                                </div>
+                                <!-- Admin Control -->
+                                <div class="vm-ctrl"
+                                    style="position:absolute; top:5px; right:5px; display:flex; gap:2px;">
+                                    <button onclick="adjustKneel('add')"
+                                        style="background:#222; border:none; color:#00ff00; cursor:pointer; font-size:10px;">+</button>
+                                </div>
                             </div>
 
                             <!-- ROUTINE -->
-                            <div class="pv-card green">
-                                <div class="pv-lbl">ROUTINE</div>
-                                <div class="pv-val" id="dRoutineStatus">PENDING</div>
-                                <div class="pv-sub" id="dRoutineName">NONE</div>
+                            <div class="vm-card"
+                                style="background:#111; border:1px solid #333; padding:10px; text-align:center;">
+                                <div style="color:#00ff00; font-family:'Cinzel'; font-size:0.7rem;">ROUTINE</div>
+                                <div id="dMirrorRoutine"
+                                    style="color:#fff; font-family:'Rajdhani'; font-size:1.1rem; margin-top:5px;">
+                                    PENDING</div>
                             </div>
 
                             <!-- STREAK -->
-                            <div class="pv-card red">
-                                <div class="pv-lbl">STREAK</div>
-                                <div class="pv-val" id="dStreak">0</div>
-                                <div class="pv-sub">DAYS</div>
+                            <div class="vm-card"
+                                style="background:#111; border:1px solid #333; padding:10px; text-align:center;">
+                                <div style="color:#ff003c; font-family:'Cinzel'; font-size:0.7rem;">STREAK</div>
+                                <div id="dMirrorStreak"
+                                    style="color:#fff; font-family:'Rajdhani'; font-size:1.5rem; font-weight:bold;">0
+                                </div>
                             </div>
                         </div>
 
-                        <!-- 2. NAVIGATION TABS -->
-                        <div class="ap-nav">
-                            <button class="ap-tab active" onclick="switchAdminTab('ops')">OPS</button>
-                            <button class="ap-tab" onclick="switchAdminTab('intel')">INTEL</button>
-                            <button class="ap-tab" onclick="switchAdminTab('record')">RECORD</button>
+                        <!-- 3. NAVIGATION TABS -->
+                        <div class="ap-nav" style="display:flex; border-bottom:1px solid #333; background:#0a0a0a;">
+                            <button class="ap-tab active" onclick="switchAdminTab('ops')"
+                                style="flex:1; padding:12px; background:transparent; border:none; color:#666; font-family:'Orbitron'; cursor:pointer; border-bottom:2px solid transparent;">OPS</button>
+                            <button class="ap-tab" onclick="switchAdminTab('intel')"
+                                style="flex:1; padding:12px; background:transparent; border:none; color:#666; font-family:'Orbitron'; cursor:pointer; border-bottom:2px solid transparent;">INTEL</button>
+                            <button class="ap-tab" onclick="switchAdminTab('record')"
+                                style="flex:1; padding:12px; background:transparent; border:none; color:#666; font-family:'Orbitron'; cursor:pointer; border-bottom:2px solid transparent;">RECORD</button>
                         </div>
 
                         <!-- 3. VIEWS CONTAINER -->
