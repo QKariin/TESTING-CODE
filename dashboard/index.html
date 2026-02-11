@@ -1,420 +1,515 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Admin OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet" />
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/dashboard-modals.css">
     <link rel="stylesheet" href="css/dashboard-mobile.css">
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 </head>
+
 <body>
 
-<!-- SOUNDS -->
-<audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
-<audio id="sfx-notify" src="https://static.wixstatic.com/mp3/ce3e5b_31aab32ecdf542e6b6fd01ef272d75bc.mp3"></audio>
+    <!-- SOUNDS -->
+    <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
+    <audio id="sfx-notify" src="https://static.wixstatic.com/mp3/ce3e5b_31aab32ecdf542e6b6fd01ef272d75bc.mp3"></audio>
 
-<!-- CMS DATALIST FOR AUTOCOMPLETE -->
-<datalist id="cmsTasksList"></datalist>
+    <!-- CMS DATALIST FOR AUTOCOMPLETE -->
+    <datalist id="cmsTasksList"></datalist>
 
-<!-- NEW HEADER BAR (MOBILE ONLY) -->
-<div class="mobile-app-header">DASHBOARD</div>
+    <!-- NEW HEADER BAR (MOBILE ONLY) -->
+    <div class="mobile-app-header">DASHBOARD</div>
 
-<div class="layout">
-    <div class="sidebar">
-        <div class="sb-dash-btn" onclick="showHome()">DASHBOARD</div>
-        <div style="text-align:center; padding:5px; border-bottom:1px solid #333;">
-            <div style="font-size:0.5rem; color:#666;">TODAY'S ID</div>
-            <div id="adminDailyCode" style="color:var(--blue); font-weight:900; font-family:'Share Tech Mono'; font-size:1.1rem;">----</div>
-        </div>
-        <div class="sb-head">SUB LIST</div>
-        <div id="userList" class="user-list"></div>
-    </div>
-
-    <div class="content">
-        <div id="viewHome">
-            <div id="mobDashHeader">OVERVIEW</div>
-            <button id="mobStatsToggle" onclick="toggleMobStats()">VIEW STATS</button>
-            
-            <div id="statsDeck" class="stats-deck">
-                <div class="d-stat-card"><div class="dsc-val gold" id="statTributes">0</div><div class="dsc-lbl">TRIBUTES</div></div>
-                <div class="d-stat-card"><div class="dsc-val blue" id="statActive">0</div><div class="dsc-lbl">ACTIVE TASKS</div></div>
-                <div class="d-stat-card"><div class="dsc-val green" id="statPending">0</div><div class="dsc-lbl">PENDING REVIEW</div></div>
-                <div class="d-stat-card"><div class="dsc-val red" id="statSkipped">0</div><div class="dsc-lbl">FAILURES</div></div>
-            </div>
-
-            <div class="protocol-deck">
-                <div class="pd-label">
-                    <div class="pd-title">SILENCE PROTOCOL</div>
-                    <div class="pd-sub">COMMUNITY TRIBUTE</div>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sb-dash-btn" onclick="showHome()">DASHBOARD</div>
+            <div style="text-align:center; padding:5px; border-bottom:1px solid #333;">
+                <div style="font-size:0.5rem; color:#666;">TODAY'S ID</div>
+                <div id="adminDailyCode"
+                    style="color:var(--blue); font-weight:900; font-family:'Share Tech Mono'; font-size:1.1rem;">----
                 </div>
-                <div id="pdControls" class="pd-controls">
-                    <div class="pd-column-group">
-                        <div class="pd-input-group">
-                            <span style="color:#666; font-size:0.7rem; font-weight:bold;">GOAL</span>
-                            <input type="number" id="pdGoal" class="pd-input" value="1000">
-                        </div>
-                        <div class="pd-row-subgroup">
-                            <div class="pd-switch" onclick="toggleNewbieImmunity()">
-                                <div id="pdImmunity" class="pd-checkbox checked">
-                                     <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                                </div>
-                                <span>NEWBIE SAFE</span>
+            </div>
+            <div class="sb-head">SUB LIST</div>
+            <div id="userList" class="user-list"></div>
+        </div>
+
+        <div class="content">
+            <div id="viewHome">
+                <div id="mobDashHeader">OVERVIEW</div>
+                <button id="mobStatsToggle" onclick="toggleMobStats()">VIEW STATS</button>
+
+                <div id="statsDeck" class="stats-deck">
+                    <div class="d-stat-card">
+                        <div class="dsc-val gold" id="statTributes">0</div>
+                        <div class="dsc-lbl">TRIBUTES</div>
+                    </div>
+                    <div class="d-stat-card">
+                        <div class="dsc-val blue" id="statActive">0</div>
+                        <div class="dsc-lbl">ACTIVE TASKS</div>
+                    </div>
+                    <div class="d-stat-card">
+                        <div class="dsc-val green" id="statPending">0</div>
+                        <div class="dsc-lbl">PENDING REVIEW</div>
+                    </div>
+                    <div class="d-stat-card">
+                        <div class="dsc-val red" id="statSkipped">0</div>
+                        <div class="dsc-lbl">FAILURES</div>
+                    </div>
+                </div>
+
+                <div class="protocol-deck">
+                    <div class="pd-label">
+                        <div class="pd-title">SILENCE PROTOCOL</div>
+                        <div class="pd-sub">COMMUNITY TRIBUTE</div>
+                    </div>
+                    <div id="pdControls" class="pd-controls">
+                        <div class="pd-column-group">
+                            <div class="pd-input-group">
+                                <span style="color:#666; font-size:0.7rem; font-weight:bold;">GOAL</span>
+                                <input type="number" id="pdGoal" class="pd-input" value="1000">
                             </div>
-                            <button class="pd-ex-btn" onclick="openExclusionModal()" title="Exclude Users">
-                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
-                            </button>
+                            <div class="pd-row-subgroup">
+                                <div class="pd-switch" onclick="toggleNewbieImmunity()">
+                                    <div id="pdImmunity" class="pd-checkbox checked">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                        </svg>
+                                    </div>
+                                    <span>NEWBIE SAFE</span>
+                                </div>
+                                <button class="pd-ex-btn" onclick="openExclusionModal()" title="Exclude Users">
+                                    <svg viewBox="0 0 24 24">
+                                        <path
+                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <button id="pdBtn" onclick="toggleProtocol()" class="pd-action-btn engage">ENGAGE</button>
+                        <button class="pd-broadcast-btn" onclick="openBroadcastModal()">
+                            <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:var(--pink);">
+                                <path d="M21 11l-6-6v14l6-6v-2zm-8 0h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0h-2v2h2v-2z" />
+                            </svg>
+                            BROADCAST
+                        </button>
+                    </div>
+                    <div id="pdProgress" class="pd-progress-area">
+                        <div class="pd-progress-bar">
+                            <div id="pdFill" class="pd-progress-fill"></div>
+                        </div>
+                        <div id="pdText" class="pd-prog-txt">0 / 1000 COINS COLLECTED</div>
+                        <button onclick="toggleProtocol()"
+                            style="background:none; border:none; color:var(--red); font-size:0.6rem; cursor:pointer; margin-top:2px;">TERMINATE</button>
+                    </div>
+                </div>
+
+                <div class="dash-split">
+                    <div class="dash-panel">
+                        <div class="dp-head"><span>OPERATIONS MONITOR</span></div>
+                        <div id="opsList" class="dp-body"></div>
+                    </div>
+                    <div class="dash-panel">
+                        <div class="dp-head"><span>REVENUE & INTEL STREAM</span><span
+                                style="color:var(--pink)">LIVE</span></div>
+                        <div id="feedLog" class="dp-body feed-log"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="viewProfile">
+                <div class="qp-header">
+                    <div class="qp-cover"></div>
+                    <div class="qp-av-con"><img
+                            src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"
+                            class="qp-av"></div>
+                    <div class="qp-name">QUEEN KARIN</div>
+                    <div class="qp-status">SYSTEM ADMINISTRATOR</div>
+                    <div class="qp-stats-row">
+                        <div class="qp-stat">
+                            <div class="qp-s-val" id="cntPosts">0</div>
+                            <div class="qp-s-lbl">POSTS</div>
+                        </div>
+                        <div class="qp-stat">
+                            <div class="qp-s-val" id="cntSubs">0</div>
+                            <div class="qp-s-lbl">SUBJECTS</div>
+                        </div>
+                        <div class="qp-stat">
+                            <div class="qp-s-val" id="cntStories">0</div>
+                            <div class="qp-s-lbl">STORIES</div>
                         </div>
                     </div>
-                    <button id="pdBtn" onclick="toggleProtocol()" class="pd-action-btn engage">ENGAGE</button>
-                    <button class="pd-broadcast-btn" onclick="openBroadcastModal()">
-                        <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:var(--pink);"><path d="M21 11l-6-6v14l6-6v-2zm-8 0h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0h-2v2h2v-2z"/></svg>
-                        BROADCAST
-                    </button>
                 </div>
-                <div id="pdProgress" class="pd-progress-area">
-                    <div class="pd-progress-bar">
-                        <div id="pdFill" class="pd-progress-fill"></div>
+                <div class="story-rail" id="storyRail">
+                    <div class="story-ring story-add" onclick="openProfileUpload(true)">+</div>
+                </div>
+                <div class="qp-tabs">
+                    <div class="qp-tab active" onclick="switchProfileTab('media')">GRID</div>
+                    <div class="qp-tab" onclick="switchProfileTab('text')">WRITINGS</div>
+                </div>
+                <div id="profileMediaGrid" class="media-grid"></div>
+                <div id="profileTextGrid" class="text-grid d-none"></div>
+                <button class="upload-fab" onclick="openProfileUpload(false)">+</button>
+            </div>
+
+            <div id="viewUser">
+                <div class="user-head">
+                    <div id="btnAppView" class="app-icon-btn" title="View Application" onclick="openApplicationView()">
+                        <img src="https://static.wixstatic.com/shapes/ce3e5b_62b9d0e748d648fe888198c912e472cb.svg">
                     </div>
-                    <div id="pdText" class="pd-prog-txt">0 / 1000 COINS COLLECTED</div>
-                    <button onclick="toggleProtocol()" style="background:none; border:none; color:var(--red); font-size:0.6rem; cursor:pointer; margin-top:2px;">TERMINATE</button>
+                    <button class="mob-back-btn" onclick="showHome()">&larr; BACK</button>
+                    <div class="uh-info-side">
+                        <div id="dName" class="uh-main">SLAVE</div>
+                        <div id="dRank" class="uh-sub">RANK</div>
+                        <div id="lastSeen" class="uh-seen">Last seen...</div>
+                    </div>
+                    <div class="uh-right">
+                        <div id="dJoined" class="uh-joined">SLAVE SINCE: --/--/--</div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="dash-split">
-                <div class="dash-panel">
-                    <div class="dp-head"><span>OPERATIONS MONITOR</span></div>
-                    <div id="opsList" class="dp-body"></div>
-                </div>
-                <div class="dash-panel">
-                    <div class="dp-head"><span>REVENUE & INTEL STREAM</span><span style="color:var(--pink)">LIVE</span></div>
-                    <div id="feedLog" class="dp-body feed-log"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="viewProfile">
-            <div class="qp-header">
-                <div class="qp-cover"></div>
-                <div class="qp-av-con"><img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" class="qp-av"></div>
-                <div class="qp-name">QUEEN KARIN</div>
-                <div class="qp-status">SYSTEM ADMINISTRATOR</div>
-                <div class="qp-stats-row">
-                    <div class="qp-stat"><div class="qp-s-val" id="cntPosts">0</div><div class="qp-s-lbl">POSTS</div></div>
-                    <div class="qp-stat"><div class="qp-s-val" id="cntSubs">0</div><div class="qp-s-lbl">SUBJECTS</div></div>
-                    <div class="qp-stat"><div class="qp-s-val" id="cntStories">0</div><div class="qp-s-lbl">STORIES</div></div>
-                </div>
-            </div>
-            <div class="story-rail" id="storyRail">
-                <div class="story-ring story-add" onclick="openProfileUpload(true)">+</div>
-            </div>
-            <div class="qp-tabs">
-                <div class="qp-tab active" onclick="switchProfileTab('media')">GRID</div>
-                <div class="qp-tab" onclick="switchProfileTab('text')">WRITINGS</div>
-            </div>
-            <div id="profileMediaGrid" class="media-grid"></div>
-            <div id="profileTextGrid" class="text-grid d-none"></div>
-            <button class="upload-fab" onclick="openProfileUpload(false)">+</button>
-        </div>
-
-        <div id="viewUser">
-             <div class="user-head">
-                <div id="btnAppView" class="app-icon-btn" title="View Application" onclick="openApplicationView()">
-                    <img src="https://static.wixstatic.com/shapes/ce3e5b_62b9d0e748d648fe888198c912e472cb.svg">
-                </div>
-                <button class="mob-back-btn" onclick="showHome()">&larr; BACK</button>
-                <div class="uh-info-side">
-                    <div id="dName" class="uh-main">SLAVE</div>
-                    <div id="dRank" class="uh-sub">RANK</div>
-                    <div id="lastSeen" class="uh-seen">Last seen...</div>
-                </div>
-                <div class="uh-right">
-                    <div id="dJoined" class="uh-joined">SLAVE SINCE: --/--/--</div>
-                </div>
-            </div>
-
-            <div class="split">
-                <div class="chat-panel">
-                    <div class="cp-head">ENCRYPTED FEED</div>
-                    <!--Show media in chat -->
-                    <div id="chatMediaOverlay" class="hidden"
-                        style="position: absolute; inset: 0; background: rgba(0,0,0,0.92);
+                <div class="split">
+                    <div class="chat-panel">
+                        <div class="cp-head">ENCRYPTED FEED</div>
+                        <!--Show media in chat -->
+                        <div id="chatMediaOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.92);
                                 z-index: 500; backdrop-filter: blur(20px);
                                 display: flex; align-items: center; justify-content: center;">
 
-                        <!-- Close button -->
-                        <div id="mediaOverlayClose"
-                            onclick="closeChatPreview()"
-                            style="position:absolute; top:20px; right:20px; cursor:pointer;
+                            <!-- Close button -->
+                            <div id="mediaOverlayClose" onclick="closeChatPreview()" style="position:absolute; top:20px; right:20px; cursor:pointer;
                                     font-size:2rem; color:white; font-weight:300;">
-                            &times;
-                        </div>
-                        <div id="chatMediaOverlayContent"
-                            style="width: 100%; max-width: 90%; max-height: 90%;
+                                &times;
+                            </div>
+                            <div id="chatMediaOverlayContent" style="width: 100%; max-width: 90%; max-height: 90%;
                                     display:flex; align-items:center; justify-content:center;">
+                            </div>
+                        </div>
+                        <div class="c-body" id="adminChatBox"></div>
+                        <div class="c-foot">
+                            <div id="plusMenu" class="d-none">
+                                <label class="menu-btn" for="adminMediaInput">
+                                    <svg viewBox="0 0 24 24">
+                                        <path
+                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+                                    </svg>
+                                    Photo/Video
+                                </label>
+                            </div>
+                            <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden-input"
+                                onchange="handleAdminUpload(this)">
+                            <button class="btn-plus"
+                                onclick="document.getElementById('adminMediaInput').click()">+</button>
+                            <input type="text" id="adminInp" class="inp" placeholder="Command..."
+                                onkeypress="if(event.key==='Enter') sendMsg()">
+                            <button onclick="sendMsg()" class="btn-send">></button>
                         </div>
                     </div>
-                    <div class="c-body" id="adminChatBox"></div>
-                    <div class="c-foot">
-                        <div id="plusMenu" class="d-none">
-                            <label class="menu-btn" for="adminMediaInput">
-                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
-                                Photo/Video
-                            </label>
+
+                    <!-- NEW RIGHT PANEL: TABBED COMMAND CENTER -->
+                    <div class="action-panel">
+
+                        <!-- 1. PREMIUM VITALS GRID (Always Visible) -->
+                        <div class="ap-vitals-premium">
+                            <!-- COINS -->
+                            <div class="pv-card gold">
+                                <div class="pv-lbl">CAPITAL</div>
+                                <div class="pv-val" id="dWalletVal">0</div>
+                                <div class="pv-ctrl">
+                                    <button onclick="adjustWallet('sub')">-</button>
+                                    <button onclick="adjustWallet('add')">+</button>
+                                </div>
+                            </div>
+
+                            <!-- KNEELING -->
+                            <div class="pv-card blue">
+                                <div class="pv-lbl">KNEELING</div>
+                                <div class="pv-val" id="dTotalKneel">0h</div>
+                                <div class="pv-sub" id="dLastKneel">--</div>
+                            </div>
+
+                            <!-- ROUTINE -->
+                            <div class="pv-card green">
+                                <div class="pv-lbl">ROUTINE</div>
+                                <div class="pv-val" id="dRoutineStatus">PENDING</div>
+                                <div class="pv-sub" id="dRoutineName">NONE</div>
+                            </div>
+
+                            <!-- STREAK -->
+                            <div class="pv-card red">
+                                <div class="pv-lbl">STREAK</div>
+                                <div class="pv-val" id="dStreak">0</div>
+                                <div class="pv-sub">DAYS</div>
+                            </div>
                         </div>
-                        <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden-input" onchange="handleAdminUpload(this)">
-                        <button class="btn-plus" onclick="document.getElementById('adminMediaInput').click()">+</button>
-                        <input type="text" id="adminInp" class="inp" placeholder="Command..." onkeypress="if(event.key==='Enter') sendMsg()">
-                        <button onclick="sendMsg()" class="btn-send">></button>
+
+                        <!-- 2. NAVIGATION TABS -->
+                        <div class="ap-nav">
+                            <button class="ap-tab active" onclick="switchAdminTab('ops')">OPS</button>
+                            <button class="ap-tab" onclick="switchAdminTab('intel')">INTEL</button>
+                            <button class="ap-tab" onclick="switchAdminTab('record')">RECORD</button>
+                        </div>
+
+                        <!-- 3. VIEWS CONTAINER -->
+                        <div class="ap-content">
+
+                            <!-- === VIEW 1: OPS (Tasks & Routines) === -->
+                            <div id="tabOps" class="ap-view active">
+                                <!-- Daily Routine Section (New Placeholder) -->
+                                <div id="userQueueSec" style="display:none; flex-direction:column; gap:8px;"></div>
+                                <div class="sec-box">
+                                    <div class="sec-title">DAILY PROTOCOL</div>
+                                    <div id="userRoutineList" class="routine-list">
+                                        <div style="color:#666; font-size:0.7rem; text-align:center;">NO ROUTINE
+                                            ASSIGNED</div>
+                                    </div>
+                                </div>
+
+                                <!-- Active Task (Preserved) -->
+                                <div class="mini-active">
+                                    <div class="ma-status">ACTIVE DIRECTIVE</div>
+                                    <div class="ma-mid">
+                                        <div id="dActiveText" class="ma-txt">None</div>
+                                        <div id="dActiveTimer" class="ma-timer">--:--</div>
+                                    </div>
+                                    <div class="ma-ctrl">
+                                        <div class="ma-btn" onclick="adminTaskAction(currId, 'send')">SEND</div>
+                                        <div class="ma-btn" onclick="adminTaskAction(currId, 'skip')">FAIL</div>
+                                    </div>
+                                </div>
+
+                                <!-- Task Queue (Preserved IDs) -->
+                                <div class="task-queue-box">
+                                    <div class="sec-title clickable-title" onclick="openTaskGallery()"
+                                        style="color:var(--blue);">TASK QUEUE</div>
+                                    <div id="qListContainer" class="q-list-vertical"></div>
+                                    <div class="q-input-row">
+                                        <input type="text" id="qInput" class="q-input" placeholder="Add task..."
+                                            list="cmsTasksList">
+                                        <button class="q-add-btn" onclick="addQueueTask()">+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- === VIEW 2: INTEL (Kinks, Limits, Stats) === -->
+                            <div id="tabIntel" class="ap-view hidden">
+                                <!-- Kneeling Stats -->
+                                <div class="sec-box">
+                                    <div class="sec-title">ENDURANCE TELEMETRY</div>
+                                    <div id="kneelStatsBox" class="telemetry-grid">
+                                        <!-- JS will fill this -->
+                                        <div class="t-stat"><span>TOTAL</span><strong id="dTotalKneel">0h</strong></div>
+                                        <div class="t-stat"><span>SESSION</span><strong id="dLastKneel">--</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Dossier (Kinks/Limits) -->
+                                <div class="sec-box">
+                                    <div class="sec-title" style="color:var(--pink);">DOSSIER</div>
+                                    <div id="dossierGrid" class="dossier-grid">
+                                        <!-- JS will fill this -->
+                                    </div>
+                                </div>
+
+                                <!-- Inventory -->
+                                <div class="sec-box">
+                                    <div class="sec-title" style="color:var(--gold);">TRIBUTE INVENTORY</div>
+                                    <div id="inventoryGrid" class="inv-grid">
+                                        <!-- JS will fill this -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- === VIEW 3: RECORD (Altar, Trophies, History) === -->
+                            <div id="tabRecord" class="ap-view hidden">
+
+                                <!-- Altar Manager (New) -->
+                                <div class="sec-box">
+                                    <div class="sec-title" style="color:var(--gold);">THE ALTAR</div>
+                                    <div class="altar-admin-row">
+                                        <div class="aa-slot" id="adminAltar1" onclick="manageAltar(1)">I</div>
+                                        <div class="aa-slot" id="adminAltar2" onclick="manageAltar(2)">II</div>
+                                        <div class="aa-slot" id="adminAltar3" onclick="manageAltar(3)">III</div>
+                                    </div>
+                                </div>
+
+                                <!-- Trophy Case (New) -->
+                                <div class="sec-box">
+                                    <div class="sec-title">HONORS</div>
+                                    <div id="userStickerCase" class="trophy-case-admin"></div>
+                                </div>
+
+                                <!-- History Grid (Preserved ID) -->
+                                <div class="sec-title">ARCHIVE</div>
+                                <div id="userHistoryGrid" class="history-grid"></div>
+                                <button id="loadMoreHist" class="load-more-btn" onclick="loadMoreHist()">LOAD
+                                    MORE</button>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
-
-                <!-- NEW RIGHT PANEL: TABBED COMMAND CENTER -->
-<div class="action-panel">
-
-    <!-- 1. VITALS DECK (Always Visible) -->
-    <div class="ap-vitals">
-        <div class="ap-wallet-row">
-            <div class="ap-label">CAPITAL</div>
-            <div class="ap-money-ctrl">
-                <button class="ap-btn-money red" onclick="adjustWallet('sub')">-</button>
-                <div id="dWalletVal" class="ap-balance">0</div>
-                <button class="ap-btn-money green" onclick="adjustWallet('add')">+</button>
-            </div>
-        </div>
-        <div class="ap-rank-row">
-            <div class="ap-label">HIERARCHY</div>
-            <div id="dRank" class="ap-rank-val">SLAVE</div>
-        </div>
-    </div>
-
-    <!-- 2. NAVIGATION TABS -->
-    <div class="ap-nav">
-        <button class="ap-tab active" onclick="switchAdminTab('ops')">OPS</button>
-        <button class="ap-tab" onclick="switchAdminTab('intel')">INTEL</button>
-        <button class="ap-tab" onclick="switchAdminTab('record')">RECORD</button>
-    </div>
-
-    <!-- 3. VIEWS CONTAINER -->
-    <div class="ap-content">
-        
-        <!-- === VIEW 1: OPS (Tasks & Routines) === -->
-        <div id="tabOps" class="ap-view active">
-            <!-- Daily Routine Section (New Placeholder) -->
-            <div id="userQueueSec" style="display:none; flex-direction:column; gap:8px;"></div>
-            <div class="sec-box">
-                <div class="sec-title">DAILY PROTOCOL</div>
-                <div id="userRoutineList" class="routine-list">
-                    <div style="color:#666; font-size:0.7rem; text-align:center;">NO ROUTINE ASSIGNED</div>
-                </div>
-            </div>
-
-            <!-- Active Task (Preserved) -->
-            <div class="mini-active">
-                <div class="ma-status">ACTIVE DIRECTIVE</div>
-                <div class="ma-mid">
-                    <div id="dActiveText" class="ma-txt">None</div>
-                    <div id="dActiveTimer" class="ma-timer">--:--</div>
-                </div>
-                <div class="ma-ctrl">
-                    <div class="ma-btn" onclick="adminTaskAction(currId, 'send')">SEND</div>
-                    <div class="ma-btn" onclick="adminTaskAction(currId, 'skip')">FAIL</div>
-                </div>
-            </div>
-
-            <!-- Task Queue (Preserved IDs) -->
-            <div class="task-queue-box">
-                <div class="sec-title clickable-title" onclick="openTaskGallery()" style="color:var(--blue);">TASK QUEUE</div>
-                <div id="qListContainer" class="q-list-vertical"></div>
-                <div class="q-input-row">
-                    <input type="text" id="qInput" class="q-input" placeholder="Add task..." list="cmsTasksList">
-                    <button class="q-add-btn" onclick="addQueueTask()">+</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- === VIEW 2: INTEL (Kinks, Limits, Stats) === -->
-        <div id="tabIntel" class="ap-view hidden">
-            <!-- Kneeling Stats -->
-            <div class="sec-box">
-                <div class="sec-title">ENDURANCE TELEMETRY</div>
-                <div id="kneelStatsBox" class="telemetry-grid">
-                    <!-- JS will fill this -->
-                    <div class="t-stat"><span>TOTAL</span><strong id="dTotalKneel">0h</strong></div>
-                    <div class="t-stat"><span>SESSION</span><strong id="dLastKneel">--</strong></div>
-                </div>
-            </div>
-
-            <!-- Dossier (Kinks/Limits) -->
-            <div class="sec-box">
-                <div class="sec-title" style="color:var(--pink);">DOSSIER</div>
-                <div id="dossierGrid" class="dossier-grid">
-                    <!-- JS will fill this -->
-                </div>
-            </div>
-
-            <!-- Inventory -->
-            <div class="sec-box">
-                <div class="sec-title" style="color:var(--gold);">TRIBUTE INVENTORY</div>
-                <div id="inventoryGrid" class="inv-grid">
-                    <!-- JS will fill this -->
-                </div>
-            </div>
-        </div>
-
-        <!-- === VIEW 3: RECORD (Altar, Trophies, History) === -->
-        <div id="tabRecord" class="ap-view hidden">
-            
-            <!-- Altar Manager (New) -->
-            <div class="sec-box">
-                <div class="sec-title" style="color:var(--gold);">THE ALTAR</div>
-                <div class="altar-admin-row">
-                    <div class="aa-slot" id="adminAltar1" onclick="manageAltar(1)">I</div>
-                    <div class="aa-slot" id="adminAltar2" onclick="manageAltar(2)">II</div>
-                    <div class="aa-slot" id="adminAltar3" onclick="manageAltar(3)">III</div>
-                </div>
-            </div>
-
-            <!-- Trophy Case (New) -->
-            <div class="sec-box">
-                <div class="sec-title">HONORS</div>
-                <div id="userStickerCase" class="trophy-case-admin"></div>
-            </div>
-
-            <!-- History Grid (Preserved ID) -->
-            <div class="sec-title">ARCHIVE</div>
-            <div id="userHistoryGrid" class="history-grid"></div>
-            <button id="loadMoreHist" class="load-more-btn" onclick="loadMoreHist()">LOAD MORE</button>
-        </div>
-
-    </div>
-</div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- MODALS -->
-<div id="reviewModal" class="modal" onclick="if(event.target === this) closeModal()">
-    <div class="m-content" style="position: relative;">
-        <!-- NEW: THE X CLOSE BUTTON -->
-        <span onclick="closeModal()" style="position: absolute; top: 15px; right: 20px; font-size: 2.5rem; color: #666; cursor: pointer; z-index: 1100; line-height: 1; transition: 0.2s;" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='#666'">&times;</span>
-        
-        <div id="mMediaBox" class="m-media-box"></div>
-        <div class="m-info">
-            <div id="reviewNormalContent">
-                <div id="mText" class="m-text-scroll"></div>
-                <div id="modalActions"></div>
-            </div>
-            <div id="reviewRewardOverlay">
-                <h3 style="color:var(--green); margin-bottom:15px; text-align:center;">REWARD PROTOCOL</h3>
-                <div id="stickerGrid" class="sticker-grid"></div>
-                <div class="reward-inputs">
-                    <div class="rw-group">
-                        <div class="rw-label">BONUS COINS</div>
-                        <input type="number" id="rewardBonus" class="rw-inp" value="50">
+    <!-- MODALS -->
+    <div id="reviewModal" class="modal" onclick="if(event.target === this) closeModal()">
+        <div class="m-content" style="position: relative;">
+            <!-- NEW: THE X CLOSE BUTTON -->
+            <span onclick="closeModal()"
+                style="position: absolute; top: 15px; right: 20px; font-size: 2.5rem; color: #666; cursor: pointer; z-index: 1100; line-height: 1; transition: 0.2s;"
+                onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='#666'">&times;</span>
+
+            <div id="mMediaBox" class="m-media-box"></div>
+            <div class="m-info">
+                <div id="reviewNormalContent">
+                    <div id="mText" class="m-text-scroll"></div>
+                    <div id="modalActions"></div>
+                </div>
+                <div id="reviewRewardOverlay">
+                    <h3 style="color:var(--green); margin-bottom:15px; text-align:center;">REWARD PROTOCOL</h3>
+                    <div id="stickerGrid" class="sticker-grid"></div>
+                    <div class="reward-inputs">
+                        <div class="rw-group">
+                            <div class="rw-label">BONUS COINS</div>
+                            <input type="number" id="rewardBonus" class="rw-inp" value="50">
+                        </div>
+                        <div class="rw-group">
+                            <div class="rw-label">COMMENT</div>
+                            <input type="text" id="rewardComment" class="rw-inp" placeholder="Optional message...">
+                        </div>
                     </div>
-                    <div class="rw-group">
-                        <div class="rw-label">COMMENT</div>
-                        <input type="text" id="rewardComment" class="rw-inp" placeholder="Optional message...">
+                    <div class="rw-media-row">
+                        <label for="rewardFileUpload" class="rw-icon-btn">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                            </svg>
+                        </label>
+                        <div id="btnRecordReward" class="rw-icon-btn" onclick="toggleRewardRecord()">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z" />
+                            </svg>
+                        </div>
+                        <div id="rewardMediaPreview" class="rw-preview-box d-none"></div>
+                    </div>
+                    <input type="file" id="rewardFileUpload" accept="image/*,video/*,audio/*"
+                        onchange="handleRewardFileUpload(this)" style="display:none;">
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button onclick="cancelReward()"
+                            style="flex:1; padding:10px; background:#666; color:white; border:none; border-radius:4px;">CANCEL</button>
+                        <button onclick="confirmReward()"
+                            style="flex:1; padding:10px; background:var(--green); color:black; border:none; border-radius:4px; font-weight:bold;">CONFIRM</button>
                     </div>
                 </div>
-                <div class="rw-media-row">
-                    <label for="rewardFileUpload" class="rw-icon-btn">
-                        <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
-                    </label>
-                    <div id="btnRecordReward" class="rw-icon-btn" onclick="toggleRewardRecord()">
-                        <svg viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <div id="exclusionModal" class="modal">
+        <div class="m-content"
+            style="width:400px; height:auto; max-height:70vh; display:flex; flex-direction:column; padding:20px;">
+            <h3 style="color:var(--red); margin-bottom:15px; text-align:center;">PROTOCOL EXCLUSIONS</h3>
+            <div id="exclusionList" class="ex-list"></div>
+            <button onclick="closeExclusionModal()"
+                style="margin-top:15px; padding:10px; background:#666; color:white; border:none; border-radius:4px;">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="broadcastModal" class="modal">
+        <div class="m-content"
+            style="display:flex; flex-direction:column; width:600px; height:auto; max-height:80vh; padding:20px; border:1px solid var(--pink); box-shadow:0 0 20px rgba(255,0,222,0.1);">
+            <div class="br-head">BROADCAST MESSAGE</div>
+            <textarea id="brText" class="br-inp" placeholder="Enter your message..."></textarea>
+            <div class="br-preset-row">
+                <button class="br-mini-btn" onclick="saveBroadcastPreset()">SAVE PRESET</button>
+                <button class="br-mini-btn" onclick="togglePresets()">LOAD PRESET</button>
+            </div>
+            <div id="presetList"></div>
+            <label for="brFile" class="br-file-label">
+                <svg viewBox="0 0 24 24">
+                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                </svg>
+                ATTACH MEDIA
+            </label>
+            <input type="file" id="brFile" accept="image/*,video/*" onchange="handleBroadcastFile(this)"
+                style="display:none;">
+            <img id="brPreviewImg" class="br-prev">
+            <video id="brPreviewVid" class="br-prev" muted autoplay loop></video>
+            <h4 style="color:var(--pink); margin:15px 0 10px 0; font-size:0.9rem;">EXCLUDE USERS:</h4>
+            <div id="brUserList" class="ex-list" style="max-height:150px; overflow-y:auto;"></div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button onclick="closeBroadcastModal()"
+                    style="flex:1; padding:15px; background:#666; color:white; border:none; border-radius:4px;">CANCEL</button>
+                <button onclick="sendBroadcast()" class="br-btn">SEND BROADCAST</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: COMMAND ARMORY WORKSHOP -->
+    <div id="taskGalleryModal" class="modal">
+        <div class="m-content"
+            style="width:98%; max-width:1300px; height:92vh; display:flex; flex-direction:column; padding:0; border:1px solid var(--blue); background:rgba(5,5,5,0.98); border-radius:15px; overflow:hidden;">
+
+            <!-- CENTERED STACKED HEADER -->
+            <div
+                style="padding:20px; border-bottom:1px solid #222; display:flex; flex-direction:column; align-items:center; gap:10px; background:rgba(0,0,0,0.8); flex-shrink:0; position:relative;">
+
+                <!-- CLOSE BUTTON (Fixed to Right) -->
+                <button onclick="closeTaskGallery()"
+                    style="position:absolute; right:20px; top:15px; background:transparent; border:none; color:#444; font-size:2rem; cursor:pointer;">&times;</button>
+
+                <!-- LINE 1: NAME -->
+                <div id="armoryTitle"
+                    style="color:white; font-weight:900; font-size:1.6rem; letter-spacing:4px; font-family:'Orbitron'; text-transform:uppercase;">
+                    SLAVE TASKS</div>
+
+                <!-- LINE 2: SMALL SEARCH -->
+                <input type="text" id="taskSearchInput" onkeyup="filterTaskGallery()" placeholder="SEARCH DIRECTIVES..."
+                    style="width:300px; background:#000; border:1px solid #333; border-radius:15px; padding:6px 15px; color:white; font-family:'Rajdhani'; font-size:0.75rem; outline:none; letter-spacing:1px; text-align:center; transition:0.3s;">
+            </div>
+
+            <!-- MAIN SPLIT AREA -->
+            <div style="display:grid; grid-template-columns: 420px 1fr; flex:1; overflow:hidden;">
+                <div
+                    style="border-right:1px solid #222; background:rgba(0,0,0,0.3); display:flex; flex-direction:column; overflow:hidden;">
+                    <div id="armoryLiveQueue"
+                        style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:8px;">
                     </div>
-                    <div id="rewardMediaPreview" class="rw-preview-box d-none"></div>
                 </div>
-                <input type="file" id="rewardFileUpload" accept="image/*,video/*,audio/*" onchange="handleRewardFileUpload(this)" style="display:none;">
-                <div style="display:flex; gap:10px; margin-top:15px;">
-                    <button onclick="cancelReward()" style="flex:1; padding:10px; background:#666; color:white; border:none; border-radius:4px;">CANCEL</button>
-                    <button onclick="confirmReward()" style="flex:1; padding:10px; background:var(--green); color:black; border:none; border-radius:4px; font-weight:bold;">CONFIRM</button>
-                </div>
+                <div id="glassTaskGrid" style="flex:1; overflow-y:auto; padding:20px; background:#050505;"></div>
             </div>
         </div>
     </div>
-</div>
-
-<div id="exclusionModal" class="modal">
-    <div class="m-content" style="width:400px; height:auto; max-height:70vh; display:flex; flex-direction:column; padding:20px;">
-        <h3 style="color:var(--red); margin-bottom:15px; text-align:center;">PROTOCOL EXCLUSIONS</h3>
-        <div id="exclusionList" class="ex-list"></div>
-        <button onclick="closeExclusionModal()" style="margin-top:15px; padding:10px; background:#666; color:white; border:none; border-radius:4px;">CLOSE</button>
-    </div>
-</div>
-
-<div id="broadcastModal" class="modal">
-    <div class="m-content" style="display:flex; flex-direction:column; width:600px; height:auto; max-height:80vh; padding:20px; border:1px solid var(--pink); box-shadow:0 0 20px rgba(255,0,222,0.1);">
-        <div class="br-head">BROADCAST MESSAGE</div>
-        <textarea id="brText" class="br-inp" placeholder="Enter your message..."></textarea>
-        <div class="br-preset-row">
-            <button class="br-mini-btn" onclick="saveBroadcastPreset()">SAVE PRESET</button>
-            <button class="br-mini-btn" onclick="togglePresets()">LOAD PRESET</button>
-        </div>
-        <div id="presetList"></div>
-        <label for="brFile" class="br-file-label">
-            <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
-            ATTACH MEDIA
-        </label>
-        <input type="file" id="brFile" accept="image/*,video/*" onchange="handleBroadcastFile(this)" style="display:none;">
-        <img id="brPreviewImg" class="br-prev">
-        <video id="brPreviewVid" class="br-prev" muted autoplay loop></video>
-        <h4 style="color:var(--pink); margin:15px 0 10px 0; font-size:0.9rem;">EXCLUDE USERS:</h4>
-        <div id="brUserList" class="ex-list" style="max-height:150px; overflow-y:auto;"></div>
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <button onclick="closeBroadcastModal()" style="flex:1; padding:15px; background:#666; color:white; border:none; border-radius:4px;">CANCEL</button>
-            <button onclick="sendBroadcast()" class="br-btn">SEND BROADCAST</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL: COMMAND ARMORY WORKSHOP -->
-<div id="taskGalleryModal" class="modal">
-    <div class="m-content" style="width:98%; max-width:1300px; height:92vh; display:flex; flex-direction:column; padding:0; border:1px solid var(--blue); background:rgba(5,5,5,0.98); border-radius:15px; overflow:hidden;">
-        
-        <!-- CENTERED STACKED HEADER -->
-        <div style="padding:20px; border-bottom:1px solid #222; display:flex; flex-direction:column; align-items:center; gap:10px; background:rgba(0,0,0,0.8); flex-shrink:0; position:relative;">
-            
-            <!-- CLOSE BUTTON (Fixed to Right) -->
-            <button onclick="closeTaskGallery()" style="position:absolute; right:20px; top:15px; background:transparent; border:none; color:#444; font-size:2rem; cursor:pointer;">&times;</button>
-
-            <!-- LINE 1: NAME -->
-            <div id="armoryTitle" style="color:white; font-weight:900; font-size:1.6rem; letter-spacing:4px; font-family:'Orbitron'; text-transform:uppercase;">SLAVE TASKS</div>
-
-            <!-- LINE 2: SMALL SEARCH -->
-            <input type="text" id="taskSearchInput" onkeyup="filterTaskGallery()" placeholder="SEARCH DIRECTIVES..." 
-                   style="width:300px; background:#000; border:1px solid #333; border-radius:15px; padding:6px 15px; color:white; font-family:'Rajdhani'; font-size:0.75rem; outline:none; letter-spacing:1px; text-align:center; transition:0.3s;">
-        </div>
-
-        <!-- MAIN SPLIT AREA -->
-        <div style="display:grid; grid-template-columns: 420px 1fr; flex:1; overflow:hidden;">
-            <div style="border-right:1px solid #222; background:rgba(0,0,0,0.3); display:flex; flex-direction:column; overflow:hidden;">
-                <div id="armoryLiveQueue" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:8px;"></div>
-            </div>
-            <div id="glassTaskGrid" style="flex:1; overflow-y:auto; padding:20px; background:#050505;"></div>
-        </div>
-    </div>
-</div>
 
     <!-- CUSTOM SLOT PICKER OVERLAY -->
-<div id="slotPickerModal" class="modal" style="z-index: 10001;">
-    <div style="background: rgba(5,5,5,0.95); border: 1px solid var(--blue); padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 0 30px rgba(0,243,255,0.2);">
-        <div style="font-family: 'Orbitron'; color: white; font-size: 0.9rem; letter-spacing: 3px; margin-bottom: 20px;">SELECT TARGET SLOT</div>
-        <div id="slotGrid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px;">
-            <!-- Numbers 1-10 injected here -->
+    <div id="slotPickerModal" class="modal" style="z-index: 10001;">
+        <div
+            style="background: rgba(5,5,5,0.95); border: 1px solid var(--blue); padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 0 30px rgba(0,243,255,0.2);">
+            <div
+                style="font-family: 'Orbitron'; color: white; font-size: 0.9rem; letter-spacing: 3px; margin-bottom: 20px;">
+                SELECT TARGET SLOT</div>
+            <div id="slotGrid"
+                style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px;">
+                <!-- Numbers 1-10 injected here -->
+            </div>
+            <button onclick="document.getElementById('slotPickerModal').classList.remove('active')"
+                style="background: transparent; border: 1px solid #444; color: #666; font-family: 'Rajdhani'; font-size: 0.7rem; padding: 5px 15px; cursor: pointer; border-radius: 4px;">CANCEL</button>
         </div>
-        <button onclick="document.getElementById('slotPickerModal').classList.remove('active')" style="background: transparent; border: 1px solid #444; color: #666; font-family: 'Rajdhani'; font-size: 0.7rem; padding: 5px 15px; cursor: pointer; border-radius: 4px;">CANCEL</button>
     </div>
-</div>
-    
-<!-- JavaScript Modules -->
-<script type="module" src="js/dashboard-main.js"></script>
+
+    <!-- JavaScript Modules -->
+    <script type="module" src="js/dashboard-main.js"></script>
 
 </body>
+
 </html>
