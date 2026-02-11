@@ -329,11 +329,13 @@ export async function renderGallery() {
 
             // HTML: We use PLACEHOLDER_IMG as src, and store real URL in data-raw
             // Added class 'lazy-gallery-img' so we can find it later
+            // ADDED onerror handler just in case
             const mediaHtml = `<img class="lazy-gallery-img ${isTrash ? 'trash-img' : 'blueprint-img'}" 
                                    src="${PLACEHOLDER_IMG}" 
                                    data-raw="${safeRaw}"
                                    loading="lazy" 
-                                   style="${imgStyle}">`;
+                                   style="${imgStyle}"
+                                   onerror="this.src='${PLACEHOLDER_IMG}'">`;
 
             deskHTML += `
                 <div class="${isTrash ? 'item-trash' : 'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
@@ -349,7 +351,8 @@ export async function renderGallery() {
                     <img class="lazy-gallery-img mob-scroll-img" 
                          src="${PLACEHOLDER_IMG}" 
                          data-raw="${safeRaw}"
-                         style="${imgStyle}">
+                         style="${imgStyle}"
+                         onerror="this.src='${PLACEHOLDER_IMG}'">
                     ${videoIcon}
                     ${stickerHtml}
                     ${mobBadge}
@@ -373,7 +376,10 @@ export async function renderGallery() {
             if (img.dataset.loaded === "true") continue;
 
             const raw = img.dataset.raw;
-            if (!raw || raw === "undefined") continue;
+            if (!raw || raw === "undefined") {
+                img.dataset.loaded = "true"; // Skip invalid
+                continue;
+            }
 
             try {
                 // 3. Call the magic getThumb function
@@ -381,15 +387,19 @@ export async function renderGallery() {
                 const realUrl = await getThumb({ proofUrl: raw }, 300);
 
                 // 4. Update the Image
-                img.src = realUrl;
+                if (realUrl) {
+                    img.src = realUrl;
+                } else {
+                    console.warn("Hydration returned empty URL for", raw);
+                }
                 img.dataset.loaded = "true"; // Mark as done
 
-                // 5. Tiny pause to let the backend breathe (100ms)
-                // This prevents the "One Picture" bug
-                await new Promise(r => setTimeout(r, 100));
+                // 5. Tiny pause (Speed up to 10ms)
+                await new Promise(r => setTimeout(r, 10));
 
             } catch (e) {
-                console.error("Hydration failed for", raw);
+                console.error("Hydration failed for", raw, e);
+                img.dataset.loaded = "true"; // Mark as failed so we don't retry forever
             }
         }
     }
