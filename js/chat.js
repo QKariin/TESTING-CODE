@@ -32,6 +32,9 @@ export async function renderChat(messages) {
         const s = (m.sender || "").toLowerCase();
         const txt = (m.message || "");
 
+        // EXCLUDE WISHLIST FROM TICKER (It goes to main chat)
+        if (txt.startsWith('WISHLIST::')) return false;
+
         // Catch 'system' sender OR any auto-generated messages
         return s === 'system' ||
             txt.includes("Task Verified") ||
@@ -43,6 +46,9 @@ export async function renderChat(messages) {
     const conversationMessages = sortedMessages.filter(m => {
         const s = (m.sender || "").toLowerCase();
         const txt = (m.message || "");
+
+        // ALWAYS ALLOW WISHLIST CARDS
+        if (txt.startsWith('WISHLIST::')) return true;
 
         // Only allow Human Conversation
         // (If it was caught by the filter above, exclude it here)
