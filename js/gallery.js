@@ -32,15 +32,6 @@ let activeStickerFilter = "ALL";
 // --- HELPER: POINTS ---
 function getPoints(item) {
     let val = item.points || item.score || item.value || item.amount || item.reward || 0;
-
-    // Fallback: If no explicit points but status is approved, assume standard task value (50)
-    // This fixes the Altar sorting for tasks that didn't save their score in history
-    if (val === 0) {
-        const s = (item.status || "").toLowerCase();
-        if (s.includes('approv') || s.includes('complete')) {
-            return 50;
-        }
-    }
     return Number(val);
 }
 
