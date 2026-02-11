@@ -1,5 +1,4 @@
 
-
 // gallery.js - TRILOGY LAYOUT (FIXED)
 import { mediaType } from './media.js';
 import {
@@ -261,14 +260,14 @@ export async function renderGallery() {
 
         // 1. EXTERNAL URL PASS-THROUGH (Fixes "Avatar Replacement" bug)
         if (raw.startsWith('http') && !raw.includes('wix:')) {
-             // If it's an image file, use it directly (UpCDN, Firebase, etc.)
-             if (/\.(jpg|jpeg|png|webp|gif)$/i.test(raw.split('?')[0])) {
-                 return raw; 
-             }
-             // If it's an external video, we can't get a poster easily without a service.
-             // But we can try to return the raw URL if it might be an image service.
-             // For now, we return it to let the <img> tag try to load it.
-             return raw; 
+            // If it's an image file, use it directly (UpCDN, Firebase, etc.)
+            if (/\.(jpg|jpeg|png|webp|gif)$/i.test(raw.split('?')[0])) {
+                return raw;
+            }
+            // If it's an external video, we can't get a poster easily without a service.
+            // But we can try to return the raw URL if it might be an image service.
+            // For now, we return it to let the <img> tag try to load it.
+            return raw;
         }
 
         let finalId = "";
@@ -276,7 +275,7 @@ export async function renderGallery() {
         // 2. Extract Wix ID from Images
         if (raw.startsWith('wix:image')) {
             finalId = raw.split('/')[3];
-        } 
+        }
         // 3. Extract Wix ID from Video Posters
         else if (raw.startsWith('wix:video')) {
             const posterMatch = raw.match(/posterUri=([^&]+)/);
