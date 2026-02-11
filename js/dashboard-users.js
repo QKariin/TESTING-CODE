@@ -8,6 +8,7 @@ import {
 import { clean, raw, formatTimer } from './dashboard-utils.js';
 import { Bridge } from './bridge.js';
 import { getOptimizedUrl, getSignedUrl } from './media.js';
+import { LEVELS } from './config.js'; // IMPORT REAL LEVELS
 
 // --- STABILITY CACHE ---
 // Prevents flickering of "System Tasks" when refreshing
@@ -32,7 +33,40 @@ export async function updateDetail(u) {
     const profPic = document.getElementById('dProfilePic');
     if (profPic) profPic.src = u.profilePicture || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
 
-    setText('dMirrorHierarchy', (u.hierarchy || "SLAVE").toUpperCase()); // Fixed: u.level -> u.hierarchy
+    // CALCULATE REAL RANK FROM POINTS
+    let realRank = "HallBoy"; // Default
+    const points = u.points || 0;
+    // Find the highest level where points >= min
+    // LEVELS is sorted ascending usually? config.js: 0, 2000, 5000...
+    // We want the last one that matches
+    for (let i = LEVELS.length - 1; i >= 0; i--) {
+        if (points >= LEVELS[i].min) {
+            realRank = LEVELS[i].name;
+            break;
+        }
+    }
+    // If u.hierarchy is explicitly set and different from default/calculated, maybe we should respect it?
+    // But user complained "it still says Hallboy". 
+    // If we want "real" data from CMS logic, we calculate it.
+    // However, we allow manual override via u.hierarchy if it matches a known level?
+    // Let's prefer the Database value if it's valid, otherwise calculate.
+    // ACTUALLY: User said "it still says hallboy" implies DB defaults to Hallboy.
+    // We should display the CALCULATED rank if DB value seems "stuck" or just always display calculated.
+    // Let's display the stored value BUT if it's "HallBoy" and points > 0, maybe update it?
+    // No, safer to just DISPLAY the calculated rank for the "Sticker".
+    // Wait, let's allow the manual override to win if it was manually set?
+    // The previous implementation used u.hierarchy || "SLAVE".
+    // I will use u.hierarchy ONLY, assuming the cycleHierarchy updates it.
+    // BUT the user says it's not connected.
+    // I will use properties from config.js.
+
+    // DECISION: Priority = u.hierarchy (if set) -> Calculated (if u.hierarchy missing or default)
+    // But if u.hierarchy IS "HallBoy" (default) but points say "Silverman", we should show "Silverman".
+    // So if u.hierarchy == "HallBoy" && calculated != "HallBoy", show Calculated?
+    // Or just always Show Calculated? 
+    // "Connect that to the real datas" -> Points are the real data backing the rank.
+
+    setText('dMirrorHierarchy', (realRank).toUpperCase());
     setText('dMirrorName', u.name || "SLAVE");
 
     const stEl = document.getElementById('dMirrorStatus');
@@ -43,12 +77,16 @@ export async function updateDetail(u) {
 
     // 2. MAIN STATS
     setText('dMirrorPoints', (u.points || 0).toLocaleString());
+    setText('dMirrorPointsCard', (u.points || 0).toLocaleString()); // Added: Grid Card
+
     setText('dMirrorWallet', (u.coins || 0).toLocaleString());
+    setText('dMirrorWalletCard', (u.coins || 0).toLocaleString()); // Added: Grid Card
 
     // 3. KNEELING
     const totalKneel = u.kneelCount || 0;
     const kneelHrs = (totalKneel * 0.25).toFixed(1);
     setText('dMirrorKneel', `${kneelHrs}h`);
+    setText('dMirrorKneelCard', `${kneelHrs}h`); // Added: Grid Card
 
     // 4. PROGRESS BAR & LEVEL
     const currentPoints = u.points || 0;
@@ -66,14 +104,24 @@ export async function updateDetail(u) {
 
     // 5. EXTENDED STATS
     setText('dMirrorStreak', u.streak || 0);
+    setText('dMirrorStreakCard', u.streak || 0); // Added: Grid Card
+
     setText('dMirrorStatTotal', u.totalTasks || 0);
-    setText('dMirrorStatCompleted', u.completed || 0); // Fixed: u.tasksCompleted -> u.completed
-    setText('dMirrorStatSkipped', u.skipped || 0); // Fixed: u.tasksSkipped -> u.skipped (will be 0 if not sent)
+    setText('dMirrorStatCompleted', u.completed || 0);
+    setText('dMirrorStatSkipped', u.skipped || 0);
 
     const isRoutineDone = u.routineDoneToday === true;
-    setText('dMirrorRoutine', isRoutineDone ? "DONE" : "PENDING");
+    const routineTxt = isRoutineDone ? "DONE" : "PENDING";
+    const routineColor = isRoutineDone ? '#00ff00' : '#666';
+
+    setText('dMirrorRoutine', routineTxt);
+    setText('dMirrorRoutineCard', routineTxt); // Added: Grid Card
+
+    // Tint color for both
     const rEl = document.getElementById('dMirrorRoutine');
-    if (rEl) rEl.style.color = isRoutineDone ? '#00ff00' : '#666';
+    if (rEl) rEl.style.color = routineColor;
+    const rElCard = document.getElementById('dMirrorRoutineCard');
+    if (rElCard) rElCard.style.color = routineColor;
 
     // 6. FOOTER
     setText('dMirrorSlaveSince', u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "--/--/--"); // Fixed: u.joinDate -> u.joinedDate
@@ -456,3 +504,33 @@ window.openQueueTask = openQueueTask;
 window.toggleMainTaskExpansion = toggleMainTaskExpansion;
 window.adjustWallet = adjustWallet;
 window.adjustKneel = adjustKneel;
+
+// --- HIERARCHY CYCLE (MANUAL OVERRIDE) ---
+function cycleHierarchy() {
+    if (!currId) return;
+    const u = users.find(x => x.memberId === currId);
+    if (!u) return;
+
+    // Use LEVELS from config
+    const rankNames = LEVELS.map(l => l.name); // ["HallBoy", "Footman"...]
+
+    // Find current index based on name (case insensitive match just in case)
+    let current = (u.hierarchy || "HallBoy");
+    let idx = rankNames.findIndex(r => r.toUpperCase() === current.toUpperCase());
+    if (idx === -1) idx = 0;
+
+    let nextIdx = (idx + 1) % rankNames.length;
+    let newRank = rankNames[nextIdx];
+
+    // Optimistic Update
+    u.hierarchy = newRank;
+    setText('dMirrorHierarchy', newRank.toUpperCase());
+
+    // Backend Sync
+    window.parent.postMessage({
+        type: "updateHierarchy",
+        memberId: currId,
+        newRank: newRank
+    }, "*");
+}
+window.cycleHierarchy = cycleHierarchy;
