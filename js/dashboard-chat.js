@@ -50,17 +50,14 @@ export async function renderChat(msgs) {
         // Message content
         // Smarter Media Detection
         if (m.message) {
-            const isImage = mediaType(m.message) === "image";
-            const isVideo = mediaType(m.message) === "video";
-
-            // 1. WISHLIST CARD (GRAPHICAL)
+            // 1. WISHLIST CARD (GRAPHICAL) - CHECK FIRST
             if (m.message.startsWith('WISHLIST::')) {
                 try {
                     const jsonStr = m.message.replace('WISHLIST::', '');
                     const item = JSON.parse(jsonStr);
 
-                    contentHtml = `
-                    <div class="msg-wishlist-card" style="margin: 10px auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                    const cardInner = `
+                    <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                         <div style="width:100%; height:120px; overflow:hidden; position:relative;">
                              <img src="${item.img}" style="width:100%; height:100%; object-fit:cover;">
                              <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
@@ -73,49 +70,57 @@ export async function renderChat(msgs) {
                             <div style="color:#c5a059; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold;">${item.price}</div>
                         </div>
                     </div>`;
+
+                    // WRAPPER FOR CENTERING
+                    contentHtml = `<div class="msg-row" style="justify-content:center; margin-bottom:15px; width:100%; display:flex;"><div class="msg-col" style="align-items:center;">${cardInner}<div class="msg-time" style="text-align:center; width:100%; margin-top:5px;">${timeStr}</div></div></div>`;
+
                 } catch (e) {
                     console.error("Failed to parse wishlist card", e);
                     contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}">🎁 TRIBUTE ERROR</div>`;
                 }
             }
-            else if (isImage) {
-                const srcUrl = m.mediaUrl || getOptimizedUrl(m.message, 300);
-                const previewUrl = m.mediaUrl || m.message;
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
-            } else if (isVideo) {
-                const srcUrl = m.mediaUrl || m.message;
-                const previewUrl = m.mediaUrl || m.message;
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', true)" muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
-            } else if (m.message.startsWith('💝 TRIBUTE:')) {
-                contentHtml = renderTributeMessage(m.message, timeStr);
-            } else if (m.message.includes('Task Verified') || m.message.includes('Task Rejected')) {
-                contentHtml = renderSystemMessage(m.message, m.message.includes('Verified') ? 'green' : 'red');
-            } else {
-                let safeHtml = DOMPurify.sanitize(m.message);
-                // Convert newlines to <br>
-                safeHtml = safeHtml.replace(/\n/g, "<br>");
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}">${safeHtml}</div>`;
+            else {
+                const isImage = mediaType(m.message) === "image";
+                const isVideo = mediaType(m.message) === "video";
+
+                if (isImage) {
+                    const srcUrl = m.mediaUrl || getOptimizedUrl(m.message, 300);
+                    const previewUrl = m.mediaUrl || m.message;
+                    contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
+                } else if (isVideo) {
+                    const srcUrl = m.mediaUrl || m.message;
+                    const previewUrl = m.mediaUrl || m.message;
+                    contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', true)" muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
+                } else if (m.message.startsWith('💝 TRIBUTE:')) {
+                    contentHtml = renderTributeMessage(m.message, timeStr);
+                } else if (m.message.includes('Task Verified') || m.message.includes('Task Rejected')) {
+                    contentHtml = renderSystemMessage(m.message, m.message.includes('Verified') ? 'green' : 'red');
+                } else {
+                    let safeHtml = DOMPurify.sanitize(m.message);
+                    // Convert newlines to <br>
+                    safeHtml = safeHtml.replace(/\n/g, "<br>");
+                    contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}">${safeHtml}</div>`;
+                }
             }
-        }
 
-        // Avatar
-        if (!isMe) {
-            const u = users.find(x => x.memberId === currId);
-            const avatarUrl = u?.avatar ? getOptimizedUrl(u.avatar, 60) : '';
-            avatarHtml = avatarUrl ?
-                `<img src="${avatarUrl}" class="chat-av">` :
-                `<div class="chat-av-placeholder">${(u?.name || 'U')[0]}</div>`;
-        } else {
-            avatarHtml = `<img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" class="chat-av">`;
-        }
+            // Avatar
+            if (!isMe) {
+                const u = users.find(x => x.memberId === currId);
+                const avatarUrl = u?.avatar ? getOptimizedUrl(u.avatar, 60) : '';
+                avatarHtml = avatarUrl ?
+                    `<img src="${avatarUrl}" class="chat-av">` :
+                    `<div class="chat-av-placeholder">${(u?.name || 'U')[0]}</div>`;
+            } else {
+                avatarHtml = `<img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" class="chat-av">`;
+            }
 
-        // Skip tribute/wishlist messages for regular rendering
-        if (!m.message.startsWith('💝 TRIBUTE:') && !m.message.startsWith('WISHLIST::')) {
-            html += `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">${!isMe ? avatarHtml : ''}${contentHtml}${isMe ? avatarHtml : ''}<div class="msg-meta ${isMe ? 'mm-out' : 'mm-in'}">${timeStr}</div></div>`;
-        } else {
-            html += contentHtml; // Tributes and Wishcards are already formatted
-        }
-    });
+            // Skip tribute/wishlist messages for regular rendering
+            if (!m.message.startsWith('💝 TRIBUTE:') && !m.message.startsWith('WISHLIST::')) {
+                html += `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">${!isMe ? avatarHtml : ''}${contentHtml}${isMe ? avatarHtml : ''}<div class="msg-meta ${isMe ? 'mm-out' : 'mm-in'}">${timeStr}</div></div>`;
+            } else {
+                html += contentHtml; // Tributes and Wishcards are already formatted
+            }
+        });
 
     // Add invisible anchor
     html += '<div id="chat-anchor" style="height:1px;"></div>';
