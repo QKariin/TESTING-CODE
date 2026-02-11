@@ -179,9 +179,9 @@ export async function renderGallery() {
     const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3') };
 
     // Mobile Altar Slots
-    const mob1 = document.getElementById('mobImgSlot1');
-    const mob2 = document.getElementById('mobImgSlot2');
-    const mob3 = document.getElementById('mobImgSlot3');
+    const mob1 = document.getElementById('mobRec_Slot1');
+    const mob2 = document.getElementById('mobRec_Slot2');
+    const mob3 = document.getElementById('mobRec_Slot3');
 
     // Mobile Lists
     const recGrid = document.getElementById('mobRec_Grid');
