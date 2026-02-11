@@ -357,6 +357,7 @@ export async function renderGallery() {
     if (recHeap) recHeap.innerHTML = deniedHTML.mob;
 
     // --- 8. RENDER DESKTOP ALTAR ---
+    // --- 8. RENDER DESKTOP ALTAR ---
     const renderAltarSlot = async (item, slotObj, isMain) => {
         if (!item || !slotObj.card) {
             if (slotObj.card) slotObj.card.style.display = 'none';
@@ -366,8 +367,23 @@ export async function renderGallery() {
 
         let url = await getThumb(item, isMain ? 800 : 400);
 
-        if (slotObj.img) slotObj.img.src = url;
-        if (slotObj.ref) slotObj.ref.src = url;
+        // SAFETY: If url is a video and we failed to get a poster, fallback to placeholder
+        // (Altar items use <img> tags and cannot render raw video files)
+        if (typeof url === 'string' && (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || url.startsWith('wix:video'))) {
+            // Try to use item.cover or fallback
+            if (item.cover) url = await getSignedUrl(item.cover);
+            else if (item.thumbnail) url = await getSignedUrl(item.thumbnail);
+            else url = PLACEHOLDER_IMG;
+        }
+
+        if (slotObj.img) {
+            slotObj.img.src = url;
+            slotObj.img.onerror = function () { this.src = PLACEHOLDER_IMG; }; // Double safety
+        }
+        if (slotObj.ref) {
+            slotObj.ref.src = url;
+            slotObj.ref.onerror = function () { this.src = PLACEHOLDER_IMG; };
+        }
 
         const scoreEl = document.getElementById(isMain ? 'scoreSlot1' : (slotObj === slot2 ? 'scoreSlot2' : 'scoreSlot3'));
         if (scoreEl) scoreEl.innerText = getPoints(item);
