@@ -250,46 +250,37 @@ export async function renderGallery() {
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
-    // --- 5. IMAGE LOADER (HYBRID: WIX OPTIMIZED + EXTERNAL SUPPORT) ---
-    // Converts Wix media to static resized JPEGs, but respects external URLs.
-    const getThumb = (item, size = 300) => {
+    // --- 5. IMAGE LOADER (ALIGNED WITH QUEEN KARIN - RETRY) ---
+    const getThumb = async (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
 
+        // 1. Get Initial Raw URL
         let raw = item.proofUrl || item.media || item.url || item.image || "";
-        if (!raw || raw.length < 5) return PLACEHOLDER_IMG;
+        // Video Objects check
+        if (typeof raw === 'object' && raw.src) raw = raw.src;
 
-        // 1. EXTERNAL URL PASS-THROUGH (Fixes "Avatar Replacement" bug)
-        if (raw.startsWith('http') && !raw.includes('wix:')) {
-            // If it's an image file, use it directly (UpCDN, Firebase, etc.)
-            if (/\.(jpg|jpeg|png|webp|gif)$/i.test(raw.split('?')[0])) {
-                return raw;
-            }
-            // If it's an external video, we can't get a poster easily without a service.
-            // But we can try to return the raw URL if it might be an image service.
-            // For now, we return it to let the <img> tag try to load it.
+        if (!raw || typeof raw !== 'string' || raw.length < 5) return PLACEHOLDER_IMG;
+
+        // 2. Video Poster Extraction (Safe Check)
+        if (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video')) {
+            if (item.cover) raw = item.cover;
+            else if (item.thumbnail) raw = item.thumbnail;
+            else if (item.poster) raw = item.poster;
+        }
+
+        // 3. Manual Wix Image Parse (Legacy Support)
+        if (raw.startsWith('wix:image')) {
+            try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
+        }
+
+        // 4. THE "MAGIC" CHAIN (Optimized + Thumbnail + Signed)
+        // This leverages js/media.js which now includes the Bytescale fix
+        try {
+            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
+        } catch (e) {
+            console.warn("Thumb Generation Failed, providing raw:", e);
             return raw;
         }
-
-        let finalId = "";
-
-        // 2. Extract Wix ID from Images
-        if (raw.startsWith('wix:image')) {
-            finalId = raw.split('/')[3];
-        }
-        // 3. Extract Wix ID from Video Posters
-        else if (raw.startsWith('wix:video')) {
-            const posterMatch = raw.match(/posterUri=([^&]+)/);
-            finalId = posterMatch ? posterMatch[1] : "";
-        }
-        // 4. Handle Filenames (Assumed to be on Wix if not http)
-        else {
-            finalId = raw.split('/').pop().split('?')[0];
-        }
-
-        if (!finalId) return PLACEHOLDER_IMG;
-
-        // Build the Optimized Thumbnail URL
-        return `https://static.wixstatic.com/media/${finalId}/v1/fill/w_${size},h_${size},al_c,q_70/thumb.jpg`;
     };
 
     // --- 6. RENDER TRACKS (STATIC THUMBNAILS ONLY) ---
@@ -298,7 +289,7 @@ export async function renderGallery() {
 
         const promises = list.map(async (item) => {
             // We use a small size (200-300px) for the grid
-            const src = getThumb(item, 300);
+            const src = await getThumb(item, 300);
             const idx = allItems.indexOf(item);
 
             const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
