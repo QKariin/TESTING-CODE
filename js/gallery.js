@@ -91,6 +91,9 @@ function getGalleryList() {
         // Hide "Routine" uploads from here
         if (cat === 'routine' || txt.includes('daily routine')) return false;
 
+        // Hide "System" updates (Level ups, badge earns, profile changes)
+        if (cat === 'profile' || cat === 'system' || cat === 'level' || cat === 'badge' || cat === 'rank') return false;
+
         return true;
     });
 
