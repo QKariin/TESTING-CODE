@@ -132,11 +132,19 @@ export function mediaTypeBytescale(url) {
 
 export function getThumbnailBytescale(url) {
   if (!isBytescaleUrl(url)) return url;
-  return url.replace("/raw/", "/thumbnail/");
-  /*return url
-    .replace("/raw/", "/raw/") // keep raw
-    + `?width=${size}&height=${size}&fit=cover&format=jpg`;*/
 
+  // 1. Force the transformation from /raw/ to /image/ (more flexible than /thumbnail/)
+  let thumbUrl = url.replace("/raw/", "/image/");
+
+  // 2. Clear any existing params to avoid conflicts
+  thumbUrl = thumbUrl.split('?')[0];
+
+  // 3. Append the "Magic" parameters for Mobile/HEIC support
+  // f=jpg (Fixes HEIC)
+  // w=300&h=300 (Fixes Memory/Speed)
+  // fit=cover (Ensures square crop for grid)
+  // q=70 (Optimization)
+  return `${thumbUrl}?w=300&h=300&fit=cover&f=jpg&q=70`;
 }
 
 /* -----------------------------
