@@ -111,11 +111,12 @@ export async function updateDetail(u) {
     setText('dMirrorStatSkipped', u.skipped || 0);
 
     const isRoutineDone = u.routineDoneToday === true;
-    const routineTxt = isRoutineDone ? "DONE" : "PENDING";
+    const routineName = (u.routine || "NONE").toUpperCase();
+    const routineStatus = isRoutineDone ? "DONE" : "PENDING";
     const routineColor = isRoutineDone ? '#00ff00' : '#666';
 
-    setText('dMirrorRoutine', routineTxt);
-    setText('dMirrorRoutineCard', routineTxt); // Added: Grid Card
+    setText('dMirrorRoutine', `${routineName} (${routineStatus})`);
+    setText('dMirrorRoutineCard', routineName); // Grid Card just name
 
     // Tint color for both
     const rEl = document.getElementById('dMirrorRoutine');
