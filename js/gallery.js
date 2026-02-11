@@ -250,8 +250,7 @@ export async function renderGallery() {
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
-// --- 5. IMAGE LOADER (BYTESCALE FIX RESTORED) ---
- // --- 5. IMAGE LOADER (BYTESCALE + SIGNING FIX) ---
+// --- 5. IMAGE LOADER (ANTI-TRAFFIC JAM VERSION) ---
     const getThumb = async (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
 
@@ -261,28 +260,32 @@ export async function renderGallery() {
 
         if (!raw || typeof raw !== 'string' || raw.length < 5) return PLACEHOLDER_IMG;
 
-        // *** FIX STARTS HERE ***
+        // *** BYTESCALE FIX ***
         if (raw.includes("upcdn.io")) {
-            // 1. Transform /raw/ to /image/ so Bytescale processes it
-            let processedUrl = raw.replace('/raw/', '/image/');
-
-            // 2. Force JPG format (Fixes Videos & iPhone HEIC)
-            if (!processedUrl.includes('?')) {
-                processedUrl += `?w=${size}&h=${size}&fit=crop&f=jpg&q=80`;
+            // A. Construct the Perfect Image URL (Forces JPG for Videos/HEIC)
+            let thumbUrl = raw.replace('/raw/', '/image/');
+            if (!thumbUrl.includes('?')) {
+                thumbUrl += `?w=${size}&h=${size}&fit=crop&f=jpg&q=80`;
             }
 
-            // 3. CRITICAL: SIGN THE NEW URL
-            // We must sign the *processed* URL. If we don't, Bytescale blocks it (403).
+            // B. Anti-Traffic Jam (The "One Picture" Fix)
+            // We add a tiny random delay (0ms - 500ms) so we don't hit the backend 50 times at once.
+            await new Promise(r => setTimeout(r, Math.random() * 500));
+
+            // C. Sign it
             try {
-                return await getSignedUrl(processedUrl);
+                return await getSignedUrl(thumbUrl);
             } catch (e) {
-                console.warn("Signing failed for Bytescale, using raw:", e);
-                return raw; 
+                console.warn("Signing choked, returning thumb unsigned:", e);
+                // Even if signing fails, return the JPG link. 
+                // It might 403, but it's better than sending a Raw Video to an Image tag.
+                return thumbUrl; 
             }
         }
-        // *** FIX ENDS HERE ***
 
-        // 2. Video Poster Extraction (Safe Check for non-Bytescale)
+        // --- Standard Logic for Non-Bytescale ---
+        
+        // 2. Video Poster Extraction
         if (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video')) {
             if (item.cover) raw = item.cover;
             else if (item.thumbnail) raw = item.thumbnail;
@@ -294,7 +297,7 @@ export async function renderGallery() {
             try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
         }
 
-        // 4. Standard Optimization (Wix/External)
+        // 4. Standard Optimization
         try {
             return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
         } catch (e) {
