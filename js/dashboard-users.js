@@ -41,21 +41,10 @@ export async function updateDetail(u) {
     // Use 0.6 opacity to ensure image is visible but text is readable
     if (headerBg) headerBg.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('${finalPic}')`;
 
-    // CALCULATE REAL RANK FROM POINTS
-    let realRank = "HallBoy"; // Default
-    const points = u.points || 0;
-    // Find the highest level where points >= min
-    // LEVELS is sorted ascending usually? config.js: 0, 2000, 5000...
-    // We want the last one that matches
-    for (let i = LEVELS.length - 1; i >= 0; i--) {
-        if (points >= LEVELS[i].min) {
-            realRank = LEVELS[i].name;
-            break;
-        }
-    }
-    // If u.hierarchy is explicitly set and different from default/calculated, maybe we should respect it?
-    // But user complained "it still says Hallboy". 
-    // If we want "real" data from CMS logic, we calculate it.
+    // STICT READ-ONLY MODE (CENTRALIZED LOGIC)
+    // The "Slave Record" (main.js) calculates the rank and updates the CMS.
+    // We just display what is in the database.
+    let realRank = (u.hierarchy || "HALLBOY");
     // However, we allow manual override via u.hierarchy if it matches a known level?
     // Let's prefer the Database value if it's valid, otherwise calculate.
     // ACTUALLY: User said "it still says hallboy" implies DB defaults to Hallboy.
