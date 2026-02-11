@@ -95,6 +95,8 @@ window.triggerPoverty = function () {
     }
 };
 
+
+
 window.closePoverty = function () {
     const overlay = document.getElementById('povertyOverlay');
     if (overlay) {
@@ -102,6 +104,107 @@ window.closePoverty = function () {
         overlay.style.display = 'none';
     }
 };
+
+// =========================================
+// ACTION PANEL (USER APP) - NEW LOGIC
+// =========================================
+
+window.switchApTab = function (tabName) {
+    // 1. Buttons
+    document.querySelectorAll('.ap-tab').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('nav' + tabName);
+    if (btn) btn.classList.add('active');
+
+    // 2. Views
+    document.querySelectorAll('.ap-view').forEach(v => v.classList.add('hidden'));
+    const view = document.getElementById('tab' + tabName);
+    if (view) {
+        view.classList.remove('hidden');
+        view.classList.add('active');
+    }
+};
+
+window.updateActionPanelStats = function () {
+    if (typeof gameStats === 'undefined') return;
+
+    // 1. CAPITAL (Gold)
+    const elCapital = document.getElementById('dWalletVal');
+    if (elCapital) elCapital.innerText = (gameStats.coins || 0).toLocaleString();
+
+    // 2. KNEELING (Blue) - Shows HOURS
+    const elKneel = document.getElementById('dTotalKneel');
+    const elLastKneel = document.getElementById('dLastKneel');
+    if (elKneel) {
+        const hours = ((gameStats.kneelCount || 0) * 0.25).toFixed(1);
+        elKneel.innerText = hours + "h";
+    }
+    if (elLastKneel && typeof userProfile !== 'undefined') {
+        if (userProfile.lastKneelDate) {
+            const d = new Date(userProfile.lastKneelDate);
+            elLastKneel.innerText = (d.getMonth() + 1) + "/" + d.getDate();
+        } else {
+            elLastKneel.innerText = "--";
+        }
+    }
+
+    // 3. ROUTINE (Green)
+    const elRoutine = document.getElementById('dRoutineStatus');
+    const elRoutineName = document.getElementById('dRoutineName');
+
+    let isDone = false;
+    if (typeof userProfile !== 'undefined' && userProfile.lastRoutineUpload && typeof checkRoutineStatus === 'function') {
+        isDone = checkRoutineStatus(userProfile.lastRoutineUpload);
+    }
+
+    if (elRoutine) {
+        elRoutine.innerText = isDone ? "DONE" : "PENDING";
+        elRoutine.style.color = isDone ? "var(--green)" : "#555";
+        if (!isDone) elRoutine.style.color = "#888";
+    }
+
+    if (elRoutineName && typeof userProfile !== 'undefined') {
+        const rName = (userProfile.routine && userProfile.routine.name) ? userProfile.routine.name :
+            (userProfile.routineName ? userProfile.routineName : "NONE");
+        elRoutineName.innerText = rName.toUpperCase();
+    }
+
+    // 4. STREAK (Red)
+    const elStreak = document.getElementById('dStreak');
+    if (elStreak) elStreak.innerText = (gameStats.taskdom_streak || 0);
+
+    // --- UPDATE ACTIVE TASK BOX ---
+    updateApActiveTask();
+};
+
+function updateApActiveTask() {
+    const box = document.getElementById('activeTaskBox');
+    const txt = document.getElementById('miniTaskText');
+    const tmr = document.getElementById('miniTaskTimer');
+    if (!box) return;
+
+    if (currentTask && currentTask.status === 'active') {
+        box.style.display = 'flex';
+
+        if (txt) txt.innerText = currentTask.text;
+
+        if (tmr && currentTask.startTime) {
+            const now = Date.now();
+            const start = new Date(currentTask.startTime).getTime();
+            const diff = now - start;
+            const sec = Math.floor(diff / 1000) % 60;
+            const min = Math.floor(diff / (1000 * 60)) % 60;
+            const hrs = Math.floor(diff / (1000 * 60 * 60));
+            tmr.innerText =
+                (hrs < 10 ? "0" + hrs : hrs) + ":" +
+                (min < 10 ? "0" + min : min) + ":" +
+                (sec < 10 ? "0" + sec : sec);
+        }
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+
 
 // ==========================
 // REPLACE WINDOW.GOTOEXCHEQUER (Around Line 56) WITH THIS:
@@ -1119,6 +1222,19 @@ function updateStats() {
 
         if (qualifiedIdx > currentIdx) {
             visualRank = REWARD_DATA.ranks[qualifiedIdx].name;
+
+            // --- AUTO-PROMOTE TRIGGER (CENTRALIZED LOGIC) ---
+            // If the calculated rank is higher than the DB rank, save it to CMS.
+            // We use a session flag to prevent spamming the backend.
+            if (!window.hasPromotedSession) {
+                console.log(`[Auto-Promote] Upgrading from ${userProfile.hierarchy} to ${visualRank}`);
+                window.hasPromotedSession = true;
+                window.parent.postMessage({
+                    type: "updateHierarchy",
+                    memberId: userProfile.memberId, // Ensure we have ID
+                    newRank: visualRank
+                }, "*");
+            }
         }
     }
 
@@ -1162,6 +1278,9 @@ function updateStats() {
     if (mobRank) mobRank.innerText = visualRank; // VISUAL PROMOTION
 
     if (mobPoints) mobPoints.innerText = gameStats.points || 0;
+
+    // --- NEW ACTION PANEL SYNC ---
+    if (window.updateActionPanelStats) window.updateActionPanelStats();
     if (mobCoins) mobCoins.innerText = gameStats.coins || 0;
 
     if (mobStreak) mobStreak.innerText = gameStats.taskdom_streak || 0;
