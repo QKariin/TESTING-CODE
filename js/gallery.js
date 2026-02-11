@@ -12,7 +12,8 @@ import {
     gameStats,
     setGameStats,
     setCurrentTask,
-    setPendingTaskState
+    setPendingTaskState,
+    userProfile
 } from './state.js';
 import { triggerSound } from './utils.js';
 import { getOptimizedUrl, getThumbnail, getSignedUrl } from './media.js';
@@ -93,6 +94,19 @@ function getGalleryList() {
 
         // Hide "System" updates (Level ups, badge earns, profile changes)
         if (cat === 'profile' || cat === 'system' || cat === 'level' || cat === 'badge' || cat === 'rank') return false;
+
+        // 4. BLOCK AVATARS (Image Comparison)
+        // If the proofUrl matches the user's current profile picture, it's not a task proof.
+        if (userProfile && userProfile.profilePicture && i.proofUrl) {
+            // Check for exact match or Wix media ID match
+            if (i.proofUrl === userProfile.profilePicture) return false;
+            if (userProfile.profilePicture.includes(i.proofUrl)) return false;
+
+            // Wix often appends dims to the end, so check pure filename if possible
+            const p1 = i.proofUrl.split('/').pop().split('.')[0];
+            const p2 = userProfile.profilePicture.split('/').pop().split('.')[0];
+            if (p1.length > 5 && p1 === p2) return false;
+        }
 
         return true;
     });
