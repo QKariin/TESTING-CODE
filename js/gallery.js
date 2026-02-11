@@ -250,100 +250,89 @@ export async function renderGallery() {
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
-    // --- 5. IMAGE LOADER (ROBUST WIX PARSING) ---
-    const getThumb = async (item, size) => {
+    // --- 5. IMAGE LOADER (LIGHTWEIGHT WIX OPTIMIZATION) ---
+    // Converts everything to a static, resized JPEG from Wix servers
+    const getThumb = (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
 
-        // 1. Get Raw Data
-        let raw = item.proofUrl;
-        if (!raw || raw.length < 5) raw = item.media || item.url || item.image || "";
-
-        // 2. Fallback to Placeholder
+        let raw = item.proofUrl || item.media || item.url || item.image || "";
         if (!raw || raw.length < 5) return PLACEHOLDER_IMG;
 
-        // 3. Wix Video Handling
-        if (typeof raw === 'string' && raw.startsWith('wix:video')) {
-            const parts = raw.split('posterUri=');
-            if (parts.length > 1) {
-                const posterId = parts[1].split('&')[0];
-                raw = `https://static.wixstatic.com/media/${posterId}`;
-            } else {
-                if (item.cover) raw = item.cover;
-                else if (item.thumbnail) raw = item.thumbnail;
-                else if (item.poster) raw = item.poster;
-            }
+        let finalId = "";
+
+        // Extract Wix ID from Images
+        if (raw.startsWith('wix:image')) {
+            finalId = raw.split('/')[3];
+        }
+        // Extract Wix ID from Video Posters
+        else if (raw.startsWith('wix:video')) {
+            const posterMatch = raw.match(/posterUri=([^&]+)/);
+            finalId = posterMatch ? posterMatch[1] : "";
+        }
+        // Handle Filenames or Full URLs
+        else {
+            // If it's a full URL, we try to extract the filename relative to Wix
+            // CAUTION: This assumes the file exists on Wix servers. 
+            // If it's an external URL (UpCDN), this might fail unless Wix proxies it.
+            // But per user request, we use this logic:
+            finalId = raw.split('/').pop().split('?')[0];
         }
 
-        // 4. Wix Image Handling (Regex)
-        else if (typeof raw === 'string' && raw.startsWith('wix:image')) {
-            const match = raw.match(/wix:image:\/\/v1\/([^/]+)\//);
-            if (match && match[1]) {
-                return `https://static.wixstatic.com/media/${match[1]}`;
-            }
-        }
+        if (!finalId) return PLACEHOLDER_IMG;
 
-        // Clean up URL
-        if (typeof raw === 'string' && raw.startsWith('http')) {
-            try { return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size))); } catch (e) { return raw; }
-        }
-
-        // Filename only
-        if (typeof raw === 'string' && !raw.includes('/') && raw.includes('.')) {
-            return `https://static.wixstatic.com/media/${raw}`;
-        }
-
-        return raw;
+        // Build the Optimized Thumbnail URL
+        // fit/w_SIZE = Resizes it | q_70 = Lowers quality slightly for speed
+        return `https://static.wixstatic.com/media/${finalId}/v1/fill/w_${size},h_${size},al_c,q_70/thumb.jpg`;
     };
 
-    // --- 6. RENDER TRACKS (Function) ---
+    // --- 6. RENDER TRACKS (STATIC THUMBNAILS ONLY) ---
     const renderChunk = async (list, isTrash) => {
         if (!list || list.length === 0) return { desk: "", mob: "" };
 
         const promises = list.map(async (item) => {
-            const src = await getThumb(item, 300);
+            // We use a small size (200-300px) for the grid
+            const src = getThumb(item, 300);
             const idx = allItems.indexOf(item);
-            const isPending = (item.status || "").toLowerCase().includes('pending');
 
-            // STYLES
             const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
 
-            // PENDING OVERLAY
+            // Check if original was a video to add a "Play" icon overlay (Optional)
+            const isVideo = (item.proofUrl || "").includes('video') || (item.media || "").includes('video') || (item.proofUrl || "").includes('.mp4');
+            const videoIcon = isVideo ? `<div class="video-indicator">▶</div>` : "";
+
+            // Common Media HTML (NO VIDEO TAGS)
+            const mediaHtml = `<img class="${isTrash ? 'trash-img' : 'blueprint-img'}" 
+                                   src="${src}" 
+                                   loading="lazy" 
+                                   style="${imgStyle}" 
+                                   onerror="this.src='${PLACEHOLDER_IMG}'">`;
+
+            const isPending = (item.status || "").toLowerCase().includes('pending');
             const overlay = isPending ? `<div class="pending-overlay"><div class="pending-badge">AWAITING<br>VERDICT</div></div>` : ``;
             const mobBadge = isPending ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;"><div class="pending-badge" style="font-size:0.4rem; padding:3px; border-width:1px;">WATCHING</div></div>` : ``;
 
-            // REWARD STICKER
             let stickerHtml = "";
             if (item.sticker && !isTrash && !isPending) {
                 stickerHtml = `<img src="${item.sticker}" class="gallery-sticker-badge">`;
             }
 
-            // DETECT VIDEO
-            const isVideo = typeof src === 'string' && (src.includes('.mp4') || src.includes('.mov') || src.includes('.webm') || src.startsWith('wix:video'));
-
-            const deskMedia = isVideo
-                ? `<video class="${isTrash ? 'trash-img' : 'blueprint-img'}" src="${src}" autoplay muted loop playsinline style="${imgStyle} object-fit:cover;"></video>`
-                : `<img class="${isTrash ? 'trash-img' : 'blueprint-img'}" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">`;
-
-            const mobMedia = isVideo
-                ? `<video class="mob-scroll-img" src="${src}" autoplay muted loop playsinline style="${imgStyle} object-fit:cover;"></video>`
-                : `<img class="mob-scroll-img" src="${src}" loading="lazy" style="${imgStyle}" onerror="this.style.opacity=0.3">`;
-
-            // Desktop HTML
             const desk = `
                 <div class="${isTrash ? 'item-trash' : 'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
-                    ${deskMedia}
+                    ${mediaHtml}
+                    ${videoIcon}
                     ${stickerHtml}
                     ${isTrash ? '<div class="trash-stamp">DENIED</div>' : ''}
                     ${overlay}
                 </div>`;
 
-            // Mobile HTML
             const mob = `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash ? 'height:80px; width:80px;' : ''}">
-                    ${mobMedia}
+                    <img src="${src}" class="mob-scroll-img" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">
+                    ${videoIcon}
                     ${stickerHtml}
                     ${mobBadge}
                 </div>`;
+
             return { desk, mob };
         });
 
@@ -434,6 +423,10 @@ export async function renderGallery() {
 
             el.src = url;
             el.style.filter = "none";
+            el.onerror = function () {
+                this.src = IMG_QUEEN_MAIN;
+                this.style.filter = "grayscale(100%) brightness(0.5)";
+            };
             el.onclick = () => window.openHistoryModal(allItems.indexOf(item));
         } else {
             el.src = IMG_QUEEN_MAIN; // Fallback
