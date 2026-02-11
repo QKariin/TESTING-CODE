@@ -81,7 +81,10 @@ function getGalleryList() {
         // 1. Basic Check: Must have data
         if (!i) return false;
 
-        // 2. THE SEPARATOR (Based on category)
+        // 2. Must have VISUAL PROOF (Fixes empty Altar slots)
+        if (!i.proofUrl || i.proofUrl.length < 5) return false;
+
+        // 3. THE SEPARATOR (Based on category)
         const cat = (i.category || "").toLowerCase();
         const txt = (i.text || "").toLowerCase();
 
