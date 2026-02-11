@@ -423,6 +423,13 @@ export async function renderGallery() {
     };
 
     await renderMobSlot(bestOf[0], mob1, 400);
+
+    // Explicit Fallback for Center Slot (Queen) if empty
+    if (!bestOf[0] && mob1) {
+        mob1.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
+        mob1.style.filter = "grayscale(100%) brightness(0.5)";
+    }
+
     await renderMobSlot(bestOf[1], mob2, 300);
     await renderMobSlot(bestOf[2], mob3, 300);
 }
