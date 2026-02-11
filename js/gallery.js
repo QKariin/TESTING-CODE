@@ -196,26 +196,6 @@ export async function renderGallery() {
     if (recGrid) recGrid.innerHTML = "";
     if (recHeap) recHeap.innerHTML = "";
 
-     const acceptedHTML = renderChunk(candidates, false);
-    gridOkay.innerHTML = acceptedHTML.desk;
-    if (recGrid) recGrid.innerHTML += acceptedHTML.mob;
-
-    // B. Pending
-    if (pendingList.length > 0) {
-        const pendingHTML = renderChunk(pendingList, false);
-        if (gridPending) gridPending.innerHTML = pendingHTML.desk;
-        if (recGrid) recGrid.innerHTML = pendingHTML.mob + recGrid.innerHTML;
-    }
-
-    // C. Denied
-    const deniedHTML = renderChunk(deniedList, true);
-    gridFailed.innerHTML = deniedHTML.desk;
-    if (recHeap) recHeap.innerHTML = deniedHTML.mob;
-
-    // *** NEW: TRIGGER THE HYDRATION WORKER ***
-    // This runs in the background while the user looks at the page
-    hydrateGalleryImages(); 
-    
     // --- 2. GET DATA ---
     const allItems = getGalleryList();
 
@@ -316,16 +296,22 @@ export async function renderGallery() {
         }
     };
 
-    // --- 6. RENDER TRACKS (INSTANT RENDER + LAZY LOAD) ---
-    const renderChunk = (list, isTrash) => {
-        // NOTE: removed 'async' because we are not waiting for network here
+    // --- 6. RENDER TRACKS (SEQUENTIAL LOADING - THE TRAFFIC FIX) ---
+    const renderChunk = async (list, isTrash) => {
         if (!list || list.length === 0) return { desk: "", mob: "" };
 
         let deskHTML = "";
         let mobHTML = "";
 
-        // Simple loop, no awaiting. Builds HTML instantly.
+        // *** FIX 2: SEQUENTIAL LOOP ***
+        // Instead of 'Promise.all' (Parallel), we use a standard Loop.
+        // This loads Item 1, THEN Item 2, THEN Item 3...
+        // It prevents the "Traffic Jam" that blocks your images.
         for (const item of list) {
+            
+            // This 'await' is what saves the backend from crashing
+            const src = await getThumb(item, 300); 
+            
             const idx = allItems.indexOf(item);
             const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
 
@@ -333,6 +319,12 @@ export async function renderGallery() {
             const rawUrl = (item.proofUrl || item.media || "").toLowerCase();
             const isVideo = rawUrl.includes('video') || rawUrl.includes('.mp4') || rawUrl.includes('.mov');
             const videoIcon = isVideo ? `<div class="video-indicator">▶</div>` : "";
+
+            const mediaHtml = `<img class="${isTrash ? 'trash-img' : 'blueprint-img'}" 
+                                   src="${src}" 
+                                   loading="lazy" 
+                                   style="${imgStyle}" 
+                                   onerror="this.src='${PLACEHOLDER_IMG}'">`;
 
             const isPending = (item.status || "").toLowerCase().includes('pending');
             const overlay = isPending ? `<div class="pending-overlay"><div class="pending-badge">AWAITING<br>VERDICT</div></div>` : ``;
@@ -343,18 +335,7 @@ export async function renderGallery() {
                 stickerHtml = `<img src="${item.sticker}" class="gallery-sticker-badge">`;
             }
 
-            // Get Raw URL safely
-            let safeRaw = item.proofUrl || item.media || "";
-            if(typeof safeRaw === 'object') safeRaw = safeRaw.src || "";
-
-            // HTML: We use PLACEHOLDER_IMG as src, and store real URL in data-raw
-            // Added class 'lazy-gallery-img' so we can find it later
-            const mediaHtml = `<img class="lazy-gallery-img ${isTrash ? 'trash-img' : 'blueprint-img'}" 
-                                   src="${PLACEHOLDER_IMG}" 
-                                   data-raw="${safeRaw}"
-                                   loading="lazy" 
-                                   style="${imgStyle}">`;
-
+            // Append to strings
             deskHTML += `
                 <div class="${isTrash ? 'item-trash' : 'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
                     ${mediaHtml}
@@ -366,10 +347,7 @@ export async function renderGallery() {
 
             mobHTML += `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash ? 'height:80px; width:80px;' : ''}">
-                    <img class="lazy-gallery-img mob-scroll-img" 
-                         src="${PLACEHOLDER_IMG}" 
-                         data-raw="${safeRaw}"
-                         style="${imgStyle}">
+                    <img src="${src}" class="mob-scroll-img" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">
                     ${videoIcon}
                     ${stickerHtml}
                     ${mobBadge}
@@ -670,41 +648,6 @@ window.toggleDirective = function (index) {
         box.dataset.view = 'task';
     }
 };
-
-// --- HYDRATION WORKER (FIXES IMAGES ONE BY ONE) ---
-async function hydrateGalleryImages() {
-    // 1. Find all images that need loading
-    const images = document.querySelectorAll('.lazy-gallery-img[data-raw]');
-    if (images.length === 0) return;
-
-    console.log(`Hydrating ${images.length} gallery items...`);
-
-    // 2. Loop through them
-    for (const img of images) {
-        // Check if already handled
-        if (img.dataset.loaded === "true") continue;
-
-        const raw = img.dataset.raw;
-        if (!raw || raw === "undefined") continue;
-
-        try {
-            // 3. Call the magic getThumb function
-            // We reuse the item structure just for the function signature
-            const realUrl = await getThumb({ proofUrl: raw }, 300);
-            
-            // 4. Update the Image
-            img.src = realUrl;
-            img.dataset.loaded = "true"; // Mark as done
-            
-            // 5. Tiny pause to let the backend breathe (100ms)
-            // This prevents the "One Picture" bug
-            await new Promise(r => setTimeout(r, 100));
-
-        } catch (e) {
-            console.error("Hydration failed for", raw);
-        }
-    }
-}
 
 // --- VIEW HELPERS ---
 export function toggleHistoryView(view) {
