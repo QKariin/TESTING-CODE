@@ -129,7 +129,7 @@ export async function renderChat(messages) {
                     const item = JSON.parse(jsonStr);
 
                     contentHtml = `
-                    <div class="msg ${msgClass}" style="padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px;">
+                    <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; width:60vw;">
                         <div style="width:100%; height:120px; overflow:hidden; position:relative;">
                              <img src="${item.img}" style="width:100%; height:100%; object-fit:cover;">
                              <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
@@ -137,6 +137,7 @@ export async function renderChat(messages) {
                              </div>
                         </div>
                         <div style="padding:8px; text-align:center;">
+                            <div style="color:#eee; font-family:'Cinzel'; font-size:0.6rem; margin-bottom:2px; opacity:0.8;">${item.sender} sent</div>
                             <div style="color:#fff; font-family:'Cinzel'; font-size:0.7rem; margin-bottom:4px;">${item.name}</div>
                             <div style="color:#c5a059; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold;">${item.price}</div>
                         </div>
@@ -155,6 +156,11 @@ export async function renderChat(messages) {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0;"><img src="${srcUrl}" style="max-width:100%;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"></div>`;
                 }
             }
+        }
+
+        // Center Wishlist Cards specifically
+        if (m.message && m.message.startsWith('WISHLIST::')) {
+            return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
         return `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}"><div class="msg-col" style="align-items:${isMe ? 'flex-end' : 'flex-start'};">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
