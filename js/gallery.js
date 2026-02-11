@@ -138,6 +138,15 @@ function renderStickerFilters() {
 export async function renderGallery() {
     if (!galleryData) return;
 
+    // --- 0. STATE CHECK (PREVENT BLINKING) ---
+    // Create a signature of the current state: Data Length + Data Timestamp + Filter
+    const newestItem = galleryData.length > 0 ? galleryData[0]._createdDate : "0";
+    const stateSig = `${galleryData.length}-${newestItem}-${activeStickerFilter}`;
+
+    // If state hasn't changed, DO NOT TOUCH THE DOM
+    if (window.lastGalleryRenderState === stateSig) return;
+    window.lastGalleryRenderState = stateSig;
+
     // --- 1. TARGETS ---
     const gridFailed = document.getElementById('gridFailed');
     const gridOkay = document.getElementById('gridOkay');
@@ -386,6 +395,7 @@ export async function renderGallery() {
 // --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
 export function loadMoreHistory() {
     setHistoryLimit(historyLimit + 25);
+    window.lastGalleryRenderState = null; // Force re-render
     renderGallery();
     console.log("Increased history limit to", historyLimit);
 }
@@ -394,6 +404,7 @@ export function loadMoreHistory() {
 window.renderGallery = renderGallery;
 window.setGalleryFilter = function (filterType) {
     activeStickerFilter = filterType;
+    window.lastGalleryRenderState = null; // Force re-render (though signature check handles filter too, being safe)
     renderGallery();
 };
 
