@@ -250,33 +250,46 @@ export async function renderGallery() {
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
-    // --- 5. IMAGE LOADER (ALIGNED WITH QUEEN KARIN - RETRY) ---
+// --- 5. IMAGE LOADER (BYTESCALE FIX RESTORED) ---
     const getThumb = async (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
 
         // 1. Get Initial Raw URL
         let raw = item.proofUrl || item.media || item.url || item.image || "";
-        // Video Objects check
         if (typeof raw === 'object' && raw.src) raw = raw.src;
 
         if (!raw || typeof raw !== 'string' || raw.length < 5) return PLACEHOLDER_IMG;
 
-        // 2. Video Poster Extraction (Safe Check)
+        // *** FIX STARTS HERE: INTERCEPT BYTESCALE ***
+        if (raw.includes("upcdn.io")) {
+            // 1. Force the switch from /raw/ (file) to /image/ (processing engine)
+            let thumbUrl = raw.replace('/raw/', '/image/');
+            
+            // 2. If it already has query params, assume it's processed and return it
+            if (thumbUrl.includes('?')) return thumbUrl;
+
+            // 3. THE MAGIC: Force format to JPG (f=jpg). 
+            // This turns Videos into Poster Images and HEIC into JPGs.
+            return `${thumbUrl}?w=${size}&h=${size}&fit=crop&f=jpg&q=80`;
+        }
+        // *** FIX ENDS HERE ***
+
+        // 2. Video Poster Extraction (Safe Check for non-Bytescale)
         if (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video')) {
             if (item.cover) raw = item.cover;
             else if (item.thumbnail) raw = item.thumbnail;
             else if (item.poster) raw = item.poster;
         }
 
-        // 3. Manual Wix Image Parse (Legacy Support)
+        // 3. Manual Wix Image Parse
         if (raw.startsWith('wix:image')) {
             try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
         }
 
-        // 4. THE "MAGIC" CHAIN (Optimized + Thumbnail + Signed)
-        // This leverages js/media.js which now includes the Bytescale fix
+        // 4. Standard Optimization
         try {
-            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
+            // We removed getOptimizedUrl here because we handled Bytescale manually above
+            return await getSignedUrl(getThumbnail(raw));
         } catch (e) {
             console.warn("Thumb Generation Failed, providing raw:", e);
             return raw;
