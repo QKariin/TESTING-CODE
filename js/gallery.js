@@ -251,6 +251,7 @@ export async function renderGallery() {
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
 // --- 5. IMAGE LOADER (BYTESCALE FIX RESTORED) ---
+ // --- 5. IMAGE LOADER (BYTESCALE + SIGNING FIX) ---
     const getThumb = async (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
 
@@ -260,17 +261,24 @@ export async function renderGallery() {
 
         if (!raw || typeof raw !== 'string' || raw.length < 5) return PLACEHOLDER_IMG;
 
-        // *** FIX STARTS HERE: INTERCEPT BYTESCALE ***
+        // *** FIX STARTS HERE ***
         if (raw.includes("upcdn.io")) {
-            // 1. Force the switch from /raw/ (file) to /image/ (processing engine)
-            let thumbUrl = raw.replace('/raw/', '/image/');
-            
-            // 2. If it already has query params, assume it's processed and return it
-            if (thumbUrl.includes('?')) return thumbUrl;
+            // 1. Transform /raw/ to /image/ so Bytescale processes it
+            let processedUrl = raw.replace('/raw/', '/image/');
 
-            // 3. THE MAGIC: Force format to JPG (f=jpg). 
-            // This turns Videos into Poster Images and HEIC into JPGs.
-            return `${thumbUrl}?w=${size}&h=${size}&fit=crop&f=jpg&q=80`;
+            // 2. Force JPG format (Fixes Videos & iPhone HEIC)
+            if (!processedUrl.includes('?')) {
+                processedUrl += `?w=${size}&h=${size}&fit=crop&f=jpg&q=80`;
+            }
+
+            // 3. CRITICAL: SIGN THE NEW URL
+            // We must sign the *processed* URL. If we don't, Bytescale blocks it (403).
+            try {
+                return await getSignedUrl(processedUrl);
+            } catch (e) {
+                console.warn("Signing failed for Bytescale, using raw:", e);
+                return raw; 
+            }
         }
         // *** FIX ENDS HERE ***
 
@@ -286,12 +294,10 @@ export async function renderGallery() {
             try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
         }
 
-        // 4. Standard Optimization
+        // 4. Standard Optimization (Wix/External)
         try {
-            // We removed getOptimizedUrl here because we handled Bytescale manually above
-            return await getSignedUrl(getThumbnail(raw));
+            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
         } catch (e) {
-            console.warn("Thumb Generation Failed, providing raw:", e);
             return raw;
         }
     };
