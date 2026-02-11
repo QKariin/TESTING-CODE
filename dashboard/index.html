@@ -159,20 +159,7 @@
             </div>
 
             <div id="viewUser">
-                <div class="user-head">
-                    <div id="btnAppView" class="app-icon-btn" title="View Application" onclick="openApplicationView()">
-                        <img src="https://static.wixstatic.com/shapes/ce3e5b_62b9d0e748d648fe888198c912e472cb.svg">
-                    </div>
-                    <button class="mob-back-btn" onclick="showHome()">&larr; BACK</button>
-                    <div class="uh-info-side">
-                        <div id="dName" class="uh-main">SLAVE</div>
-                        <div id="dRank" class="uh-sub">RANK</div>
-                        <div id="lastSeen" class="uh-seen">Last seen...</div>
-                    </div>
-                    <div class="uh-right">
-                        <div id="dJoined" class="uh-joined">SLAVE SINCE: --/--/--</div>
-                    </div>
-                </div>
+
 
                 <div class="split">
                     <div class="chat-panel">
@@ -220,49 +207,6 @@
                     <!-- NEW RIGHT PANEL: USER PROFILE MIRROR -->
                     <div class="action-panel"
                         style="background:#050505; display:flex; flex-direction:column; height:100%;">
-
-                        <!-- 1. PROFILE HEADER (FULL MIRROR) -->
-                        <div class="ap-mirror-header" style="padding:20px; text-align:center; border-bottom:1px solid #333; 
-                                    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png');
-                                    background-size: cover; background-position: center;">
-
-                            <!-- HIERARCHY STAMP -->
-                            <div id="dMirrorHierarchy" class="hierarchy-top"
-                                style="margin: 0 auto 15px auto; display:inline-block;">LOADING...</div>
-
-                            <!-- AVATAR -->
-                            <div class="avatar-container" style="width:120px; height:140px; margin:0 auto 15px;">
-                                <img id="dProfilePic"
-                                    src="https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png">
-                            </div>
-
-                            <!-- NAME & STATUS -->
-                            <div id="dMirrorName" class="identity-name" style="margin-bottom:5px; font-size:1.2rem;">
-                                SLAVE</div>
-                            <div id="dMirrorStatus"
-                                style="font-family:'Orbitron'; color:#00ff00; font-size:0.7rem; letter-spacing:1px; margin-bottom:15px;">
-                                ONLINE</div>
-
-                            <!-- STATS ROW (Merit / Capital) -->
-                            <div class="stats-stack-row" style="margin-bottom:15px;">
-                                <div class="stat-item">
-                                    <span class="stat-lbl">MERIT</span>
-                                    <span id="dMirrorPoints" class="stat-val">0</span>
-                                </div>
-                                <div class="stat-divider"></div>
-                                <div class="stat-item">
-                                    <span class="stat-lbl">CAPITAL</span>
-                                    <span id="dMirrorWallet" class="stat-val">0</span>
-                                    <!-- Admin Control for Wallet -->
-                                    <div style="display:flex; justify-content:center; gap:5px; margin-top:5px;">
-                                        <button onclick="adjustWallet('sub')"
-                                            style="background:#222; border:1px solid #444; color:var(--red); font-size:10px; cursor:pointer;">-</button>
-                                        <button onclick="adjustWallet('add')"
-                                            style="background:#222; border:1px solid #444; color:var(--green); font-size:10px; cursor:pointer;">+</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- 2. EXPANDABLE STATS & PROGRESS (ALWAYS VISIBLE FOR ADMIN) -->
                         <div class="ap-vitals-mirror" style="padding:15px; background:#080808; display:block;">
@@ -316,11 +260,22 @@
                             </div>
                         </div>
 
+                        <!-- GRID CARDS -->
+
+                        <!-- MERIT (Replaces Header Stat) -->
+                        <div class="vm-card"
+                            style="background:#111; border:1px solid #333; padding:10px; text-align:center;">
+                            <div style="color:#fff; font-family:'Cinzel'; font-size:0.7rem;">MERIT</div>
+                            <div id="dMirrorPointsCard"
+                                style="color:#c5a059; font-family:'Rajdhani'; font-size:1.5rem; font-weight:bold;">0
+                            </div>
+                        </div>
+
                         <!-- CAPITAL -->
                         <div class="vm-card"
                             style="background:#111; border:1px solid #333; padding:10px; text-align:center; position:relative;">
                             <div style="color:#c5a059; font-family:'Cinzel'; font-size:0.7rem;">CAPITAL</div>
-                            <div id="dMirrorWallet"
+                            <div id="dMirrorWalletCard"
                                 style="color:#fff; font-family:'Rajdhani'; font-size:1.5rem; font-weight:bold;">0
                             </div>
                             <!-- Admin Control -->
@@ -336,7 +291,7 @@
                         <div class="vm-card"
                             style="background:#111; border:1px solid #333; padding:10px; text-align:center; position:relative;">
                             <div style="color:#00f3ff; font-family:'Cinzel'; font-size:0.7rem;">KNEELING</div>
-                            <div id="dMirrorKneel"
+                            <div id="dMirrorKneelCard"
                                 style="color:#fff; font-family:'Rajdhani'; font-size:1.5rem; font-weight:bold;">0h
                             </div>
                             <!-- Admin Control -->
@@ -350,7 +305,7 @@
                         <div class="vm-card"
                             style="background:#111; border:1px solid #333; padding:10px; text-align:center;">
                             <div style="color:#00ff00; font-family:'Cinzel'; font-size:0.7rem;">ROUTINE</div>
-                            <div id="dMirrorRoutine"
+                            <div id="dMirrorRoutineCard"
                                 style="color:#fff; font-family:'Rajdhani'; font-size:1.1rem; margin-top:5px;">
                                 PENDING</div>
                         </div>
@@ -359,7 +314,7 @@
                         <div class="vm-card"
                             style="background:#111; border:1px solid #333; padding:10px; text-align:center;">
                             <div style="color:#ff003c; font-family:'Cinzel'; font-size:0.7rem;">STREAK</div>
-                            <div id="dMirrorStreak"
+                            <div id="dMirrorStreakCard"
                                 style="color:#fff; font-family:'Rajdhani'; font-size:1.5rem; font-weight:bold;">0
                             </div>
                         </div>
