@@ -1220,21 +1220,26 @@ function updateStats() {
             }
         }
 
-        if (qualifiedIdx > currentIdx) {
-            visualRank = REWARD_DATA.ranks[qualifiedIdx].name;
+        let calculatedRank = visualRank; // Default to current DB or initial
+        if (qualifiedIdx > -1) {
+            calculatedRank = REWARD_DATA.ranks[qualifiedIdx].name;
+        }
 
-            // --- AUTO-PROMOTE TRIGGER (CENTRALIZED LOGIC) ---
-            // If the calculated rank is higher than the DB rank, save it to CMS.
-            // We use a session flag to prevent spamming the backend.
-            if (!window.hasPromotedSession) {
-                console.log(`[Auto-Promote] Upgrading from ${userProfile.hierarchy} to ${visualRank}`);
-                window.hasPromotedSession = true;
-                window.parent.postMessage({
-                    type: "updateHierarchy",
-                    memberId: userProfile.memberId, // Ensure we have ID
-                    newRank: visualRank
-                }, "*");
-            }
+        // FORCE VISUAL UPDATE TO MATCH MATH
+        visualRank = calculatedRank;
+
+        // --- SYNC CHECK (Centralized Logic) ---
+        // If the Calculated Rank differs from the DB Rank, we MUST update the CMS.
+        // We use a flag to do this once per session to avoid loops, unless it changes again.
+        if (calculatedRank !== userProfile.hierarchy && window.lastSyncedRank !== calculatedRank) {
+            console.log(`[Rank Sync] DB says ${userProfile.hierarchy}, Math says ${calculatedRank}. Updating...`);
+            window.lastSyncedRank = calculatedRank;
+
+            window.parent.postMessage({
+                type: "updateHierarchy",
+                memberId: userProfile.memberId,
+                newRank: calculatedRank
+            }, "*");
         }
     }
 
