@@ -1,4 +1,6 @@
-// gallery.js - TRILOGY LAYOUT (FIXED FOR BYTESCALE)
+
+
+// gallery.js - TRILOGY LAYOUT (FIXED)
 import { mediaType } from './media.js';
 import {
     galleryData,
@@ -17,9 +19,6 @@ import {
 import { triggerSound } from './utils.js';
 import { getOptimizedUrl, getThumbnail, getSignedUrl } from './media.js';
 
-// --- NEW IMPORT: BYTESCALE HELPERS ---
-import { isBytescaleUrl, getThumbnailBytescale } from './mediaBytescale.js';
-
 // STICKERS
 const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
 const STICKER_DENIED = "https://static.wixstatic.com/media/ce3e5b_63a0c8320e29416896d071d5b46541d7~mv2.png";
@@ -37,7 +36,7 @@ function getPoints(item) {
     return Number(val);
 }
 
-// --- HELPER: NORMALIZE DATA ---
+// --- HELPER: NORMALIZE DATA (FIXED) ---
 let normalizedCache = new Set();
 
 function normalizeGalleryItem(item) {
@@ -46,7 +45,7 @@ function normalizeGalleryItem(item) {
     // 1. Ensure Status is a String
     if (!item.status) item.status = "";
 
-    // Use item ID/timestamp as cache key
+    // Use item ID/timestamp as cache key to avoid re-normalizing
     const cacheKey = item._id || item._createdDate;
     if (normalizedCache.has(cacheKey)) return;
 
@@ -55,7 +54,9 @@ function normalizeGalleryItem(item) {
         const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src', 'attachment', 'photo', 'cover', 'thumbnail', 'poster'];
         for (let key of candidates) {
             if (item[key] && typeof item[key] === 'string' && item[key].length > 5) {
-                if (key === 'avatar') continue; // User does not want profile pics as evidence
+                // Ignore "Avatar" completely - User does not want profile pics as evidence
+                if (key === 'avatar') continue;
+
                 item.proofUrl = item[key];
                 break;
             }
@@ -70,14 +71,14 @@ function getSortedGallery() {
     return [...galleryData].sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
 }
 
-// --- HELPER: GET FILTERED LIST ---
+// --- HELPER: GET FILTERED LIST (SEPARATED BY BUTTON TYPE) ---
 function getGalleryList() {
     if (!galleryData || !Array.isArray(galleryData)) return [];
 
     // Normalize data structure first
     galleryData.forEach(normalizeGalleryItem);
 
-    // FILTER: Service Record (Altar)
+    // FILTER: This determines what shows in the Service Record (Altar)
     let items = galleryData.filter(i => {
         // 1. Basic Check: Must have data
         if (!i) return false;
@@ -89,14 +90,20 @@ function getGalleryList() {
         const cat = (i.category || "").toLowerCase();
         const txt = (i.text || "").toLowerCase();
 
-        // Hide "Routine" & "System" updates
+        // Hide "Routine" uploads from here
         if (cat === 'routine' || txt.includes('daily routine')) return false;
+
+        // Hide "System" updates (Level ups, badge earns, profile changes)
         if (cat === 'profile' || cat === 'system' || cat === 'level' || cat === 'badge' || cat === 'rank') return false;
 
         // 4. BLOCK AVATARS (Image Comparison)
+        // If the proofUrl matches the user's current profile picture, it's not a task proof.
         if (userProfile && userProfile.profilePicture && i.proofUrl) {
+            // Check for exact match or Wix media ID match
             if (i.proofUrl === userProfile.profilePicture) return false;
             if (userProfile.profilePicture.includes(i.proofUrl)) return false;
+
+            // Wix often appends dims to the end, so check pure filename if possible
             const p1 = i.proofUrl.split('/').pop().split('.')[0];
             const p2 = userProfile.profilePicture.split('/').pop().split('.')[0];
             if (p1.length > 5 && p1 === p2) return false;
@@ -105,7 +112,7 @@ function getGalleryList() {
         return true;
     });
 
-    // Apply Sticker Filters
+    // Apply Sticker Filters (The buttons at the top of history)
     if (activeStickerFilter === "DENIED") {
         items = items.filter(item => (item.status || "").toLowerCase().includes('rej'));
     } else if (activeStickerFilter === "PENDING") {
@@ -152,9 +159,12 @@ function renderStickerFilters() {
 export async function renderGallery() {
     if (!galleryData) return;
 
-    // --- 0. STATE CHECK ---
+    // --- 0. STATE CHECK (PREVENT BLINKING) ---
+    // Create a signature of the current state: Data Length + Data Timestamp + Filter
     const newestItem = galleryData.length > 0 ? galleryData[0]._createdDate : "0";
     const stateSig = `${galleryData.length}-${newestItem}-${activeStickerFilter}`;
+
+    // If state hasn't changed, DO NOT TOUCH THE DOM
     if (window.lastGalleryRenderState === stateSig) return;
     window.lastGalleryRenderState = stateSig;
 
@@ -164,7 +174,7 @@ export async function renderGallery() {
     const gridPending = document.getElementById('gridPending');
     const historySection = document.getElementById('historySection');
 
-    // Altar Slots
+    // Altar Slots (Desktop)
     const slot1 = { card: document.getElementById('altarSlot1'), img: document.getElementById('imgSlot1'), ref: document.getElementById('reflectSlot1') };
     const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2') };
     const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3') };
@@ -195,7 +205,14 @@ export async function renderGallery() {
         else historySection.classList.remove('solo-mode');
     }
 
-    // --- 3. SEPARATE LISTS ---
+    // --- 3. SEPARATE LISTS (STRICTER) ---
+    /* 
+       LOGIC:
+       - FAILED: Explicit "Fail", "Reject", "Denied"
+       - PENDING: Explicit "Pending", "Wait", "Review" OR Empty Status (Assume pending if new)
+       - ACCEPTED: Everything else (Approved, Completed, or Legacy valid)
+    */
+
     // A. Denied
     const deniedList = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
@@ -205,92 +222,93 @@ export async function renderGallery() {
     // B. Pending
     const pendingList = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
+        // If status is empty, treat as Pending (safer than Accepted)
         if (s === "") return true;
         return s.includes('pending') || s.includes('wait') || s.includes('review') || s.includes('process');
     });
 
-    // C. Accepted
+    // C. Accepted (Candidates)
     const candidates = allItems.filter(item => {
         if (deniedList.includes(item)) return false;
         if (pendingList.includes(item)) return false;
         return true;
     });
 
-    // --- 4. ALTAR SORTING ---
+    // --- 4. ALTAR SORTING (HIGHEST RATED) ---
+    // User Request: "pictures with an highest rating"
+    // Sort by Points (Desc) -> Date (Desc)
     candidates.sort((a, b) => {
         const statsA = getPoints(a);
         const statsB = getPoints(b);
-        if (statsB !== statsA) return statsB - statsA;
-        return new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate);
+        if (statsB !== statsA) return statsB - statsA; // Higher score first
+        return new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate); // Then newer
     });
 
     let bestOf = [];
+
+    // Take top 3 highest rated items
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
-    // --- 5. IMAGE LOADER (THE FIX FOR BYTESCALE) ---
+    // --- 5. IMAGE LOADER (HYBRID: WIX OPTIMIZED + EXTERNAL SUPPORT) ---
+    // Converts Wix media to static resized JPEGs, but respects external URLs.
     const getThumb = (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
 
         let raw = item.proofUrl || item.media || item.url || item.image || "";
         if (!raw || raw.length < 5) return PLACEHOLDER_IMG;
 
-        // *** THE FIX: INTERCEPT BYTESCALE URLS ***
-        // If it comes from upcdn.io, force it to be a thumbnail (JPG).
-        // This solves 3 problems:
-        // 1. Videos (mp4) become Image Posters
-        // 2. HEIC files (iPhone) become JPGs
-        // 3. Huge Raw files become small thumbnails
-        if (isBytescaleUrl(raw)) {
-            return getThumbnailBytescale(raw);
-        }
-
-        // --- Standard Logic for Non-Bytescale ---
-        
-        // 1. External URL Pass-through (Firebase/Other)
+        // 1. EXTERNAL URL PASS-THROUGH (Fixes "Avatar Replacement" bug)
         if (raw.startsWith('http') && !raw.includes('wix:')) {
+             // If it's an image file, use it directly (UpCDN, Firebase, etc.)
              if (/\.(jpg|jpeg|png|webp|gif)$/i.test(raw.split('?')[0])) {
                  return raw; 
              }
-             // If generic http video/unknown, return raw (might fail in img tag)
-             // or return placeholder. For now, try raw.
+             // If it's an external video, we can't get a poster easily without a service.
+             // But we can try to return the raw URL if it might be an image service.
+             // For now, we return it to let the <img> tag try to load it.
              return raw; 
         }
 
         let finalId = "";
 
-        // 2. Extract Wix ID
+        // 2. Extract Wix ID from Images
         if (raw.startsWith('wix:image')) {
             finalId = raw.split('/')[3];
         } 
+        // 3. Extract Wix ID from Video Posters
         else if (raw.startsWith('wix:video')) {
             const posterMatch = raw.match(/posterUri=([^&]+)/);
             finalId = posterMatch ? posterMatch[1] : "";
         }
+        // 4. Handle Filenames (Assumed to be on Wix if not http)
         else {
             finalId = raw.split('/').pop().split('?')[0];
         }
 
         if (!finalId) return PLACEHOLDER_IMG;
+
+        // Build the Optimized Thumbnail URL
         return `https://static.wixstatic.com/media/${finalId}/v1/fill/w_${size},h_${size},al_c,q_70/thumb.jpg`;
     };
 
-    // --- 6. RENDER TRACKS ---
+    // --- 6. RENDER TRACKS (STATIC THUMBNAILS ONLY) ---
     const renderChunk = async (list, isTrash) => {
         if (!list || list.length === 0) return { desk: "", mob: "" };
 
-        // We process these synchronously mapping to string to ensure order
-        const results = list.map((item) => {
-            const src = getThumb(item, 300); // Uses new logic
+        const promises = list.map(async (item) => {
+            // We use a small size (200-300px) for the grid
+            const src = getThumb(item, 300);
             const idx = allItems.indexOf(item);
+
             const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
 
-            // Video Indicator (Visual Only)
-            const rawUrl = (item.proofUrl || item.media || "").toLowerCase();
-            const isVideo = rawUrl.includes('video') || rawUrl.includes('.mp4') || rawUrl.includes('.mov');
+            // Check if original was a video to add a "Play" icon overlay (Optional)
+            const isVideo = (item.proofUrl || "").includes('video') || (item.media || "").includes('video') || (item.proofUrl || "").includes('.mp4');
             const videoIcon = isVideo ? `<div class="video-indicator">▶</div>` : "";
 
+            // Common Media HTML (NO VIDEO TAGS)
             const mediaHtml = `<img class="${isTrash ? 'trash-img' : 'blueprint-img'}" 
                                    src="${src}" 
                                    loading="lazy" 
@@ -326,41 +344,63 @@ export async function renderGallery() {
             return { desk, mob };
         });
 
+        const results = await Promise.all(promises);
         return { desk: results.map(r => r.desk).join(''), mob: results.map(r => r.mob).join('') };
     };
 
     // --- 7. EXECUTE RENDERS ---
 
-    // A. Accepted
+    // A. Accepted (Candidates)
     const acceptedHTML = await renderChunk(candidates, false);
     gridOkay.innerHTML = acceptedHTML.desk;
-    if (recGrid) recGrid.innerHTML += acceptedHTML.mob;
+    if (recGrid) recGrid.innerHTML += acceptedHTML.mob; // Append to top list
 
     // B. Pending
     if (pendingList.length > 0) {
         const pendingHTML = await renderChunk(pendingList, false);
         if (gridPending) gridPending.innerHTML = pendingHTML.desk;
-        if (recGrid) recGrid.innerHTML = pendingHTML.mob + recGrid.innerHTML; // Prepend pending
+        // MOBILE: Prepend to Top List (recGrid) so they start the list
+        if (recGrid) recGrid.innerHTML = pendingHTML.mob + recGrid.innerHTML;
     }
 
-    // C. Denied
+    // C. Denied (Heap)
     const deniedHTML = await renderChunk(deniedList, true);
     gridFailed.innerHTML = deniedHTML.desk;
     if (recHeap) recHeap.innerHTML = deniedHTML.mob;
 
     // --- 8. RENDER DESKTOP ALTAR ---
-    const renderAltarSlot = (item, slotObj, isMain) => {
+    // --- 8. RENDER DESKTOP ALTAR ---
+    const renderAltarSlot = async (item, slotObj, isMain) => {
         if (!item || !slotObj.card) {
             if (slotObj.card) slotObj.card.style.display = 'none';
             return;
         }
         slotObj.card.style.display = 'flex';
 
-        let url = getThumb(item, isMain ? 800 : 400);
+        // 1. Get Initial Thumb
+        let url = await getThumb(item, isMain ? 800 : 400);
+
+        // 2. EXTERNAL IMAGE FIX (UpCDN / Bytescale / Firebase)
+        // If it's an external image, getThumb might have messed it up with optimization params.
+        // We prefer the RAW proofUrl if it's a direct image link.
+        if (item.proofUrl && item.proofUrl.startsWith('http') && !item.proofUrl.includes('wix:')) {
+            const ext = item.proofUrl.split('?')[0].split('.').pop().toLowerCase();
+            if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
+                url = item.proofUrl;
+            }
+        }
+
+        // 3. VIDEO SAFETY
+        if (typeof url === 'string' && (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || url.startsWith('wix:video'))) {
+            // ... video fallback logic ...
+            if (item.cover) url = await getThumb({ proofUrl: item.cover }, isMain ? 800 : 400);
+            else if (item.thumbnail) url = await getThumb({ proofUrl: item.thumbnail }, isMain ? 800 : 400);
+            else url = PLACEHOLDER_IMG;
+        }
 
         if (slotObj.img) {
             slotObj.img.src = url;
-            slotObj.img.onerror = function () { this.src = PLACEHOLDER_IMG; };
+            slotObj.img.onerror = function () { this.src = PLACEHOLDER_IMG; }; // Double safety
         }
         if (slotObj.ref) {
             slotObj.ref.src = url;
@@ -371,15 +411,24 @@ export async function renderGallery() {
         if (scoreEl) scoreEl.innerText = getPoints(item);
     };
 
-    renderAltarSlot(bestOf[0], slot1, true);
-    renderAltarSlot(bestOf[1], slot2, false);
-    renderAltarSlot(bestOf[2], slot3, false);
+    await renderAltarSlot(bestOf[0], slot1, true);
+    await renderAltarSlot(bestOf[1], slot2, false);
+    await renderAltarSlot(bestOf[2], slot3, false);
 
-    // --- 9. RENDER MOBILE ALTAR ---
-    const renderMobSlot = (item, el, size) => {
+    // --- 9. RENDER MOBILE ALTAR (INSIDE THE FUNCTION NOW) ---
+    const renderMobSlot = async (item, el, size) => {
         if (!el) return;
         if (item) {
-            let url = getThumb(item, size);
+            let url = await getThumb(item, size);
+
+            // EXTERNAL IMAGE FIX (Mobile)
+            if (item.proofUrl && item.proofUrl.startsWith('http') && !item.proofUrl.includes('wix:')) {
+                const ext = item.proofUrl.split('?')[0].split('.').pop().toLowerCase();
+                if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
+                    url = item.proofUrl;
+                }
+            }
+
             el.src = url;
             el.style.filter = "none";
             el.onerror = function () {
@@ -388,26 +437,26 @@ export async function renderGallery() {
             };
             el.onclick = () => window.openHistoryModal(allItems.indexOf(item));
         } else {
-            el.src = IMG_QUEEN_MAIN;
+            el.src = IMG_QUEEN_MAIN; // Fallback
             el.style.filter = "grayscale(100%) brightness(0.5)";
         }
     };
 
-    renderMobSlot(bestOf[0], mob1, 400);
+    await renderMobSlot(bestOf[0], mob1, 400);
 
+    // Explicit Fallback for Center Slot (Queen) if empty
     if (!bestOf[0] && mob1) {
         mob1.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
         mob1.style.filter = "grayscale(100%) brightness(0.5)";
     }
 
-    renderMobSlot(bestOf[1], mob2, 300);
-    renderMobSlot(bestOf[2], mob3, 300);
+    await renderMobSlot(bestOf[1], mob2, 300);
+    await renderMobSlot(bestOf[2], mob3, 300);
 }
-
-// --- HISTORY LOADER ---
+// --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
 export function loadMoreHistory() {
     setHistoryLimit(historyLimit + 25);
-    window.lastGalleryRenderState = null;
+    window.lastGalleryRenderState = null; // Force re-render
     renderGallery();
     console.log("Increased history limit to", historyLimit);
 }
@@ -416,7 +465,7 @@ export function loadMoreHistory() {
 window.renderGallery = renderGallery;
 window.setGalleryFilter = function (filterType) {
     activeStickerFilter = filterType;
-    window.lastGalleryRenderState = null;
+    window.lastGalleryRenderState = null; // Force re-render (though signature check handles filter too, being safe)
     renderGallery();
 };
 
@@ -473,7 +522,7 @@ window.atoneForTask = function (index) {
     }, "*");
 };
 
-// MODAL OPENER
+// REPLACE openHistoryModal
 export async function openHistoryModal(index) {
     const items = getGalleryList();
     if (!items[index]) return;
@@ -483,34 +532,31 @@ export async function openHistoryModal(index) {
 
     // 1. Setup Background Media
     let url = item.proofUrl || item.media;
-    
-    // --- BYTESCALE MODAL FIX ---
-    // In the Modal, we WANT the Video to play (if possible), 
-    // but we still need to handle HEIC or Unsigned files.
-    // For now, let's trust the raw URL in the modal or sign it if needed.
-    // Bytescale raw URLs usually play in <video> tags if the browser supports the format.
-    
-    const isVideo = (url || "").includes('.mp4') || (url || "").includes('.mov') || (url || "").includes('video');
-    
+    const isVideo = mediaType(url) === 'video';
+    url = await getSignedUrl(url);
     const mediaContainer = document.getElementById('modalMediaContainer');
 
     if (mediaContainer) {
         mediaContainer.innerHTML = isVideo ?
-            `<video src="${url}" autoplay loop muted playsinline controls style="width:100%; height:100%; object-fit:contain;"></video>` :
+            `<video src="${url}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:contain;"></video>` :
             `<img src="${url}" style="width:100%; height:100%; object-fit:contain;">`;
     }
 
     // 2. Setup Data
     const pts = getPoints(item);
     const status = (item.status || "").toLowerCase();
+
+    // CRITICAL FIX: Add 'deni' and 'refus' to ensure the button shows for "Denied" tasks
     const isRejected = status.includes('rej') || status.includes('fail') || status.includes('deni') || status.includes('refus');
 
     // 3. Build UI
     const overlay = document.getElementById('modalGlassOverlay');
     if (overlay) {
         let verdictText = item.adminComment || "Logged without commentary.";
+        // If rejected but no comment, show default text
         if (isRejected && !item.adminComment) verdictText = "Submission rejected. Standards not met.";
 
+        // --- REDEMPTION BUTTON GENERATOR ---
         let redemptionBtn = '';
         if (isRejected) {
             redemptionBtn = `
@@ -522,34 +568,46 @@ export async function openHistoryModal(index) {
         }
 
         overlay.innerHTML = `
+            <!-- FIX 1: Add stopPropagation here so clicks inside the box DON'T close the modal -->
             <div class="modal-center-col" id="modalUI">
+                
                 <div class="modal-merit-title">${isRejected ? "CAPITAL DEDUCTED" : "MERIT ACQUIRED"}</div>
                 <div class="modal-merit-value" style="color:${isRejected ? '#ff003c' : 'var(--gold)'}">
                     ${isRejected ? "0" : "+" + pts}
                 </div>
+
                 <div class="modal-verdict-box" id="verdictBox">
                     "${verdictText}"
                 </div>
+
                 <div class="modal-btn-stack">
                     <button onclick="event.stopPropagation(); window.toggleDirective(${index})" class="btn-glass-silver">THE DIRECTIVE</button>
+                    
                     <button onclick="event.stopPropagation(); window.toggleInspectMode()" class="btn-glass-silver">INSPECT OFFERING</button>
+                    
                     ${redemptionBtn}
+                    
+                    <!-- This button forces close specifically -->
                     <button onclick="window.closeModal()" class="btn-glass-silver btn-glass-red">DISMISS</button>
                 </div>
             </div>
         `;
     }
 
+    // FIX 2: Activate the background click to close
     const glassModal = document.getElementById('glassModal');
     if (glassModal) {
         glassModal.onclick = (e) => window.closeModal(e);
         glassModal.classList.add('active');
         glassModal.classList.remove('inspect-mode');
+
+        // *** ADD THIS LINE: LOCK THE DASHBOARD ***
         document.getElementById('viewMobileHome').style.overflow = 'hidden';
     }
 }
 
-// TOGGLE DIRECTIVE
+// REPLACE OR ADD toggleDirective (Fixes the text swapping)
+// REPLACE YOUR toggleDirective FUNCTION WITH THIS
 window.toggleDirective = function (index) {
     const items = getGalleryList();
     const item = items[index];
@@ -557,25 +615,32 @@ window.toggleDirective = function (index) {
 
     const box = document.getElementById('verdictBox');
 
+    // Check current view state
     if (box.dataset.view === 'task') {
+        // Switch back to Verdict (Admin comments are usually plain text, so innerText is fine here, but you can change to innerHTML if needed)
         let verdictText = item.adminComment || "Logged without commentary.";
         const status = (item.status || "").toLowerCase();
         if ((status.includes('rej') || status.includes('fail')) && !item.adminComment) {
             verdictText = "Submission rejected. Standards not met.";
         }
+
         box.innerText = `"${verdictText}"`;
         box.style.color = "#eee";
         box.style.fontStyle = "italic";
         box.dataset.view = 'verdict';
     } else {
+        // Switch to Task/Directive
+        // --- THE FIX IS HERE --- 
+        // We change .innerText to .innerHTML so the <p> and <br> tags render correctly
         box.innerHTML = item.text || "No directive data available.";
+
         box.style.color = "#ccc";
         box.style.fontStyle = "normal";
         box.dataset.view = 'task';
     }
 };
 
-// VIEW HELPERS
+// --- VIEW HELPERS ---
 export function toggleHistoryView(view) {
     const modal = document.getElementById('glassModal');
     const overlay = document.getElementById('modalGlassOverlay');
@@ -593,24 +658,40 @@ export function toggleHistoryView(view) {
     } else {
         modal.classList.remove('proof-mode-active');
         overlay.classList.remove('clean');
+
         let targetId = 'modalInfoView';
         if (view === 'feedback') targetId = 'modalFeedbackView';
         if (view === 'task') targetId = 'modalTaskView';
+
         const target = document.getElementById(targetId);
         if (target) target.classList.remove('hidden');
     }
 }
 
+// REPLACE your closeModal with this simple version
 export function closeModal(e) {
     if (e && e.stopPropagation) e.stopPropagation();
+
     const modal = document.getElementById('glassModal');
     if (modal) {
         modal.classList.remove('active');
         modal.classList.remove('inspect-mode');
     }
+
     const media = document.getElementById('modalMediaContainer');
     if (media) media.innerHTML = "";
+
+    // *** ADD THIS LINE: UNLOCK THE DASHBOARD ***
     document.getElementById('viewMobileHome').style.overflow = 'auto';
+}
+
+// Helper to ensure clean closing
+function forceClose() {
+    const modal = document.getElementById('glassModal');
+    if (modal) modal.classList.remove('active');
+
+    const media = document.getElementById('modalMediaContainer');
+    if (media) media.innerHTML = "";
 }
 
 export function openModal() { }
@@ -618,15 +699,20 @@ export function openModal() { }
 export function initModalSwipeDetection() {
     const modalEl = document.getElementById('glassModal');
     if (!modalEl) return;
+
     modalEl.addEventListener('touchstart', e => setTouchStartX(e.changedTouches[0].screenX), { passive: true });
+
     modalEl.addEventListener('touchend', e => {
         const touchEndX = e.changedTouches[0].screenX;
         const diff = touchStartX - touchEndX;
+
         if (Math.abs(diff) > 80) {
             let historyItems = getGalleryList();
             let nextIndex = currentHistoryIndex;
+
             if (diff > 0) nextIndex++;
             else nextIndex--;
+
             if (nextIndex >= 0 && nextIndex < historyItems.length) {
                 openHistoryModal(nextIndex);
             }
@@ -634,30 +720,52 @@ export function initModalSwipeDetection() {
     }, { passive: true });
 }
 
+// ADD THIS FUNCTION
 window.toggleInspectMode = function () {
     const modal = document.getElementById('glassModal');
-    if (modal) modal.classList.toggle('inspect-mode');
+    if (modal) {
+        modal.classList.toggle('inspect-mode');
+    }
 };
+
+// --- PASTE THIS AT THE VERY BOTTOM OF gallery.js ---
 
 window.addEventListener('click', function (e) {
     const modal = document.getElementById('glassModal');
     const card = document.getElementById('modalUI');
+
+    // 1. If Modal is NOT open, stop here. Do nothing.
     if (!modal || !modal.classList.contains('active')) return;
-    if (card && card.contains(e.target)) return;
+
+    // 2. CHECK: Did we click INSIDE the Black Card (Text/Buttons)?
+    if (card && card.contains(e.target)) {
+        return;
+    }
+
+    // 3. CHECK: Are we in INSPECT MODE? (Photo only)
     if (modal.classList.contains('inspect-mode')) {
+        // If we clicked the BLURRED BACKGROUND or IMAGE (Inside the modal wrapper)
         if (modal.contains(e.target)) {
+            // User wants to revert back to the text card
             modal.classList.remove('inspect-mode');
             return;
         }
+
     }
+
     window.closeModal();
-}, true);
+}, true); // 'true' ensures we catch the click before other listeners stop it
+
+// --- PASTE AT BOTTOM OF gallery.js ---
 
 window.toggleMobileMenu = function () {
     const sidebar = document.querySelector('.layout-left');
-    if (sidebar) sidebar.classList.toggle('mobile-open');
+    if (sidebar) {
+        sidebar.classList.toggle('mobile-open');
+    }
 };
 
+// Use event delegation instead of adding listeners to each button
 document.addEventListener('click', (e) => {
     if (e.target.closest('.nav-btn, .kneel-bar-graphic')) {
         const sidebar = document.querySelector('.layout-left');
@@ -665,9 +773,11 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Force Exports
+
+// --- FORCE WINDOW EXPORTS ---
 window.renderGallery = renderGallery;
 window.openHistoryModal = openHistoryModal;
 window.toggleHistoryView = toggleHistoryView;
 window.closeModal = closeModal;
 window.loadMoreHistory = loadMoreHistory;
+// atoneForTask, toggleInspectMode, setGalleryFilter, toggleMobileMenu are already on window
