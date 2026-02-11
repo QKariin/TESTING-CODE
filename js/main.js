@@ -1,2542 +1,2390 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content" />
-    <title>Command Console</title>
 
-    <script type="module" src="../js/main.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
-    <!-- FONTS -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@200;300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap"
-        rel="stylesheet" />
 
-    <!-- DESKTOP STYLES -->
-    <link rel="stylesheet" href="../css/chat.css">
-    <link rel="stylesheet" href="../css/profile.css">
-    <link rel="stylesheet" href="../css/reward.css">
 
-    <style>
-        /* =========================================
-       1. CORE LAYOUT & SCROLLING (CLEANED)
-       ========================================= */
-        #MOBILE_APP {
-            display: none;
+
+// main.js - FINAL COMPLETE VERSION (DESKTOP + MOBILE)
+
+import { CONFIG, URLS, LEVELS, FUNNY_SAYINGS, STREAM_PASSWORDS } from './config.js';
+import {
+    gameStats, stats, userProfile, currentTask, taskDatabase, galleryData,
+    pendingTaskState, taskJustFinished, cooldownInterval, ignoreBackendUpdates,
+    lastChatJson, lastGalleryJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
+    historyLimit, pendingLimit, currentView, resetUiTimer, taskQueue,
+    audioUnlocked, cmsHierarchyData, WISHLIST_ITEMS, lastWorshipTime,
+    currentHistoryIndex, touchStartX, isLocked, COOLDOWN_MINUTES,
+    setGameStats, setStats, setUserProfile, setCurrentTask, setTaskDatabase,
+    setGalleryData, setPendingTaskState, setTaskJustFinished, setIgnoreBackendUpdates,
+    setLastChatJson, setLastGalleryJson, setIsInitialLoad, setChatLimit,
+    setLastNotifiedMessageId, setHistoryLimit, setCurrentView, setResetUiTimer,
+    setTaskQueue, setCmsHierarchyData, setWishlistItems, setLastWorshipTime,
+    setCurrentHistoryIndex, setTouchStartX, setIsLocked, setCooldownInterval, setActiveRevealMap, setVaultItems, setCurrentLibraryMedia, setLibraryProgressIndex
+} from './state.js';
+import { renderRewardGrid, runTargetingAnimation } from '../profile/kneeling/reward.js';
+import { triggerSound, migrateGameStatsToStats } from './utils.js';
+import { switchTab, toggleStats, openSessionUI, closeSessionUI, updateSessionCost, toggleSection, renderDomVideos, renderNews, renderWishlist } from './ui.js';
+import { getRandomTask, restorePendingUI, finishTask, cancelPendingTask, resetTaskDisplay } from './tasks.js';
+import { renderChat, sendChatMessage, handleChatKey, sendCoins, loadMoreChat, openChatPreview, closeChatPreview, forceBottom } from './chat.js';
+import { renderGallery, loadMoreHistory, initModalSwipeDetection, closeModal, toggleHistoryView, openHistoryModal, openModal } from './gallery.js';
+import { handleEvidenceUpload, handleProfileUpload, handleAdminUpload } from './uploads.js';
+import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from '../profile/kneeling/kneeling.js';
+import { Bridge } from './bridge.js';
+import { getOptimizedUrl } from './media.js';
+
+const KINK_LIST = [
+    "JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership",
+    "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation",
+    "Task submission", "CBT", "Training", "Power exchange", "Verbal domination",
+    "Protocol", "Obedience", "Psychological domination"
+];
+
+// =========================================
+// POVERTY SYSTEM (MOCKING LOGIC)
+// =========================================
+
+const POVERTY_INSULTS = [
+    "Your wallet is as empty as your worth.",
+    "Do not waste my time with empty pockets.",
+    "Silence is free. Serving me costs.",
+    "Go beg for coins, then come back.",
+    "You cannot afford to look at me.",
+    "Access Denied. Reason: Poverty."
+];
+
+// --- HELPER: CHECK IF ROUTINE IS DONE (6 AM RESET RULE) ---
+function checkRoutineStatus(lastUploadDateString) {
+    if (!lastUploadDateString) return false; // Never done
+
+    const last = new Date(lastUploadDateString);
+    const now = new Date();
+
+    // Define "Duty Start Time" for the current moment
+    let dutyStart = new Date();
+    dutyStart.setHours(6, 0, 0, 0); // Today at 06:00:00
+
+    // If it is currently EARLY morning (e.g. 2 AM), the duty day started yesterday
+    if (now < dutyStart) {
+        dutyStart.setDate(dutyStart.getDate() - 1);
+    }
+
+    // If the last upload happened AFTER the duty window started, it counts.
+    return last >= dutyStart;
+}
+
+// ==========================
+// REPLACE window.triggerPoverty WITH THIS JAILBREAK VERSION
+// ==========================
+
+window.triggerPoverty = function () {
+    const overlay = document.getElementById('povertyOverlay');
+    const text = document.getElementById('povertyInsult');
+
+    // Pick random insult
+    const insult = POVERTY_INSULTS[Math.floor(Math.random() * POVERTY_INSULTS.length)];
+    if (text) text.innerText = `"${insult}"`;
+
+    if (overlay) {
+        // *** THE FIX: Move overlay to Body so it is never hidden by a parent view ***
+        if (overlay.parentElement !== document.body) {
+            document.body.appendChild(overlay);
         }
 
-        /* --- CRITICAL APP SHELL LOCK (GLOBAL) --- */
-        /* This applies to BOTH Desktop and Mobile to stop the "Wix Scroll" */
-        html,
-        body {
+        overlay.classList.remove('hidden');
+        overlay.style.display = 'flex';
+    }
+};
 
-            width: 100% !important;
-            height: 100% !important;
-            overflow: hidden !important;
-            /* Kills outer scrollbar */
-            background-color: transparent !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            top: 0 !important;
-            left: 0 !important;
-            overscroll-behavior: none !important;
-            /* Kills iOS bounce */
-            touch-action: none;
-            /* Kills pinch-zoom on mobile */
+window.closePoverty = function () {
+    const overlay = document.getElementById('povertyOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.style.display = 'none';
+    }
+};
+
+// ==========================
+// REPLACE WINDOW.GOTOEXCHEQUER (Around Line 56) WITH THIS:
+// ==========================
+
+window.goToExchequer = function () {
+    // 1. Close any blocking overlays (Poverty, Queen Menu)
+    window.closePoverty();
+    if (window.closeQueenMenu) window.closeQueenMenu();
+
+    // 2. Switch to the Global View (Mobile) instead of 'buy' (Desktop)
+    // This prevents the "Black Screen" crash
+    if (window.toggleMobileView) window.toggleMobileView('global');
+
+    // 3. Force open the Store Overlay immediately after switching views
+    setTimeout(() => {
+        if (window.openExchequer) window.openExchequer();
+    }, 200);
+};
+
+// --- 2. CRITICAL UI FUNCTIONS ---
+
+window.toggleTaskDetails = function (forceOpen = null) {
+    if (window.event) window.event.stopPropagation();
+    const panel = document.getElementById('taskDetailPanel');
+    const link = document.querySelector('.see-task-link');
+    const chatBox = document.getElementById('chatBox');
+    if (!panel) return;
+    const isOpen = panel.classList.contains('open');
+    let shouldOpen = (forceOpen === true) ? true : (forceOpen === false ? false : !isOpen);
+
+    if (shouldOpen) {
+        panel.classList.add('open');
+        if (chatBox) chatBox.classList.add('focused-task');
+        if (link) { link.innerHTML = "▲ HIDE DIRECTIVE ▲"; link.style.opacity = "1"; }
+    } else {
+        panel.classList.remove('open');
+        if (chatBox) chatBox.classList.remove('focused-task');
+        if (link) { link.innerHTML = "▼ SEE DIRECTIVE ▼"; link.style.opacity = "1"; }
+    }
+};
+
+window.updateTaskUIState = function (isActive) {
+    const statusText = document.getElementById('mainStatusText');
+    const idleMsg = document.getElementById('idleMessage');
+    const timerRow = document.getElementById('activeTimerRow');
+    const reqBtn = document.getElementById('mainButtonsArea');
+    const uploadArea = document.getElementById('uploadBtnContainer');
+
+    if (isActive) {
+        if (statusText) { statusText.innerText = "WORKING"; statusText.className = "status-text-lg status-working"; }
+        if (idleMsg) idleMsg.classList.add('hidden');
+        if (timerRow) timerRow.classList.remove('hidden');
+        if (reqBtn) reqBtn.classList.add('hidden');
+        if (uploadArea) uploadArea.classList.remove('hidden');
+    } else {
+        if (statusText) { statusText.innerText = "UNPRODUCTIVE"; statusText.className = "status-text-lg status-unproductive"; }
+        if (idleMsg) idleMsg.classList.remove('hidden');
+        if (timerRow) timerRow.classList.add('hidden');
+        if (reqBtn) reqBtn.classList.remove('hidden');
+        if (uploadArea) uploadArea.classList.add('hidden');
+        window.toggleTaskDetails(false);
+    }
+};
+
+document.addEventListener('click', function (event) {
+    const card = document.getElementById('taskCard');
+    const panel = document.getElementById('taskDetailPanel');
+    if (event.target.closest('.see-task-link')) return;
+    if (panel && panel.classList.contains('open') && card && !card.contains(event.target)) {
+        window.toggleTaskDetails(false);
+    }
+});
+
+// --- 3. INITIALIZATION ---
+
+document.addEventListener('click', () => {
+    if (!window.audioUnlocked) {
+        ['msgSound', 'coinSound', 'skipSound', 'sfx-buy', 'sfx-deny'].forEach(id => {
+            const sound = document.getElementById(id);
+            if (sound) {
+                const originalVolume = sound.volume;
+                sound.volume = 0;
+                sound.play().then(() => { sound.pause(); sound.currentTime = 0; sound.volume = originalVolume; }).catch(e => console.log("Audio Engine Ready"));
+            }
+        });
+        window.audioUnlocked = true;
+    }
+}, { once: true });
+
+const resizer = new ResizeObserver(() => {
+    if (window.parent) window.parent.postMessage({ iframeHeight: document.body.scrollHeight }, '*');
+});
+resizer.observe(document.body);
+
+function initDomProfile() {
+    const frame = document.getElementById('twitchFrame');
+    if (frame && !frame.src) {
+        const parents = ["qkarin.com", "www.qkarin.com", "entire-ecosystem.vercel.app", "html-components.wixusercontent.com", "filesusr.com", "editor.wix.com", "manage.wix.com", "localhost"];
+        let parentString = "";
+        parents.forEach(p => parentString += `&parent=${p}`);
+        frame.src = `https://player.twitch.tv/?channel=${CONFIG.TWITCH_CHANNEL}${parentString}&muted=true&autoplay=true`;
+    }
+}
+initDomProfile();
+
+// --- 4. BRIDGE LISTENER ---
+
+Bridge.listen((data) => {
+    const ignoreList = ["CHAT_ECHO", "UPDATE_FULL_DATA", "UPDATE_DOM_STATUS", "instantUpdate", "instantReviewSuccess"];
+    if (ignoreList.includes(data.type)) return;
+    window.postMessage(data, "*");
+});
+
+// =========================================
+
+// NEW: SETTINGS LOGIC (FIXED ROUTINE CRASH)
+
+// =========================================
+
+
+
+let currentActionType = "";
+
+let currentActionCost = 0;
+
+let selectedRoutineValue = ""; // <--- NEW VARIABLE TO STORE SELECTION
+
+
+
+// 1. NAVIGATION
+
+window.openLobby = function () {
+
+    document.getElementById('lobbyOverlay').classList.remove('hidden');
+
+    window.backToLobbyMenu();
+
+};
+
+
+
+window.closeLobby = function () {
+
+    document.getElementById('lobbyOverlay').classList.add('hidden');
+
+};
+
+
+
+window.backToLobbyMenu = function () {
+
+    document.getElementById('lobbyMenu').classList.remove('hidden');
+
+    document.getElementById('lobbyActionView').classList.add('hidden');
+
+};
+
+
+
+// 2. SETUP ACTION SCREEN
+
+let selectedKinks = new Set(); // Store selections
+
+
+
+window.showLobbyAction = function (type) {
+
+    currentActionType = type;
+
+
+
+    const prompt = document.getElementById('lobbyPrompt');
+
+    const input = document.getElementById('lobbyInputText');
+
+    const fileBtn = document.getElementById('lobbyInputFileBtn');
+
+    const routineArea = document.getElementById('routineSelectionArea');
+
+    const kinkArea = document.getElementById('kinkSelectionArea'); // NEW
+
+    const costDisplay = document.getElementById('lobbyCostDisplay');
+
+
+
+    // Reset UI
+
+    input.classList.add('hidden');
+
+    fileBtn.classList.add('hidden');
+
+    routineArea.classList.add('hidden');
+
+    if (kinkArea) kinkArea.classList.add('hidden');
+
+
+
+    // Switch View
+
+    document.getElementById('lobbyMenu').classList.add('hidden');
+
+    document.getElementById('lobbyActionView').classList.remove('hidden');
+
+
+
+    if (type === 'name') {
+
+        prompt.innerText = "Enter your new name.";
+
+        input.classList.remove('hidden');
+
+        currentActionCost = 100;
+
+    }
+
+    else if (type === 'photo') {
+
+        prompt.innerText = "Upload a new profile picture.";
+
+        fileBtn.classList.remove('hidden');
+
+        currentActionCost = 500;
+
+    }
+
+    else if (type === 'limits') {
+
+        prompt.innerText = "Define your hard limits.";
+
+        input.classList.remove('hidden');
+
+        currentActionCost = 200;
+
+    }
+
+    else if (type === 'routine') {
+
+        prompt.innerText = "Select a Daily Routine.";
+
+        routineArea.classList.remove('hidden');
+
+        document.getElementById('routineDropdown').value = "Morning Kneel";
+
+        window.checkRoutineDropdown();
+
+        return;
+
+    }
+
+    // *** NEW KINK LOGIC ***
+
+    else if (type === 'kinks') {
+
+        prompt.innerText = "Select your perversions.";
+
+        if (kinkArea) {
+
+            kinkArea.classList.remove('hidden');
+
+            renderKinkGrid();
+
         }
 
-        .mobile-only-trigger {
-            display: none !important;
+        currentActionCost = 0;
+
+    }
+
+
+
+    costDisplay.innerText = currentActionCost;
+
+};
+
+
+
+// NEW: RENDER KINK GRID
+
+function renderKinkGrid() {
+
+    const grid = document.getElementById('kinkGrid');
+
+    if (!grid) return;
+
+    grid.innerHTML = ""; // Clear
+
+    selectedKinks.clear(); // Reset selection
+
+
+
+    KINK_LIST.forEach(kink => {
+
+        const btn = document.createElement('div');
+
+        btn.className = "routine-tile";
+
+        btn.innerText = kink.toUpperCase();
+
+        btn.onclick = () => toggleKinkSelection(btn, kink);
+
+        grid.appendChild(btn);
+
+    });
+
+}
+
+
+
+// NEW: TOGGLE SELECTION
+
+window.toggleKinkSelection = function (el, value) {
+
+    if (selectedKinks.has(value)) {
+
+        selectedKinks.delete(value);
+
+        el.classList.remove('selected');
+
+    } else {
+
+        selectedKinks.add(value);
+
+        el.classList.add('selected');
+
+    }
+
+
+
+    // Update Price (100 per kink)
+
+    currentActionCost = selectedKinks.size * 100;
+
+    document.getElementById('lobbyCostDisplay').innerText = currentActionCost;
+
+};
+
+
+
+// 3. HANDLE ROUTINE TILE SELECTION (FIXED)
+
+window.selectRoutineItem = function (el, value) {
+
+    // 1. Visually deselect all others
+
+    document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('selected'));
+
+
+
+    // 2. Select clicked
+
+    el.classList.add('selected');
+
+
+
+    // 3. Save Value to Variable (Not Element)
+
+    selectedRoutineValue = value;
+
+
+
+    // 4. Handle Logic
+
+    const input = document.getElementById('routineCustomInput');
+
+    const costDisplay = document.getElementById('lobbyCostDisplay');
+
+
+
+    if (value === 'custom') {
+
+        input.classList.remove('hidden');
+
+        currentActionCost = 2000;
+
+    } else {
+
+        input.classList.add('hidden');
+
+        currentActionCost = 1000;
+
+    }
+
+
+
+    costDisplay.innerText = currentActionCost;
+
+};
+
+
+
+// 4. EXECUTE ACTION (FIXED ROUTINE SELECTION)
+
+window.confirmLobbyAction = function () {
+
+    // 1. Check Funds
+
+    if (gameStats.coins < currentActionCost) {
+
+        window.triggerPoverty();
+
+        return;
+
+    }
+
+
+
+    let payload = "";
+
+    let notifyTitle = "SYSTEM UPDATE";
+
+    let notifyText = "Changes saved.";
+
+
+
+    // --- A. ROUTINE LOGIC (THE FIX) ---
+
+    if (currentActionType === 'routine') {
+
+        // USE THE GLOBAL VARIABLE FROM TILE SELECTION
+
+        let taskName = selectedRoutineValue;
+
+
+
+        // If Custom, read the input box
+
+        if (taskName === 'custom') {
+
+            taskName = document.getElementById('routineCustomInput').value;
+
         }
 
-        /* --- MOBILE SPECIFIC STYLES --- */
-        @media screen and (max-width: 768px) {
-
-            #MOBILE_APP {
-                display: block !important;
-                width: 100vw;
-                height: 100dvh;
-                position: fixed;
-                top: 0;
-                left: 0;
-                z-index: 999999;
-                background-color: transparent !important;
-                color: white;
-                font-family: 'Cinzel', serif;
-                overflow: hidden;
-            }
-
-            #DESKTOP_APP {
-                display: none !important;
-            }
-
-            /* NOTE: I removed the duplicate 'html, body' block here. 
-           The global one at the top handles it perfectly. */
-
-            /* The ONLY thing allowed to scroll is the View Container */
-            /* The ONLY thing allowed to scroll is the View Container */
-            /* The ONLY thing allowed to scroll is the View Container */
-            #viewMobileHome {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                /* CHANGED FROM 100vw TO 100% */
-                height: 100dvh;
-
-                overflow-y: auto !important;
-                overflow-x: hidden !important;
-
-                /* SCROLL PHYSICS */
-                -webkit-overflow-scrolling: touch !important;
-                touch-action: pan-y !important;
-                overscroll-behavior: none !important;
-
-                /* GPU */
-                will-change: scroll-position;
-                transform: translateZ(0);
-
-                display: block;
-                padding: 0;
-                z-index: 1;
-                background: transparent !important;
-            }
-
-            /* HIDE ALL SCROLLBARS */
-            #viewMobileHome::-webkit-scrollbar,
-            #mobHomeScroll::-webkit-scrollbar,
-            #mobGlobalScroll::-webkit-scrollbar,
-            #mobRecordScroll::-webkit-scrollbar,
-            .mob-horiz-scroll::-webkit-scrollbar,
-            .qm-scroll-content::-webkit-scrollbar {
-                display: none !important;
-                width: 0 !important;
-                height: 0 !important;
-                background: transparent !important;
-            }
-
-            /* =========================================
-           2. HALO DASHBOARD
-           ========================================= */
-            .mobile-only-trigger {
-                display: block !important;
-            }
-
-            .halo-section {
-                position: relative;
-                z-index: 2;
-                margin-top: 60px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .halo-ring {
-                width: 280px;
-                height: 280px;
-                border-radius: 50%;
-                border: 2px solid #c5a059;
-                box-shadow: 0 0 30px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-
-                /* --- ADD THIS FOR THE BLUR --- */
-                background: rgba(0, 0, 0, 0.3);
-                /* Slight dark tint so text pops */
-                backdrop-filter: blur(10px);
-                /* The Blur Effect */
-                -webkit-backdrop-filter: blur(10px);
-                /* Required for iPhone */
-            }
-
-            .halo-name {
-                font-family: 'Cinzel', serif;
-                font-size: 2.2rem;
-                color: #fff;
-                text-transform: uppercase;
-                letter-spacing: 2px;
-                text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-                line-height: 1;
-                margin-bottom: 5px;
-                text-align: center;
-            }
-
-            .halo-rank {
-                font-family: 'Orbitron', sans-serif;
-                font-size: 0.7rem;
-                color: #c5a059;
-                letter-spacing: 4px;
-                text-transform: uppercase;
-            }
-
-            /* STATS CARD */
-            .halo-stats-card {
-                position: relative;
-                z-index: 3;
-                margin-top: -40px;
-                width: 90%;
-                background: rgba(10, 10, 10, 0.85);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 8px;
-                padding: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: space-around;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                backdrop-filter: blur(15px);
-                margin-bottom: 20px;
-            }
-
-            .h-stat {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .h-val {
-                font-family: 'Orbitron', serif;
-                font-size: 1.5rem;
-                color: #fff;
-                line-height: 1;
-            }
-
-            .h-lbl {
-                font-family: 'Orbitron', sans-serif;
-                font-size: 0.5rem;
-                color: #888;
-                letter-spacing: 2px;
-                margin-top: 4px;
-            }
-
-            .h-divider {
-                width: 1px;
-                height: 30px;
-                background: rgba(255, 255, 255, 0.15);
-            }
-
-            .halo-stack {
-                position: relative;
-                z-index: 3;
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 15px;
-                padding: 0 20px;
-            }
-
-            /* =========================================
-           3. STATS DRAWER (RESTORED)
-           ========================================= */
-            .mob-stats-toggle-btn {
-                width: 100%;
-                background: transparent;
-                border: 1px solid rgba(136, 136, 136, 0.3);
-                color: #888;
-                opacity: 0.7;
-                font-family: 'Cinzel', serif;
-                font-weight: 700;
-                font-size: 0.75rem;
-                padding: 8px 0;
-                cursor: pointer;
-                letter-spacing: 2px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                border-radius: 4px;
-                transition: 0.3s;
-            }
-
-            .mob-stats-toggle-btn:active {
-                opacity: 1;
-                border-color: #fff;
-                color: #fff;
-            }
-
-            .mob-internal-drawer {
-                width: 100%;
-                max-height: 0;
-                opacity: 0;
-                overflow: hidden;
-                transition: all 0.4s ease;
-                background: transparent;
-                border-top: 1px solid transparent;
-            }
-
-            .mob-internal-drawer.open {
-                max-height: 200px;
-                opacity: 1;
-                margin-top: 15px;
-                padding-top: 5px;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .drawer-row {
-                display: flex;
-                justify-content: space-between;
-                padding: 8px 0;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            }
-
-            .drawer-row:last-child {
-                border-bottom: none;
-            }
-
-            .d-lbl {
-                font-size: 0.7rem;
-                color: #888;
-                font-family: 'Cinzel';
-                letter-spacing: 1px;
-            }
-
-            .d-val {
-                font-size: 0.8rem;
-                color: #c5a059;
-                font-family: 'Orbitron';
-            }
-
-            /* =========================================
-           4. KNEEL BAR & BUTTONS (RESTORED)
-           ========================================= */
-            .mob-section-wrapper {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 5px;
-            }
-
-            .mob-kneel-bar {
-                width: 100%;
-                height: 50px;
-                background: #080808;
-                border: 1px solid #c5a059;
-                border-radius: 4px;
-                position: relative;
-                overflow: hidden;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
-                transition: 0.2s;
-            }
-
-            .mob-kneel-bar:active {
-                border-color: #fff;
-                transform: scale(0.98);
-            }
-
-            .mob-bar-fill,
-            .mob-kneel-fill {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 0%;
-                height: 100%;
-                background: linear-gradient(90deg, #8b0000, #000000);
-                z-index: 1;
-                transition: width 0.1s linear;
-            }
-
-            .mob-bar-content {
-                z-index: 2;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .kneel-icon-sm {
-                color: #c5a059;
-                font-size: 1.2rem;
-            }
-
-            .kneel-text {
-                font-family: 'Cinzel', serif;
-                letter-spacing: 3px;
-                color: #ccc;
-            }
-
-            .mob-action-btn {
-                width: 100%;
-                padding: 15px;
-                background: transparent;
-                margin-top: 15px;
-                border: 1px solid #c5a059;
-                color: #c5a059;
-                font-family: 'Cinzel', serif;
-                font-weight: 700;
-                font-size: 0.9rem;
-                letter-spacing: 2px;
-                cursor: pointer;
-            }
-
-            /* FIX MOBILE CHAT SCROLL GLITCH */
-            #mob_chatBox {
-                /* 1. TRAP THE SCROLL (Stop it from moving the dashboard) */
-                overscroll-behavior: contain !important;
-
-                /* 2. FORCE GPU (Smoothness) */
-                will-change: scroll-position;
-                transform: translateZ(0);
-
-                /* 3. STRICT VERTICAL ONLY */
-                touch-action: pan-y !important;
-
-                /* 4. ENSURE WIDTH SAFETY */
-                width: 100% !important;
-                max-width: 100% !important;
-                overflow-x: hidden !important;
-            }
-
-            /* Ensure the wrapper doesn't cause issues either */
-            #inlineChatPanel {
-                width: 100% !important;
-                max-width: 100% !important;
-                overflow: hidden !important;
-                /* No scrolling on the wrapper, only the box */
-            }
-
-            /* FIX MODAL SCROLL GLITCH */
-            #glassModal {
-                /* Prevent scroll from passing through to the dashboard */
-                overscroll-behavior: contain !important;
-
-                /* Force GPU to prevent rendering glitches */
-                will-change: transform;
-                transform: translateZ(0);
-            }
-
-            /* If the text box inside needs scrolling, let it scroll smoothly */
-            .theater-text-box,
-            .modal-verdict-box {
-                -webkit-overflow-scrolling: touch;
-                overscroll-behavior: contain;
-            }
-
-            /* --- JAIL LOGIC --- */
-            /* Forces the overlay to stick inside the trophy box */
-            #trophySectionJail #rewardCardOverlay {
-                position: absolute !important;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 50;
-                background: rgba(0, 0, 0, 0.98) !important;
-                padding-top: 20px !important;
-                align-items: flex-start !important;
-            }
-
-            /* Adjust card size to fit the jail */
-            #trophySectionJail .mob-reward-card {
-                width: 95% !important;
-                max-height: 95% !important;
-                margin: 0 auto !important;
-                border: 1px solid #c5a059;
-            }
-
-            /* --- GALLERY STICKER (Reward Badge) --- */
-            .gallery-sticker-badge {
-                position: absolute;
-                bottom: 5px;
-                right: 5px;
-                width: 35px;
-                /* Adjust size as needed */
-                height: 35px;
-                z-index: 5;
-                object-fit: contain;
-                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
-                transform: rotate(-10deg);
-                /* Slight tilt for realism */
-                pointer-events: none;
-                /* Let clicks pass through to the card */
-            }
-
-            /* Make it slightly smaller on mobile lists if needed */
-            .mob-scroll-item .gallery-sticker-badge {
-                width: 25px;
-                height: 25px;
-                bottom: 2px;
-                right: 2px;
-            }
-
-            /* FIX QUEEN'S WALL ON MOBILE */
-            #mobNewsGrid {
-                display: grid !important;
-                grid-template-columns: 1fr 1fr !important;
-                /* 2 Columns */
-                gap: 10px !important;
-                width: 100% !important;
-                padding-bottom: 50px;
-            }
-
-            /* Force the items to fit the mobile grid */
-            #mobNewsGrid .sg-item {
-                width: 100% !important;
-                height: auto !important;
-                min-height: 150px !important;
-                position: relative !important;
-                /* Reset any desktop absolute positioning */
-                display: flex !important;
-                flex-direction: column !important;
-                background: #000;
-                border: 1px solid #333;
-            }
-
-            /* Make images fill the box */
-            #mobNewsGrid .sg-img {
-                width: 100% !important;
-                height: 120px !important;
-                object-fit: cover !important;
-            }
-
-            /* Make text visible */
-            #mobNewsGrid .news-txt {
-                display: block !important;
-                padding: 5px;
-                font-size: 0.7rem;
-                color: #ccc;
-            }
-
-            /* =========================================
-           5. LUXURY CARDS (RESTORED)
-           ========================================= */
-            .luxury-wrap {
-                padding: 0 20px;
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-                width: 100%;
-            }
-
-            .luxury-card {
-                background: linear-gradient(180deg, rgba(30, 30, 30, 0.6) 0%, rgba(10, 10, 10, 0.9) 100%);
-                border: 1px solid rgba(197, 160, 89, 0.2);
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                border-radius: 2px;
-                padding: 20px 15px;
-                position: relative;
-                overflow: hidden;
-                width: 90%;
-                margin: 10px auto;
-            }
-
-            .luxury-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 1px;
-                background: linear-gradient(90deg, transparent 0%, #c5a059 50%, transparent 100%);
-                opacity: 0.7;
-            }
-
-            .duty-label {
-                font-family: 'Cinzel', serif;
-                font-weight: 700;
-                font-size: 0.7rem;
-                color: #888;
-                letter-spacing: 4px;
-                text-transform: uppercase;
-                text-align: center;
-                margin-bottom: 20px;
-                position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                margin-top: 30px;
-            }
-
-            .duty-label::before,
-            .duty-label::after {
-                content: '';
-                height: 1px;
-                width: 30px;
-                background: #333;
-            }
-
-            /* Timers & Task Text */
-            .card-timer-row {
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: center;
-                justify-content: center;
-                gap: 5px;
-                margin: 15px 0;
-                width: 100%;
-            }
-
-            .card-t-box {
-                background: #000;
-                border: 1px solid #333;
-                color: #c5a059;
-                font-family: 'Rajdhani', sans-serif;
-                font-size: 1.5rem;
-                padding: 5px 10px;
-                border-radius: 4px;
-                min-width: 40px;
-                text-align: center;
-                line-height: 1;
-            }
-
-            #mobTaskText {
-                font-family: 'Cinzel', serif;
-                font-size: 0.85rem;
-                color: #e0e0e0;
-                text-align: center;
-                line-height: 1.4;
-                margin: 5px 0 15px 0;
-                padding: 8px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                background: rgba(0, 0, 0, 0.3);
-                min-height: 50px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.3s ease;
-            }
-
-            .text-pulse {
-                animation: pulseText 1.5s infinite;
-                color: #c5a059 !important;
-                font-family: 'Orbitron' !important;
-            }
-
-            @keyframes pulseText {
-                0% {
-                    opacity: 0.5;
-                }
-
-                50% {
-                    opacity: 1;
-                }
-
-                100% {
-                    opacity: 0.5;
-                }
-            }
-
-            /* Status Texts */
-            .txt-status-red {
-                color: #ff003c;
-                font-family: 'Orbitron';
-                font-size: 0.8rem;
-                letter-spacing: 1px;
-                text-shadow: 0 0 5px rgba(255, 0, 60, 0.4);
-            }
-
-            .txt-status-green {
-                color: #00ff00;
-                font-family: 'Orbitron';
-                font-size: 0.8rem;
-                letter-spacing: 1px;
-                text-shadow: 0 0 5px rgba(0, 255, 0, 0.4);
-            }
-
-            .txt-status-gold {
-                color: #c5a059;
-                font-family: 'Orbitron';
-                font-size: 0.8rem;
-                letter-spacing: 1px;
-            }
-
-            .btn-upload-sm {
-                background: transparent;
-                border: 1px solid #c5a059;
-                color: #c5a059;
-                font-family: 'Cinzel';
-                font-size: 0.65rem;
-                padding: 6px 12px;
-                cursor: pointer;
-                align-self: flex-start;
-            }
-
-            .btn-skip-sm {
-                background: transparent;
-                border: 1px solid #444;
-                color: #666;
-                font-family: 'Cinzel';
-                font-size: 0.65rem;
-                padding: 6px 12px;
-                cursor: pointer;
-            }
-
-            /* =========================================
-           6. RECORD / GALLERY / STREAKS (RESTORED THE SQUARES)
-           ========================================= */
-            .mob-grid-label-center {
-                font-size: 0.5rem;
-                color: #444;
-                letter-spacing: 3px;
-                margin-bottom: 5px;
-                text-align: center;
-                width: 100%;
-            }
-
-            .mob-streak-strip {
-                display: grid;
-                grid-template-columns: repeat(12, 1fr);
-                gap: 3px;
-                width: 70%;
-                margin-bottom: 10px;
-            }
-
-            .streak-sq {
-                height: 6px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 1px;
-            }
-
-            .streak-sq.active {
-                background: rgba(197, 160, 89, 0.6);
-                border-color: #c5a059;
-                box-shadow: 0 0 8px rgba(197, 160, 89, 0.2);
-            }
-
-            .mob-horiz-scroll {
-                display: flex;
-                flex-direction: row;
-                overflow-x: auto;
-                gap: 10px;
-                width: 100%;
-                padding-right: 20px;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-                padding-left: 10px;
-            }
-
-            .mob-horiz-scroll::-webkit-scrollbar {
-                display: none;
-            }
-
-            .mob-pyramid-stage {
-                position: relative;
-                width: 100%;
-                height: 260px;
-                margin-top: 15px;
-                perspective: 1000px;
-            }
-
-            .mob-idol {
-                position: absolute;
-                background: #000;
-                overflow: hidden;
-                transition: all 0.3s ease;
-            }
-
-            .mob-idol img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-            }
-
-            .mob-idol.center {
-                width: 160px;
-                height: 230px;
-                top: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 20;
-                border: 2px solid #c5a059;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(197, 160, 89, 0.2);
-            }
-
-            .mob-idol.side {
-                width: 130px;
-                height: 190px;
-                top: 50px;
-                left: 10%;
-                z-index: 5;
-                border: 1px solid #444;
-                filter: brightness(0.5) grayscale(50%);
-                transform: rotate(-6deg);
-            }
-
-            .mob-idol.side.right {
-                left: auto;
-                right: 10%;
-                transform: rotate(6deg);
-            }
-
-            .mob-rank-badge {
-                position: absolute;
-                bottom: -10px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #000;
-                border: 1px solid #333;
-                color: #888;
-                font-family: 'Cinzel', serif;
-                font-size: 0.6rem;
-                padding: 2px 6px;
-                z-index: 30;
-            }
-
-            .mob-rank-badge.main {
-                border-color: #c5a059;
-                color: #c5a059;
-                bottom: 10px;
-                background: rgba(0, 0, 0, 0.8);
-            }
-
-            .mob-scroll-item {
-                flex: 0 0 120px;
-                height: 160px;
-                position: relative;
-                border: 1px solid #333;
-                background: #111;
-                border-radius: 4px;
-                overflow: hidden;
-                margin-right: 10px;
-            }
-
-            .mob-horiz-scroll.small .mob-scroll-item {
-                flex: 0 0 80px;
-                height: 80px;
-                opacity: 0.6;
-            }
-
-            .mob-scroll-img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-            }
-
-            /* =========================================
-           7. HUD & LOBBY (RESTORED TOP CIRCLES)
-           ========================================= */
-            .mob-hud-row {
-                position: absolute;
-                top: 15px;
-                left: 0;
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                padding: 0 20px;
-                z-index: 10;
-            }
-
-            .hud-circle {
-                width: 45px;
-                height: 45px;
-                border-radius: 50%;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                background: #000;
-                position: relative;
-                overflow: visible;
-                box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-            }
-
-            .hud-circle img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                border-radius: 50%;
-                opacity: 0.8;
-            }
-
-            .hud-gear {
-                position: absolute;
-                bottom: -5px;
-                right: -5px;
-                font-size: 0.8rem;
-                color: #fff;
-                text-shadow: 0 0 5px #000;
-            }
-
-            .hud-status-dot {
-                position: absolute;
-                bottom: 0;
-                right: 0;
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                border: 2px solid #000;
-            }
-
-            .hud-status-dot.online {
-                background: #00ff00;
-                box-shadow: 0 0 10px #00ff00;
-            }
-
-            .hud-status-dot.offline {
-                background: #c5a059;
-                box-shadow: 0 0 5px #c5a059;
-                opacity: 0.5;
-            }
-
-            /* LOBBY / SETTINGS */
-            .lobby-card {
-                max-height: 75vh !important;
-                overflow-y: auto !important;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
-
-            .lobby-card::-webkit-scrollbar {
-                display: none;
-            }
-
-            .lobby-header {
-                margin-bottom: 25px;
-                text-align: center;
-            }
-
-            .lobby-title {
-                font-family: 'Cinzel', serif;
-                font-size: 1.4rem;
-                color: #c5a059;
-                letter-spacing: 4px;
-                border-bottom: 1px solid #333;
-                padding-bottom: 10px;
-                display: inline-block;
-            }
-
-            .lobby-subtitle {
-                font-family: 'Cinzel', serif;
-                font-size: 0.6rem;
-                color: #666;
-                margin-top: 5px;
-                letter-spacing: 2px;
-            }
-
-            .lobby-content {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-                align-items: center;
-            }
-
-            .lobby-btn {
-                background: transparent;
-                border: 1px solid #333;
-                color: #ccc;
-                font-family: 'Cinzel', serif;
-                font-size: 0.8rem;
-                padding: 12px;
-                width: 100%;
-                cursor: pointer;
-                transition: 0.3s;
-                letter-spacing: 2px;
-            }
-
-            .lobby-btn:active {
-                background: rgba(255, 255, 255, 0.05);
-                border-color: #666;
-            }
-
-            .lobby-btn.gold {
-                border-color: #c5a059;
-                color: #c5a059;
-                font-weight: 700;
-            }
-
-            .lobby-btn.close {
-                border: none;
-                color: #555;
-                font-size: 0.7rem;
-                margin-top: 5px;
-            }
-
-            .lobby-prompt {
-                font-family: 'Cinzel', serif;
-                color: white;
-                font-size: 1rem;
-                text-align: center;
-                margin-bottom: 15px;
-                line-height: 1.4;
-            }
-
-            .lobby-input {
-                background: #111;
-                border: 1px solid #444;
-                color: #c5a059;
-                font-family: 'Cinzel', serif;
-                font-size: 1rem;
-                padding: 10px;
-                width: 100%;
-                text-align: center;
-                outline: none;
-            }
-
-            .lobby-cost-area {
-                margin-top: 10px;
-                margin-bottom: 5px;
-                font-size: 0.7rem;
-                color: #666;
-                font-family: 'Orbitron';
-                letter-spacing: 1px;
-            }
-
-            .cost-val {
-                color: #c5a059;
-                font-weight: bold;
-                margin-left: 5px;
-            }
-
-            .routine-grid {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                width: 100%;
-                margin-bottom: 15px;
-            }
-
-            .routine-tile {
-                width: 100%;
-                background: rgba(255, 255, 255, 0.03);
-                border: 1px solid #333;
-                padding: 15px;
-                text-align: center;
-                font-family: 'Cinzel', serif;
-                font-size: 0.8rem;
-                color: #888;
-                cursor: pointer;
-                transition: 0.2s;
-                border-radius: 2px;
-                letter-spacing: 2px;
-            }
-
-            .routine-tile.selected {
-                background: rgba(197, 160, 89, 0.1);
-                border-color: #c5a059;
-                color: #c5a059;
-                font-weight: 700;
-            }
-
-            .routine-tile.special {
-                border-style: dashed;
-                color: #ccc;
-            }
-
-            /* =========================================
-           8. GLOBAL / COINS / OVERLAYS (RESTORED)
-           ========================================= */
-            .wallet-btn {
-                width: 100%;
-                padding: 15px;
-                background: transparent;
-                border: 1px solid #c5a059;
-                color: #c5a059;
-                font-family: 'Cinzel', serif;
-                font-weight: 700;
-                font-size: 0.9rem;
-                letter-spacing: 2px;
-                cursor: pointer;
-                box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
-            }
-
-            .coin-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-                width: 100%;
-                margin-top: 15px;
-            }
-
-            .coin-tile {
-                background: rgba(20, 20, 20, 0.9);
-                border: 1px solid #333;
-                border-radius: 4px;
-                padding: 15px 5px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 5px;
-                cursor: pointer;
-            }
-
-            .coin-amount {
-                font-family: 'Rajdhani', sans-serif;
-                font-size: 1.4rem;
-                color: #c5a059;
-                font-weight: 700;
-                line-height: 1;
-            }
-
-            .coin-price {
-                font-family: 'Cinzel', serif;
-                font-size: 0.7rem;
-                color: #888;
-            }
-
-            .hidden {
-                display: none !important;
-            }
-
-            /* 1. OVERLAY: ALIGN TO TOP (Instead of Center) */
-            .mob-reward-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.95);
-                z-index: 2147483647;
-                /* Highest Level */
-
-                /* THE ALIGNMENT FIX */
-                display: flex;
-                justify-content: center;
-                align-items: flex-start !important;
-                /* Pushes content to the top */
-                padding-top: 80px !important;
-                /* Adds space so it doesn't hit the very top edge */
-
-                backdrop-filter: blur(8px);
-                animation: fadeIn 0.3s ease;
-            }
-
-            /* 2. THE CARD: ENABLE SCROLLING (The Right Circle Fix) */
-            /* Applies to both Lobby and Queen Menu */
-            .mob-reward-card,
-            .queen-card-layout,
-            .lobby-card {
-                background: #111;
-                border: 1px solid #c5a059;
-                padding: 20px;
-                border-radius: 8px;
-                text-align: center;
-                width: 90%;
-                box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 20px;
-
-                /* THE SCROLL FIX */
-                max-height: 80vh !important;
-                /* Limits height to 80% of screen */
-                overflow-y: auto !important;
-                /* Enables vertical scrolling */
-                -webkit-overflow-scrolling: touch !important;
-                /* Smooth scroll on iPhone */
-
-                /* PREVENTS CLIPPING */
-                margin-bottom: 50px;
-            }
-
-            /* REWARDS TROPHY CASE STYLES */
-            .reward-shelf {
-                display: flex;
-                gap: 15px;
-                padding: 10px 15px;
-                width: 100%;
-                overflow-x: auto;
-                scrollbar-width: none;
-                align-items: center;
-            }
-
-            .reward-badge {
-                flex: 0 0 70px;
-                height: 70px;
-                background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-                border: 1px solid #333;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                position: relative;
-                transition: all 0.3s;
-            }
-
-            .reward-badge.shape-hex {
-                clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-                width: 70px;
-                height: 80px;
-                border: none;
-                background: #111;
-            }
-
-            .reward-badge.shape-hex::before {
-                content: '';
-                position: absolute;
-                inset: 1px;
-                background: #1a1a1a;
-                clip-path: inherit;
-                z-index: -1;
-            }
-
-            .reward-badge.shape-chip {
-                clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
-            }
-
-            .reward-badge.shape-circle {
-                border-radius: 50%;
-            }
-
-            .reward-badge.shape-diamond {
-                transform: rotate(45deg);
-                width: 55px;
-                height: 55px;
-                margin: 10px;
-            }
-
-            .reward-badge.shape-diamond .rb-inner {
-                transform: rotate(-45deg);
-            }
-
-            .rb-icon {
-                width: 24px;
-                height: 24px;
-                fill: #444;
-                margin-bottom: 5px;
-            }
-
-            .rb-label {
-                font-family: 'Orbitron';
-                font-size: 0.45rem;
-                color: #444;
-                text-transform: uppercase;
-            }
-
-            .reward-badge.unlocked .rb-icon {
-                fill: #c5a059;
-                filter: drop-shadow(0 0 5px rgba(197, 160, 89, 0.5));
-            }
-
-            .reward-badge.unlocked .rb-label {
-                color: #ccc;
-            }
-
-            .reward-badge.unlocked.shape-hex {
-                background: #c5a059;
-            }
-
-            .reward-badge.unlocked.shape-hex::before {
-                background: #111;
-            }
-
-            .reward-badge.unlocked.shape-circle {
-                border-color: #c5a059;
-            }
-
-            .reward-badge.unlocked.shape-chip {
-                border-right: 2px solid #c5a059;
-            }
-
-            .reward-badge.unlocked.shape-diamond {
-                border-color: #c5a059;
-            }
-
-            /* THE WALL (NEWS GRID) */
-            #mobNewsGrid {
-                padding-bottom: 40px;
-            }
-
-            .news-item {
-                border: 1px solid #333;
-                background: #000;
-                min-height: 150px;
-                display: flex;
-                flex-direction: column;
-            }
-
-            .news-img {
-                width: 100%;
-                height: 150px;
-                object-fit: cover;
-            }
-
-            .news-txt {
-                padding: 10px;
-                color: #888;
-                font-family: 'Cinzel';
-                font-size: 0.7rem;
-            }
-
-            /* CHAT OVERLAY STYLE (FORCED HIDDEN) */
-            #chatCard {
-                display: none !important;
-            }
-
-            .mob-chat-header {
-                display: flex;
-                align-items: center;
-                padding: 10px 15px;
-                background: #111;
-                border-bottom: 1px solid #333;
-            }
-
-            .queen-av-wrap {
-                position: relative;
-                width: 40px;
-                height: 40px;
-                margin-right: 10px;
-            }
-
-            .queen-av-img {
-                width: 100%;
-                height: 100%;
-                border-radius: 50%;
-                object-fit: cover;
-            }
-
-            .chat-meta-col {
-                display: flex;
-                flex-direction: column;
-            }
-
-            .chat-queen-name {
-                color: #fff;
-                font-family: 'Cinzel';
-                font-size: 0.9rem;
-            }
-
-            .chat-status-text {
-                color: #00ff00;
-                font-family: 'Orbitron';
-                font-size: 0.6rem;
-                letter-spacing: 1px;
-            }
-
-            .chat-footer {
-                display: flex;
-                align-items: center;
-                padding: 10px;
-                background: #111;
-                border-top: 1px solid #333;
-                gap: 10px;
-            }
-
-            .chat-input-wrapper {
-                flex: 1;
-                position: relative;
-                display: flex;
-                align-items: center;
-            }
-
-            .chat-input {
-                width: 100%;
-                background: #000;
-                border: 1px solid #333;
-                color: #fff;
-                padding: 10px 10px 10px 40px;
-                font-family: 'Cinzel';
-                outline: none;
-                border-radius: 20px;
-            }
-
-            .chat-btn-plus {
-                position: absolute;
-                left: 5px;
-                width: 30px;
-                height: 30px;
-                border-radius: 50%;
-                background: #222;
-                border: 1px solid #444;
-                color: #fff;
-                cursor: pointer;
-            }
-
-            .chat-btn-send {
-                background: #c5a059;
-                color: #000;
-                border: none;
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                font-weight: bold;
-                cursor: pointer;
+
+
+        // If still empty, stop here
+
+        if (!taskName) return;
+
+
+
+        notifyTitle = "PROTOCOL ASSIGNED";
+
+        notifyText = taskName.toUpperCase();
+
+
+
+        // Send to Wix
+
+        window.parent.postMessage({
+
+            type: "UPDATE_CMS_FIELD",
+
+            field: "routine",
+
+            value: taskName,
+
+            cost: currentActionCost,
+
+            message: "Routine set to: " + taskName
+
+        }, "*");
+
+
+
+        // Immediate UI Update
+
+        userProfile.routine = taskName; // Update memory
+
+
+
+        const btn = document.getElementById('btnDailyRoutine');
+
+        const noMsg = document.getElementById('noRoutineMsg');
+
+
+
+        if (btn) {
+
+            btn.classList.remove('hidden');
+
+            // Update button text inside the Queen Menu
+
+            const txt = document.getElementById('routineBtnText');
+
+            if (txt) txt.innerText = "SUBMIT: " + taskName.toUpperCase();
+
+        }
+
+        if (noMsg) noMsg.style.display = 'none';
+
+    }
+
+
+
+    // --- B. PHOTO LOGIC ---
+
+    else if (currentActionType === 'photo') {
+
+        const fileInput = document.getElementById('lobbyFile');
+
+        if (fileInput.files.length > 0) {
+
+            notifyTitle = "VISUALS LOGGED";
+
+            notifyText = "Uploading...";
+
+
+
+            window.parent.postMessage({
+
+                type: "PROCESS_PAYMENT",
+
+                cost: 500,
+
+                note: "Photo Change"
+
+            }, "*");
+
+
+
+            if (window.handleProfileUpload) window.handleProfileUpload(fileInput);
+
+        } else { return; }
+
+    }
+
+
+
+    // --- C. NAME LOGIC ---
+
+    else if (currentActionType === 'name') {
+
+        const text = document.getElementById('lobbyInputText').value;
+
+        if (!text) return;
+
+
+
+        notifyTitle = "IDENTITY REWRITTEN";
+
+        notifyText = text.toUpperCase();
+
+
+
+        window.parent.postMessage({
+
+            type: "UPDATE_CMS_FIELD",
+
+            field: "title_fld",
+
+            value: text,
+
+            cost: 100,
+
+            message: "Name changed to: " + text
+
+        }, "*");
+
+
+
+        // Update UI
+
+        const el = document.getElementById('mob_slaveName');
+
+        const halo = document.getElementById('mob_slaveName'); // Halo uses same ID usually
+
+        if (el) el.innerText = text;
+
+        if (halo) halo.innerText = text;
+
+        userProfile.name = text;
+
+    }
+
+
+
+    // --- D. KINKS LOGIC ---
+
+    else if (currentActionType === 'kinks') {
+
+        // Safe check
+
+        if (typeof selectedKinks === 'undefined' || selectedKinks.size === 0) return;
+
+
+
+        const kinkString = Array.from(selectedKinks).join(", ");
+
+        notifyTitle = "FILE UPDATED";
+
+        notifyText = "Kinks registered.";
+
+
+
+        window.parent.postMessage({
+
+            type: "UPDATE_CMS_FIELD",
+
+            field: "kink",
+
+            value: kinkString,
+
+            cost: currentActionCost,
+
+            message: "Kinks: " + kinkString
+
+        }, "*");
+
+    }
+
+
+
+    // --- E. LIMITS LOGIC ---
+
+    else {
+
+        const text = document.getElementById('lobbyInputText').value;
+
+        if (!text) return;
+
+
+
+        notifyTitle = "DATA APPENDED";
+
+        notifyText = "Limits updated.";
+
+
+
+        window.parent.postMessage({
+
+            type: "PURCHASE_ITEM",
+
+            itemName: currentActionType.toUpperCase() + ": " + text,
+
+            cost: currentActionCost,
+
+            messageToDom: "Limits: " + text
+
+        }, "*");
+
+    }
+
+
+
+    // FINAL: Close & Celebrate
+
+    window.closeLobby();
+
+
+
+    // Trigger the Green Notification
+
+    if (window.showSystemNotification) {
+
+        window.showSystemNotification(notifyTitle, notifyText);
+
+    }
+
+};
+
+
+
+// --- NOTIFICATION SYSTEM ---
+
+// --- NOTIFICATION SYSTEM (Green = Reward, Red = Penalty) ---
+window.showSystemNotification = function (title, detail, isPenalty = false) {
+    const overlay = document.getElementById('celebrationOverlay');
+    if (!overlay) return;
+
+    // 1. Determine Style Class
+    // If penalty, we add 'angry'. If not, just standard glass-card.
+    const containerClass = isPenalty ? "glass-card angry" : "glass-card";
+
+    // 2. Build Internal HTML based on type
+    let contentHtml = "";
+
+    if (isPenalty) {
+        // ANGRY RED LAYOUT
+        contentHtml = `
+            <div class="angry-title"> ${title}</div>
+            <div class="angry-text">${detail}</div>
+        `;
+    } else {
+        // STANDARD GREEN LAYOUT (Original)
+        contentHtml = `
+            <div style="font-family:'Orbitron'; font-size:1.2rem; color:var(--neon-green); margin-bottom:10px; letter-spacing:2px; text-shadow:0 0 20px var(--neon-green);">
+                ${title}
+            </div>
+            <div style="font-family:'Cinzel'; font-size:0.9rem; color:#fff;">
+                ${detail}
+            </div>
+        `;
+    }
+
+    // 3. Inject and Animate
+    overlay.innerHTML = `<div class="${containerClass}" style="text-align:center; padding: 30px; min-width: 280px;">${contentHtml}</div>`;
+
+    overlay.style.pointerEvents = "auto";
+    overlay.style.opacity = '1';
+
+    // 4. Hide after 3.5 seconds
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        overlay.style.pointerEvents = "none";
+    }, 3500);
+};
+
+
+
+
+window.addEventListener("message", (event) => {
+    try {
+        const data = event.data;
+
+        // 1. CHAT & RULES
+        if (data.type === "CHAT_ECHO" && data.msgObj) renderChat([data.msgObj], true);
+
+        if (data.type === 'UPDATE_RULES') {
+            const rules = data.payload || {};
+            for (let i = 1; i <= 8; i++) {
+                const el = document.getElementById('r' + i);
+                if (el && rules['rule' + i]) el.innerHTML = rules['rule' + i];
             }
         }
-    </style>
-</head>
 
-<body>
-
-    <!-- SOUNDS & INPUTS -->
-    <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
-    <audio id="coinSound" src="/audio/2019-preview1.mp3"></audio>
-    <audio id="skipSound" src="https://static.wixstatic.com/mp3/ce3e5b_3b5b34d4083847e2b123b6fd9a8551fd.mp3"></audio>
-    <audio id="sfx-buy" src="/audio/2019-preview1.mp3"></audio>
-    <audio id="sfx-deny" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3"></audio>
-
-    <input type="file" id="profileUploadInput" accept="image/*" class="hidden" onchange="handleProfileUpload(this)">
-    <input type="file" id="adminMediaInput" accept="image/*,video/*" class="hidden" onchange="handleAdminUpload(this)">
-
-    <!-- CELEBRATION OVERLAY -->
-    <div id="celebrationOverlay"
-        style="position:fixed;inset:0;pointer-events:none;z-index:2147483647;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.3s;">
-        <div class="glass-card" style="border: 2px solid var(--neon-green); text-align:center;">
-            <div
-                style="font-size:1.8rem;font-weight:900;color:var(--neon-green);text-shadow:0 0 20px var(--neon-green); font-family: 'Orbitron';">
-                TASK<br>SUBMITTED</div>
-        </div>
-    </div>
-    <!-- =======================================================
-     UNIVERSE A: DESKTOP APP (WRAPPED)
-     ======================================================= -->
-    <div id="DESKTOP_APP">
-        <div class="app-container">
-
-            <div class="layout-left">
-                <!-- HIERARCHY STAMP -->
-                <div id="subHierarchy" class="hierarchy-top">LOADING...</div>
-
-                <div class="avatar-container" onclick="document.getElementById('profileUploadInput').click()">
-                    <img id="profilePic" src="" alt="Avatar">
-                </div>
-                <div id="subName" class="identity-name">SLAVE</div>
-
-                <!-- STATS ROW -->
-                <div class="stats-stack-row">
-                    <div class="stat-item"><span class="stat-lbl">MERIT</span><span id="points"
-                            class="stat-val">0</span></div>
-                    <div class="stat-divider"></div>
-                    <div class="stat-item"><span class="stat-lbl">CAPITAL</span><span id="coins"
-                            class="stat-val">0</span></div>
-                </div>
-
-                <!-- KNEEL BUTTON (UPDATED) -->
-                <div class="kneel-sidebar-wrapper">
-                    <div id="btn" class="kneel-bar-graphic"
-                        onmousedown="if(window.handleHoldStart) window.handleHoldStart(event)"
-                        onmouseup="if(window.handleHoldEnd) window.handleHoldEnd(event)"
-                        onmouseleave="if(window.handleHoldEnd) window.handleHoldEnd(event)"
-                        ontouchstart="if(window.handleHoldStart) window.handleHoldStart(event)"
-                        ontouchend="if(window.handleHoldEnd) window.handleHoldEnd(event)">
-                        <div id="fill" class="graphic-fill"></div>
-                        <span id="txt-main" class="graphic-text">HOLD TO KNEEL</span>
-                    </div>
-                </div>
-
-                <!-- EXPANDABLE STATS -->
-                <button class="stats-toggle-btn" onclick="toggleStats()">EXPAND STATS ▾</button>
-                <div id="statsContent" class="stats-panel">
-                    <div class="progress-section">
-                        <div
-                            style="display: flex; justify-content: space-between; margin-bottom: 5px; font-family: 'Cinzel', serif; font-size: 0.7rem;">
-                            <span style="color:#666;">NEXT:</span>
-                            <span id="nextLevelName" style="color:var(--gold); font-weight:700;">-</span>
-                        </div>
-                        <div class="prog-bg">
-                            <div id="progressBar" class="prog-fill"></div>
-                        </div>
-                        <div style="text-align: center; margin-top: 5px;">
-                            <span id="pointsNeeded"
-                                style="color:#888; font-size:0.65rem; font-family:'Cinzel', serif;">0 to go</span>
-                        </div>
-                    </div>
-                    <div class="stat-line"><span>Streak</span> <strong id="statStreak">0</strong></div>
-                    <div class="stat-line"><span>Total Tasks</span> <strong id="statTotal">0</strong></div>
-                    <div class="stat-line"><span>Completed</span> <strong id="statCompleted">0</strong></div>
-                    <div class="stat-line"><span>Skipped</span> <strong id="statSkipped">0</strong></div>
-                    <div class="stat-line"><span>Total Kneeling</span> <strong id="statTotalKneels">0</strong></div>
-                    <div class="stat-footer">
-                        <div style="color:#666; font-size:0.7rem; letter-spacing:2px; margin-bottom:5px;">SLAVE SINCE
-                        </div>
-                        <strong id="slaveSinceDate" style="color:#ccc; font-size:0.9rem;">--/--/--</strong>
-                    </div>
-                </div>
-
-                <!-- NAV MENU -->
-                <div class="nav-menu">
-                    <button class="nav-btn active" onclick="switchTab('serve')">CONSOLE</button>
-                    <button class="nav-btn" onclick="switchTab('record')">SLAVE RECORD</button>
-                    <button class="nav-btn" onclick="switchTab('news')">QUEEN KARIN</button>
-                    <button class="nav-btn" onclick="switchTab('vault')">VAULT</button>
-                    <button class="nav-btn" onclick="switchTab('protocol')">PROTOCOL</button>
-                    <button class="nav-btn" onclick="switchTab('buy')">EXCHEQUER</button>
-                </div>
-            </div>
-
-            <!-- RIGHT SIDE -->
-            <div class="layout-right">
-
-                <!-- DESKTOP HEADER -->
-                <div class="right-header">
-                    <div class="rh-profile-group">
-                        <div class="rh-avatar-wrapper">
-                            <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png"
-                                alt="Queen" class="rh-avatar">
-                            <div id="domStatusDot" class="rh-status-dot online"></div>
-                        </div>
-                        <div class="rh-text-col">
-                            <div class="rh-name">QUEEN KARIN</div>
-                            <div id="chatStatusBadge" class="rh-status-text">ONLINE</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="content-stage">
-                    <!-- 1. CONSOLE (TASK RIBBON) -->
-                    <div id="viewServingTop" class="view-wrapper"
-                        style="display: flex; flex-direction: column; height: 100%;">
-
-                        <!-- TASK CARD -->
-                        <div id="taskCard" class="glass-card task-ribbon"
-                            style="margin: 20px 20px 0 20px; position: relative; z-index: 100; justify-content: space-between;">
-                            <div class="ribbon-left"
-                                style="width: 30%; border-right: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                                <div class="ribbon-label">CURRENT STATUS</div>
-                                <div id="mainStatusText" class="status-text-lg status-unproductive">UNPRODUCTIVE</div>
-                            </div>
-                            <div class="ribbon-center"
-                                style="width: 40%; border: none; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                                <div id="idleMessage" class="ribbon-status" style="opacity: 0.5; font-style: italic;">
-                                    "Awaiting Royal Decree..."</div>
-                                <div id="activeTimerRow" class="hidden"
-                                    style="display: flex; flex-direction: column; align-items: center;">
-                                    <div class="timer-box-wrapper">
-                                        <div id="timerH" class="t-box">00</div>
-                                        <div class="t-sep">:</div>
-                                        <div id="timerM" class="t-box">00</div>
-                                        <div class="t-sep">:</div>
-                                        <div id="timerS" class="t-box">00</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ribbon-right"
-                                style="width: 30%; display: flex; justify-content: center; align-items: center;">
-                                <div id="mainButtonsArea" style="width: 100%; padding: 0 10px;">
-                                    <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn"
-                                        style="width: 100%;">REQUEST TASK</button>
-                                </div>
-                                <div id="uploadBtnContainer" class="hidden"
-                                    style="width: 100%; display: flex; gap: 10px; justify-content: center; align-items: center; padding: 0 10px;">
-                                    <button onclick="window.toggleTaskDetails(null)" class="btn-ghost">SEE TASK</button>
-                                    <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden"
-                                        onchange="window.handleUploadStart(this)">
-                                    <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()"
-                                        class="action-btn btn-upload">UPLOAD</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- DRAWER -->
-                        <div id="taskDetailPanel" class="task-detail-panel">
-                            <div class="detail-content">
-                                <div
-                                    style="color: #666; font-size: 0.7rem; margin-bottom: 10px; font-family: 'Cinzel';">
-                                    CURRENT ORDERS</div>
-                                <h2 id="readyText" class="drawer-task-text">LOADING...</h2>
-                                <div
-                                    style="border-top: 1px solid #333; padding-top: 20px; width: 100%; display: flex; justify-content: center; gap: 20px;">
-                                    <button onclick="window.toggleTaskDetails(false)" class="text-btn">▲ HIDE</button>
-                                    <button id="btnSkip" onclick="window.cancelPendingTask()"
-                                        class="btn-skip-small">SKIP TASK</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- CHAT CONTAINER -->
-                        <div id="chatCard" class="chat-container"
-                            style="flex-grow: 1; overflow: hidden; margin-top: 20px;">
-
-                            <!-- MOBILE CHAT HEADER (Hidden on Desktop via CSS) -->
-                            <div class="mob-chat-header">
-                                <button class="chat-back" onclick="window.toggleMobileView('home')">‹</button>
-                                <div class="chat-queen-profile">
-                                    <div class="queen-av-wrap">
-                                        <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png"
-                                            class="queen-av-img">
-                                        <div id="mobChatOnlineDot" class="status-dot"></div>
-                                    </div>
-                                    <div class="chat-meta-col">
-                                        <div class="chat-queen-name">QUEEN KARIN</div>
-                                        <div id="mobChatStatusText" class="chat-status-text">CONNECTING...</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- [FIX] SYSTEM TICKER (Added Here) -->
-                            <div id="systemTicker" class="system-ticker hidden">SYSTEM ONLINE</div>
-
-                            <!-- SCROLLING MESSAGES -->
-                            <div id="chatBox" class="chat-body-frame">
-                                <div id="kneelRewardOverlay" class="hidden overlay-center">
-                                    <div style="text-align: center;">
-                                        <h2 style="color:white; margin-bottom: 20px; font-family:'Orbitron';">DEVOTION
-                                            RECOGNIZED</h2>
-                                        <div style="display:flex; gap:10px;">
-                                            <button onclick="claimKneelReward('coins')"
-                                                class="action-btn">COINS</button>
-                                            <button onclick="claimKneelReward('points')"
-                                                class="action-btn">POINTS</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="chatMediaOverlay" class="hidden overlay-center">
-                                    <div id="mediaOverlayClose" onclick="closeChatPreview()"
-                                        style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer;">
-                                        X</div>
-                                    <div id="chatMediaOverlayContent"></div>
-                                </div>
-                                <div id="tributeHuntOverlay" class="hidden overlay-center"
-                                    style="position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 50; flex-direction: column; padding: 20px;">
-
-                                    <!-- HEADER -->
-                                    <div
-                                        style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
-                                        <span style="font-family:'Cinzel'; color:#c5a059;">TRIBUTE STORE</span>
-                                        <button onclick="toggleTributeHunt()"
-                                            style="color: white; background:none; border:none; cursor:pointer; font-family:'Orbitron'; font-size:1.2rem;">X</button>
-                                    </div>
-
-                                    <!-- THE GRID (Where items appear) -->
-                                    <div id="huntStoreGrid" class="store-grid"
-                                        style="width: 100%; overflow-y: auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
-                                        <!-- Javascript will fill this -->
-                                    </div>
-
-                                </div>
-                                <div id="chatContent" class="chat-area"></div>
-                            </div>
-
-                            <!-- INPUT AREA -->
-                            <div class="chat-footer">
-                                <!-- WRAPPER: Holds Input + The Plus Button inside it -->
-                                <div class="chat-input-wrapper">
-                                    <!-- 1. RANK GATED MEDIA BUTTON (Now Circular & Absolute) -->
-                                    <button id="btnMediaPlus" class="chat-btn-plus"
-                                        onclick="window.handleMediaPlus()">+</button>
-
-                                    <!-- 2. TEXT INPUT (Padding Left added via CSS) -->
-                                    <input type="text" id="chatMsgInput" class="chat-input" placeholder="Type..."
-                                        onkeypress="handleChatKey(event)">
-                                </div>
-
-                                <!-- 3. FILE INPUT (Hidden, dynamic accept attribute) -->
-                                <input type="file" id="chatMediaInput" class="hidden"
-                                    onchange="window.handleAdminUpload(this)">
-
-                                <!-- 4. TRIBUTE (Desktop Only) -->
-                                <button id="deskTributeBtn" class="chat-btn-tribute desktop-only"
-                                    onclick="toggleTributeHunt()">🎁</button>
-
-                                <!-- 5. SEND ARROW -->
-                                <button class="chat-btn-send" onclick="sendChatMessage()">></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- OTHER VIEWS (EXCHEQUER, NEWS, VAULT, ETC) -->
-                    <div id="viewBuy" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                        <div class="glass-card" style="margin-bottom: 20px;">
-                            <h2 style="text-align: center; color: var(--neon-yellow); font-family:'Cinzel';">EXCHEQUER
-                            </h2>
-                        </div>
-                        <div class="store-grid">
-                            <div class="store-item">
-                                <div>1K</div><button class="si-btn" onclick="buyRealCoins(1000)">€10.00</button>
-                            </div>
-                            <div class="store-item">
-                                <div>5.5K</div><button class="si-btn" onclick="buyRealCoins(5500)">€50.00</button>
-                            </div>
-                            <div class="store-item">
-                                <div>12K</div><button class="si-btn" onclick="buyRealCoins(12000)">€100.00</button>
-                            </div>
-                            <div class="store-item">
-                                <div>30K</div><button class="si-btn" onclick="buyRealCoins(30000)">€250.00</button>
-                            </div>
-                            <div class="store-item">
-                                <div>70K</div><button class="si-btn" onclick="buyRealCoins(70000)">€500.00</button>
-                            </div>
-                            <div class="store-item">
-                                <div>150K</div><button class="si-btn" onclick="buyRealCoins(150000)">€1000.00</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- HISTORY SECTION -->
-                    <div id="historySection" class="view-wrapper hidden"
-                        style="height: 100%; display: flex; flex-direction: column; overflow: hidden; background: #020202;">
-                        <!-- ALTAR -->
-                        <div class="trilogy-section section-altar triptych-stage">
-                            <div class="altar-halo"></div>
-                            <div class="altar-card side-card left-offering" id="altarSlot2" style="display:none;">
-                                <div class="gold-bar bar-top"></div>
-                                <div class="inner-hairline"></div><img src="" class="altar-img" id="imgSlot2">
-                                <div class="gold-bar bar-bottom"></div>
-                                <div class="altar-plaque" id="scoreSlot2"></div>
-                            </div>
-                            <div class="altar-card side-card right-offering" id="altarSlot3" style="display:none;">
-                                <div class="gold-bar bar-top"></div>
-                                <div class="inner-hairline"></div><img src="" class="altar-img" id="imgSlot3">
-                                <div class="gold-bar bar-bottom"></div>
-                                <div class="altar-plaque" id="scoreSlot3"></div>
-                            </div>
-                            <div class="altar-card center-idol" id="altarSlot1" style="display:none;">
-                                <div class="gold-bar bar-top"></div>
-                                <div class="inner-hairline"></div><img src="" class="altar-img" id="imgSlot1">
-                                <div class="gold-bar bar-bottom"></div>
-                                <div class="reflection-mask"><img src="" class="reflect-img" id="reflectSlot1"></div>
-                                <div class="altar-plaque main-plaque" id="scoreSlot1"></div>
-                            </div>
-                        </div>
-                        <!-- ARCHIVE (ACCEPTED) -->
-                        <div class="trilogy-section section-archive">
-                            <div class="trilogy-label label-archive" style="color:#00ff00;">ACCEPTED PROTOCOLS</div>
-                            <div id="gridOkay" class="horizontal-scroll-track archive-track"
-                                style="display:flex; overflow-x:auto; height:100%; align-items:center; padding:0 20px;">
-                            </div>
-                        </div>
-                        <!-- PENDING (NEW) -->
-                        <div class="trilogy-section section-pending">
-                            <div class="trilogy-label label-pending" style="color:#c5a059;">PENDING REVIEW</div>
-                            <div id="gridPending" class="horizontal-scroll-track pending-track"
-                                style="display:flex; overflow-x:auto; height:100%; align-items:center; padding:0 20px;">
-                            </div>
-                        </div>
-                        <!-- HEAP (DENIED) -->
-                        <div class="trilogy-section section-heap">
-                            <div class="trilogy-label label-heap" style="color:#ff003c;">DENIED / FAILED</div>
-                            <div id="gridFailed" class="horizontal-scroll-track heap-track"
-                                style="display:flex; overflow-x:auto; height:100%; align-items:center; padding:0 20px;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- NEWS, VAULT, PROTOCOL -->
-                    <div id="viewNews" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                        <div class="glass-card" style="margin-bottom: 20px; text-align: center;">
-                            <h2 style="font-family:'Cinzel';">QUEEN KARIN</h2>
-                        </div>
-                        <div id="newsGrid" class="gallery-grid"></div>
-                    </div>
-                    <div id="viewVault" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                        <div class="glass-card" style="margin-bottom: 20px; text-align: center;">
-                            <h2 style="font-family:'Cinzel';">VAULT</h2>
-                        </div>
-                        <div id="vaultGrid" class="gallery-grid"></div>
-                    </div>
-                    <div id="viewProtocol" class="view-wrapper hidden" style="padding: 20px; overflow-y: auto;">
-                        <div class="glass-card" style="margin-bottom: 20px; text-align: center;">
-                            <h2 style="font-family:'Cinzel';">PROTOCOL</h2>
-                        </div>
-                        <div style="color: #ccc; text-align: center; font-family:'Cinzel';">Obedience is the only
-                            currency.</div>
-                    </div>
-
-                    <div id="viewRewards" class="hidden"></div>
-                    <div id="viewHierarchy" class="hidden"></div>
-                    <div id="viewSession" class="hidden"></div>
-
-                    <!-- MODAL -->
-                    <div id="glassModal" class="glass-modal">
-                        <div id="modalMediaContainer" class="modal-bg-photo"></div>
-                        <div id="modalGlassOverlay" class="modal-glass-overlay">
-                            <div id="modalCloseX" onclick="closeModal(null)"
-                                style="position:absolute; top:20px; right:20px; font-size:2rem; cursor:pointer; color:white; z-index:110;">
-                                ×</div>
-                            <div class="theater-content dossier-layout">
-                                <div class="dossier-sidebar">
-                                    <div class="dossier-block">
-                                        <div class="dossier-label">SYSTEM VERDICT</div>
-                                        <div class="stamp-container"><img id="modalStatusSticker" src=""
-                                                class="m-status-sticker-lg"></div>
-                                    </div>
-                                    <div class="dossier-block">
-                                        <div class="dossier-label">MERIT ACQUIRED</div>
-                                        <div class="reward-container">
-                                            <div id="modalPoints" class="m-points-lg">+0</div>
-                                            <div id="modalSticker"></div>
-                                        </div>
-                                    </div>
-                                    <div id="modalFeedbackView" class="sub-view">
-                                        <div class="dossier-label">QUEEN'S FEEDBACK</div>
-                                        <div id="modalFeedbackText" class="theater-text-box"></div>
-                                    </div>
-                                    <div id="modalTaskView" class="sub-view hidden">
-                                        <div class="dossier-label">ORIGINAL ASSIGNMENT</div>
-                                        <div id="modalOrderText" class="theater-text-box"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer-menu dossier-footer">
-                                <button onclick="event.stopPropagation(); toggleHistoryView('feedback')"
-                                    class="history-action-btn">FEEDBACK</button>
-                                <button onclick="event.stopPropagation(); toggleHistoryView('task')"
-                                    class="history-action-btn">THE TASK</button>
-                                <button onclick="event.stopPropagation(); toggleHistoryView('proof')"
-                                    class="history-action-btn gold-border">SEE PROOF</button>
-                                <button onclick="event.stopPropagation(); toggleHistoryView('info')"
-                                    class="history-action-btn">STATUS</button>
-                                <button onclick="event.stopPropagation(); closeModal(null)"
-                                    class="history-action-btn btn-close-red" style="grid-column: span 2;">CLOSE
-                                    ARCHIVE</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> <!-- END DESKTOP_APP -->
-
-    <!-- 🟢 MOBILE UNIVERSE (FULL CODE - REORDERED) -->
-    <div id="MOBILE_APP" style="display:none;">
-
-        <!-- =======================================================
-         DASHBOARD CONTAINER
-         ======================================================= -->
-        <div id="viewMobileHome"
-            style="position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; display: block; padding: 0; z-index: 1; background: transparent;">
-
-            <div class="mob-hud-row">
-                <div class="hud-circle slave" onclick="openLobby()">
-                    <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png">
-                    <div class="hud-gear">⚙</div>
-                </div>
-                <div class="hud-circle queen" onclick="openQueenMenu()">
-                    <img id="hudSlavePic" src="">
-                    <div id="hudDomStatus" class="hud-status-dot offline"></div>
-                </div>
-            </div>
-
-
-
-            <!-- === POPUP OVERLAYS (ALL 5 RESTORED) === -->
-
-            <!-- 1. LOBBY -->
-            <div id="lobbyOverlay" class="mob-reward-overlay hidden">
-                <div class="mob-reward-card lobby-card">
-                    <div id="lobbyMenu" class="lobby-content">
-                        <button class="lobby-btn" onclick="showLobbyAction('name')">ADD YOUR NAME</button>
-                        <button class="lobby-btn" onclick="showLobbyAction('photo')">UPLOAD PHOTO</button>
-                        <button class="lobby-btn" onclick="showLobbyAction('routine')">GET ROUTINE</button>
-                        <button class="lobby-btn" onclick="showLobbyAction('kinks')">ADD KINKS</button>
-                        <button class="lobby-btn" onclick="showLobbyAction('limits')">ADD LIMITS</button>
-                        <div class="lobby-divider"></div>
-                        <button class="lobby-btn close" onclick="closeLobby()">CLOSE</button>
-                    </div>
-                    <div id="lobbyActionView" class="lobby-content hidden">
-                        <div id="lobbyPrompt" class="lobby-prompt">...</div>
-                        <input type="text" id="lobbyInputText" class="lobby-input hidden" placeholder="Type here...">
-                        <button id="lobbyInputFileBtn" class="lobby-file-btn hidden"
-                            onclick="document.getElementById('lobbyFile').click()">PICK PHOTO</button>
-                        <input type="file" id="lobbyFile" hidden
-                            onchange="document.getElementById('lobbyInputFileBtn').innerText = 'PHOTO UPLOADED'">
-                        <div id="routineSelectionArea" class="hidden"
-                            style="width:100%; display:flex; flex-direction:column; gap:10px;">
-                            <div class="routine-grid">
-                                <div class="routine-tile" onclick="selectRoutineItem(this, 'Morning Kneel')">Morning
-                                    Kneel</div>
-                                <div class="routine-tile" onclick="selectRoutineItem(this, 'Chastity Check')">Chastity
-                                    Check</div>
-                                <div class="routine-tile" onclick="selectRoutineItem(this, 'Cleanliness Check')">
-                                    Cleanliness Check</div>
-                                <div class="routine-tile special" onclick="selectRoutineItem(this, 'custom')">CREATE OWN
-                                    (+1000)</div>
-                            </div>
-                            <input type="text" id="routineCustomInput" class="lobby-input hidden"
-                                placeholder="Describe..." style="margin-top:10px;">
-                        </div>
-                        <div id="kinkSelectionArea" class="hidden" style="width:100%;">
-                            <div id="kinkGrid" class="routine-grid"></div>
-                        </div>
-                        <div class="lobby-cost-area"><span class="cost-lbl">COST:</span><span id="lobbyCostDisplay"
-                                class="cost-val">0</span></div>
-                        <button id="btnLobbyConfirm" class="lobby-btn gold"
-                            onclick="confirmLobbyAction()">SUBMIT</button>
-                        <button class="lobby-btn close" onclick="backToLobbyMenu()">BACK</button>
-                    </div>
-                </div>
-            </div>
-
-
-
-            <!-- 3. POVERTY -->
-            <div id="povertyOverlay" class="mob-reward-overlay hidden">
-                <div class="mob-reward-card" style="border-color: #ff003c; box-shadow: 0 0 30px rgba(255, 0, 60, 0.2);">
-                    <div class="mob-hex-wrap small-reward" style="background: linear-gradient(135deg, #ff003c, #000);">
-                        <div class="mob-rank-stamp" style="right: auto; left: -5px; color: #fff; border-color: #fff;">
-                            DENIED</div>
-                    </div>
-                    <h2 class="mob-reward-title" style="color:#ff003c;">INSUFFICIENT CAPITAL</h2>
-                    <div id="povertyInsult"
-                        style="font-family:'Cinzel'; color:#ccc; font-size:0.85rem; line-height:1.4; padding:0 10px;">
-                        "You cannot afford my attention."</div>
-                    <div class="mob-reward-actions" style="margin-top:10px;">
-                        <button onclick="goToExchequer()" class="mob-action-btn"
-                            style="border-color: #ff003c; color: #ff003c;">BOOST WALLET</button>
-                        <button onclick="closePoverty()" class="mob-action-btn"
-                            style="border-color: #444; color: #888;">APOLOGIZE & RETURN</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. KNEEL REWARD (RESTORED) -->
-            <div id="mobKneelReward" class="mob-reward-overlay hidden">
-                <div class="mob-reward-card">
-                    <div class="mob-hex-wrap small-reward">
-                        <div class="mob-rank-stamp" style="right: auto; left: -5px; color: #fff; border-color: #fff;">
-                            AUTHORIZED</div>
-                    </div>
-                    <h2 class="mob-reward-title" style="color: #c5a059; font-family: 'Cinzel'; letter-spacing: 2px;">
-                        DEVOTION RECOGNIZED</h2>
-                    <div class="mob-reward-actions"
-                        style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                        <button onclick="window.claimKneelReward('coins')" class="mob-action-btn"
-                            style="border-color: #ffd700; color: #ffd700;">CLAIM COINS</button>
-                        <button onclick="window.claimKneelReward('points')" class="mob-action-btn"
-                            style="border-color: #fff; color: #fff;">CLAIM MERIT</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 5. TROPHY DETAILS -->
-            <div id="rewardCardOverlay" class="mob-reward-overlay hidden" onclick="closeRewardCard()">
-                <div class="mob-reward-card" onclick="event.stopPropagation()">
-                    <div class="rc-header">
-                        <div id="rcIcon" class="rc-icon-large"></div>
-                        <div class="rc-meta">
-                            <div id="rcTitle" class="rc-title">TITLE</div>
-                            <div id="rcStatus" class="rc-status">LOCKED</div>
-                        </div>
-                    </div>
-                    <div id="rcQuote" class="rc-quote">...</div>
-                    <div class="rc-progress-wrap">
-                        <div class="rc-progress-labels"><span id="rcCurrent">0</span><span id="rcTarget">/ 100</span>
-                        </div>
-                        <div class="rc-track">
-                            <div id="rcFill" class="rc-fill"></div>
-                        </div>
-                    </div>
-                    <button class="mob-action-btn" onclick="closeRewardCard()">ACKNOWLEDGE</button>
-                </div>
-            </div>
-
-            <!-- *** THE MAIN SCROLL *** -->
-            <div id="mobHomeScroll"
-                style="width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 5px 10px 5px; box-sizing: border-box;">
-
-                <!-- 1. TOP BLOCK (HALO + KNEEL) -->
-                <div style="width:100%; display:flex; flex-direction:column; align-items:center;">
-                    <div class="halo-section">
-                        <div class="halo-ring">
-                            <div id="mob_slaveName" class="halo-name">SLAVE</div>
-                            <div id="mob_rankStamp" class="halo-rank">INITIATE</div>
-                            <div class="mob-section-wrapper" style="width:100%;">
-                                <div class="mob-grid-label-center">DAILY PROGRESS</div>
-                                <div id="mob_streakGrid" class="mob-streak-strip"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Stats Card -->
-                    <div style="width:100%; display:flex; flex-direction:column; align-items:center; z-index:3;">
-                        <div class="halo-stats-card">
-                            <div class="h-stat"><span class="h-val" id="mobPoints">0</span><span
-                                    class="h-lbl">MERIT</span></div>
-                            <div class="h-divider"></div>
-                            <div class="h-stat"><span class="h-val" id="mobCoins">0</span><span class="h-lbl">NET</span>
-                            </div>
-                        </div>
-
-                        <div class="mob-stats-toggle-btn" onclick="toggleMobileStats()">
-                            SLAVE STATS <span id="mobStatsArrow">▼</span>
-                        </div>
-
-                        <div id="mobStatsContent" class="mob-internal-drawer">
-                            <div class="drawer-row"><span class="d-lbl">CURRENT STREAK</span><span class="d-val"
-                                    id="mobStreak">0</span></div>
-                            <div class="drawer-row"><span class="d-lbl">TOTAL SERVED</span><span class="d-val"
-                                    id="mobTotal">0</span></div>
-                            <div class="drawer-row"><span class="d-lbl">KNEEL COUNT</span><span class="d-val"
-                                    id="mobKneels">0</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Kneel Button -->
-                    <div class="halo-stack" style="padding: 0 20px; width:100%; margin-top:15px; margin-bottom: 30px;">
-                        <div class="mob-kneel-bar mob-kneel-zone"
-                            onmousedown="if(window.handleHoldStart) window.handleHoldStart(event)"
-                            onmouseup="if(window.handleHoldEnd) window.handleHoldEnd(event)"
-                            onmouseleave="if(window.handleHoldEnd) window.handleHoldEnd(event)"
-                            ontouchstart="if(window.handleHoldStart) window.handleHoldStart(event)"
-                            ontouchend="if(window.handleHoldEnd) window.handleHoldEnd(event)">
-                            <div id="mob_kneelFill" class="mob-bar-fill"></div>
-                            <div class="mob-bar-content">
-                                <span class="kneel-icon-sm">◈</span>
-                                <span id="mob_kneelText" class="kneel-text kneel-label">HOLD TO KNEEL</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CHAT SECTION: HEADER -> TICKER -> TOGGLE -->
-                <div id="mobChatSection" style="
-                width: 100%;
-                margin: 0;
-                background: #000;
-                border-top: 1px solid #333;
-                border-bottom: 1px solid #333;
-                display: flex;
-                flex-direction: column;
-            ">
-
-                    <!-- 1. HEADER (Static - Always Visible) -->
-                    <div style="
-                    padding: 10px 20px;
-                    display: flex; align-items: center; gap: 15px;
-                    background: linear-gradient(180deg, #111 0%, #050505 100%);
-                ">
-                        <div style="position: relative; width: 45px; height: 45px;">
-                            <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png"
-                                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #c5a059;">
-                            <div id="mobChatOnlineDot" class="status-dot online"
-                                style="position: absolute; bottom: 0; right: 0;"></div>
-                        </div>
-                        <div style="display: flex; flex-direction: column;">
-                            <div style="font-family: 'Cinzel'; font-weight: 700; font-size: 1rem; color: #fff;">QUEEN
-                                KARIN</div>
-                            <div id="mobChatStatusText"
-                                style="font-family: 'Orbitron'; font-size: 0.55rem; color: #888;">ONLINE</div>
-                        </div>
-                    </div>
-
-                    <!-- 2. SERVICE MESSAGE (Static - Always Visible) -->
-                    <!-- Moved OUT of the hidden panel so it sits between Header and Trigger -->
-                    <div id="mob_systemTicker" class="system-ticker" style="
-                    width: 100%;
-                    padding: 6px 0;
-                    background: #080808;
-                    border-top: 1px solid #222;
-                    border-bottom: 1px solid #222;
-                    color: #c5a059;
-                    font-family: 'Orbitron';
-                    font-size: 0.6rem;
-                    text-align: center;
-                    letter-spacing: 2px;
-                ">SYSTEM ONLINE</div>
-
-                    <!-- 3. THE SWAP ZONE (Button vs Chat) -->
-
-                    <!-- A. THE BUTTON (Default View) -->
-                    <div id="btnEnterChatPanel" onclick="window.toggleMobileChat(true)" style="
-                    width: 100%;
-                    padding: 12px;
-                    text-align: center;
-                    background: #000;
-                    color: #666;
-                    font-family: 'Orbitron';
-                    font-size: 0.7rem;
-                    letter-spacing: 3px;
-                    cursor: pointer;
-                    transition: 0.2s;
-                ">
-                        ▼ ENTER CHAT
-                    </div>
-
-                    <!-- B. THE CHAT BOX (Hidden View) -->
-                    <div id="inlineChatPanel" class="hidden" style="
-                    width: 100%; height: 450px; background: #050505;
-                    display: flex; flex-direction: column;
-                    position: relative;
-                ">
-                        <!-- Messages Area -->
-                        <div id="mob_chatBox" class="chat-body-frame" style="
-                        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                        padding-bottom: 70px; overflow-y: auto; -webkit-overflow-scrolling: touch;
-                    ">
-                            <!-- Tribute Overlay (Inside Chat) -->
-                            <div id="tributeHuntOverlay" class="hidden overlay-center"
-                                style="position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 50; flex-direction: column; padding: 20px;">
-                                <div
-                                    style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
-                                    <span style="font-family:'Cinzel'; color:#c5a059;">TRIBUTE STORE</span>
-                                    <button onclick="toggleTributeHunt()"
-                                        style="color: white; background:none; border:none; cursor:pointer; font-family:'Orbitron'; font-size:1.2rem;">X</button>
-                                </div>
-                                <div id="huntStoreGrid" class="store-grid"
-                                    style="width: 100%; overflow-y: auto; display:grid; grid-template-columns: repeat(3, 1fr); gap:5px;">
-                                </div>
-                            </div>
-
-                            <div id="mob_chatContent" class="chat-area"></div>
-                        </div>
-
-                        <!-- Close Bar (Optional, to collapse it back) -->
-                        <div onclick="window.toggleMobileChat(false)" style="
-                        position: absolute; top: 0; right: 10px; z-index: 25;
-                        color: #333; font-size: 1.5rem; cursor: pointer;
-                    ">×</div>
-
-                        <!-- Input Footer -->
-                        <div class="chat-footer"
-                            style="position: absolute; bottom: 0; width: 100%; height: 65px; z-index: 20; background:#080808; border-top: 1px solid #222;">
-                            <div class="chat-input-wrapper">
-                                <button id="btnMediaPlus" class="chat-btn-plus"
-                                    onclick="window.handleMediaPlus()">+</button>
-                                <input type="text" id="mob_chatMsgInput" class="chat-input" placeholder="Transmit..."
-                                    onkeypress="handleChatKey(event)">
-                            </div>
-                            <button class="chat-btn-tribute" onclick="window.toggleTributeHunt()">🎁</button>
-                            <button class="chat-btn-send" onclick="sendChatMessage()">></button>
-                            <input type="file" id="chatMediaInput" class="hidden"
-                                onchange="window.handleAdminUpload(this)">
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- 5. CURRENT STATUS (LABOR CARD - FIXED TEXT RENDERING) -->
-                <div style="width:100%;">
-                    <div class="duty-label">CURRENT STATUS</div>
-                    <div class="luxury-card" style="padding: 15px 5px;">
-
-                        <!-- IDLE STATE -->
-                        <div id="qm_TaskIdle" class="hidden" style="text-align:center;">
-                            <div class="txt-status-red" style="margin-bottom:10px;">UNPRODUCTIVE</div>
-                            <button class="lobby-btn" style="width:100%; border-color:#c5a059; color:#c5a059;"
-                                onclick="window.mobileRequestTask()">
-                                REQUEST TASK
-                            </button>
-                        </div>
-
-                        <!-- WORKING STATE -->
-                        <div id="qm_TaskActive" class="hidden" style="text-align:center;">
-                            <div class="txt-status-green" style="margin-bottom:5px;">WORKING</div>
-
-                            <!-- 
-                           TASK TEXT FIX:
-                           Added 'flex-direction: column;' 
-                           This stops the text from splitting into side-by-side fields.
-                        -->
-                            <div id="mobTaskText" style="
-                            margin-bottom:10px; min-height:40px; 
-                            display:flex; 
-                            flex-direction: column; /* <--- THE FIX */
-                            align-items:center; justify-content:center; 
-                            text-align:center; line-height:1.3;
-                            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
-                        ">
-                                LOADING ORDER...
-                            </div>
-
-                            <!-- TIMER -->
-                            <div class="card-timer-row">
-                                <div id="qm_timerH" class="card-t-box">00</div>:
-                                <div id="qm_timerM" class="card-t-box">00</div>:
-                                <div id="qm_timerS" class="card-t-box">00</div>
-                            </div>
-
-                            <!-- ACTIONS -->
-                            <div style="display:flex; gap:5px; margin-top:10px;">
-                                <button id="mobBtnUpload" class="btn-upload-sm" style="flex:1;"
-                                    onclick="document.getElementById('evidenceInputMob').click()">UPLOAD</button>
-                                <input type="file" id="evidenceInputMob" hidden
-                                    onchange="window.mobileUploadEvidence(this)">
-                                <button class="btn-skip-sm" style="flex:1;" onclick="window.mobileSkipTask()">SKIP
-                                    (-300)</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <!-- 4. THE ALTAR (PYRAMID) -->
-                <div style="width:100%; margin-top: 20px;"
-                    onclick="document.getElementById('altarHistoryPanel').classList.toggle('hidden')">
-                    <div class="duty-label">THE ALTAR</div>
-                    <div class="mob-pyramid-stage" style="height: 240px; cursor:pointer;">
-                        <div class="mob-idol side"><img id="mobRec_Slot2" src="">
-                            <div class="mob-rank-badge">II</div>
-                        </div>
-                        <div class="mob-idol side right"><img id="mobRec_Slot3" src="">
-                            <div class="mob-rank-badge">III</div>
-                        </div>
-                        <div class="mob-idol center"><img id="mobRec_Slot1" src="">
-                            <div class="mob-rank-badge main">I</div>
-                        </div>
-                    </div>
-                    <div
-                        style="text-align:center; font-family:'Cinzel'; font-size:0.6rem; color:#666; margin-top:-10px;">
-                        TAP TO REVEAL DATABASE</div>
-                </div>
-
-                <div id="altarHistoryPanel" class="hidden" style="width:100%; animation:fadeIn 0.5s;">
-                    <div class="mob-grid-label-center"
-                        style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ACCEPTED PROTOCOLS
-                    </div>
-                    <div id="mobRec_Grid" class="mob-horiz-scroll"></div>
-                    <div class="mob-grid-label-center"
-                        style="text-align: left; padding-left: 10px; color: #ff003c; margin-top: 15px;">FAILED / DENIED
-                    </div>
-                    <div id="mobRec_Heap" class="mob-horiz-scroll small"></div>
-                </div>
-
-                <!-- 5. QUEEN'S WALL (Simple Horizontal Scroll) -->
-                <div style="width:100%; margin-top: 20px;">
-                    <div class="duty-label">QUEEN'S WALL</div>
-
-                    <!-- The Scroll Track (Visible Immediately) -->
-                    <div id="qWall_ScrollTrack" class="mob-horiz-scroll"
-                        style="margin-top: 15px; padding-bottom: 10px; min-height: 100px;">
-                        <!-- Javascript will fill this with images -->
-                        <div style="color:#333; font-size:0.7rem; padding:20px;">LOADING FEED...</div>
-                    </div>
-                </div>
-
-                <!-- 6. SERVICE RECORD (SPLIT LAYOUT) -->
-                <div style="width:100%; margin-top: 20px;">
-
-                    <div class="duty-label">SLAVE RECORDS</div>
-
-                    <!-- PART A: DAILY DISCIPLINE (Stays Visible) -->
-                    <div style="width:100%; margin-bottom: 20px;">
-                        <div class="duty-label" style="color:#c5a059; border-color:rgba(197, 160, 89, 0.3);">DAILY
-                            DISCIPLINE</div>
-
-                        <div style="display:flex; gap:15px; align-items:center;">
-                            <!-- THE COUNTER -->
-                            <div
-                                style="flex: 0 0 90px; height: 90px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid #c5a059; background:linear-gradient(180deg, #1a1a1a 0%, #000 100%); border-radius:4px; box-shadow: 0 0 15px rgba(197, 160, 89, 0.1);">
-                                <div id="dispStreakVal"
-                                    style="font-family:'Orbitron'; font-size:2rem; color:#c5a059; line-height:1; text-shadow:0 0 10px rgba(197, 160, 89, 0.3);">
-                                    0</div>
-                                <div
-                                    style="font-family:'Cinzel'; font-size:0.55rem; color:#888; margin-top:5px; letter-spacing:2px;">
-                                    STREAK</div>
-                            </div>
-
-                            <!-- THE PROOF -->
-                            <div id="shelfRoutine" class="mob-horiz-scroll"
-                                style="flex:1; height:90px; align-items:center;">
-                                <div style="color:#444; font-size:0.6rem; padding:10px; font-family:'Cinzel';">AWAITING
-                                    PROOF</div>
-                            </div>
-                        </div>
-
-                        <div
-                            style="text-align:center; font-family:'Cinzel'; font-size:0.6rem; color:#666; margin-top:5px; letter-spacing:1px;">
-                            PERSONAL BEST: <span id="dispBestStreak" style="color:#888;">0</span> DAYS
-                        </div>
-                    </div>
-
-                    <!-- PART B: THE TROPHY JAIL (Modal covers ONLY this part) -->
-                    <div id="trophySectionJail"
-                        style="position: relative; width: 100%; min-height: 400px; overflow: hidden;">
-
-                        <!-- HIERARCHY -->
-                        <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666;">
-                            HIERARCHY</div>
-                        <div id="shelfRanks" class="reward-shelf mob-horiz-scroll"></div>
-
-                        <!-- LABOR -->
-                        <div class="mob-grid-label-center"
-                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">LABOR MEDALS
-                        </div>
-                        <div id="shelfTasks" class="reward-shelf mob-horiz-scroll"></div>
-
-                        <!-- ENDURANCE -->
-                        <div class="mob-grid-label-center"
-                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ENDURANCE</div>
-                        <div id="shelfKneel" class="reward-shelf mob-horiz-scroll"></div>
-
-                        <!-- SACRIFICE -->
-                        <div class="mob-grid-label-center"
-                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">SACRIFICE</div>
-                        <div id="shelfSpend" class="reward-shelf mob-horiz-scroll"></div>
-
-                        <!-- THE MODAL (Moved Inside the Jail) -->
-                        <div id="rewardCardOverlay" class="mob-reward-overlay hidden" onclick="closeRewardCard()">
-                            <div class="mob-reward-card" onclick="event.stopPropagation()">
-                                <!-- JS fills this -->
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- (Exchequer kept hidden) -->
-                <div id="mobExchequer" class="mob-reward-overlay hidden" style="z-index: 2147483640;">
-                    <div class="mob-reward-card lobby-card" style="border: 1px solid #c5a059;">
-                        <div class="lobby-header">
-                            <div class="lobby-title">EXCHEQUER</div>
-                        </div>
-                        <div class="coin-grid">
-                            <div class="coin-tile" onclick="window.buyRealCoins(1000)">
-                                <div class="coin-amount">1,000</div>
-                                <div class="coin-price">€10.00</div>
-                            </div>
-                            <div class="coin-tile" onclick="window.buyRealCoins(5500)">
-                                <div class="coin-amount">5,500</div>
-                                <div class="coin-price">€50.00</div>
-                            </div>
-                            <div class="coin-tile" onclick="window.buyRealCoins(12000)">
-                                <div class="coin-amount">12,000</div>
-                                <div class="coin-price">€100.00</div>
-                            </div>
-                            <div class="coin-tile" onclick="window.buyRealCoins(30000)">
-                                <div class="coin-amount">30,000</div>
-                                <div class="coin-price">€250.00</div>
-                            </div>
-                            <div class="coin-tile" onclick="window.buyRealCoins(70000)">
-                                <div class="coin-amount">70,000</div>
-                                <div class="coin-price">€500.00</div>
-                            </div>
-                            <div class="coin-tile" onclick="window.buyRealCoins(150000)">
-                                <div class="coin-amount">150,000</div>
-                                <div class="coin-price">€1000.00</div>
-                            </div>
-                        </div>
-                        <button class="lobby-btn close" onclick="closeExchequer()"
-                            style="margin-top:20px;">CLOSE</button>
-                    </div>
-                </div>
-
-                <!-- === POPUP OVERLAYS (ALL RESTORED) === -->
-
-                <!-- 1. LOBBY (SETTINGS) -->
-                <div id="lobbyOverlay" class="mob-reward-overlay hidden">
-                    <div class="mob-reward-card lobby-card">
-                        <div id="lobbyMenu" class="lobby-content">
-                            <button class="lobby-btn" onclick="showLobbyAction('name')">ADD YOUR NAME</button>
-                            <button class="lobby-btn" onclick="showLobbyAction('photo')">UPLOAD PHOTO</button>
-                            <button class="lobby-btn" onclick="showLobbyAction('routine')">GET ROUTINE</button>
-                            <button class="lobby-btn" onclick="showLobbyAction('kinks')">ADD KINKS</button>
-                            <button class="lobby-btn" onclick="showLobbyAction('limits')">ADD LIMITS</button>
-                            <div class="lobby-divider"></div>
-                            <button class="lobby-btn close" onclick="closeLobby()">CLOSE</button>
-                        </div>
-                        <div id="lobbyActionView" class="lobby-content hidden">
-                            <div id="lobbyPrompt" class="lobby-prompt">...</div>
-                            <input type="text" id="lobbyInputText" class="lobby-input hidden"
-                                placeholder="Type here...">
-                            <button id="lobbyInputFileBtn" class="lobby-file-btn hidden"
-                                onclick="document.getElementById('lobbyFile').click()">PICK PHOTO</button>
-                            <input type="file" id="lobbyFile" hidden
-                                onchange="document.getElementById('lobbyInputFileBtn').innerText = 'PHOTO UPLOADED'">
-                            <div id="routineSelectionArea" class="hidden"
-                                style="width:100%; display:flex; flex-direction:column; gap:10px;">
-                                <div class="routine-grid">
-                                    <div class="routine-tile" onclick="selectRoutineItem(this, 'Morning Kneel')">Morning
-                                        Kneel</div>
-                                    <div class="routine-tile" onclick="selectRoutineItem(this, 'Chastity Check')">
-                                        Chastity Check</div>
-                                    <div class="routine-tile" onclick="selectRoutineItem(this, 'Cleanliness Check')">
-                                        Cleanliness Check</div>
-                                    <div class="routine-tile special" onclick="selectRoutineItem(this, 'custom')">CREATE
-                                        OWN (+1000)</div>
-                                </div>
-                                <input type="text" id="routineCustomInput" class="lobby-input hidden"
-                                    placeholder="Describe..." style="margin-top:10px;">
-                            </div>
-                            <div id="kinkSelectionArea" class="hidden" style="width:100%;">
-                                <div id="kinkGrid" class="routine-grid"></div>
-                            </div>
-                            <div class="lobby-cost-area"><span class="cost-lbl">COST:</span><span id="lobbyCostDisplay"
-                                    class="cost-val">0</span></div>
-                            <button id="btnLobbyConfirm" class="lobby-btn gold"
-                                onclick="confirmLobbyAction()">SUBMIT</button>
-                            <button class="lobby-btn close" onclick="backToLobbyMenu()">BACK</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. QUEEN MENU (DAILY DUTIES) -->
-                <div id="queenOverlay" class="mob-reward-overlay hidden">
-                    <div class="mob-reward-card queen-card-layout"
-                        style="width: 90%; max-height: 80vh; overflow-y: auto;">
-
-                        <!-- HEADER -->
-                        <div class="mob-chat-header"
-                            style="width:100%; justify-content:space-between; margin-bottom: 20px; background: transparent; border: none; padding: 0;">
-                            <div class="chat-queen-name" style="color: #c5a059; font-size: 1.2rem;">DAILY DUTIES</div>
-                            <button onclick="closeQueenMenu()"
-                                style="background:none; border:none; color:#fff; font-size:2rem; cursor:pointer;">×</button>
-                        </div>
-
-                        <!-- 1. ROUTINE UPLOAD SECTION -->
-                        <div
-                            style="width:100%; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 20px;">
-                            <div class="duty-label">MANDATORY PROTOCOL</div>
-
-                            <!-- Routine Name (Updated by JS) -->
-                            <div id="mobRoutineDisplay"
-                                style="color: white; font-family: 'Orbitron'; text-align: center; margin: 15px 0; font-size: 1.1rem; letter-spacing: 2px;">
-                                LOADING...
-                            </div>
-
-                            <!-- Action Area -->
-                            <div style="display:flex; flex-direction: column; align-items:center; gap: 10px;">
-                                <!-- Upload Button -->
-                                <button id="btnRoutineUpload" class="action-btn"
-                                    onclick="document.getElementById('routineUploadInput').click()">
-                                    UPLOAD PROOF
-                                </button>
-                                <input type="file" id="routineUploadInput" class="hidden"
-                                    onchange="window.handleRoutineUpload(this)">
-
-                                <!-- Messages (Hidden/Shown by JS) -->
-                                <div id="routineTimeMsg" class="hidden"
-                                    style="color:#666; font-size:0.7rem; font-style:italic;">
-                                    WINDOW CLOSED
-                                </div>
-                                <div id="routineDoneMsg" class="hidden"
-                                    style="color:#00ff00; font-size:0.9rem; font-family:'Orbitron'; text-shadow: 0 0 10px #00ff00;">
-                                    ✔ SUBMITTED
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 2. KNEELING COUNTER -->
-                        <div
-                            style="width:100%; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 20px;">
-                            <div class="duty-label">KNEELING HOURS</div>
-
-                            <!-- Progress Bar -->
-                            <div class="mob-kneel-bar"
-                                style="height: 35px; margin-top: 15px; cursor: default; background: #000; border: 1px solid #444;">
-                                <div id="kneelDailyFill" class="mob-bar-fill" style="width: 0%; background: #c5a059;">
-                                </div>
-                                <div class="mob-bar-content" style="width:100%; justify-content:center;">
-                                    <span id="kneelDailyText"
-                                        style="font-family:'Orbitron'; font-size:0.9rem; color:#fff; z-index:2;">0 /
-                                        8</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. TASK COUNTERS (Using existing Stats IDs) -->
-                        <div style="width:100%;">
-                            <div class="duty-label">LABOR COMPLETED</div>
-
-                            <div style="display:flex; justify-content:space-around; margin-top: 15px;">
-                                <div style="text-align:center;">
-                                    <div style="font-size:0.6rem; color:#888; font-family:'Cinzel'; margin-bottom:5px;">
-                                        CURRENT STREAK</div>
-                                    <!-- Reuse the ID so JS updates it automatically -->
-                                    <div id="mobStreak" style="font-size:1.8rem; color:white; font-family:'Orbitron';">0
-                                    </div>
-                                </div>
-                                <div style="text-align:center;">
-                                    <div style="font-size:0.6rem; color:#888; font-family:'Cinzel'; margin-bottom:5px;">
-                                        TOTAL SERVED</div>
-                                    <!-- Reuse the ID so JS updates it automatically -->
-                                    <div id="mobTotal" style="font-size:1.8rem; color:#c5a059; font-family:'Orbitron';">
-                                        0</div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- 3. POVERTY OVERLAY (RESTORED) -->
-                <div id="povertyOverlay" class="mob-reward-overlay hidden">
-                    <div class="mob-reward-card"
-                        style="border-color: #ff003c; box-shadow: 0 0 30px rgba(255, 0, 60, 0.2);">
-                        <div class="mob-hex-wrap small-reward"
-                            style="background: linear-gradient(135deg, #ff003c, #000);">
-                            <div class="mob-rank-stamp"
-                                style="right: auto; left: -5px; color: #fff; border-color: #fff;">DENIED</div>
-                        </div>
-                        <h2 class="mob-reward-title" style="color:#ff003c;">INSUFFICIENT CAPITAL</h2>
-                        <div id="povertyInsult"
-                            style="font-family:'Cinzel'; color:#ccc; font-size:0.85rem; line-height:1.4; padding:0 10px;">
-                            "You cannot afford my attention."</div>
-                        <div class="mob-reward-actions" style="margin-top:10px;">
-                            <button onclick="goToExchequer()" class="mob-action-btn"
-                                style="border-color: #ff003c; color: #ff003c;">BOOST WALLET</button>
-                            <button onclick="closePoverty()" class="mob-action-btn"
-                                style="border-color: #444; color: #888;">APOLOGIZE & RETURN</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. KNEEL REWARD OVERLAY (RESTORED) -->
-                <div id="mobKneelReward" class="mob-reward-overlay hidden">
-                    <div class="mob-reward-card">
-                        <div class="mob-hex-wrap small-reward">
-                            <div class="mob-rank-stamp"
-                                style="right: auto; left: -5px; color: #fff; border-color: #fff;">AUTHORIZED</div>
-                        </div>
-                        <h2 class="mob-reward-title"
-                            style="color: #c5a059; font-family: 'Cinzel'; letter-spacing: 2px;">DEVOTION RECOGNIZED</h2>
-                        <div class="mob-reward-actions"
-                            style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                            <button onclick="window.claimKneelReward('coins')" class="mob-action-btn"
-                                style="border-color: #ffd700; color: #ffd700;">CLAIM COINS</button>
-                            <button onclick="window.claimKneelReward('points')" class="mob-action-btn"
-                                style="border-color: #fff; color: #fff;">CLAIM MERIT</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 5. REWARD DETAILS (TROPHIES) -->
-                <div id="rewardCardOverlay" class="mob-reward-overlay hidden" onclick="closeRewardCard()">
-                    <div class="mob-reward-card" onclick="event.stopPropagation()">
-                        <div class="rc-header">
-                            <div id="rcIcon" class="rc-icon-large"></div>
-                            <div class="rc-meta">
-                                <div id="rcTitle" class="rc-title">TITLE</div>
-                                <div id="rcStatus" class="rc-status">LOCKED</div>
-                            </div>
-                        </div>
-                        <div id="rcQuote" class="rc-quote">...</div>
-                        <div class="rc-progress-wrap">
-                            <div class="rc-progress-labels"><span id="rcCurrent">0</span><span id="rcTarget">/
-                                    100</span></div>
-                            <div class="rc-track">
-                                <div id="rcFill" class="rc-fill"></div>
-                            </div>
-                        </div>
-                        <button class="mob-action-btn" onclick="closeRewardCard()">ACKNOWLEDGE</button>
-                    </div>
-                </div>
-
-            </div> <!-- END MOBILE_APP -->
-
-
-            <script>
-
-                // =========================================
-                // IOS VISUAL VIEWPORT RESIZER
-                // =========================================
-                if (window.visualViewport) {
-                    window.visualViewport.addEventListener('resize', () => {
-                        // When keyboard opens/closes, browser resizes visualViewport.
-                        // We force the body height to match, preventing the "Halfway Scroll" bug.
-                        document.body.style.height = window.visualViewport.height + 'px';
-
-                        // Force scroll to top to kill any offsets
-                        window.scrollTo(0, 0);
-                    });
+        // 2. INIT STATIC DATA
+        if (data.type === "INIT_TASKS") {
+            setTaskDatabase(data.tasks || []);
+        }
+        if (data.type === "INIT_WISHLIST" || data.wishlist) {
+            setWishlistItems(data.wishlist || []);
+            window.WISHLIST_ITEMS = data.wishlist || [];
+            renderWishlist();
+        }
+
+        // 3. STATUS UPDATES (Header Signals)
+        if (data.type === "UPDATE_DOM_STATUS") {
+            const badge = document.getElementById('chatStatusBadge');
+            const ring = document.getElementById('chatStatusRing');
+            const domBadge = document.getElementById('domStatusBadge');
+
+            if (badge) {
+                badge.innerHTML = data.online ? "ONLINE" : data.text;
+                badge.className = data.online ? "chat-status-text chat-online" : "chat-status-text";
+            }
+            if (ring) ring.className = data.online ? "dom-status-ring ring-active" : "dom-status-ring ring-inactive";
+            if (domBadge) domBadge.className = data.online ? "dom-status status-online" : "dom-status";
+
+            const mobText = document.getElementById('mobChatStatusText');
+            const mobDot = document.getElementById('mobChatOnlineDot');
+            const hudDot = document.getElementById('hudDomStatus');
+
+            if (mobText) {
+                mobText.innerText = data.online ? "ONLINE NOW" : data.text.toUpperCase();
+                mobText.style.color = data.online ? "#00ff00" : "#888";
+            }
+
+            if (mobDot) mobDot.className = data.online ? 'status-dot online' : 'status-dot';
+            if (hudDot) hudDot.className = data.online ? 'hud-status-dot online' : 'hud-status-dot offline';
+        }
+
+        if (data.type === "UPDATE_Q_FEED") {
+            const feedData = data.domVideos || data.posts || data.feed;
+            if (feedData && Array.isArray(feedData)) {
+                if (typeof renderDomVideos === 'function') renderDomVideos(feedData);
+                if (typeof renderNews === 'function') renderNews(feedData);
+                const pc = document.getElementById('cntPosts');
+                if (pc) pc.innerText = feedData.length;
+            }
+        }
+
+        // 4. MAIN DATA SYNC (Profile & Stats)
+        const payload = data.profile || data.galleryData || data.pendingState ? data : (data.type === "UPDATE_FULL_DATA" ? data : null);
+
+        if (payload) {
+            // A. GALLERY
+            if (payload.galleryData) {
+                setGalleryData(payload.galleryData);
+                const currentGalleryJson = JSON.stringify(payload.galleryData);
+                if (currentGalleryJson !== lastGalleryJson) {
+                    setLastGalleryJson(currentGalleryJson);
+                    renderGallery();
+                    if (window.renderDesktopRecord) window.renderDesktopRecord(); // SYNC DESKTOP
                 }
+            }
 
-                function checkDevice() {
-                    const isMobile = window.innerWidth <= 768;
-                    const desktop = document.getElementById('DESKTOP_APP');
-                    const mobile = document.getElementById('MOBILE_APP');
-                    const dashboard = document.getElementById('viewMobileHome');
+            // B. PROFILE
+            if (data.profile && !ignoreBackendUpdates) {
 
-                    if (isMobile) {
-                        if (desktop) desktop.style.display = 'none';
-                        if (mobile) mobile.style.display = 'flex';
-                        // Force Dashboard Visible
-                        if (dashboard) {
-                            dashboard.style.display = 'flex';
-                            dashboard.style.visibility = 'visible';
-                            dashboard.style.opacity = '1';
-                        }
-                    } else {
-                        if (mobile) mobile.style.display = 'none';
-                        if (desktop) desktop.style.display = 'flex';
+                // --- TRUTH CHECK (Routine Date) ---
+                let confirmedDate = data.profile.lastRoutine || "";
+
+                // Check specific routineHistory field
+                if (data.profile.routineHistory || data.profile.routinehistory) {
+                    let rh = data.profile.routineHistory || data.profile.routinehistory;
+                    if (typeof rh === 'string' && (rh.startsWith('[') || rh.startsWith('{'))) {
+                        try { rh = JSON.parse(rh); } catch (e) { }
+                    }
+                    if (Array.isArray(rh) && rh.length > 0) {
+                        rh.sort((a, b) => new Date(b.date || b._createdDate || b) - new Date(a.date || a._createdDate || a));
+                        const newest = rh[0];
+                        const rDate = newest.date || newest._createdDate || newest;
+                        if (!confirmedDate || new Date(rDate) > new Date(confirmedDate)) confirmedDate = rDate;
                     }
                 }
-                // Run immediately and on resize
-                checkDevice();
-                window.addEventListener('resize', checkDevice);
-                window.addEventListener('load', checkDevice);
-            </script>
-</body>
 
-</html>
+                // Protect Local Updates
+                if (typeof userProfile !== 'undefined' && userProfile.lastRoutine) {
+                    const localTime = new Date(userProfile.lastRoutine).getTime();
+                    const incomingTime = confirmedDate ? new Date(confirmedDate).getTime() : 0;
+                    if (localTime > incomingTime) confirmedDate = userProfile.lastRoutine;
+                }
+                data.profile.lastRoutine = confirmedDate;
+
+                // --- INTEGRATION: MAP CMS FIELDS TO GAME STATS ---
+                // This ensures the Hierarchy Modal can read the progress
+                setGameStats({
+                    ...data.profile, // Load everything
+
+                    // Explicit Mappings for Hierarchy Logic
+                    total_coins_spent: data.profile.tributetotal || 0, // NEW CMS FIELD
+                    routine_streak: data.profile.routinestreak || 0,   // NEW CMS FIELD
+                    kneelCount: data.profile.kneelCount || 0,
+                    taskdom_completed: data.profile.taskdom_completed_tasks || 0
+                });
+
+                setUserProfile({
+                    name: data.profile.name || "Slave",
+                    hierarchy: data.profile.hierarchy || "HallBoy",
+                    memberId: data.profile.memberId || "",
+                    joined: data.profile.joined,
+                    profilePicture: data.profile.profilePicture,
+                    routine: data.profile.routine,
+                    kneelHistory: data.profile.kneelHistory,
+                    lastRoutine: confirmedDate,
+                    routineHistory: data.profile.routineHistory // Save full history for display
+                });
+
+                if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
+
+                if (data.profile.activeRevealMap) {
+                    try { setActiveRevealMap(JSON.parse(data.profile.activeRevealMap)); } catch (e) { setActiveRevealMap([]); }
+                }
+
+                if (data.profile.rewardVault) {
+                    try { setVaultItems(JSON.parse(data.profile.rewardVault)); } catch (e) { setVaultItems([]); }
+                }
+
+                setLibraryProgressIndex(data.profile.libraryProgressIndex || 1);
+                setCurrentLibraryMedia(data.profile.currentLibraryMedia || "");
+
+                renderRewardGrid();
+                if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
+                setStats(migrateGameStatsToStats(data.profile, stats));
+
+                // Profile Pic Sync
+                if (data.profile.profilePicture) {
+                    const rawUrl = data.profile.profilePicture;
+                    const picEl = document.getElementById('profilePic');
+                    if (picEl) picEl.src = getOptimizedUrl(rawUrl, 150);
+
+                    const mobPic = document.getElementById('mob_profilePic');
+                    const mobBg = document.getElementById('mob_bgPic');
+                    const hudPic = document.getElementById('hudSlavePic');
+
+                    let finalUrl = rawUrl;
+                    if (rawUrl.startsWith("wix:image")) {
+                        const uri = rawUrl.split('/')[3].split('#')[0];
+                        finalUrl = `https://static.wixstatic.com/media/${uri}`;
+                    }
+                    if (mobPic) mobPic.src = finalUrl;
+                    if (mobBg) mobBg.src = finalUrl;
+                    if (hudPic) hudPic.src = finalUrl;
+
+                    if (typeof userProfile !== 'undefined') userProfile.profilePicture = rawUrl;
+                }
+                updateStats();
+
+                // TRIGGER UI REFRESH
+                if (window.syncMobileDashboard) window.syncMobileDashboard();
+                if (window.renderDesktopRecord) window.renderDesktopRecord(); // SYNC DESKTOP
+            }
+
+            if (data.type === "INSTANT_REVEAL_SYNC") {
+                if (data.currentLibraryMedia) setCurrentLibraryMedia(data.currentLibraryMedia);
+                renderRewardGrid();
+                setTimeout(() => {
+                    const winnerId = data.activeRevealMap[data.activeRevealMap.length - 1];
+                    runTargetingAnimation(winnerId, () => {
+                        setActiveRevealMap(data.activeRevealMap || []);
+                        renderRewardGrid();
+                    });
+                }, 50);
+            }
+
+            if (payload.galleryData) {
+                const currentGalleryJson = JSON.stringify(payload.galleryData);
+                if (currentGalleryJson !== lastGalleryJson) {
+                    setLastGalleryJson(currentGalleryJson);
+                    setGalleryData(payload.galleryData);
+                    renderGallery();
+                    updateStats();
+                }
+            }
+
+            if (payload.pendingState !== undefined) {
+                if (!taskJustFinished && !ignoreBackendUpdates) {
+                    setPendingTaskState(payload.pendingState);
+                    if (pendingTaskState) {
+                        setCurrentTask(pendingTaskState.task);
+                        restorePendingUI();
+                        window.updateTaskUIState(true);
+                    } else if (!resetUiTimer) {
+                        window.updateTaskUIState(false);
+                        const rt = document.getElementById('readyText');
+                        if (rt) rt.innerText = "AWAITING ORDERS";
+                    }
+                }
+            }
+        }
+
+        if (data.type === "UPDATE_CHAT" || data.chatHistory) renderChat(data.chatHistory || data.messages);
+
+        if (data.type === "FRAGMENT_REVEALED") {
+            const { fragmentNumber, isComplete } = data;
+            import('../profile/kneeling/reward.js').then(({ runTargetingAnimation, renderRewardGrid }) => {
+                runTargetingAnimation(fragmentNumber, () => {
+                    renderRewardGrid();
+                    if (isComplete) triggerSound('coinSound');
+                });
+            });
+        }
+    } catch (err) { console.error("Main error:", err); }
+});
+
+// --- EXPORTS & HELPERS ---
+window.handleUploadStart = function (inputElement) {
+    if (inputElement.files && inputElement.files.length > 0) {
+        const btn = document.getElementById('btnUpload');
+        if (btn) { btn.innerHTML = '...'; btn.style.background = '#333'; btn.style.color = '#ffd700'; btn.style.cursor = 'wait'; }
+        if (typeof handleEvidenceUpload === 'function') handleEvidenceUpload(inputElement);
+    }
+};
+
+window.switchTab = switchTab;
+window.toggleStats = toggleStats;
+window.openSessionUI = openSessionUI;
+window.closeSessionUI = closeSessionUI;
+window.updateSessionCost = updateSessionCost;
+window.submitSessionRequest = submitSessionRequest;
+window.sendChatMessage = sendChatMessage;
+window.handleChatKey = handleChatKey;
+window.loadMoreChat = loadMoreChat;
+window.openChatPreview = openChatPreview;
+window.closeChatPreview = closeChatPreview;
+window.breakGlass = breakGlass;
+window.openHistoryModal = openHistoryModal;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.toggleHistoryView = toggleHistoryView;
+window.loadMoreHistory = loadMoreHistory;
+window.handleHoldStart = handleHoldStart;
+window.handleHoldEnd = handleHoldEnd;
+window.claimKneelReward = claimKneelReward;
+window.updateKneelingStatus = updateKneelingStatus;
+window.buyRealCoins = buyRealCoins;
+window.getRandomTask = getRandomTask;
+window.cancelPendingTask = cancelPendingTask;
+window.handleEvidenceUpload = handleEvidenceUpload;
+window.handleProfileUpload = handleProfileUpload;
+window.handleAdminUpload = handleAdminUpload;
+window.WISHLIST_ITEMS = WISHLIST_ITEMS;
+window.gameStats = gameStats;
+
+function updateStats() {
+    // 1. DESKTOP UPDATE (Basic Header)
+    const subName = document.getElementById('subName');
+    const subHierarchy = document.getElementById('subHierarchy');
+    const coinsEl = document.getElementById('coins');
+    const pointsEl = document.getElementById('points');
+
+    if (!subName || !userProfile || !gameStats) return;
+
+    // --- VISUAL PROMOTION LOGIC (Universal) ---
+    // Calculate 6 AM Streak for accurate visual checking
+    const routinePhotos = (userProfile.routineHistory ? JSON.parse(userProfile.routineHistory) : []);
+    let visualStreak = gameStats.taskdom_streak || 0;
+
+    // Use the same routine streak logic as renderRewards if available
+    // (Simplified here for performance, or assume gameStats is up to date)
+    // Actually, determineRank uses 'routinestreak', let's use what we have.
+    // Ideally we assume 'streakCount' from global scope if calculated, else fallback
+    let effectiveStreak = (typeof window.streakCount !== 'undefined') ? window.streakCount : (gameStats.taskdom_streak || 0);
+
+    let visualRank = userProfile.hierarchy || "Hall Boy";
+    if (typeof REWARD_DATA !== 'undefined' && REWARD_DATA.ranks) {
+        const clean = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        const dbClean = clean(visualRank);
+        let currentIdx = REWARD_DATA.ranks.findIndex(r => clean(r.name) === dbClean);
+        if (currentIdx === -1) currentIdx = 0;
+
+        let qualifiedIdx = -1;
+        for (let i = REWARD_DATA.ranks.length - 1; i >= 0; i--) {
+            const r = REWARD_DATA.ranks[i].req;
+            // Note: routine streak is key for hierarchy now
+            if (gameStats.taskdom_completed >= r.tasks &&
+                gameStats.kneelCount >= r.kneels &&
+                gameStats.points >= r.points &&
+                gameStats.total_coins_spent >= r.spent &&
+                effectiveStreak >= r.streak) {
+                qualifiedIdx = i;
+                break;
+            }
+        }
+
+        if (qualifiedIdx > currentIdx) {
+            visualRank = REWARD_DATA.ranks[qualifiedIdx].name;
+        }
+    }
+
+    // Update Basic Desktop Elements
+    subName.textContent = userProfile.name || "Slave";
+    if (subHierarchy) subHierarchy.textContent = visualRank; // VISUAL PROMOTION
+    if (coinsEl) coinsEl.textContent = gameStats.coins ?? 0;
+    if (pointsEl) pointsEl.textContent = gameStats.points ?? 0;
+
+    // --- CONNECT DESKTOP EXPANDED STATS ---
+    if (document.getElementById('statStreak')) document.getElementById('statStreak').innerText = gameStats.taskdom_streak || 0;
+    if (document.getElementById('statTotal')) document.getElementById('statTotal').innerText = gameStats.taskdom_total_tasks || 0;
+    if (document.getElementById('statCompleted')) document.getElementById('statCompleted').innerText = gameStats.taskdom_completed || 0;
+    if (document.getElementById('statSkipped')) document.getElementById('statSkipped').innerText = gameStats.taskdom_skipped || 0;
+    if (document.getElementById('statTotalKneels')) document.getElementById('statTotalKneels').innerText = gameStats.kneelCount || 0;
+
+    if (window.renderRewards) window.renderRewards();
+
+
+    // 2. MOBILE UPDATE (The New Connection)
+    // Header Identity
+    const mobName = document.getElementById('mob_slaveName');
+    const mobRank = document.getElementById('mob_rankStamp');
+    const mobPic = document.getElementById('mob_profilePic'); // Center Hexagon
+
+    // Header Stats (Visible)
+    const mobPoints = document.getElementById('mobPoints');
+    const mobCoins = document.getElementById('mobCoins');
+
+    // Drawer Stats (Hidden)
+    const mobStreak = document.getElementById('mobStreak');
+    const mobTotal = document.getElementById('mobTotal');
+    const mobKneels = document.getElementById('mobKneels');
+
+    // Daily duties
+    const mobDailyKneels = document.getElementById('kneelDailyText');
+    const kneelDailyFill = document.getElementById("kneelDailyFill");
+
+    // FILL MOBILE TEXT DATA
+    if (mobName) mobName.innerText = userProfile.name || "SLAVE";
+    if (mobRank) mobRank.innerText = visualRank; // VISUAL PROMOTION
+
+    if (mobPoints) mobPoints.innerText = gameStats.points || 0;
+    if (mobCoins) mobCoins.innerText = gameStats.coins || 0;
+
+    if (mobStreak) mobStreak.innerText = gameStats.taskdom_streak || 0;
+    if (mobTotal) mobTotal.innerText = gameStats.taskdom_total_tasks || 0;
+    if (mobKneels) mobKneels.innerText = gameStats.kneelCount || 0;
+
+    // Daily Duties Logic
+    const dailyKneels = (gameStats.kneelHistory ? JSON.parse(gameStats.kneelHistory).hours?.length || 0 : 0);
+    if (mobDailyKneels) mobDailyKneels.innerText = dailyKneels + " / 8";
+
+    if (kneelDailyFill) {
+        const percent = Math.min((dailyKneels / 8) * 100, 100);
+        kneelDailyFill.style.width = percent + "%";
+    }
+
+    // --- [FIX] PROFILE PICTURE LOGIC (SYNC ALL 3 IMAGES) ---
+    if (userProfile.profilePicture) {
+        let rawUrl = userProfile.profilePicture;
+        let finalUrl = rawUrl;
+
+        // Fix Wix URLs
+        if (rawUrl.startsWith("wix:image")) {
+            const uri = rawUrl.split('/')[3].split('#')[0];
+            finalUrl = `https://static.wixstatic.com/media/${uri}`;
+        }
+
+        // 1. Update the Big Hexagon (Dashboard Center)
+        if (mobPic) mobPic.src = finalUrl;
+
+        // 2. Update the Background Blur
+        const mobBg = document.getElementById('mob_bgPic');
+        if (mobBg) mobBg.src = finalUrl;
+
+        // 3. Update the Right Circle (Slave ID)
+        const rightCircle = document.getElementById('hudSlavePic');
+        if (rightCircle) rightCircle.src = finalUrl;
+
+        // 4. Update Desktop Avatar (Just in case)
+        const deskPic = document.getElementById('profilePic');
+        if (deskPic) deskPic.src = finalUrl;
+    }
+
+    // --- GRID SYNC (TRUST THE BACKEND) ---
+    const grid = document.getElementById('mob_streakGrid');
+    if (grid) {
+        grid.innerHTML = '';
+        let loggedHours = [];
+        const now = new Date();
+
+        if (userProfile.kneelHistory) {
+            try {
+                const hObj = JSON.parse(userProfile.kneelHistory);
+                loggedHours = hObj.hours || [];
+            } catch (e) { console.error("Grid parse error", e); }
+        }
+
+        for (let i = 0; i < 24; i++) {
+            const sq = document.createElement('div');
+            sq.className = 'streak-sq';
+
+            // 1. Is this hour logged? (Gold)
+            if (loggedHours.includes(i)) {
+                sq.classList.add('active');
+            }
+            // 2. Has this hour passed? (Dim/Dark)
+            else if (i < now.getHours()) {
+                sq.style.opacity = "0.3";
+                sq.style.borderColor = "#333";
+            }
+            // 3. Future hours are normal style
+            grid.appendChild(sq);
+        }
+    }
+
+    // 4. DESKTOP EXTRAS (Progress Bar etc)
+    const sinceEl = document.getElementById('slaveSinceDate');
+    if (sinceEl && userProfile.joined) {
+        try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch (e) { sinceEl.textContent = "--/--/--"; }
+    }
+
+    if (typeof LEVELS !== 'undefined' && LEVELS.length > 0) {
+        let nextLevel = LEVELS.find(l => l.min > gameStats.points) || LEVELS[LEVELS.length - 1];
+        const nln = document.getElementById('nextLevelName');
+        const pnd = document.getElementById('pointsNeeded');
+
+        if (nln) nln.innerText = nextLevel.name;
+        if (pnd) pnd.innerText = Math.max(0, nextLevel.min - gameStats.points) + " to go";
+
+        const pb = document.getElementById('progressBar');
+        const progress = ((gameStats.points - 0) / (nextLevel.min - 0)) * 100;
+        if (pb) pb.style.width = Math.min(100, Math.max(0, progress)) + "%";
+    }
+
+    updateKneelingStatus();
+}
+
+// =========================================
+// REWARD SYSTEM CONFIG & RENDER
+// =========================================
+
+const ICONS = {
+    rank: "M12 2l-10 9h20l-10-9zm0 5l6 5.5h-12l6-5.5z M12 14l-8 7h16l-8-7z", // Chevron Stack
+    task: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z", // Check Circle
+    kneel: "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z", // Clock/Time
+    spend: "M12,2L2,12L12,22L22,12L12,2Z M12,18L6,12L12,6L18,12L12,18Z" // Diamond Gem
+};
+
+// --- CONFIGURATION: RANKS & MEDALS ---
+const REWARD_DATA = {
+    // 1. THE HIERARCHY (Main Event)
+    ranks: [
+        {
+            name: "HALL BOY", icon: ICONS.rank, tax: 20,
+            req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
+            benefits: ["Silence is mandatory.", "Access to The Terminal."]
+        },
+        {
+            name: "FOOTMAN", icon: ICONS.rank, tax: 15,
+            req: { tasks: 5, kneels: 10, points: 500, spent: 1000, streak: 0 },
+            benefits: ["Identity Grant: You may have a face.", "Protocol Alpha: Daily Routine access.", "Voice cost reduced to 15."]
+        },
+        {
+            name: "SILVERMAN", icon: ICONS.rank, tax: 10,
+            req: { tasks: 25, kneels: 65, points: 2500, spent: 10000, streak: 3 },
+            benefits: ["Visual Tribute: Send PHOTOS.", "Gilded Chains: Pending tasks Gold.", "Voice cost reduced to 10."]
+        },
+        {
+            name: "BUTLER", icon: ICONS.rank, tax: 5,
+            req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 7 },
+            benefits: ["Kinetic Submission: Send VIDEOS.", "Forbidden Knowledge: Access Vault.", "Voice cost reduced to 5."]
+        },
+        {
+            name: "CHAMBERLAIN", icon: ICONS.rank, tax: 0,
+            req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 14 },
+            benefits: ["Royal Mercy: Penalties halved.", "The Free Tongue: Tax removed.", "Priority status."]
+        },
+        {
+            name: "SECRETARY", icon: ICONS.rank, tax: 0,
+            req: { tasks: 500, kneels: 1500, points: 100000, spent: 500000, streak: 30 },
+            benefits: ["The Golden Voice.", "System Command.", "Direct Throne Line."]
+        },
+        {
+            name: "QUEEN'S CHAMPION", icon: ICONS.rank, tax: 0,
+            req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 60 },
+            benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."]
+        }
+    ],
+
+    // 2. THE MEDALS (Side Quests - Restored)
+    tasks: [
+        { limit: 10, name: "LABORER", icon: ICONS.task },
+        { limit: 50, name: "TOOL", icon: ICONS.task },
+        { limit: 100, name: "DRONE", icon: ICONS.task },
+        { limit: 500, name: "MACHINE", icon: ICONS.task },
+        { limit: 1000, name: "ARCHITECT", icon: ICONS.task }
+    ],
+    kneeling: [
+        { limit: 10, name: "BENT", icon: ICONS.kneel },
+        { limit: 50, name: "SORE", icon: ICONS.kneel },
+        { limit: 100, name: "TRAINED", icon: ICONS.kneel },
+        { limit: 500, name: "FURNITURE", icon: ICONS.kneel },
+        { limit: 1000, name: "STATUE", icon: ICONS.kneel }
+    ],
+    spending: [
+        { limit: 1000, name: "TITHE", icon: ICONS.spend },
+        { limit: 10000, name: "SUPPORTER", icon: ICONS.spend },
+        { limit: 50000, name: "PATRON", icon: ICONS.spend },
+        { limit: 100000, name: "FINANCIER", icon: ICONS.spend },
+        { limit: 500000, name: "WHALE", icon: ICONS.spend }
+    ]
+};
+
+// --- OPEN HIERARCHY MODAL (Targeting the Jail) ---
+window.openHierarchyCard = function (rankName, currentStreak) {
+    const rankObj = REWARD_DATA.ranks.find(r => r.name === rankName);
+    if (!rankObj) return;
+
+    // FIX: Look specifically inside the Trophy Jail
+    const overlay = document.querySelector('#trophySectionJail #rewardCardOverlay');
+    if (!overlay) {
+        console.error("Jailed overlay not found! Check HTML.");
+        return;
+    }
+
+    const container = overlay.querySelector('.mob-reward-card');
+
+    // 1. Get Stats
+    const stats = {
+        tasks: gameStats.taskdom_completed || 0,
+        kneels: gameStats.kneelCount || 0,
+        points: gameStats.points || 0,
+        spent: gameStats.total_coins_spent || 0,
+        streak: currentStreak || 0
+    };
+
+    // 2. Build Row Helper
+    const buildRow = (label, curr, target, icon) => {
+        if (target <= 0) return "";
+        const pct = Math.min((curr / target) * 100, 100);
+        const isDone = curr >= target;
+        const color = isDone ? "#00ff00" : "#c5a059";
+
+        return `
+        <div style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${isDone ? '#fff' : '#888'};">
+                <span>${icon} ${label}</span>
+                <span style="color:${color}">${curr.toLocaleString()} / ${target.toLocaleString()}</span>
+            </div>
+            <div style="width:100%; height:6px; background:#000; border:1px solid #333; border-radius:3px; overflow:hidden;">
+                <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40;"></div>
+            </div>
+        </div>`;
+    };
+
+    // 3. Inject HTML
+    container.innerHTML = `
+        <div style="width:100%; text-align:center; border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:15px;">
+            <div style="font-family:'Cinzel'; font-size:1.2rem; color:#fff; letter-spacing:2px;">${rankObj.name}</div>
+            <div style="font-family:'Orbitron'; font-size:0.6rem; color:#666; margin-top:5px;">CLASSIFICATION DETAILS</div>
+        </div>
+
+        <div style="width:100%; text-align:left; background:rgba(255,255,255,0.02); padding:15px; border-radius:4px; border:1px solid #333;">
+            <div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>
+            ${buildRow("LABOR", stats.tasks, rankObj.req.tasks, "🛠️")}
+            ${buildRow("ENDURANCE", stats.kneels, rankObj.req.kneels, "🧎")}
+            ${buildRow("MERIT", stats.points, rankObj.req.points, "✨")}
+            ${buildRow("SACRIFICE", stats.spent, rankObj.req.spent, "💰")}
+            ${buildRow("CONSISTENCY", stats.streak, rankObj.req.streak, "🔥")}
+        </div>
+
+        <div style="width:100%; text-align:left; margin-top:15px; padding:0 10px;">
+            <div style="font-size:0.55rem; color:#c5a059; margin-bottom:5px; font-family:'Orbitron';">PRIVILEGES GRANTED</div>
+            <ul style="color:#ccc; font-size:0.7rem; font-family:'Cinzel'; padding-left:15px; line-height:1.6;">
+                ${rankObj.benefits.map(b => `<li>${b}</li>`).join('')}
+            </ul>
+        </div>
+
+        <button class="mob-action-btn" onclick="window.closeRewardCard()" style="margin-top:20px;">ACKNOWLEDGE</button>
+    `;
+
+    overlay.classList.remove('hidden');
+};
+
+// --- NEW: DESKTOP RECORD RENDERER ---
+// --- NEW: DESKTOP RECORD RENDERER ---
+let isRenderPending = false;
+window.renderDesktopRecord = function () {
+    // PREVENT BLINKING: Debounce 3-second triggers
+    if (isRenderPending) return;
+
+    // If called, wait a moment to see if other calls come in, then render once
+    isRenderPending = true;
+    requestAnimationFrame(() => {
+        if (window.renderGallery) window.renderGallery();
+        isRenderPending = false;
+    });
+};
+
+window.renderRewards = function () {
+    // 1. GET DATA
+    const currentRank = (userProfile?.hierarchy || "Hall Boy").toUpperCase();
+    const totalTasks = gameStats.taskdom_completed || 0;
+    const totalKneels = gameStats.kneelCount || 0;
+    const totalSpent = gameStats.total_coins_spent || 0;
+
+    // ============================================================
+    // PART A: DAILY DISCIPLINE (The Streak)
+    // ============================================================
+    let streakCount = 0;
+    let routinePhotos = [];
+
+    // 1. DATA SOURCE: Prefer specific history, fallback to gallery
+    let rawHistory = userProfile.routineHistory || userProfile.routinehistory;
+
+    if (rawHistory) {
+        if (typeof rawHistory === 'string') {
+            try { routinePhotos = JSON.parse(rawHistory); } catch (e) { routinePhotos = []; }
+        } else if (Array.isArray(rawHistory)) {
+            routinePhotos = rawHistory;
+        }
+    }
+    else if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
+        routinePhotos = galleryData.filter(item => (item.category || "").toLowerCase() === 'routine');
+    }
+
+    // 2. SORT (Newest First)
+    routinePhotos.sort((a, b) => {
+        const dateA = new Date(a.date || a._createdDate || a);
+        const dateB = new Date(b.date || b._createdDate || b);
+        return dateB - dateA;
+    });
+
+    // 3. CALCULATE STREAK (6 AM Rule)
+    if (routinePhotos.length > 0) {
+        const getDutyDay = (d) => {
+            let date = new Date(d);
+            if (date.getHours() < 6) date.setDate(date.getDate() - 1);
+            return date.toISOString().split('T')[0];
+        };
+
+        const todayCode = getDutyDay(new Date());
+        const newestDate = routinePhotos[0].date || routinePhotos[0]._createdDate || routinePhotos[0];
+        const lastCode = getDutyDay(newestDate);
+
+        const d1 = new Date(todayCode);
+        const d2 = new Date(lastCode);
+        const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
+
+        if (diffDays <= 1) {
+            streakCount = 1;
+            let currentCode = lastCode;
+
+            for (let i = 1; i < routinePhotos.length; i++) {
+                const itemDate = routinePhotos[i].date || routinePhotos[i]._createdDate || routinePhotos[i];
+                const nextCode = getDutyDay(itemDate);
+                if (nextCode === currentCode) continue;
+
+                const dayA = new Date(currentCode);
+                const dayB = new Date(nextCode);
+                const gap = (dayA - dayB) / (1000 * 60 * 60 * 24);
+
+                if (gap === 1) {
+                    streakCount++;
+                    currentCode = nextCode;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    // 4. RENDER ROUTINE UI
+    const strVal = document.getElementById('dispStreakVal');
+    const strBest = document.getElementById('dispBestStreak');
+    const strShelf = document.getElementById('shelfRoutine');
+
+    if (strVal) {
+        strVal.innerText = streakCount;
+        strVal.style.color = "#c5a059";
+        if (strVal.parentElement) {
+            strVal.parentElement.style.borderColor = "#c5a059";
+            strVal.parentElement.style.background = "linear-gradient(180deg, #1a1a1a 0%, #000 100%)";
+        }
+    }
+
+    if (strBest) strBest.innerText = Math.max(streakCount, gameStats.bestRoutineStreak || 0);
+
+    if (strShelf) {
+        if (routinePhotos.length === 0) {
+            strShelf.innerHTML = `<div style="color:#666; font-family:'Cinzel'; font-size:0.6rem; padding:10px; letter-spacing:1px;">SUBMISSION REQUIRED</div>`;
+        } else {
+            strShelf.innerHTML = routinePhotos.slice(0, 10).map(item => {
+                let rawSrc = (typeof item === 'object') ? (item.proof || item.url || item.image) : item;
+                if (!rawSrc) return "";
+
+                // WIX URL FIXER
+                let thumb = rawSrc;
+                if (rawSrc.startsWith('wix:image')) {
+                    try {
+                        const id = rawSrc.split('/')[3].split('#')[0];
+                        thumb = `https://static.wixstatic.com/media/${id}/v1/fill/w_150,h_150,q_70/thumb.jpg`;
+                    } catch (e) { }
+                }
+
+                return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border:1px solid #444; border-radius:2px; flex-shrink:0; margin-right:8px; filter:sepia(20%) brightness(0.9);">`;
+            }).join('');
+        }
+    }
+
+    // ============================================================
+    // PART B: HIERARCHY PODIUM (Past / Present / Future)
+    // ============================================================
+    const shelfRank = document.getElementById('shelfRanks');
+    if (shelfRank) {
+        // --- ROBUST MATCHING (Fixes "Hall Boy" vs "HallBoy" vs "Newbie") ---
+        const clean = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        const userClean = clean(userProfile?.hierarchy || "Hall Boy");
+
+        let currentIdx = REWARD_DATA.ranks.findIndex(r => clean(r.name) === userClean);
+
+        // --- VISUAL PROMOTION (PRE-CALCULATE) ---
+        // Even if DB says "Hall Boy", if they qualify for "Footman", SHOW IT.
+        let qualifiedIdx = -1;
+        for (let i = REWARD_DATA.ranks.length - 1; i >= 0; i--) {
+            const r = REWARD_DATA.ranks[i].req;
+            if (gameStats.taskdom_completed >= r.tasks &&
+                gameStats.kneelCount >= r.kneels &&
+                gameStats.points >= r.points &&
+                gameStats.total_coins_spent >= r.spent &&
+                streakCount >= r.streak) {
+                qualifiedIdx = i;
+                break;
+            }
+        }
+
+        // If DB rank is lower than qualified rank, upgrade the visual
+        if (qualifiedIdx > currentIdx) {
+            currentIdx = qualifiedIdx;
+        }
+
+        // Final Safety: Default to 0
+        if (currentIdx === -1) currentIdx = 0;
+
+        let html = "";
+
+        // 1. PREVIOUS (Small, Dim)
+        if (currentIdx > 0) {
+            const prev = REWARD_DATA.ranks[currentIdx - 1];
+            html += `
+            <div class="reward-badge shape-hex unlocked" style="transform:scale(0.8); opacity:0.5; filter:grayscale(100%); margin:0 5px;"
+                 onclick="window.openHierarchyCard('${prev.name}', ${streakCount})">
+                <div class="rb-inner">
+                    <svg class="rb-icon" viewBox="0 0 24 24"><path d="${prev.icon}"/></svg>
+                    <div class="rb-label">${prev.name}</div>
+                </div>
+            </div>`;
+        }
+
+        // 2. CURRENT (Big, Gold)
+        const curr = REWARD_DATA.ranks[currentIdx];
+        html += `
+        <div class="reward-badge shape-hex unlocked" style="transform:scale(1.2); z-index:10; border-color:#c5a059; box-shadow:0 0 25px rgba(197, 160, 89, 0.25); margin:0 10px;"
+             onclick="window.openHierarchyCard('${curr.name}', ${streakCount})">
+            <div class="rb-inner">
+                <svg class="rb-icon" viewBox="0 0 24 24" style="fill:#c5a059;"><path d="${curr.icon}"/></svg>
+                <div class="rb-label" style="color:#fff; text-shadow:0 0 5px #c5a059;">${curr.name}</div>
+            </div>
+        </div>`;
+
+        // 3. NEXT (Small, Locked)
+        if (currentIdx < REWARD_DATA.ranks.length - 1) {
+            const next = REWARD_DATA.ranks[currentIdx + 1];
+            html += `
+            <div class="reward-badge shape-hex locked" style="transform:scale(0.8); opacity:0.8; margin:0 5px;"
+                 onclick="window.openHierarchyCard('${next.name}', ${streakCount})">
+                <div class="rb-inner">
+                    <div style="font-size:1.2rem; margin-bottom:5px;">🔒</div>
+                    <div class="rb-label">${next.name}</div>
+                </div>
+            </div>`;
+        }
+
+        shelfRank.innerHTML = html;
+        shelfRank.style.justifyContent = "center";
+        shelfRank.style.overflow = "visible";
+    }
+
+    // ============================================================
+    // PART C: STANDARD SHELVES (Tasks, Kneel, Spend)
+    // ============================================================
+    const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabel) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = data.map((item, index) => {
+            const targetVal = item.limit;
+            const isUnlocked = currentVal >= targetVal;
+            const statusClass = isUnlocked ? "unlocked" : "locked";
+            const isLegendary = index === data.length - 1 ? "legendary" : "";
+
+            return `
+                <div class="reward-badge ${shapeClass} ${statusClass} ${isLegendary}" 
+                     onclick="window.openRewardCard('${item.name}', '${item.icon}', ${currentVal}, ${targetVal}, '${typeLabel}')">
+                    <div class="rb-inner" style="display:flex; flex-direction:column; align-items:center;">
+                        <svg class="rb-icon" viewBox="0 0 24 24"><path d="${item.icon}"/></svg>
+                        <div class="rb-label">${item.name}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    // Ensure arrays exist before mapping
+    if (REWARD_DATA.tasks) buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
+    if (REWARD_DATA.kneeling) buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
+    if (REWARD_DATA.spending) buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', null, totalSpent, 'spend');
+};
+
+window.openRewardCard = function (name, iconPath, current, target, type) {
+    // FIX: Look specifically inside the Trophy Jail
+    const overlay = document.querySelector('#trophySectionJail #rewardCardOverlay');
+    if (!overlay) return;
+
+    const container = overlay.querySelector('.mob-reward-card');
+
+    // Logic
+    const isUnlocked = current >= target;
+    const percentage = Math.min((current / target) * 100, 100);
+
+    // Get Quote Helper
+    const getQuote = (t, unlock) => {
+        if (unlock) return "Accepted. You may continue.";
+        return "You are not there yet. Suffer more.";
+    };
+
+    // Inject HTML
+    container.innerHTML = `
+        <div class="rc-header">
+            <div class="rc-icon-large"><svg viewBox="0 0 24 24"><path d="${iconPath}"/></svg></div>
+            <div class="rc-meta">
+                <div class="rc-title">${name}</div>
+                <div class="rc-status" style="color:${isUnlocked ? '#00ff00' : '#666'}">${isUnlocked ? "ACQUIRED" : "LOCKED"}</div>
+            </div>
+        </div>
+        <div class="rc-quote">${getQuote(type, isUnlocked)}</div>
+        <div class="rc-progress-wrap">
+            <div class="rc-progress-labels"><span id="rcCurrent">${current.toLocaleString()}</span><span id="rcTarget">/ ${target.toLocaleString()}</span></div>
+            <div class="rc-track"><div class="rc-fill" style="width:${percentage}%"></div></div>
+        </div>
+        <button class="mob-action-btn" onclick="window.closeRewardCard()">ACKNOWLEDGE</button>
+    `;
+
+    // Remove old classes just in case
+    container.classList.remove('unlocked-mode');
+    if (isUnlocked) container.classList.add('unlocked-mode');
+
+    overlay.classList.remove('hidden');
+};
+
+window.closeRewardCard = function () {
+    // Target the specific jailed overlay
+    const overlay = document.querySelector('#trophySectionJail #rewardCardOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
+};
+
+// Helper: Generates Flavor Text
+function getQuote(type, isUnlocked) {
+    const insults = [
+        "You are not there yet. Suffer more.",
+        "Pathetic. Is this your best?",
+        "Do not look at me until you finish this.",
+        "Your dedication is lacking."
+    ];
+    const praise = [
+        "Accepted. You may continue.",
+        "Adequate service. Do not get arrogant.",
+        "I see your effort. Keep going.",
+        "This pleases me. Briefly."
+    ];
+
+    // Specific overrides
+    if (type === 'spend' && !isUnlocked) return "Your wallet is too full. Empty it.";
+    if (type === 'kneel' && !isUnlocked) return "Your knees are too strong. Break them.";
+
+    return isUnlocked
+        ? praise[Math.floor(Math.random() * praise.length)]
+        : insults[Math.floor(Math.random() * insults.length)];
+}
+// =========================================
+// PART 3: TRIBUTE & BACKEND FUNCTIONS (RESTORED)
+// =========================================
+
+let currentHuntIndex = 0, filteredItems = [], selectedReason = "", selectedNote = "", selectedItem = null;
+// 1. TOGGLE: Opens the menu and immediately loads the grid
+window.toggleTributeHunt = function () {
+    // Detect environment
+    const isMobile = window.innerWidth <= 768;
+    const root = isMobile ? document.getElementById('MOBILE_APP') : document.getElementById('DESKTOP_APP');
+
+    // Find the specific overlay inside the active root
+    const overlay = root.querySelector('#tributeHuntOverlay');
+
+    if (!overlay) return;
+
+    if (overlay.classList.contains('hidden')) {
+        overlay.classList.remove('hidden');
+        renderSimpleStore(root); // Load items immediately
+    } else {
+        overlay.classList.add('hidden');
+    }
+};
+
+// 2. RENDER: Loops through wishlist and makes simple buttons
+window.renderSimpleStore = function (rootElement) {
+    const grid = rootElement.querySelector('#huntStoreGrid');
+    if (!grid) return;
+
+    grid.innerHTML = ""; // Clear old stuff
+
+    // Use global wishlist data
+    const items = window.WISHLIST_ITEMS || [];
+
+    if (items.length === 0) {
+        grid.innerHTML = "<div style='color:#666; width:200%; text-align:center;'>NO ITEMS LOADED</div>";
+        return;
+    }
+
+    items.forEach(item => {
+        // Create the card
+        const card = document.createElement('div');
+        card.className = "store-item"; // Reuse your existing CSS class
+        card.style.cursor = "pointer";
+        card.onclick = () => window.quickBuyItem(item); // Click to buy
+
+        card.innerHTML = `
+            <img src="${item.img || item.image}" style="width:100%; height:100px; object-fit:cover; opacity:0.8;">
+            <div style="padding:10px; text-align:center;">
+                <div style="color:#c5a059; font-family:'Orbitron'; font-weight:bold;">${item.price}</div>
+                <div style="color:#ccc; font-size:0.7rem; font-family:'Cinzel'; margin-top:5px;">${item.name.toUpperCase()}</div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+};
+
+// 3. BUY: Instant purchase logic
+window.quickBuyItem = function (item) {
+    // Check Money
+    if (window.gameStats.coins < item.price) {
+        triggerSound('sfx-deny');
+        window.triggerPoverty(); // Your existing poverty popup
+        return;
+    }
+
+    // Success Sound
+    triggerSound('sfx-buy');
+
+    // Send to Backend
+    window.parent.postMessage({
+        type: "PURCHASE_ITEM",
+        itemName: item.name,
+        cost: item.price,
+        messageToDom: `🎁 TRIBUTE SENT: ${item.name} (${item.price})`
+    }, "*");
+
+    // Visual Feedback (Coin Shower)
+    if (window.triggerCoinShower) window.triggerCoinShower();
+
+    // Close Menu
+    window.toggleTributeHunt();
+
+    // Optional: Show Green Notification
+    if (window.showSystemNotification) window.showSystemNotification("TRIBUTE SENT", item.name);
+};
+
+
+function buyRealCoins(amount) { triggerSound('sfx-buy'); window.parent.postMessage({ type: "INITIATE_STRIPE_PAYMENT", amount: amount }, "*"); }
+function triggerCoinShower() { for (let i = 0; i < 40; i++) { const coin = document.createElement('div'); coin.className = 'coin-particle'; coin.innerHTML = `<svg style="width:100%; height:100%; fill:gold;"><use href="#icon-coin"></use></svg>`; coin.style.setProperty('--tx', `${Math.random() * 200 - 100}vw`); coin.style.setProperty('--ty', `${-(Math.random() * 80 + 20)}vh`); document.body.appendChild(coin); setTimeout(() => coin.remove(), 2000); } }
+function breakGlass(e) { if (e && e.stopPropagation) e.stopPropagation(); const overlay = document.getElementById('specialGlassOverlay'); if (overlay) overlay.classList.remove('active'); window.parent.postMessage({ type: "GLASS_BROKEN" }, "*"); }
+function submitSessionRequest() { const checked = document.querySelector('input[name="sessionType"]:checked'); if (!checked) return; window.parent.postMessage({ type: "SESSION_REQUEST", sessionType: checked.value, cost: checked.getAttribute('data-cost') }, "*"); }
+
+// =========================================
+// PART 1: MOBILE LOGIC (BRAIN & NAVIGATION)
+// =========================================
+
+// 5. STATS EXPANDER (SIMPLE TOGGLE)
+window.toggleMobileStats = function () {
+    const drawer = document.getElementById('mobStatsContent');
+    const arrow = document.getElementById('mobStatsArrow');
+
+    if (drawer) {
+        // Toggle the class that handles the animation (CSS)
+        drawer.classList.toggle('open');
+
+        // Rotate Arrow
+        if (arrow) {
+            arrow.innerText = drawer.classList.contains('open') ? "▲" : "▼";
+        }
+    }
+};
+
+// ==========================
+// REPLACE window.toggleMobileView WITH THIS VERSION
+// ==========================
+
+window.toggleMobileView = function (viewName) {
+    // 1. CLEANUP POPOVERS
+    if (window.closeLobby) window.closeLobby();
+    if (window.closeQueenMenu) window.closeQueenMenu();
+    if (window.closePoverty) window.closePoverty();
+
+    // 2. DEFINE VIEWS
+    const home = document.getElementById('viewMobileHome');
+    const mobRecord = document.getElementById('viewMobileRecord');
+    const mobGlobal = document.getElementById('viewMobileGlobal');
+
+    // Desktop/Shared Views to hide
+    const chatCard = document.getElementById('chatCard');
+    const mobileApp = document.getElementById('MOBILE_APP');
+    const history = document.getElementById('historySection');
+    const news = document.getElementById('viewNews');
+    const protocol = document.getElementById('viewProtocol');
+
+    // 3. HIDE EVERYTHING (Aggressive Reset)
+    const views = [home, mobRecord, mobGlobal, history, news, protocol];
+    views.forEach(el => {
+        if (el) el.style.display = 'none';
+    });
+
+    if (chatCard) chatCard.style.setProperty('display', 'none', 'important');
+
+    // 4. SHOW TARGET VIEW
+    if (viewName === 'home' && home) {
+        home.style.display = 'flex';
+        if (window.syncMobileDashboard) window.syncMobileDashboard();
+        window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
+    }
+    else if (viewName === 'chat') {
+        if (chatCard && mobileApp) {
+            if (chatCard.parentElement !== mobileApp) mobileApp.appendChild(chatCard);
+            chatCard.style.removeProperty('display');
+            chatCard.style.display = 'flex';
+            // Scroll fix
+            const chatBox = document.getElementById('chatBox');
+            if (chatBox) setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
+        }
+    }
+    else if (viewName === 'record' && mobRecord) {
+        mobRecord.style.display = 'flex';
+        if (window.renderGallery) window.renderGallery();
+    }
+    else if (viewName === 'queen' && news) {
+        news.style.display = 'block';
+    }
+    // *** THE FIX FOR GLOBAL ***
+    else if (viewName === 'global' && mobGlobal) {
+        mobGlobal.style.display = 'flex';
+
+        // FORCE STYLES VIA JS (Fixes "Invisible" issue)
+        mobGlobal.style.backgroundColor = "#000";
+        mobGlobal.style.color = "#fff";
+        mobGlobal.style.zIndex = "100";
+
+        // Paint the headers inside it manually to be safe
+        const headers = mobGlobal.querySelectorAll('.mob-name, .mob-header, div');
+        headers.forEach(h => h.style.color = "#fff");
+
+        const card = mobGlobal.querySelector('.mob-card');
+        if (card) {
+            card.style.border = "1px solid #333";
+            card.style.background = "rgba(20,20,20,0.8)";
+            card.style.padding = "20px";
+            card.style.borderRadius = "8px";
+        }
+    }
+
+    // 5. SIDEBAR CLEANUP
+    const sidebar = document.querySelector('.layout-left');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    document.querySelectorAll('.mf-btn').forEach(btn => btn.classList.remove('active'));
+};
+
+// QUEEN'S MENU NAVIGATION
+window.openQueenMenu = function () {
+    const menu = document.getElementById('queenOverlay');
+    if (menu) {
+        menu.classList.remove('hidden');
+        menu.style.display = 'flex';
+        // Force a data refresh so the progress bar updates
+        if (window.syncMobileDashboard) window.syncMobileDashboard();
+    }
+};
+
+window.closeQueenMenu = function () {
+    const menu = document.getElementById('queenOverlay');
+    if (menu) {
+        menu.classList.add('hidden');
+        menu.style.display = 'none';
+    }
+};
+// 3. KNEEL BUTTON
+window.triggerKneel = function () {
+    const sidebar = document.querySelector('.layout-left');
+    const realBtn = document.querySelector('.kneel-bar-graphic');
+
+    if (sidebar) sidebar.classList.add('mobile-open');
+
+    if (realBtn) {
+        realBtn.style.boxShadow = "0 0 20px var(--neon-red)";
+        setTimeout(() => realBtn.style.boxShadow = "", 1000);
+    }
+};
+
+window.syncMobileDashboard = function () {
+    if (!gameStats || !userProfile) return;
+
+    // --- HEADER ---
+    const dateEl = document.getElementById('dutyDateDisplay');
+    if (dateEl) dateEl.innerText = new Date().toLocaleDateString().toUpperCase();
+
+    // --- 1. PROTOCOL STATUS (6 AM LOCK) ---
+    const routineName = userProfile.routine || "NO PROTOCOL";
+    const rDisplay = document.getElementById('mobRoutineDisplay');
+    if (rDisplay) rDisplay.innerText = routineName.toUpperCase();
+
+    // A. Define the 6 AM Logic
+    const check6AmLock = (dateStr) => {
+        if (!dateStr) return false;
+        const last = new Date(dateStr);
+        const now = new Date();
+
+        // Duty Day starts at 6:00 AM
+        let dutyStart = new Date();
+        dutyStart.setHours(6, 0, 0, 0);
+
+        // If now is 4 AM, the duty day started Yesterday at 6 AM
+        if (now < dutyStart) dutyStart.setDate(dutyStart.getDate() - 1);
+
+        // If upload is newer than the duty start, it's DONE.
+        return last >= dutyStart;
+    };
+
+    // B. Check Status
+    const lastDate = userProfile.lastRoutine || userProfile.lastRoutineSubmission;
+    // We check the Date OR the local flag (for instant feedback)
+    const isDone = check6AmLock(lastDate) || gameStats.routineDoneToday === true;
+
+    const hasRoutine = userProfile.routine && userProfile.routine.trim().length > 0;
+
+    // C. Update UI Elements
+    const btnUpload = document.getElementById('btnRoutineUpload');
+    const msgTime = document.getElementById('routineTimeMsg'); // "Window Closed"
+    const msgDone = document.getElementById('routineDoneMsg'); // "Accepted"
+
+    if (btnUpload) {
+        if (!hasRoutine) {
+            // Case: No routine assigned
+            btnUpload.classList.add('hidden');
+            if (msgTime) { msgTime.innerText = "NO PROTOCOL ASSIGNED"; msgTime.classList.remove('hidden'); }
+            if (msgDone) msgDone.classList.add('hidden');
+        }
+        else if (isDone) {
+            // Case: DONE -> LOCK BUTTON
+            btnUpload.classList.add('hidden'); // Hide button
+
+            if (msgTime) msgTime.classList.add('hidden');
+
+            if (msgDone) {
+                // YOUR CUSTOM TEXT
+                msgDone.innerHTML = `<span style="color:var(--neon-green)">ACCEPTED.</span><br><span style="color:#666; font-size:0.7rem;">LOCKED UNTIL 06:00</span>`;
+                msgDone.classList.remove('hidden');
+            }
+        }
+        else {
+            // Case: NOT DONE -> SHOW BUTTON
+            btnUpload.classList.remove('hidden');
+            btnUpload.disabled = false;
+
+            if (msgTime) msgTime.classList.add('hidden');
+            if (msgDone) msgDone.classList.add('hidden');
+        }
+    }
+
+    // --- 2. LABOR (Task Logic) ---
+    const activeRow = document.getElementById('activeTimerRow');
+    const isWorking = activeRow && !activeRow.classList.contains('hidden');
+
+    const taskIdle = document.getElementById('dash_TaskIdle');
+    const activeCard = document.getElementById('dash_TaskActive');
+    const mobTaskText = document.getElementById('mobTaskText');
+
+    if (isWorking) {
+        if (taskIdle) taskIdle.classList.add('hidden');
+        if (activeCard) activeCard.classList.remove('hidden');
+
+        if (mobTaskText && typeof currentTask !== 'undefined' && currentTask) {
+            mobTaskText.innerHTML = currentTask.instruction || currentTask.text || "AWAITING ORDERS";
+        } else if (mobTaskText) {
+            const desktopText = document.getElementById('readyText');
+            mobTaskText.innerHTML = desktopText ? desktopText.innerHTML : "PROCESSING...";
+        }
+    } else {
+        if (taskIdle) taskIdle.classList.remove('hidden');
+        if (activeCard) activeCard.classList.add('hidden');
+    }
+};
+
+// --- HANDLE ROUTINE UPLOAD (Immediate Lock) ---
+window.handleRoutineUpload = function (input) {
+    if (input.files && input.files.length > 0) {
+
+        // 1. Send to Backend
+        if (window.handleEvidenceUpload) {
+            window.handleEvidenceUpload(input, "Routine");
+        }
+
+        // 2. CRITICAL: Update the Timestamp LOCALLY right now
+        // This makes the "6 AM Logic" see it as Done immediately
+        const now = new Date().toISOString();
+
+        if (window.userProfile) {
+            window.userProfile.lastRoutine = now; // Update main profile memory
+            window.userProfile.lastRoutineSubmission = now; // Safety for alternate keys
+        }
+
+        if (window.gameStats) {
+            gameStats.routineDoneToday = true; // Legacy flag
+        }
+
+        // 3. Update the Dashboard (This will run the logic, see the new date, and lock the button)
+        if (window.syncMobileDashboard) window.syncMobileDashboard();
+    }
+};
+
+// ==========================
+// EXCHEQUER LOGIC (MOBILE)
+// ==========================
+
+window.openExchequer = function () {
+    const store = document.getElementById('mobExchequer');
+
+    if (store) {
+        // 1. JAILBREAK: Move store to Body so it is never hidden by parent views
+        if (store.parentElement !== document.body) {
+            document.body.appendChild(store);
+        }
+
+        // 2. FORCE Z-INDEX: Make sure it sits on top (just under the poverty alert)
+        store.style.zIndex = "2147483640";
+
+        // 3. SHOW IT
+        store.classList.remove('hidden');
+        store.style.display = 'flex';
+    } else {
+        console.error("Exchequer Overlay not found! Check HTML IDs.");
+    }
+};
+
+window.closeExchequer = function () {
+    const store = document.getElementById('mobExchequer');
+    if (store) {
+        store.classList.add('hidden');
+        store.style.display = 'none';
+    }
+};
+
+// --- RANK DEFINITIONS (MATCHING YOUR IMAGE) ---
+const HIERARCHY_LEVELS = [
+    "Hall Boy",
+    "Footman",
+    "Silverman",
+    "Butler",
+    "Chamberlain",
+    "Secretary",
+    "Queen's Champion"
+];
+
+// MOCKING INSULTS
+const RANK_INSULTS = [
+    "You are too pathetic to send media.",
+    "Silverman rank required. Know your place.",
+    "I do not want to see your face.",
+    "Earn your stripes before you try to impress me."
+];
+
+window.handleMediaPlus = function () {
+    // Get Rank (Default to Hall Boy if missing)
+    let currentRank = userProfile?.hierarchy || "Hall Boy";
+
+    // Normalize string (Case insensitive check)
+    const rankIndex = HIERARCHY_LEVELS.findIndex(r => r.toLowerCase() === currentRank.toLowerCase());
+    console.log("Current Rank:", currentRank, "Index:", rankIndex);
+
+    // SILVERMAN IS INDEX 2. BUTLER IS INDEX 3.
+    const SILVERMAN_IDX = 2;
+    const BUTLER_IDX = 3;
+
+    // 1. CHECK: BELOW SILVERMAN -> REJECT
+    if (rankIndex < SILVERMAN_IDX) {
+        triggerRankMock("SILVERMAN REQUIRED");
+        return;
+    }
+
+    // 2. CONFIGURE INPUT BASED ON RANK
+    const fileInput = document.getElementById('chatMediaInput');
+
+    if (rankIndex < BUTLER_IDX) {
+        // SILVERMAN: Photos Only
+        fileInput.setAttribute("accept", "image/*");
+        // Optional: Notify user they can't send video yet
+        // console.log("Rank: Silverman. Photos allowed. Videos restricted.");
+    } else {
+        // BUTLER+: Photos & Videos
+        fileInput.setAttribute("accept", "image/*,video/*");
+    }
+
+    // 3. OPEN PICKER
+    fileInput.click();
+};
+
+window.triggerRankMock = function (customTitle) {
+    const overlay = document.getElementById('povertyOverlay');
+    const title = overlay.querySelector('.mob-reward-title');
+    const text = document.getElementById('povertyInsult');
+    const stamp = overlay.querySelector('.mob-rank-stamp');
+
+    if (!overlay) return;
+
+    const insult = RANK_INSULTS[Math.floor(Math.random() * RANK_INSULTS.length)];
+
+    if (title) {
+        title.innerText = customTitle || "RANK INSUFFICIENT";
+        title.style.color = "#888";
+    }
+    if (text) text.innerText = `"${insult}"`;
+    if (stamp) {
+        stamp.innerText = "SILENCE";
+        stamp.style.borderColor = "#888";
+    }
+
+    if (overlay.parentElement !== document.body) document.body.appendChild(overlay);
+    overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
+
+    if (window.triggerSound) triggerSound('sfx-deny');
+};
+
+// 1. GLOBAL VARIABLE (Must be attached to window)
+window.isRequestingTask = false;
+
+window.mobileRequestTask = function () {
+    // 1. SAFETY CHECK
+    if (!window.gameStats) return;
+
+    // 2. POVERTY CHECK (Added parseInt for safety)
+    if (parseInt(gameStats.coins || 0) < 300) {
+        window.triggerPoverty();
+        if (window.triggerSound) triggerSound('sfx-deny');
+        return;
+    }
+
+    // 3. LOCK THE UI (Stop the interval from resetting it)
+    window.isRequestingTask = true;
+
+    // 4. SET "LOADING" STATE UI (Target BOTH Dashboard and Menu)
+    // Dashboard IDs
+    const dIdle = document.getElementById('dash_TaskIdle');
+    const dActive = document.getElementById('dash_TaskActive');
+    if (dIdle) dIdle.classList.add('hidden');
+    if (dActive) dActive.classList.remove('hidden');
+
+    // Queen Menu IDs (Legacy)
+    const qIdle = document.getElementById('qm_TaskIdle');
+    const qActive = document.getElementById('qm_TaskActive');
+    if (qIdle) qIdle.classList.add('hidden');
+    if (qActive) qActive.classList.remove('hidden');
+
+    // Text Pulse
+    const txt = document.getElementById('mobTaskText');
+    if (txt) {
+        txt.innerHTML = "ESTABLISHING LINK...";
+        txt.className = "text-pulse";
+    }
+
+    // 5. EXECUTE AFTER DELAY
+    setTimeout(() => {
+        // Generate the task (starts the desktop timer)
+        if (window.getRandomTask) window.getRandomTask();
+
+        // Wait a moment for the Desktop DOM to actually update, then unlock
+        setTimeout(() => {
+            window.isRequestingTask = false;
+            if (window.syncMobileDashboard) window.syncMobileDashboard();
+        }, 1000); // 1 second buffer
+    }, 800);
+};
+
+window.mobileUploadEvidence = function (input) {
+    if (input.files && input.files.length > 0) {
+
+        // 1. Trigger the Backend Upload
+        window.handleEvidenceUpload(input);
+
+        // 2. UI FEEDBACK
+        const btn = document.getElementById('mobBtnUpload');
+        if (btn) btn.innerText = "SENDING...";
+
+        // 3. SHOW SUCCESS & CLOSE TASK (After 1.5 seconds)
+        setTimeout(() => {
+            // Show Green Notification
+            if (window.showSystemNotification) {
+                window.showSystemNotification("EVIDENCE SENT", "STATUS: PENDING REVIEW");
+            }
+
+            // RESET UI TO "UNACTIVE"
+            window.updateTaskUIState(false);
+
+            // Reset Button Text
+            if (btn) btn.innerText = "UPLOAD";
+
+            // Force Mobile Sync
+            window.syncMobileDashboard();
+        }, 1500);
+    }
+};
+
+window.mobileSkipTask = function () {
+    console.log("Skip Clicked");
+
+    // 1. CHECK FUNDS (Need 300)
+    if (parseInt(gameStats.coins || 0) < 300) {
+        window.triggerPoverty();
+        return;
+    }
+
+    // 2. DEDUCT COINS
+    gameStats.coins -= 300;
+    if (window.updateStats) window.updateStats(); // Refresh headers immediately
+
+    // 3. PLAY SOUND & INSULT
+    triggerSound('sfx-deny');
+
+    // 4. SHOW NOTIFICATION
+    if (window.showSystemNotification) {
+        window.showSystemNotification("Task ABORTED", "PENALTY: 300 coins", true);
+    }
+
+    // 5. CANCEL TASK (Backend)
+    if (window.cancelPendingTask) window.cancelPendingTask();
+
+    // 6. FORCE UI RESET (Crucial Fix)
+    window.updateTaskUIState(false);
+    if (window.syncMobileDashboard) window.syncMobileDashboard();
+};
+
+// TIMER SYNC & VISUALIZATION (UPDATED TO HANDLE ALL IDS)
+setInterval(() => {
+    // 1. Get Source (Desktop Hidden Elements)
+    const desktopH = document.getElementById('timerH');
+    const desktopM = document.getElementById('timerM');
+    const desktopS = document.getElementById('timerS');
+
+    // 2. Mobile Dashboard Elements (DASH_)
+    const dH = document.getElementById('dash_timerH');
+    const dM = document.getElementById('dash_timerM');
+    const dS = document.getElementById('dash_timerS');
+
+    // 3. Queen Menu Elements (QM_)
+    const qH = document.getElementById('qm_timerH');
+    const qM = document.getElementById('qm_timerM');
+    const qS = document.getElementById('qm_timerS');
+
+    // 4. Update Values
+    if (desktopH) {
+        const hTxt = desktopH.innerText;
+        const mTxt = desktopM.innerText;
+        const sTxt = desktopS.innerText;
+
+        // Update Dashboard
+        if (dH) { dH.innerText = hTxt; dM.innerText = mTxt; dS.innerText = sTxt; }
+
+        // Update Queen Menu Card
+        if (qH) { qH.innerText = hTxt; qM.innerText = mTxt; qS.innerText = sTxt; }
+
+        // Update Rings (Dashboard)
+        const hVal = parseInt(hTxt) || 0;
+        const mVal = parseInt(mTxt) || 0;
+        const sVal = parseInt(sTxt) || 0;
+
+        const ringH = document.getElementById('ring_H');
+        const ringM = document.getElementById('ring_M');
+        const ringS = document.getElementById('ring_S');
+
+        if (ringH) ringH.style.background = `conic-gradient(#c5a059 ${(hVal / 24) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if (ringM) ringM.style.background = `conic-gradient(#c5a059 ${(mVal / 60) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if (ringS) ringS.style.background = `conic-gradient(#c5a059 ${(sVal / 60) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+    }
+
+    // --- VISIBILITY SYNC (THE FIX) ---
+
+    // IF WE ARE CURRENTLY REQUESTING A TASK, DO NOT RUN THIS LOGIC
+    if (window.isRequestingTask === true) return;
+
+    const activeRow = document.getElementById('activeTimerRow');
+    if (!activeRow) return;
+
+    const isWorking = !activeRow.classList.contains('hidden');
+
+    // A. Update Dashboard (dash_ IDs)
+    const dashIdle = document.getElementById('dash_TaskIdle');
+    const dashActive = document.getElementById('dash_TaskActive');
+
+    if (dashIdle && dashActive) {
+        if (isWorking) {
+            dashIdle.classList.add('hidden');
+            dashActive.classList.remove('hidden');
+            const light = document.getElementById('mob_statusLight');
+            const text = document.getElementById('mob_statusText');
+            if (light) light.className = 'status-light green';
+            if (text) text.innerText = "WORKING";
+        } else {
+            dashIdle.classList.remove('hidden');
+            dashActive.classList.add('hidden');
+            const light = document.getElementById('mob_statusLight');
+            const text = document.getElementById('mob_statusText');
+            if (light) light.className = 'status-light red';
+            if (text) text.innerText = "UNPRODUCTIVE";
+        }
+    }
+
+    // B. Update Queen Menu (qm_ IDs)
+    const qmIdle = document.getElementById('qm_TaskIdle');
+    const qmActive = document.getElementById('qm_TaskActive');
+
+    if (qmIdle && qmActive) {
+        if (isWorking) {
+            qmIdle.classList.add('hidden');
+            qmActive.classList.remove('hidden');
+        } else {
+            qmIdle.classList.remove('hidden');
+            qmActive.classList.add('hidden');
+        }
+    }
+}, 500);
+
+window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
+window.parent.postMessage({ type: "UI_READY" }, "*");
+setTimeout(() => { if (window.renderDesktopRecord) window.renderDesktopRecord(); }, 1000); // Initial Desktop Load
+
+window.toggleMobileChat = function (open) {
+    const btn = document.getElementById('btnEnterChatPanel');
+    const panel = document.getElementById('inlineChatPanel');
+    const scrollBox = document.getElementById('mob_chatBox');
+
+    if (open) {
+        btn.classList.add('hidden');       // Hide Button
+        panel.classList.remove('hidden');  // Show Chat
+        // Auto-scroll to bottom
+        if (scrollBox) setTimeout(() => { scrollBox.scrollTop = scrollBox.scrollHeight; }, 50);
+    } else {
+        btn.classList.remove('hidden');    // Show Button
+        panel.classList.add('hidden');     // Hide Chat
+    }
+};
