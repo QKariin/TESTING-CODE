@@ -423,6 +423,15 @@ export async function renderGallery() {
         if (!el) return;
         if (item) {
             let url = await getThumb(item, size);
+
+            // EXTERNAL IMAGE FIX (Mobile)
+            if (item.proofUrl && item.proofUrl.startsWith('http') && !item.proofUrl.includes('wix:')) {
+                const ext = item.proofUrl.split('?')[0].split('.').pop().toLowerCase();
+                if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
+                    url = item.proofUrl;
+                }
+            }
+
             el.src = url;
             el.style.filter = "none";
             el.onclick = () => window.openHistoryModal(allItems.indexOf(item));
