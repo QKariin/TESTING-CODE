@@ -2527,4 +2527,165 @@ body {
     color: #00ff00;
     font-family: 'Orbitron', sans-serif;
     text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+}/* =========================================
+   PROFILE MIRROR - MISSING COMPONENTS
+   (Hierarchy, Progress, Detailed Stats)
+   ========================================= */
+
+/* HIERARCHY STAMP */
+.hierarchy-top {
+    font-family: 'Black Ops One', 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: rgba(197, 160, 89, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    border: 2px solid rgba(197, 160, 89, 0.4);
+    padding: 5px 15px;
+    transform: rotate(-3deg);
+    margin-bottom: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    display: inline-block;
+}
+
+.identity-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.6rem;
+    color: #fff;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+/* STATS ROW (Merit / Wallet) */
+.stats-stack-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 10px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 30px;
+    background: linear-gradient(to bottom, transparent, #444, transparent);
+    opacity: 0.5;
+}
+
+.stat-lbl {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    color: #666;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.stat-val {
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    color: #ccc;
+    font-weight: 700;
+}
+
+/* KNEEL GRAPHIC */
+.kneel-sidebar-wrapper {
+    width: 100%;
+    height: 40px;
+    margin-bottom: 15px;
+}
+
+.kneel-bar-graphic {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #c5a059;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.graphic-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0%;
+    background: linear-gradient(90deg, #8b0000, #ff003c);
+    z-index: 1;
+}
+
+.graphic-text {
+    position: relative;
+    z-index: 2;
+    font-family: 'Cinzel', serif;
+    color: #c5a059;
+    letter-spacing: 3px;
+    font-size: 0.8rem;
+    text-shadow: 0 0 5px black;
+}
+
+/* PROGRESS BAR */
+.progress-section {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.prog-bg {
+    width: 100%;
+    height: 6px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.prog-fill {
+    height: 100%;
+    width: 0%;
+    background: #c5a059;
+    box-shadow: 0 0 10px rgba(197, 160, 89, 0.3);
+    transition: width 0.5s ease-out;
+}
+
+/* DETAILED STATS TEXT */
+.stat-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 4px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.stat-line strong {
+    color: #eee;
+}
+
+/* FOOTER */
+.stat-footer {
+    margin-top: 20px;
+    text-align: center;
+    border-top: 1px solid #333;
+    padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
