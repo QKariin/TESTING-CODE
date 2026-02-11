@@ -1,8 +1,8 @@
 // js/dashboard-users.js - USER DATA CONTROLLER
 
-import { 
+import {
     users, currId, cooldownInterval, histLimit, lastHistoryJson, stickerConfig,
-    availableDailyTasks, 
+    availableDailyTasks,
     setCooldownInterval, setHistLimit, setLastHistoryJson, setArmoryTarget
 } from './dashboard-state.js';
 import { clean, raw, formatTimer } from './dashboard-utils.js';
@@ -20,35 +20,48 @@ const mainDashboardExpandedTasks = new Set();
 // =========================================
 export async function updateDetail(u) {
     if (!u) return;
-    
+
     // --- 1. VITALS DECK (Top Header) ---
     const now = Date.now();
     const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
     let diff = Math.floor((now - ls) / 60000);
     let status = (ls > 0 && diff < 2) ? "ONLINE" : (ls > 0 ? diff + " MIN AGO" : "OFFLINE");
-    
+
     const lsEl = document.getElementById('lastSeen');
     if (lsEl) {
         lsEl.innerText = status;
         lsEl.className = (status === "ONLINE") ? "uh-seen online" : "uh-seen";
     }
-    
+
     // Basic Info
     setText('dName', u.name);
     setText('dRank', u.hierarchy || "SLAVE");
     setText('dWalletVal', u.coins || 0);
-    
-    // Stats Bar
-    setText('dStrikes', u.strikeCount || 0);
-    setText('dTasks', u.completed || 0);
+
+    // PREMIUM HEADER STATS
     setText('dStreak', u.streak || 0);
     setText('dPoints', u.points || 0);
+
+    // Routine Header Status
+    const isRoutineDone = u.routineDoneToday === true;
+    const rName = u.routine ? u.routine.toUpperCase() : "NONE";
+    setText('dRoutineStatus', isRoutineDone ? "DONE" : "PENDING");
+    setText('dRoutineName', rName);
+
+    // Kneeling Header (Logic reused from telemetry)
+    const totalKneel = u.kneelCount || 0;
+    const kneelHrs = (totalKneel * 0.25).toFixed(1);
+    setText('dTotalKneel', `${kneelHrs}h`);
+    setText('dLastKneel', u.lastKneelDate ? new Date(u.lastKneelDate).toLocaleDateString() : "--");
+
+    const rStatEl = document.getElementById('dRoutineStatus');
+    if (rStatEl) rStatEl.style.color = isRoutineDone ? 'var(--green)' : 'var(--red)';
 
     // --- 2. TAB: OPS (Operations) ---
     updateReviewQueue(u);
     updateActiveTask(u);
     updateTaskQueue(u);
-    updateDailyProtocol(u); 
+    updateDailyProtocol(u);
 
     // --- 3. TAB: INTEL (Data) ---
     updateTelemetry(u);
@@ -64,7 +77,7 @@ export async function updateDetail(u) {
 // Helper to safely set text
 function setText(id, txt) {
     const el = document.getElementById(id);
-    if(el) el.innerText = txt;
+    if (el) el.innerText = txt;
 }
 
 // =========================================
@@ -73,25 +86,25 @@ function setText(id, txt) {
 async function updateReviewQueue(u) {
     const qSec = document.getElementById('userQueueSec');
     if (!qSec) return;
-    
+
     if (u.reviewQueue && u.reviewQueue.length > 0) {
         // Sign URLs for thumbnails
         const signingPromises = u.reviewQueue.map(async t => {
-            if(t.proofUrl) {
+            if (t.proofUrl) {
                 t.thumbSigned = await getSignedUrl(getOptimizedUrl(t.proofUrl, 150));
-                t.fullSigned  = await getSignedUrl(t.proofUrl);
+                t.fullSigned = await getSignedUrl(t.proofUrl);
             }
         });
         await Promise.all(signingPromises);
 
         qSec.style.display = 'flex';
-        qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` + 
+        qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` +
             u.reviewQueue.map(t => `<div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false, '${t.fullSigned}')">
                     <img src="${t.thumbSigned}" class="pend-thumb">
                     <div class="pend-info"><div class="pend-act">PENDING</div><div class="pend-txt">${clean(t.text)}</div></div>
                 </div>`).join('');
-    } else { 
-        qSec.style.display = 'none'; 
+    } else {
+        qSec.style.display = 'none';
     }
 }
 
@@ -104,13 +117,13 @@ function updateActiveTask(u) {
 
     if (u.activeTask && u.endTime && u.endTime > Date.now()) {
         activeText.innerText = clean(u.activeTask.text);
-        
+
         const tick = () => {
             const diff = u.endTime - Date.now();
-            if (diff <= 0) { 
-                activeTimer.innerText = "00:00"; 
-                clearInterval(cooldownInterval); 
-                return; 
+            if (diff <= 0) {
+                activeTimer.innerText = "00:00";
+                clearInterval(cooldownInterval);
+                return;
             }
             activeTimer.innerText = formatTimer(diff);
         };
@@ -128,13 +141,13 @@ function updateTaskQueue(u) {
     if (!listContainer) return;
 
     let personalTasks = u.taskQueue || [];
-    
+
     // Filler Logic (Random tasks to make it look busy if empty)
     if (fillerUserId !== u.memberId || cachedFillers.length === 0) {
         cachedFillers = (availableDailyTasks || []).sort(() => 0.5 - Math.random()).slice(0, 10);
         fillerUserId = u.memberId;
     }
-    
+
     const displayTasks = [...personalTasks, ...cachedFillers.slice(0, Math.max(0, 10 - personalTasks.length))];
 
     listContainer.innerHTML = displayTasks.map((t, idx) => {
@@ -154,17 +167,26 @@ function updateTaskQueue(u) {
 }
 
 function updateDailyProtocol(u) {
+    // 1. Update List
     const container = document.getElementById('userRoutineList');
-    if(!container) return;
+
+    // 2. Update Header (Sync)
+    const isDone = u.routineDoneToday === true;
+    const color = isDone ? 'var(--green)' : '#666'; // List color
+    const headColor = isDone ? 'var(--green)' : 'var(--red)'; // Header color
+    const icon = isDone ? 'COMPLETED' : 'PENDING';
+
+    // Sync Header
+    setText('dRoutineStatus', isDone ? "DONE" : "PENDING");
+    const rStatEl = document.getElementById('dRoutineStatus');
+    if (rStatEl) rStatEl.style.color = headColor;
+
+    if (!container) return; // Exit if list container missing
 
     if (!u.routine) {
         container.innerHTML = '<div style="color:#666; font-size:0.7rem; text-align:center; padding:10px;">NO ROUTINE ASSIGNED</div>';
         return;
     }
-
-    const isDone = u.routineDoneToday === true;
-    const color = isDone ? 'var(--green)' : '#666';
-    const icon = isDone ? 'COMPLETED' : 'PENDING';
 
     container.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border:1px solid #333; border-left:3px solid ${color};">
@@ -178,9 +200,9 @@ function updateDailyProtocol(u) {
 // TAB 2: INTEL (DATA)
 // =========================================
 function updateTelemetry(u) {
-    const total = u.kneelCount || 0; 
+    const total = u.kneelCount || 0;
     const hours = (total * 0.25).toFixed(1); // Assuming 15m per kneel
-    
+
     setText('dTotalKneel', `${hours} HRS`);
     // Need kneelHistory array from Velo to do this properly, defaulting for now
     setText('dLastKneel', u.lastKneelDate ? new Date(u.lastKneelDate).toLocaleDateString() : "NEVER");
@@ -188,30 +210,30 @@ function updateTelemetry(u) {
 
 function updateDossier(u) {
     const grid = document.getElementById('dossierGrid');
-    if(!grid) return;
-    
+    if (!grid) return;
+
     let content = "";
-    if(u.kinks) content += `<div style="margin-bottom:10px;"><div style="color:var(--blue); font-size:0.6rem; margin-bottom:2px;">KINKS</div><div style="color:#ccc; font-size:0.8rem; line-height:1.2;">${u.kinks}</div></div>`;
-    if(u.limits) content += `<div><div style="color:var(--red); font-size:0.6rem; margin-bottom:2px;">LIMITS</div><div style="color:#ccc; font-size:0.8rem; line-height:1.2;">${u.limits}</div></div>`;
-    
-    if(!content) content = '<div style="color:#444; font-size:0.7rem;">FILE EMPTY</div>';
+    if (u.kinks) content += `<div style="margin-bottom:10px;"><div style="color:var(--blue); font-size:0.6rem; margin-bottom:2px;">KINKS</div><div style="color:#ccc; font-size:0.8rem; line-height:1.2;">${u.kinks}</div></div>`;
+    if (u.limits) content += `<div><div style="color:var(--red); font-size:0.6rem; margin-bottom:2px;">LIMITS</div><div style="color:#ccc; font-size:0.8rem; line-height:1.2;">${u.limits}</div></div>`;
+
+    if (!content) content = '<div style="color:#444; font-size:0.7rem;">FILE EMPTY</div>';
     grid.innerHTML = content;
 }
 
 function updateInventory(u) {
     const grid = document.getElementById('inventoryGrid');
-    if(!grid) return;
+    if (!grid) return;
 
     // Handle string or array parsing for purchased items
     let items = [];
     if (u.purchasedItems) {
         if (Array.isArray(u.purchasedItems)) items = u.purchasedItems;
         else if (typeof u.purchasedItems === 'string') {
-            try { items = JSON.parse(u.purchasedItems); } catch(e) {}
+            try { items = JSON.parse(u.purchasedItems); } catch (e) { }
         }
     }
 
-    if(items.length === 0) {
+    if (items.length === 0) {
         grid.innerHTML = '<div style="color:#444; font-size:0.7rem; text-align:center;">NO TRIBUTES</div>';
         return;
     }
@@ -234,7 +256,7 @@ function updateAltar(u) {
 
 function updateTrophies(u) {
     const container = document.getElementById('userStickerCase');
-    if(!container) return;
+    if (!container) return;
 
     // Ranks Visualizer
     const ranks = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Queen's Champion"];
@@ -247,7 +269,7 @@ function updateTrophies(u) {
         const color = unlocked ? "var(--gold)" : "#333";
         const bg = unlocked ? "rgba(197, 160, 89, 0.1)" : "transparent";
         html += `<div style="border:1px solid ${color}; background:${bg}; padding:4px 8px; font-size:0.6rem; color:${color}; border-radius:4px;" title="${r}">
-            ${i+1}
+            ${i + 1}
         </div>`;
     });
     html += '</div>';
@@ -263,14 +285,14 @@ async function updateHistory(u) {
 
         const cleanHist = (u.history || []).filter(h => h.status && h.status !== 'fail');
         const historyToShow = cleanHist.slice(0, histLimit);
-        
+
         // Show/Hide Load More
         const loadBtn = document.getElementById('loadMoreHist');
         if (loadBtn) loadBtn.style.display = (cleanHist.length > histLimit) ? 'block' : 'none';
 
         // Sign URLs
         const signingPromises = historyToShow.map(async h => {
-            if(h.proofUrl && h.proofUrl.startsWith('https://upcdn')) h.thumbSigned = await getSignedUrl(getOptimizedUrl(h.proofUrl, 150));
+            if (h.proofUrl && h.proofUrl.startsWith('https://upcdn')) h.thumbSigned = await getSignedUrl(getOptimizedUrl(h.proofUrl, 150));
             else h.thumbSigned = getOptimizedUrl(h.proofUrl, 150);
         });
         await Promise.all(signingPromises);
@@ -279,9 +301,9 @@ async function updateHistory(u) {
             const cls = h.status === 'approve' ? 'hb-app' : 'hb-rej';
             const img = h.thumbSigned || '';
             // Only show if image exists
-            if(!img) return '';
+            if (!img) return '';
             return `<div class="h-card-mini" style="position:relative; width:100%; aspect-ratio:1/1; background:black; border:1px solid #333; cursor:pointer;" 
-                     onclick='openModal(null, null, "${h.proofUrl}", "${h.proofType||'text'}", "${raw(h.text)}", true, "${h.status}")'>
+                     onclick='openModal(null, null, "${h.proofUrl}", "${h.proofType || 'text'}", "${raw(h.text)}", true, "${h.status}")'>
                 <img src="${img}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;">
                 <div class="h-badge ${cls}" style="position:absolute; bottom:0; left:0; width:100%; font-size:0.5rem; text-align:center;">${h.status.toUpperCase()}</div>
             </div>`;
@@ -295,9 +317,9 @@ async function updateHistory(u) {
 export function addQueueTask() {
     // 1. Target the input inside OPS tab
     const input = document.querySelector('#tabOps #qInput') || document.getElementById('qInput');
-    
+
     if (!input) return console.error("Input #qInput not found!");
-    
+
     if (!currId) {
         alert("Select a Slave first.");
         return;
@@ -309,38 +331,38 @@ export function addQueueTask() {
     if (!txt) {
         // SCENARIO A: Input is Empty -> OPEN DATABASE (Armory)
         console.log("Input empty. Opening Task Gallery for QUEUE...");
-        
+
         // Tell the system: "Whatever I click next goes to the QUEUE"
-        setArmoryTarget('queue'); 
-        
+        setArmoryTarget('queue');
+
         // Open the Modal
-        if(window.openTaskGallery) {
+        if (window.openTaskGallery) {
             window.openTaskGallery();
         } else {
             console.error("openTaskGallery function not found on window!");
         }
         return;
     }
-    
+
     // SCENARIO B: Input has Text -> ADD MANUAL TASK
     const u = users.find(x => x.memberId === currId);
     if (u) {
         if (!u.taskQueue) u.taskQueue = [];
-        
+
         // Add to local
         u.taskQueue.push(txt);
-        
+
         // Send to Backend
         window.parent.postMessage({ type: "updateTaskQueue", memberId: currId, queue: u.taskQueue }, "*");
-        
+
         // Instant Bridge
-        if(window.Bridge) {
+        if (window.Bridge) {
             window.Bridge.send("updateTaskQueue", { memberId: currId, queue: u.taskQueue });
         }
 
         // Cleanup
         input.value = '';
-        updateDetail(u); 
+        updateDetail(u);
     }
 }
 export function deleteQueueItem(memberId, index) {
@@ -363,17 +385,17 @@ export function modPoints(amount) {
     window.parent.postMessage({ type: "adjustPoints", memberId: currId, amount: amount }, "*");
 }
 
-export function loadMoreHist() { 
-    setHistLimit(histLimit + 10); 
-    const u = users.find(x => x.memberId === currId); 
-    if (u) updateDetail(u); 
+export function loadMoreHist() {
+    setHistLimit(histLimit + 10);
+    const u = users.find(x => x.memberId === currId);
+    if (u) updateDetail(u);
 }
 
-export function openQueueTask(memberId, index) { 
+export function openQueueTask(memberId, index) {
     const u = users.find(x => x.memberId === memberId);
     if (u?.taskQueue?.[index]) {
-         // Assuming you have an openModal import or global availability
-         // window.openModal(...) 
+        // Assuming you have an openModal import or global availability
+        // window.openModal(...) 
     }
 }
 
