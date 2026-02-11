@@ -250,7 +250,7 @@ export async function renderGallery() {
     if (candidates.length > 0) bestOf.push(candidates.shift());
     if (candidates.length > 0) bestOf.push(candidates.shift());
 
-// --- 5. IMAGE LOADER (ANTI-TRAFFIC JAM VERSION) ---
+// --- 5. IMAGE LOADER (SEQUENTIAL & ROBUST) ---
     const getThumb = async (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
 
@@ -260,44 +260,35 @@ export async function renderGallery() {
 
         if (!raw || typeof raw !== 'string' || raw.length < 5) return PLACEHOLDER_IMG;
 
-        // *** BYTESCALE FIX ***
+        // *** FIX 1: FORCE IMAGE FORMAT FOR BYTESCALE ***
         if (raw.includes("upcdn.io")) {
-            // A. Construct the Perfect Image URL (Forces JPG for Videos/HEIC)
+            // Convert /raw/ to /image/ so we get a JPG (Fixes Videos & iPhone HEIC)
             let thumbUrl = raw.replace('/raw/', '/image/');
             if (!thumbUrl.includes('?')) {
                 thumbUrl += `?w=${size}&h=${size}&fit=crop&f=jpg&q=80`;
             }
 
-            // B. Anti-Traffic Jam (The "One Picture" Fix)
-            // We add a tiny random delay (0ms - 500ms) so we don't hit the backend 50 times at once.
-            await new Promise(r => setTimeout(r, Math.random() * 500));
-
-            // C. Sign it
+            // Attempt to sign the *Thumbnail* URL, not the Raw one
             try {
                 return await getSignedUrl(thumbUrl);
             } catch (e) {
-                console.warn("Signing choked, returning thumb unsigned:", e);
-                // Even if signing fails, return the JPG link. 
-                // It might 403, but it's better than sending a Raw Video to an Image tag.
+                // If signing fails, return the unsigned JPG link. 
+                // It is better to try loading an image than a raw video.
                 return thumbUrl; 
             }
         }
 
-        // --- Standard Logic for Non-Bytescale ---
-        
-        // 2. Video Poster Extraction
+        // 2. Standard Logic for Non-Bytescale
         if (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video')) {
             if (item.cover) raw = item.cover;
             else if (item.thumbnail) raw = item.thumbnail;
             else if (item.poster) raw = item.poster;
         }
 
-        // 3. Manual Wix Image Parse
         if (raw.startsWith('wix:image')) {
             try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
         }
 
-        // 4. Standard Optimization
         try {
             return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
         } catch (e) {
@@ -305,22 +296,30 @@ export async function renderGallery() {
         }
     };
 
-    // --- 6. RENDER TRACKS (STATIC THUMBNAILS ONLY) ---
+    // --- 6. RENDER TRACKS (SEQUENTIAL LOADING - THE TRAFFIC FIX) ---
     const renderChunk = async (list, isTrash) => {
         if (!list || list.length === 0) return { desk: "", mob: "" };
 
-        const promises = list.map(async (item) => {
-            // We use a small size (200-300px) for the grid
-            const src = await getThumb(item, 300);
-            const idx = allItems.indexOf(item);
+        let deskHTML = "";
+        let mobHTML = "";
 
+        // *** FIX 2: SEQUENTIAL LOOP ***
+        // Instead of 'Promise.all' (Parallel), we use a standard Loop.
+        // This loads Item 1, THEN Item 2, THEN Item 3...
+        // It prevents the "Traffic Jam" that blocks your images.
+        for (const item of list) {
+            
+            // This 'await' is what saves the backend from crashing
+            const src = await getThumb(item, 300); 
+            
+            const idx = allItems.indexOf(item);
             const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
 
-            // Check if original was a video to add a "Play" icon overlay (Optional)
-            const isVideo = (item.proofUrl || "").includes('video') || (item.media || "").includes('video') || (item.proofUrl || "").includes('.mp4');
+            // Video Indicator
+            const rawUrl = (item.proofUrl || item.media || "").toLowerCase();
+            const isVideo = rawUrl.includes('video') || rawUrl.includes('.mp4') || rawUrl.includes('.mov');
             const videoIcon = isVideo ? `<div class="video-indicator">▶</div>` : "";
 
-            // Common Media HTML (NO VIDEO TAGS)
             const mediaHtml = `<img class="${isTrash ? 'trash-img' : 'blueprint-img'}" 
                                    src="${src}" 
                                    loading="lazy" 
@@ -336,7 +335,8 @@ export async function renderGallery() {
                 stickerHtml = `<img src="${item.sticker}" class="gallery-sticker-badge">`;
             }
 
-            const desk = `
+            // Append to strings
+            deskHTML += `
                 <div class="${isTrash ? 'item-trash' : 'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
                     ${mediaHtml}
                     ${videoIcon}
@@ -345,19 +345,16 @@ export async function renderGallery() {
                     ${overlay}
                 </div>`;
 
-            const mob = `
+            mobHTML += `
                 <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash ? 'height:80px; width:80px;' : ''}">
                     <img src="${src}" class="mob-scroll-img" loading="lazy" style="${imgStyle}" onerror="this.src='${PLACEHOLDER_IMG}'">
                     ${videoIcon}
                     ${stickerHtml}
                     ${mobBadge}
                 </div>`;
+        }
 
-            return { desk, mob };
-        });
-
-        const results = await Promise.all(promises);
-        return { desk: results.map(r => r.desk).join(''), mob: results.map(r => r.mob).join('') };
+        return { desk: deskHTML, mob: mobHTML };
     };
 
     // --- 7. EXECUTE RENDERS ---
