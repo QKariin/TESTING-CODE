@@ -380,12 +380,22 @@ export async function renderGallery() {
         }
         slotObj.card.style.display = 'flex';
 
+        // 1. Get Initial Thumb
         let url = await getThumb(item, isMain ? 800 : 400);
 
-        // SAFETY: If url is a video and we failed to get a poster, fallback to placeholder
-        // (Altar items use <img> tags and cannot render raw video files)
+        // 2. EXTERNAL IMAGE FIX (UpCDN / Bytescale / Firebase)
+        // If it's an external image, getThumb might have messed it up with optimization params.
+        // We prefer the RAW proofUrl if it's a direct image link.
+        if (item.proofUrl && item.proofUrl.startsWith('http') && !item.proofUrl.includes('wix:')) {
+            const ext = item.proofUrl.split('?')[0].split('.').pop().toLowerCase();
+            if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
+                url = item.proofUrl;
+            }
+        }
+
+        // 3. VIDEO SAFETY
         if (typeof url === 'string' && (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || url.startsWith('wix:video'))) {
-            // Try to use item.cover or fallback via getThumb (recursive for robust parsing)
+            // ... video fallback logic ...
             if (item.cover) url = await getThumb({ proofUrl: item.cover }, isMain ? 800 : 400);
             else if (item.thumbnail) url = await getThumb({ proofUrl: item.thumbnail }, isMain ? 800 : 400);
             else url = PLACEHOLDER_IMG;
