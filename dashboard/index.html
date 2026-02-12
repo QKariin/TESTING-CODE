@@ -269,30 +269,49 @@
                                 </div>
                             </div>
 
-                            <!-- PROGRESS SECTION -->
-                            <div class="progress-section">
-                                <div
-                                    style="display: flex; justify-content: space-between; margin-bottom: 5px; font-family: 'Cinzel', serif; font-size: 0.7rem;">
-                                    <span style="color:#666;">NEXT:</span>
-                                    <span id="dMirrorNextLevel" style="color:var(--gold); font-weight:700;">-</span>
-                                </div>
-                                <div class="prog-bg">
-                                    <div id="dMirrorProgress" class="prog-fill" style="width:0%;"></div>
-                                </div>
-                                <div style="text-align: center; margin-top: 5px;">
-                                    <span id="dMirrorPointsNeeded"
-                                        style="color:#888; font-size:0.65rem; font-family:'Cinzel', serif;">0 to
-                                        go</span>
+                            <!-- NEW SLAVE STATS DRAWER MIRROR -->
+                            <!-- 1. WHO YOU ARE (Current) -->
+                            <div
+                                style="width:100%; text-align:center; padding-bottom:15px; border-bottom:1px solid #333; margin-bottom:15px;">
+                                <div style="font-family:'Cinzel'; font-size:0.6rem; color:#666; letter-spacing:2px;">
+                                    CURRENT CLASSIFICATION</div>
+                                <div id="admin_CurrentRank"
+                                    style="font-family:'Cinzel'; font-size:1.2rem; color:#fff; margin:5px 0; text-transform:uppercase;">
+                                    LOADING...</div>
+                                <div id="admin_CurrentBenefits"
+                                    style="font-family:'Cinzel'; font-size:0.65rem; color:#888; font-style:italic; padding:0 10px; line-height:1.4;">
                                 </div>
                             </div>
 
-                            <!-- DETAILED STATS -->
-                            <div class="stat-line"><span>Streak</span> <strong id="dMirrorStreak">0</strong></div>
-                            <div class="stat-line"><span>Total Tasks</span> <strong id="dMirrorStatTotal">0</strong>
+                            <!-- 2. THE GOAL (Next Rank) -->
+                            <div style="width:100%; text-align:center; margin-bottom:15px;">
+                                <div
+                                    style="font-family:'Orbitron'; font-size:0.6rem; color:#c5a059; letter-spacing:2px;">
+                                    WORKING ON PROMOTION TO</div>
+                                <div id="admin_NextRank"
+                                    style="font-family:'Orbitron'; font-size:1.4rem; color:#c5a059; font-weight:900; letter-spacing:1px; margin-top:5px; text-shadow:0 0 15px rgba(197, 160, 89, 0.3); text-transform:uppercase;">
+                                    LOADING...
+                                </div>
                             </div>
-                            <div class="stat-line"><span>Completed</span> <strong id="dMirrorStatCompleted">0</strong>
+
+                            <!-- 3. THE MATH (Progress Bars) -->
+                            <div id="admin_ProgressContainer"
+                                style="width:100%; background:rgba(255,255,255,0.02); border:1px solid #333; border-radius:4px; padding:15px; margin-bottom:20px;">
+                                <!-- Bars Injected via JS -->
                             </div>
-                            <div class="stat-line"><span>Skipped</span> <strong id="dMirrorStatSkipped">0</strong></div>
+
+                            <!-- 4. THE PRIZE (Next Benefits) -->
+                            <div style="width:100%; text-align:left; padding:0 5px; margin-bottom:15px;">
+                                <div
+                                    style="font-family:'Orbitron'; font-size:0.6rem; color:#c5a059; margin-bottom:8px;">
+                                    PRIVILEGES GRANTED</div>
+                                <ul id="admin_NextBenefits"
+                                    style="color:#ccc; font-size:0.75rem; font-family:'Cinzel'; padding-left:20px; line-height:1.6; margin:0;">
+                                    <!-- List Items via JS -->
+                                </ul>
+                            </div>
+
+                            <!-- Routine (Preserved) -->
                             <div class="stat-line"><span>Routine</span> <strong id="dMirrorRoutine">PENDING</strong>
                             </div>
 
