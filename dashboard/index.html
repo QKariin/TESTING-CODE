@@ -164,6 +164,99 @@
                 <div class="split">
                     <div class="chat-panel">
                         <div class="cp-head">ENCRYPTED FEED</div>
+
+                        <!-- NEW: OPS/INTEL/RECORD TOP SECTION (30-35% of Left Panel) -->
+                        <div class="admin-dash-top"
+                            style="display:flex; flex-direction:column; height:35%; border-bottom:1px solid #333; background:#080808;">
+                            <!-- TABS -->
+                            <div class="ap-nav"
+                                style="display:flex; border-bottom:1px solid #333; background:#0a0a0a; flex-shrink:0;">
+                                <button class="ap-tab active" onclick="switchAdminTab('ops')"
+                                    style="flex:1; padding:8px; background:transparent; border:none; color:#666; font-family:'Orbitron'; cursor:pointer; border-bottom:2px solid transparent; font-size:0.7rem;">OPS</button>
+                                <button class="ap-tab" onclick="switchAdminTab('intel')"
+                                    style="flex:1; padding:8px; background:transparent; border:none; color:#666; font-family:'Orbitron'; cursor:pointer; border-bottom:2px solid transparent; font-size:0.7rem;">INTEL</button>
+                                <button class="ap-tab" onclick="switchAdminTab('record')"
+                                    style="flex:1; padding:8px; background:transparent; border:none; color:#666; font-family:'Orbitron'; cursor:pointer; border-bottom:2px solid transparent; font-size:0.7rem;">RECORD</button>
+                            </div>
+
+                            <!-- VIEWS -->
+                            <div class="ap-content" style="flex:1; overflow-y:auto; overflow-x:hidden;">
+                                <!-- OPS VIEW -->
+                                <div id="tabOps" class="ap-view active" style="padding:10px;">
+                                    <div id="userQueueSec" style="display:none; flex-direction:column; gap:8px;"></div>
+                                    <div class="sec-box">
+                                        <div class="sec-title">DAILY PROTOCOL</div>
+                                        <div id="userRoutineList" class="routine-list">
+                                            <div style="color:#666; font-size:0.7rem; text-align:center;">NO ROUTINE
+                                                ASSIGNED</div>
+                                        </div>
+                                    </div>
+                                    <div class="mini-active">
+                                        <div class="ma-status">ACTIVE DIRECTIVE</div>
+                                        <div class="ma-mid">
+                                            <div id="dActiveText" class="ma-txt">None</div>
+                                            <div id="dActiveTimer" class="ma-timer">--:--</div>
+                                        </div>
+                                        <div class="ma-ctrl">
+                                            <div class="ma-btn" onclick="adminTaskAction(currId, 'send')">SEND</div>
+                                            <div class="ma-btn" onclick="adminTaskAction(currId, 'skip')">FAIL</div>
+                                        </div>
+                                    </div>
+                                    <div class="task-queue-box">
+                                        <div class="sec-title clickable-title" onclick="openTaskGallery()"
+                                            style="color:var(--blue);">TASK QUEUE</div>
+                                        <div id="qListContainer" class="q-list-vertical" style="max-height:100px;">
+                                        </div>
+                                        <div class="q-input-row">
+                                            <input type="text" id="qInput" class="q-input" placeholder="Add task..."
+                                                list="cmsTasksList">
+                                            <button class="q-add-btn" onclick="addQueueTask()">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- INTEL VIEW -->
+                                <div id="tabIntel" class="ap-view hidden" style="padding:10px;">
+                                    <div class="sec-box">
+                                        <div class="sec-title">ENDURANCE TELEMETRY</div>
+                                        <div id="kneelStatsBox" class="telemetry-grid">
+                                            <div class="t-stat"><span>TOTAL</span><strong id="dTotalKneel">0h</strong>
+                                            </div>
+                                            <div class="t-stat"><span>SESSION</span><strong id="dLastKneel">--</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="sec-box">
+                                        <div class="sec-title" style="color:var(--pink);">DOSSIER</div>
+                                        <div id="dossierGrid" class="dossier-grid"></div>
+                                    </div>
+                                    <div class="sec-box">
+                                        <div class="sec-title" style="color:var(--gold);">TRIBUTE INVENTORY</div>
+                                        <div id="inventoryGrid" class="inv-grid"></div>
+                                    </div>
+                                </div>
+
+                                <!-- RECORD VIEW -->
+                                <div id="tabRecord" class="ap-view hidden" style="padding:10px;">
+                                    <div class="sec-box">
+                                        <div class="sec-title" style="color:var(--gold);">THE ALTAR</div>
+                                        <div class="altar-admin-row">
+                                            <div class="aa-slot" id="adminAltar1" onclick="manageAltar(1)">I</div>
+                                            <div class="aa-slot" id="adminAltar2" onclick="manageAltar(2)">II</div>
+                                            <div class="aa-slot" id="adminAltar3" onclick="manageAltar(3)">III</div>
+                                        </div>
+                                    </div>
+                                    <div class="sec-box">
+                                        <div class="sec-title">HONORS</div>
+                                        <div id="userStickerCase" class="trophy-case-admin"></div>
+                                    </div>
+                                    <div class="sec-title">ARCHIVE</div>
+                                    <div id="userHistoryGrid" class="history-grid"></div>
+                                    <button id="loadMoreHist" class="load-more-btn" onclick="loadMoreHist()">LOAD
+                                        MORE</button>
+                                </div>
+                            </div>
+                        </div>
                         <!--Show media in chat -->
                         <div id="chatMediaOverlay" class="hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.92);
                                 z-index: 500; backdrop-filter: blur(20px);
@@ -326,114 +419,7 @@
                         <!-- GRID CARDS REMOVED (Redundant with Drawer) -->
                     </div>
 
-                    <!-- 3. NAVIGATION TABS -->
-                    <div class="ap-nav" style="display:flex; border-bottom:1px solid #333; background:#0a0a0a;">
-                        <button class="ap-tab active" onclick="switchAdminTab('ops')"
-                            style="flex:1; padding:12px; background:transparent; border:none; color:#666; font-family:'Orbitron'; cursor:pointer; border-bottom:2px solid transparent;">OPS</button>
-                        <button class="ap-tab" onclick="switchAdminTab('intel')"
-                            style="flex:1; padding:12px; background:transparent; border:none; color:#666; font-family:'Orbitron'; cursor:pointer; border-bottom:2px solid transparent;">INTEL</button>
-                        <button class="ap-tab" onclick="switchAdminTab('record')"
-                            style="flex:1; padding:12px; background:transparent; border:none; color:#666; font-family:'Orbitron'; cursor:pointer; border-bottom:2px solid transparent;">RECORD</button>
-                    </div>
 
-                    <!-- 3. VIEWS CONTAINER -->
-                    <div class="ap-content">
-
-                        <!-- === VIEW 1: OPS (Tasks & Routines) === -->
-                        <div id="tabOps" class="ap-view active">
-                            <!-- Daily Routine Section (New Placeholder) -->
-                            <div id="userQueueSec" style="display:none; flex-direction:column; gap:8px;"></div>
-                            <div class="sec-box">
-                                <div class="sec-title">DAILY PROTOCOL</div>
-                                <div id="userRoutineList" class="routine-list">
-                                    <div style="color:#666; font-size:0.7rem; text-align:center;">NO ROUTINE
-                                        ASSIGNED</div>
-                                </div>
-                            </div>
-
-                            <!-- Active Task (Preserved) -->
-                            <div class="mini-active">
-                                <div class="ma-status">ACTIVE DIRECTIVE</div>
-                                <div class="ma-mid">
-                                    <div id="dActiveText" class="ma-txt">None</div>
-                                    <div id="dActiveTimer" class="ma-timer">--:--</div>
-                                </div>
-                                <div class="ma-ctrl">
-                                    <div class="ma-btn" onclick="adminTaskAction(currId, 'send')">SEND</div>
-                                    <div class="ma-btn" onclick="adminTaskAction(currId, 'skip')">FAIL</div>
-                                </div>
-                            </div>
-
-                            <!-- Task Queue (Preserved IDs) -->
-                            <div class="task-queue-box">
-                                <div class="sec-title clickable-title" onclick="openTaskGallery()"
-                                    style="color:var(--blue);">TASK QUEUE</div>
-                                <div id="qListContainer" class="q-list-vertical"></div>
-                                <div class="q-input-row">
-                                    <input type="text" id="qInput" class="q-input" placeholder="Add task..."
-                                        list="cmsTasksList">
-                                    <button class="q-add-btn" onclick="addQueueTask()">+</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- === VIEW 2: INTEL (Kinks, Limits, Stats) === -->
-                        <div id="tabIntel" class="ap-view hidden">
-                            <!-- Kneeling Stats -->
-                            <div class="sec-box">
-                                <div class="sec-title">ENDURANCE TELEMETRY</div>
-                                <div id="kneelStatsBox" class="telemetry-grid">
-                                    <!-- JS will fill this -->
-                                    <div class="t-stat"><span>TOTAL</span><strong id="dTotalKneel">0h</strong></div>
-                                    <div class="t-stat"><span>SESSION</span><strong id="dLastKneel">--</strong>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Dossier (Kinks/Limits) -->
-                            <div class="sec-box">
-                                <div class="sec-title" style="color:var(--pink);">DOSSIER</div>
-                                <div id="dossierGrid" class="dossier-grid">
-                                    <!-- JS will fill this -->
-                                </div>
-                            </div>
-
-                            <!-- Inventory -->
-                            <div class="sec-box">
-                                <div class="sec-title" style="color:var(--gold);">TRIBUTE INVENTORY</div>
-                                <div id="inventoryGrid" class="inv-grid">
-                                    <!-- JS will fill this -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- === VIEW 3: RECORD (Altar, Trophies, History) === -->
-                        <div id="tabRecord" class="ap-view hidden">
-
-                            <!-- Altar Manager (New) -->
-                            <div class="sec-box">
-                                <div class="sec-title" style="color:var(--gold);">THE ALTAR</div>
-                                <div class="altar-admin-row">
-                                    <div class="aa-slot" id="adminAltar1" onclick="manageAltar(1)">I</div>
-                                    <div class="aa-slot" id="adminAltar2" onclick="manageAltar(2)">II</div>
-                                    <div class="aa-slot" id="adminAltar3" onclick="manageAltar(3)">III</div>
-                                </div>
-                            </div>
-
-                            <!-- Trophy Case (New) -->
-                            <div class="sec-box">
-                                <div class="sec-title">HONORS</div>
-                                <div id="userStickerCase" class="trophy-case-admin"></div>
-                            </div>
-
-                            <!-- History Grid (Preserved ID) -->
-                            <div class="sec-title">ARCHIVE</div>
-                            <div id="userHistoryGrid" class="history-grid"></div>
-                            <button id="loadMoreHist" class="load-more-btn" onclick="loadMoreHist()">LOAD
-                                MORE</button>
-                        </div>
-
-                    </div>
                 </div>
             </div>
         </div>
