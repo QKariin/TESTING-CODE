@@ -184,30 +184,37 @@
                                 <!-- OPS VIEW -->
                                 <div id="tabOps" class="ap-view active" style="padding:10px;">
                                     <div id="userQueueSec" style="display:none; flex-direction:column; gap:8px;"></div>
-                                    <div class="sec-box">
-                                        <div class="sec-title">DAILY PROTOCOL</div>
-                                        <div id="userRoutineList" class="routine-list">
-                                            <div style="color:#666; font-size:0.7rem; text-align:center;">NO ROUTINE
-                                                ASSIGNED</div>
-                                        </div>
-                                    </div>
-                                    <div class="active-task-card">
+
+                                    <!-- 1. STATUS CARD (Luxurious Gold) -->
+                                    <div class="active-task-card gold-theme">
                                         <div class="at-header">
-                                            <div class="at-label">ACTIVE TASK</div>
-                                            <div id="dActiveTimer" class="at-timer">--:--</div>
+                                            <div class="at-label">CURRENT STATUS</div>
+                                            <div id="dActiveStatus" class="at-status-text">UNPRODUCTIVE</div>
                                         </div>
-                                        <div id="dActiveText" class="at-text">None</div>
-                                        <div class="at-actions">
-                                            <button class="at-btn at-send"
-                                                onclick="adminTaskAction(currId, 'send')">SEND</button>
-                                            <button class="at-btn at-fail"
-                                                onclick="adminTaskAction(currId, 'skip')">FAIL</button>
+
+                                        <!-- Active Task Content -->
+                                        <div id="activeTaskContent">
+                                            <div class="at-sub-label">ACTIVE DIRECTIVE</div>
+                                            <div id="dActiveText" class="at-text">None</div>
+                                            <div class="at-timer-row">
+                                                <div class="at-timer-label">TIME REMAINING</div>
+                                                <div id="dActiveTimer" class="at-timer-large">--:--</div>
+                                            </div>
+                                            <div class="at-actions">
+                                                <button class="at-btn at-fail"
+                                                    onclick="adminTaskAction(currId, 'skip')">CANCEL TASK</button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="task-queue-box">
+
+                                    <!-- 2. SCHEDULE BUTTON -->
+                                    <button class="schedule-btn" onclick="toggleTaskQueue()">SCHEDULE TASKS</button>
+
+                                    <!-- 3. HIDDEN QUEUE -->
+                                    <div id="taskQueueContainer" class="task-queue-box hidden" style="margin-top:10px;">
                                         <div class="sec-title clickable-title" onclick="openTaskGallery()"
                                             style="color:var(--blue);">TASK QUEUE</div>
-                                        <div id="qListContainer" class="q-list-vertical" style="max-height:100px;">
+                                        <div id="qListContainer" class="q-list-vertical" style="max-height:150px;">
                                         </div>
                                         <div class="q-input-row">
                                             <input type="text" id="qInput" class="q-input" placeholder="Add task..."
