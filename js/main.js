@@ -1395,44 +1395,53 @@ const ICONS = {
 
 // --- CONFIGURATION: RANKS & MEDALS ---
 const REWARD_DATA = {
-    // 1. THE HIERARCHY (Main Event)
+    // 1. THE HIERARCHY (Updated to match Backend Rules)
     ranks: [
-        {
+        { 
             name: "HALL BOY", icon: ICONS.rank, tax: 20,
             req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
             benefits: ["Silence is mandatory.", "Access to The Terminal."]
         },
-        {
+        { 
             name: "FOOTMAN", icon: ICONS.rank, tax: 15,
-            req: { tasks: 5, kneels: 10, points: 500, spent: 1000, streak: 0 },
+            // Updated: Matches "tasks >= 5 && kneels >= 10 && points >= 500"
+            // Note: Your backend didn't ask for spent/streak here, so we set them low/zero or keep legacy
+            req: { tasks: 5, kneels: 10, points: 500, spent: 0, streak: 0 },
             benefits: ["Identity Grant: You may have a face.", "Protocol Alpha: Daily Routine access.", "Voice cost reduced to 15."]
         },
-        {
+        { 
             name: "SILVERMAN", icon: ICONS.rank, tax: 10,
-            req: { tasks: 25, kneels: 65, points: 2500, spent: 10000, streak: 3 },
+            // Updated: Matches your new Silver requirements
+            req: { tasks: 25, kneels: 65, points: 2500, spent: 5000, streak: 5 },
             benefits: ["Visual Tribute: Send PHOTOS.", "Gilded Chains: Pending tasks Gold.", "Voice cost reduced to 10."]
         },
-        {
+        { 
             name: "BUTLER", icon: ICONS.rank, tax: 5,
-            req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 7 },
+            // Updated: Matches your new Butler requirements
+            req: { tasks: 100, kneels: 250, points: 10000, spent: 10000, streak: 10 },
             benefits: ["Kinetic Submission: Send VIDEOS.", "Forbidden Knowledge: Access Vault.", "Voice cost reduced to 5."]
         },
-        {
+        { 
             name: "CHAMBERLAIN", icon: ICONS.rank, tax: 0,
-            req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 14 },
+            // Updated: Matches your new Chamberlain requirements
+            req: { tasks: 300, kneels: 750, points: 50000, spent: 50000, streak: 30 },
             benefits: ["Royal Mercy: Penalties halved.", "The Free Tongue: Tax removed.", "Priority status."]
         },
-        {
+        { 
             name: "SECRETARY", icon: ICONS.rank, tax: 0,
-            req: { tasks: 500, kneels: 1500, points: 100000, spent: 500000, streak: 30 },
+            // Updated: Matches your new Secretary requirements
+            req: { tasks: 500, kneels: 1500, points: 100000, spent: 100000, streak: 100 },
             benefits: ["The Golden Voice.", "System Command.", "Direct Throne Line."]
         },
-        {
+        { 
             name: "QUEEN'S CHAMPION", icon: ICONS.rank, tax: 0,
-            req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 60 },
+            // Updated: Matches your new Champion requirements
+            req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 365 },
             benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."]
         }
     ],
+
+    // ... (Keep the medals section as is) ...
 
     // 2. THE MEDALS (Side Quests - Restored)
     tasks: [
