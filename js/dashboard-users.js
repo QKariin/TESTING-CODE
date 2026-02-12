@@ -273,6 +273,7 @@ function updateActiveTask(u) {
     const activeTimer = document.getElementById('dActiveTimer');
     const statusText = document.getElementById('dActiveStatus');
     const contentBox = document.getElementById('activeTaskContent');
+    const idleBox = document.getElementById('idleActions');
 
     if (!activeText) return;
 
@@ -283,6 +284,7 @@ function updateActiveTask(u) {
             statusText.style.color = "var(--green)";
         }
         if (contentBox) contentBox.style.display = "block";
+        if (idleBox) idleBox.style.display = "none";
 
         activeText.innerText = clean(u.activeTask.text);
 
@@ -305,6 +307,7 @@ function updateActiveTask(u) {
             statusText.style.color = "var(--red)";
         }
         if (contentBox) contentBox.style.display = "none";
+        if (idleBox) idleBox.style.display = "block";
 
         activeText.innerText = "None";
         activeTimer.innerText = "--:--";
