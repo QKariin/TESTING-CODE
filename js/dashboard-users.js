@@ -115,16 +115,13 @@ export async function updateDetail(u) {
 
     // 2. MAIN STATS
     setText('dMirrorPoints', (u.points || 0).toLocaleString());
-    setText('dMirrorPointsCard', (u.points || 0).toLocaleString()); // Added: Grid Card
 
     setText('dMirrorWallet', (u.coins || 0).toLocaleString());
-    setText('dMirrorWalletCard', (u.coins || 0).toLocaleString()); // Added: Grid Card
 
     // 3. KNEELING
     const totalKneel = u.kneelCount || 0;
     const kneelHrs = (totalKneel * 0.25).toFixed(1);
     setText('dMirrorKneel', `${kneelHrs}h`);
-    setText('dMirrorKneelCard', `${kneelHrs}h`); // Added: Grid Card
 
     // 4. HIERARCHY PROGRESS (FULL MIRROR)
     const ranks = REWARD_DATA.ranks;
@@ -211,13 +208,10 @@ export async function updateDetail(u) {
     const routineColor = isRoutineDone ? '#00ff00' : '#666';
 
     setText('dMirrorRoutine', `${routineName} (${routineStatus})`);
-    setText('dMirrorRoutineCard', routineName); // Grid Card just name
 
     // Tint color for both
     const rEl = document.getElementById('dMirrorRoutine');
     if (rEl) rEl.style.color = routineColor;
-    const rElCard = document.getElementById('dMirrorRoutineCard');
-    if (rElCard) rElCard.style.color = routineColor;
 
     // 6. FOOTER
     setText('dMirrorSlaveSince', u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "--/--/--"); // Fixed: u.joinDate -> u.joinedDate
@@ -277,10 +271,19 @@ function updateActiveTask(u) {
     if (cooldownInterval) clearInterval(cooldownInterval);
     const activeText = document.getElementById('dActiveText');
     const activeTimer = document.getElementById('dActiveTimer');
+    const statusText = document.getElementById('dActiveStatus');
+    const contentBox = document.getElementById('activeTaskContent');
 
     if (!activeText) return;
 
     if (u.activeTask && u.endTime && u.endTime > Date.now()) {
+        // STATUS: WORKING
+        if (statusText) {
+            statusText.innerText = "WORKING";
+            statusText.style.color = "var(--green)";
+        }
+        if (contentBox) contentBox.style.display = "block";
+
         activeText.innerText = clean(u.activeTask.text);
 
         const tick = () => {
@@ -296,10 +299,23 @@ function updateActiveTask(u) {
         const interval = setInterval(tick, 1000);
         setCooldownInterval(interval);
     } else {
-        activeText.innerText = "IDLE";
+        // STATUS: UNPRODUCTIVE
+        if (statusText) {
+            statusText.innerText = "UNPRODUCTIVE";
+            statusText.style.color = "var(--red)";
+        }
+        if (contentBox) contentBox.style.display = "none";
+
+        activeText.innerText = "None";
         activeTimer.innerText = "--:--";
     }
 }
+
+// Global Toggle for Queue
+window.toggleTaskQueue = function () {
+    const q = document.getElementById('taskQueueContainer');
+    if (q) q.classList.toggle('hidden');
+};
 
 function updateTaskQueue(u) {
     const listContainer = document.getElementById('qListContainer');
