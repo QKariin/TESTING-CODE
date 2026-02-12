@@ -1615,7 +1615,8 @@ window.updateHierarchyDrawer = function (currentStreak) {
         html += buildCheck("IDENTITY", hasName, SVG_ID, 'name');
     }
     if (req.photo === true) {
-        const hasPhoto = (userProfile.avatar && !userProfile.avatar.includes('default'));
+        // Check RAW image, not the fallback avatar
+        const hasPhoto = (userProfile.rawImage && !userProfile.rawImage.includes('default'));
         html += buildCheck("PHOTO", hasPhoto, SVG_PHOTO, 'photo');
     }
 
@@ -1629,6 +1630,7 @@ window.updateHierarchyDrawer = function (currentStreak) {
         html += buildCheck("KINKS", hasKinks, SVG_KINKS, 'kinks');
     }
 
+    // BARS (Conditional)
     html += buildBar("LABOR", stats.tasks, req.tasks, "🛠️");
     html += buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎");
     html += buildBar("MERIT", stats.points, req.points, "✨");
@@ -1637,7 +1639,9 @@ window.updateHierarchyDrawer = function (currentStreak) {
         html += buildBar("SACRIFICE", stats.spent, req.spent, "💰");
     }
 
-    html += buildBar("CONSISTENCY", stats.streak, req.streak, "🔥");
+    if (req.streak > 0) {
+        html += buildBar("CONSISTENCY", stats.streak, req.streak, "🔥");
+    }
 
     container.innerHTML = html + `<div id="inlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;
 };
