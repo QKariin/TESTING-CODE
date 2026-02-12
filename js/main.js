@@ -1651,40 +1651,55 @@ window.updateHierarchyDrawer = function (currentStreak) {
 
 
 // --- INLINE DATA ENTRY (Jailed in Slave Stats Drawer) ---
+window.isEditingProfile = false;
+
+// --- INLINE DATA ENTRY (Jailed in Slave Stats Drawer) ---
 window.openDataEntry = function (type) {
     const container = document.getElementById('drawer_ProgressContainer');
     if (!container) return;
 
+    window.isEditingProfile = true; // LOCK UPDATE
+
     // Premium Styles
-    const btnStyle = "background:#ffd700; color:#000; border:none; padding:10px 20px; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold; cursor:pointer; width:100%; margin-top:15px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition:all 0.2s;";
-    const cancelStyle = "background:transparent; color:#888; border:1px solid #444; padding:8px 16px; font-family:'Cinzel'; font-size:0.7rem; cursor:pointer; width:100%; margin-top:10px; opacity:0.7;";
+    const btnStyle = "background:#ffd700; color:#000; border:none; padding:12px; font-family:'Orbitron'; font-size:0.9rem; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition:all 0.2s;";
+    const backStyle = "background:transparent; color:#888; border:1px solid #444; padding:10px; font-family:'Cinzel'; font-size:0.8rem; cursor:pointer; width:100%; margin-top:10px; transition:all 0.2s;";
     const inputStyle = "width:100%; background:rgba(0,0,0,0.5); color:#fff; border:none; border-bottom:1px solid #c5a059; padding:10px 5px; font-family:'Cinzel'; font-size:1rem; margin-bottom:15px; outline:none;";
     const labelStyle = "color:#c5a059; font-family:'Orbitron'; font-size:0.65rem; letter-spacing:2px; margin-bottom:5px; text-transform:uppercase;";
     const headerStyle = "color:#fff; font-family:'Cinzel'; font-size:1.1rem; text-align:center; margin-bottom:20px; text-shadow:0 0 10px rgba(255,255,255,0.3);";
+    const costStyle = "color:#ffd700; font-family:'Orbitron'; font-size:0.9rem; text-align:center; margin-top:15px; padding:10px; border-top:1px solid rgba(255,255,255,0.1);";
 
     let contentHtml = '';
+    let baseCost = 0;
+    let itemCost = 0;
 
-    // Helper for Kink/Limit Chips
+    if (type === 'name') baseCost = 100;
+    if (type === 'photo') baseCost = 200;
+    if (type === 'kinks') itemCost = 100;
+    if (type === 'limits') itemCost = 200;
+
+    // Helper for Kink/Limit Chips (Vertical List)
     const renderChips = (dataType) => {
-        // Use global KINK_LIST for both (as requested)
         const list = (typeof KINK_LIST !== 'undefined') ? KINK_LIST : ["JOI", "Humiliation", "Control", "Chastity", "Pain", "Service"];
 
-        let chipsHtml = `<div style="display:flex; flex-wrap:wrap; gap:8px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">`;
+        let chipsHtml = `<div id="chipContainer" style="display:flex; flex-direction:column; gap:10px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">`;
         list.forEach(item => {
             chipsHtml += `
                 <div class="kink-chip" 
-                     onclick="this.classList.toggle('selected')" 
+                     onclick="window.toggleChip(this, ${itemCost})" 
                      data-value="${item}"
-                     style="padding:8px 14px; border:1px solid #333; background:rgba(0,0,0,0.3); border-radius:4px; font-size:0.7rem; font-family:'Orbitron'; color:#888; cursor:pointer; transition:all 0.2s; user-select:none;">
-                    ${item}
+                     style="width:100%; padding:12px 15px; border:1px solid #333; background:rgba(0,0,0,0.4); font-size:0.8rem; font-family:'Orbitron'; color:#888; cursor:pointer; transition:all 0.2s; user-select:none; display:flex; justify-content:space-between; align-items:center;">
+                    <span>${item}</span>
+                    <span class="cost-badge" style="font-size:0.6rem; color:#444;">${itemCost}</span>
                 </div>`;
         });
         chipsHtml += `</div>`;
 
-        // Add CSS for selected state inline to ensure it works
+        // Hide Scrollbar Style & Selection
         chipsHtml += `<style>
-            .kink-chip:hover { border-color:#666; color:#ccc; }
+            #chipContainer::-webkit-scrollbar { display: none; }
+            #chipContainer { -ms-overflow-style: none; scrollbar-width: none; }
             .kink-chip.selected { border-color:#c5a059 !important; color:#000 !important; background:#c5a059 !important; font-weight:bold; box-shadow:0 0 15px rgba(197, 160, 89, 0.4); }
+            .kink-chip.selected .cost-badge { color:#000; }
         </style>`;
 
         return chipsHtml;
@@ -1697,7 +1712,8 @@ window.openDataEntry = function (type) {
                 <div style="${labelStyle}">Designation</div>
                 <input type="text" id="inlineNameInput" placeholder="Enter Name..." style="${inputStyle}">
             </div>
-            <button onclick="window.saveInlineData('name')" style="${btnStyle}">CONFIRM IDENTITY</button>
+            <div id="costDisplay" style="${costStyle}">TOTAL COST: ${baseCost} COINS</div>
+            <button id="actionBtn" onclick="window.saveInlineData('name')" style="${btnStyle}">SUBMIT</button>
         `;
     } else if (type === 'photo') {
         contentHtml = `
@@ -1705,36 +1721,46 @@ window.openDataEntry = function (type) {
             <div style="text-align:left;">
                 <div style="${labelStyle}">Image URL</div>
                 <input type="text" id="inlinePhotoInput" placeholder="https://..." style="${inputStyle}">
-                <div style="font-size:0.6rem; color:#666; font-style:italic; margin-top:-10px; margin-bottom:15px;">Paste a direct link to your image.</div>
             </div>
-            <button onclick="window.saveInlineData('photo')" style="${btnStyle}">UPLOAD & VERIFY</button>
+            <div id="costDisplay" style="${costStyle}">TOTAL COST: ${baseCost} COINS</div>
+            <button id="actionBtn" onclick="window.saveInlineData('photo')" style="${btnStyle}">SUBMIT</button>
         `;
     } else if (type === 'limits') {
         contentHtml = `
             <div style="${headerStyle}">HARD LIMITS</div>
-            <div style="margin-bottom:15px; font-size:0.7rem; color:#888; font-family:'Cinzel';">Touch to select all that apply:</div>
             ${renderChips('limits')}
-            <button onclick="window.saveInlineData('limits')" style="${btnStyle}">SET LIMITS</button>
+            <div id="costDisplay" style="${costStyle}">TOTAL COST: 0 COINS</div>
+            <button id="actionBtn" onclick="window.saveInlineData('limits')" style="${btnStyle}">SUBMIT</button>
         `;
     } else if (type === 'kinks') {
         contentHtml = `
             <div style="${headerStyle}">DESIRED PROTOCOLS</div>
-            <div style="margin-bottom:15px; font-size:0.7rem; color:#888; font-family:'Cinzel';">Touch to select your interests:</div>
             ${renderChips('kinks')}
-            <button onclick="window.saveInlineData('kinks')" style="${btnStyle}">DECLARE KINKS</button>
+            <div id="costDisplay" style="${costStyle}">TOTAL COST: 0 COINS</div>
+            <button id="actionBtn" onclick="window.saveInlineData('kinks')" style="${btnStyle}">SUBMIT</button>
         `;
     }
 
-    // JAIL: Darker background, border, padding
     container.innerHTML = `
-        <div style="padding:25px; border:1px solid #c5a059; background:rgba(10,10,10,0.95); box-shadow:0 0 50px rgba(0,0,0,0.9); border-radius:4px; position:relative;">
+        <div style="padding:25px; border:1px solid #c5a059; background:rgba(5,5,5,0.98); box-shadow:0 0 50px rgba(0,0,0,0.9); border-radius:4px; position:relative;">
              ${contentHtml}
-            <button onclick="window.closeDataEntry()" style="${cancelStyle}">CANCEL</button>
+            <button onclick="window.closeDataEntry()" style="${backStyle}">BACK</button>
         </div>
     `;
 };
 
+window.toggleChip = function (el, costPerItem) {
+    el.classList.toggle('selected');
+    // Recalc Total
+    const count = document.querySelectorAll('.kink-chip.selected').length;
+    const total = count * costPerItem;
+    // Update Display Only
+    const display = document.getElementById('costDisplay');
+    if (display) display.innerText = `TOTAL COST: ${total} COINS`;
+};
+
 window.closeDataEntry = function () {
+    window.isEditingProfile = false; // RELEASE LOCK
     // Restore the view
     if (window.updateHierarchyDrawer && window.gameStats) {
         window.updateHierarchyDrawer(window.gameStats.taskdom_streak || 0);
@@ -1751,28 +1777,23 @@ window.saveInlineData = function (type) {
         payload.photo = document.getElementById('inlinePhotoInput').value;
     }
     else if (type === 'limits' || type === 'kinks') {
-        // Gather selected chips
         const selected = Array.from(document.querySelectorAll('.kink-chip.selected')).map(el => el.getAttribute('data-value'));
         if (type === 'limits') payload.limits = selected;
         if (type === 'kinks') payload.kinks = selected;
     }
 
-    // Basic Validation
     if (Object.keys(payload).length > 0) {
-        // Show saving state
-        const btn = document.querySelector('#drawer_ProgressContainer button');
+        const btn = document.getElementById('actionBtn');
         if (btn) {
             btn.innerText = "PROCESSING...";
             btn.style.opacity = "0.5";
         }
 
-        // Send to Velo
         window.parent.postMessage({
             type: "UPDATE_PROFILE",
             payload: payload
         }, "*");
 
-        // Optimistic UI Update & Close
         setTimeout(() => {
             window.closeDataEntry();
         }, 1500);
