@@ -1785,3 +1785,27 @@ body {
 .magazine-card:hover .mag-text {
     color: var(--gold);
 }
+
+
+/* --- CRITICAL DESKTOP HEADER FIXES (SAFEGUARDED) --- */
+@media screen and (min-width: 769px) {
+
+    /* Forces Queen's Avatar to start small even if chat.css fails */
+    .rh-avatar {
+        width: 45px !important;
+        height: 45px !important;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .rh-avatar-wrapper {
+        width: 45px !important;
+        height: 45px !important;
+    }
+
+    /* Forces Altar Images to stay regulated */
+    .center-idol {
+        max-width: 180px !important;
+        max-height: 180px !important;
+    }
+}
