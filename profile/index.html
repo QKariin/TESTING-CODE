@@ -272,7 +272,7 @@
             }
 
             .mob-internal-drawer.open {
-                max-height: 1200px;
+                max-height: 200px;
                 opacity: 1;
                 margin-top: 15px;
                 padding-top: 5px;
@@ -1944,38 +1944,12 @@
                         </div>
 
                         <div id="mobStatsContent" class="mob-internal-drawer">
-    
-                            <!-- 1. WHO YOU ARE (Current) -->
-                            <div style="width:100%; text-align:center; padding-bottom:15px; border-bottom:1px solid #333; margin-bottom:15px;">
-                                <div style="font-family:'Cinzel'; font-size:0.6rem; color:#666; letter-spacing:2px;">CURRENT CLASSIFICATION</div>
-                                <!-- Matches your Gold/White aesthetic -->
-                                <div id="drawer_CurrentRank" style="font-family:'Cinzel'; font-size:1.2rem; color:#fff; margin:5px 0; text-transform:uppercase;">LOADING...</div>
-                                <div id="drawer_CurrentBenefits" style="font-family:'Cinzel'; font-size:0.65rem; color:#888; font-style:italic; padding:0 10px; line-height:1.4;"></div>
-                            </div>
-                        
-                            <!-- 2. THE GOAL (Next Rank) -->
-                            <div style="width:100%; text-align:center; margin-bottom:15px;">
-                                <div style="font-family:'Orbitron'; font-size:0.6rem; color:#c5a059; letter-spacing:2px;">WORKING ON PROMOTION TO</div>
-                                <!-- Big Gold Text for the Target -->
-                                <div id="drawer_NextRank" style="font-family:'Orbitron'; font-size:1.4rem; color:#c5a059; font-weight:900; letter-spacing:1px; margin-top:5px; text-shadow:0 0 15px rgba(197, 160, 89, 0.3); text-transform:uppercase;">
-                                    LOADING...
-                                </div>
-                            </div>
-                        
-                            <!-- 3. THE MATH (Progress Bars) -->
-                            <!-- JS will inject the Green/Red bars here, exactly like the old card -->
-                            <div id="drawer_ProgressContainer" style="width:100%; background:rgba(255,255,255,0.02); border:1px solid #333; border-radius:4px; padding:15px; margin-bottom:20px;">
-                                <!-- Bars go here automatically via JS -->
-                            </div>
-                        
-                            <!-- 4. THE PRIZE (Next Benefits) -->
-                            <div style="width:100%; text-align:left; padding:0 5px;">
-                                <div style="font-family:'Orbitron'; font-size:0.6rem; color:#c5a059; margin-bottom:8px;">PRIVILEGES GRANTED</div>
-                                <ul id="drawer_NextBenefits" style="color:#ccc; font-size:0.75rem; font-family:'Cinzel'; padding-left:20px; line-height:1.6; margin:0;">
-                                    <!-- JS will fill list items here -->
-                                </ul>
-                            </div>
-                        
+                            <div class="drawer-row"><span class="d-lbl">CURRENT STREAK</span><span class="d-val"
+                                    id="mobStreak">0</span></div>
+                            <div class="drawer-row"><span class="d-lbl">TOTAL SERVED</span><span class="d-val"
+                                    id="mobTotal">0</span></div>
+                            <div class="drawer-row"><span class="d-lbl">KNEEL COUNT</span><span class="d-val"
+                                    id="mobKneels">0</span></div>
                         </div>
                     </div>
 
@@ -2246,7 +2220,39 @@
                         </div>
                     </div>
 
-                    
+                    <!-- PART B: THE TROPHY JAIL (Modal covers ONLY this part) -->
+                    <div id="trophySectionJail"
+                        style="position: relative; width: 100%; min-height: 400px; overflow: hidden;">
+
+                        <!-- HIERARCHY -->
+                        <div class="mob-grid-label-center" style="text-align: left; padding-left: 10px; color: #666;">
+                            HIERARCHY</div>
+                        <div id="shelfRanks" class="reward-shelf mob-horiz-scroll"></div>
+
+                        <!-- LABOR -->
+                        <div class="mob-grid-label-center"
+                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">LABOR MEDALS
+                        </div>
+                        <div id="shelfTasks" class="reward-shelf mob-horiz-scroll"></div>
+
+                        <!-- ENDURANCE -->
+                        <div class="mob-grid-label-center"
+                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ENDURANCE</div>
+                        <div id="shelfKneel" class="reward-shelf mob-horiz-scroll"></div>
+
+                        <!-- SACRIFICE -->
+                        <div class="mob-grid-label-center"
+                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">SACRIFICE</div>
+                        <div id="shelfSpend" class="reward-shelf mob-horiz-scroll"></div>
+
+                        <!-- THE MODAL (Moved Inside the Jail) -->
+                        <div id="rewardCardOverlay" class="mob-reward-overlay hidden" onclick="closeRewardCard()">
+                            <div class="mob-reward-card" onclick="event.stopPropagation()">
+                                <!-- JS fills this -->
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
                 <!-- (Exchequer kept hidden) -->
