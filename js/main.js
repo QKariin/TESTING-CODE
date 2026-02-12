@@ -32,6 +32,38 @@ import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus 
 import { Bridge } from './bridge.js';
 import { getOptimizedUrl } from './media.js';
 
+// --- LOCALHOST / PREVIEW BYPASS ---
+// If running on Live Server, mock the user immediately so we don't get stuck on "Loading..." or Login keys.
+if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
+    console.log("⚠️ PREVIEW MODE DETECTED: MOCKING LOGIN ⚠️");
+    setTimeout(() => {
+        if (window.setUserProfile) {
+            window.setUserProfile({
+                name: "Preview Slave",
+                hierarchy: "Evaluator",
+                avatar: "",
+                joined: new Date().toISOString(),
+                coins: 5000,
+                merit: 100
+            });
+        }
+        // Force UI updates
+        if (document.getElementById('subName')) document.getElementById('subName').innerText = "Preview Slave";
+        if (document.getElementById('subHierarchy')) document.getElementById('subHierarchy').innerText = "Evaluator";
+        if (document.getElementById('coins')) document.getElementById('coins').innerText = "5000";
+        if (document.getElementById('points')) document.getElementById('points').innerText = "100";
+
+        // Hide any potential loading/login overlays if they exist dynamically
+        const overlays = document.querySelectorAll('[id*="login"], [id*="overlay"]');
+        overlays.forEach(o => {
+            // Don't hide the main app :)
+            if (o.id !== 'sessionOverlay' && o.id !== 'celebrationOverlay') {
+                o.style.display = 'none';
+            }
+        });
+    }, 1000);
+}
+
 const KINK_LIST = [
     "JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership",
     "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation",
@@ -1405,38 +1437,31 @@ const REWARD_DATA = {
         },
         {
             name: "FOOTMAN", icon: ICONS.rank, tax: 15,
-            // Updated: Matches "tasks >= 5 && kneels >= 10 && points >= 500"
-            // Note: Your backend didn't ask for spent/streak here, so we set them low/zero or keep legacy
-            req: { tasks: 5, kneels: 10, points: 500, spent: 0, streak: 0 },
+            req: { tasks: 5, kneels: 10, points: 500, spent: 0, streak: 0, name: true, photo: true },
             benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."]
         },
         {
             name: "SILVERMAN", icon: ICONS.rank, tax: 10,
-            // Updated: Matches your new Silver requirements
-            req: { tasks: 25, kneels: 65, points: 2500, spent: 5000, streak: 5 },
+            req: { tasks: 25, kneels: 65, points: 2500, spent: 5000, streak: 5, limits: true, kinks: true },
             benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."]
         },
         {
             name: "BUTLER", icon: ICONS.rank, tax: 5,
-            // Updated: Matches your new Butler requirements
             req: { tasks: 100, kneels: 250, points: 10000, spent: 10000, streak: 10 },
             benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions.", "Speak Cost: 5 Coins."]
         },
         {
             name: "CHAMBERLAIN", icon: ICONS.rank, tax: 0,
-            // Updated: Matches your new Chamberlain requirements
             req: { tasks: 300, kneels: 750, points: 50000, spent: 50000, streak: 30 },
             benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."]
         },
         {
             name: "SECRETARY", icon: ICONS.rank, tax: 0,
-            // Updated: Matches your new Secretary requirements
             req: { tasks: 500, kneels: 1500, points: 100000, spent: 100000, streak: 100 },
             benefits: ["The Line: A direct Audio Connection.", "Authority: Access to System Commands.", "The Throne: Total, Unfiltered Access."]
         },
         {
             name: "QUEEN'S CHAMPION", icon: ICONS.rank, tax: 0,
-            // Updated: Matches your new Champion requirements
             req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 365 },
             benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."]
         }
