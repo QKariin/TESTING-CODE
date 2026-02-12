@@ -16,6 +16,46 @@ let cachedFillers = [];
 let fillerUserId = null;
 const mainDashboardExpandedTasks = new Set();
 
+const REWARD_DATA = {
+    ranks: [
+        {
+            name: "HALL BOY", icon: "🧹", tax: 20,
+            req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
+            benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks.", "Speak Cost: 20 Coins."]
+        },
+        {
+            name: "FOOTMAN", icon: "👞", tax: 15,
+            req: { tasks: 5, kneels: 10, points: 500, spent: 0, streak: 0 },
+            benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."]
+        },
+        {
+            name: "SILVERMAN", icon: "🥈", tax: 10,
+            req: { tasks: 25, kneels: 65, points: 2500, spent: 5000, streak: 5 },
+            benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."]
+        },
+        {
+            name: "BUTLER", icon: "🤵", tax: 5,
+            req: { tasks: 100, kneels: 250, points: 10000, spent: 10000, streak: 10 },
+            benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions.", "Speak Cost: 5 Coins."]
+        },
+        {
+            name: "CHAMBERLAIN", icon: "🗝️", tax: 0,
+            req: { tasks: 300, kneels: 750, points: 50000, spent: 50000, streak: 30 },
+            benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."]
+        },
+        {
+            name: "SECRETARY", icon: "💼", tax: 0,
+            req: { tasks: 500, kneels: 1500, points: 100000, spent: 100000, streak: 100 },
+            benefits: ["The Line: A direct Audio Connection.", "Authority: Access to System Commands.", "The Throne: Total, Unfiltered Access."]
+        },
+        {
+            name: "QUEEN'S CHAMPION", icon: "👑", tax: 0,
+            req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 365 },
+            benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."]
+        }
+    ]
+};
+
 // =========================================
 // MAIN UPDATE FUNCTION (Populates All Tabs)
 // =========================================
@@ -23,6 +63,7 @@ export async function updateDetail(u) {
     if (!u) return;
 
     // --- 1. VITALS MIRROR (Top Header & Stats) ---
+
     const now = Date.now();
     const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
     let diff = Math.floor((now - ls) / 60000);
@@ -85,28 +126,84 @@ export async function updateDetail(u) {
     setText('dMirrorKneel', `${kneelHrs}h`);
     setText('dMirrorKneelCard', `${kneelHrs}h`); // Added: Grid Card
 
-    // 4. PROGRESS BAR & LEVEL
-    const currentPoints = u.points || 0;
-    // Simple level logic for display (matches main.js roughly)
-    const level = Math.floor(currentPoints / 1000) + 1;
-    const nextLevelPoints = level * 1000;
-    const pointsNeeded = nextLevelPoints - currentPoints;
-    const progressPercent = Math.min(100, Math.max(0, (currentPoints % 1000) / 10)); // 0-100%
+    // 4. HIERARCHY PROGRESS (FULL MIRROR)
+    const ranks = REWARD_DATA.ranks;
+    // Normalize string to match config (e.g. "Hall Boy" vs "HallBoy")
+    const cleanName = (name) => (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const currentRaw = u.hierarchy || "Hall Boy";
 
-    setText('dMirrorNextLevel', "LEVEL " + (level + 1));
-    setText('dMirrorPointsNeeded', `${pointsNeeded} to go`);
+    let currentIdx = ranks.findIndex(r => cleanName(r.name) === cleanName(currentRaw));
+    if (currentIdx === -1) currentIdx = 0;
 
-    const pBar = document.getElementById('dMirrorProgress');
-    if (pBar) pBar.style.width = `${progressPercent}%`;
+    const currentRankObj = ranks[currentIdx];
+    const isMax = currentIdx >= ranks.length - 1;
+    const nextRankObj = isMax ? currentRankObj : ranks[currentIdx + 1];
 
-    // 5. EXTENDED STATS
-    setText('dMirrorStreak', u.streak || 0);
-    setText('dMirrorStreakCard', u.streak || 0); // Added: Grid Card
+    // Update Text Headers
+    setText('admin_CurrentRank', currentRankObj.name);
+    const elAdminCurBen = document.getElementById('admin_CurrentBenefits');
+    if (elAdminCurBen) {
+        elAdminCurBen.innerHTML = currentRankObj.benefits.map(b => `<div style="margin-bottom:4px;">${b}</div>`).join('');
+    }
 
-    setText('dMirrorStatTotal', u.totalTasks || (u.history ? u.history.length : 0));
+    setText('admin_NextRank', isMax ? "MAXIMUM RANK" : nextRankObj.name);
+    const elAdminNextBen = document.getElementById('admin_NextBenefits');
+    if (elAdminNextBen) {
+        if (isMax) {
+            elAdminNextBen.innerHTML = "<li>You have reached the apex of servitude.</li>";
+        } else {
+            elAdminNextBen.innerHTML = nextRankObj.benefits.map(b => `<li>${b}</li>`).join('');
+        }
+    }
+
+    // Calculate Stats
+    // Note: completed count might need better sourcing if 'u.completed' is missing
     const completedCount = u.completed || (u.history ? u.history.filter(h => h.status === 'approve').length : 0);
-    setText('dMirrorStatCompleted', completedCount);
-    setText('dMirrorStatSkipped', u.skipped || 0);
+
+    const stats = {
+        tasks: completedCount,
+        kneels: u.kneelCount || 0,
+        points: u.points || 0,
+        spent: u.totalSpent || 0, // Ensure this field exists in your user object or it will be 0
+        streak: u.streak || 0
+    };
+
+    // Build Progress Bars
+    const req = nextRankObj.req;
+    const container = document.getElementById('admin_ProgressContainer');
+
+    if (container) {
+        const buildBar = (label, current, target, icon) => {
+            if (isMax) target = current;
+            if (target <= 0) target = 1;
+
+            const pct = Math.min((current / target) * 100, 100);
+            const isDone = current >= target;
+            const color = isDone ? "#00ff00" : "#c5a059";
+            const labelColor = isDone ? "#fff" : "#888";
+            const valColor = isDone ? "#00ff00" : "#c5a059";
+
+            return `
+            <div style="margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${labelColor};">
+                    <span>${icon} ${label}</span>
+                    <span style="color:${valColor}">${current.toLocaleString()} / ${target.toLocaleString()}</span>
+                </div>
+                <div style="width:100%; height:6px; background:#000; border:1px solid #333; border-radius:3px; overflow:hidden;">
+                    <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40; transition: width 0.5s ease;"></div>
+                </div>
+            </div>`;
+        };
+
+        container.innerHTML = `
+            <div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>
+            ${buildBar("LABOR", stats.tasks, req.tasks, "🛠️")}
+            ${buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎")}
+            ${buildBar("MERIT", stats.points, req.points, "✨")}
+            ${buildBar("SACRIFICE", stats.spent, req.spent, "💰")}
+            ${buildBar("CONSISTENCY", stats.streak, req.streak, "🔥")}
+        `;
+    }
 
     const isRoutineDone = u.routineDoneToday === true;
     const routineName = (u.routine || "NONE").toUpperCase();
