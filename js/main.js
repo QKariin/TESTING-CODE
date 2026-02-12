@@ -1467,78 +1467,97 @@ const REWARD_DATA = {
     ]
 };
 
-// --- OPEN HIERARCHY MODAL (Targeting the Jail) ---
-window.openHierarchyCard = function (rankName, currentStreak) {
-    const rankObj = REWARD_DATA.ranks.find(r => r.name === rankName);
-    if (!rankObj) return;
+// --- NEW: HIERARCHY DRAWER LOGIC ---
+window.updateHierarchyDrawer = function() {
+    // 1. Safety Check: Do the elements exist?
+    const container = document.getElementById('drawer_ProgressContainer');
+    if (!container || !window.gameStats || !window.REWARD_DATA) return;
 
-    // FIX: Look specifically inside the Trophy Jail
-    const overlay = document.querySelector('#trophySectionJail #rewardCardOverlay');
-    if (!overlay) {
-        console.error("Jailed overlay not found! Check HTML.");
-        return;
+    // 2. Identify Ranks (Current vs Next)
+    const ranks = REWARD_DATA.ranks;
+    // Normalize string to match config (e.g. "Hall Boy" vs "HallBoy")
+    const cleanName = (name) => (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const currentRaw = userProfile.hierarchy || "Hall Boy";
+    
+    let currentIdx = ranks.findIndex(r => cleanName(r.name) === cleanName(currentRaw));
+    if (currentIdx === -1) currentIdx = 0;
+
+    // Define Targets
+    const currentRankObj = ranks[currentIdx];
+    // If max rank, stay on current. Otherwise, look at next.
+    const isMax = currentIdx >= ranks.length - 1;
+    const nextRankObj = isMax ? currentRankObj : ranks[currentIdx + 1];
+
+    // 3. Update Text Headers
+    const elCurrentName = document.getElementById('drawer_CurrentRank');
+    const elCurrentBen = document.getElementById('drawer_CurrentBenefits');
+    const elNextName = document.getElementById('drawer_NextRank');
+    const elNextBenList = document.getElementById('drawer_NextBenefits');
+
+    if (elCurrentName) elCurrentName.innerText = currentRankObj.name;
+    if (elCurrentBen) elCurrentBen.innerText = currentRankObj.benefits.join(" • "); // Simple inline list
+    
+    if (elNextName) {
+        elNextName.innerText = isMax ? "MAXIMUM RANK" : nextRankObj.name;
+        elNextName.style.color = isMax ? "#c5a059" : "#c5a059"; // Gold
     }
 
-    const container = overlay.querySelector('.mob-reward-card');
+    if (elNextBenList) {
+        if (isMax) {
+            elNextBenList.innerHTML = "<li>You have reached the apex of servitude.</li>";
+        } else {
+            elNextBenList.innerHTML = nextRankObj.benefits.map(b => `<li>${b}</li>`).join('');
+        }
+    }
 
-    // 1. Get Stats
+    // 4. Calculate Stats (Consolidated)
+    // We use the same math as the "Judge"
     const stats = {
         tasks: gameStats.taskdom_completed || 0,
         kneels: gameStats.kneelCount || 0,
         points: gameStats.points || 0,
         spent: gameStats.total_coins_spent || 0,
-        streak: currentStreak || 0
+        // Use the streak calculated in updateStats or fallback
+        streak: (typeof window.streakCount !== 'undefined') ? window.streakCount : (gameStats.taskdom_streak || 0)
     };
 
-    // 2. Build Row Helper
-    const buildRow = (label, curr, target, icon) => {
-        if (target <= 0) return "";
-        const pct = Math.min((curr / target) * 100, 100);
-        const isDone = curr >= target;
-        const color = isDone ? "#00ff00" : "#c5a059";
+    // 5. Build Progress Bars (The "Green Bar" Logic)
+    const req = nextRankObj.req; // Requirements for NEXT rank
+
+    // Helper to generate HTML for one bar
+    const buildBar = (label, current, target, icon) => {
+        if (isMax) target = current; // If max, bar is full
+        if (target <= 0) target = 1; // Prevent divide by zero
+
+        const pct = Math.min((current / target) * 100, 100);
+        const isDone = current >= target;
+        
+        // Colors: Green (#00ff00) if done, Gold (#c5a059) if in progress
+        const color = isDone ? "#00ff00" : "#c5a059"; 
+        const labelColor = isDone ? "#fff" : "#888";
+        const valColor = isDone ? "#00ff00" : "#c5a059";
 
         return `
         <div style="margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${isDone ? '#fff' : '#888'};">
+            <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${labelColor};">
                 <span>${icon} ${label}</span>
-                <span style="color:${color}">${curr.toLocaleString()} / ${target.toLocaleString()}</span>
+                <span style="color:${valColor}">${current.toLocaleString()} / ${target.toLocaleString()}</span>
             </div>
             <div style="width:100%; height:6px; background:#000; border:1px solid #333; border-radius:3px; overflow:hidden;">
-                <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40;"></div>
+                <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40; transition: width 0.5s ease;"></div>
             </div>
         </div>`;
     };
 
-    // 3. Inject HTML
+    // Inject into the Grid
     container.innerHTML = `
-        <div style="width:100%; text-align:center; border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:15px;">
-            <div style="font-family:'Cinzel'; font-size:1.2rem; color:#fff; letter-spacing:2px;">${rankObj.name}</div>
-            <div style="font-family:'Orbitron'; font-size:0.6rem; color:#666; margin-top:5px;">CLASSIFICATION DETAILS</div>
-        </div>
-
-        <div style="width:100%; text-align:left; background:rgba(255,255,255,0.02); padding:15px; border-radius:4px; border:1px solid #333;">
-            <div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>
-            ${buildRow("LABOR", stats.tasks, rankObj.req.tasks, "🛠️")}
-            ${buildRow("ENDURANCE", stats.kneels, rankObj.req.kneels, "🧎")}
-            ${buildRow("MERIT", stats.points, rankObj.req.points, "✨")}
-            ${buildRow("SACRIFICE", stats.spent, rankObj.req.spent, "💰")}
-            ${buildRow("CONSISTENCY", stats.streak, rankObj.req.streak, "🔥")}
-        </div>
-
-        <div style="width:100%; text-align:left; margin-top:15px; padding:0 10px;">
-            <div style="font-size:0.55rem; color:#c5a059; margin-bottom:5px; font-family:'Orbitron';">PRIVILEGES GRANTED</div>
-            <ul style="color:#ccc; font-size:0.7rem; font-family:'Cinzel'; padding-left:15px; line-height:1.6;">
-                ${rankObj.benefits.map(b => `<li>${b}</li>`).join('')}
-            </ul>
-        </div>
-
-        <button class="mob-action-btn" onclick="window.closeRewardCard()" style="margin-top:20px;">ACKNOWLEDGE</button>
+        ${buildBar("LABOR", stats.tasks, req.tasks, "🛠️")}
+        ${buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎")}
+        ${buildBar("MERIT", stats.points, req.points, "✨")}
+        ${buildBar("SACRIFICE", stats.spent, req.spent, "💰")}
+        ${buildBar("CONSISTENCY", stats.streak, req.streak, "🔥")}
     `;
-
-    overlay.classList.remove('hidden');
 };
-
-// --- NEW: DESKTOP RECORD RENDERER ---
 // --- NEW: DESKTOP RECORD RENDERER ---
 let isRenderPending = false;
 window.renderDesktopRecord = function () {
