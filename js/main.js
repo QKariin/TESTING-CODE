@@ -1647,6 +1647,85 @@ window.updateHierarchyDrawer = function (currentStreak) {
 };
 
 
+// --- INLINE DATA ENTRY (Jailed in Slave Stats Drawer) ---
+window.openDataEntry = function (type) {
+    const container = document.getElementById('drawer_ProgressContainer');
+    if (!container) return;
+
+    const btnStyle = "background:#ffd700; color:#000; border:none; padding:8px 16px; font-family:'Orbitron'; font-size:0.7rem; cursor:pointer; width:100%; margin-top:8px;";
+    const cancelStyle = "background:transparent; color:#888; border:1px solid #444; padding:6px 16px; font-family:'Cinzel'; font-size:0.6rem; cursor:pointer; width:100%; margin-top:5px;";
+    const inputStyle = "width:100%; background:#111; color:#fff; border:1px solid #333; padding:8px; font-family:'Courier New'; margin-bottom:5px;";
+
+    let formHtml = '';
+
+    if (type === 'name') {
+        formHtml = `
+            <div style="color:#ffd700; font-family:'Orbitron'; font-size:0.7rem; margin-bottom:5px;">SET IDENTITY NAME</div>
+            <input type="text" id="inlineNameInput" placeholder="Enter your identity..." style="${inputStyle}">
+            <button onclick="window.saveInlineData('name')" style="${btnStyle}">ESTABLISH IDENTITY</button>
+        `;
+    } else if (type === 'photo') {
+        formHtml = `
+            <div style="color:#ffd700; font-family:'Orbitron'; font-size:0.7rem; margin-bottom:5px;">UPLOAD PROFILE PHOTO</div>
+            <div style="color:#888; font-size:0.6rem; margin-bottom:5px;">Paste your image URL here:</div>
+            <input type="text" id="inlinePhotoInput" placeholder="https://..." style="${inputStyle}">
+            <button onclick="window.saveInlineData('photo')" style="${btnStyle}">VERIFY PHOTO</button>
+        `;
+    } else if (type === 'limits') {
+        formHtml = `
+            <div style="color:#ffd700; font-family:'Orbitron'; font-size:0.7rem; margin-bottom:5px;">DEFINE LIMITS</div>
+            <textarea id="inlineLimitsInput" rows="3" placeholder="List your hard limits..." style="${inputStyle}"></textarea>
+            <button onclick="window.saveInlineData('limits')" style="${btnStyle}">SET LIMITS</button>
+        `;
+    } else if (type === 'kinks') {
+        formHtml = `
+            <div style="color:#ffd700; font-family:'Orbitron'; font-size:0.7rem; margin-bottom:5px;">DECLARE KINKS</div>
+            <textarea id="inlineKinksInput" rows="3" placeholder="List your kinks/interests..." style="${inputStyle}"></textarea>
+            <button onclick="window.saveInlineData('kinks')" style="${btnStyle}">DECLARE KINKS</button>
+        `;
+    }
+
+    // JAIL: Replace the entire drawer content with this form
+    container.innerHTML = `
+        <div style="padding:10px; border:1px solid #c5a059; background:rgba(0,0,0,0.8);">
+            ${formHtml}
+            <button onclick="window.closeDataEntry()" style="${cancelStyle}">CANCEL</button>
+        </div>
+    `;
+};
+
+window.closeDataEntry = function () {
+    // Restore the view
+    if (window.updateHierarchyDrawer && window.gameStats) {
+        window.updateHierarchyDrawer(window.gameStats.taskdom_streak || 0);
+    }
+};
+
+window.saveInlineData = function (type) {
+    let payload = {};
+    if (type === 'name') payload.name = document.getElementById('inlineNameInput').value;
+    if (type === 'photo') payload.photo = document.getElementById('inlinePhotoInput').value;
+    if (type === 'limits') payload.limits = document.getElementById('inlineLimitsInput').value;
+    if (type === 'kinks') payload.kinks = document.getElementById('inlineKinksInput').value;
+
+    if (Object.keys(payload).length > 0) {
+        // Show saving state
+        const btn = document.querySelector('#drawer_ProgressContainer button');
+        if (btn) btn.innerText = "SAVING...";
+
+        // Send to Velo
+        window.parent.postMessage({
+            type: "UPDATE_PROFILE",
+            payload: payload
+        }, "*");
+
+        // Optimistic UI Update & Close
+        setTimeout(() => {
+            window.closeDataEntry();
+        }, 1000); // 1s delay to show "Saving..."
+    }
+};
+
 // --- NEW: DESKTOP RECORD RENDERER ---
 let isRenderPending = false;
 window.renderDesktopRecord = function () {
