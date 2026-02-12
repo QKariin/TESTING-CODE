@@ -1577,15 +1577,69 @@ window.updateHierarchyDrawer = function (currentStreak) {
         </div>`;
     };
 
-    // Inject into the Grid
-    container.innerHTML = `
-        <div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>
-        ${buildBar("LABOR", stats.tasks, req.tasks, "🛠️")}
-        ${buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎")}
-        ${buildBar("MERIT", stats.points, req.points, "✨")}
-        ${buildBar("SACRIFICE", stats.spent, req.spent, "💰")}
-        ${buildBar("CONSISTENCY", stats.streak, req.streak, "🔥")}
-    `;
+    const buildCheck = (label, isMet, iconSvg, type) => {
+        const statusColor = isMet ? "#00ff00" : "#ff4444";
+        const statusText = isMet ? "VERIFIED" : "MISSING";
+        const iconColor = isMet ? "#00ff00" : "#888"; // Grey if missing, Green if done
+
+        // USER APP: ADD BUTTONS ARE REQUIRED
+        let actionBtn = "";
+        if (!isMet && !isMax) {
+            actionBtn = `<span onclick="window.openDataEntry('${type}')" style="cursor:pointer; color:#ffd700; font-size:0.6rem; border:1px solid #ffd700; padding:2px 6px; border-radius:4px; margin-left:8px;">ADD</span>`;
+        }
+
+        return `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-family:'Orbitron'; font-size:0.65rem; border-bottom:1px solid #222; padding-bottom:4px;">
+            <div style="display:flex; align-items:center; color:${iconColor};">
+                <div style="width:16px; height:16px; fill:${iconColor}; margin-right:8px;">${iconSvg}</div>
+                <span>${label}</span>
+            </div>
+            <div style="display:flex; align-items:center;">
+                <span style="color:${statusColor}; letter-spacing:1px;">${statusText} ${isMet ? '✅' : '❌'}</span>
+                ${actionBtn}
+            </div>
+        </div>`;
+    };
+
+    // SVGs
+    const SVG_ID = '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+    const SVG_PHOTO = '<svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
+    const SVG_LIMITS = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+    const SVG_KINKS = '<svg viewBox="0 0 24 24"><path d="M10.59 13.41c.41.39.41 1.03 0 1.42-.39.41-1.03.41-1.42 0a5.003 5.003 0 0 1 0-7.07l3.54-3.54a5.003 5.003 0 0 1 7.07 0 5.003 5.003 0 0 1 0 7.07l-1.49 1.49c.01-.82-.12-1.64-.4-2.42l.47-.48a2.982 2.982 0 0 0 0-4.24 2.982 2.982 0 0 0-4.24 0l-3.53 3.53a2.982 2.982 0 0 0 0 4.24zm2.82-4.24c.39-.41 1.03-.41 1.42 0a5.003 5.003 0 0 1 0 7.07l-3.54 3.54a5.003 5.003 0 0 1-7.07 0 5.003 5.003 0 0 1 0-7.07l1.49-1.49c-.01.82.12 1.64.4 2.43l-.47.47a2.982 2.982 0 0 0 0 4.24 2.982 2.982 0 0 0 4.24 0l3.53-3.53a2.982 2.982 0 0 0 0-4.24.973.973 0 0 1 0-1.42z"/></svg>';
+
+    let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>`;
+
+    // Identity Checks (Footman+)
+    if (req.name === true) {
+        const hasName = (userProfile.name && userProfile.name !== 'Slave') || (userProfile.title && userProfile.title !== 'Slave');
+        html += buildCheck("IDENTITY", hasName, SVG_ID, 'name');
+    }
+    if (req.photo === true) {
+        const hasPhoto = (userProfile.avatar && !userProfile.avatar.includes('default'));
+        html += buildCheck("PHOTO", hasPhoto, SVG_PHOTO, 'photo');
+    }
+
+    // Preference Checks (Silverman+)
+    if (req.limits === true) {
+        const hasLimits = (userProfile.limits && userProfile.limits.length > 2);
+        html += buildCheck("LIMITS", hasLimits, SVG_LIMITS, 'limits');
+    }
+    if (req.kinks === true) {
+        const hasKinks = ((userProfile.kinks && userProfile.kinks.length > 2) || (userProfile.kink && userProfile.kink.length > 2));
+        html += buildCheck("KINKS", hasKinks, SVG_KINKS, 'kinks');
+    }
+
+    html += buildBar("LABOR", stats.tasks, req.tasks, "🛠️");
+    html += buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎");
+    html += buildBar("MERIT", stats.points, req.points, "✨");
+
+    if (req.spent > 0) {
+        html += buildBar("SACRIFICE", stats.spent, req.spent, "💰");
+    }
+
+    html += buildBar("CONSISTENCY", stats.streak, req.streak, "🔥");
+
+    container.innerHTML = html + `<div id="inlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;
 };
 
 
