@@ -31,6 +31,7 @@ import { handleEvidenceUpload, handleProfileUpload, handleAdminUpload } from './
 import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from '../profile/kneeling/kneeling.js';
 import { Bridge } from './bridge.js';
 import { getOptimizedUrl } from './media.js';
+import { uploadToBytescale } from './mediaBytescale.js';
 
 // --- LOCALHOST / PREVIEW BYPASS ---
 // If running on Live Server, mock the user immediately so we don't get stuck on "Loading..." or Login keys.
