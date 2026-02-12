@@ -844,6 +844,7 @@ body {
     line-height: 1.1;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -2182,6 +2183,7 @@ body {
 .q-item-line.is-expanded .q-txt-line {
     display: block !important;
     -webkit-line-clamp: unset !important;
+    line-clamp: unset !important;
     /* SHOW EVERYTHING */
     overflow: visible !important;
     color: #fff !important;
@@ -2395,7 +2397,9 @@ body {
     font-size: 0.8rem;
     margin-bottom: 10px;
     outline: none;
-}/* =========================================
+}
+
+/* =========================================
    PROFILE MIRROR STYLES (Ported from profile.css)
    ========================================= */
 
@@ -2527,7 +2531,9 @@ body {
     color: #00ff00;
     font-family: 'Orbitron', sans-serif;
     text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
-}/* =========================================
+}
+
+/* =========================================
    PROFILE MIRROR - MISSING COMPONENTS
    (Hierarchy, Progress, Detailed Stats)
    ========================================= */
