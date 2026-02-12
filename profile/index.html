@@ -472,7 +472,48 @@
                 right: 2px;
             }
 
+            /* --- DESKTOP ENFORCEMENT (CRITICAL UI FIX) --- */
+            @media screen and (min-width: 769px) {
+                .app-container {
+                    display: flex !important;
+                    flex-direction: row !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    overflow: hidden !important;
+                }
 
+                .layout-left {
+                    width: 25% !important;
+                    min-width: 300px !important;
+                    height: 100% !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    align-items: center !important;
+                    background-size: cover !important;
+                }
+
+                .avatar-container {
+                    width: 160px !important;
+                    min-width: 160px !important;
+                    /* Prevents crush */
+                    height: 185px !important;
+                    margin-bottom: 20px !important;
+                    position: relative !important;
+                    display: block !important;
+                }
+
+                #profilePic {
+                    width: 100% !important;
+                    height: 100% !important;
+                    object-fit: cover !important;
+                }
+
+                .layout-right {
+                    flex-grow: 1 !important;
+                    height: 100% !important;
+                    overflow: hidden !important;
+                }
+            }
 
             /* FIX QUEEN'S WALL ON MOBILE */
             #mobNewsGrid {
