@@ -191,15 +191,17 @@
                                                 ASSIGNED</div>
                                         </div>
                                     </div>
-                                    <div class="mini-active">
-                                        <div class="ma-status">ACTIVE DIRECTIVE</div>
-                                        <div class="ma-mid">
-                                            <div id="dActiveText" class="ma-txt">None</div>
-                                            <div id="dActiveTimer" class="ma-timer">--:--</div>
+                                    <div class="active-task-card">
+                                        <div class="at-header">
+                                            <div class="at-label">ACTIVE TASK</div>
+                                            <div id="dActiveTimer" class="at-timer">--:--</div>
                                         </div>
-                                        <div class="ma-ctrl">
-                                            <div class="ma-btn" onclick="adminTaskAction(currId, 'send')">SEND</div>
-                                            <div class="ma-btn" onclick="adminTaskAction(currId, 'skip')">FAIL</div>
+                                        <div id="dActiveText" class="at-text">None</div>
+                                        <div class="at-actions">
+                                            <button class="at-btn at-send"
+                                                onclick="adminTaskAction(currId, 'send')">SEND</button>
+                                            <button class="at-btn at-fail"
+                                                onclick="adminTaskAction(currId, 'skip')">FAIL</button>
                                         </div>
                                     </div>
                                     <div class="task-queue-box">
