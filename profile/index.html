@@ -272,7 +272,7 @@
             }
 
             .mob-internal-drawer.open {
-                max-height: 200px;
+                max-height: 1200px;
                 opacity: 1;
                 margin-top: 15px;
                 padding-top: 5px;
@@ -1944,12 +1944,37 @@
                         </div>
 
                         <div id="mobStatsContent" class="mob-internal-drawer">
-                            <div class="drawer-row"><span class="d-lbl">CURRENT STREAK</span><span class="d-val"
-                                    id="mobStreak">0</span></div>
-                            <div class="drawer-row"><span class="d-lbl">TOTAL SERVED</span><span class="d-val"
-                                    id="mobTotal">0</span></div>
-                            <div class="drawer-row"><span class="d-lbl">KNEEL COUNT</span><span class="d-val"
-                                    id="mobKneels">0</span></div>
+    
+                            <!-- 1. CURRENT RANK SUMMARY -->
+                            <div style="width:100%; text-align:center; padding-bottom:15px; border-bottom:1px solid #333; margin-bottom:15px;">
+                                <div style="font-family:'Cinzel'; font-size:0.6rem; color:#666; letter-spacing:2px;">CURRENT CLASSIFICATION</div>
+                                <div id="statDrawer_CurrentRank" style="font-family:'Cinzel'; font-size:1.2rem; color:#fff; margin:5px 0;">LOADING...</div>
+                                <div id="statDrawer_CurrentBenefits" style="font-family:'Cinzel'; font-size:0.65rem; color:#888; font-style:italic; padding:0 20px;">
+                                    ...
+                                </div>
+                            </div>
+                        
+                            <!-- 2. NEXT RANK TARGET -->
+                            <div style="width:100%; text-align:center; margin-bottom:10px;">
+                                <div style="font-family:'Orbitron'; font-size:0.6rem; color:#c5a059; letter-spacing:2px;">WORKING ON PROMOTION TO</div>
+                                <div id="statDrawer_NextRank" style="font-family:'Orbitron'; font-size:1.4rem; color:#c5a059; font-weight:900; letter-spacing:1px; margin-top:5px; text-shadow:0 0 10px rgba(197, 160, 89, 0.2);">
+                                    LOADING...
+                                </div>
+                            </div>
+                        
+                            <!-- 3. PROGRESS BARS CONTAINER (JS will inject the Green/Red bars here) -->
+                            <div id="statDrawer_ProgressGrid" style="width:100%; background:rgba(255,255,255,0.03); border:1px solid #333; border-radius:4px; padding:15px; margin-bottom:15px;">
+                                <!-- The bars (Labor, Endurance, etc) will be built here by Main.js -->
+                            </div>
+                        
+                            <!-- 4. NEXT BENEFITS -->
+                            <div style="width:100%; text-align:left; padding:0 10px;">
+                                <div style="font-family:'Orbitron'; font-size:0.6rem; color:#c5a059; margin-bottom:5px;">NEXT RANK PRIVILEGES</div>
+                                <ul id="statDrawer_NextBenefits" style="color:#ccc; font-size:0.75rem; font-family:'Cinzel'; padding-left:20px; line-height:1.5;">
+                                    <!-- JS will fill this -->
+                                </ul>
+                            </div>
+                        
                         </div>
                     </div>
 
