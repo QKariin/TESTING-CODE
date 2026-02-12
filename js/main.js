@@ -1497,7 +1497,9 @@ window.updateHierarchyDrawer = function (currentStreak) {
     const elNextBenList = document.getElementById('drawer_NextBenefits');
 
     if (elCurrentName) elCurrentName.innerText = currentRankObj.name;
-    if (elCurrentBen) elCurrentBen.innerText = currentRankObj.benefits.join(" • "); // Simple inline list
+    if (elCurrentBen) {
+        elCurrentBen.innerHTML = currentRankObj.benefits.map(b => `<div style="margin-bottom:4px;">${b}</div>`).join('');
+    }
 
     if (elNextName) {
         elNextName.innerText = isMax ? "MAXIMUM RANK" : nextRankObj.name;
