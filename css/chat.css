@@ -676,12 +676,17 @@
     }
 
     /* --- FIXES FOR USER COMPLAINTS --- */
-    /* 1. Fix "Cuts words": Ensure wrapping */
+    /* 1. Fix "Cuts words": Ensure wrapping & correct width */
     .msg {
+        width: fit-content !important;
+        max-width: 85% !important;
+        /* User asked for 75%+, giving 85% for safety */
+        min-width: 50px !important;
         white-space: pre-wrap !important;
-        word-wrap: break-word !important;
-        word-break: break-word !important;
-        overflow-wrap: break-word !important;
+        word-break: normal !important;
+        /* Stop breaking words */
+        overflow-wrap: anywhere !important;
+        /* Break long URLs etc */
         height: auto !important;
         min-height: auto !important;
     }
