@@ -1257,7 +1257,7 @@ function updateStats() {
     if (document.getElementById('statTotalKneels')) document.getElementById('statTotalKneels').innerText = gameStats.kneelCount || 0;
 
     if (window.renderRewards) window.renderRewards();
-    if (window.updateHierarchyDrawer) window.updateHierarchyDrawer();
+
 
 
     // 2. MOBILE UPDATE (The New Connection)
@@ -1469,7 +1469,7 @@ const REWARD_DATA = {
 };
 
 // --- NEW: HIERARCHY DRAWER LOGIC ---
-window.updateHierarchyDrawer = function () {
+window.updateHierarchyDrawer = function (currentStreak) {
     // 1. Safety Check: Do the elements exist?
     const container = document.getElementById('drawer_ProgressContainer');
     // REWARD_DATA is available in local scope
@@ -1518,8 +1518,8 @@ window.updateHierarchyDrawer = function () {
         kneels: gameStats.kneelCount || 0,
         points: gameStats.points || 0,
         spent: gameStats.total_coins_spent || 0,
-        // Use the streak calculated in updateStats or fallback
-        streak: (typeof window.streakCount !== 'undefined') ? window.streakCount : (gameStats.taskdom_streak || 0)
+        // Use the passed streak or fallback
+        streak: currentStreak || 0
     };
 
     // 5. Build Progress Bars (The "Green Bar" Logic)
@@ -1717,6 +1717,9 @@ window.renderRewards = function () {
         if (qualifiedIdx > currentIdx) {
             currentIdx = qualifiedIdx;
         }
+
+        // 4. MOBILE UPDATE (The New Connection)
+        if (window.updateHierarchyDrawer) window.updateHierarchyDrawer(streakCount);
 
         // Final Safety: Default to 0
         if (currentIdx === -1) currentIdx = 0;
