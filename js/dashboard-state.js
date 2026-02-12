@@ -54,7 +54,7 @@ export function setQueenContent(newContent) { queenContent = newContent; }
 export function setStickerConfig(newConfig) { stickerConfig = newConfig; }
 export function setBroadcastPresets(newPresets) { broadcastPresets = newPresets; }
 
-export function setCurrId(id) { currId = id; }
+export function setCurrId(id) { currId = id; window.currId = id; }
 export function setLastChatJson(json) { lastChatJson = json; }
 export function setLastGalleryJson(json) { lastGalleryJson = json; }
 export function setLastHistoryJson(json) { lastHistoryJson = json; }
