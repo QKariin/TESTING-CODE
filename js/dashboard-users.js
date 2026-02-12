@@ -25,12 +25,12 @@ const REWARD_DATA = {
         },
         {
             name: "FOOTMAN", icon: "👞", tax: 15,
-            req: { tasks: 5, kneels: 10, points: 500, spent: 0, streak: 0 },
+            req: { tasks: 5, kneels: 10, points: 500, spent: 0, streak: 0, name: true, photo: true },
             benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."]
         },
         {
             name: "SILVERMAN", icon: "🥈", tax: 10,
-            req: { tasks: 25, kneels: 65, points: 2500, spent: 5000, streak: 5 },
+            req: { tasks: 25, kneels: 65, points: 2500, spent: 5000, streak: 5, limits: true, kinks: true },
             benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."]
         },
         {
@@ -253,14 +253,62 @@ export async function updateDetail(u) {
             </div>`;
         };
 
-        container.innerHTML = `
-            <div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>
-            ${buildBar("LABOR", stats.tasks, req.tasks, "🛠️")}
-            ${buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎")}
-            ${buildBar("MERIT", stats.points, req.points, "✨")}
-            ${buildBar("SACRIFICE", stats.spent, req.spent, "💰")}
-            ${buildBar("CONSISTENCY", stats.streak, req.streak, "🔥")}
-        `;
+        const buildCheck = (label, isMet, iconSvg) => {
+            const statusColor = isMet ? "#00ff00" : "#ff4444";
+            const statusText = isMet ? "VERIFIED" : "MISSING";
+            const iconColor = isMet ? "#00ff00" : "#888"; // Grey if missing, Green if done
+
+            return `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-family:'Orbitron'; font-size:0.65rem; border-bottom:1px solid #222; padding-bottom:4px;">
+                <div style="display:flex; align-items:center; color:${iconColor};">
+                    <div style="width:16px; height:16px; fill:${iconColor}; margin-right:8px;">${iconSvg}</div>
+                    <span>${label}</span>
+                </div>
+                <span style="color:${statusColor}; letter-spacing:1px;">${statusText} ${isMet ? '✅' : '❌'}</span>
+            </div>`;
+        };
+
+        // SVGs
+        const SVG_ID = '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+        const SVG_PHOTO = '<svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
+        const SVG_LIMITS = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+        const SVG_KINKS = '<svg viewBox="0 0 24 24"><path d="M10.59 13.41c.41.39.41 1.03 0 1.42-.39.41-1.03.41-1.42 0a5.003 5.003 0 0 1 0-7.07l3.54-3.54a5.003 5.003 0 0 1 7.07 0 5.003 5.003 0 0 1 0 7.07l-1.49 1.49c.01-.82-.12-1.64-.4-2.42l.47-.48a2.982 2.982 0 0 0 0-4.24 2.982 2.982 0 0 0-4.24 0l-3.53 3.53a2.982 2.982 0 0 0 0 4.24zm2.82-4.24c.39-.41 1.03-.41 1.42 0a5.003 5.003 0 0 1 0 7.07l-3.54 3.54a5.003 5.003 0 0 1-7.07 0 5.003 5.003 0 0 1 0-7.07l1.49-1.49c-.01.82.12 1.64.4 2.43l-.47.47a2.982 2.982 0 0 0 0 4.24 2.982 2.982 0 0 0 4.24 0l3.53-3.53a2.982 2.982 0 0 0 0-4.24.973.973 0 0 1 0-1.42z"/></svg>';
+
+        let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>`;
+
+        // Identity Checks (Footman+)
+        if (req.name === true) {
+            const hasName = (u.name && u.name !== 'Slave') || (u.title && u.title !== 'Slave');
+            html += buildCheck("IDENTITY", hasName, SVG_ID);
+        }
+        if (req.photo === true) {
+            const hasPhoto = (u.avatar && !u.avatar.includes('default'));
+            html += buildCheck("PHOTO", hasPhoto, SVG_PHOTO);
+        }
+
+        // Preference Checks (Silverman+)
+        if (req.limits === true) {
+            const hasLimits = (u.limits && u.limits.length > 2);
+            html += buildCheck("LIMITS", hasLimits, SVG_LIMITS);
+        }
+        if (req.kinks === true) {
+            const hasKinks = ((u.kinks && u.kinks.length > 2) || (u.kink && u.kink.length > 2));
+            html += buildCheck("KINKS", hasKinks, SVG_KINKS);
+        }
+
+        html += buildBar("LABOR", stats.tasks, req.tasks, "🛠️");
+        html += buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎");
+        html += buildBar("MERIT", stats.points, req.points, "✨");
+
+        if (req.spent > 0) {
+            html += buildBar("SACRIFICE", stats.spent, req.spent, "💰");
+        }
+
+        if (req.streak > 0) {
+            html += buildBar("CONSISTENCY", stats.streak, req.streak, "🔥");
+        }
+
+        container.innerHTML = html + `<div id="adminInlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;
     }
 
     const isRoutineDone = u.routineDoneToday === true;
