@@ -56,6 +56,64 @@ const REWARD_DATA = {
     ]
 };
 
+// --- HELPER: ROUTINE STREAK CALL (6 AM RULE) ---
+function calculateRoutineStreak(historyStr) {
+    if (!historyStr) return 0;
+
+    let photos = [];
+    try {
+        if (typeof historyStr === 'string') photos = JSON.parse(historyStr);
+        else if (Array.isArray(historyStr)) photos = historyStr;
+    } catch (e) { return 0; }
+
+    if (!photos || photos.length === 0) return 0;
+
+    // Sort Newest First
+    photos.sort((a, b) => {
+        const dateA = new Date(a.date || a._createdDate || a);
+        const dateB = new Date(b.date || b._createdDate || b);
+        return dateB - dateA;
+    });
+
+    const getDutyDay = (d) => {
+        let date = new Date(d);
+        if (date.getHours() < 6) date.setDate(date.getDate() - 1);
+        return date.toISOString().split('T')[0];
+    };
+
+    let streak = 0;
+    const todayCode = getDutyDay(new Date());
+    const newestDate = photos[0].date || photos[0]._createdDate || photos[0];
+    const lastCode = getDutyDay(newestDate);
+
+    const d1 = new Date(todayCode);
+    const d2 = new Date(lastCode);
+    const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
+
+    if (diffDays <= 1) {
+        streak = 1;
+        let currentCode = lastCode;
+
+        for (let i = 1; i < photos.length; i++) {
+            const itemDate = photos[i].date || photos[i]._createdDate || photos[i];
+            const nextCode = getDutyDay(itemDate);
+            if (nextCode === currentCode) continue;
+
+            const dayA = new Date(currentCode);
+            const dayB = new Date(nextCode);
+            const gap = (dayA - dayB) / (1000 * 60 * 60 * 24);
+
+            if (gap === 1) {
+                streak++;
+                currentCode = nextCode;
+            } else {
+                break;
+            }
+        }
+    }
+    return streak;
+}
+
 // =========================================
 // MAIN UPDATE FUNCTION (Populates All Tabs)
 // =========================================
@@ -157,12 +215,15 @@ export async function updateDetail(u) {
     // Note: completed count might need better sourcing if 'u.completed' is missing
     const completedCount = u.completed || (u.history ? u.history.filter(h => h.status === 'approve').length : 0);
 
+    // Calculate Routine Streak (Client-Side to match User App)
+    const calculatedStreak = calculateRoutineStreak(u.routineHistory);
+
     const stats = {
         tasks: completedCount,
         kneels: u.kneelCount || 0,
         points: u.points || 0,
         spent: u.totalSpent || 0, // Ensure this field exists in your user object or it will be 0
-        streak: u.streak || 0
+        streak: calculatedStreak || u.routinestreak || 0
     };
 
     // Build Progress Bars
@@ -198,7 +259,7 @@ export async function updateDetail(u) {
             ${buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎")}
             ${buildBar("MERIT", stats.points, req.points, "✨")}
             ${buildBar("SACRIFICE", stats.spent, req.spent, "💰")}
-            ${buildBar("CONSISTENCY", (u.routinestreak || 0), req.streak, "🔥")}
+            ${buildBar("CONSISTENCY", stats.streak, req.streak, "🔥")}
         `;
     }
 
