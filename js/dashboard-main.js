@@ -1,9 +1,10 @@
+
 // js/dashboard-main.js - FULL MASTER CONTROLLER
 
 // --- 1. IMPORTS ---
-import {
+import { 
     users, currId, globalQueue, globalTributes, availableDailyTasks,
-    setUsers, setGlobalQueue, setGlobalTributes, setAvailableDailyTasks,
+    setUsers, setGlobalQueue, setGlobalTributes, setAvailableDailyTasks, 
     setQueenContent, setStickerConfig, setBroadcastPresets, setTimerInterval, timerInterval,
     setArmoryTarget
 } from './dashboard-state.js';
@@ -22,8 +23,8 @@ import './dashboard-navigation.js';
 import { openChatPreview, closeChatPreview } from './chat.js';
 
 // --- 2. INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', function () {
-
+document.addEventListener('DOMContentLoaded', function() {
+    
     // Audio Wake-Up Strategy
     document.addEventListener('click', () => {
         const sfx = document.getElementById('msgSound');
@@ -41,11 +42,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const dayCode = ((110 - (today.getMonth() + 1)) * 100 + (82 - today.getDate())).toString().padStart(4, '0');
     const codeEl = document.getElementById('adminDailyCode');
     if (codeEl) codeEl.innerText = dayCode;
-
+    
     // Start Systems
     startTimerLoop();
     renderMainDashboard();
-
+    
     console.log('Dashboard initialized. ID:', dayCode);
 });
 
@@ -53,12 +54,12 @@ document.addEventListener('DOMContentLoaded', function () {
 Bridge.listen((data) => {
     // Forward chat echoes to window (for chat.js to pick up)
     if (data.type === "CHAT_ECHO" || data.type === "UPDATE_CHAT") {
-        window.postMessage(data, "*");
+        window.postMessage(data, "*"); 
         return;
     }
 
     // Forward everything else
-    window.postMessage(data, "*");
+    window.postMessage(data, "*"); 
 
     // Instant Notification: Reward Claimed
     if (data.type === "SLAVE_REWARD_CLAIMED") {
@@ -75,7 +76,7 @@ Bridge.listen((data) => {
                 sidebarItem.style.boxShadow = `inset 0 0 20px ${color}`;
                 setTimeout(() => { sidebarItem.style.boxShadow = "none"; }, 2000);
             }
-
+            
             // Refresh detail if viewing
             if (window.currId === data.memberId) window.updateDetail(u);
         }
@@ -85,7 +86,7 @@ Bridge.listen((data) => {
 // --- 4. WIX DATA LISTENER (The Heavy Lifting) ---
 window.addEventListener("message", async (event) => {
     const data = event.data;
-
+    
     // A. MAIN SYNC
     if (data.type === "updateDashboard") {
         setUsers(data.users || []);
@@ -93,7 +94,7 @@ window.addEventListener("message", async (event) => {
         setGlobalTributes(data.globalTributes || []);
         setAvailableDailyTasks(data.dailyTasks || []);
         setQueenContent(data.queenCMS || []);
-
+        
         // Sticker Mapping (RESTORED)
         const stickerSource = data.queenCMS?.find(item => item["10"] || item["100"]);
         if (stickerSource) {
@@ -108,33 +109,33 @@ window.addEventListener("message", async (event) => {
         }
 
         renderMainDashboard();
-
+        
         // Update User Detail (If open)
         if (window.currId) {
             const u = users.find(x => x.memberId === window.currId);
             if (u) updateDetail(u);
         }
     }
-
+    
     // B. CHAT SYNC
     else if (data.type === "updateChat") {
         await renderChat(data.messages || []);
-
+        
         const u = users.find(x => x.memberId === data.memberId);
-
+        
         // Sound Logic (RESTORED)
         if (u && data.messages && data.messages.length > 0) {
             const lastMsg = data.messages[data.messages.length - 1];
             const realMsgTime = new Date(lastMsg._createdDate).getTime();
 
-            if (realMsgTime > (u.lastMessageTime || 0) &&
-                lastMsg.sender !== 'admin' &&
+            if (realMsgTime > (u.lastMessageTime || 0) && 
+                lastMsg.sender !== 'admin' && 
                 data.memberId !== currId) {
-
+                
                 const sfx = document.getElementById('msgSound');
                 if (sfx) {
                     sfx.currentTime = 0;
-                    sfx.play().catch(e => { });
+                    sfx.play().catch(e => {});
                 }
             }
             u.lastMessageTime = realMsgTime;
@@ -143,19 +144,19 @@ window.addEventListener("message", async (event) => {
                 localStorage.setItem('read_' + data.memberId, Date.now().toString());
             }
 
-            if (u.memberId !== currId) renderSidebar();
+            if (u.memberId !== currId) renderSidebar(); 
         }
     }
-
+        
     // C. SUB-DATA LISTENERS (RESTORED)
     else if (data.type === "stickerConfig") {
         setStickerConfig(data.stickers || []);
     }
-
+    
     else if (data.type === "broadcastPresets") {
         setBroadcastPresets(data.presets || []);
     }
-
+    
     else if (data.type === "protocolUpdate") {
         import('./dashboard-protocol.js').then(({ updateProtocolProgress }) => {
             updateProtocolProgress();
@@ -166,7 +167,7 @@ window.addEventListener("message", async (event) => {
     else if (data.type === "instantUpdate") {
         const u = users.find(x => x.memberId === data.memberId);
         if (u) {
-            u.points = data.newPoints;
+            u.points = data.newPoints; 
             if (window.currId === data.memberId) updateDetail(u);
         }
     }
@@ -195,10 +196,10 @@ function updateStatsDeck() {
     const skipped = document.getElementById('statSkipped');
 
     // Stats Math
-    if (totalTributes) totalTributes.innerText = globalTributes.length;
-    if (activeTasks) activeTasks.innerText = users.filter(u => u.activeTask && u.endTime && u.endTime > Date.now()).length;
-    if (pending) pending.innerText = globalQueue.length;
-    if (skipped) skipped.innerText = users.reduce((sum, u) => sum + (u.strikeCount || 0), 0); // Simplified fail metric
+    if(totalTributes) totalTributes.innerText = globalTributes.length;
+    if(activeTasks) activeTasks.innerText = users.filter(u => u.activeTask && u.endTime && u.endTime > Date.now()).length;
+    if(pending) pending.innerText = globalQueue.length;
+    if(skipped) skipped.innerText = users.reduce((sum, u) => sum + (u.strikeCount || 0), 0); // Simplified fail metric
 }
 
 function startTimerLoop() {
@@ -207,7 +208,7 @@ function startTimerLoop() {
         // Only tick the current user details if visible
         if (window.currId) {
             const u = users.find(x => x.memberId === window.currId);
-            if (u) updateDetail(u);
+            if (u) updateDetail(u); 
         }
         // Also tick protocol?
         // ... (Protocol logic sits in dashboard-protocol.js usually)
@@ -233,7 +234,7 @@ function switchAdminTab(tabName) {
     // 3. Show Target
     const targetId = 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
     const target = document.getElementById(targetId);
-    if (target) {
+    if(target) {
         target.classList.remove('hidden');
         target.classList.add('active');
     }
@@ -243,17 +244,17 @@ function adjustWallet(action) {
     if (!currId) return alert("Select a user first.");
     const amountStr = prompt(action === 'add' ? "Amount to ADD:" : "Amount to DEDUCT:");
     const amount = parseInt(amountStr);
-
-    if (!amount || isNaN(amount)) return;
-
+    
+    if(!amount || isNaN(amount)) return;
+    
     const finalAmount = action === 'add' ? amount : -amount;
-
+    
     // Send to Wix
     window.parent.postMessage({ type: "adjustCoins", memberId: currId, amount: finalAmount }, "*");
-
+    
     // Optimistic Update
     const u = users.find(x => x.memberId === currId);
-    if (u) {
+    if(u) {
         u.coins = (u.coins || 0) + finalAmount;
         document.getElementById('dWalletVal').innerText = u.coins;
     }
@@ -265,11 +266,11 @@ function manageAltar(slotId) {
 
 // --- 7. EXPORTS (GLOBAL BINDING) ---
 window.renderMainDashboard = renderMainDashboard;
-window.adminTaskAction = function (mid, action) {
+window.adminTaskAction = function(mid, action) {
     if (action === 'send') {
-        setArmoryTarget("active");
+        setArmoryTarget("active"); 
         window.openTaskGallery();
-    }
+    } 
     else if (action === 'skip') {
         window.parent.postMessage({ type: "adminTaskAction", memberId: mid, action: "skip" }, "*");
         // Optional: Open Armory after skip to replace it immediately
@@ -285,4 +286,4 @@ window.closeChatPreview = closeChatPreview;
 window.switchAdminTab = switchAdminTab;
 window.adjustWallet = adjustWallet;
 window.manageAltar = manageAltar;
-Object.defineProperty(window, 'currId', { get: () => currId });
+window.currId = currId;
