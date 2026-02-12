@@ -1937,25 +1937,10 @@ window.renderRewards = function () {
 
         let currentIdx = REWARD_DATA.ranks.findIndex(r => clean(r.name) === userClean);
 
-        // --- VISUAL PROMOTION (PRE-CALCULATE) ---
-        // Even if DB says "Hall Boy", if they qualify for "Footman", SHOW IT.
-        let qualifiedIdx = -1;
-        for (let i = REWARD_DATA.ranks.length - 1; i >= 0; i--) {
-            const r = REWARD_DATA.ranks[i].req;
-            if (gameStats.taskdom_completed >= r.tasks &&
-                gameStats.kneelCount >= r.kneels &&
-                gameStats.points >= r.points &&
-                gameStats.total_coins_spent >= r.spent &&
-                streakCount >= r.streak) {
-                qualifiedIdx = i;
-                break;
-            }
-        }
+        // [REMOVED OPTIMISTIC PROMOTION LOGIC]
+        // The Backend now strictly controls hierarchy. We trust userProfile.hierarchy.
 
-        // If DB rank is lower than qualified rank, upgrade the visual
-        if (qualifiedIdx > currentIdx) {
-            currentIdx = qualifiedIdx;
-        }
+        // 4. MOBILE UPDATE (The New Connection)
 
         // 4. MOBILE UPDATE (The New Connection)
         if (window.updateHierarchyDrawer) window.updateHierarchyDrawer(streakCount);
