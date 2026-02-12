@@ -1652,43 +1652,80 @@ window.openDataEntry = function (type) {
     const container = document.getElementById('drawer_ProgressContainer');
     if (!container) return;
 
-    const btnStyle = "background:#ffd700; color:#000; border:none; padding:8px 16px; font-family:'Orbitron'; font-size:0.7rem; cursor:pointer; width:100%; margin-top:8px;";
-    const cancelStyle = "background:transparent; color:#888; border:1px solid #444; padding:6px 16px; font-family:'Cinzel'; font-size:0.6rem; cursor:pointer; width:100%; margin-top:5px;";
-    const inputStyle = "width:100%; background:#111; color:#fff; border:1px solid #333; padding:8px; font-family:'Courier New'; margin-bottom:5px;";
+    // Premium Styles
+    const btnStyle = "background:#ffd700; color:#000; border:none; padding:10px 20px; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold; cursor:pointer; width:100%; margin-top:15px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition:all 0.2s;";
+    const cancelStyle = "background:transparent; color:#888; border:1px solid #444; padding:8px 16px; font-family:'Cinzel'; font-size:0.7rem; cursor:pointer; width:100%; margin-top:10px; opacity:0.7;";
+    const inputStyle = "width:100%; background:rgba(0,0,0,0.5); color:#fff; border:none; border-bottom:1px solid #c5a059; padding:10px 5px; font-family:'Cinzel'; font-size:1rem; margin-bottom:15px; outline:none;";
+    const labelStyle = "color:#c5a059; font-family:'Orbitron'; font-size:0.65rem; letter-spacing:2px; margin-bottom:5px; text-transform:uppercase;";
+    const headerStyle = "color:#fff; font-family:'Cinzel'; font-size:1.1rem; text-align:center; margin-bottom:20px; text-shadow:0 0 10px rgba(255,255,255,0.3);";
 
-    let formHtml = '';
+    let contentHtml = '';
+
+    // Helper for Kink/Limit Chips
+    const renderChips = (dataType) => {
+        // Use global KINK_LIST for both (as requested)
+        const list = (typeof KINK_LIST !== 'undefined') ? KINK_LIST : ["JOI", "Humiliation", "Control", "Chastity", "Pain", "Service"];
+
+        let chipsHtml = `<div style="display:flex; flex-wrap:wrap; gap:8px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">`;
+        list.forEach(item => {
+            chipsHtml += `
+                <div class="kink-chip" 
+                     onclick="this.classList.toggle('selected')" 
+                     data-value="${item}"
+                     style="padding:8px 14px; border:1px solid #333; background:rgba(0,0,0,0.3); border-radius:4px; font-size:0.7rem; font-family:'Orbitron'; color:#888; cursor:pointer; transition:all 0.2s; user-select:none;">
+                    ${item}
+                </div>`;
+        });
+        chipsHtml += `</div>`;
+
+        // Add CSS for selected state inline to ensure it works
+        chipsHtml += `<style>
+            .kink-chip:hover { border-color:#666; color:#ccc; }
+            .kink-chip.selected { border-color:#c5a059 !important; color:#000 !important; background:#c5a059 !important; font-weight:bold; box-shadow:0 0 15px rgba(197, 160, 89, 0.4); }
+        </style>`;
+
+        return chipsHtml;
+    };
 
     if (type === 'name') {
-        formHtml = `
-            <div style="color:#ffd700; font-family:'Orbitron'; font-size:0.7rem; margin-bottom:5px;">SET IDENTITY NAME</div>
-            <input type="text" id="inlineNameInput" placeholder="Enter your identity..." style="${inputStyle}">
-            <button onclick="window.saveInlineData('name')" style="${btnStyle}">ESTABLISH IDENTITY</button>
+        contentHtml = `
+            <div style="${headerStyle}">ESTABLISH IDENTITY</div>
+            <div style="text-align:left;">
+                <div style="${labelStyle}">Designation</div>
+                <input type="text" id="inlineNameInput" placeholder="Enter Name..." style="${inputStyle}">
+            </div>
+            <button onclick="window.saveInlineData('name')" style="${btnStyle}">CONFIRM IDENTITY</button>
         `;
     } else if (type === 'photo') {
-        formHtml = `
-            <div style="color:#ffd700; font-family:'Orbitron'; font-size:0.7rem; margin-bottom:5px;">UPLOAD PROFILE PHOTO</div>
-            <div style="color:#888; font-size:0.6rem; margin-bottom:5px;">Paste your image URL here:</div>
-            <input type="text" id="inlinePhotoInput" placeholder="https://..." style="${inputStyle}">
-            <button onclick="window.saveInlineData('photo')" style="${btnStyle}">VERIFY PHOTO</button>
+        contentHtml = `
+            <div style="${headerStyle}">VISUAL VERIFICATION</div>
+            <div style="text-align:left;">
+                <div style="${labelStyle}">Image URL</div>
+                <input type="text" id="inlinePhotoInput" placeholder="https://..." style="${inputStyle}">
+                <div style="font-size:0.6rem; color:#666; font-style:italic; margin-top:-10px; margin-bottom:15px;">Paste a direct link to your image.</div>
+            </div>
+            <button onclick="window.saveInlineData('photo')" style="${btnStyle}">UPLOAD & VERIFY</button>
         `;
     } else if (type === 'limits') {
-        formHtml = `
-            <div style="color:#ffd700; font-family:'Orbitron'; font-size:0.7rem; margin-bottom:5px;">DEFINE LIMITS</div>
-            <textarea id="inlineLimitsInput" rows="3" placeholder="List your hard limits..." style="${inputStyle}"></textarea>
+        contentHtml = `
+            <div style="${headerStyle}">HARD LIMITS</div>
+            <div style="margin-bottom:15px; font-size:0.7rem; color:#888; font-family:'Cinzel';">Touch to select all that apply:</div>
+            ${renderChips('limits')}
             <button onclick="window.saveInlineData('limits')" style="${btnStyle}">SET LIMITS</button>
         `;
     } else if (type === 'kinks') {
-        formHtml = `
-            <div style="color:#ffd700; font-family:'Orbitron'; font-size:0.7rem; margin-bottom:5px;">DECLARE KINKS</div>
-            <textarea id="inlineKinksInput" rows="3" placeholder="List your kinks/interests..." style="${inputStyle}"></textarea>
+        contentHtml = `
+            <div style="${headerStyle}">DESIRED PROTOCOLS</div>
+            <div style="margin-bottom:15px; font-size:0.7rem; color:#888; font-family:'Cinzel';">Touch to select your interests:</div>
+            ${renderChips('kinks')}
             <button onclick="window.saveInlineData('kinks')" style="${btnStyle}">DECLARE KINKS</button>
         `;
     }
 
-    // JAIL: Replace the entire drawer content with this form
+    // JAIL: Darker background, border, padding
     container.innerHTML = `
-        <div style="padding:10px; border:1px solid #c5a059; background:rgba(0,0,0,0.8);">
-            ${formHtml}
+        <div style="padding:25px; border:1px solid #c5a059; background:rgba(10,10,10,0.95); box-shadow:0 0 50px rgba(0,0,0,0.9); border-radius:4px; position:relative;">
+             ${contentHtml}
             <button onclick="window.closeDataEntry()" style="${cancelStyle}">CANCEL</button>
         </div>
     `;
@@ -1703,15 +1740,28 @@ window.closeDataEntry = function () {
 
 window.saveInlineData = function (type) {
     let payload = {};
-    if (type === 'name') payload.name = document.getElementById('inlineNameInput').value;
-    if (type === 'photo') payload.photo = document.getElementById('inlinePhotoInput').value;
-    if (type === 'limits') payload.limits = document.getElementById('inlineLimitsInput').value;
-    if (type === 'kinks') payload.kinks = document.getElementById('inlineKinksInput').value;
 
+    if (type === 'name') {
+        payload.name = document.getElementById('inlineNameInput').value;
+    }
+    else if (type === 'photo') {
+        payload.photo = document.getElementById('inlinePhotoInput').value;
+    }
+    else if (type === 'limits' || type === 'kinks') {
+        // Gather selected chips
+        const selected = Array.from(document.querySelectorAll('.kink-chip.selected')).map(el => el.getAttribute('data-value'));
+        if (type === 'limits') payload.limits = selected;
+        if (type === 'kinks') payload.kinks = selected;
+    }
+
+    // Basic Validation
     if (Object.keys(payload).length > 0) {
         // Show saving state
         const btn = document.querySelector('#drawer_ProgressContainer button');
-        if (btn) btn.innerText = "SAVING...";
+        if (btn) {
+            btn.innerText = "PROCESSING...";
+            btn.style.opacity = "0.5";
+        }
 
         // Send to Velo
         window.parent.postMessage({
@@ -1722,7 +1772,7 @@ window.saveInlineData = function (type) {
         // Optimistic UI Update & Close
         setTimeout(() => {
             window.closeDataEntry();
-        }, 1000); // 1s delay to show "Saving..."
+        }, 1500);
     }
 };
 
