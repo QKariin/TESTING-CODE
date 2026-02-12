@@ -1560,8 +1560,7 @@ window.updateHierarchyDrawer = function () {
     `;
 };
 
-`;
-};
+
 // --- NEW: DESKTOP RECORD RENDERER ---
 let isRenderPending = false;
 window.renderDesktopRecord = function () {
@@ -1682,51 +1681,51 @@ window.renderRewards = function () {
                     } catch (e) { }
                 }
 
-return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border:1px solid #444; border-radius:2px; flex-shrink:0; margin-right:8px; filter:sepia(20%) brightness(0.9);">`;
+                return `<img src="${thumb}" style="width:90px; height:90px; object-fit:cover; border:1px solid #444; border-radius:2px; flex-shrink:0; margin-right:8px; filter:sepia(20%) brightness(0.9);">`;
             }).join('');
         }
     }
 
-// ============================================================
-// PART B: HIERARCHY PODIUM (Past / Present / Future)
-// ============================================================
-const shelfRank = document.getElementById('shelfRanks');
-if (shelfRank) {
-    // --- ROBUST MATCHING (Fixes "Hall Boy" vs "HallBoy" vs "Newbie") ---
-    const clean = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-    const userClean = clean(userProfile?.hierarchy || "Hall Boy");
+    // ============================================================
+    // PART B: HIERARCHY PODIUM (Past / Present / Future)
+    // ============================================================
+    const shelfRank = document.getElementById('shelfRanks');
+    if (shelfRank) {
+        // --- ROBUST MATCHING (Fixes "Hall Boy" vs "HallBoy" vs "Newbie") ---
+        const clean = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        const userClean = clean(userProfile?.hierarchy || "Hall Boy");
 
-    let currentIdx = REWARD_DATA.ranks.findIndex(r => clean(r.name) === userClean);
+        let currentIdx = REWARD_DATA.ranks.findIndex(r => clean(r.name) === userClean);
 
-    // --- VISUAL PROMOTION (PRE-CALCULATE) ---
-    // Even if DB says "Hall Boy", if they qualify for "Footman", SHOW IT.
-    let qualifiedIdx = -1;
-    for (let i = REWARD_DATA.ranks.length - 1; i >= 0; i--) {
-        const r = REWARD_DATA.ranks[i].req;
-        if (gameStats.taskdom_completed >= r.tasks &&
-            gameStats.kneelCount >= r.kneels &&
-            gameStats.points >= r.points &&
-            gameStats.total_coins_spent >= r.spent &&
-            streakCount >= r.streak) {
-            qualifiedIdx = i;
-            break;
+        // --- VISUAL PROMOTION (PRE-CALCULATE) ---
+        // Even if DB says "Hall Boy", if they qualify for "Footman", SHOW IT.
+        let qualifiedIdx = -1;
+        for (let i = REWARD_DATA.ranks.length - 1; i >= 0; i--) {
+            const r = REWARD_DATA.ranks[i].req;
+            if (gameStats.taskdom_completed >= r.tasks &&
+                gameStats.kneelCount >= r.kneels &&
+                gameStats.points >= r.points &&
+                gameStats.total_coins_spent >= r.spent &&
+                streakCount >= r.streak) {
+                qualifiedIdx = i;
+                break;
+            }
         }
-    }
 
-    // If DB rank is lower than qualified rank, upgrade the visual
-    if (qualifiedIdx > currentIdx) {
-        currentIdx = qualifiedIdx;
-    }
+        // If DB rank is lower than qualified rank, upgrade the visual
+        if (qualifiedIdx > currentIdx) {
+            currentIdx = qualifiedIdx;
+        }
 
-    // Final Safety: Default to 0
-    if (currentIdx === -1) currentIdx = 0;
+        // Final Safety: Default to 0
+        if (currentIdx === -1) currentIdx = 0;
 
-    let html = "";
+        let html = "";
 
-    // 1. PREVIOUS (Small, Dim)
-    if (currentIdx > 0) {
-        const prev = REWARD_DATA.ranks[currentIdx - 1];
-        html += `
+        // 1. PREVIOUS (Small, Dim)
+        if (currentIdx > 0) {
+            const prev = REWARD_DATA.ranks[currentIdx - 1];
+            html += `
             <div class="reward-badge shape-hex unlocked" style="transform:scale(0.8); opacity:0.5; filter:grayscale(100%); margin:0 5px;"
                  onclick="window.openHierarchyCard('${prev.name}', ${streakCount})">
                 <div class="rb-inner">
@@ -1734,11 +1733,11 @@ if (shelfRank) {
                     <div class="rb-label">${prev.name}</div>
                 </div>
             </div>`;
-    }
+        }
 
-    // 2. CURRENT (Big, Gold)
-    const curr = REWARD_DATA.ranks[currentIdx];
-    html += `
+        // 2. CURRENT (Big, Gold)
+        const curr = REWARD_DATA.ranks[currentIdx];
+        html += `
         <div class="reward-badge shape-hex unlocked" style="transform:scale(1.2); z-index:10; border-color:#c5a059; box-shadow:0 0 25px rgba(197, 160, 89, 0.25); margin:0 10px;"
              onclick="window.openHierarchyCard('${curr.name}', ${streakCount})">
             <div class="rb-inner">
@@ -1747,10 +1746,10 @@ if (shelfRank) {
             </div>
         </div>`;
 
-    // 3. NEXT (Small, Locked)
-    if (currentIdx < REWARD_DATA.ranks.length - 1) {
-        const next = REWARD_DATA.ranks[currentIdx + 1];
-        html += `
+        // 3. NEXT (Small, Locked)
+        if (currentIdx < REWARD_DATA.ranks.length - 1) {
+            const next = REWARD_DATA.ranks[currentIdx + 1];
+            html += `
             <div class="reward-badge shape-hex locked" style="transform:scale(0.8); opacity:0.8; margin:0 5px;"
                  onclick="window.openHierarchyCard('${next.name}', ${streakCount})">
                 <div class="rb-inner">
@@ -1758,27 +1757,27 @@ if (shelfRank) {
                     <div class="rb-label">${next.name}</div>
                 </div>
             </div>`;
+        }
+
+        shelfRank.innerHTML = html;
+        shelfRank.style.justifyContent = "center";
+        shelfRank.style.overflow = "visible";
     }
 
-    shelfRank.innerHTML = html;
-    shelfRank.style.justifyContent = "center";
-    shelfRank.style.overflow = "visible";
-}
+    // ============================================================
+    // PART C: STANDARD SHELVES (Tasks, Kneel, Spend)
+    // ============================================================
+    const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabel) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
 
-// ============================================================
-// PART C: STANDARD SHELVES (Tasks, Kneel, Spend)
-// ============================================================
-const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabel) => {
-    const container = document.getElementById(containerId);
-    if (!container) return;
+        container.innerHTML = data.map((item, index) => {
+            const targetVal = item.limit;
+            const isUnlocked = currentVal >= targetVal;
+            const statusClass = isUnlocked ? "unlocked" : "locked";
+            const isLegendary = index === data.length - 1 ? "legendary" : "";
 
-    container.innerHTML = data.map((item, index) => {
-        const targetVal = item.limit;
-        const isUnlocked = currentVal >= targetVal;
-        const statusClass = isUnlocked ? "unlocked" : "locked";
-        const isLegendary = index === data.length - 1 ? "legendary" : "";
-
-        return `
+            return `
                 <div class="reward-badge ${shapeClass} ${statusClass} ${isLegendary}" 
                      onclick="window.openRewardCard('${item.name}', '${item.icon}', ${currentVal}, ${targetVal}, '${typeLabel}')">
                     <div class="rb-inner" style="display:flex; flex-direction:column; align-items:center;">
@@ -1787,13 +1786,13 @@ const buildShelf = (containerId, data, shapeClass, checkFn, currentVal, typeLabe
                     </div>
                 </div>
             `;
-    }).join('');
-};
+        }).join('');
+    };
 
-// Ensure arrays exist before mapping
-if (REWARD_DATA.tasks) buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
-if (REWARD_DATA.kneeling) buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
-if (REWARD_DATA.spending) buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', null, totalSpent, 'spend');
+    // Ensure arrays exist before mapping
+    if (REWARD_DATA.tasks) buildShelf('shelfTasks', REWARD_DATA.tasks, 'shape-chip', null, totalTasks, 'task');
+    if (REWARD_DATA.kneeling) buildShelf('shelfKneel', REWARD_DATA.kneeling, 'shape-circle', null, totalKneels, 'kneel');
+    if (REWARD_DATA.spending) buildShelf('shelfSpend', REWARD_DATA.spending, 'shape-diamond', null, totalSpent, 'spend');
 };
 
 window.openRewardCard = function (name, iconPath, current, target, type) {
