@@ -198,7 +198,7 @@ export async function updateDetail(u) {
             ${buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎")}
             ${buildBar("MERIT", stats.points, req.points, "✨")}
             ${buildBar("SACRIFICE", stats.spent, req.spent, "💰")}
-            ${buildBar("CONSISTENCY", (u.routineStreak || stats.streak), req.streak, "🔥")}
+            ${buildBar("CONSISTENCY", (u.routinestreak || 0), req.streak, "🔥")}
         `;
     }
 
