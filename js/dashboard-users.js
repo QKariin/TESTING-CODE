@@ -282,7 +282,8 @@ export async function updateDetail(u) {
             html += buildCheck("IDENTITY", hasName, SVG_ID);
         }
         if (req.photo === true) {
-            const hasPhoto = (u.avatar && !u.avatar.includes('default'));
+            // Check RAW profilePicture, not the fallback avatar
+            const hasPhoto = (u.profilePicture && !u.profilePicture.includes('default'));
             html += buildCheck("PHOTO", hasPhoto, SVG_PHOTO);
         }
 
