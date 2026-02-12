@@ -75,7 +75,7 @@ export function clean(str) {
 
 export function raw(str) {
     if (!str) return "";
-    return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\n/g, '\\n');
 }
 
 export function formatTimer(ms) {
