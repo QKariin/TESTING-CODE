@@ -205,6 +205,12 @@
                                                     onclick="adminTaskAction(currId, 'skip')">CANCEL TASK</button>
                                             </div>
                                         </div>
+
+                                        <!-- IDLE ACTIONS (Visible when UNPRODUCTIVE) -->
+                                        <div id="idleActions" style="display:none; padding-top:10px;">
+                                            <button class="at-btn at-send"
+                                                onclick="adminTaskAction(currId, 'send')">SEND NEW TASK</button>
+                                        </div>
                                     </div>
 
                                     <!-- 2. SCHEDULE BUTTON -->
