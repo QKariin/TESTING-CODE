@@ -1522,8 +1522,8 @@ window.updateHierarchyDrawer = function (currentStreak) {
         kneels: gameStats.kneelCount || 0,
         points: gameStats.points || 0,
         spent: gameStats.total_coins_spent || 0,
-        // Use the REAL Hierarchy Streak (Routine Streak)
-        streak: userProfile.routinestreak || 0
+        // Use the passed streak or fallback
+        streak: currentStreak || 0
     };
 
     // 5. Build Progress Bars (The "Green Bar" Logic)
