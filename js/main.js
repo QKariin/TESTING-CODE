@@ -1401,38 +1401,38 @@ const REWARD_DATA = {
         {
             name: "HALL BOY", icon: ICONS.rank, tax: 20,
             req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
-            benefits: ["Silence is mandatory.", "Access to The Terminal."]
+            benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks.", "Speak Cost: 20 Coins."]
         },
         {
             name: "FOOTMAN", icon: ICONS.rank, tax: 15,
             // Updated: Matches "tasks >= 5 && kneels >= 10 && points >= 500"
             // Note: Your backend didn't ask for spent/streak here, so we set them low/zero or keep legacy
             req: { tasks: 5, kneels: 10, points: 500, spent: 0, streak: 0 },
-            benefits: ["Identity Grant: You may have a face.", "Protocol Alpha: Daily Routine access.", "Voice cost reduced to 15."]
+            benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."]
         },
         {
             name: "SILVERMAN", icon: ICONS.rank, tax: 10,
             // Updated: Matches your new Silver requirements
             req: { tasks: 25, kneels: 65, points: 2500, spent: 5000, streak: 5 },
-            benefits: ["Visual Tribute: Send PHOTOS.", "Gilded Chains: Pending tasks Gold.", "Voice cost reduced to 10."]
+            benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."]
         },
         {
             name: "BUTLER", icon: ICONS.rank, tax: 5,
             // Updated: Matches your new Butler requirements
             req: { tasks: 100, kneels: 250, points: 10000, spent: 10000, streak: 10 },
-            benefits: ["Kinetic Submission: Send VIDEOS.", "Forbidden Knowledge: Access Vault.", "Voice cost reduced to 5."]
+            benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions.", "Speak Cost: 5 Coins."]
         },
         {
             name: "CHAMBERLAIN", icon: ICONS.rank, tax: 0,
             // Updated: Matches your new Chamberlain requirements
             req: { tasks: 300, kneels: 750, points: 50000, spent: 50000, streak: 30 },
-            benefits: ["Royal Mercy: Penalties halved.", "The Free Tongue: Tax removed.", "Priority status."]
+            benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."]
         },
         {
             name: "SECRETARY", icon: ICONS.rank, tax: 0,
             // Updated: Matches your new Secretary requirements
             req: { tasks: 500, kneels: 1500, points: 100000, spent: 100000, streak: 100 },
-            benefits: ["The Golden Voice.", "System Command.", "Direct Throne Line."]
+            benefits: ["The Line: A direct Audio Connection.", "Authority: Access to System Commands.", "The Throne: Total, Unfiltered Access."]
         },
         {
             name: "QUEEN'S CHAMPION", icon: ICONS.rank, tax: 0,
