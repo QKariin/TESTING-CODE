@@ -206,7 +206,7 @@
 
                     <!-- NEW RIGHT PANEL: USER PROFILE MIRROR -->
                     <div class="action-panel"
-                        style="background:#050505; display:flex; flex-direction:column; height:100%;">
+                        style="background:#050505; display:flex; flex-direction:column; height:100%; overflow-y: auto; overflow-x: hidden;">
 
                         <!-- 1. PROFILE HEADER (FULL MIRROR) -->
                         <div id="apMirrorHeader" class="ap-mirror-header" style="padding:20px; text-align:center; border-bottom:1px solid #333; 
@@ -214,9 +214,9 @@
                                     background-size: cover; background-position: center;">
 
                             <!-- HIERARCHY STAMP -->
-                            <div id="dMirrorHierarchy" class="hierarchy-top" onclick="cycleHierarchy()"
-                                style="margin: 0 auto 15px auto; display:inline-block; cursor:pointer;"
-                                title="Click to Cycle Rank">LOADING...</div>
+                            <div id="dMirrorHierarchy" class="hierarchy-top"
+                                style="margin: 0 auto 15px auto; display:inline-block;" title="Current Rank">LOADING...
+                            </div>
 
                             <!-- AVATAR -->
                             <div class="avatar-container" style="width:120px; height:140px; margin:0 auto 15px;">
