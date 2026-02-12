@@ -317,7 +317,28 @@ function updateActiveTask(u) {
 // Global Toggle for Queue
 window.toggleTaskQueue = function () {
     const q = document.getElementById('taskQueueContainer');
-    if (q) q.classList.toggle('hidden');
+    const topPanel = document.querySelector('.admin-dash-top');
+
+    if (q) {
+        const isHidden = q.classList.toggle('hidden'); // hidden means Closed
+        // If we just removed hidden (it is now visible), we Expand. 
+        // If we added hidden (it is now closed), we Collapse.
+
+        // toggle returns true if added, false if removed.
+        // Wait, classList.toggle returns true if class is now present.
+        // So if 'hidden' is present -> Collapsed. 
+        // If 'hidden' is NOT present -> Expanded.
+
+        if (topPanel) {
+            if (!isHidden) {
+                topPanel.classList.add('expanded-ops');
+                topPanel.style.height = "100%"; // FORCE OVERRIDE inline style
+            } else {
+                topPanel.classList.remove('expanded-ops');
+                topPanel.style.height = "35%"; // RESTORE ORIGINAL inline style
+            }
+        }
+    }
 };
 
 function updateTaskQueue(u) {
