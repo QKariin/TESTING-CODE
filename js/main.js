@@ -1221,60 +1221,33 @@ function updateStats() {
 
     if (!subName || !userProfile || !gameStats) return;
 
-    // --- VISUAL PROMOTION LOGIC (Universal) ---
-    // Calculate 6 AM Streak for accurate visual checking
-    const routinePhotos = (userProfile.routineHistory ? JSON.parse(userProfile.routineHistory) : []);
-    let visualStreak = gameStats.taskdom_streak || 0;
-
-    // Use the same routine streak logic as renderRewards if available
-    // (Simplified here for performance, or assume gameStats is up to date)
-    // Actually, determineRank uses 'routinestreak', let's use what we have.
-    // Ideally we assume 'streakCount' from global scope if calculated, else fallback
-    let effectiveStreak = (typeof window.streakCount !== 'undefined') ? window.streakCount : (gameStats.taskdom_streak || 0);
-
+    // --- VISUAL HIERARCHY LOGIC (STRICT) ---
+    // Start with what the DB says
     let visualRank = userProfile.hierarchy || "Hall Boy";
-    if (typeof REWARD_DATA !== 'undefined' && REWARD_DATA.ranks) {
-        const clean = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-        const dbClean = clean(visualRank);
-        let currentIdx = REWARD_DATA.ranks.findIndex(r => clean(r.name) === dbClean);
-        if (currentIdx === -1) currentIdx = 0;
 
-        let qualifiedIdx = -1;
-        for (let i = REWARD_DATA.ranks.length - 1; i >= 0; i--) {
-            const r = REWARD_DATA.ranks[i].req;
-            // Note: routine streak is key for hierarchy now
-            if (gameStats.taskdom_completed >= r.tasks &&
-                gameStats.kneelCount >= r.kneels &&
-                gameStats.points >= r.points &&
-                gameStats.total_coins_spent >= r.spent &&
-                effectiveStreak >= r.streak) {
-                qualifiedIdx = i;
-                break;
-            }
-        }
+    // 1. GATEKEEPER: Identity & Photo
+    // If these are missing, you ARE Hall Boy, no matter what the DB says (catch latency)
+    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture) {
+        visualRank = "Hall Boy";
+    }
 
-        let calculatedRank = visualRank; // Default to current DB or initial
-        if (qualifiedIdx > -1) {
-            calculatedRank = REWARD_DATA.ranks[qualifiedIdx].name;
-        }
+    // 2. GATEKEEPER: Preferences (Silverman+)
+    // If you are visually marked as Silverman+, but have no Kinks, degrade to Footman visually
+    // (This hides the rank until they fix it)
+    const dbRankLower = visualRank.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const isAboveFootman = dbRankLower !== "hallboy" && dbRankLower !== "footman";
 
-        // FORCE VISUAL UPDATE TO MATCH MATH
-        visualRank = calculatedRank;
+    if (isAboveFootman) {
+        const hasKinks = (userProfile.kinks && userProfile.kinks.length > 2);
+        const hasLimits = (userProfile.limits && userProfile.limits.length > 2);
 
-        // --- SYNC CHECK (Centralized Logic) ---
-        // If the Calculated Rank differs from the DB Rank, we MUST update the CMS.
-        // We use a flag to do this once per session to avoid loops, unless it changes again.
-        if (calculatedRank !== userProfile.hierarchy && window.lastSyncedRank !== calculatedRank) {
-            console.log(`[Rank Sync] DB says ${userProfile.hierarchy}, Math says ${calculatedRank}. Updating...`);
-            window.lastSyncedRank = calculatedRank;
-
-            window.parent.postMessage({
-                type: "updateHierarchy",
-                memberId: userProfile.memberId,
-                newRank: calculatedRank
-            }, "*");
+        if (!hasKinks || !hasLimits) {
+            visualRank = "Footman";
         }
     }
+
+    // 3. NO OPTIMISTIC PROMOTION. 
+    // We strictly follow the backend, only applying local degradation for instant feedback.
 
     // Update Basic Desktop Elements
     subName.textContent = userProfile.name || "Slave";
