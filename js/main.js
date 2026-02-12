@@ -1552,6 +1552,7 @@ window.updateHierarchyDrawer = function () {
 
     // Inject into the Grid
     container.innerHTML = `
+        <div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>
         ${buildBar("LABOR", stats.tasks, req.tasks, "🛠️")}
         ${buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎")}
         ${buildBar("MERIT", stats.points, req.points, "✨")}
