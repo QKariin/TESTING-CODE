@@ -1257,6 +1257,7 @@ function updateStats() {
     if (document.getElementById('statTotalKneels')) document.getElementById('statTotalKneels').innerText = gameStats.kneelCount || 0;
 
     if (window.renderRewards) window.renderRewards();
+    if(window.updateHierarchyDrawer) window.updateHierarchyDrawer();
 
 
     // 2. MOBILE UPDATE (The New Connection)
