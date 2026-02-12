@@ -1496,6 +1496,9 @@ const REWARD_DATA = {
 // --- NEW: HIERARCHY DRAWER LOGIC ---
 window.updateHierarchyDrawer = function (currentStreak) {
     // 1. Safety Check: Do the elements exist?
+    // BLOCK IF EDITING (Fix disappearing overlay)
+    if (window.isEditingProfile === true) return;
+
     const container = document.getElementById('drawer_ProgressContainer');
     // REWARD_DATA is available in local scope
     if (!container || !window.gameStats) return;
