@@ -22,7 +22,7 @@ body {
     --red: #ff003c;
     --blue: #00f3ff;
     --yellow: #ffd700;
-    --gold: #ffd700;
+    --gold: #C5A059;
     --grey: #888888;
 }
 
@@ -2835,10 +2835,11 @@ body {
     color: #fff;
     border-color: var(--red);
 }
+
 /* --- OPS REDESIGN: GOLD THEME --- */
 .active-task-card.gold-theme {
     border: 1px solid var(--gold);
-    background: linear-gradient(135deg, rgba(10,10,10,1) 0%, rgba(20,20,10,1) 100%);
+    background: linear-gradient(135deg, rgba(10, 10, 10, 1) 0%, rgba(20, 20, 10, 1) 100%);
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
 }
 
@@ -2848,7 +2849,7 @@ body {
     color: #fff;
     letter-spacing: 2px;
     font-weight: bold;
-    text-shadow: 0 0 5px rgba(255,255,255,0.3);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
 
 .at-sub-label {
@@ -2862,7 +2863,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0, 0, 0, 0.3);
     padding: 8px;
     border-radius: 4px;
     margin-bottom: 10px;
