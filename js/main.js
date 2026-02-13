@@ -1402,44 +1402,8 @@ const ICONS = {
 
 // --- CONFIGURATION: RANKS & MEDALS ---
 const REWARD_DATA = {
-    // 1. THE HIERARCHY (Updated to match Backend Rules)
-    ranks: [
-        {
-            name: "HALL BOY", icon: ICONS.rank, tax: 20,
-            req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
-            benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks.", "Speak Cost: 20 Coins."]
-        },
-        {
-            name: "FOOTMAN", icon: ICONS.rank, tax: 15,
-            req: { tasks: 5, kneels: 10, points: 500, spent: 0, streak: 0, name: true, photo: true },
-            benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."]
-        },
-        {
-            name: "SILVERMAN", icon: ICONS.rank, tax: 10,
-            req: { tasks: 25, kneels: 65, points: 2500, spent: 5000, streak: 5, limits: true, kinks: true },
-            benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."]
-        },
-        {
-            name: "BUTLER", icon: ICONS.rank, tax: 5,
-            req: { tasks: 100, kneels: 250, points: 10000, spent: 10000, streak: 10 },
-            benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions.", "Speak Cost: 5 Coins."]
-        },
-        {
-            name: "CHAMBERLAIN", icon: ICONS.rank, tax: 0,
-            req: { tasks: 300, kneels: 750, points: 50000, spent: 50000, streak: 30 },
-            benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."]
-        },
-        {
-            name: "SECRETARY", icon: ICONS.rank, tax: 0,
-            req: { tasks: 500, kneels: 1500, points: 100000, spent: 100000, streak: 100 },
-            benefits: ["The Line: A direct Audio Connection.", "Authority: Access to System Commands.", "The Throne: Total, Unfiltered Access."]
-        },
-        {
-            name: "QUEEN'S CHAMPION", icon: ICONS.rank, tax: 0,
-            req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 365 },
-            benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."]
-        }
-    ],
+    // 1. THE HIERARCHY (FETCHED FROM BACKEND)
+    ranks: [], // EMPTY - Fetched via INIT_HIERARCHY_RULES
 
     // ... (Keep the medals section as is) ...
 
@@ -1466,6 +1430,31 @@ const REWARD_DATA = {
         { limit: 500000, name: "WHALE", icon: ICONS.spend }
     ]
 };
+
+// --- NEW LISTENER FOR BACKEND RULES ---
+window.addEventListener("message", (event) => {
+    // SAFETY: Wix posts many messages, check for our type
+    const data = event.data;
+    if (data && data.type === "INIT_HIERARCHY_RULES") {
+        console.log("RECEIVED HIERARCHY RULES:", data.rules);
+        if (data.rules && Array.isArray(data.rules)) {
+            // MAP BACKEND RULES TO FRONTEND STRUCTURE
+            REWARD_DATA.ranks = data.rules.map(r => ({
+                ...r,
+                icon: ICONS.rank, // Default Icon
+                // Map Tax based on Rank Name (Legacy Logic preservation)
+                tax: r.name === "Hall Boy" ? 20 : (r.name === "Footman" ? 15 : (r.name === "Silverman" ? 10 : (r.name === "Butler" ? 5 : 0)))
+            }));
+
+            // Reverse array if needed? Backend sends Champion -> Hallboy (Desc). 
+            // Frontend usually expects Hallboy -> Champion (Asc) for progress bars.
+            // Backend HIERARCHY_RULES is Descending (Champion first).
+            // Frontend REWARD_DATA.ranks was Ascending (HallBoy first).
+            // WE MUST REVERSE IT!
+            REWARD_DATA.ranks.reverse();
+        }
+    }
+});
 
 // --- NEW: HIERARCHY DRAWER LOGIC ---
 window.updateHierarchyDrawer = function (currentStreak) {
