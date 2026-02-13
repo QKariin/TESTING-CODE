@@ -186,6 +186,13 @@
                         <div id="feedLog" class="vf-body feed-log"></div>
                     </div>
                 </div>
+                <div class="qp-tabs">
+                    <div class="qp-tab active" onclick="switchProfileTab('media')">GRID</div>
+                    <div class="qp-tab" onclick="switchProfileTab('text')">WRITINGS</div>
+                </div>
+                <div id="profileMediaGrid" class="media-grid"></div>
+                <div id="profileTextGrid" class="text-grid d-none"></div>
+                <button class="upload-fab" onclick="openProfileUpload(false)">+</button>
             </div>
 
             <div id="viewProfile">
