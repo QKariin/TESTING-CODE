@@ -1607,8 +1607,8 @@ window.updateHierarchyDrawer = function (currentStreak) {
         html += buildCheck("IDENTITY", hasName, SVG_ID, 'name');
     }
     if (req.photo) {
-        // Check RAW image, not the fallback avatar
-        const hasPhoto = (userProfile.rawImage && !userProfile.rawImage.includes('default'));
+        // Check RAW image. If it exists in DB, it's valid.
+        const hasPhoto = (userProfile.rawImage && userProfile.rawImage.length > 5);
         html += buildCheck("PHOTO", hasPhoto, SVG_PHOTO, 'photo');
     }
 
