@@ -1,40 +1,43 @@
 // js/state.js - CENTRAL DATA STORE
 
 // --- 1. DATA STORAGE ---
-export let gameStats = { 
-    totalTasks: 0, 
-    completedTasks: 0, 
-    currentStreak: 0, 
-    points: 0, 
+export let gameStats = {
+    totalTasks: 0,
+    completedTasks: 0,
+    currentStreak: 0,
+    points: 0,
     coins: 0,
-    kneelCount: 0,      
+    kneelCount: 0,
     todayKneeling: 0,
     taskdom_streak: 0,      // Sync naming
     taskdom_total_tasks: 0  // Sync naming
 };
 
-export let stats = { 
-    approvedTasks: 0, 
-    rejectedTasks: 0, 
-    skippedTasks: 0, 
-    dailyCompletedTasks: 0, 
-    dailyStreak: 0, 
-    dailyScore: 0, 
-    monthlyTotalTasks: 0, 
+export let stats = {
+    approvedTasks: 0,
+    rejectedTasks: 0,
+    skippedTasks: 0,
+    dailyCompletedTasks: 0,
+    dailyStreak: 0,
+    dailyScore: 0,
+    monthlyTotalTasks: 0,
     monthlyScore: 0
 };
 
-export let userProfile = { 
-    name: "Slave", 
-    hierarchy: "Loading...", 
+export let userProfile = {
+    name: "Slave",
+    hierarchy: "Loading...",
     avatar: "",
     joined: null,
-    
+
     // *** NEW FIELDS (INITIALIZED) ***
     profilePicture: "",      // For the Hexagon/Background
     kneelHistory: null,      // For the 24-Square Grid
     routine: "",             // For Daily Routine Logic
-    kinks: ""                // For Kink List
+    kinks: "",               // For Kink List
+    limits: "",              // For Limits List
+    routinestreak: 0,        // For Hierarchy Consistency Check
+    rawImage: ""             // For Photo Verification
 };
 
 // --- NEW: REWARD SYSTEM DATA ---
@@ -73,7 +76,7 @@ export let touchStartX = 0;
 // --- 3. SETTERS (THE ONLY WAY TO UPDATE STATE SAFELY) ---
 
 export function setGameStats(newStats) {
-    Object.assign(gameStats, newStats); 
+    Object.assign(gameStats, newStats);
 }
 
 export function setStats(newStats) {
