@@ -1216,44 +1216,6 @@ window.handleAdminUpload = handleAdminUpload;
 window.WISHLIST_ITEMS = WISHLIST_ITEMS;
 window.gameStats = gameStats;
 
-// --- CENTRALIZED VISUAL RANK LOGIC ---
-window.calculateStrictVisualRank = function (profile) {
-    if (!profile) return "Hall Boy";
-
-    // 1. Start with DB Rank
-    let rank = profile.hierarchy || "Hall Boy";
-
-    // 2. GATEKEEPER: Identity & Photo (Hall Boy Check)
-    const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
-    // Check if name is "Slave" (default) or empty
-    const nameInvalid = !profile.name || profile.name === "Slave" || profile.name === "New Slave";
-    // Check if photo is missing or silhouette
-    const photoInvalid = !profile.profilePicture || profile.profilePicture.includes(SILHOUETTE);
-
-    if (nameInvalid || photoInvalid) {
-        return "Hall Boy";
-    }
-
-    // 3. GATEKEEPER: Preferences (Footman Check)
-    // If you are visually marked as Silverman+, but have no Kinks, degrade to Footman
-    const dbRankLower = rank.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const isAboveFootman = dbRankLower !== "hallboy" && dbRankLower !== "footman";
-
-    if (isAboveFootman) {
-        const hasKinks = (profile.kinks && profile.kinks.length > 2);
-        const hasLimits = (profile.limits && profile.limits.length > 2);
-
-        if (!hasKinks || !hasLimits) {
-            return "Footman";
-        }
-    }
-
-    return rank;
-};
-
-// Export to window usually happens automatically but ensuring it here
-window.calculateStrictVisualRank = calculateStrictVisualRank;
-
 function updateStats() {
     // 1. DESKTOP UPDATE (Basic Header)
     const subName = document.getElementById('subName');
@@ -1264,7 +1226,33 @@ function updateStats() {
     if (!subName || !userProfile || !gameStats) return;
 
     // --- VISUAL HIERARCHY LOGIC (STRICT) ---
-    const visualRank = calculateStrictVisualRank(userProfile);
+    // Start with what the DB says
+    let visualRank = userProfile.hierarchy || "Hall Boy";
+
+    // 1. GATEKEEPER: Identity & Photo
+    // If these are missing, you ARE Hall Boy, no matter what the DB says (catch latency)
+    const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
+    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture || userProfile.profilePicture.includes(SILHOUETTE)) {
+        visualRank = "Hall Boy";
+    }
+
+    // 2. GATEKEEPER: Preferences (Silverman+)
+    // If you are visually marked as Silverman+, but have no Kinks, degrade to Footman visually
+    // (This hides the rank until they fix it)
+    const dbRankLower = visualRank.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const isAboveFootman = dbRankLower !== "hallboy" && dbRankLower !== "footman";
+
+    if (isAboveFootman) {
+        const hasKinks = (userProfile.kinks && userProfile.kinks.length > 2);
+        const hasLimits = (userProfile.limits && userProfile.limits.length > 2);
+
+        if (!hasKinks || !hasLimits) {
+            visualRank = "Footman";
+        }
+    }
+
+    // 3. NO OPTIMISTIC PROMOTION. 
+    // We strictly follow the backend, only applying local degradation for instant feedback.
 
     // Update Basic Desktop Elements
     subName.textContent = userProfile.name || "Slave";
