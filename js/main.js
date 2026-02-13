@@ -867,15 +867,11 @@ window.confirmLobbyAction = function () {
 
 
         window.parent.postMessage({
-
-            type: "PURCHASE_ITEM",
-
-            itemName: currentActionType.toUpperCase() + ": " + text,
-
+            type: "UPDATE_CMS_FIELD",
+            field: "limits",
+            value: text,
             cost: currentActionCost,
-
-            messageToDom: "Limits: " + text
-
+            message: "Limits set: " + text
         }, "*");
 
     }
