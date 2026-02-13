@@ -1483,312 +1483,419 @@
         </div>
 
         <div class="v-main-content">
-            <!-- 4 STAT CARDS -->
-            <!-- KNEELING COUNTER (8 KNEELS REQUIRED) -->
-            <div class="v-card v-stat-card v-span-1" style="flex-direction: column; align-items: stretch; gap: 10px;">
-                <div class="ribbon-label" style="text-align: center;">KNEELING HOURS</div>
-                <div class="prog-bg"
-                    style="height: 25px; border-radius: 12px; position: relative; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
-                    <div id="deskKneelDailyFill" class="prog-fill"
-                        style="width: 0%; background: var(--gold); height: 100%; transition: width 0.5s ease;"></div>
-                    <div id="deskKneelDailyText"
-                        style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: 0.8rem; color: white; text-shadow: 0 1px 3px black;">
-                        0 / 8</div>
-                </div>
-            </div>
+            <div class="desktop-grid-wrapper">
 
-            <!-- DAILY ROUTINE (MANDATORY PROTOCOL) -->
-            <div class="v-card v-stat-card v-span-1" style="flex-direction: column; align-items: stretch; gap: 5px;">
-                <div class="ribbon-label" style="text-align: center;">MANDATORY PROTOCOL</div>
-                <div id="deskRoutineDisplay"
-                    style="font-family: 'Orbitron'; font-size: 0.75rem; color: white; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 5px;">
-                    LOADING...</div>
-                <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin-top: 2px;">
-                    <button id="deskRoutineUploadBtn" class="v-icon-box"
-                        style="width: 30px; height: 30px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; background: var(--blue-accent);"
-                        onclick="document.getElementById('routineUploadInput').click()">
-                        <i class="fas fa-upload"></i>
-                    </button>
-                    <div id="deskRoutineDoneMsg" class="hidden"
-                        style="color: var(--neon-green); font-family: 'Orbitron'; font-size: 0.7rem;">✔ DONE</div>
-                    <div id="deskRoutineTimeMsg" class="hidden"
-                        style="color: #666; font-family: 'Cinzel'; font-size: 0.6rem;">CLOSED</div>
-                </div>
-            </div>
-
-            <!-- DAILY TASK COUNTER (LABOR COMPLETED) -->
-            <div class="v-card v-stat-card v-span-1" style="justify-content: space-around;">
-                <div style="text-align: center;">
-                    <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7;">STREAK</div>
-                    <div id="deskStreak" style="font-family: 'Orbitron'; font-size: 1.5rem; color: white;">0</div>
-                </div>
-                <div style="height: 30px; width: 1px; background: rgba(255,255,255,0.1);"></div>
-                <div style="text-align: center;">
-                    <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7;">TOTAL</div>
-                    <div id="deskTotal" style="font-family: 'Orbitron'; font-size: 1.5rem; color: var(--gold);">0</div>
-                </div>
-            </div>
-
-            <!-- TRIBUTE TOTAL (NET TRIBUTE) -->
-            <div class="v-card v-stat-card v-span-1">
-                <div>
-                    <div class="ribbon-label">TRIBUTE TOTAL</div>
-                    <div id="deskNetTribute" style="font-family: 'Orbitron'; font-size: 1.5rem; color: #f5d142;">0</div>
-                </div>
-                <div class="v-icon-box" style="background: linear-gradient(135deg, #f5d142, #f2a900);"><i
-                        class="fas fa-coins"></i></div>
-            </div>
-
-            <!-- HERO & SATISFACTION -->
-            <div class="v-card v-span-2"
-                style="background: url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png'); background-size: cover; background-position: center; min-height: 200px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;">
-                <div
-                    style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(2,5,18,0.9) 0%, rgba(2,5,18,0.4) 100%);">
-                </div>
-                <div style="position: relative; z-index: 1;">
-                    <p
-                        style="color: rgba(255,255,255,0.6); font-family: 'Cinzel'; font-size: 0.8rem; letter-spacing: 2px; margin: 0;">
-                        Welcome back,</p>
-                    <h2 id="heroUserName"
-                        style="font-family: 'Orbitron'; font-size: 2rem; margin: 5px 0; color: white;">
-                        LOYAL SUBJECT</h2>
-
-                    <!-- CONSOLIDATED KNEELING BUTTON -->
-                    <div id="btn" class="mob-kneel-bar"
-                        style="height: 40px; width: 200px; cursor: pointer; border-radius: 10px; overflow: hidden; position: relative; background: rgba(0,0,0,0.4); border: 1px solid var(--gold); margin: 10px 0;"
-                        onmousedown="window.handleHoldStart(event)" onmouseup="window.handleHoldEnd(event)"
-                        onmouseleave="window.handleHoldEnd(event)" ontouchstart="window.handleHoldStart(event)"
-                        ontouchend="window.handleHoldEnd(event)">
-                        <div id="fill" class="mob-bar-fill"
-                            style="width: 0%; background: var(--gold); height: 100%; position: absolute; left: 0; top: 0; transition: width 0.3s ease;">
-                        </div>
-                        <div class="mob-bar-content"
-                            style="position: relative; z-index: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%; gap: 10px;">
-                            <span id="txt-main"
-                                style="font-family: 'Orbitron'; font-size: 0.7rem; color: white; text-shadow: 0 1px 3px black;">HOLD
-                                TO KNEEL</span>
-                        </div>
-                    </div>
-
-                    <p
-                        style="color: var(--gold); font-family: 'Cinzel'; font-size: 0.9rem; letter-spacing: 1px; margin: 5px 0;">
-                        "Your devotion determines your destiny."</p>
-                </div>
-            </div>
-
-            <!-- ACTION PANEL: TASK SYSTEM -->
-            <div id="taskActionPanel" class="v-card v-span-2"
-                style="display: flex; flex-direction: column; justify-content: space-between; gap: 10px; min-height: 200px;">
-                <div class="ribbon-label">CURRENT ORDERS</div>
-
-                <!-- IDLE STATE -->
-                <div id="mainButtonsArea"
-                    style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px;">
-                    <div id="idleMessage"
-                        style="font-family: 'Cinzel'; font-size: 0.8rem; color: rgba(255,255,255,0.5); text-align: center;">
-                        Awaiting direct orders from the Void...</div>
-                    <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn"
-                        style="width: 100%; border-radius: 12px; background: var(--blue-accent); color: white; padding: 15px; font-weight: bold; letter-spacing: 2px;">REQUEST
-                        TASK</button>
-                </div>
-
-                <!-- ACTIVE STATE -->
-                <div id="activeTaskContent" style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px;">
-                    <h2 id="readyText"
-                        style="font-family: 'Cinzel'; font-size: 1.1rem; text-align: center; margin: 0; line-height: 1.4; min-height: 60px; display: flex; align-items: center; justify-content: center; color: white;">
-                        -</h2>
-
-                    <div id="activeTimerRow" class="hidden" style="display: flex; justify-content: center;">
-                        <div class="timer-box-wrapper" style="gap: 10px; display: flex; align-items: center;">
-                            <div id="timerH" class="t-box"
-                                style="width: 50px; height: 50px; font-size: 1.5rem; border-radius: 10px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron';">
-                                00</div>
-                            <div class="t-sep" style="font-size: 1.5rem; color: var(--gold);">:</div>
-                            <div id="timerM" class="t-box"
-                                style="width: 50px; height: 50px; font-size: 1.5rem; border-radius: 10px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron';">
-                                00</div>
-                            <div class="t-sep" style="font-size: 1.5rem; color: var(--gold);">:</div>
-                            <div id="timerS" class="t-box"
-                                style="width: 50px; height: 50px; font-size: 1.5rem; border-radius: 10px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron';">
-                                00</div>
-                        </div>
-                    </div>
-
-                    <div id="uploadBtnContainer" class="hidden"
-                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden"
-                            onchange="window.handleUploadStart(this)">
-                        <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()"
-                            class="action-btn"
-                            style="background: var(--gold); color: black; border-radius: 10px; font-weight: bold;">UPLOAD</button>
-                        <button id="btnSkip" onclick="window.cancelPendingTask()" class="action-btn"
-                            style="background: rgba(255,0,60,0.1); color: var(--neon-red); border: 1px solid var(--neon-red); border-radius: 10px; font-size: 0.8rem;">SKIP
-                            (-300)</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MAIN VIEW STAGE -->
-            <div class="v-span-4" style="display: grid; grid-template-columns: 1fr 350px; gap: 25px;">
-
-                <!-- LEFT MAIN COLUMN -->
-                <div style="display: flex; flex-direction: column; gap: 25px;">
-
-                    <!-- CONSOLE / CHAT AREA -->
-                    <div id="viewServingTop" class="v-card"
-                        style="flex-grow: 1; display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; height: 100%; border-radius: 20px;">
-
-                        <!-- CHAT INTERNAL -->
-
-                        <!-- CHAT INTERNAL -->
-                        <div id="chatCard" class="chat-container"
-                            style="flex: 1; min-height: 0; background: transparent; margin: 0; border: none; border-radius: 0; display: flex; flex-direction: column;">
-                            <div id="chatBox" class="chat-body-frame"
-                                style="background: transparent; flex: 1; min-height: 0; overflow-y: auto;">
-                                <div id="chatContent" class="chat-area" style="padding: 20px;"></div>
+                <!-- WRAPPER FOR DASHBOARD (SERVE VIEW) -->
+                <div id="viewServingTopDesktop" style="display: contents;">
+                    <!-- 4 STAT CARDS -->
+                    <!-- KNEELING COUNTER (8 KNEELS REQUIRED) -->
+                    <div class="v-card v-stat-card v-span-1"
+                        style="flex-direction: column; align-items: stretch; gap: 10px;">
+                        <div class="ribbon-label" style="text-align: center;">KNEELING HOURS</div>
+                        <div class="prog-bg"
+                            style="height: 25px; border-radius: 12px; position: relative; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
+                            <div id="deskKneelDailyFill" class="prog-fill"
+                                style="width: 0%; background: var(--gold); height: 100%; transition: width 0.5s ease;">
                             </div>
-                            <div class="chat-footer"
-                                style="background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.1); padding: 15px; display: flex; align-items: center; gap: 10px;">
-
-                                <div class="chat-input-wrapper"
-                                    style="flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
-                                    <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()"
-                                        style="background: var(--blue-accent);">+</button>
-                                    <input type="text" id="chatMsgInput" class="chat-input"
-                                        placeholder="Communicate with the Void..." onkeypress="handleChatKey(event)">
-                                </div>
-                                <button class="chat-btn-send" onclick="sendChatMessage()"
-                                    style="background: var(--gold); border-radius: 15px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">></button>
-                            </div>
+                            <div id="deskKneelDailyText"
+                                style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: 0.8rem; color: white; text-shadow: 0 1px 3px black;">
+                                0 / 8</div>
                         </div>
                     </div>
 
-                    <!-- RECORDS VIEW (ALTERNATE TAB) -->
-                    <div id="historySection" class="view-wrapper hidden"
-                        style="background: transparent; height: auto; min-height: 500px;">
-                        <div class="v-card" style="margin-bottom: 20px;">
-                            <h2 style="font-family: 'Cinzel'; color: var(--gold); text-align: center;">SERVICE RECORD
-                            </h2>
-                        </div>
-
-                        <!-- NEW: STATS SUMMARY INSIDE RECORDS -->
+                    <!-- DAILY ROUTINE (MANDATORY PROTOCOL) -->
+                    <div class="v-card v-stat-card v-span-1"
+                        style="flex-direction: column; align-items: stretch; gap: 5px;">
+                        <div class="ribbon-label" style="text-align: center;">MANDATORY PROTOCOL</div>
+                        <div id="deskRoutineDisplay"
+                            style="font-family: 'Orbitron'; font-size: 0.75rem; color: white; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 5px;">
+                            LOADING...</div>
                         <div
-                            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
-                            <div class="v-card" style="padding: 15px; text-align: center;">
-                                <div class="ribbon-label">TOTAL TASKS</div>
-                                <div id="statTotal" style="font-size: 1.5rem; font-family: 'Orbitron'; color: white;">0
-                                </div>
+                            style="display: flex; justify-content: center; gap: 5px; align-items: center; margin-top: 2px;">
+                            <button id="deskRoutineUploadBtn" class="v-icon-box"
+                                style="width: 30px; height: 30px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; background: var(--blue-accent);"
+                                onclick="document.getElementById('routineUploadInput').click()">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            <div id="deskRoutineDoneMsg" class="hidden"
+                                style="color: var(--neon-green); font-family: 'Orbitron'; font-size: 0.7rem;">✔ DONE
                             </div>
-                            <div class="v-card" style="padding: 15px; text-align: center;">
-                                <div class="ribbon-label">SKIPPED</div>
-                                <div id="statSkipped"
-                                    style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-red);">0</div>
-                            </div>
-                            <div class="v-card" style="padding: 15px; text-align: center;">
-                                <div class="ribbon-label">KNEELS</div>
-                                <div id="statTotalKneels"
-                                    style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">0
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TRACKS -->
-                        <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
-                            <div class="ribbon-label" style="padding: 10px;">ACCEPTED OFFERINGS</div>
-                            <div id="gridOkay" class="horizontal-scroll-track"
-                                style="height: 180px; padding-bottom: 10px;">
-                            </div>
-                        </div>
-                        <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
-                            <div class="ribbon-label" style="padding: 10px;">PENDING VERDICT</div>
-                            <div id="gridPending" class="horizontal-scroll-track"
-                                style="height: 180px; padding-bottom: 10px;"></div>
-                        </div>
-                        <div class="v-card" style="padding: 10px;">
-                            <div class="ribbon-label" style="padding: 10px;">DENIED / VOIDED</div>
-                            <div id="gridFailed" class="horizontal-scroll-track"
-                                style="height: 180px; padding-bottom: 10px;"></div>
+                            <div id="deskRoutineTimeMsg" class="hidden"
+                                style="color: #666; font-family: 'Cinzel'; font-size: 0.6rem;">CLOSED</div>
                         </div>
                     </div>
 
-                    <!-- OTHER VIEWS -->
-                    <div id="viewBuy" class="view-wrapper hidden" style="padding: 0;">
-                        <div class="v-card">
-                            <h2
-                                style="text-align: center; color: var(--gold); font-family:'Cinzel'; margin-bottom: 25px;">
-                                EXCHEQUER</h2>
-                            <div class="store-grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                                <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                                    <div style="font-size: 1.2rem; margin-bottom: 10px;">1,000 🪙</div>
-                                    <button class="action-btn" onclick="buyRealCoins(1000)"
-                                        style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€10.00</button>
-                                </div>
-                                <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                                    <div style="font-size: 1.2rem; margin-bottom: 10px;">5,500 🪙</div>
-                                    <button class="action-btn" onclick="buyRealCoins(5500)"
-                                        style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€50.00</button>
-                                </div>
-                                <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                                    <div style="font-size: 1.2rem; margin-bottom: 10px;">12,000 🪙</div>
-                                    <button class="action-btn" onclick="buyRealCoins(12000)"
-                                        style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€100.00</button>
-                                </div>
+                    <!-- DAILY TASK COUNTER (LABOR COMPLETED) -->
+                    <div class="v-card v-stat-card v-span-1" style="justify-content: space-around;">
+                        <div style="text-align: center;">
+                            <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7;">STREAK</div>
+                            <div id="deskStreak" style="font-family: 'Orbitron'; font-size: 1.5rem; color: white;">0
+                            </div>
+                        </div>
+                        <div style="height: 30px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+                        <div style="text-align: center;">
+                            <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7;">TOTAL</div>
+                            <div id="deskTotal" style="font-family: 'Orbitron'; font-size: 1.5rem; color: var(--gold);">
+                                0
                             </div>
                         </div>
                     </div>
 
-                    <div id="viewNews" class="view-wrapper hidden" style="padding: 0;">
-                        <div class="v-card">
-                            <h2
-                                style="font-family:'Cinzel'; color: var(--gold); text-align: center; margin-bottom: 20px;">
-                                LIBRARY</h2>
-                            <div id="newsGrid" class="gallery-grid"
-                                style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;"></div>
+                    <!-- TRIBUTE TOTAL (NET TRIBUTE) -->
+                    <div class="v-card v-stat-card v-span-1">
+                        <div>
+                            <div class="ribbon-label">TRIBUTE TOTAL</div>
+                            <div id="deskNetTribute"
+                                style="font-family: 'Orbitron'; font-size: 1.5rem; color: #f5d142;">0
+                            </div>
                         </div>
+                        <div class="v-icon-box" style="background: linear-gradient(135deg, #f5d142, #f2a900);"><i
+                                class="fas fa-coins"></i></div>
                     </div>
 
-                </div>
-
-                <!-- RIGHT SIDEBAR (STATS & STORE) -->
-                <div style="display:flex; flex-direction:column; gap:25px;">
-
-                    <!-- DAILY DISCIPLINE (MERGED FROM MOBILE) -->
-                    <div class="v-card">
-                        <div class="ribbon-label" style="margin-bottom: 15px;">DAILY DISCIPLINE</div>
-                        <div id="shelfRanks" class="mob-streak-strip" style="justify-content: center; gap: 8px;"></div>
+                    <!-- HERO & SATISFACTION -->
+                    <!-- HERO & SATISFACTION -->
+                    <div class="v-card v-span-2"
+                        style="background: url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png'); background-size: cover; background-position: center; min-height: 200px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;">
                         <div
-                            style="text-align: center; margin-top: 15px; font-size: 0.7rem; color: rgba(255,255,255,0.5); font-family: 'Cinzel';">
-                            SINCE <span id="slaveSinceDate" style="color: white;">--/--/--</span>
+                            style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(2,5,18,0.9) 0%, rgba(2,5,18,0.4) 100%);">
+                        </div>
+                        <div style="position: relative; z-index: 1;">
+                            <p
+                                style="color: rgba(255,255,255,0.6); font-family: 'Cinzel'; font-size: 0.8rem; letter-spacing: 2px; margin: 0;">
+                                Welcome back,</p>
+                            <h2 id="heroUserName"
+                                style="font-family: 'Orbitron'; font-size: 2rem; margin: 5px 0; color: white;">
+                                LOYAL SUBJECT</h2>
+
+                            <!-- CONSOLIDATED KNEELING BUTTON -->
+                            <div id="btn" class="mob-kneel-bar"
+                                style="height: 40px; width: 200px; cursor: pointer; border-radius: 10px; overflow: hidden; position: relative; background: rgba(0,0,0,0.4); border: 1px solid var(--gold); margin: 10px 0;"
+                                onmousedown="window.handleHoldStart(event)" onmouseup="window.handleHoldEnd(event)"
+                                onmouseleave="window.handleHoldEnd(event)" ontouchstart="window.handleHoldStart(event)"
+                                ontouchend="window.handleHoldEnd(event)">
+                                <div id="fill" class="mob-bar-fill"
+                                    style="width: 0%; background: var(--gold); height: 100%; position: absolute; left: 0; top: 0; transition: width 0.3s ease;">
+                                </div>
+                                <div class="mob-bar-content"
+                                    style="position: relative; z-index: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%; gap: 10px;">
+                                    <span id="txt-main"
+                                        style="font-family: 'Orbitron'; font-size: 0.7rem; color: white; text-shadow: 0 1px 3px black;">HOLD
+                                        TO KNEEL</span>
+                                </div>
+                            </div>
+
+                            <p
+                                style="color: var(--gold); font-family: 'Cinzel'; font-size: 0.9rem; letter-spacing: 1px; margin: 5px 0;">
+                                "Your devotion determines your destiny."</p>
                         </div>
                     </div>
 
-                    <!-- TRIBUTE STORE (COMPACT) -->
-                    <div class="v-card" style="flex-grow: 1;">
-                        <div class="ribbon-label" style="margin-bottom: 15px;">TRIBUTE STORE</div>
-                        <div id="huntStoreGrid" class="store-grid"
-                            style="grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 400px; overflow-y: auto;">
-                            <!-- Items will be injected here -->
+                    <!-- ACTION PANEL: TASK SYSTEM (WIDER - 50%) -->
+                    <div id="taskActionPanel" class="v-card v-span-2"
+                        style="display: flex; flex-direction: column; justify-content: space-between; gap: 10px; min-height: 200px;">
+                        <div class="ribbon-label">CURRENT ORDERS</div>
+
+                        <!-- STABLE CONTAINER FOR BOTH IDLE AND ACTIVE STATES -->
+                        <div class="task-interface-container"
+                            style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+
+                            <!-- 1. IDLE/READY STATE -->
+                            <div id="mainButtonsArea" style="width: 100%; text-align: center;">
+                                <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn"
+                                    style="width: 100%; border-radius: 12px; background: var(--blue-accent); color: white; padding: 15px; font-weight: bold; letter-spacing: 2px;">
+                                    REQUEST TASK
+                                </button>
+                                <div id="idleMessage"
+                                    style="font-family: 'Cinzel'; font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 10px;">
+                                    Awaiting direct orders from the Void...
+                                </div>
+                            </div>
+
+                            <!-- 2. ACTIVE STATE (Hidden by default via CSS/JS toggle) -->
+                            <div id="activeTaskContent" class="hidden"
+                                style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
+                                <h2 id="readyText"
+                                    style="font-family: 'Cinzel'; font-size: 1.1rem; text-align: center; margin: 0; line-height: 1.4; color: white;">
+                                    -</h2>
+
+                                <div id="activeTimerRow" class="card-timer-row">
+                                    <div id="timerH" class="card-t-box">00</div>
+                                    <div class="t-sep">:</div>
+                                    <div id="timerM" class="card-t-box">00</div>
+                                    <div class="t-sep">:</div>
+                                    <div id="timerS" class="card-t-box">00</div>
+                                </div>
+
+                                <div id="uploadBtnContainer" class="hidden"
+                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden"
+                                        onchange="window.handleUploadStart(this)">
+                                    <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()"
+                                        class="action-btn"
+                                        style="background: var(--gold); color: black; border-radius: 10px; font-weight: bold;">UPLOAD</button>
+                                    <button id="btnSkip" onclick="window.cancelPendingTask()" class="action-btn"
+                                        style="background: rgba(255,0,60,0.1); color: var(--neon-red); border: 1px solid var(--neon-red); border-radius: 10px; font-size: 0.8rem;">SKIP
+                                        (-300)</button>
+                                </div>
+                            </div>
+
                         </div>
-                        <button class="action-btn" onclick="toggleTributeHunt()"
-                            style="margin-top: 20px; font-size: 0.7rem; background: rgba(255,255,255,0.05);">VIEW FULL
-                            STORE</button>
                     </div>
 
-                    <!-- PROTOCOL STATUS -->
-                    <div class="v-card">
-                        <div class="ribbon-label">PROTOCOL ACTIVE</div>
-                        <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+                    <!-- EXCHEQUER VIEW (HIDDEN BY DEFAULT, TOGGLED ON CLICK) -->
+                    <div id="viewBuy" class="v-card v-span-4 hidden" style="flex-direction: column; gap: 20px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                            <div class="ribbon-label" style="font-size: 1rem; color: var(--gold);">ROYAL EXCHEQUER</div>
+                            <button onclick="window.switchTab('serve')" class="text-btn">CLOSE ✕</button>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                            <!-- SUBSCRIPTION -->
+                            <div class="v-card" style="background: rgba(0,0,0,0.5); text-align: center;">
+                                <div class="ribbon-label">MONTHLY TRIBUTE</div>
+                                <div style="font-size: 2rem; font-family: 'Orbitron'; color: white; margin: 15px 0;">
+                                    $25.00
+                                </div>
+                                <div style="font-size: 0.8rem; color: #888; margin-bottom: 15px;">Active Subscription
+                                </div>
+                                <button class="action-btn" style="font-size: 0.8rem;">MANAGE</button>
+                            </div>
+
+                            <!-- ONE-TIME TRIBUTE -->
+                            <div class="v-card" style="background: rgba(0,0,0,0.5); text-align: center;">
+                                <div class="ribbon-label">SEND GIFT</div>
+                                <div style="margin: 15px 0; color: #ccc; font-size: 0.9rem;">
+                                    Directly contribute to Queen Karin's treasury.
+                                </div>
+                                <button class="action-btn" style="font-size: 0.8rem; width: 100%;">SEND TRIBUTE</button>
+                            </div>
+
+                            <!-- HISTORY -->
+                            <div class="v-card" style="background: rgba(0,0,0,0.5); text-align: center;">
+                                <div class="ribbon-label">TRIBUTE HISTORY</div>
+                                <div
+                                    style="height: 100px; overflow-y: auto; text-align: left; font-size: 0.8rem; color: #888; padding: 10px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding: 5px 0;">
+                                        <span>Feb 10</span><span>$25.00</span>
+                                    </div>
+                                    <div
+                                        style="display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding: 5px 0;">
+                                        <span>Jan 10</span><span>$25.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MAIN VIEW STAGE -->
+                    <div class="v-span-4" style="display: grid; grid-template-columns: 1fr 350px; gap: 25px;">
+
+                        <!-- LEFT MAIN COLUMN -->
+                        <div style="display: flex; flex-direction: column; gap: 25px;">
+
+                            <!-- CONSOLE / CHAT AREA -->
+                            <div id="viewServingTop" class="v-card"
+                                style="flex-grow: 1; display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; height: 100%; border-radius: 20px;">
+
+                                <!-- CHAT INTERNAL -->
+
+                                <!-- CHAT INTERNAL -->
+                                <div id="chatCard" class="chat-container"
+                                    style="flex: 1; min-height: 0; background: transparent; margin: 0; border: none; border-radius: 0; display: flex; flex-direction: column;">
+                                    <div id="chatBox" class="chat-body-frame"
+                                        style="background: transparent; flex: 1; min-height: 0; overflow-y: auto;">
+                                        <div id="chatContent" class="chat-area" style="padding: 20px;"></div>
+                                    </div>
+                                    <div class="chat-footer"
+                                        style="background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.1); padding: 15px; display: flex; align-items: center; gap: 10px;">
+
+                                        <div class="chat-input-wrapper"
+                                            style="flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                                            <button id="btnMediaPlus" class="chat-btn-plus"
+                                                onclick="window.handleMediaPlus()"
+                                                style="background: var(--blue-accent);">+</button>
+                                            <input type="text" id="chatMsgInput" class="chat-input"
+                                                placeholder="Communicate with the Void..."
+                                                onkeypress="handleChatKey(event)">
+                                        </div>
+                                        <button class="chat-btn-send" onclick="sendChatMessage()"
+                                            style="background: var(--gold); border-radius: 15px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RECORDS VIEW (ALTERNATE TAB) -->
+                            <div id="historySection" class="view-wrapper hidden"
+                                style="background: transparent; height: auto; min-height: 500px;">
+                                <div class="v-card" style="margin-bottom: 20px;">
+                                    <h2 style="font-family: 'Cinzel'; color: var(--gold); text-align: center;">SERVICE
+                                        RECORD
+                                    </h2>
+                                </div>
+
+                                <!-- NEW: STATS SUMMARY INSIDE RECORDS -->
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+                                    <div class="v-card" style="padding: 15px; text-align: center;">
+                                        <div class="ribbon-label">TOTAL TASKS</div>
+                                        <div id="statTotal"
+                                            style="font-size: 1.5rem; font-family: 'Orbitron'; color: white;">0
+                                        </div>
+                                    </div>
+                                    <div class="v-card" style="padding: 15px; text-align: center;">
+                                        <div class="ribbon-label">SKIPPED</div>
+                                        <div id="statSkipped"
+                                            style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-red);">
+                                            0
+                                        </div>
+                                    </div>
+                                    <div class="v-card" style="padding: 15px; text-align: center;">
+                                        <div class="ribbon-label">KNEELS</div>
+                                        <div id="statTotalKneels"
+                                            style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">
+                                            0
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TRACKS -->
+                                <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
+                                    <div class="ribbon-label" style="padding: 10px;">ACCEPTED OFFERINGS</div>
+                                    <div id="gridOkay" class="horizontal-scroll-track"
+                                        style="height: 180px; padding-bottom: 10px;">
+                                    </div>
+                                </div>
+                                <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
+                                    <div class="ribbon-label" style="padding: 10px;">PENDING VERDICT</div>
+                                    <div id="gridPending" class="horizontal-scroll-track"
+                                        style="height: 180px; padding-bottom: 10px;"></div>
+                                </div>
+                                <div class="v-card" style="padding: 10px;">
+                                    <div class="ribbon-label" style="padding: 10px;">DENIED / VOIDED</div>
+                                    <div id="gridFailed" class="horizontal-scroll-track"
+                                        style="height: 180px; padding-bottom: 10px;"></div>
+                                </div>
+                            </div>
+
+                            <!-- OTHER VIEWS -->
+                            <div id="viewBuy" class="view-wrapper hidden" style="padding: 0;">
+                                <div class="v-card">
+                                    <h2
+                                        style="text-align: center; color: var(--gold); font-family:'Cinzel'; margin-bottom: 25px;">
+                                        EXCHEQUER</h2>
+                                    <div class="store-grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                                        <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                                            <div style="font-size: 1.2rem; margin-bottom: 10px;">1,000 🪙</div>
+                                            <button class="action-btn" onclick="buyRealCoins(1000)"
+                                                style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€10.00</button>
+                                        </div>
+                                        <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                                            <div style="font-size: 1.2rem; margin-bottom: 10px;">5,500 🪙</div>
+                                            <button class="action-btn" onclick="buyRealCoins(5500)"
+                                                style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€50.00</button>
+                                        </div>
+                                        <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                                            <div style="font-size: 1.2rem; margin-bottom: 10px;">12,000 🪙</div>
+                                            <button class="action-btn" onclick="buyRealCoins(12000)"
+                                                style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€100.00</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="viewNews" class="view-wrapper hidden" style="padding: 0;">
+                                <div class="v-card">
+                                    <h2
+                                        style="font-family:'Cinzel'; color: var(--gold); text-align: center; margin-bottom: 20px;">
+                                        LIBRARY</h2>
+                                    <div id="newsGrid" class="gallery-grid"
+                                        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;"></div>
+                                </div>
+                            </div>
+
+                        </div> <!-- END Left Main Column -->
+
+                        <!-- RIGHT SIDEBAR (STATS & STORE) -->
+                        <div style="display:flex; flex-direction:column; gap:25px;">
+
+                            <!-- DAILY DISCIPLINE -->
+                            <div class="v-card">
+                                <div class="ribbon-label" style="margin-bottom: 15px;">DAILY DISCIPLINE</div>
+                                <div id="shelfRanks" class="mob-streak-strip"
+                                    style="justify-content: center; gap: 8px;"></div>
+                                <div
+                                    style="text-align: center; margin-top: 15px; font-size: 0.7rem; color: rgba(255,255,255,0.5); font-family: 'Cinzel';">
+                                    SINCE <span id="slaveSinceDate" style="color: white;">--/--/--</span>
+                                </div>
+                            </div>
+
+                            <!-- TRIBUTE STORE -->
+                            <div class="v-card" style="flex-grow: 1;">
+                                <div class="ribbon-label" style="margin-bottom: 15px;">TRIBUTE STORE</div>
+                                <div id="huntStoreGrid" class="store-grid"
+                                    style="grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 400px; overflow-y: auto;">
+                                    <!-- Items will be injected here -->
+                                </div>
+                                <button class="action-btn" onclick="toggleTributeHunt()"
+                                    style="margin-top: 20px; font-size: 0.7rem; background: rgba(255,255,255,0.05);">VIEW
+                                    FULL STORE</button>
+                            </div>
+
+                            <!-- PROTOCOL STATUS -->
+                            <div class="v-card">
+                                <div class="ribbon-label">PROTOCOL ACTIVE</div>
+                                <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+                                    <div
+                                        style="width: 12px; height: 12px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green);">
+                                    </div>
+                                    <div style="font-family: 'Orbitron'; font-size: 0.9rem;">SILENCE ENGAGED</div>
+                                </div>
+                            </div>
+
+                        </div> <!-- END RIGHT SIDEBAR -->
+
+                    </div> <!-- END MAIN VIEW STAGE -->
+                </div> <!-- END viewServingTopDesktop -->
+
+                <!-- EXCHEQUER VIEW -->
+                <div id="viewBuy" class="v-card v-span-4 hidden" style="flex-direction: column; gap: 20px;">
+                    <!-- TITLE -->
+                    <div class="ribbon-label" style="align-self: flex-start;">EXCHEQUER & TRIBUTE</div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; width:100%;">
+                        <!-- FEES WINDOW -->
+                        <div
+                            style="background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 10px;">
                             <div
-                                style="width: 12px; height: 12px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green);">
+                                style="color: var(--gold); font-family: 'Orbitron'; font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px;">
+                                OUTSTANDING FEES
                             </div>
-                            <div style="font-family: 'Orbitron'; font-size: 0.9rem;">SILENCE ENGAGED</div>
+                            <div
+                                style="color: #666; font-size: 0.7rem; font-family: 'Cinzel'; text-align: center; padding: 20px;">
+                                NO FEES PENDING
+                            </div>
+                        </div>
+
+                        <!-- STRIPE / HISTORY -->
+                        <div
+                            style="background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 10px;">
+                            <div
+                                style="color: var(--gold); font-family: 'Orbitron'; font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px;">
+                                TRANSACTION HISTORY
+                            </div>
+                            <div
+                                style="color: #666; font-size: 0.7rem; font-family: 'Cinzel'; text-align: center; padding: 20px;">
+                                ACCESSING STRIPE CONNECT...
+                            </div>
                         </div>
                     </div>
-
                 </div>
 
-            </div>
-        </div>
+            </div> <!-- END desktop-grid-wrapper -->
+        </div> <!-- END v-main-content -->
 
         <!-- SHARED MODALS & OVERLAYS (STILL NEEDED) -->
         <div id="taskDetailPanel" class="task-detail-panel"
@@ -1885,11 +1992,13 @@
                             <div class="routine-grid">
                                 <div class="routine-tile" onclick="selectRoutineItem(this, 'Morning Kneel')">Morning
                                     Kneel</div>
-                                <div class="routine-tile" onclick="selectRoutineItem(this, 'Chastity Check')">Chastity
+                                <div class="routine-tile" onclick="selectRoutineItem(this, 'Chastity Check')">
+                                    Chastity
                                     Check</div>
                                 <div class="routine-tile" onclick="selectRoutineItem(this, 'Cleanliness Check')">
                                     Cleanliness Check</div>
-                                <div class="routine-tile special" onclick="selectRoutineItem(this, 'custom')">CREATE OWN
+                                <div class="routine-tile special" onclick="selectRoutineItem(this, 'custom')">CREATE
+                                    OWN
                                     (+1000)</div>
                             </div>
                             <input type="text" id="routineCustomInput" class="lobby-input hidden"
@@ -1960,7 +2069,8 @@
                     </div>
                     <div id="rcQuote" class="rc-quote">...</div>
                     <div class="rc-progress-wrap">
-                        <div class="rc-progress-labels"><span id="rcCurrent">0</span><span id="rcTarget">/ 100</span>
+                        <div class="rc-progress-labels"><span id="rcCurrent">0</span><span id="rcTarget">/
+                                100</span>
                         </div>
                         <div class="rc-track">
                             <div id="rcFill" class="rc-fill"></div>
@@ -2090,7 +2200,8 @@
                                 style="position: absolute; bottom: 0; right: 0;"></div>
                         </div>
                         <div style="display: flex; flex-direction: column;">
-                            <div style="font-family: 'Cinzel'; font-weight: 700; font-size: 1rem; color: #fff;">QUEEN
+                            <div style="font-family: 'Cinzel'; font-weight: 700; font-size: 1rem; color: #fff;">
+                                QUEEN
                                 KARIN</div>
                             <div id="mobChatStatusText"
                                 style="font-family: 'Orbitron'; font-size: 0.55rem; color: #888;">ONLINE</div>
@@ -2260,11 +2371,13 @@
 
                 <div id="altarHistoryPanel" class="hidden" style="width:100%; animation:fadeIn 0.5s;">
                     <div class="mob-grid-label-center"
-                        style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ACCEPTED PROTOCOLS
+                        style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ACCEPTED
+                        PROTOCOLS
                     </div>
                     <div id="mobRec_Grid" class="mob-horiz-scroll"></div>
                     <div class="mob-grid-label-center"
-                        style="text-align: left; padding-left: 10px; color: #ff003c; margin-top: 15px;">FAILED / DENIED
+                        style="text-align: left; padding-left: 10px; color: #ff003c; margin-top: 15px;">FAILED /
+                        DENIED
                     </div>
                     <div id="mobRec_Heap" class="mob-horiz-scroll small"></div>
                 </div>
@@ -2306,7 +2419,8 @@
                             <!-- THE PROOF -->
                             <div id="shelfRoutine" class="mob-horiz-scroll"
                                 style="flex:1; height:90px; align-items:center;">
-                                <div style="color:#444; font-size:0.6rem; padding:10px; font-family:'Cinzel';">AWAITING
+                                <div style="color:#444; font-size:0.6rem; padding:10px; font-family:'Cinzel';">
+                                    AWAITING
                                     PROOF</div>
                             </div>
                         </div>
@@ -2328,18 +2442,21 @@
 
                         <!-- LABOR -->
                         <div class="mob-grid-label-center"
-                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">LABOR MEDALS
+                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">LABOR
+                            MEDALS
                         </div>
                         <div id="shelfTasks" class="reward-shelf mob-horiz-scroll"></div>
 
                         <!-- ENDURANCE -->
                         <div class="mob-grid-label-center"
-                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ENDURANCE</div>
+                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">ENDURANCE
+                        </div>
                         <div id="shelfKneel" class="reward-shelf mob-horiz-scroll"></div>
 
                         <!-- SACRIFICE -->
                         <div class="mob-grid-label-center"
-                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">SACRIFICE</div>
+                            style="text-align: left; padding-left: 10px; color: #666; margin-top: 15px;">SACRIFICE
+                        </div>
                         <div id="shelfSpend" class="reward-shelf mob-horiz-scroll"></div>
 
                         <!-- THE MODAL (Moved Inside the Jail) -->
@@ -2414,13 +2531,15 @@
                             <div id="routineSelectionArea" class="hidden"
                                 style="width:100%; display:flex; flex-direction:column; gap:10px;">
                                 <div class="routine-grid">
-                                    <div class="routine-tile" onclick="selectRoutineItem(this, 'Morning Kneel')">Morning
+                                    <div class="routine-tile" onclick="selectRoutineItem(this, 'Morning Kneel')">
+                                        Morning
                                         Kneel</div>
                                     <div class="routine-tile" onclick="selectRoutineItem(this, 'Chastity Check')">
                                         Chastity Check</div>
                                     <div class="routine-tile" onclick="selectRoutineItem(this, 'Cleanliness Check')">
                                         Cleanliness Check</div>
-                                    <div class="routine-tile special" onclick="selectRoutineItem(this, 'custom')">CREATE
+                                    <div class="routine-tile special" onclick="selectRoutineItem(this, 'custom')">
+                                        CREATE
                                         OWN (+1000)</div>
                                 </div>
                                 <input type="text" id="routineCustomInput" class="lobby-input hidden"
@@ -2446,7 +2565,8 @@
                         <!-- HEADER -->
                         <div class="mob-chat-header"
                             style="width:100%; justify-content:space-between; margin-bottom: 20px; background: transparent; border: none; padding: 0;">
-                            <div class="chat-queen-name" style="color: #c5a059; font-size: 1.2rem;">DAILY DUTIES</div>
+                            <div class="chat-queen-name" style="color: #c5a059; font-size: 1.2rem;">DAILY DUTIES
+                            </div>
                             <button onclick="closeQueenMenu()"
                                 style="background:none; border:none; color:#fff; font-size:2rem; cursor:pointer;">×</button>
                         </div>
@@ -2557,7 +2677,8 @@
                                 style="right: auto; left: -5px; color: #fff; border-color: #fff;">AUTHORIZED</div>
                         </div>
                         <h2 class="mob-reward-title"
-                            style="color: #c5a059; font-family: 'Cinzel'; letter-spacing: 2px;">DEVOTION RECOGNIZED</h2>
+                            style="color: #c5a059; font-family: 'Cinzel'; letter-spacing: 2px;">DEVOTION RECOGNIZED
+                        </h2>
                         <div class="mob-reward-actions"
                             style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%;">
                             <button onclick="window.claimKneelReward('coins')" class="mob-action-btn"
