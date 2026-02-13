@@ -1442,41 +1442,59 @@
 
         <div class="v-main-content">
             <!-- 4 STAT CARDS -->
-            <div class="v-card v-stat-card v-span-1">
-                <div>
-                    <div class="ribbon-label">MERIT</div>
-                    <div id="points" class="status-text-lg"
-                        style="color: white; font-size: 1.4rem; font-family: 'Orbitron';">0</div>
+            <!-- KNEELING COUNTER (8 KNEELS REQUIRED) -->
+            <div class="v-card v-stat-card v-span-1" style="flex-direction: column; align-items: stretch; gap: 10px;">
+                <div class="ribbon-label" style="text-align: center;">KNEELING HOURS</div>
+                <div class="prog-bg"
+                    style="height: 25px; border-radius: 12px; position: relative; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
+                    <div id="deskKneelDailyFill" class="prog-fill"
+                        style="width: 0%; background: var(--gold); height: 100%; transition: width 0.5s ease;"></div>
+                    <div id="deskKneelDailyText"
+                        style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: 0.8rem; color: white; text-shadow: 0 1px 3px black;">
+                        0 / 8</div>
                 </div>
-                <div class="v-icon-box" style="background: linear-gradient(135deg, var(--blue-accent), #00d2ff);"><i
-                        class="fas fa-star"></i></div>
             </div>
+
+            <!-- DAILY ROUTINE (MANDATORY PROTOCOL) -->
+            <div class="v-card v-stat-card v-span-1" style="flex-direction: column; align-items: stretch; gap: 5px;">
+                <div class="ribbon-label" style="text-align: center;">MANDATORY PROTOCOL</div>
+                <div id="deskRoutineDisplay"
+                    style="font-family: 'Orbitron'; font-size: 0.75rem; color: white; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 5px;">
+                    LOADING...</div>
+                <div style="display: flex; justify-content: center; gap: 5px; align-items: center; margin-top: 2px;">
+                    <button id="deskRoutineUploadBtn" class="v-icon-box"
+                        style="width: 30px; height: 30px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; background: var(--blue-accent);"
+                        onclick="document.getElementById('routineUploadInput').click()">
+                        <i class="fas fa-upload"></i>
+                    </button>
+                    <div id="deskRoutineDoneMsg" class="hidden"
+                        style="color: var(--neon-green); font-family: 'Orbitron'; font-size: 0.7rem;">✔ DONE</div>
+                    <div id="deskRoutineTimeMsg" class="hidden"
+                        style="color: #666; font-family: 'Cinzel'; font-size: 0.6rem;">CLOSED</div>
+                </div>
+            </div>
+
+            <!-- DAILY TASK COUNTER (LABOR COMPLETED) -->
+            <div class="v-card v-stat-card v-span-1" style="justify-content: space-around;">
+                <div style="text-align: center;">
+                    <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7;">STREAK</div>
+                    <div id="deskStreak" style="font-family: 'Orbitron'; font-size: 1.5rem; color: white;">0</div>
+                </div>
+                <div style="height: 30px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+                <div style="text-align: center;">
+                    <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7;">TOTAL</div>
+                    <div id="deskTotal" style="font-family: 'Orbitron'; font-size: 1.5rem; color: var(--gold);">0</div>
+                </div>
+            </div>
+
+            <!-- TRIBUTE TOTAL (NET TRIBUTE) -->
             <div class="v-card v-stat-card v-span-1">
                 <div>
-                    <div class="ribbon-label">CAPITAL</div>
-                    <div id="coins" class="status-text-lg"
-                        style="color: white; font-size: 1.4rem; font-family: 'Orbitron';">0</div>
+                    <div class="ribbon-label">TRIBUTE TOTAL</div>
+                    <div id="deskNetTribute" style="font-family: 'Orbitron'; font-size: 1.5rem; color: #f5d142;">0</div>
                 </div>
                 <div class="v-icon-box" style="background: linear-gradient(135deg, #f5d142, #f2a900);"><i
                         class="fas fa-coins"></i></div>
-            </div>
-            <div class="v-card v-stat-card v-span-1">
-                <div>
-                    <div class="ribbon-label">DAILY STREAK</div>
-                    <div id="statStreak" class="status-text-lg"
-                        style="color: white; font-size: 1.4rem; font-family: 'Orbitron';">0</div>
-                </div>
-                <div class="v-icon-box" style="background: linear-gradient(135deg, #42f563, #00a31d);"><i
-                        class="fas fa-bolt"></i></div>
-            </div>
-            <div class="v-card v-stat-card v-span-1">
-                <div>
-                    <div class="ribbon-label">TASKS COMPLETED</div>
-                    <div id="statCompleted" class="status-text-lg"
-                        style="color: white; font-size: 1.4rem; font-family: 'Orbitron';">0</div>
-                </div>
-                <div class="v-icon-box" style="background: linear-gradient(135deg, #f54242, #a30000);"><i
-                        class="fas fa-check"></i></div>
             </div>
 
             <!-- HERO & SATISFACTION -->
@@ -1489,31 +1507,62 @@
                     <p
                         style="color: rgba(255,255,255,0.6); font-family: 'Cinzel'; font-size: 0.8rem; letter-spacing: 2px;">
                         Welcome back,</p>
-                    <h2 style="font-family: 'Orbitron'; font-size: 2rem; margin: 10px 0; color: white;">LOYAL SUBJECT
+                    <h2 id="heroUserName"
+                        style="font-family: 'Orbitron'; font-size: 2rem; margin: 10px 0; color: white;">LOYAL SUBJECT
                     </h2>
                     <p style="color: var(--gold); font-family: 'Cinzel'; font-size: 0.9rem; letter-spacing: 1px;">"Your
                         devotion determines your destiny."</p>
                 </div>
             </div>
 
-            <div class="v-card v-span-2" style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="flex-grow: 1;">
-                    <div class="ribbon-label">SATISFACTION RATE</div>
-                    <div id="satisfactionPercent"
-                        style="color: white; font-family: 'Orbitron'; font-size: 1.8rem; margin: 5px 0;">0%</div>
-                    <div class="prog-bg" style="width: 100%; height: 6px; border-radius: 3px;">
-                        <div id="progressBar" class="prog-fill"
-                            style="background: var(--blue-accent); border-radius: 3px;"></div>
-                    </div>
-                    <div
-                        style="margin-top: 10px; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-family: 'Cinzel';">
-                        <span id="pointsNeeded">0 to go</span> TOWARDS PROMOTION
-                    </div>
+            <!-- ACTION PANEL: TASK SYSTEM -->
+            <div id="taskActionPanel" class="v-card v-span-2"
+                style="display: flex; flex-direction: column; justify-content: space-between; gap: 10px; min-height: 200px;">
+                <div class="ribbon-label">CURRENT ORDERS</div>
+
+                <!-- IDLE STATE -->
+                <div id="mainButtonsArea"
+                    style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px;">
+                    <div id="idleMessage"
+                        style="font-family: 'Cinzel'; font-size: 0.8rem; color: rgba(255,255,255,0.5); text-align: center;">
+                        Awaiting direct orders from the Void...</div>
+                    <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn"
+                        style="width: 100%; border-radius: 12px; background: var(--blue-accent); color: white; padding: 15px; font-weight: bold; letter-spacing: 2px;">REQUEST
+                        TASK</button>
                 </div>
-                <div style="margin-left: 30px; text-align: right;">
-                    <div class="v-icon-box"
-                        style="width: 70px; height: 70px; background: rgba(0, 117, 255, 0.1); border: 1px solid var(--blue-accent);">
-                        <span style="font-size: 1.5rem;">📊</span>
+
+                <!-- ACTIVE STATE -->
+                <div id="activeTaskContent" style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px;">
+                    <h2 id="readyText"
+                        style="font-family: 'Cinzel'; font-size: 1.1rem; text-align: center; margin: 0; line-height: 1.4; min-height: 60px; display: flex; align-items: center; justify-content: center; color: white;">
+                        -</h2>
+
+                    <div id="activeTimerRow" class="hidden" style="display: flex; justify-content: center;">
+                        <div class="timer-box-wrapper" style="gap: 10px; display: flex; align-items: center;">
+                            <div id="timerH" class="t-box"
+                                style="width: 50px; height: 50px; font-size: 1.5rem; border-radius: 10px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron';">
+                                00</div>
+                            <div class="t-sep" style="font-size: 1.5rem; color: var(--gold);">:</div>
+                            <div id="timerM" class="t-box"
+                                style="width: 50px; height: 50px; font-size: 1.5rem; border-radius: 10px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron';">
+                                00</div>
+                            <div class="t-sep" style="font-size: 1.5rem; color: var(--gold);">:</div>
+                            <div id="timerS" class="t-box"
+                                style="width: 50px; height: 50px; font-size: 1.5rem; border-radius: 10px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron';">
+                                00</div>
+                        </div>
+                    </div>
+
+                    <div id="uploadBtnContainer" class="hidden"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden"
+                            onchange="window.handleUploadStart(this)">
+                        <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()"
+                            class="action-btn"
+                            style="background: var(--gold); color: black; border-radius: 10px; font-weight: bold;">UPLOAD</button>
+                        <button id="btnSkip" onclick="window.cancelPendingTask()" class="action-btn"
+                            style="background: rgba(255,0,60,0.1); color: var(--neon-red); border: 1px solid var(--neon-red); border-radius: 10px; font-size: 0.8rem;">SKIP
+                            (-300)</button>
                     </div>
                 </div>
             </div>
@@ -1528,53 +1577,7 @@
                     <div id="viewServingTop" class="v-card"
                         style="flex-grow: 1; display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 500px; border-radius: 20px;">
 
-                        <!-- NEW VISION TASK RIBBON -->
-                        <div id="taskCard" class="task-ribbon"
-                            style="background: rgba(255,255,255,0.03); border: none; border-bottom: 1px solid rgba(255,255,255,0.1); border-radius: 0; padding: 20px; height: auto;">
-                            <div class="ribbon-left" style="border: none; align-items: flex-start;">
-                                <div class="ribbon-label" style="margin-bottom: 2px;">SYSTEM STATUS</div>
-                                <div id="mainStatusText" class="status-text-lg status-unproductive"
-                                    style="font-size: 1.2rem;">IDLE</div>
-                            </div>
-
-                            <div class="ribbon-center">
-                                <div id="idleMessage" class="ribbon-status"
-                                    style="font-size: 0.7rem; color: rgba(255,255,255,0.5);">Awaiting direct orders...
-                                </div>
-                                <div id="activeTimerRow" class="hidden">
-                                    <div class="timer-box-wrapper" style="gap: 10px;">
-                                        <div id="timerH" class="t-box"
-                                            style="width: 60px; height: 60px; font-size: 2rem; border-radius: 12px; background: rgba(0,0,0,0.5);">
-                                            00</div>
-                                        <div class="t-sep" style="font-size: 2rem; color: var(--gold);">:</div>
-                                        <div id="timerM" class="t-box"
-                                            style="width: 60px; height: 60px; font-size: 2rem; border-radius: 12px; background: rgba(0,0,0,0.5);">
-                                            00</div>
-                                        <div class="t-sep" style="font-size: 2rem; color: var(--gold);">:</div>
-                                        <div id="timerS" class="t-box"
-                                            style="width: 60px; height: 60px; font-size: 2rem; border-radius: 12px; background: rgba(0,0,0,0.5);">
-                                            00</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="ribbon-right" style="border: none;">
-                                <div id="mainButtonsArea" style="width: 100%;">
-                                    <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn"
-                                        style="border-radius: 12px; border: none; background: var(--blue-accent); color: white; padding: 15px;">REQUEST
-                                        TASK</button>
-                                </div>
-                                <div id="uploadBtnContainer" class="hidden" style="width: 100%; gap: 10px;">
-                                    <button onclick="window.toggleTaskDetails(null)" class="btn-ghost"
-                                        style="border-radius: 12px;">DETAILS</button>
-                                    <input type="file" id="evidenceInput" accept="image/*,video/*" class="hidden"
-                                        onchange="window.handleUploadStart(this)">
-                                    <button id="btnUpload" onclick="document.getElementById('evidenceInput').click()"
-                                        class="action-btn btn-upload"
-                                        style="border-radius: 12px; background: var(--gold); color: black;">UPLOAD</button>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- CHAT INTERNAL -->
 
                         <!-- CHAT INTERNAL -->
                         <div id="chatCard" class="chat-container"
@@ -1583,16 +1586,42 @@
                                 <div id="chatContent" class="chat-area" style="padding: 20px;"></div>
                             </div>
                             <div class="chat-footer"
-                                style="background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.1); padding: 15px;">
-                                <div class="chat-input-wrapper"
-                                    style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
-                                    <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()"
-                                        style="background: var(--blue-accent);">+</button>
-                                    <input type="text" id="chatMsgInput" class="chat-input"
-                                        placeholder="Communicate with the Void..." onkeypress="handleChatKey(event)">
+                                style="background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.1); padding: 15px; display: flex; flex-direction: column; gap: 15px;">
+
+                                <!-- KNEELING BUTTON -->
+                                <div id="btn" class="mob-kneel-bar"
+                                    style="height: 45px; cursor: pointer; border-radius: 12px; overflow: hidden; position: relative; background: rgba(0,0,0,0.4); border: 1px solid var(--gold); margin: 0;"
+                                    onmousedown="window.handleHoldStart(event)" onmouseup="window.handleHoldEnd(event)"
+                                    onmouseleave="window.handleHoldEnd(event)"
+                                    ontouchstart="window.handleHoldStart(event)"
+                                    ontouchend="window.handleHoldEnd(event)">
+                                    <div id="fill" class="mob-bar-fill"
+                                        style="width: 0%; background: var(--gold); height: 100%; position: absolute; left: 0; top: 0; transition: width 0.3s ease;">
+                                    </div>
+                                    <div class="mob-bar-content"
+                                        style="position: relative; z-index: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%; gap: 10px;">
+                                        <span id="txt-main"
+                                            style="font-family: 'Orbitron'; font-size: 0.8rem; color: white; text-shadow: 0 1px 3px black;">HOLD
+                                            TO KNEEL</span>
+                                        <span id="txt-sub"
+                                            style="font-family: 'Cinzel'; font-size: 0.6rem; color: rgba(255,255,255,0.7);">TODAY:
+                                            0</span>
+                                    </div>
                                 </div>
-                                <button class="chat-btn-send" onclick="sendChatMessage()"
-                                    style="background: var(--gold); border-radius: 15px;">></button>
+
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <div class="chat-input-wrapper"
+                                        style="flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                                        <button id="btnMediaPlus" class="chat-btn-plus"
+                                            onclick="window.handleMediaPlus()"
+                                            style="background: var(--blue-accent);">+</button>
+                                        <input type="text" id="chatMsgInput" class="chat-input"
+                                            placeholder="Communicate with the Void..."
+                                            onkeypress="handleChatKey(event)">
+                                    </div>
+                                    <button class="chat-btn-send" onclick="sendChatMessage()"
+                                        style="background: var(--gold); border-radius: 15px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">></button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1747,6 +1776,24 @@
                     ×</div>
                 <!-- Rest of the modal content as before -->
                 <div class="theater-content dossier-layout">...</div>
+            </div>
+        </div>
+
+        <div id="kneelRewardOverlay" class="mob-reward-overlay hidden">
+            <div class="mob-reward-card">
+                <div class="mob-hex-wrap small-reward">
+                    <div class="mob-rank-stamp" style="right: auto; left: -5px; color: #fff; border-color: #fff;">
+                        AUTHORIZED</div>
+                </div>
+                <h2 class="mob-reward-title" style="color: #c5a059; font-family: 'Cinzel'; letter-spacing: 2px;">
+                    DEVOTION RECOGNIZED</h2>
+                <div class="mob-reward-actions"
+                    style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                    <button onclick="window.claimKneelReward('coins')" class="mob-action-btn"
+                        style="border-color: #ffd700; color: #ffd700;">CLAIM COINS</button>
+                    <button onclick="window.claimKneelReward('points')" class="mob-action-btn"
+                        style="border-color: #fff; color: #fff;">CLAIM MERIT</button>
+                </div>
             </div>
         </div>
 
