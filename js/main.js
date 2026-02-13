@@ -1642,8 +1642,7 @@ window.updateHierarchyDrawer = function (currentStreak) {
         html += buildBar("CONSISTENCY", stats.streak, req.streak, "🔥");
     }
 
-    // DEBUG INFO - REMOVE AFTER FIX
-    html += `<div style="font-size:0.6rem; color:#666; text-align:center; margin-top:20px; font-family:monospace;">DEBUG: ${currentRankObj.name} -> ${nextRankObj.name}</div>`;
+    // DEBUG INFO REMOVED
 
     container.innerHTML = html + `<div id="inlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;
 };
@@ -1717,12 +1716,15 @@ window.openDataEntry = function (type) {
     } else if (type === 'photo') {
         contentHtml = `
             <div style="${headerStyle}">VISUAL VERIFICATION</div>
-            <div style="text-align:left;">
-                <div style="${labelStyle}">Image URL</div>
-                <input type="text" id="inlinePhotoInput" placeholder="https://..." style="${inputStyle}">
+            <div style="text-align:center; margin-bottom:15px;">
+                <input type="file" id="inlinePhotoUpload" accept="image/*" capture="user" style="display:none;" onchange="window.previewInlinePhoto(this)">
+                <label for="inlinePhotoUpload" style="display:inline-block; padding:15px 30px; border:1px solid #c5a059; color:#c5a059; font-family:'Orbitron'; cursor:pointer; background:rgba(0,0,0,0.5);">
+                    📸 TAKE / UPLOAD PHOTO
+                </label>
+                <div id="inlinePhotoPreview" style="width:100px; height:100px; margin:15px auto; border-radius:50%; background:#222; background-size:cover; background-position:center; display:none; border:2px solid #c5a059;"></div>
             </div>
             <div id="costDisplay" style="${costStyle}">TOTAL COST: ${baseCost} COINS</div>
-            <button id="actionBtn" onclick="window.saveInlineData('photo')" style="${btnStyle}">SUBMIT</button>
+            <button id="actionBtn" onclick="window.saveInlineData('photo')" style="${btnStyle}">SUBMIT VERIFICATION</button>
         `;
     } else if (type === 'limits') {
         contentHtml = `
@@ -1766,37 +1768,90 @@ window.closeDataEntry = function () {
     }
 };
 
-window.saveInlineData = function (type) {
+// --- NEW HELPER: PHOTO PREVIEW ---
+window.previewInlinePhoto = function (input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const preview = document.getElementById('inlinePhotoPreview');
+            if (preview) {
+                preview.style.display = 'block';
+                preview.style.backgroundImage = `url(${e.target.result})`;
+            }
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+window.saveInlineData = async function (type) {
+    const btn = document.getElementById('actionBtn');
+    if (btn) btn.innerText = "PROCESSING...";
+
     let payload = {};
 
     if (type === 'name') {
-        payload.name = document.getElementById('inlineNameInput').value;
-    }
-    else if (type === 'photo') {
-        payload.photo = document.getElementById('inlinePhotoInput').value;
-    }
-    else if (type === 'limits' || type === 'kinks') {
-        const selected = Array.from(document.querySelectorAll('.kink-chip.selected')).map(el => el.getAttribute('data-value'));
-        if (type === 'limits') payload.limits = selected;
-        if (type === 'kinks') payload.kinks = selected;
+        const val = document.getElementById('inlineNameInput').value;
+        if (!val) return;
+        payload = { type: 'name', value: val, cost: 100 };
     }
 
-    if (Object.keys(payload).length > 0) {
-        const btn = document.getElementById('actionBtn');
-        if (btn) {
-            btn.innerText = "PROCESSING...";
-            btn.style.opacity = "0.5";
+    if (type === 'photo') {
+        const fileInput = document.getElementById('inlinePhotoUpload');
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+            alert("Please select a photo first.");
+            if (btn) btn.innerText = "SUBMIT VERIFICATION";
+            return;
         }
 
-        window.parent.postMessage({
-            type: "UPDATE_PROFILE",
-            payload: payload
-        }, "*");
-
-        setTimeout(() => {
-            window.closeDataEntry();
-        }, 1500);
+        // UPLOAD LOGIC
+        try {
+            if (btn) btn.innerText = "UPLOADING...";
+            const file = fileInput.files[0];
+            const url = await uploadToBytescale(file);
+            console.log("Uploaded URL:", url);
+            payload = { type: 'photo', value: url, cost: 200 };
+        } catch (err) {
+            console.error("Upload Error:", err);
+            alert("Upload Failed. Please try again.");
+            if (btn) btn.innerText = "SUBMIT VERIFICATION";
+            return;
+        }
     }
+
+    // ... (Keep existing logic for kinks/limits below if needed, but I need to replace the WHOLE function to be safe)
+    if (type === 'kinks') {
+        // Collect selected chips
+        const selected = Array.from(document.querySelectorAll('.kink-chip.selected')).map(el => el.getAttribute('data-value'));
+        if (selected.length < 3) {
+            alert("Please select at least 3 items.");
+            if (btn) btn.innerText = "SUBMIT";
+            return;
+        }
+        payload = { type: 'kinks', value: selected, cost: selected.length * 100 };
+    }
+
+    if (type === 'limits') {
+        const selected = Array.from(document.querySelectorAll('.kink-chip.selected')).map(el => el.getAttribute('data-value'));
+        if (selected.length < 3) {
+            alert("Please select at least 3 items.");
+            if (btn) btn.innerText = "SUBMIT";
+            return;
+        }
+        payload = { type: 'limits', value: selected, cost: selected.length * 200 };
+    }
+
+    // SEND TO WIX (BRIDGE)
+    window.parent.postMessage({ type: "UPDATE_PROFILE", payload }, "*");
+
+    // Fallback UI reset
+    setTimeout(() => {
+        window.closeDataEntry();
+        // Optimistic Update?
+        if (type === 'photo') userProfile.rawImage = payload.value;
+        if (type === 'name') userProfile.name = payload.value;
+        // Trigger drawer update
+        if (window.updateHierarchyDrawer) window.updateHierarchyDrawer();
+    }, 1000);
 };
 
 // --- NEW: DESKTOP RECORD RENDERER ---
