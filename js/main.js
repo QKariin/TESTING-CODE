@@ -1606,6 +1606,13 @@ window.updateHierarchyDrawer = function (currentStreak) {
         html += buildCheck("KINKS", hasKinks, SVG_KINKS, 'kinks');
     }
 
+    if (req.routine === true) {
+        // Check if routine is set (length > 5)
+        const hasRoutine = (userProfile.routine && userProfile.routine.length > 5);
+        // Using ID SVG as placeholder for Routine/Order
+        html += buildCheck("ROUTINE", hasRoutine, SVG_ID, 'routine');
+    }
+
     // BARS (Conditional)
     html += buildBar("LABOR", stats.tasks, req.tasks, "🛠️");
     html += buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎");
