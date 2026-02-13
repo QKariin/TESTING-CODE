@@ -1,109 +1,107 @@
-// File upload handling - FULL LOGIC RESTORED
+// uploads.js - ROBUST & CRASH-PROOF
 import { CONFIG } from './config.js';
-import { userProfile, currentTask } from './state.js'; // FIXED: Added currentTask import
+import { userProfile, currentTask } from './state.js';
 import { finishTask } from './tasks.js';
 import { uploadToBytescale } from './mediaBytescale.js';
 
-export async function handleEvidenceUpload(input) {
+export async function handleEvidenceUpload(input, category = "Task") {
+    // 1. Define UI Elements globally within function scope so 'catch' can see them
+    const statusEl = document.getElementById("uploadStatus"); // Desktop
+    const mobBtn = document.getElementById("mobBtnUpload");   // Mobile
+
     try {
         if (input.files && input.files[0]) {
             const file = input.files[0];
+            let cat = category;
             
-            const statusEl = document.getElementById("uploadStatus");
-            if (statusEl) statusEl.innerText = "Uploading...";
+            // 2. Set Text Description & UI Loading State
+            if (category === "Task") {
+                cat = currentTask ? currentTask.text : "Task";
+                if (statusEl) statusEl.innerText = "Uploading...";
+                if (mobBtn) mobBtn.innerText = "SENDING...";
+            }
+            else if (category === "Routine") {
+                const rName = userProfile.routine || "Standard Protocol";
+                cat = `Daily Routine: ${rName}`;
+                if (mobBtn) mobBtn.innerText = "UPLOADING...";
+            }
             
-            const folder = userProfile.name.replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
+            // 3. Upload to Cloud
+            const folder = (userProfile.name || "slave").replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
             const finalUrl = await uploadToBytescale("evidence", file, folder);
             
+            // 4. Handle Failure
             if (finalUrl === "failed") {
-                if (statusEl) statusEl.innerText = "Upload failed.";
+                if (category === "Task" && statusEl) statusEl.innerText = "Upload failed.";
+                if (mobBtn) mobBtn.innerText = "FAILED";
                 return;
             }
             
-            // FIXED: Now correctly reads currentTask.text
+            // 5. Send to Backend (The "Write")
             window.parent.postMessage({
                 type: "uploadEvidence",
-                task: currentTask ? currentTask.text : "Task",
-                fileUrl: finalUrl,
-                mimeType: file.type
+                task: cat,          // The Text (e.g. "Daily Routine: Kneel")
+                fileUrl: finalUrl,  // The Image Link
+                mimeType: file.type,
+                category: category  // THE CRITICAL TAG ("Routine" or "Task")
             }, "*");
-            finishTask(true);
-            if (statusEl) statusEl.innerText = "Upload complete!";
+
+            // 6. Cleanup Logic
+            if (category === "Task") {
+                finishTask(true);
+                if (statusEl) statusEl.innerText = "Upload complete!";
+            }
+            
+            // Note: Mobile button reset is handled by main.js logic to keep it synced
         }
     } catch (err) {
-        const statusEl = document.getElementById("uploadStatus");
-        if (statusEl) statusEl.innerText = "Upload failed (error).";
+        // 7. Safe Error Handling
         console.error("Upload error:", err);
+        if (category === "Task" && statusEl) statusEl.innerText = "Error.";
+        if (mobBtn) mobBtn.innerText = "ERROR";
     }
 }
 
 export async function handleProfileUpload(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-
         try {
-            const folder = userProfile.name.replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
+            const folder = (userProfile.name || "slave").replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
             const finalUrl = await uploadToBytescale("profile", file, folder);
 
-            if (finalUrl === "failed") {
-                console.error("Profile upload failed");
-                return;
-            }
+            if (finalUrl === "failed") return;
 
-            window.parent.postMessage({
-                type: "UPDATE_PROFILE_PIC",
-                url: finalUrl
-            }, "*");
-        } catch (err) {
-            console.error("Profile upload error:", err);
-        }
+            window.parent.postMessage({ type: "UPDATE_PROFILE_PIC", url: finalUrl }, "*");
+        } catch (err) { console.error("Profile upload error:", err); }
     }
 }
 
-// RESTORED: Full high-detail Admin Upload logic with Hourglass and Video Fix
 export async function handleAdminUpload(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        //const isVideo = file.type.startsWith('video') || file.name.match(/\.(mp4|mov|webm)$/i);
-        //const fd = new FormData();
-        //fd.append("file", file);
-
+        const btn = document.querySelector('.btn-plus') || document.getElementById('btnMediaPlus'); // Check both desktop/mobile buttons
+        const oldText = btn ? btn.innerText : "+";
+        
         try {
-            // Visual feedback: Hourglass on the plus button
-            const btn = document.querySelector('.btn-plus');
-            const oldText = btn ? btn.innerText : "+";
             if (btn) btn.innerText = "⏳";
 
-            let finalUrl = await uploadToBytescale("chat", file, userProfile.name.replace(/[^a-z0-9-_]/gi, "_").toLowerCase());
-            //const res = await fetch(
-            //    `https://api.bytescale.com/v2/accounts/${CONFIG.ACCOUNT_ID}/uploads/form_data?path=/admin`,
-            //    { 
-            //        method: "POST", 
-            //        headers: { "Authorization": `Bearer ${CONFIG.API_KEY}` }, 
-            //        body: fd 
-            //    }
-            //);
+            const folder = (userProfile.name || "slave").replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
+            let finalUrl = await uploadToBytescale("chat", file, folder);
 
             if (finalUrl === "failed") { 
-                console.error("Upload failed");
                 if (btn) btn.innerText = oldText;
                 return; 
             }
-            //const d = await res.json();
-
-            //if (d.files && d.files[0] && d.files[0].fileUrl) {
-            //    let finalUrl = d.files[0].fileUrl;
-            //    
-            //    // RESTORED VIDEO FIX: Ensures videos play correctly in the chat bubbles
-            //    if (isVideo) {
-            //        finalUrl = finalUrl + "#.mp4"; 
-            //    }
 
             window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: finalUrl }, "*");
-            //}
+            
+            // Clear input so same file can be selected again
+            input.value = ""; 
             if (btn) btn.innerText = oldText;
+            
         } catch (err) { 
-            console.error("Profile upload error", err); 
+            console.error("Admin upload error", err); 
+            if (btn) btn.innerText = oldText;
         }
     }
 }
