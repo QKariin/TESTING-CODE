@@ -1607,8 +1607,8 @@ window.updateHierarchyDrawer = function (currentStreak) {
         html += buildCheck("IDENTITY", hasName, SVG_ID, 'name');
     }
     if (req.photo) {
-        // Check RAW image. If it exists in DB, it's valid.
-        const hasPhoto = (userProfile.rawImage && userProfile.rawImage.length > 5);
+        // Check RAW image. Must exist AND not be the default silhouette.
+        const hasPhoto = (userProfile.rawImage && userProfile.rawImage.length > 5 && !userProfile.rawImage.includes('ce3e5b_e06c7a2254d848a480eb98107c35e246'));
         html += buildCheck("PHOTO", hasPhoto, SVG_PHOTO, 'photo');
     }
 
