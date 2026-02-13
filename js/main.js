@@ -1439,12 +1439,28 @@ window.addEventListener("message", (event) => {
         console.log("RECEIVED HIERARCHY RULES:", data.rules);
         if (data.rules && Array.isArray(data.rules)) {
             // MAP BACKEND RULES TO FRONTEND STRUCTURE
-            REWARD_DATA.ranks = data.rules.map(r => ({
-                ...r,
-                icon: ICONS.rank, // Default Icon
-                // Map Tax based on Rank Name (Legacy Logic preservation)
-                tax: r.name === "Hall Boy" ? 20 : (r.name === "Footman" ? 15 : (r.name === "Silverman" ? 10 : (r.name === "Butler" ? 5 : 0)))
-            }));
+            REWARD_DATA.ranks = data.rules.map(r => {
+                // --- EMERGENCY PATCH: FORCE SILVERMAN & FOOTMAN FLAGS ---
+                // (In case Backend cache is stale)
+                if (r.name === "Silverman") {
+                    r.req.limits = true;
+                    r.req.kinks = true;
+                    r.req.routine = true;
+                }
+                if (r.name === "Footman") {
+                    r.req.name = true;
+                    r.req.photo = true;
+                    r.req.prefs = true; // Just in case
+                }
+                // ----------------------------------------------
+
+                return {
+                    ...r,
+                    icon: ICONS.rank, // Default Icon
+                    // Map Tax based on Rank Name (Legacy Logic preservation)
+                    tax: r.name === "Hall Boy" ? 20 : (r.name === "Footman" ? 15 : (r.name === "Silverman" ? 10 : (r.name === "Butler" ? 5 : 0)))
+                };
+            });
 
             // Reverse array if needed? Backend sends Champion -> Hallboy (Desc). 
             // Frontend usually expects Hallboy -> Champion (Asc) for progress bars.
@@ -1625,6 +1641,9 @@ window.updateHierarchyDrawer = function (currentStreak) {
     if (req.streak > 0) {
         html += buildBar("CONSISTENCY", stats.streak, req.streak, "🔥");
     }
+
+    // DEBUG INFO - REMOVE AFTER FIX
+    html += `<div style="font-size:0.6rem; color:#666; text-align:center; margin-top:20px; font-family:monospace;">DEBUG: ${currentRankObj.name} -> ${nextRankObj.name}</div>`;
 
     container.innerHTML = html + `<div id="inlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;
 };
