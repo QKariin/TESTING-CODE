@@ -54,15 +54,20 @@ export function getOptimizedUrl(url, width = 400) {
     return "https://upcdn.io/kW2K8hR/raw/public/collar-192.png";
   }
 
-  // 2. BYTESCALE
+  // 2. BYTESCALE (CLEAN REWRITE)
   if (url.includes("upcdn.io")) {
-    if (url.includes("&sig=")) {
-      // Signed URL → do not modify
-      return url;
-    }
-    const cleanUrl = getThumbnail(url);
-    const sep = cleanUrl.includes("?") ? "&" : "?";
-    return `${cleanUrl}${sep}width=${width}&format=auto&quality=auto&dpr=auto`;
+    if (url.includes("&sig=")) return url; // Already signed
+
+    // Fix: Do not use getThumbnail() here as it hardcodes w=300
+    // 1. Force transformation endopint
+    let clean = url.replace("/raw/", "/image/").replace("/thumbnail/", "/image/");
+
+    // 2. Strip existing params to ensure clean state
+    clean = clean.split('?')[0];
+
+    // 3. Apply requested width and auto format
+    // Note: Bytescale uses 'w' and 'h'. Chat asks for 600.
+    return `${clean}?w=${width}&h=${width}&fit=cover&q=80&f=auto`;
   }
 
   // 3. WIX VECTORS
