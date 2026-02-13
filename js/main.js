@@ -1658,13 +1658,13 @@ window.openDataEntry = function (type) {
 
     window.isEditingProfile = true; // LOCK UPDATE
 
-    // Premium Styles
-    const btnStyle = "background:#ffd700; color:#000; border:none; padding:12px; font-family:'Orbitron'; font-size:0.9rem; font-weight:bold; cursor:pointer; width:100%; margin-top:10px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition:all 0.2s;";
-    const backStyle = "background:transparent; color:#888; border:1px solid #444; padding:10px; font-family:'Cinzel'; font-size:0.8rem; cursor:pointer; width:100%; margin-top:10px; transition:all 0.2s;";
-    const inputStyle = "width:100%; background:rgba(0,0,0,0.5); color:#fff; border:none; border-bottom:1px solid #c5a059; padding:10px 5px; font-family:'Cinzel'; font-size:1rem; margin-bottom:15px; outline:none;";
-    const labelStyle = "color:#c5a059; font-family:'Orbitron'; font-size:0.65rem; letter-spacing:2px; margin-bottom:5px; text-transform:uppercase;";
-    const headerStyle = "color:#fff; font-family:'Cinzel'; font-size:1.1rem; text-align:center; margin-bottom:20px; text-shadow:0 0 10px rgba(255,255,255,0.3);";
-    const costStyle = "color:#ffd700; font-family:'Orbitron'; font-size:0.9rem; text-align:center; margin-top:15px; padding:10px; border-top:1px solid rgba(255,255,255,0.1);";
+    // LUXURY STYLES (Gold & Black, Elegant Fonts)
+    const btnStyle = "background:#c5a059; color:#000; border:1px solid #c5a059; padding:12px; font-family:'Cinzel', serif; letter-spacing:1px; font-size:0.9rem; font-weight:bold; cursor:pointer; width:100%; margin-top:15px; text-transform:uppercase; transition:all 0.3s; box-shadow:0 4px 15px rgba(197, 160, 89, 0.2);";
+    const backStyle = "background:transparent; color:#666; border:none; padding:10px; font-family:'Cinzel', serif; font-size:0.8rem; cursor:pointer; width:100%; margin-top:5px; transition:all 0.2s; text-decoration:underline;";
+    const inputStyle = "width:100%; background:rgba(255,255,255,0.05); color:#fff; border:1px solid #333; border-bottom:1px solid #c5a059; padding:12px; font-family:'Cinzel', serif; font-size:1rem; margin-bottom:15px; outline:none;";
+    const labelStyle = "color:#888; font-family:'Cinzel', serif; font-size:0.7rem; letter-spacing:1px; margin-bottom:5px; text-transform:uppercase;";
+    const headerStyle = "color:#c5a059; font-family:'Cinzel', serif; font-size:1.2rem; text-align:center; margin-bottom:25px; border-bottom:1px solid #333; padding-bottom:10px;";
+    const costStyle = "color:#c5a059; font-family:'Cinzel', serif; font-size:0.9rem; text-align:center; margin-top:15px; padding:10px; border-top:1px solid rgba(255,255,255,0.1);";
 
     let contentHtml = '';
     let baseCost = 0;
@@ -1678,74 +1678,64 @@ window.openDataEntry = function (type) {
     // Helper for Kink/Limit Chips (Vertical List)
     const renderChips = (dataType) => {
         const list = (typeof KINK_LIST !== 'undefined') ? KINK_LIST : ["JOI", "Humiliation", "Control", "Chastity", "Pain", "Service"];
-
-        let chipsHtml = `<div id="chipContainer" style="display:flex; flex-direction:column; gap:10px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">`;
+        let chipsHtml = `<div id="chipContainer" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">`;
         list.forEach(item => {
             chipsHtml += `
                 <div class="kink-chip" 
                      onclick="window.toggleChip(this, ${itemCost})" 
                      data-value="${item}"
-                     style="width:100%; padding:12px 15px; border:1px solid #333; background:rgba(0,0,0,0.4); font-size:0.8rem; font-family:'Orbitron'; color:#888; cursor:pointer; transition:all 0.2s; user-select:none; display:flex; justify-content:space-between; align-items:center;">
+                     style="width:100%; padding:12px; border:1px solid #333; background:rgba(0,0,0,0.6); font-size:0.9rem; font-family:'Cinzel', serif; color:#aaa; cursor:pointer; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center;">
                     <span>${item}</span>
-                    <span class="cost-badge" style="font-size:0.6rem; color:#444;">${itemCost}</span>
+                    <span class="cost-badge" style="font-size:0.7rem; color:#666;">${itemCost}</span>
                 </div>`;
         });
-        chipsHtml += `</div>`;
-
-        // Hide Scrollbar Style & Selection
-        chipsHtml += `<style>
-            #chipContainer::-webkit-scrollbar { display: none; }
-            #chipContainer { -ms-overflow-style: none; scrollbar-width: none; }
-            .kink-chip.selected { border-color:#c5a059 !important; color:#000 !important; background:#c5a059 !important; font-weight:bold; box-shadow:0 0 15px rgba(197, 160, 89, 0.4); }
-            .kink-chip.selected .cost-badge { color:#000; }
-        </style>`;
-
+        chipsHtml += `</div><style>#chipContainer::-webkit-scrollbar{display:none;} .kink-chip.selected{border-color:#c5a059; color:#c5a059; background:rgba(197,160,89,0.1);}</style>`;
         return chipsHtml;
     };
 
     if (type === 'name') {
         contentHtml = `
-            <div style="${headerStyle}">ESTABLISH IDENTITY</div>
+            <div style="${headerStyle}">Identity Protocol</div>
             <div style="text-align:left;">
                 <div style="${labelStyle}">Designation</div>
                 <input type="text" id="inlineNameInput" placeholder="Enter Name..." style="${inputStyle}">
             </div>
-            <div id="costDisplay" style="${costStyle}">TOTAL COST: ${baseCost} COINS</div>
-            <button id="actionBtn" onclick="window.saveInlineData('name')" style="${btnStyle}">SUBMIT</button>
+            <div id="costDisplay" style="${costStyle}">Cost: ${baseCost} Coins</div>
+            <button id="actionBtn" onclick="window.saveInlineData('name')" style="${btnStyle}">Confirm Identity</button>
         `;
     } else if (type === 'photo') {
         contentHtml = `
-            <div style="${headerStyle}">VISUAL VERIFICATION</div>
+            <div style="${headerStyle}">Visual Verification</div>
             <div style="text-align:center; margin-bottom:15px;">
-                <input type="file" id="inlinePhotoUpload" accept="image/*" capture="user" style="display:none;" onchange="window.previewInlinePhoto(this)">
-                <label for="inlinePhotoUpload" style="display:inline-block; padding:15px 30px; border:1px solid #c5a059; color:#c5a059; font-family:'Orbitron'; cursor:pointer; background:rgba(0,0,0,0.5);">
-                    📸 TAKE / UPLOAD PHOTO
+                <input type="file" id="inlinePhotoUpload" accept="image/*" style="display:none;" onchange="window.previewInlinePhoto(this)">
+                <label for="inlinePhotoUpload" style="display:block; padding:20px; border:1px dashed #444; color:#888; font-family:'Cinzel', serif; cursor:pointer; background:rgba(0,0,0,0.3); transition:all 0.2s;" onmouseover="this.style.borderColor='#c5a059';this.style.color='#c5a059'" onmouseout="this.style.borderColor='#444';this.style.color='#888'">
+                    CLICK TO SELECT IMAGE
                 </label>
-                <div id="inlinePhotoPreview" style="width:100px; height:100px; margin:15px auto; border-radius:50%; background:#222; background-size:cover; background-position:center; display:none; border:2px solid #c5a059;"></div>
+                <div id="inlinePhotoPreview" style="width:120px; height:120px; margin:20px auto; border-radius:50%; background:#111; background-size:cover; background-position:center; display:none; border:2px solid #c5a059; box-shadow:0 0 20px rgba(197,160,89,0.2);"></div>
             </div>
-            <div id="costDisplay" style="${costStyle}">TOTAL COST: ${baseCost} COINS</div>
-            <button id="actionBtn" onclick="window.saveInlineData('photo')" style="${btnStyle}">SUBMIT VERIFICATION</button>
+            <div id="costDisplay" style="${costStyle}">Cost: ${baseCost} Coins</div>
+            <button id="actionBtn" onclick="window.saveInlineData('photo')" style="${btnStyle}">Upload Verification</button>
         `;
     } else if (type === 'limits') {
         contentHtml = `
-            <div style="${headerStyle}">HARD LIMITS</div>
+            <div style="${headerStyle}">Hard Limits</div>
             ${renderChips('limits')}
-            <div id="costDisplay" style="${costStyle}">TOTAL COST: 0 COINS</div>
-            <button id="actionBtn" onclick="window.saveInlineData('limits')" style="${btnStyle}">SUBMIT</button>
+            <div id="costDisplay" style="${costStyle}">Total Cost: 0 Coins</div>
+            <button id="actionBtn" onclick="window.saveInlineData('limits')" style="${btnStyle}">Update Limits</button>
         `;
     } else if (type === 'kinks') {
         contentHtml = `
-            <div style="${headerStyle}">DESIRED PROTOCOLS</div>
+            <div style="${headerStyle}">Desired Protocols</div>
             ${renderChips('kinks')}
-            <div id="costDisplay" style="${costStyle}">TOTAL COST: 0 COINS</div>
-            <button id="actionBtn" onclick="window.saveInlineData('kinks')" style="${btnStyle}">SUBMIT</button>
+            <div id="costDisplay" style="${costStyle}">Total Cost: 0 Coins</div>
+            <button id="actionBtn" onclick="window.saveInlineData('kinks')" style="${btnStyle}">Update Desires</button>
         `;
     }
 
     container.innerHTML = `
-        <div style="padding:25px; border:1px solid #c5a059; background:rgba(5,5,5,0.98); box-shadow:0 0 50px rgba(0,0,0,0.9); border-radius:4px; position:relative;">
+        <div style="padding:20px; border:1px solid #c5a059; background:#050505; box-shadow:0 0 50px rgba(0,0,0,1); position:relative;">
              ${contentHtml}
-            <button onclick="window.closeDataEntry()" style="${backStyle}">BACK</button>
+            <button onclick="window.closeDataEntry()" style="${backStyle}">Return</button>
         </div>
     `;
 };
