@@ -1610,10 +1610,14 @@ window.updateHierarchyDrawer = function (currentStreak) {
     }
     if (req.photo) {
         // Check RAW image. Must exist AND not be the default silhouette.
-        const raw = userProfile.rawImage;
-        console.log("Checking Photo Requirement. Raw:", raw); // DEBUG
+        let raw = userProfile.rawImage;
+        // Fallback: If raw is missing but profilePicture is CUSTOM (not default), use that
+        if (!raw && userProfile.profilePicture && !userProfile.profilePicture.includes('ce3e5b_e06c7a')) {
+            raw = userProfile.profilePicture;
+        }
 
         const hasPhoto = (raw && raw.length > 5 && !raw.includes('ce3e5b_e06c7a'));
+
         html += buildCheck("PHOTO", hasPhoto, SVG_PHOTO, 'photo');
     }
 
