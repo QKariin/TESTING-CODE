@@ -1610,7 +1610,10 @@ window.updateHierarchyDrawer = function (currentStreak) {
     }
     if (req.photo) {
         // Check RAW image. Must exist AND not be the default silhouette.
-        const hasPhoto = (userProfile.rawImage && userProfile.rawImage.length > 5 && !userProfile.rawImage.includes('ce3e5b_e06c7a2254d848a480eb98107c35e246'));
+        const raw = userProfile.rawImage;
+        console.log("Checking Photo Requirement. Raw:", raw); // DEBUG
+
+        const hasPhoto = (raw && raw.length > 5 && !raw.includes('ce3e5b_e06c7a'));
         html += buildCheck("PHOTO", hasPhoto, SVG_PHOTO, 'photo');
     }
 
