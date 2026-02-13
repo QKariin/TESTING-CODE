@@ -78,7 +78,8 @@
     /* --- DESKTOP GRID LAYOUT --- */
     #DESKTOP_APP {
         display: grid;
-        grid-template-columns: 420px 1fr;
+        grid-template-columns: clamp(300px, 25vw, 420px) 1fr;
+        /* RESPONSIVE SIDEBAR WIDTH */
         grid-template-rows: 100vh;
         background: var(--bg-deep);
         color: white;
@@ -91,15 +92,49 @@
         display: flex;
         flex-direction: column;
         gap: 20px;
+        flex-shrink: 0;
+        overflow-y: auto;
+        /* Allow sidebar scrolling if needed */
     }
 
     .v-main-content {
-        padding: 30px;
+        padding: 0;
+        /* NO PADDING REQUESTED */
         overflow-y: auto;
+        display: flex;
+        /* FLEX FOR CENTERING */
+        flex-direction: column;
+        align-items: center;
+        /* CENTER HORIZONTALLY */
+        justify-content: flex-start;
+        /* START FROM TOP */
+        padding-top: 5vh;
+        /* VISUAL BALANCE */
+    }
+
+    /* THE CENTERED GRID CONTAINER */
+    .v-main-content::after {
+        content: "";
+        /* Hack to ensure bottom spacing if needed */
+        display: block;
+        height: 50px;
+    }
+
+    /* WE WRAP CONTENT IN A MAX-WIDTH GRID TO CENTER IT */
+    .desktop-grid-wrapper {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         grid-auto-rows: min-content;
         gap: 25px;
+        width: 95%;
+        /* FLUID WIDTH */
+        max-width: 1400px;
+        /* LIMIT MAX WIDTH TO KEEP CENTERED */
+        padding: 0 20px;
+        /* REDUCED PADDING */
+        margin: 0 auto;
+        /* CENTER THE WRAPPER */
+        box-sizing: border-box;
     }
 
     .nav-menu {
