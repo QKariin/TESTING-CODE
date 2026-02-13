@@ -1497,7 +1497,30 @@ window.updateHierarchyDrawer = function (currentStreak) {
     // 2. Identify Ranks (Current vs Next)
     // Normalize string to match config (e.g. "Hall Boy" vs "HallBoy")
     const cleanName = (name) => (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-    const currentRaw = userProfile.hierarchy || "Hall Boy";
+
+    // --- GATEKEEPER START (Copied from updateStats) ---
+    let currentRaw = userProfile.hierarchy || "Hall Boy";
+
+    // 1. GATEKEEPER: Identity & Photo
+    const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
+    // Check if name is "Slave" (default) or empty OR photo is missing/silhouette
+    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture || userProfile.profilePicture.includes(SILHOUETTE)) {
+        currentRaw = "Hall Boy";
+    }
+
+    // 2. GATEKEEPER: Preferences (Silverman+)
+    const dbRankLower = currentRaw.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const isAboveFootman = dbRankLower !== "hallboy" && dbRankLower !== "footman";
+
+    if (isAboveFootman) {
+        const hasKinks = (userProfile.kinks && userProfile.kinks.length > 2);
+        const hasLimits = (userProfile.limits && userProfile.limits.length > 2);
+
+        if (!hasKinks || !hasLimits) {
+            currentRaw = "Footman";
+        }
+    }
+    // --- GATEKEEPER END ---
 
     let currentIdx = ranks.findIndex(r => cleanName(r.name) === cleanName(currentRaw));
     if (currentIdx === -1) currentIdx = 0;
