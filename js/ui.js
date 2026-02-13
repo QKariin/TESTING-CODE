@@ -1,18 +1,18 @@
 // UI management functions - FULL LOGIC WITH WISHLIST & VAULT SYNC & SLAVE RECORD FIX
 import { currentView, cmsHierarchyData, setCurrentView, WISHLIST_ITEMS, gameStats } from './state.js';
 import { CMS_HIERARCHY } from './config.js';
-import { renderGallery, loadMoreHistory } from './gallery.js'; 
-import { getOptimizedUrl } from './media.js';
+import { renderGallery, loadMoreHistory } from './gallery.js';
+import { getOptimizedUrl, getThumbnail, getSignedUrl } from './media.js';
 import { renderVault } from '../profile/kneeling/reward.js';
 
 export function switchTab(mode) {
     // 1. Update the buttons
-    const allBtns = document.querySelectorAll('.tab-btn, .nav-btn'); 
+    const allBtns = document.querySelectorAll('.tab-btn, .nav-btn');
     allBtns.forEach(b => b.classList.remove('active'));
-    
+
     // 2. Update the "State" correctly
     setCurrentView(mode);
-    
+
     allBtns.forEach(btn => {
         const onclickAttr = btn.getAttribute('onclick') || "";
         if (onclickAttr.includes(`'${mode}'`)) {
@@ -34,31 +34,32 @@ export function switchTab(mode) {
             }
         });
     }
-    
+
     // 4. Hide all views
     const allViews = [
-        'viewServingTop', 'viewNews', 'viewSession', 
-        'viewVault', 'viewProtocol', 'viewBuy', 
+        'viewServingTop', 'viewNews', 'viewSession',
+        'viewVault', 'viewProtocol', 'viewBuy',
         'viewTribute', 'viewHierarchy', 'viewRewards', 'historySection'
     ];
-    
+
     allViews.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.classList.add('hidden');
-            el.style.display = 'none'; 
+            el.style.display = 'none';
         }
     });
 
     // 5. THE CLEAN VIEW MAP
     const viewMap = {
-        'serve': 'viewServingTop',
+        'serve': (document.getElementById('viewServingTopDesktop') ? 'viewServingTopDesktop' : 'viewServingTop'),
         'news': 'viewNews',
         'session': 'viewSession',
-        'rewards': 'viewVault',    
+        'rewards': 'viewVault',
         'protocol': 'viewProtocol',
         'buy': 'viewBuy',
-        'history': 'historySection', 
+        'history': 'historySection',
+        'record': 'historySection', // FIX: Button calls 'record', not 'history'
         'vault': 'viewVault'
     };
 
@@ -67,7 +68,7 @@ export function switchTab(mode) {
         const targetEl = document.getElementById(targetId);
         if (targetEl) {
             targetEl.classList.remove('hidden');
-            
+
             // New Layout Logic
             if (['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId)) {
                 targetEl.style.display = 'flex';
@@ -77,14 +78,14 @@ export function switchTab(mode) {
             }
         }
     }
-       
+
     // 6. TRIGGER RENDERS
     if (mode === 'news') {
         window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
     }
-    
+
     if (mode === 'rewards' || mode === 'vault') {
-        renderVault(); 
+        renderVault();
     }
 }
 
@@ -92,7 +93,7 @@ export function switchTab(mode) {
 export function renderWishlist(maxBudget = 999999) {
     // Supports both Desktop 'storeGrid' and Mobile 'huntStoreGrid' if needed
     const grids = [document.getElementById('storeGrid'), document.getElementById('huntStoreGrid')];
-    
+
     // Filter items
     const items = (WISHLIST_ITEMS || []).filter(i => i.price <= maxBudget);
 
@@ -136,7 +137,7 @@ export function toggleStats() {
 export function toggleSection(element) {
     const allItems = document.querySelectorAll('.protocol-item');
     const isActive = element.classList.contains('active');
-    
+
     if (!isActive) {
         allItems.forEach(item => {
             if (item === element) {
@@ -163,11 +164,11 @@ export function toggleSection(element) {
 export function renderDomVideos(videos) {
     const reel = document.getElementById('domVideoReel');
     if (!reel || !videos) return;
-    
+
     reel.innerHTML = videos.slice(0, 10).map(v => {
         const src = v.page || v.url || v.media || v.image;
         if (!src) return "";
-        
+
         const optimized = getOptimizedUrl(src, 100);
         return `
             <div class="hl-item">
@@ -178,77 +179,148 @@ export function renderDomVideos(videos) {
     }).join('');
 }
 
-// *** QUEEN'S WALL RENDERER (OPTIMIZED THUMBNAILS) ***
-export function renderNews(posts) {
+// *** QUEEN'S WALL RENDERER (ROYAL GAZETTE STYLE) ***
+export async function renderNews(posts) {
     const deskGrid = document.getElementById('newsGrid');
     const mobScroll = document.getElementById('qWall_ScrollTrack');
 
     if (!posts || !Array.isArray(posts)) {
-        if(mobScroll) mobScroll.innerHTML = "<div style='color:#666; padding:20px; font-size:0.7rem;'>NO UPDATES</div>";
+        if (mobScroll) mobScroll.innerHTML = "<div style='color:#666; padding:20px; font-size:0.7rem;'>NO UPDATES</div>";
+        if (deskGrid) deskGrid.innerHTML = "<div style='color:#666; padding:40px; text-align:center; font-family:\"Cinzel\";'>THE QUEEN HAS NOT SPOKEN.</div>";
         return;
     }
 
-    // --- HELPER: GENERATE THUMBNAIL VS MASTER ---
-    const getMediaData = (p) => {
-        // 1. Find the raw data key
-        let raw = p.image || p.img || p.thumbnail || p.cover || p.poster || p.media || p.url || "";
-        
-        // 2. Video Handling: If it's a video, try to find a cover image first
-        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov'))) {
-            if (p.cover) raw = p.cover;
-            else if (p.thumbnail) raw = p.thumbnail;
-            else if (p.poster) raw = p.poster;
+    // --- ALTAR LOGIC COPIED FROM GALLERY.JS ---
+    const getThumb = async (item, size) => {
+        let raw = item.image || item.img || item.thumbnail || item.cover || item.media || item.url || "";
+
+        // Video Cover Check
+        if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video'))) {
+            if (item.cover) raw = item.cover;
+            else if (item.thumbnail) raw = item.thumbnail;
+            else if (item.poster) raw = item.poster;
         }
 
-        // 3. WIX OPTIMIZATION LOGIC
-        if (raw && raw.startsWith("wix:image")) {
-            try {
-                // Extract Filename (e.g. "8b3d8_image.jpg")
-                const parts = raw.split('/');
-                const fileName = parts[3].split('#')[0]; 
-                
-                return {
-                    // FAST: Ask Wix for a small, compressed version (250x350, Quality 70)
-                    thumb: `https://static.wixstatic.com/media/${fileName}/v1/fill/w_250,h_350,al_c,q_70/${fileName}`,
-                    // HD: The original master file
-                    full: `https://static.wixstatic.com/media/${fileName}`
-                };
-            } catch(e) { 
-                return { thumb: "", full: "" }; 
-            }
+        // Wix Check (Manual Parsing - The "Altar" Way)
+        if (raw && raw.startsWith('wix:image')) {
+            try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
         }
-        
-        // 4. Standard URL Fallback (External links)
-        const std = raw ? getOptimizedUrl(raw, 400) : "";
-        return { thumb: std, full: std };
+
+        try {
+            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
+        } catch (e) { return raw; }
     };
 
-    // --- 1. DESKTOP RENDER (Standard Grid) ---
-    if (deskGrid) {
-        deskGrid.innerHTML = posts.map(p => {
-            const media = getMediaData(p);
-            if(!media.thumb) return "";
-            return `<div class="sg-item" onclick="window.openChatPreview('${media.full}', false)"><img src="${media.thumb}" class="sg-img"></div>`;
-        }).join('');
-    }
+    // --- 1. PRE-PROCESS DATA (ASYNC) ---
+    // We resolve all URLs first to avoid partial rendering
+    const processedPosts = await Promise.all(posts.map(async p => {
+        const thumb = await getThumb(p, 400); // Mobile/Grid size
+        const full = await getThumb(p, 1200); // Desktop Hero size
+        let raw = p.image || p.img || p.thumbnail || p.cover || p.media || p.url || "";
+        return { ...p, _thumbUrl: thumb, _fullUrl: full, _rawUrl: raw };
+    }));
 
-    // --- 2. MOBILE RENDER (Fast Scroll) ---
+    // --- 2. MOBILE RENDER (SAFE RESTORATION) ---
     if (mobScroll) {
-        mobScroll.innerHTML = posts.map(p => {
-            const media = getMediaData(p);
+        mobScroll.innerHTML = processedPosts.map(p => {
+            if (!p._thumbUrl) return "";
             const txt = p.text || p.title || "Update";
-            
-            // Skip empty items
-            if (!media.thumb) return "";
-            
-            // IMG SRC = Low Res Thumbnail (Fast)
-            // ONCLICK = Full Res Master (Clear)
+
             return `
-                <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${media.full}', '${txt.replace(/'/g, "\\'")}')">
-                    <img src="${media.thumb}" class="mob-scroll-img" loading="lazy" onerror="this.parentElement.style.display='none'">
+                <div class="mob-scroll-item" onclick="if(window.openModal) window.openModal('${p._fullUrl}', '${txt.replace(/'/g, "\\'")}')">
+                    <img src="${p._thumbUrl}" class="mob-scroll-img" loading="lazy" onerror="this.parentElement.style.display='none'">
                 </div>
             `;
         }).join('');
+    }
+
+    // --- 3. DESKTOP RENDER (ROYAL GAZETTE LAYOUT) ---
+    if (deskGrid) {
+        deskGrid.innerHTML = "";
+        deskGrid.className = "";
+
+        const layoutWrapper = document.createElement("div");
+        layoutWrapper.className = "royal-gazette-layout";
+
+        // A. HERO SECTION (Latest Post)
+        if (processedPosts.length > 0) {
+            const heroPost = processedPosts[0];
+            const heroTitle = heroPost.title || heroPost.text || "ROYAL DECREE";
+            const heroDate = heroPost._createdDate ? new Date(heroPost._createdDate).toLocaleDateString() : "RECENT";
+
+            if (heroPost._fullUrl) { // Only show if we explicitly have a full URL
+                // Determine if video
+                const isVideo = heroPost._rawUrl.toLowerCase().includes('.mp4') ||
+                    heroPost._rawUrl.toLowerCase().includes('.mov') ||
+                    heroPost._rawUrl.toLowerCase().includes('.webm') ||
+                    heroPost._rawUrl.startsWith('wix:video');
+
+                // For video, we try to construct the direct video URL if possible
+                let videoSrc = heroPost._fullUrl;
+                if (isVideo && heroPost._rawUrl.startsWith('wix:video')) {
+                    try { videoSrc = `https://video.wixstatic.com/video/${heroPost._rawUrl.split('/')[3].split('#')[0]}/mp4/file.mp4`; } catch (e) { }
+                }
+
+                const mediaTag = isVideo
+                    ? `<video src="${videoSrc}" class="hero-img" autoplay muted loop playsinline></video>`
+                    : `<img src="${heroPost._fullUrl}" class="hero-img" onerror="this.closest('.news-hero-section').style.display='none'">`;
+
+                const heroHTML = `
+                <div class="news-hero-section" onclick="window.openChatPreview('${heroPost._fullUrl}', false)">
+                    <div class="hero-image-wrapper">
+                        ${mediaTag}
+                        <div class="hero-overlay-grad"></div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="hero-label">LATEST TRANSMISSION</div>
+                        <div class="hero-title">${heroTitle}</div>
+                        <div class="hero-meta">${heroDate}</div>
+                    </div>
+                </div>`;
+                layoutWrapper.innerHTML += heroHTML;
+            }
+        }
+
+        // B. MASONRY GRID (Older Posts)
+        if (processedPosts.length > 1) {
+            const gridHTML = `
+            <div class="news-magazine-grid">
+                ${processedPosts.slice(1).map(p => {
+                if (!p._thumbUrl) return "";
+                const txt = p.title || p.text || "Update";
+
+                const isVideo = p._rawUrl.toLowerCase().includes('.mp4') ||
+                    p._rawUrl.toLowerCase().includes('.mov') ||
+                    p._rawUrl.toLowerCase().includes('.webm') ||
+                    p._rawUrl.startsWith('wix:video');
+
+                let videoSrc = p._thumbUrl; // Default to thumb for video poster/src
+                if (isVideo && p._rawUrl.startsWith('wix:video')) {
+                    try { videoSrc = `https://video.wixstatic.com/video/${p._rawUrl.split('/')[3].split('#')[0]}/mp4/file.mp4`; } catch (e) { }
+                }
+
+                const mediaTag = isVideo
+                    ? `<video src="${videoSrc}" class="magazine-img" autoplay muted loop playsinline></video>`
+                    : `<img src="${p._thumbUrl}" class="magazine-img" loading="lazy" onerror="this.closest('.magazine-card').style.display='none'">`;
+
+                return `
+                    <div class="magazine-card" onclick="window.openChatPreview('${p._fullUrl}', false)">
+                        <div class="mag-img-box">
+                            ${mediaTag}
+                            <div class="mag-overlay">
+                                <span class="mag-view-btn">VIEW</span>
+                            </div>
+                        </div>
+                        <div class="mag-footer">
+                            <div class="mag-text">${txt.substring(0, 50)}${txt.length > 50 ? '...' : ''}</div>
+                        </div>
+                    </div>`;
+            }).join('')}
+            </div>`;
+            layoutWrapper.innerHTML += gridHTML;
+        }
+
+        deskGrid.appendChild(layoutWrapper);
     }
 }
 
@@ -256,14 +328,14 @@ export function renderNews(posts) {
 
 export function openSessionUI() {
     const overlay = document.getElementById('sessionOverlay');
-    if(overlay) overlay.classList.add('active');
+    if (overlay) overlay.classList.add('active');
     const costDisp = document.getElementById('sessionCostDisplay');
-    if(costDisp) costDisp.innerText = "3000";
+    if (costDisp) costDisp.innerText = "3000";
 }
 
 export function closeSessionUI() {
     const overlay = document.getElementById('sessionOverlay');
-    if(overlay) overlay.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
 }
 
 export function updateSessionCost() {
@@ -271,6 +343,6 @@ export function updateSessionCost() {
     if (checked) {
         const cost = checked.getAttribute('data-cost');
         const costDisp = document.getElementById('sessionCostDisplay');
-        if(costDisp) costDisp.innerText = cost;
+        if (costDisp) costDisp.innerText = cost;
     }
 }

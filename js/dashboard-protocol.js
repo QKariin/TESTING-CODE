@@ -1,8 +1,8 @@
 // Dashboard Protocol Management
 // Silence Protocol, exclusions, and broadcast functionality
 
-import { 
-    excludedIds, broadcastExclusions, protocolActive, protocolGoal, 
+import {
+    excludedIds, broadcastExclusions, protocolActive, protocolGoal,
     protocolProgress, newbieImmunity, users, broadcastMedia, broadcastPresets,
     setExcludedIds, setBroadcastExclusions, setProtocolActive, setProtocolGoal,
     setProtocolProgress, setNewbieImmunity, setBroadcastMedia, setBroadcastPresets,
@@ -13,62 +13,65 @@ export function toggleProtocol() {
     const btn = document.getElementById('pdBtn');
     const controls = document.getElementById('pdControls');
     const progress = document.getElementById('pdProgress');
-    
+
     if (!protocolActive) {
         // Start protocol
         setProtocolActive(true);
         setProtocolGoal(parseInt(document.getElementById('pdGoal').value) || 1000);
         setProtocolProgress(0);
-        
+
         btn.innerText = 'ACTIVE';
         btn.classList.remove('engage');
         btn.classList.add('active-btn');
-        
+
         controls.style.display = 'none';
         progress.style.display = 'flex';
-        
+
         updateProtocolProgress();
-        
+
         // Send to backend
-        window.parent.postMessage({ 
-            type: "startProtocol", 
+        window.parent.postMessage({
+            type: "startProtocol",
             goal: protocolGoal,
             excludedIds: excludedIds,
             newbieImmunity: newbieImmunity
         }, "*");
-        
+
     } else {
         // Stop protocol
         setProtocolActive(false);
-        
+
         btn.innerText = 'ENGAGE';
         btn.classList.remove('active-btn');
         btn.classList.add('engage');
-        
+
         controls.style.display = 'flex';
         progress.style.display = 'none';
-        
+
         // Send to backend
         window.parent.postMessage({ type: "stopProtocol" }, "*");
     }
 }
 
 export function updateProtocolProgress() {
-    if (!protocolActive) return;
-    
     const fill = document.getElementById('pdFill');
     const text = document.getElementById('pdText');
-    
-    if (fill && text) {
-        const percentage = Math.min(100, (protocolProgress / protocolGoal) * 100);
-        fill.style.width = percentage + '%';
-        text.innerText = `${protocolProgress} / ${protocolGoal} COINS COLLECTED`;
-        
-        if (protocolProgress >= protocolGoal) {
-            // Protocol completed
-            toggleProtocol();
-            window.parent.postMessage({ type: "protocolCompleted" }, "*");
-        }
+    const percEl = document.getElementById('pdPercentage');
+    const goalEl = document.getElementById('pdGoalDisplay');
+    const circle = document.querySelector('.vg-circle');
+
+    const percentage = Math.min(100, (protocolProgress / protocolGoal) * 100);
+
+    if (fill) fill.style.width = percentage + '%';
+    if (text) text.innerText = `${protocolProgress} / ${protocolGoal} COINS COLLECTED`;
+    if (percEl) percEl.innerText = Math.round(percentage) + '%';
+    if (goalEl) goalEl.innerText = protocolGoal;
+    if (circle) circle.style.background = `conic-gradient(var(--blue-accent) ${percentage}%, transparent 0%)`;
+
+    if (protocolActive && protocolProgress >= protocolGoal) {
+        // Protocol completed
+        toggleProtocol();
+        window.parent.postMessage({ type: "protocolCompleted" }, "*");
     }
 }
 
@@ -87,7 +90,7 @@ export function toggleNewbieImmunity() {
 export function openExclusionModal() {
     const list = document.getElementById('exclusionList');
     if (!list) return;
-    
+
     list.innerHTML = users.map(u => {
         const isEx = excludedIds.includes(u.memberId);
         return `
@@ -97,7 +100,7 @@ export function openExclusionModal() {
             </div>
         `;
     }).join('');
-    
+
     document.getElementById('exclusionModal').classList.add('active');
 }
 
@@ -123,7 +126,7 @@ export function openBroadcastModal() {
 export function renderBrUserList() {
     const list = document.getElementById('brUserList');
     if (!list) return;
-    
+
     list.innerHTML = users.map(u => {
         const isEx = broadcastExclusions.includes(u.memberId);
         return `
@@ -163,13 +166,13 @@ export async function handleBroadcastFile(input) {
 
         try {
             const res = await fetch(
-                `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/broadcasts`, 
+                `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/broadcasts`,
                 { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd }
             );
-            
+
             if (!res.ok) return;
             const d = await res.json();
-            
+
             if (d.files && d.files[0]) {
                 let media = d.files[0].fileUrl;
                 //if (isVideo) media += "#.mp4";
@@ -195,21 +198,21 @@ export async function handleBroadcastFile(input) {
 
 export function sendBroadcast() {
     const text = document.getElementById('brText').value.trim();
-    
+
     if (!text && !broadcastMedia) {
         alert("Please enter a message or upload media!");
         return;
     }
-    
+
     const targetUsers = users.filter(u => !broadcastExclusions.includes(u.memberId));
-    
-    window.parent.postMessage({ 
+
+    window.parent.postMessage({
         type: "sendBroadcast",
         message: text,
         media: broadcastMedia,
         targetUsers: targetUsers.map(u => u.memberId)
     }, "*");
-    
+
     closeBroadcastModal();
     alert(`Broadcast sent to ${targetUsers.length} users!`);
 }
@@ -220,13 +223,13 @@ export function saveBroadcastPreset() {
         alert("Nothing to save!");
         return;
     }
-    
-    window.parent.postMessage({ 
-        type: "saveToCMS", 
-        collection: "BROADCAST", 
-        payload: { planedt: txt, planedm: broadcastMedia } 
+
+    window.parent.postMessage({
+        type: "saveToCMS",
+        collection: "BROADCAST",
+        payload: { planedt: txt, planedm: broadcastMedia }
     }, "*");
-    
+
     setBroadcastPresets([...broadcastPresets, { planedt: txt, planedm: broadcastMedia }]);
     alert("Saved to Presets!");
 }
@@ -234,7 +237,7 @@ export function saveBroadcastPreset() {
 export function togglePresets() {
     const list = document.getElementById('presetList');
     if (!list) return;
-    
+
     if (list.style.display === 'none') {
         list.style.display = 'flex';
         renderPresetList();
@@ -246,7 +249,7 @@ export function togglePresets() {
 function renderPresetList() {
     const list = document.getElementById('presetList');
     if (!list) return;
-    
+
     list.innerHTML = broadcastPresets.map((preset, i) => `
         <div class="preset-item" onclick="loadPreset(${i})">
             ${preset.planedm ? `<img src="${preset.planedm}" class="preset-img">` : '<div class="preset-img" style="background:#333;"></div>'}
@@ -258,15 +261,15 @@ function renderPresetList() {
 export function loadPreset(index) {
     const preset = broadcastPresets[index];
     if (!preset) return;
-    
+
     if (preset.planedt) {
         document.getElementById('brText').value = preset.planedt;
     }
-    
+
     if (preset.planedm) {
         setBroadcastMedia(preset.planedm);
         const isVideo = preset.planedm.includes('.mp4') || preset.planedm.includes('.mov');
-        
+
         if (isVideo) {
             const v = document.getElementById('brPreviewVid');
             v.src = preset.planedm;
@@ -279,7 +282,7 @@ export function loadPreset(index) {
             document.getElementById('brPreviewVid').style.display = 'none';
         }
     }
-    
+
     togglePresets();
 }
 

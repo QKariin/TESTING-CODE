@@ -8,7 +8,7 @@ import { triggerSound } from './utils.js';
 import { getOptimizedUrl } from './media.js';
 
 // --- ADD THESE TWO LINES AT THE TOP ---
-let currentVisualOrder = []; 
+let currentVisualOrder = [];
 let previousOnlineStates = {}; // <--- THIS WAS MISSING AND CAUSED THE CRASH
 const soundMemory = {};
 
@@ -18,7 +18,7 @@ export function renderSidebar() {
 
     // --- 1. THE DUPLICATE KILLER (SANITIZE) ---
     const allDbIds = users.map(u => u.memberId);
-    
+
     // Force the visual order to be unique and only include real users
     currentVisualOrder = [...new Set(currentVisualOrder)].filter(id => allDbIds.includes(id));
 
@@ -33,7 +33,7 @@ export function renderSidebar() {
     const isUserOnline = (u) => {
         if (!u || !u.lastSeen) return false;
         const ls = new Date(u.lastSeen).getTime();
-        return (now - ls) / 60000 < 5; 
+        return (now - ls) / 60000 < 5;
     };
 
     // --- 2. APPLY HIERARCHY MOVEMENT RULES ---
@@ -77,7 +77,7 @@ export function renderSidebar() {
         }
 
         // C. FALLING: Just logged off (Handled by the Sort in Step 3)
-        
+
         // Update memory for next refresh
         previousOnlineStates[u.memberId] = isOnline;
     });
@@ -107,14 +107,14 @@ export function renderSidebar() {
         const isQueen = u.hierarchy === "Queen";
         const hasMsg = hasUnreadMessage(u);
         const online = isUserOnline(u);
-        
+
         const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
         const diff = ls > 0 ? Math.floor((now - ls) / 60000) : 999;
-        
+
         let statusText = "OFFLINE";
         if (online) statusText = "ONLINE";
         else if (ls > 0 && diff < 60) statusText = `${diff} MIN AGO`;
-        else if (ls > 0) statusText = new Date(ls).toLocaleDateString([], {month:'short', day:'numeric'});
+        else if (ls > 0) statusText = new Date(ls).toLocaleDateString([], { month: 'short', day: 'numeric' });
 
         html += `
             <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" onclick="selUser('${u.memberId}')">
@@ -138,7 +138,7 @@ export function renderSidebar() {
 function renderUserIcons(u) {
     let html = '';
     const hasMsg = hasUnreadMessage(u);
-    
+
     // 1. MAIL ICON (Message Status)
     const mailPath = "M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z";
     if (hasMsg) {
@@ -173,7 +173,7 @@ function hasUnreadMessage(u) {
     // 2. Otherwise, check the last message time against the last click time
     const readTime = localStorage.getItem('read_' + u.memberId);
     if (!readTime) return u.lastMessageTime > 0;
-    
+
     // If the message is newer than the last time I clicked the user, light it up
     return u.lastMessageTime > parseInt(readTime);
 }
@@ -182,34 +182,36 @@ function hasUnreadMessageCurrentUser(u) {
     // 2. Otherwise, check the last message time against the last click time
     const readTime = localStorage.getItem('read_' + u.memberId);
     if (!readTime) return u.lastMessageTime > 0;
-    
+
     // If the message is newer than the last time I clicked the user, light it up
     return u.lastMessageTime > parseInt(readTime);
 }
 
 export function selUser(id) {
-    if (id === currId) return; 
+    if (id === currId) return;
     if (typeof window.parent !== 'undefined') {
         window.parent.postMessage({ type: "selectUser", memberId: id }, "*");
     }
     localStorage.setItem('read_' + id, Date.now().toString());
     document.getElementById('adminChatBox').innerHTML = "";
     setCurrId(id);
-    
+
     // Hide other views and show user view
     document.getElementById('viewHome').style.display = 'none';
     document.getElementById('viewProfile').style.display = 'none';
-    document.getElementById('viewUser').classList.add('active');
-    
+    const vUser = document.getElementById('viewUser');
+    vUser.style.display = 'flex';
+    vUser.classList.add('active');
+
     // Mark as read
     localStorage.setItem('read_' + id, Date.now());
     renderSidebar();
-    
+
     // Reset history limit and update user details
     import('./dashboard-state.js').then(({ setHistLimit }) => {
         setHistLimit(10);
     });
-    
+
     const u = users.find(x => x.memberId === id);
     if (u) {
         import('./dashboard-users.js').then(({ updateDetail }) => {

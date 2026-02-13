@@ -1,3 +1,4 @@
+
 // Dashboard Chat Management
 // Chat rendering, message handling, and file uploads
 
@@ -11,92 +12,122 @@ let isInitialLoad = true;
 
 export async function renderChat(msgs) {
     if (!msgs || !Array.isArray(msgs)) return;
-    
+
     const currentJson = JSON.stringify(msgs);
     if (currentJson === lastChatJson) return;
     setLastChatJson(currentJson);
-    
+
     // Proxy Bytescale URLs for private access (in parallel)
     const signingPromises = msgs.map(async (m) => {
         if (m.message && m.message.startsWith('https://')) {
             //const parts = m.message.split('/raw/');
             //if (parts.length === 2) {
-                //const filePath = '/' + parts[1];
-                try {
-                    //m.mediaUrl = await getPrivateFile(filePath);
-                    m.mediaUrl = await getSignedUrl(getOptimizedUrl(m.message, 400));
-                } catch (e) {
-                    console.error('Failed to sign URL', e);
-                }
+            //const filePath = '/' + parts[1];
+            try {
+                //m.mediaUrl = await getPrivateFile(filePath);
+                m.mediaUrl = await getSignedUrl(getOptimizedUrl(m.message, 400));
+            } catch (e) {
+                console.error('Failed to sign URL', e);
+            }
             //}
         }
     });
     await Promise.all(signingPromises);
-    
+
     const b = document.getElementById('adminChatBox');
     if (!b) return;
-    
+
     const isFreshLoad = b.innerHTML.trim() === "";
     const wasAtBottom = isAtBottom();
-    
+
     let html = '';
     msgs.forEach(m => {
         const isMe = m.sender === 'admin';
         const timeStr = new Date(m._createdDate || m.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
+
         let contentHtml = '';
         let avatarHtml = '';
-        
+
         // Message content
         // Smarter Media Detection
         if (m.message) {
-            const isImage = mediaType(m.message) === "image";
-            const isVideo = mediaType(m.message) === "video";
+            // 1. WISHLIST CARD (GRAPHICAL) - CHECK FIRST
+            if (m.message.startsWith('WISHLIST::')) {
+                try {
+                    const jsonStr = m.message.replace('WISHLIST::', '');
+                    const item = JSON.parse(jsonStr);
 
-            if (isImage) {
-                const srcUrl = m.mediaUrl || getOptimizedUrl(m.message, 300);
-                const previewUrl = m.mediaUrl || m.message;
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
-            } else if (isVideo) {
-                const srcUrl = m.mediaUrl || m.message;
-                const previewUrl = m.mediaUrl || m.message;
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', true)" muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
-            } else if (m.message.startsWith('💝 TRIBUTE:')) {
-                contentHtml = renderTributeMessage(m.message, timeStr);
-            } else if (m.message.includes('Task Verified') || m.message.includes('Task Rejected')) {
-                contentHtml = renderSystemMessage(m.message, m.message.includes('Verified') ? 'green' : 'red');
-            } else {
-                let safeHtml = DOMPurify.sanitize(m.message);
-                // Convert newlines to <br>
-                safeHtml = safeHtml.replace(/\n/g, "<br>");
-                contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}">${safeHtml}</div>`;
+                    const cardInner = `
+                    <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <div style="width:100%; height:120px; overflow:hidden; position:relative;">
+                             <img src="${item.img}" style="width:100%; height:100%; object-fit:cover;">
+                             <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
+                                 TRIBUTE SENT
+                             </div>
+                        </div>
+                        <div style="padding:8px; text-align:center;">
+                            <div style="color:#eee; font-family:'Cinzel'; font-size:0.6rem; margin-bottom:2px; opacity:0.8;">${item.sender} sent</div>
+                            <div style="color:#fff; font-family:'Cinzel'; font-size:0.7rem; margin-bottom:4px;">${item.name}</div>
+                            <div style="color:#c5a059; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold;">${item.price}</div>
+                        </div>
+                    </div>`;
+
+                    // WRAPPER FOR CENTERING
+                    contentHtml = `<div class="msg-row" style="justify-content:center; margin-bottom:15px; width:100%; display:flex;"><div class="msg-col" style="align-items:center;">${cardInner}<div class="msg-time" style="text-align:center; width:100%; margin-top:5px;">${timeStr}</div></div></div>`;
+
+                } catch (e) {
+                    console.error("Failed to parse wishlist card", e);
+                    contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}">🎁 TRIBUTE ERROR</div>`;
+                }
+            }
+            else {
+                // Standard Media Check (ONLY if not wishlist)
+                const isImage = mediaType(m.message) === "image";
+                const isVideo = mediaType(m.message) === "video";
+
+                if (isImage) {
+                    const srcUrl = m.mediaUrl || getOptimizedUrl(m.message, 300);
+                    const previewUrl = m.mediaUrl || m.message;
+                    contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
+                } else if (isVideo) {
+                    const srcUrl = m.mediaUrl || m.message;
+                    const previewUrl = m.mediaUrl || m.message;
+                    contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', true)" muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
+                } else if (m.message.startsWith('💝 TRIBUTE:')) {
+                    contentHtml = renderTributeMessage(m.message, timeStr);
+                } else if (m.message.includes('Task Verified') || m.message.includes('Task Rejected')) {
+                    contentHtml = renderSystemMessage(m.message, m.message.includes('Verified') ? 'green' : 'red');
+                } else {
+                    let safeHtml = DOMPurify.sanitize(m.message);
+                    safeHtml = safeHtml.replace(/\n/g, "<br>");
+                    contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}">${safeHtml}</div>`;
+                }
             }
         }
-        
         // Avatar
         if (!isMe) {
             const u = users.find(x => x.memberId === currId);
             const avatarUrl = u?.avatar ? getOptimizedUrl(u.avatar, 60) : '';
-            avatarHtml = avatarUrl ? 
-                `<img src="${avatarUrl}" class="chat-av">` : 
+            avatarHtml = avatarUrl ?
+                `<img src="${avatarUrl}" class="chat-av">` :
                 `<div class="chat-av-placeholder">${(u?.name || 'U')[0]}</div>`;
         } else {
             avatarHtml = `<img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" class="chat-av">`;
         }
-        
-        // Skip tribute messages for regular rendering
-        if (!m.message.startsWith('💝 TRIBUTE:')) {
+
+        // Skip tribute/wishlist messages for regular rendering
+        if (!m.message.startsWith('💝 TRIBUTE:') && !m.message.startsWith('WISHLIST::')) {
             html += `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">${!isMe ? avatarHtml : ''}${contentHtml}${isMe ? avatarHtml : ''}<div class="msg-meta ${isMe ? 'mm-out' : 'mm-in'}">${timeStr}</div></div>`;
         } else {
-            html += contentHtml; // Tribute messages are already formatted
+            html += contentHtml; // Tributes and Wishcards are already formatted
         }
     });
-    
+
     // Add invisible anchor
     html += '<div id="chat-anchor" style="height:1px;"></div>';
-    
+
     b.innerHTML = html;
-    
+
     // Scroll logic
     if (isFreshLoad || wasAtBottom) {
         forceBottom();
@@ -108,18 +139,18 @@ export async function renderChat(msgs) {
 function renderTributeMessage(message, timeStr) {
     // Regex to remove any potential emojis from the incoming string
     const cleanMsg = message.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
-    
+
     const lines = cleanMsg.split('\n');
     const tributeLine = lines.find(line => line.includes('TRIBUTE:'));
     const itemLine = lines.find(line => line.includes('ITEM:'));
     const costLine = lines.find(line => line.includes('COST:'));
     const messageLine = lines.find(line => line.includes('MESSAGE:')) || lines[lines.length - 1];
-    
+
     const reason = tributeLine ? tributeLine.replace('TRIBUTE:', '').trim() : 'Adoration';
     const item = itemLine ? itemLine.replace('ITEM:', '').trim() : 'Premium Selection';
     const cost = costLine ? costLine.replace('COST:', '').trim() : '0';
     const note = messageLine ? messageLine.replace('MESSAGE:', '').replace(/"/g, '').trim() : 'A silent tribute';
-    
+
     return `
         <div class="tribute-system-container" style="margin: 25px 0; width: 100%; display: flex; flex-direction: column; align-items: center;">
             <div class="tribute-card" style="background: rgba(10, 10, 12, 0.95); border: 1px solid var(--gold); border-radius: 0; padding: 25px; width: 85%; max-width: 290px; position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.8);">
@@ -156,10 +187,10 @@ function renderTributeMessage(message, timeStr) {
 
 function renderSystemMessage(message, type) {
     const color = type === 'green' ? 'var(--green)' : 'var(--red)';
-    const icon = type === 'green' ? 
+    const icon = type === 'green' ?
         '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>' :
         '<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>';
-    
+
     return `
         <div class="msg-${type}" style="width: 90%; align-self: center; text-align: center; margin: 10px 0; padding: 10px; background: linear-gradient(90deg, rgba(${type === 'green' ? '57,255,20' : '255,0,60'},0.1) 0%, rgba(0,0,0,0.5) 50%, rgba(${type === 'green' ? '57,255,20' : '255,0,60'},0.1) 100%); border: 1px solid ${color}; border-radius: 6px; color: ${color}; font-family: 'Orbitron'; font-size: 0.9rem; font-weight: 900; display: flex; flex-direction: column; align-items: center; gap: 5px;">
             <svg style="width: 24px; height: 24px; fill: ${color};" viewBox="0 0 24 24">${icon}</svg>
@@ -171,15 +202,15 @@ function renderSystemMessage(message, type) {
 export function sendMsg() {
     const inp = document.getElementById('adminInp');
     if (!inp || !currId) return;
-    
+
     const text = inp.value.trim();
     if (!text) return;
-    
-    window.parent.postMessage({ 
-        type: "adminMessage", 
-        text: text 
+
+    window.parent.postMessage({
+        type: "adminMessage",
+        text: text
     }, "*");
-    
+
     inp.value = "";
 }
 
@@ -200,12 +231,12 @@ export async function handleAdminUpload(input) {
                 { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd }
             );
 
-            if (!res.ok) { 
-                console.error("Upload failed"); 
+            if (!res.ok) {
+                console.error("Upload failed");
                 btn.innerText = originalText;
-                return; 
+                return;
             }
-            
+
             const d = await res.json();
 
             if (d.files && d.files[0] && d.files[0].fileUrl) {
@@ -217,8 +248,8 @@ export async function handleAdminUpload(input) {
                 window.parent.postMessage({ type: "adminMessage", text: finalUrl }, "*");
             }
             btn.innerText = originalText;
-        } catch (err) { 
-            console.error("Error", err); 
+        } catch (err) {
+            console.error("Error", err);
             document.querySelector('.btn-plus').innerText = "+";
         }
     }

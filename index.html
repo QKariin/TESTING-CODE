@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="../css/reward.css">
     <meta name="theme-color" content="#000000">
     <style>
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             height: 100%;
             overflow: hidden;
             background: black;
         }
+
         iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
+
         #installBanner {
             position: fixed;
             bottom: 20px;
@@ -32,6 +36,7 @@
             display: none;
             z-index: 9999;
         }
+
         #installBtn {
             background: #222;
             border: 1px solid #555;
@@ -40,6 +45,7 @@
             color: #ccc;
             cursor: pointer;
         }
+
         #pushContainer {
             position: fixed;
             top: 20px;
@@ -63,105 +69,120 @@
             border-color: #777;
         }
     </style>
+    <script>
+        // PREVIEW MODE: IMMEDIATE REDIRECT (MUST BE IN HEAD)
+        if (window.location.protocol === "file:" ||
+            window.location.hostname === "localhost" ||
+            window.location.hostname === "127.0.0.1" ||
+            window.location.hostname === "") {
+            window.location.replace("profile/index.html");
+        }
+    </script>
 </head>
+
 <body>
 
-    
-<div id="installBanner">
-    Install Queendom App
-    <button id="installBtn">Install</button>
-</div>
-<div id="pushContainer">
-    <button id="enablePush" class="push-btn">Enable Notifications</button>
-</div>
+    <script>
+        // REDIRECT TO DASHBOARD FOR ALL LOCAL/DEVELOPMENT ACCESS
+        // Only load the production iframe if we're on the actual qkarin.com domain
+        if (window.location.hostname !== "www.qkarin.com" && window.location.hostname !== "qkarin.com") {
+            window.location.replace("profile/index.html");
+        }
+    </script>
 
-<iframe src="https://www.qkarin.com/private"></iframe>
+    <div
+        style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: #666; font-family: monospace;">
+        Redirecting to dashboard...
+    </div>
 
-<script>
-const VAPID_PUBLIC_KEY = "BDtVl6DWNkaFQj9VhDk7POUptz4t6JklRJg0dd2SIfRDJRRuTZqi7cCB88VeKatXlYGb8w0QhbNR_TmrdpR_qzI";
-let deferredPrompt = null;
+    <iframe src="https://www.qkarin.com/private"></iframe>
 
-window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById("installBanner").style.display = "block";
-});
+    <script>
+        const VAPID_PUBLIC_KEY = "BDtVl6DWNkaFQj9VhDk7POUptz4t6JklRJg0dd2SIfRDJRRuTZqi7cCB88VeKatXlYGb8w0QhbNR_TmrdpR_qzI";
+        let deferredPrompt = null;
 
-document.getElementById("installBtn").addEventListener("click", async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    document.getElementById("installBanner").style.display = "none";
-});
+        window.addEventListener("beforeinstallprompt", (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById("installBanner").style.display = "block";
+        });
 
-async function askNotificationPermission() {
-    const permission = await Notification.requestPermission();
-    return permission
-    /*if (permission !== "granted") {
-        console.log("Notifications denied");
-        return null;
-    }*/
-    console.log("Notification:", permission);
-}
+        document.getElementById("installBtn").addEventListener("click", async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.getElementById("installBanner").style.display = "none";
+        });
 
-document.getElementById("enablePush").addEventListener("click", async () => {
-    const permission = await askNotificationPermission();
+        async function askNotificationPermission() {
+            const permission = await Notification.requestPermission();
+            return permission
+            /*if (permission !== "granted") {
+                console.log("Notifications denied");
+                return null;
+            }*/
+            console.log("Notification:", permission);
+        }
 
-    if (permission === "granted") {
-        await subscribeUserToPush();
-        document.getElementById("enablePush").style.display = "none";
-    }
-});
+        document.getElementById("enablePush").addEventListener("click", async () => {
+            const permission = await askNotificationPermission();
 
-async function subscribeUserToPush() {
-    // Ensure service worker is ready
-    const registration = await navigator.serviceWorker.ready;
+            if (permission === "granted") {
+                await subscribeUserToPush();
+                document.getElementById("enablePush").style.display = "none";
+            }
+        });
 
-    // Convert the VAPID key to a Uint8Array
-    const convertedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+        async function subscribeUserToPush() {
+            // Ensure service worker is ready
+            const registration = await navigator.serviceWorker.ready;
 
-    // Create the subscription
-    const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: convertedKey
-    });
+            // Convert the VAPID key to a Uint8Array
+            const convertedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
 
-    console.log("Push subscription created:", subscription);
+            // Create the subscription
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedKey
+            });
 
-    // Send subscription to your backend (Step 4)
-    await fetch("/api/save-subscription", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subscription)
-    });
+            console.log("Push subscription created:", subscription);
 
-    return subscription;
-}
+            // Send subscription to your backend (Step 4)
+            await fetch("/api/save-subscription", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(subscription)
+            });
 
-// Helper to convert VAPID key
-function urlBase64ToUint8Array(base64String) {
-    const padding = "=".repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-        .replace(/-/g, "+")
-        .replace(/_/g, "/");
+            return subscription;
+        }
 
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
+        // Helper to convert VAPID key
+        function urlBase64ToUint8Array(base64String) {
+            const padding = "=".repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/-/g, "+")
+                .replace(/_/g, "/");
 
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
 
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/service-worker.js")
-        .then(() => console.log("Service worker registered"))
-        .catch(err => console.error("SW registration failed:", err));
-}
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
 
-</script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/service-worker.js")
+                .then(() => console.log("Service worker registered"))
+                .catch(err => console.error("SW registration failed:", err));
+        }
+
+    </script>
 
 </body>
+
 </html>

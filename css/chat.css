@@ -1,12 +1,16 @@
-
 /* --- LUXURY TACTICAL CHAT DNA --- */
 
 /* =========================================
    [GLOBAL] HEADER VISIBILITY LOGIC
    ========================================= */
 /* DEFAULT (DESKTOP): Hide Giant Mobile Header, Show Black Bar */
-.mob-chat-header { display: none !important; }
-.right-header { display: flex !important; }
+.mob-chat-header {
+    display: none !important;
+}
+
+.right-header {
+    display: flex !important;
+}
 
 :root {
     --pink: #ff00de;
@@ -24,30 +28,34 @@
 .chat-container {
     background: var(--panel-bg);
     border: 1px solid var(--border);
-    flex: 1; 
-    min-height: 0; /* CRITICAL: Allows the internal scrollbar to work */
-    
+    flex: 1;
+    min-height: 0;
+    /* CRITICAL: Allows the internal scrollbar to work */
+
     display: flex;
     flex-direction: column;
     overflow: hidden;
     box-shadow: inset 0 0 40px #000;
     position: relative;
-    margin-bottom: 20px; /* Add space at bottom so it doesn't touch edge */
+    margin-bottom: 20px;
+    /* Add space at bottom so it doesn't touch edge */
 }
 
 /* --- DESKTOP RIGHT HEADER --- */
 .right-header {
     width: 100%;
-    height: 80px; /* Fixed height */
+    height: 80px;
+    /* Fixed height */
     background: #000;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 30px;
-    flex-shrink: 0; /* Prevents scrolling away */
+    flex-shrink: 0;
+    /* Prevents scrolling away */
     z-index: 50;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
 }
 
 .rh-profile-group {
@@ -67,7 +75,8 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid #c5a059; /* Gold Border */
+    border: 1px solid #c5a059;
+    /* Gold Border */
 }
 
 .rh-status-dot {
@@ -76,7 +85,8 @@
     right: 0;
     width: 10px;
     height: 10px;
-    background: #444; /* Default gray */
+    background: #444;
+    /* Default gray */
     border: 2px solid #000;
     border-radius: 50%;
 }
@@ -103,7 +113,8 @@
 .rh-status-text {
     font-family: 'Orbitron', sans-serif;
     font-size: 0.6rem;
-    color: #c5a059; /* Gold text */
+    color: #c5a059;
+    /* Gold text */
     letter-spacing: 1px;
     margin-top: 2px;
 }
@@ -122,17 +133,19 @@
     width: 100%;
     padding: 8px 0;
     background: rgba(10, 10, 10, 0.95);
-    border-bottom: 1px solid rgba(197, 160, 89, 0.3); /* Gold Line */
+    border-bottom: 1px solid rgba(197, 160, 89, 0.3);
+    /* Gold Line */
     color: #c5a059;
     font-family: 'Orbitron', sans-serif;
     font-size: 0.65rem;
     text-align: center;
     letter-spacing: 3px;
     text-transform: uppercase;
-    flex-shrink: 0; /* Never collapse */
+    flex-shrink: 0;
+    /* Never collapse */
     z-index: 40;
     transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
 .system-ticker.hidden {
@@ -143,9 +156,18 @@
 .ticker-flash {
     animation: textFlash 0.5s ease-in-out;
 }
+
 @keyframes textFlash {
-    0% { color: #fff; text-shadow: 0 0 10px #fff; background: rgba(197, 160, 89, 0.2); }
-    100% { color: #c5a059; background: rgba(10, 10, 10, 0.95); }
+    0% {
+        color: #fff;
+        text-shadow: 0 0 10px #fff;
+        background: rgba(197, 160, 89, 0.2);
+    }
+
+    100% {
+        color: #c5a059;
+        background: rgba(10, 10, 10, 0.95);
+    }
 }
 
 
@@ -167,7 +189,8 @@
 
 /* THE WRAPPER (Holds Input + Button) */
 .chat-input-wrapper {
-    position: relative; /* Anchor for the absolute button */
+    position: relative;
+    /* Anchor for the absolute button */
     flex-grow: 1;
     display: flex;
     align-items: center;
@@ -181,13 +204,19 @@
     color: #ccc;
     font-family: 'Inter', sans-serif;
     padding: 10px 15px;
-    padding-left: 45px !important; /* SPACE FOR THE CIRCLE BUTTON */
-    border-radius: 20px; /* Rounder look */
+    padding-left: 45px !important;
+    /* SPACE FOR THE CIRCLE BUTTON */
+    border-radius: 20px;
+    /* Rounder look */
     outline: none;
     height: 40px;
     transition: 0.3s;
 }
-.chat-input:focus { border-color: #c5a059; color: #fff; }
+
+.chat-input:focus {
+    border-color: #c5a059;
+    color: #fff;
+}
 
 /* THE PLUS BUTTON (Floating Circle) */
 .chat-btn-plus {
@@ -195,14 +224,14 @@
     left: 5px;
     top: 50%;
     transform: translateY(-50%);
-    
+
     width: 30px;
     height: 30px;
     border-radius: 50%;
     background: #222;
     border: 1px solid #444;
     color: #888;
-    
+
     font-size: 1.2rem;
     font-weight: 300;
     line-height: 1;
@@ -213,10 +242,11 @@
     transition: 0.2s;
     z-index: 10;
 }
-.chat-btn-plus:hover { 
-    background: var(--gold); 
-    color: #000; 
-    border-color: var(--gold); 
+
+.chat-btn-plus:hover {
+    background: var(--gold);
+    color: #000;
+    border-color: var(--gold);
 }
 
 /* OTHER BUTTONS */
@@ -225,12 +255,18 @@
     font-family: 'Rajdhani', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
-    background: none; border: none; cursor: pointer; padding-left: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding-left: 5px;
 }
 
 .chat-btn-tribute {
     font-size: 1.2rem;
-    background: none; border: none; cursor: pointer; opacity: 0.7;
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0.7;
 }
 
 /* Avatar Fix - The "Shit" look stopper */
@@ -253,14 +289,14 @@
 }
 
 /* --- ALIGNMENT: SLAVE RIGHT / QUEEN LEFT --- */
-.mr-out { 
-    flex-direction: row-reverse; 
-    justify-content: flex-start; 
-} 
+.mr-out {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
 
-.mr-in { 
-    flex-direction: row; 
-    justify-content: flex-start; 
+.mr-in {
+    flex-direction: row;
+    justify-content: flex-start;
 }
 
 /* --- KILL THE PINK BUBBLES --- */
@@ -283,7 +319,11 @@
 }
 
 /* Kill the Circus Avatars */
-.chat-av, .msg-avatar, .chat-av-placeholder { display: none !important; }
+.chat-av,
+.msg-avatar,
+.chat-av-placeholder {
+    display: none !important;
+}
 
 /* --- LUXURY TERMINAL TYPOGRAPHY --- */
 .msg {
@@ -302,7 +342,7 @@
 .mr-out .msg {
     color: #bbbbbb;
     text-align: right;
-    border-right: 2px solid #444444; 
+    border-right: 2px solid #444444;
     padding-right: 15px;
     margin-left: auto;
 }
@@ -359,7 +399,7 @@
     letter-spacing: 3px;
     text-transform: uppercase;
     color: var(--gold);
-    box-shadow: inset 0 0 10px rgba(0,0,0,1);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 1);
 }
 
 .sys-gold {
@@ -380,16 +420,24 @@
 @media screen and (max-width: 768px) {
 
     /* --- SHOW MOBILE HEADER --- */
-    .mob-chat-header { display: flex !important; }
-    .right-header { display: none !important; }
+    .mob-chat-header {
+        display: flex !important;
+    }
+
+    .right-header {
+        display: none !important;
+    }
 
     /* --- 1. CHAT CONTAINER: THE CAGE --- */
-    .chat-container, #chatCard {
+    .chat-container,
+    #chatCard {
         display: flex !important;
         flex-direction: column !important;
-        position: relative !important; /* CRITICAL: Keeps it inside the div */
+        position: relative !important;
+        /* CRITICAL: Keeps it inside the div */
         width: 100% !important;
-        height: 100% !important;       /* Fills the 450px height */
+        height: 100% !important;
+        /* Fills the 450px height */
         z-index: 1 !important;
         background: #000 !important;
         border: none !important;
@@ -406,39 +454,105 @@
         height: 65px !important;
         background: rgba(10, 10, 10, 0.95);
         border-bottom: 1px solid #333;
-        display: flex; align-items: center;
+        display: flex;
+        align-items: center;
         padding: 0 10px;
         z-index: 10 !important;
     }
 
     /* Header Elements */
     .chat-back {
-        background: none; border: none; color: #c5a059;
-        font-size: 1.5rem; padding: 0 10px; cursor: pointer;
+        background: none;
+        border: none;
+        color: #c5a059;
+        font-size: 1.5rem;
+        padding: 0 10px;
+        cursor: pointer;
     }
-    .chat-queen-profile { display: flex; align-items: center; gap: 10px; }
-    .queen-av-wrap { position: relative; width: 40px; height: 40px; }
-    .queen-av-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #c5a059; }
-    .status-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #000; background: #666; }
-    .status-dot.online { background: #00ff00; box-shadow: 0 0 5px #00ff00; }
-    .chat-meta-col { display: flex; flex-direction: column; }
-    .chat-queen-name { font-family: 'Cinzel'; font-size: 0.9rem; color: #fff; letter-spacing: 1px; }
-    .chat-status-text { font-family: 'Orbitron'; font-size: 0.55rem; color: #888; letter-spacing: 1px; }
+
+    .chat-queen-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .queen-av-wrap {
+        position: relative;
+        width: 40px;
+        height: 40px;
+    }
+
+    .queen-av-img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #c5a059;
+    }
+
+    .status-dot {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 2px solid #000;
+        background: #666;
+    }
+
+    .status-dot.online {
+        background: #00ff00;
+        box-shadow: 0 0 5px #00ff00;
+    }
+
+    .chat-meta-col {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-queen-name {
+        font-family: 'Cinzel';
+        font-size: 0.9rem;
+        color: #fff;
+        letter-spacing: 1px;
+    }
+
+    .chat-status-text {
+        font-family: 'Orbitron';
+        font-size: 0.55rem;
+        color: #888;
+        letter-spacing: 1px;
+    }
 
     /* Blink Animation */
-    .blink-dot { animation: dotPulse 2s infinite ease-in-out; }
+    .blink-dot {
+        animation: dotPulse 2s infinite ease-in-out;
+    }
+
     @keyframes dotPulse {
-        0% { opacity: 1; box-shadow: 0 0 5px #00ff00; }
-        50% { opacity: 0.4; box-shadow: 0 0 0px #00ff00; }
-        100% { opacity: 1; box-shadow: 0 0 5px #00ff00; }
+        0% {
+            opacity: 1;
+            box-shadow: 0 0 5px #00ff00;
+        }
+
+        50% {
+            opacity: 0.4;
+            box-shadow: 0 0 0px #00ff00;
+        }
+
+        100% {
+            opacity: 1;
+            box-shadow: 0 0 5px #00ff00;
+        }
     }
 
     /* --- 3. SCROLL AREA: FILLS MIDDLE --- */
     .chat-body-frame {
         width: 100% !important;
         height: 100% !important;
-        padding-top: 75px !important; 
-        padding-bottom: 75px !important; 
+        padding-top: 75px !important;
+        padding-bottom: 75px !important;
         padding-left: 10px !important;
         padding-right: 10px !important;
         overflow-y: auto !important;
@@ -446,25 +560,32 @@
         box-sizing: border-box !important;
         scrollbar-width: none;
     }
-    .chat-body-frame::-webkit-scrollbar { display: none; }
 
-    .system-ticker { margin-top: 0; }
+    .chat-body-frame::-webkit-scrollbar {
+        display: none;
+    }
+
+    .system-ticker {
+        margin-top: 0;
+    }
 
     /* --- 4. INPUT FOOTER: PINNED TO BOTTOM --- */
-   .chat-footer {
+    .chat-footer {
         position: absolute !important;
         bottom: 0 !important;
         left: 0 !important;
         width: 100% !important;
         z-index: 20 !important;
         padding: 10px !important;
-        background: #111 !important; 
+        background: #111 !important;
         border-top: 1px solid #333 !important;
-        display: flex; gap: 10px; align-items: center;
+        display: flex;
+        gap: 10px;
+        align-items: center;
     }
 
     .chat-input {
-        font-size: 16px !important; 
+        font-size: 16px !important;
         height: 40px !important;
     }
 
@@ -478,7 +599,7 @@
     }
 
     .store-item {
-        background: rgba(20,20,20,0.9);
+        background: rgba(20, 20, 20, 0.9);
         border: 1px solid #333;
         border-radius: 4px;
         overflow: hidden;
@@ -527,22 +648,77 @@
     /* --- 6. MESSAGE STYLING --- */
     .msg {
         max-width: 88% !important;
-        font-size: 0.65rem !important;
-        padding: 5px 12px !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
+        font-size: 0.75rem !important;
+        /* Legible size */
+        padding: 8px 12px !important;
+        /* RESTORED BUBBLES: Removed background:transparent override */
     }
-    .m-slave { border-right: 2px solid var(--pink) !important; border-radius: 0 !important; }
-    .m-queen { border-left: 2px solid var(--gold) !important; border-radius: 0 !important; }
-    
+
+    .m-slave {
+        /* Keep specific mobile adjustments if needed, but allow background */
+        border-right: 2px solid var(--pink) !important;
+        border-radius: 12px 12px 2px 12px !important;
+        /* Restore bubble shape */
+    }
+
+    .m-queen {
+        border-left: 2px solid var(--gold) !important;
+        border-radius: 12px 12px 12px 2px !important;
+        /* Restore bubble shape */
+    }
+
     .msg-system {
         font-size: 0.55rem !important;
         opacity: 1 !important;
-        background: 000000 !important;
+        background: #000000 !important;
         border: none !important;
-        border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
         width: 90% !important;
         margin: 2px auto !important;
+    }
+
+    /* --- FIXES FOR USER COMPLAINTS --- */
+    /* 1. Fix "Cuts words": Ensure wrapping */
+    .msg {
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        height: auto !important;
+        min-height: auto !important;
+    }
+
+    /* 2. Fix "Time too big" */
+    .msg-time {
+        font-size: 0.5rem !important;
+        /* Smaller than 0.65rem */
+        margin-top: 2px !important;
+    }
+
+    /* 3. Fix "Tribute Square" */
+    .chat-btn-tribute {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 50% !important;
+        /* Ensure it's not square */
+        width: 40px !important;
+        height: 40px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.5rem !important;
+    }
+
+    /* 4. RESTORE AVATARS */
+    .chat-av {
+        display: block !important;
+        /* Force show */
+        width: 35px !important;
+        height: 35px !important;
+        margin: 0 8px !important;
+        border-radius: 50% !important;
+        object-fit: cover !important;
+        border: 1px solid #333 !important;
     }
 }

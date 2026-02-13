@@ -2,19 +2,19 @@
 
 export function getOptimizedUrl(url, width = 400) {
     if (!url || typeof url !== 'string') return "";
-    
+
     // 1. KILL CLOUDINARY (Stops the 401 errors from your logs)
     if (url.includes("cloudinary.com")) return "";
 
     // 2. PASS THROUGH standard web links
     if (url.startsWith("http")) return url;
-    
+
     // 3. HANDLE WIX VECTORS (Fixes the ERR_UNKNOWN_URL_SCHEME)
     if (url.startsWith("wix:vector://v1/")) {
         const id = url.split('/')[3].split('#')[0];
         return `https://static.wixstatic.com/shapes/${id}`;
     }
-    
+
     // 4. HANDLE WIX IMAGES
     if (url.startsWith("wix:image://v1/")) {
         const id = url.split('/')[3].split('#')[0];
@@ -32,7 +32,7 @@ export function getOptimizedUrl(url, width = 400) {
 
 export function clean(str) {
     if (str === null || str === undefined) return "";
-    
+
     let target = str;
 
     // 1. Handle Objects or JSON Strings (Wix Collections)
@@ -46,36 +46,45 @@ export function clean(str) {
         } catch (e) { }
     }
 
-    // 2. THE RICH TEXT KILLER (Removes <p>, <span>, class="...", etc.)
+    // 2. PRESERVE NEWLINES (Hack to survive regex cleaning)
+    if (typeof target === 'string') {
+        target = target.replace(/\n/g, ' __BR__ ');
+        target = target.replace(/<br\s*\/?>/gi, ' __BR__ ');
+    }
+
+    // 3. THE RICH TEXT KILLER (Removes <p>, <span>, class="...", etc.)
     if (typeof target === 'string') {
         // This removes all HTML tags completely
-        target = target.replace(/<[^>]*>?/gm, ' '); 
-        
+        target = target.replace(/<[^>]*>?/gm, ' ');
+
         // This decodes symbols like &amp; into & or &quot; into "
         const doc = new DOMParser().parseFromString(target, 'text/html');
         target = doc.body.textContent || target;
     }
 
-    // 3. FINAL CLEANUP (Brackets and extra spaces)
+    // 4. FINAL CLEANUP (Brackets and extra spaces)
     let result = target.toString();
     result = result.replace(/\[.*?\]/g, ''); // Remove [TASK_ID] etc.
     result = result.replace(/\s\s+/g, ' ');  // Remove double spaces
 
-    return result.trim().substring(0, 100);
+    // 5. RESTORE NEWLINES
+    result = result.replace(/__BR__/g, '\n').trim();
+
+    return result; // NO LIMIT
 }
 
 export function raw(str) {
     if (!str) return "";
-    return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\n/g, '\\n');
 }
 
 export function formatTimer(ms) {
     if (ms <= 0) return "00:00";
-    
+
     // Calculate Hours and Minutes
     const hours = Math.floor(ms / (1000 * 60 * 60));
     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     // Return format HH:MM (e.g., 23:59)
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
