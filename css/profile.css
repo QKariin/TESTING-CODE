@@ -78,7 +78,7 @@
     /* --- DESKTOP GRID LAYOUT --- */
     #DESKTOP_APP {
         display: grid;
-        grid-template-columns: 280px 1fr;
+        grid-template-columns: 420px 1fr;
         grid-template-rows: 100vh;
         background: var(--bg-deep);
         color: white;
@@ -1904,4 +1904,5 @@
             max-width: 180px !important;
             max-height: 180px !important;
         }
-    }}
+    }
+}
