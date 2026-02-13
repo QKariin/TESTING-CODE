@@ -66,21 +66,36 @@ export function getOptimizedUrl(url, width = 400) {
   }
 
   // 3. WIX VECTORS
-  if (url.startsWith("wix:vector://v1/")) {
-    const id = url.split("/")[3].split("#")[0];
-    return `https://static.wixstatic.com/shapes/${id}`;
+  if (url.startsWith("wix:vector://")) {
+    const parts = url.split("/");
+    const id = parts[3] ? parts[3].split("#")[0] : "";
+    if (id) return `https://static.wixstatic.com/shapes/${id}`;
   }
 
-  // 4. WIX IMAGES
-  if (url.startsWith("wix:image://v1/")) {
-    const id = url.split("/")[3].split("#")[0];
-    return `https://static.wixstatic.com/media/${id}/v1/fill/w_${width},h_${width},al_c,q_80,usm_0.66_1.00_0.01,enc_auto/${id}`;
+  // 4. WIX IMAGES (ROBUST REGEX)
+  if (url.startsWith("wix:image://")) {
+    // Expected format: wix:image://v1/<uri>/<filename>#originWidth=...
+    // We just need the <uri> which is usually the 4th segment (index 3)
+    const matches = url.match(/wix:image:\/\/v1\/([^/]+)\//);
+    if (matches && matches[1]) {
+      const id = matches[1];
+      return `https://static.wixstatic.com/media/${id}/v1/fill/w_${width},h_${width},al_c,q_80,usm_0.66_1.00_0.01,enc_auto/file.jpg`;
+    }
+
+    // Fallback: Try simple split if regex fails (e.g. valid v1 but weird filename)
+    const parts = url.split("/");
+    if (parts.length >= 4) {
+      const id = parts[3];
+      return `https://static.wixstatic.com/media/${id}/v1/fill/w_${width},h_${width},al_c,q_80,usm_0.66_1.00_0.01,enc_auto/file.jpg`;
+    }
   }
 
   // 5. WIX VIDEOS
-  if (url.startsWith("wix:video://v1/")) {
-    const id = url.split("/")[3].split("#")[0];
-    return `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
+  if (url.startsWith("wix:video://")) {
+    const matches = url.match(/wix:video:\/\/v1\/([^/]+)\//);
+    if (matches && matches[1]) {
+      return `https://video.wixstatic.com/video/${matches[1]}/mp4/file.mp4`;
+    }
   }
 
   // 6. STANDARD HTTP LINKS → passthrough
