@@ -1111,10 +1111,13 @@ window.addEventListener("message", (event) => {
                     }
                     if (mobPic) mobPic.src = finalUrl;
                     if (mobBg) mobBg.src = finalUrl;
+                    if (mobBg) mobBg.src = finalUrl;
                     if (hudPic) hudPic.src = finalUrl;
 
                     if (typeof userProfile !== 'undefined') userProfile.profilePicture = rawUrl;
                 }
+
+                // ALWAYS UPDATE STATS (Even if photo is missing/removed)
                 updateStats();
 
                 // TRIGGER UI REFRESH
@@ -1228,7 +1231,8 @@ function updateStats() {
 
     // 1. GATEKEEPER: Identity & Photo
     // If these are missing, you ARE Hall Boy, no matter what the DB says (catch latency)
-    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture) {
+    const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
+    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture || userProfile.profilePicture.includes(SILHOUETTE)) {
         visualRank = "Hall Boy";
     }
 
