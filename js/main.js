@@ -1069,7 +1069,12 @@ window.addEventListener("message", (event) => {
                     routine: data.profile.routine,
                     kneelHistory: data.profile.kneelHistory,
                     lastRoutine: confirmedDate,
-                    routineHistory: data.profile.routineHistory // Save full history for display
+                    routineHistory: data.profile.routineHistory, // Save full history for display
+
+                    // NEW: REQUIRED FOR HIERARCHY LOGIC
+                    kinks: data.profile.kinks,
+                    limits: data.profile.limits,
+                    rawImage: data.profile.rawImage
                 });
 
                 if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
