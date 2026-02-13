@@ -1603,7 +1603,9 @@ window.updateHierarchyDrawer = function (currentStreak) {
 
     // Identity Checks (Footman+)
     if (req.name) {
-        const hasName = (userProfile.name && userProfile.name !== 'Slave') || (userProfile.title && userProfile.title !== 'Slave');
+        // Name must exist and NOT be "Slave" or "New Slave" (Case Insensitive)
+        const name = (userProfile.name || userProfile.title || "").trim().toUpperCase();
+        const hasName = (name.length > 0 && name !== "SLAVE" && name !== "NEW SLAVE");
         html += buildCheck("IDENTITY", hasName, SVG_ID, 'name');
     }
     if (req.photo) {
