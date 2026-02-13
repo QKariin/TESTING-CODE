@@ -235,6 +235,40 @@
             /* =========================================
            3. STATS DRAWER (RESTORED)
            ========================================= */
+            .mob-hud-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                padding: 20px;
+                box-sizing: border-box;
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 10;
+            }
+
+            .hud-circle {
+                width: 45px;
+                height: 45px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(5px);
+                cursor: pointer;
+                position: relative;
+            }
+
+            .hud-circle img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 50%;
+            }
+
             .mob-stats-toggle-btn {
                 width: 100%;
                 background: transparent;
@@ -1579,14 +1613,15 @@
 
                     <!-- CONSOLE / CHAT AREA -->
                     <div id="viewServingTop" class="v-card"
-                        style="flex-grow: 1; display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 300px; border-radius: 20px;">
+                        style="flex-grow: 1; display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; height: 100%; border-radius: 20px;">
 
                         <!-- CHAT INTERNAL -->
 
                         <!-- CHAT INTERNAL -->
                         <div id="chatCard" class="chat-container"
-                            style="flex-grow: 1; background: transparent; margin: 0; border: none; border-radius: 0;">
-                            <div id="chatBox" class="chat-body-frame" style="background: transparent;">
+                            style="flex: 1; min-height: 0; background: transparent; margin: 0; border: none; border-radius: 0; display: flex; flex-direction: column;">
+                            <div id="chatBox" class="chat-body-frame"
+                                style="background: transparent; flex: 1; min-height: 0; overflow-y: auto;">
                                 <div id="chatContent" class="chat-area" style="padding: 20px;"></div>
                             </div>
                             <div class="chat-footer"
@@ -1786,7 +1821,7 @@
          DASHBOARD CONTAINER
          ======================================================= -->
         <div id="viewMobileHome"
-            style="position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; display: block; padding: 0; z-index: 1; background: transparent;">
+            style="position: fixed; top: 0; left: 0; width: 100vw; max-width: 100vw; height: 100dvh; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; display: block; padding: 0; z-index: 1; background: transparent;">
 
             <div class="mob-hud-row">
                 <div class="hud-circle slave" onclick="openLobby()">
@@ -2574,6 +2609,10 @@
                 checkDevice();
                 window.addEventListener('resize', checkDevice);
                 window.addEventListener('load', checkDevice);
+            </script>
+            <script type="module">
+                import '../profile/kneeling/kneeling.js';
+                console.log("Kneeling logic loaded explicitly.");
             </script>
 </body>
 
