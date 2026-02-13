@@ -1781,7 +1781,7 @@ window.saveInlineData = async function (type) {
 
     if (type === 'name') {
         const val = document.getElementById('inlineNameInput').value;
-        if (!val) return;
+        if (!val) { if (btn) btn.innerText = "CONFIRM IDENTITY"; return; }
         payload = { type: 'name', value: val, cost: 100 };
     }
 
@@ -1797,7 +1797,13 @@ window.saveInlineData = async function (type) {
         try {
             if (btn) btn.innerText = "UPLOADING...";
             const file = fileInput.files[0];
-            const url = await uploadToBytescale(file);
+
+            // FIX: Pass correct arguments to Bytescale (Subject, File, Folder)
+            const folder = (userProfile.name || "slave").replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
+            const url = await uploadToBytescale("profile", file, folder);
+
+            if (url === "failed") throw new Error("API returned failed");
+
             console.log("Uploaded URL:", url);
             payload = { type: 'photo', value: url, cost: 200 };
         } catch (err) {
