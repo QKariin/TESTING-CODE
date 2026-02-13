@@ -1111,13 +1111,10 @@ window.addEventListener("message", (event) => {
                     }
                     if (mobPic) mobPic.src = finalUrl;
                     if (mobBg) mobBg.src = finalUrl;
-                    if (mobBg) mobBg.src = finalUrl;
                     if (hudPic) hudPic.src = finalUrl;
 
                     if (typeof userProfile !== 'undefined') userProfile.profilePicture = rawUrl;
                 }
-
-                // ALWAYS UPDATE STATS (Even if photo is missing/removed)
                 updateStats();
 
                 // TRIGGER UI REFRESH
@@ -1231,8 +1228,7 @@ function updateStats() {
 
     // 1. GATEKEEPER: Identity & Photo
     // If these are missing, you ARE Hall Boy, no matter what the DB says (catch latency)
-    const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
-    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture || userProfile.profilePicture.includes(SILHOUETTE)) {
+    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture) {
         visualRank = "Hall Boy";
     }
 
@@ -1499,15 +1495,16 @@ window.updateHierarchyDrawer = function (currentStreak) {
     }
 
     // 2. Identify Ranks (Current vs Next)
-    // 2. Identify Ranks (Current vs Next)
     // Normalize string to match config (e.g. "Hall Boy" vs "HallBoy")
     const cleanName = (name) => (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-
-    // USE STRICT VISUAL RANK (Shared Logic)
-    const currentRaw = calculateStrictVisualRank(userProfile);
+    const currentRaw = userProfile.hierarchy || "Hall Boy";
 
     let currentIdx = ranks.findIndex(r => cleanName(r.name) === cleanName(currentRaw));
     if (currentIdx === -1) currentIdx = 0;
+
+    // Define Targets
+    const currentRankObj = ranks[currentIdx];
+    // If max rank, stay on current. Otherwise, look at next.
     const isMax = currentIdx >= ranks.length - 1;
     const nextRankObj = isMax ? currentRankObj : ranks[currentIdx + 1];
 
