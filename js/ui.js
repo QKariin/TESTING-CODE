@@ -39,7 +39,8 @@ export function switchTab(mode) {
     const allViews = [
         'viewServingTop', 'viewNews', 'viewSession',
         'viewVault', 'viewProtocol', 'viewBuy',
-        'viewTribute', 'viewHierarchy', 'viewRewards', 'historySection'
+        'viewTribute', 'viewHierarchy', 'viewRewards', 'historySection',
+        'viewServingTopDesktop'
     ];
 
     allViews.forEach(id => {
@@ -69,8 +70,15 @@ export function switchTab(mode) {
         if (targetEl) {
             targetEl.classList.remove('hidden');
 
-            // New Layout Logic
-            if (['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId)) {
+            // NEW: If we are going to Dashboard, we ALSO show the Chat (viewServingTop)
+            if (targetId === 'viewServingTopDesktop') {
+                targetEl.style.display = 'contents';
+                const chatArea = document.getElementById('viewServingTop');
+                if (chatArea) {
+                    chatArea.classList.remove('hidden');
+                    chatArea.style.display = 'flex';
+                }
+            } else if (['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId)) {
                 targetEl.style.display = 'flex';
                 targetEl.style.flexDirection = 'column';
             } else {
