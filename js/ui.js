@@ -78,7 +78,7 @@ export function switchTab(mode) {
                     chatArea.classList.remove('hidden');
                     chatArea.style.display = 'flex';
                 }
-            } else if (['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId)) {
+            } else if (['viewNews', 'viewVault', 'historySection', 'viewServingTop', 'viewBuy'].includes(targetId)) {
                 targetEl.style.display = 'flex';
                 targetEl.style.flexDirection = 'column';
             } else {
