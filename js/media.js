@@ -41,7 +41,7 @@ export function getThumbnail(url) {
 
   // Only operate on Bytescale URLs
   if (isBytescaleUrl(url)) return getThumbnailBytescale(url);
-  
+
   return url;
 }
 
@@ -92,7 +92,7 @@ export function getOptimizedUrl(url, width = 400) {
 
 export async function getSignedUrl(url) {
   if (!url) return "";
-  
+
   // Only sign Bytescale URLs
   if (isBytescaleUrl(url)) {
     return await getBytescaleSignedUrl(url);
