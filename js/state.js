@@ -35,6 +35,7 @@ export let userProfile = {
     kneelHistory: null,      // For the 24-Square Grid
     routine: "",             // For Daily Routine Logic
     kinks: "",               // For Kink List
+    limits: "",              // For Limits List
     routinestreak: 0,        // For Hierarchy Consistency Check
     rawImage: ""             // For Photo Verification
 };
