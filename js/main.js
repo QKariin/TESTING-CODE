@@ -1452,6 +1452,9 @@ window.addEventListener("message", (event) => {
             // Frontend REWARD_DATA.ranks was Ascending (HallBoy first).
             // WE MUST REVERSE IT!
             REWARD_DATA.ranks.reverse();
+
+            // REFRESH DRAWER IF OPEN (Fix race condition)
+            if (window.updateHierarchyDrawer) window.updateHierarchyDrawer();
         }
     }
 });
@@ -1466,8 +1469,15 @@ window.updateHierarchyDrawer = function (currentStreak) {
     // REWARD_DATA is available in local scope
     if (!container || !window.gameStats) return;
 
-    // 2. Identify Ranks (Current vs Next)
     const ranks = REWARD_DATA.ranks;
+
+    // SAFETY CHECK: IF RANKS NOT LOADED YET (Wait for Backend Message)
+    if (!ranks || ranks.length === 0) {
+        container.innerHTML = '<div style="color:#666; font-size:0.7rem; text-align:center; padding:20px; font-family:"Orbitron";">LOADING HIERARCHY...</div>';
+        return;
+    }
+
+    // 2. Identify Ranks (Current vs Next)
     // Normalize string to match config (e.g. "Hall Boy" vs "HallBoy")
     const cleanName = (name) => (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const currentRaw = userProfile.hierarchy || "Hall Boy";
