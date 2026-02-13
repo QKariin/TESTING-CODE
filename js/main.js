@@ -1586,27 +1586,27 @@ window.updateHierarchyDrawer = function (currentStreak) {
     let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>`;
 
     // Identity Checks (Footman+)
-    if (req.name === true) {
+    if (req.name) {
         const hasName = (userProfile.name && userProfile.name !== 'Slave') || (userProfile.title && userProfile.title !== 'Slave');
         html += buildCheck("IDENTITY", hasName, SVG_ID, 'name');
     }
-    if (req.photo === true) {
+    if (req.photo) {
         // Check RAW image, not the fallback avatar
         const hasPhoto = (userProfile.rawImage && !userProfile.rawImage.includes('default'));
         html += buildCheck("PHOTO", hasPhoto, SVG_PHOTO, 'photo');
     }
 
     // Preference Checks (Silverman+)
-    if (req.limits === true) {
+    if (req.limits) {
         const hasLimits = (userProfile.limits && userProfile.limits.length > 2);
         html += buildCheck("LIMITS", hasLimits, SVG_LIMITS, 'limits');
     }
-    if (req.kinks === true) {
+    if (req.kinks) {
         const hasKinks = ((userProfile.kinks && userProfile.kinks.length > 2) || (userProfile.kink && userProfile.kink.length > 2));
         html += buildCheck("KINKS", hasKinks, SVG_KINKS, 'kinks');
     }
 
-    if (req.routine === true) {
+    if (req.routine) {
         // Check if routine is set (length > 5)
         const hasRoutine = (userProfile.routine && userProfile.routine.length > 5);
         // Using ID SVG as placeholder for Routine/Order
