@@ -1696,55 +1696,6 @@
                         </div>
                     </div>
 
-
-
-                    <!-- EXCHEQUER VIEW (HIDDEN BY DEFAULT, TOGGLED ON CLICK) -->
-                    <div id="viewBuy" class="v-card v-span-4 hidden" style="flex-direction: column; gap: 20px;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-                            <div class="ribbon-label" style="font-size: 1rem; color: var(--gold);">ROYAL EXCHEQUER</div>
-                            <button onclick="window.switchTab('serve')" class="text-btn">CLOSE ✕</button>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                            <!-- SUBSCRIPTION -->
-                            <div class="v-card" style="background: rgba(0,0,0,0.5); text-align: center;">
-                                <div class="ribbon-label">MONTHLY TRIBUTE</div>
-                                <div style="font-size: 2rem; font-family: 'Orbitron'; color: white; margin: 15px 0;">
-                                    $25.00
-                                </div>
-                                <div style="font-size: 0.8rem; color: #888; margin-bottom: 15px;">Active Subscription
-                                </div>
-                                <button class="action-btn" style="font-size: 0.8rem;">MANAGE</button>
-                            </div>
-
-                            <!-- ONE-TIME TRIBUTE -->
-                            <div class="v-card" style="background: rgba(0,0,0,0.5); text-align: center;">
-                                <div class="ribbon-label">SEND GIFT</div>
-                                <div style="margin: 15px 0; color: #ccc; font-size: 0.9rem;">
-                                    Directly contribute to Queen Karin's treasury.
-                                </div>
-                                <button class="action-btn" style="font-size: 0.8rem; width: 100%;">SEND TRIBUTE</button>
-                            </div>
-
-                            <!-- HISTORY -->
-                            <div class="v-card" style="background: rgba(0,0,0,0.5); text-align: center;">
-                                <div class="ribbon-label">TRIBUTE HISTORY</div>
-                                <div
-                                    style="height: 100px; overflow-y: auto; text-align: left; font-size: 0.8rem; color: #888; padding: 10px;">
-                                    <div
-                                        style="display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding: 5px 0;">
-                                        <span>Feb 10</span><span>$25.00</span>
-                                    </div>
-                                    <div
-                                        style="display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding: 5px 0;">
-                                        <span>Jan 10</span><span>$25.00</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- MAIN VIEW STAGE -->
                     <div class="v-span-4" style="display: grid; grid-template-columns: 1fr 350px; gap: 25px;">
 
@@ -1754,8 +1705,6 @@
                             <!-- CONSOLE / CHAT AREA -->
                             <div id="viewServingTop" class="v-card"
                                 style="flex-grow: 1; display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; height: 100%; border-radius: 20px;">
-
-                                <!-- CHAT INTERNAL -->
 
                                 <!-- CHAT INTERNAL -->
                                 <div id="chatCard" class="chat-container"
@@ -1779,95 +1728,6 @@
                                         <button class="chat-btn-send" onclick="sendChatMessage()"
                                             style="background: var(--gold); border-radius: 15px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">></button>
                                     </div>
-                                </div>
-                            </div>
-
-                            <!-- RECORDS VIEW (ALTERNATE TAB) -->
-                            <div id="historySection" class="view-wrapper hidden"
-                                style="background: transparent; height: auto; min-height: 500px;">
-                                <div class="v-card" style="margin-bottom: 20px;">
-                                    <h2 style="font-family: 'Cinzel'; color: var(--gold); text-align: center;">SERVICE
-                                        RECORD
-                                    </h2>
-                                </div>
-
-                                <!-- NEW: STATS SUMMARY INSIDE RECORDS -->
-                                <div
-                                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
-                                    <div class="v-card" style="padding: 15px; text-align: center;">
-                                        <div class="ribbon-label">TOTAL TASKS</div>
-                                        <div id="statTotal"
-                                            style="font-size: 1.5rem; font-family: 'Orbitron'; color: white;">0
-                                        </div>
-                                    </div>
-                                    <div class="v-card" style="padding: 15px; text-align: center;">
-                                        <div class="ribbon-label">SKIPPED</div>
-                                        <div id="statSkipped"
-                                            style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-red);">
-                                            0
-                                        </div>
-                                    </div>
-                                    <div class="v-card" style="padding: 15px; text-align: center;">
-                                        <div class="ribbon-label">KNEELS</div>
-                                        <div id="statTotalKneels"
-                                            style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">
-                                            0
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- TRACKS -->
-                                <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
-                                    <div class="ribbon-label" style="padding: 10px;">ACCEPTED OFFERINGS</div>
-                                    <div id="gridOkay" class="horizontal-scroll-track"
-                                        style="height: 180px; padding-bottom: 10px;">
-                                    </div>
-                                </div>
-                                <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
-                                    <div class="ribbon-label" style="padding: 10px;">PENDING VERDICT</div>
-                                    <div id="gridPending" class="horizontal-scroll-track"
-                                        style="height: 180px; padding-bottom: 10px;"></div>
-                                </div>
-                                <div class="v-card" style="padding: 10px;">
-                                    <div class="ribbon-label" style="padding: 10px;">DENIED / VOIDED</div>
-                                    <div id="gridFailed" class="horizontal-scroll-track"
-                                        style="height: 180px; padding-bottom: 10px;"></div>
-                                </div>
-                            </div>
-
-                            <!-- OTHER VIEWS -->
-                            <div id="viewBuy" class="view-wrapper hidden" style="padding: 0;">
-                                <div class="v-card">
-                                    <h2
-                                        style="text-align: center; color: var(--gold); font-family:'Cinzel'; margin-bottom: 25px;">
-                                        EXCHEQUER</h2>
-                                    <div class="store-grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                                        <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                                            <div style="font-size: 1.2rem; margin-bottom: 10px;">1,000 🪙</div>
-                                            <button class="action-btn" onclick="buyRealCoins(1000)"
-                                                style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€10.00</button>
-                                        </div>
-                                        <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                                            <div style="font-size: 1.2rem; margin-bottom: 10px;">5,500 🪙</div>
-                                            <button class="action-btn" onclick="buyRealCoins(5500)"
-                                                style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€50.00</button>
-                                        </div>
-                                        <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                                            <div style="font-size: 1.2rem; margin-bottom: 10px;">12,000 🪙</div>
-                                            <button class="action-btn" onclick="buyRealCoins(12000)"
-                                                style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€100.00</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="viewNews" class="view-wrapper hidden" style="padding: 0;">
-                                <div class="v-card">
-                                    <h2
-                                        style="font-family:'Cinzel'; color: var(--gold); text-align: center; margin-bottom: 20px;">
-                                        LIBRARY</h2>
-                                    <div id="newsGrid" class="gallery-grid"
-                                        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;"></div>
                                 </div>
                             </div>
 
@@ -1915,7 +1775,60 @@
                     </div> <!-- END MAIN VIEW STAGE -->
                 </div> <!-- END viewServingTopDesktop -->
 
-                <!-- EXCHEQUER VIEW -->
+
+                <!-- MOVED SECTION: RECORDS (Outside Dashboard) -->
+                <div id="historySection" class="view-wrapper hidden v-span-4"
+                    style="background: transparent; height: auto; min-height: 500px;">
+                    <div class="v-card" style="margin-bottom: 20px;">
+                        <h2 style="font-family: 'Cinzel'; color: var(--gold); text-align: center;">SERVICE RECORD</h2>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+                        <div class="v-card" style="padding: 15px; text-align: center;">
+                            <div class="ribbon-label">TOTAL TASKS</div>
+                            <div id="statTotal" style="font-size: 1.5rem; font-family: 'Orbitron'; color: white;">0
+                            </div>
+                        </div>
+                        <div class="v-card" style="padding: 15px; text-align: center;">
+                            <div class="ribbon-label">SKIPPED</div>
+                            <div id="statSkipped"
+                                style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-red);">0</div>
+                        </div>
+                        <div class="v-card" style="padding: 15px; text-align: center;">
+                            <div class="ribbon-label">KNEELS</div>
+                            <div id="statTotalKneels"
+                                style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">0</div>
+                        </div>
+                    </div>
+
+                    <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
+                        <div class="ribbon-label" style="padding: 10px;">ACCEPTED OFFERINGS</div>
+                        <div id="gridOkay" class="horizontal-scroll-track"
+                            style="height: 180px; padding-bottom: 10px;"></div>
+                    </div>
+                    <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
+                        <div class="ribbon-label" style="padding: 10px;">PENDING VERDICT</div>
+                        <div id="gridPending" class="horizontal-scroll-track"
+                            style="height: 180px; padding-bottom: 10px;"></div>
+                    </div>
+                    <div class="v-card" style="padding: 10px;">
+                        <div class="ribbon-label" style="padding: 10px;">DENIED / VOIDED</div>
+                        <div id="gridFailed" class="horizontal-scroll-track"
+                            style="height: 180px; padding-bottom: 10px;"></div>
+                    </div>
+                </div>
+
+                <!-- MOVED SECTION: QUEEN KARIN / NEWS (Outside Dashboard) -->
+                <div id="viewNews" class="view-wrapper hidden v-span-4" style="padding: 0;">
+                    <div class="v-card">
+                        <h2 style="font-family:'Cinzel'; color: var(--gold); text-align: center; margin-bottom: 20px;">
+                            LIBRARY</h2>
+                        <div id="newsGrid" class="gallery-grid"
+                            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;"></div>
+                    </div>
+                </div>
+
+                <!-- EXCHEQUER VIEW (Correct Location: Outside Dashboard) -->
                 <div id="viewBuy" class="v-card v-span-4 hidden" style="flex-direction: column; gap: 20px;">
                     <!-- TITLE -->
                     <div class="ribbon-label" style="align-self: flex-start;">EXCHEQUER & TRIBUTE</div>
@@ -1945,6 +1858,24 @@
                                 style="color: #666; font-size: 0.7rem; font-family: 'Cinzel'; text-align: center; padding: 20px;">
                                 ACCESSING STRIPE CONNECT...
                             </div>
+                        </div>
+                    </div>
+                    <!-- STORE GRID FOR EXCHEQUER -->
+                    <div class="store-grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                        <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                            <div style="font-size: 1.2rem; margin-bottom: 10px;">1,000 🪙</div>
+                            <button class="action-btn" onclick="buyRealCoins(1000)"
+                                style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€10.00</button>
+                        </div>
+                        <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                            <div style="font-size: 1.2rem; margin-bottom: 10px;">5,500 🪙</div>
+                            <button class="action-btn" onclick="buyRealCoins(5500)"
+                                style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€50.00</button>
+                        </div>
+                        <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                            <div style="font-size: 1.2rem; margin-bottom: 10px;">12,000 🪙</div>
+                            <button class="action-btn" onclick="buyRealCoins(12000)"
+                                style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€100.00</button>
                         </div>
                     </div>
                 </div>
