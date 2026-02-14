@@ -1781,13 +1781,19 @@ window.claimPromotion = function (newRank) {
     // 2. Optimistic Update
     userProfile.hierarchy = newRank;
 
-    // 3. Send to Backend
+    // 3. Prevent immediate reversion from backend sync (Wix latency)
+    if (typeof setIgnoreBackendUpdates === 'function') {
+        setIgnoreBackendUpdates(true);
+        setTimeout(() => setIgnoreBackendUpdates(false), 5000);
+    }
+
+    // 4. Send to Backend
     window.parent.postMessage({
         type: "UPDATE_PROFILE",
         payload: { hierarchy: newRank }
     }, "*");
 
-    // 4. Visual Feedback
+    // 5. Visual Feedback
     alert("Congratulations! You have been promoted to " + newRank);
 
     if (window.updateStats) window.updateStats();
