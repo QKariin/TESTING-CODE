@@ -206,7 +206,7 @@
         overflow-x: hidden !important;
         height: 100vh !important;
         width: 100% !important;
-        padding: 10px !important;
+        padding: 10px 40px 10px 10px !important;
         align-content: start !important;
         /* Pack items to top */
     }
