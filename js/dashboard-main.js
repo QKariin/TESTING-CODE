@@ -69,36 +69,47 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- FORCE NAVIGATION LISTENER (DELEGATION) ---
-    // This bypasses inline onclick issues.
+    // Fixes all buttons being "blind" in certain environments
     document.addEventListener('click', (e) => {
-        const item = e.target.closest('.u-item');
-        if (item) {
-            const onclickAttr = item.getAttribute('onclick');
-            if (onclickAttr) {
-                const match = onclickAttr.match(/'([^']+)'/);
-                if (match && match[1]) {
-                    const id = match[1];
-                    console.log("FORCE CLICK DETECTED ON:", id);
-
-                    // 1. FORCE UI SWITCH
+        // 1. Sidebar User Items
+        const uItem = e.target.closest('.u-item');
+        if (uItem) {
+            const id = uItem.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+            if (id) {
+                console.log("FORCE SELECT USER:", id);
+                if (window.selUser) window.selUser(id);
+                else {
+                    // Manual backup
                     document.getElementById('viewHome').style.display = 'none';
                     document.getElementById('viewProfile').style.display = 'none';
                     const vUser = document.getElementById('viewUser');
-                    if (vUser) {
-                        vUser.style.display = 'flex';
-                        vUser.classList.add('active');
-                    }
-
-                    // 2. LOAD DATA
-                    if (window.selUser) {
-                        try {
-                            window.selUser(id);
-                        } catch (err) {
-                            console.error("Data load failed:", err);
-                        }
-                    }
+                    if (vUser) { vUser.style.display = 'flex'; vUser.classList.add('active'); }
                 }
             }
+            return;
+        }
+
+        // 2. Main Sidebar Navigation (DASHBOARD / PROFILE)
+        const navBtn = e.target.closest('.sb-dash-btn');
+        if (navBtn) {
+            const text = navBtn.innerText.toUpperCase();
+            if (text.includes('DASHBOARD')) {
+                console.log("FORCE NAV: HOME");
+                showHome();
+            } else if (text.includes('PROFILE')) {
+                console.log("FORCE NAV: PROFILE");
+                if (window.showProfile) window.showProfile();
+            }
+            return;
+        }
+
+        // 3. Admin Tabs (OPS / INTEL / RECORD)
+        const tabBtn = e.target.closest('.ap-tab');
+        if (tabBtn) {
+            const tabName = tabBtn.innerText.toLowerCase();
+            console.log("FORCE TAB:", tabName);
+            switchAdminTab(tabName);
+            return;
         }
     });
 
@@ -110,17 +121,18 @@ export function showHome() {
     console.log("NAVIGATING TO HOME");
     setCurrId(null);
 
-    document.getElementById('viewUser').style.display = 'none';
-    document.getElementById('viewUser').classList.remove('active');
-
-    document.getElementById('viewProfile').style.display = 'none';
-    document.getElementById('viewProfile').classList.remove('active');
-
-    const vHome = document.getElementById('viewHome');
-    vHome.style.display = 'grid';
-    vHome.classList.add('active');
-
-    renderMainDashboard();
+    // Stop cooldowns if any
+    import('./dashboard-navigation.js').then(nav => {
+        if (nav.showHome) nav.showHome();
+        else {
+            // Backup logic
+            document.getElementById('viewUser').style.display = 'none';
+            document.getElementById('viewUser').classList.remove('active');
+            document.getElementById('viewProfile').style.display = 'none';
+            document.getElementById('viewHome').style.display = 'grid';
+            renderMainDashboard();
+        }
+    });
 }
 window.showHome = showHome;
 
