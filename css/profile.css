@@ -90,19 +90,6 @@
         padding: 0 !important;
     }
 
-    /* --- UTILITIES --- */
-    .hide-scrollbar {
-        -ms-overflow-style: none;
-        /* IE and Edge */
-        scrollbar-width: none;
-        /* Firefox */
-    }
-
-    .hide-scrollbar::-webkit-scrollbar {
-        display: none;
-        /* Chrome, Safari and Opera */
-    }
-
     /* COLUMN 1: SIDEBAR (Full Height) */
     .v-sidebar {
         grid-column: 1 / 2 !important;
@@ -112,9 +99,23 @@
         border-right: 1px solid rgba(255, 255, 255, 0.1);
         display: flex;
         flex-direction: column;
-        padding: 20px;
+        padding: 20px 0 20px 0;
+        /* Vertical padding only, internal area has horizontal */
         overflow: hidden;
         z-index: 100 !important;
+    }
+
+    /* DESKTOP SCROLLBAR HIDING */
+    * {
+        scrollbar-width: none !important;
+        /* Firefox */
+        -ms-overflow-style: none !important;
+        /* IE/Edge */
+    }
+
+    *::-webkit-scrollbar {
+        display: none !important;
+        /* Chrome/Safari */
     }
 
     /* ROW 1: 4 STAT CARDS (Cols 2-5) */
@@ -184,7 +185,17 @@
 
     .v-main-content,
     #viewServingTopDesktop {
-        display: contents !important;
+        grid-column: 2 / 6 !important;
+        grid-row: 1 / 4 !important;
+        display: grid !important;
+        grid-template-columns: repeat(4, 25%) !important;
+        grid-template-rows: repeat(3, auto) !important;
+        /* Allow rows to grow */
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: 100vh !important;
+        width: 100% !important;
+        padding: 5px !important;
     }
 
     /* Fill grid cell minus margins */
