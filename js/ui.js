@@ -69,6 +69,15 @@ export function switchTab(mode) {
         if (targetEl) {
             targetEl.classList.remove('hidden');
 
+            // NEW: Fix Desktop Dashboard (Chat Visibility)
+            if (targetId === 'viewServingTopDesktop') {
+                const chatEl = document.getElementById('viewServingTop');
+                if (chatEl) {
+                    chatEl.classList.remove('hidden');
+                    chatEl.style.display = 'flex';
+                }
+            }
+
             // New Layout Logic
             if (['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId)) {
                 targetEl.style.display = 'flex';
