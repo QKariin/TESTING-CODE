@@ -79,7 +79,7 @@ export function switchTab(mode) {
             }
 
             // New Layout Logic
-            if (['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId)) {
+            if (['viewNews', 'viewVault', 'historySection', 'viewServingTop', 'viewBuy'].includes(targetId)) {
                 targetEl.style.display = 'flex';
                 targetEl.style.flexDirection = 'column';
             } else {
@@ -99,6 +99,9 @@ export function switchTab(mode) {
 
     if ((mode === 'buy' || mode === 'record' || mode === 'history') && window.renderTributeHistory) {
         window.renderTributeHistory();
+        if (mode === 'buy' && typeof renderWishlist === 'function') {
+            renderWishlist();
+        }
     }
 }
 
