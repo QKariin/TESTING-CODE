@@ -1,3 +1,4 @@
+
 /* =========================================
    1. VARIABLES & RESET
    ========================================= */
@@ -88,11 +89,16 @@
         overflow: hidden;
     }
 
-   .v-sidebar {
-    grid-column: 1 / 2;
-    grid-row: 1 / 4; 
-    height: 100%;
-}
+    .v-sidebar {
+        padding: 20px;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        flex-shrink: 0;
+        overflow-y: auto;
+        /* Allow sidebar scrolling if needed */
+    }
 
     .v-main-content {
         padding: 0;
@@ -148,100 +154,21 @@
     }
 
     /* WE WRAP CONTENT IN A GRID TO CENTER IT */
-    /* =========================================
-   PERFECT SCREEN GRID (AUTO SIZE)
-   ========================================= */
-
-/* 1. THE MAIN GRID CONTAINER */
-.desktop-grid-wrapper {
-    display: grid;
-    /* 5 Columns: 20% each */
-    grid-template-columns: 20% 20% 20% 20% 20%; 
-    /* 3 Rows: 20%, 30%, 50% height */
-    grid-template-rows: 20vh 30vh 50vh; 
-    
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden; /* No scrolling on the main page */
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    gap: 10px; /* Space between boxes */
-    box-sizing: border-box;
-}
-
-/* 2. IGNORE THE INVISIBLE WRAPPERS */
-/* This is crucial. It unwraps your nested divs so the grid sees the cards directly. */
-#viewServingTopDesktop, 
-.v-span-4 {
-    display: contents; 
-}
-
-/* =========================================
-   PLACEMENT MAPPING (MATCHING YOUR NAMES)
-   ========================================= */
-
-/* --- COLUMN 1: MENU (20% Width, 100% Height) --- */
-.v-sidebar {
-    grid-column: 1 / 2;
-    grid-row: 1 / 4; /* Spans Top to Bottom */
-    height: 100%;
-}
-
-/* --- ROW 1: 4 STAT CARDS (20% Height) --- */
-/* Each card takes 1 slot (25% of the remaining space) */
-.v-stat-card {
-    grid-row: 1 / 2;
-    /* No specific column set, they will auto-fill slots 2, 3, 4, 5 */
-    min-height: 0; /* Prevents overflow */
-}
-
-/* --- ROW 2: HERO & ACTION (30% Height) --- */
-
-/* Hero Card (Welcome Back) - Takes 50% of right area */
-#viewServingTopDesktop > .v-card.v-span-2:first-of-type {
-    grid-row: 2 / 3;
-    grid-column: 2 / 4; /* Spans 2 columns */
-    min-height: 0;
-}
-
-/* Task Panel - Takes 50% of right area */
-#taskActionPanel {
-    grid-row: 2 / 3;
-    grid-column: 4 / 6; /* Spans 2 columns */
-    min-height: 0;
-}
-
-/* --- ROW 3: CHAT & RIGHT ITEMS (50% Height) --- */
-
-/* Chat Area - Takes 50% of right area */
-#viewServingTop {
-    grid-row: 3 / 4;
-    grid-column: 2 / 4; /* Spans 2 columns */
-    min-height: 0;
-    height: 100%;
-}
-
-/* The Right Sidebar Container - Takes remaining 50% */
-/* We turn this into a SUB-GRID to get your "2x25%" request */
-.v-span-1 {
-    grid-row: 3 / 4;
-    grid-column: 4 / 6; /* Spans 2 columns */
-    
-    /* Internal Layout for the 2 items */
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Split into 25% and 25% */
-    grid-template-rows: 100%;
-    gap: 10px;
-    height: 100%;
-    overflow: hidden;
-}
-
-/* Ensure children of the right sidebar fill their height */
-.v-span-1 > .v-card {
-    height: 100%;
-    overflow-y: auto; /* Allow internal scrolling if needed */
-}
+    .desktop-grid-wrapper {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-auto-rows: min-content;
+        gap: 25px;
+        width: 100% !important;
+        /* FULL WIDTH - FORCED */
+        min-width: 1800px;
+        /* MINIMUM WIDTH TO MATCH TASK-ACTIVE STATE */
+        padding: 0 40px;
+        /* HORIZONTAL PADDING FOR BREATHING ROOM */
+        margin: 0 auto;
+        /* CENTER THE WRAPPER */
+        box-sizing: border-box;
+    }
 
     .nav-menu {
         display: flex;
