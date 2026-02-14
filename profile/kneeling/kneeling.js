@@ -1,6 +1,5 @@
-// kneeling.js - FINAL TWIN SYNC (FIXED IDS)
+// kneeling.js - RESTORED MOBILE FEEL + DESKTOP SUPPORT
 
-// 1. PATHS
 import { 
     isLocked, lastWorshipTime, COOLDOWN_MINUTES, gameStats, ignoreBackendUpdates, userProfile
 } from '../../js/state.js'; 
@@ -18,18 +17,18 @@ const REQUIRED_HOLD_TIME = 2000;
 export function handleHoldStart(e) {
     if (isLocked) return;
     
-    // Safety check for event
-    if (e && e.cancelable && e.type !== 'touchstart') {
+    // CRITICAL FIX: Always prevent default to stop text selection/context menu on mobile
+    if (e) {
         e.preventDefault();
         e.stopPropagation();
     }
 
-    // --- TARGETS (UPDATED TO MATCH HTML) ---
-    // Desktop Targets
-    const deskFill = document.getElementById('heroKneelFill'); // WAS 'fill'
-    const deskText = document.getElementById('heroKneelText'); // WAS 'txt-main'
+    // --- GET TARGETS ---
+    // 1. Desktop
+    const deskFill = document.getElementById('heroKneelFill');
+    const deskText = document.getElementById('heroKneelText');
     
-    // Mobile Targets
+    // 2. Mobile
     const mobFill = document.getElementById('mob_kneelFill');
     const mobText = document.getElementById('mob_kneelText'); 
     const mobBar = document.querySelector('.mob-kneel-zone');
@@ -57,7 +56,11 @@ export function handleHoldStart(e) {
 
 // --- 2. HOLD END ---
 export function handleHoldEnd(e) {
-    if(e && e.type !== 'touchend') e.preventDefault();
+    // CRITICAL FIX: Prevent default to stop ghost clicks
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
 
     if (isLocked) {
         if (holdTimer) clearTimeout(holdTimer);
@@ -105,19 +108,16 @@ function completeKneelAction() {
 
     window.parent.postMessage({ type: "FINISH_KNEELING" }, "*");
 
-    // Trigger visual updates immediately
     updateKneelingStatus(); 
 
-    // --- SHOW REWARDS ---
-    
-    // 1. Desktop Reward Overlay
+    // SHOW DESKTOP REWARD (Jailed)
     const deskReward = document.getElementById('kneelRewardOverlay');
     if (deskReward) {
         deskReward.classList.remove('hidden');
         deskReward.style.display = 'flex';
     }
 
-    // 2. Mobile Reward Overlay
+    // SHOW MOBILE REWARD (Full Screen)
     const mobReward = document.getElementById('mobKneelReward');
     if (mobReward) {
         mobReward.classList.remove('hidden');
@@ -128,7 +128,7 @@ function completeKneelAction() {
     setTimeout(() => { setIgnoreBackendUpdates(false); }, 15000);
 }
 
-// --- 4. STATUS SYNC (UPDATED) ---
+// --- 4. STATUS SYNC ---
 export function updateKneelingStatus() {
     const now = Date.now();
     
@@ -145,7 +145,7 @@ export function updateKneelingStatus() {
     const diffMs = now - lastWorshipTime;
     const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
 
-    // A. LOCKED STATE (Cooldown Active)
+    // A. LOCKED STATE
     if (lastWorshipTime > 0 && diffMs < cooldownMs) {
         setIsLocked(true);
         const minLeft = Math.ceil((cooldownMs - diffMs) / 60000);
@@ -172,7 +172,7 @@ export function updateKneelingStatus() {
             }
         }
     } 
-    // B. UNLOCKED STATE (Ready)
+    // B. UNLOCKED STATE
     else if (!holdTimer) { 
         setIsLocked(false);
         
@@ -213,7 +213,6 @@ export function claimKneelReward(choice) {
     triggerSound('coinSound');
     triggerCoinShower();
 
-    // Send to Backend
     window.parent.postMessage({ 
         type: "CLAIM_KNEEL_REWARD", 
         rewardType: choice,
@@ -233,7 +232,7 @@ function triggerCoinShower() {
     }
 }
 
-// SELF-REGISTER GLOBAL FUNCTIONS
+// SELF-REGISTER
 window.handleHoldStart = handleHoldStart;
 window.handleHoldEnd = handleHoldEnd;
 window.claimKneelReward = claimKneelReward;
