@@ -90,6 +90,19 @@
         padding: 0 !important;
     }
 
+    /* --- UTILITIES --- */
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+        /* Chrome, Safari and Opera */
+    }
+
     /* COLUMN 1: SIDEBAR (Full Height) */
     .v-sidebar {
         grid-column: 1 / 2 !important;
