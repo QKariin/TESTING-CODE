@@ -1606,7 +1606,7 @@ window.updateHierarchyDrawer = function (currentStreak) {
     const elements = {
         currentName: [document.getElementById('drawer_CurrentRank'), document.getElementById('desk_CurrentRank'), document.getElementById('desk_DashboardRank')],
         currentBen: [document.getElementById('drawer_CurrentBenefits'), document.getElementById('desk_CurrentBenefits')],
-        nextName: [document.getElementById('drawer_NextRank'), document.getElementById('desk_NextRank')],
+        nextName: [document.getElementById('drawer_NextRank'), document.getElementById('desk_NextRank'), document.getElementById('desk_WorkingOnRank')],
         nextBenList: [document.getElementById('drawer_NextBenefits'), document.getElementById('desk_NextBenefits')]
     };
 
