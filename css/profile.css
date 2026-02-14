@@ -99,10 +99,11 @@
         border-right: 1px solid rgba(255, 255, 255, 0.1);
         display: flex;
         flex-direction: column;
-        padding: 20px 0 20px 0;
-        /* Vertical padding only, internal area has horizontal */
+        padding: 20px 0 0 0;
+        /* Header stays at top, internal area scrolls */
         overflow: hidden;
         z-index: 100 !important;
+        height: 100vh !important;
     }
 
     /* DESKTOP SCROLLBAR HIDING */
@@ -118,46 +119,46 @@
         /* Chrome/Safari */
     }
 
-    /* ROW 1: 4 STAT CARDS (Cols 2-5) */
+    /* ROW 1: 4 STAT CARDS (Cols 1-4 of Sub-Grid) */
     #gridStat1 {
-        grid-column: 2 / 3 !important;
+        grid-column: 1 / 2 !important;
         grid-row: 1 / 2 !important;
     }
 
     #gridStat2 {
-        grid-column: 3 / 4 !important;
+        grid-column: 2 / 3 !important;
         grid-row: 1 / 2 !important;
     }
 
     #gridStat3 {
-        grid-column: 4 / 5 !important;
+        grid-column: 3 / 4 !important;
         grid-row: 1 / 2 !important;
     }
 
     #gridStat4 {
-        grid-column: 5 / 6 !important;
+        grid-column: 4 / 5 !important;
         grid-row: 1 / 2 !important;
     }
 
-    /* ROW 2: HERO & TASK (Cols 2-3 and 4-5) */
+    /* ROW 2: HERO & TASK (Cols 1-2 and 3-4 of Sub-Grid) */
     #gridHero {
-        grid-column: 2 / 4 !important;
+        grid-column: 1 / 3 !important;
         grid-row: 2 / 3 !important;
     }
 
     #gridTask {
-        grid-column: 4 / 6 !important;
+        grid-column: 3 / 5 !important;
         grid-row: 2 / 3 !important;
     }
 
-    /* ROW 3: CHAT & RIGHT SECTION (Cols 2-3 and 4-5) */
+    /* ROW 3: CHAT & RIGHT SECTION (Cols 1-2 and 3-4 of Sub-Grid) */
     #viewServingTop {
-        grid-column: 2 / 4 !important;
+        grid-column: 1 / 3 !important;
         grid-row: 3 / 4 !important;
     }
 
     #gridRightSection {
-        grid-column: 4 / 6 !important;
+        grid-column: 3 / 5 !important;
         grid-row: 3 / 4 !important;
     }
 
@@ -178,9 +179,13 @@
     .serve-grid-item {
         margin: 10px !important;
         box-sizing: border-box !important;
-        height: calc(100% - 20px) !important;
+        height: auto !important;
+        /* Allow growth */
+        min-height: 150px;
+        /* Base height */
         width: calc(100% - 20px) !important;
-        overflow: hidden !important;
+        overflow: visible !important;
+        /* Allow content to push height */
     }
 
     .v-main-content,
@@ -189,13 +194,16 @@
         grid-row: 1 / 4 !important;
         display: grid !important;
         grid-template-columns: repeat(4, 25%) !important;
-        grid-template-rows: repeat(3, auto) !important;
-        /* Allow rows to grow */
+        grid-template-rows: auto auto auto !important;
+        /* Natural growth */
+        grid-auto-rows: auto !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         height: 100vh !important;
         width: 100% !important;
-        padding: 5px !important;
+        padding: 10px !important;
+        align-content: start !important;
+        /* Pack items to top */
     }
 
     /* Fill grid cell minus margins */
