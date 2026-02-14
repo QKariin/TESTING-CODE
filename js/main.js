@@ -22,13 +22,13 @@ import {
     setCurrentHistoryIndex, setTouchStartX, setIsLocked, setCooldownInterval, setActiveRevealMap, setVaultItems, setCurrentLibraryMedia, setLibraryProgressIndex
 } from './state.js';
 import { renderRewardGrid, runTargetingAnimation } from '../profile/kneeling/reward.js';
-import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from '../profile/kneeling/kneeling.js';
 import { triggerSound, migrateGameStatsToStats } from './utils.js';
 import { switchTab, toggleStats, openSessionUI, closeSessionUI, updateSessionCost, toggleSection, renderDomVideos, renderNews, renderWishlist } from './ui.js';
 import { getRandomTask, restorePendingUI, finishTask, cancelPendingTask, resetTaskDisplay } from './tasks.js';
 import { renderChat, sendChatMessage, handleChatKey, sendCoins, loadMoreChat, openChatPreview, closeChatPreview, forceBottom } from './chat.js';
 import { renderGallery, loadMoreHistory, initModalSwipeDetection, closeModal, toggleHistoryView, openHistoryModal, openModal } from './gallery.js';
 import { handleEvidenceUpload, handleProfileUpload, handleAdminUpload } from './uploads.js';
+import { handleHoldStart, handleHoldEnd, claimKneelReward, updateKneelingStatus } from '../profile/kneeling/kneeling.js';
 import { Bridge } from './bridge.js';
 import { getOptimizedUrl } from './media.js';
 import { uploadToBytescale } from './mediaBytescale.js';
@@ -69,19 +69,7 @@ if (window.location.hostname === "127.0.0.1" ||
 
         // Update dashboard displays (routine, etc.)
         if (window.syncMobileDashboard) window.syncMobileDashboard();
-
-        // --- MOCK HIERARCHY DATA FOR PREVIEW ---
-        if (typeof REWARD_DATA !== 'undefined' && REWARD_DATA.ranks.length === 0) {
-            REWARD_DATA.ranks = [
-                { name: "Hall Boy", benefits: ["Minimal existence", "Silent service"], req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 } },
-                { name: "Footman", benefits: ["Basic Identity", "Manual Labor access"], req: { tasks: 10, kneels: 5, points: 50, spent: 10, streak: 1, name: true, photo: true } },
-                { name: "Evaluator", benefits: ["Advanced Dashboard", "Rank Metrics"], req: { tasks: 30, kneels: 15, points: 200, spent: 50, streak: 3, name: true, photo: true } },
-                { name: "Silverman", benefits: ["Private Audience", "Digital Presence"], req: { tasks: 100, kneels: 50, points: 1000, spent: 500, streak: 7, limits: true, kinks: true, routine: true } }
-            ].map(r => ({ ...r, icon: '<svg viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg>' }));
-
-            if (window.updateHierarchyDrawer) window.updateHierarchyDrawer();
-        }
-    }, 500); // Wait a bit longer for everything to be ready
+    }, 100);
 }
 
 const KINK_LIST = [
@@ -1225,23 +1213,6 @@ window.handleUploadStart = function (inputElement) {
     }
 };
 
-// --- FORCE NAVIGATION LISTENER (DELEGATION) ---
-// Ensures that all navigation buttons switch views even if inline handlers fail.
-document.addEventListener('click', (e) => {
-    const navBtn = e.target.closest('.nav-btn');
-    if (navBtn) {
-        const onclickAttr = navBtn.getAttribute('onclick') || "";
-        const match = onclickAttr.match(/switchTab\('([^']+)'\)/);
-        if (match && match[1]) {
-            const mode = match[1];
-            console.log("FORCE NAVIGATING TO:", mode);
-            if (typeof switchTab === 'function') {
-                switchTab(mode);
-            }
-        }
-    }
-});
-
 window.switchTab = switchTab;
 window.toggleStats = toggleStats;
 window.openSessionUI = openSessionUI;
@@ -1286,16 +1257,15 @@ function updateStats() {
     // Start with what the DB says
     let visualRank = userProfile.hierarchy || "Hall Boy";
 
-    // 1. GATEKEEPER: Identity & Photo (MODIFIED FOR PREVIEW)
-    // We no longer degrade to Hall Boy if name or photo are missing
+    // 1. GATEKEEPER: Identity & Photo
+    // If these are missing, you ARE Hall Boy, no matter what the DB says (catch latency)
+    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture) {
+        visualRank = "Hall Boy";
+    }
 
-    // if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture) {
-    //     visualRank = "Hall Boy";
-    // }
-
-    // 2. GATEKEEPER: Preferences (MODIFIED FOR PREVIEW)
-    // We no longer degrade based on kinks/limits missing
-    /*
+    // 2. GATEKEEPER: Preferences (Silverman+)
+    // If you are visually marked as Silverman+, but have no Kinks, degrade to Footman visually
+    // (This hides the rank until they fix it)
     const dbRankLower = visualRank.toLowerCase().replace(/[^a-z0-9]/g, "");
     const isAboveFootman = dbRankLower !== "hallboy" && dbRankLower !== "footman";
 
@@ -1307,7 +1277,6 @@ function updateStats() {
             visualRank = "Footman";
         }
     }
-    */
 
     // 3. NO OPTIMISTIC PROMOTION. 
     // We strictly follow the backend, only applying local degradation for instant feedback.
@@ -1567,12 +1536,9 @@ window.updateHierarchyDrawer = function (currentStreak) {
     // BLOCK IF EDITING (Fix disappearing overlay)
     if (window.isEditingProfile === true) return;
 
-    const mobContainer = document.getElementById('drawer_ProgressContainer');
-    const deskContainer = document.getElementById('desk_ProgressContainer');
+    const container = document.getElementById('drawer_ProgressContainer');
     // REWARD_DATA is available in local scope
-    if ((!mobContainer && !deskContainer) || !window.gameStats) return;
-
-    const container = mobContainer || deskContainer; // Reference for legacy checks
+    if (!container || !window.gameStats) return;
 
     const ranks = REWARD_DATA.ranks;
 
@@ -1620,24 +1586,27 @@ window.updateHierarchyDrawer = function (currentStreak) {
     const nextRankObj = isMax ? currentRankObj : ranks[currentIdx + 1];
 
     // 3. Update Text Headers
-    const updateStatEls = (idSuffix, value, isHTML = false) => {
-        ['drawer_', 'desk_'].forEach(prefix => {
-            const el = document.getElementById(prefix + idSuffix);
-            if (el) {
-                if (isHTML) el.innerHTML = value;
-                else el.innerText = value;
-            }
-        });
-    };
+    const elCurrentName = document.getElementById('drawer_CurrentRank');
+    const elCurrentBen = document.getElementById('drawer_CurrentBenefits');
+    const elNextName = document.getElementById('drawer_NextRank');
+    const elNextBenList = document.getElementById('drawer_NextBenefits');
 
-    updateStatEls('CurrentRank', currentRankObj.name);
-    updateStatEls('CurrentBenefits', currentRankObj.benefits.map(b => `<div style="margin-bottom:4px;">${b}</div>`).join(''), true);
-    updateStatEls('NextRank', isMax ? "MAXIMUM RANK" : nextRankObj.name);
+    if (elCurrentName) elCurrentName.innerText = currentRankObj.name;
+    if (elCurrentBen) {
+        elCurrentBen.innerHTML = currentRankObj.benefits.map(b => `<div style="margin-bottom:4px;">${b}</div>`).join('');
+    }
 
-    if (isMax) {
-        updateStatEls('NextBenefits', "<li>You have reached the apex of servitude.</li>", true);
-    } else {
-        updateStatEls('NextBenefits', nextRankObj.benefits.map(b => `<li>${b}</li>`).join(''), true);
+    if (elNextName) {
+        elNextName.innerText = isMax ? "MAXIMUM RANK" : nextRankObj.name;
+        elNextName.style.color = isMax ? "#c5a059" : "#c5a059"; // Gold
+    }
+
+    if (elNextBenList) {
+        if (isMax) {
+            elNextBenList.innerHTML = "<li>You have reached the apex of servitude.</li>";
+        } else {
+            elNextBenList.innerHTML = nextRankObj.benefits.map(b => `<li>${b}</li>`).join('');
+        }
     }
 
     // 4. Calculate Stats (Consolidated)
@@ -1680,13 +1649,13 @@ window.updateHierarchyDrawer = function (currentStreak) {
 
     const buildCheck = (label, isMet, iconSvg, type) => {
         const statusColor = isMet ? "#00ff00" : "#ff4444";
-        const statusText = isMet ? "VERIFIED" : ""; // Removed MISSING text
+        const statusText = isMet ? "VERIFIED" : "MISSING";
         const iconColor = isMet ? "#00ff00" : "#888"; // Grey if missing, Green if done
 
         // USER APP: ADD BUTTONS ARE REQUIRED
         let actionBtn = "";
         if (!isMet && !isMax) {
-            actionBtn = `<span onclick="window.openDataEntry('${type}')" style="cursor:pointer; color:#000; background:var(--gold); font-size:0.55rem; padding:3px 8px; border-radius:4px; margin-left:8px; font-weight:bold; box-shadow:0 0 10px rgba(197,160,89,0.2);">update info</span>`;
+            actionBtn = `<span onclick="window.openDataEntry('${type}')" style="cursor:pointer; color:#ffd700; font-size:0.6rem; border:1px solid #ffd700; padding:2px 6px; border-radius:4px; margin-left:8px;">ADD</span>`;
         }
 
         return `
@@ -1696,7 +1665,7 @@ window.updateHierarchyDrawer = function (currentStreak) {
                 <span>${label}</span>
             </div>
             <div style="display:flex; align-items:center;">
-                <span style="color:${statusColor}; letter-spacing:1px;">${statusText}</span>
+                <span style="color:${statusColor}; letter-spacing:1px;">${statusText} ${isMet ? '✅' : '❌'}</span>
                 ${actionBtn}
             </div>
         </div>`;
@@ -1762,10 +1731,7 @@ window.updateHierarchyDrawer = function (currentStreak) {
 
     // DEBUG INFO REMOVED
 
-    // 6. FINAL INJECTION
-    const finalHtml = html + `<div id="inlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;
-    if (mobContainer) mobContainer.innerHTML = finalHtml;
-    if (deskContainer) deskContainer.innerHTML = finalHtml;
+    container.innerHTML = html + `<div id="inlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;
 };
 
 

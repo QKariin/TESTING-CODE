@@ -37,7 +37,7 @@ export function getRandomTask() {
 
         restorePendingUI();
         if (window.updateTaskUIState) window.updateTaskUIState(true);
-        // Popup removed as requested
+        if (window.toggleTaskDetails) window.toggleTaskDetails(true);
 
         console.log("⚠️ PREVIEW MODE: Mock task assigned");
         return;
@@ -66,7 +66,7 @@ export function getRandomTask() {
 
     restorePendingUI();
     if (window.updateTaskUIState) window.updateTaskUIState(true);
-    // Popup removed as requested
+    if (window.toggleTaskDetails) window.toggleTaskDetails(true);
 
     window.parent.postMessage({ type: "savePendingState", pendingState: newPendingState, consumeQueue: true }, "*");
     setTimeout(() => { setIgnoreBackendUpdates(false); }, 5000);

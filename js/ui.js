@@ -35,12 +35,11 @@ export function switchTab(mode) {
         });
     }
 
-    // 4. Hide all views and grid items
+    // 4. Hide all views
     const allViews = [
-        'viewNews', 'viewSession',
+        'viewServingTop', 'viewNews', 'viewSession',
         'viewVault', 'viewProtocol', 'viewBuy',
-        'viewTribute', 'viewHierarchy', 'viewRewards', 'historySection',
-        'viewServingTopDesktop'
+        'viewTribute', 'viewHierarchy', 'viewRewards', 'historySection'
     ];
 
     allViews.forEach(id => {
@@ -51,23 +50,16 @@ export function switchTab(mode) {
         }
     });
 
-    // Also hide serve-specific grid items
-    const gridItems = document.querySelectorAll('.serve-grid-item');
-    gridItems.forEach(item => {
-        item.classList.add('hidden');
-        item.style.display = 'none';
-    });
-
     // 5. THE CLEAN VIEW MAP
     const viewMap = {
-        'serve': 'viewServingTopDesktop',
+        'serve': (document.getElementById('viewServingTopDesktop') ? 'viewServingTopDesktop' : 'viewServingTop'),
         'news': 'viewNews',
         'session': 'viewSession',
         'rewards': 'viewVault',
         'protocol': 'viewProtocol',
         'buy': 'viewBuy',
         'history': 'historySection',
-        'record': 'historySection',
+        'record': 'historySection', // FIX: Button calls 'record', not 'history'
         'vault': 'viewVault'
     };
 
@@ -77,19 +69,8 @@ export function switchTab(mode) {
         if (targetEl) {
             targetEl.classList.remove('hidden');
 
-            if (mode === 'serve') {
-                // Show the grid wrapper
-                targetEl.style.display = 'contents';
-                gridItems.forEach(item => {
-                    item.classList.remove('hidden');
-                    // Special case for chat which needs flex
-                    if (item.id === 'viewServingTop' || item.id === 'gridRightSection') {
-                        item.style.display = 'flex';
-                    } else {
-                        item.style.display = 'block';
-                    }
-                });
-            } else if (targetEl.classList.contains('alt-grid-view') || ['viewNews', 'viewVault', 'historySection', 'viewServingTop', 'viewBuy'].includes(targetId)) {
+            // New Layout Logic
+            if (['viewNews', 'viewVault', 'historySection', 'viewServingTop'].includes(targetId)) {
                 targetEl.style.display = 'flex';
                 targetEl.style.flexDirection = 'column';
             } else {
