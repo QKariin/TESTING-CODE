@@ -1,3 +1,4 @@
+
 // kneeling.js - FINAL TWIN SYNC (DESKTOP + MOBILE REWARDS)
 
 // 1. PATHS
@@ -23,9 +24,9 @@ export function handleHoldStart(e) {
         e.stopPropagation();
     }
 
-    // DESKTOP TARGETS (Updated IDs to match your HTML)
-    const fill = document.getElementById('heroKneelFill');
-    const txtMain = document.getElementById('heroKneelText');
+    // DESKTOP TARGETS
+    const fill = document.getElementById('fill');
+    const txtMain = document.getElementById('txt-main');
     
     // MOBILE TARGETS
     const mobFill = document.getElementById('mob_kneelFill');
@@ -68,8 +69,8 @@ export function handleHoldEnd(e) {
         holdTimer = null;
         
         // RESET DESKTOP
-        const fill = document.getElementById('heroKneelFill');
-        const txtMain = document.getElementById('heroKneelText');
+        const fill = document.getElementById('fill');
+        const txtMain = document.getElementById('txt-main');
         if (fill) {
             fill.style.transition = "width 0.3s ease"; 
             fill.style.width = "0%";
@@ -85,7 +86,7 @@ export function handleHoldEnd(e) {
             mobFill.style.transition = "width 0.3s ease";
             mobFill.style.width = "0%";
         }
-        if (mobText) mobText.innerText = "HOLD TO KNEEL";
+        if (mobText) mobText.innerText = "HOLD";
         if (mobBar) mobBar.style.borderColor = "#c5a059"; 
     }
 }
@@ -133,10 +134,10 @@ export function updateKneelingStatus() {
     const idEl = document.getElementById('dailyRandomId');
     if (idEl) idEl.innerText = "#" + dayCode;
 
-    // DESKTOP (Updated IDs)
-    const btn = document.getElementById('heroKneelBtn');
-    const txtMain = document.getElementById('heroKneelText');
-    const fill = document.getElementById('heroKneelFill');
+    // DESKTOP
+    const btn = document.getElementById('btn');
+    const txtMain = document.getElementById('txt-main');
+    const fill = document.getElementById('fill');
     const txtSub = document.getElementById('txt-sub');
     
     // MOBILE
