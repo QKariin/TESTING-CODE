@@ -1201,6 +1201,13 @@ window.addEventListener("message", (event) => {
                 });
             });
         }
+
+        // Trigger initial render of classification for desktop/mobile
+        if (window.updateHierarchyDrawer) {
+            // Approximate streak from gallery data if available
+            const streak = (gameStats.routineHistory ? JSON.parse(gameStats.routineHistory).hours?.length || 0 : 0);
+            window.updateHierarchyDrawer(streak);
+        }
     } catch (err) { console.error("Main error:", err); }
 });
 
@@ -1282,12 +1289,17 @@ function updateStats() {
     // We strictly follow the backend, only applying local degradation for instant feedback.
 
     // Update Basic Desktop Elements
-    subName.textContent = userProfile.name || "Slave";
+    if (subName) subName.textContent = userProfile.name || "Slave";
     if (subHierarchy) subHierarchy.textContent = visualRank; // VISUAL PROMOTION
     if (coinsEl) coinsEl.textContent = gameStats.coins ?? 0;
     if (pointsEl) pointsEl.textContent = gameStats.points ?? 0;
 
     // --- CONNECT DESKTOP EXPANDED STATS ---
+    const meritEl = document.getElementById('sidebarMerit');
+    const netEl = document.getElementById('sidebarNet');
+    if (meritEl) meritEl.textContent = gameStats.points ?? 0;
+    if (netEl) netEl.textContent = gameStats.coins ?? 0;
+
     if (document.getElementById('statStreak')) document.getElementById('statStreak').innerText = gameStats.taskdom_streak || 0;
     if (document.getElementById('statTotal')) document.getElementById('statTotal').innerText = gameStats.taskdom_total_tasks || 0;
     if (document.getElementById('statCompleted')) document.getElementById('statCompleted').innerText = gameStats.taskdom_completed || 0;
@@ -1539,14 +1551,18 @@ window.updateHierarchyDrawer = function (currentStreak) {
     if (window.isEditingProfile === true) return;
 
     const container = document.getElementById('drawer_ProgressContainer');
+    const deskContainer = document.getElementById('desk_ProgressContainer');
     // REWARD_DATA is available in local scope
-    if (!container || !window.gameStats) return;
+    if (!container && !deskContainer) return;
+    if (!window.gameStats) return;
 
     const ranks = REWARD_DATA.ranks;
 
     // SAFETY CHECK: IF RANKS NOT LOADED YET (Wait for Backend Message)
     if (!ranks || ranks.length === 0) {
-        container.innerHTML = '<div style="color:#666; font-size:0.7rem; text-align:center; padding:20px; font-family:"Orbitron";">LOADING HIERARCHY...</div>';
+        const loadingHtml = '<div style="color:#666; font-size:0.7rem; text-align:center; padding:20px; font-family:"Orbitron";">LOADING HIERARCHY...</div>';
+        if (container) container.innerHTML = loadingHtml;
+        if (deskContainer) deskContainer.innerHTML = loadingHtml;
         return;
     }
 
@@ -1587,29 +1603,34 @@ window.updateHierarchyDrawer = function (currentStreak) {
     const isMax = currentIdx >= ranks.length - 1;
     const nextRankObj = isMax ? currentRankObj : ranks[currentIdx + 1];
 
-    // 3. Update Text Headers
-    const elCurrentName = document.getElementById('drawer_CurrentRank');
-    const elCurrentBen = document.getElementById('drawer_CurrentBenefits');
-    const elNextName = document.getElementById('drawer_NextRank');
-    const elNextBenList = document.getElementById('drawer_NextBenefits');
+    const elements = {
+        currentName: [document.getElementById('drawer_CurrentRank'), document.getElementById('desk_CurrentRank'), document.getElementById('desk_DashboardRank')],
+        currentBen: [document.getElementById('drawer_CurrentBenefits'), document.getElementById('desk_CurrentBenefits')],
+        nextName: [document.getElementById('drawer_NextRank'), document.getElementById('desk_NextRank')],
+        nextBenList: [document.getElementById('drawer_NextBenefits'), document.getElementById('desk_NextBenefits')]
+    };
 
-    if (elCurrentName) elCurrentName.innerText = currentRankObj.name;
-    if (elCurrentBen) {
-        elCurrentBen.innerHTML = currentRankObj.benefits.map(b => `<div style="margin-bottom:4px;">${b}</div>`).join('');
-    }
+    elements.currentName.forEach(el => { if (el) el.innerText = currentRankObj.name; });
+    elements.currentBen.forEach(el => {
+        if (el) el.innerHTML = currentRankObj.benefits.map(b => `<div style="margin-bottom:4px;">${b}</div>`).join('');
+    });
 
-    if (elNextName) {
-        elNextName.innerText = isMax ? "MAXIMUM RANK" : nextRankObj.name;
-        elNextName.style.color = isMax ? "#c5a059" : "#c5a059"; // Gold
-    }
-
-    if (elNextBenList) {
-        if (isMax) {
-            elNextBenList.innerHTML = "<li>You have reached the apex of servitude.</li>";
-        } else {
-            elNextBenList.innerHTML = nextRankObj.benefits.map(b => `<li>${b}</li>`).join('');
+    elements.nextName.forEach(el => {
+        if (el) {
+            el.innerText = isMax ? "MAXIMUM RANK" : nextRankObj.name;
+            el.style.color = "#c5a059"; // Gold
         }
-    }
+    });
+
+    elements.nextBenList.forEach(el => {
+        if (el) {
+            if (isMax) {
+                el.innerHTML = "<li>You have reached the apex of servitude.</li>";
+            } else {
+                el.innerHTML = nextRankObj.benefits.map(b => `<li>${b}</li>`).join('');
+            }
+        }
+    });
 
     // 4. Calculate Stats (Consolidated)
     const stats = {
@@ -1761,7 +1782,7 @@ window.updateHierarchyDrawer = function (currentStreak) {
     })();
 
     if (allMet) {
-        html += `
+        const promoHtml = `
         <div style="margin-top:20px; padding:15px; border:2px solid #00ff00; background:rgba(0,255,0,0.1); text-align:center; border-radius:8px; animation: pulse 2s infinite;">
             <div style="font-family:'Orbitron'; font-size:0.75rem; color:#00ff00; margin-bottom:10px; font-weight:bold; letter-spacing:1px;">PROMOTION AUTHORIZED</div>
             <button onclick="window.claimPromotion('${nextRankObj.name}')"
@@ -1769,9 +1790,12 @@ window.updateHierarchyDrawer = function (currentStreak) {
                 CLAIM ${nextRankObj.name.toUpperCase()} RANK
             </button>
         </div>`;
+        html += promoHtml;
     }
 
-    container.innerHTML = html + `<div id="inlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;
+    const finalHtml = html + `<div id="inlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;
+    if (container) container.innerHTML = finalHtml;
+    if (deskContainer) deskContainer.innerHTML = finalHtml;
 };
 
 window.claimPromotion = function (newRank) {
