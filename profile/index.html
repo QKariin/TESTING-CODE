@@ -1455,7 +1455,7 @@
                     <div class="sidebar-stat-block">
                         <div class="sidebar-stat-value-row">
                             <span style="color: #fff; opacity:0.8;"><i class="fas fa-award"></i></span>
-                            <div id="sidebarMerit">0</div>
+                            <div id="points">0</div>
                         </div>
                         <div class="sidebar-stat-label">POINTS</div>
                     </div>
@@ -1463,7 +1463,7 @@
                     <div class="sidebar-stat-block">
                         <div class="sidebar-stat-value-row">
                             <span style="color: var(--gold);"><i class="fas fa-coins"></i></span>
-                            <div id="sidebarNet">0</div>
+                            <div id="coins">0</div>
                         </div>
                         <div class="sidebar-stat-label">COINS</div>
                     </div>
@@ -1504,21 +1504,22 @@
                         style="color:rgba(255,255,255,0.6); font-size:0.7rem; font-family:'Cinzel'; padding-left:15px; line-height:1.5; margin:0;">
                     </ul>
                 </div>
+            </div>
 
-                <div class="nav-menu">
-                    <button class="nav-btn active" onclick="switchTab('serve')">
-                        <span style="font-size: 1.2rem; margin-right: 10px;">🏠</span> DASHBOARD
-                    </button>
-                    <button class="nav-btn" onclick="switchTab('record')">
-                        <span style="font-size: 1.2rem; margin-right: 10px;">📜</span> RECORDS
-                    </button>
-                    <button class="nav-btn" onclick="switchTab('news')">
-                        <span style="font-size: 1.2rem; margin-right: 10px;">👑</span> QUEEN KARIN
-                    </button>
-                    <button class="nav-btn" onclick="switchTab('buy')">
-                        <span style="font-size: 1.2rem; margin-right: 10px;">💰</span> EXCHEQUER
-                    </button>
-                </div>
+            <div class="nav-menu"
+                style="width: 100%; padding: 15px; box-sizing: border-box; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button class="nav-btn active" onclick="switchTab('serve')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">🏠</span> DASHBOARD
+                </button>
+                <button class="nav-btn" onclick="switchTab('record')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">📜</span> RECORDS
+                </button>
+                <button class="nav-btn" onclick="switchTab('news')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">👑</span> QUEEN KARIN
+                </button>
+                <button class="nav-btn" onclick="switchTab('buy')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">💰</span> EXCHEQUER
+                </button>
             </div>
         </div>
 
@@ -1621,16 +1622,17 @@
 
                             <div class="mob-reward-actions"
                                 style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                                <button onclick="window.claimKneelReward('coins')" class="mob-action-btn"
-                                    style="border-color: #ffd700; color: #ffd700; font-size: 0.7rem;">CLAIM
+                                <button onclick="window.claimKneelReward('coins')" class="action-btn"
+                                    style="border-color: #ffd700; color: #ffd700; background: rgba(255,215,0,0.05); font-size: 0.7rem;">CLAIM
                                     COINS</button>
-                                <button onclick="window.claimKneelReward('points')" class="mob-action-btn"
-                                    style="border-color: #fff; color: #fff; font-size: 0.7rem;">CLAIM MERIT</button>
+                                <button onclick="window.claimKneelReward('points')" class="action-btn"
+                                    style="border-color: #fff; color: #fff; background: rgba(255,255,255,0.05); font-size: 0.7rem;">CLAIM
+                                    MERIT</button>
 
                                 <div style="margin: 5px 0; color: #444; font-size: 0.5rem; letter-spacing: 2px;">— OR —
                                 </div>
 
-                                <button onclick="handleRevealFragment()" class="mob-action-btn"
+                                <button onclick="handleRevealFragment()" class="action-btn"
                                     style="border-color: var(--blue-accent); color: var(--blue-accent); font-size: 0.7rem; margin-top: 0;">REVEAL
                                     GIFT</button>
                             </div>
