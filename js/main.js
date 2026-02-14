@@ -1662,8 +1662,8 @@ window.updateHierarchyDrawer = function (currentStreak) {
         return `
         <div style="margin-bottom:12px;">
             <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${labelColor};">
-                <span>${icon} ${label}</span>
-                <span style="color:${valColor}">${current.toLocaleString()} / ${target.toLocaleString()}</span>
+                <span>${label}</span>
+                <span style="color:${valColor}; opacity: 0.7; font-size: 0.55rem;">${current.toLocaleString()} / ${target.toLocaleString()}</span>
             </div>
             <div style="width:100%; height:6px; background:#000; border:1px solid #333; border-radius:3px; overflow:hidden;">
                 <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40; transition: width 0.5s ease;"></div>
@@ -1689,7 +1689,7 @@ window.updateHierarchyDrawer = function (currentStreak) {
                 <span>${label}</span>
             </div>
             <div style="display:flex; align-items:center;">
-                <span style="color:${statusColor}; letter-spacing:1px;">${statusText} ${isMet ? '✅' : '❌'}</span>
+                <span style="color:${statusColor}; letter-spacing:1px; opacity:0.7; font-size:0.55rem;">${statusText}</span>
                 ${actionBtn}
             </div>
         </div>`;
