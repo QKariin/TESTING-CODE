@@ -1731,7 +1731,67 @@ window.updateHierarchyDrawer = function (currentStreak) {
 
     // DEBUG INFO REMOVED
 
+    // 6. PROMOTION BUTTON (NEW)
+    const allMet = (() => {
+        if (isMax) return false;
+        // Checks
+        if (req.name) {
+            const name = (userProfile.name || userProfile.title || "").trim().toUpperCase();
+            if (!(name.length > 0 && name !== "SLAVE" && name !== "NEW SLAVE")) return false;
+        }
+        if (req.photo) {
+            let raw = userProfile.rawImage;
+            if (!raw && userProfile.profilePicture && !userProfile.profilePicture.includes('ce3e5b_e06c7a')) raw = userProfile.profilePicture;
+            if (!(raw && raw.length > 5 && !raw.includes('ce3e5b_e06c7a'))) return false;
+        }
+        if (req.limits && !(userProfile.limits && userProfile.limits.length > 2)) return false;
+        if (req.kinks && !((userProfile.kinks && userProfile.kinks.length > 2) || (userProfile.kink && userProfile.kink.length > 2))) return false;
+        if (req.routine && !(userProfile.routine && userProfile.routine.length > 5)) return false;
+
+        // Bars
+        if (stats.tasks < req.tasks) return false;
+        if (stats.kneels < req.kneels) return false;
+        if (stats.points < req.points) return false;
+        if (req.spent > 0 && stats.spent < req.spent) return false;
+        if (req.streak > 0 && stats.streak < req.streak) return false;
+
+        return true;
+    })();
+
+    if (allMet) {
+        html += `
+        <div style="margin-top:20px; padding:15px; border:2px solid #00ff00; background:rgba(0,255,0,0.1); text-align:center; border-radius:8px; animation: pulse 2s infinite;">
+            <div style="font-family:'Orbitron'; font-size:0.75rem; color:#00ff00; margin-bottom:10px; font-weight:bold; letter-spacing:1px;">PROMOTION AUTHORIZED</div>
+            <button onclick="window.claimPromotion('${nextRankObj.name}')" 
+                    style="background:#00ff00; color:#000; border:none; padding:12px 25px; font-family:'Orbitron'; font-weight:bold; cursor:pointer; width:100%; border-radius:4px; font-size:0.9rem;">
+                CLAIM ${nextRankObj.name.toUpperCase()} RANK
+            </button>
+        </div>`;
+    }
+
     container.innerHTML = html + `<div id="inlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;
+};
+
+window.claimPromotion = function (newRank) {
+    if (!newRank) return;
+
+    // 1. Play Sound
+    triggerSound('msgSound');
+
+    // 2. Optimistic Update
+    userProfile.hierarchy = newRank;
+
+    // 3. Send to Backend
+    window.parent.postMessage({
+        type: "UPDATE_PROFILE",
+        payload: { hierarchy: newRank }
+    }, "*");
+
+    // 4. Visual Feedback
+    alert("Congratulations! You have been promoted to " + newRank);
+
+    if (window.updateStats) window.updateStats();
+    if (window.updateHierarchyDrawer) window.updateHierarchyDrawer();
 };
 
 
@@ -1817,6 +1877,26 @@ window.openDataEntry = function (type) {
             <div id="costDisplay" style="${costStyle}">Total Cost: 0 Coins</div>
             <button id="actionBtn" onclick="window.saveInlineData('kinks')" style="${btnStyle}">Update Desires</button>
         `;
+    } else if (type === 'routine') {
+        const list = ["Morning Kneel", "Chastity Check", "Cleanliness Check", "Custom Order"];
+        let chipsHtml = `<div id="chipContainer" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">`;
+        list.forEach(item => {
+            chipsHtml += `
+                <div class="kink-chip" 
+                     onclick="window.selectRoutineChip(this)" 
+                     data-value="${item}"
+                     style="width:100%; padding:12px; border:1px solid #333; background:rgba(0,0,0,0.6); font-size:0.9rem; font-family:'Cinzel', serif; color:#aaa; cursor:pointer; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center;">
+                    <span>${item}</span>
+                </div>`;
+        });
+        chipsHtml += `</div><style>#chipContainer::-webkit-scrollbar{display:none;} .kink-chip.selected{border-color:#c5a059; color:#c5a059; background:rgba(197,160,89,0.1);}</style>`;
+
+        contentHtml = `
+            <div style="${headerStyle}">Protocol Assignment</div>
+            ${chipsHtml}
+            <div id="costDisplay" style="${costStyle}">Cost: 1000 Coins</div>
+            <button id="actionBtn" onclick="window.saveInlineData('routine')" style="${btnStyle}">Assign Protocol</button>
+        `;
     }
 
     container.innerHTML = `
@@ -1835,6 +1915,12 @@ window.toggleChip = function (el, costPerItem) {
     // Update Display Only
     const display = document.getElementById('costDisplay');
     if (display) display.innerText = `TOTAL COST: ${total} COINS`;
+};
+
+window.selectRoutineChip = function (el) {
+    // Only one routine at a time
+    document.querySelectorAll('.kink-chip').forEach(chip => chip.classList.remove('selected'));
+    el.classList.add('selected');
 };
 
 window.closeDataEntry = function () {
@@ -1920,6 +2006,30 @@ window.saveInlineData = async function (type) {
         }
         // FIX: Backend expects 'limits'
         payload = { limits: selected, cost: selected.length * 200 };
+    }
+
+    if (type === 'routine') {
+        const selected = document.querySelector('.kink-chip.selected')?.getAttribute('data-value');
+        if (!selected) {
+            alert("Please select a protocol.");
+            if (btn) btn.innerText = "ASSIGN PROTOCOL";
+            return;
+        }
+        // Use UPDATE_CMS_FIELD for routine like confirmLobbyAction does
+        window.parent.postMessage({
+            type: "UPDATE_CMS_FIELD",
+            field: "routine",
+            value: selected,
+            cost: 1000,
+            message: "Routine set to: " + selected
+        }, "*");
+
+        userProfile.routine = selected; // Optimistic update
+        setTimeout(() => {
+            window.closeDataEntry();
+            if (window.updateHierarchyDrawer) window.updateHierarchyDrawer();
+        }, 1000);
+        return; // Already sent the message
     }
 
     // SEND TO WIX (BRIDGE)
