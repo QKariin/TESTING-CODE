@@ -35,9 +35,9 @@ export function switchTab(mode) {
         });
     }
 
-    // 4. Hide all views
+    // 4. Hide all views and grid items
     const allViews = [
-        'viewServingTop', 'viewNews', 'viewSession',
+        'viewNews', 'viewSession',
         'viewVault', 'viewProtocol', 'viewBuy',
         'viewTribute', 'viewHierarchy', 'viewRewards', 'historySection',
         'viewServingTopDesktop'
@@ -51,16 +51,23 @@ export function switchTab(mode) {
         }
     });
 
+    // Also hide serve-specific grid items
+    const gridItems = document.querySelectorAll('.serve-grid-item');
+    gridItems.forEach(item => {
+        item.classList.add('hidden');
+        item.style.display = 'none';
+    });
+
     // 5. THE CLEAN VIEW MAP
     const viewMap = {
-        'serve': (document.getElementById('viewServingTopDesktop') ? 'viewServingTopDesktop' : 'viewServingTop'),
+        'serve': 'viewServingTopDesktop',
         'news': 'viewNews',
         'session': 'viewSession',
         'rewards': 'viewVault',
         'protocol': 'viewProtocol',
         'buy': 'viewBuy',
         'history': 'historySection',
-        'record': 'historySection', // FIX: Button calls 'record', not 'history'
+        'record': 'historySection',
         'vault': 'viewVault'
     };
 
@@ -70,15 +77,19 @@ export function switchTab(mode) {
         if (targetEl) {
             targetEl.classList.remove('hidden');
 
-            // NEW: If we are going to Dashboard, we ALSO show the Chat (viewServingTop)
-            if (targetId === 'viewServingTopDesktop') {
+            if (mode === 'serve') {
+                // Show the grid wrapper
                 targetEl.style.display = 'contents';
-                const chatArea = document.getElementById('viewServingTop');
-                if (chatArea) {
-                    chatArea.classList.remove('hidden');
-                    chatArea.style.display = 'flex';
-                }
-            } else if (['viewNews', 'viewVault', 'historySection', 'viewServingTop', 'viewBuy'].includes(targetId)) {
+                gridItems.forEach(item => {
+                    item.classList.remove('hidden');
+                    // Special case for chat which needs flex
+                    if (item.id === 'viewServingTop' || item.id === 'gridRightSection') {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'block';
+                    }
+                });
+            } else if (targetEl.classList.contains('alt-grid-view') || ['viewNews', 'viewVault', 'historySection', 'viewServingTop', 'viewBuy'].includes(targetId)) {
                 targetEl.style.display = 'flex';
                 targetEl.style.flexDirection = 'column';
             } else {
