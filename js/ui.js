@@ -87,6 +87,10 @@ export function switchTab(mode) {
     if (mode === 'rewards' || mode === 'vault') {
         renderVault();
     }
+
+    if ((mode === 'buy' || mode === 'record' || mode === 'history') && window.renderTributeHistory) {
+        window.renderTributeHistory();
+    }
 }
 
 // --- THE WISHLIST RENDERER (Updated to match main.js logic) ---
