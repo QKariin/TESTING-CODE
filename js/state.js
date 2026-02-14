@@ -37,7 +37,8 @@ export let userProfile = {
     kinks: "",               // For Kink List
     limits: "",              // For Limits List
     routinestreak: 0,        // For Hierarchy Consistency Check
-    rawImage: ""             // For Photo Verification
+    rawImage: "",             // For Photo Verification
+    tributeHistory: []       // For Exchequer Transaction Log
 };
 
 // --- NEW: REWARD SYSTEM DATA ---
