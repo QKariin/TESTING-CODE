@@ -1501,11 +1501,13 @@ window.addEventListener("message", (event) => {
                     r.req.limits = true;
                     r.req.kinks = true;
                     r.req.routine = true;
+                    r.req.points = 5000; // Update points for Silverman
                 }
                 if (r.name === "Footman") {
                     r.req.name = true;
                     r.req.photo = true;
                     r.req.prefs = true; // Just in case
+                    r.req.points = 2000; // Update points for Footman
                 }
                 // ----------------------------------------------
 
@@ -1517,7 +1519,7 @@ window.addEventListener("message", (event) => {
                 };
             });
 
-            // Reverse array if needed? Backend sends Champion -> Hallboy (Desc). 
+            // Reverse array if needed? Backend sends Champion -> Hallboy (Desc).
             // Frontend usually expects Hallboy -> Champion (Asc) for progress bars.
             // Backend HIERARCHY_RULES is Descending (Champion first).
             // Frontend REWARD_DATA.ranks was Ascending (HallBoy first).
@@ -1762,7 +1764,7 @@ window.updateHierarchyDrawer = function (currentStreak) {
         html += `
         <div style="margin-top:20px; padding:15px; border:2px solid #00ff00; background:rgba(0,255,0,0.1); text-align:center; border-radius:8px; animation: pulse 2s infinite;">
             <div style="font-family:'Orbitron'; font-size:0.75rem; color:#00ff00; margin-bottom:10px; font-weight:bold; letter-spacing:1px;">PROMOTION AUTHORIZED</div>
-            <button onclick="window.claimPromotion('${nextRankObj.name}')" 
+            <button onclick="window.claimPromotion('${nextRankObj.name}')"
                     style="background:#00ff00; color:#000; border:none; padding:12px 25px; font-family:'Orbitron'; font-weight:bold; cursor:pointer; width:100%; border-radius:4px; font-size:0.9rem;">
                 CLAIM ${nextRankObj.name.toUpperCase()} RANK
             </button>
@@ -1787,10 +1789,10 @@ window.claimPromotion = function (newRank) {
         setTimeout(() => setIgnoreBackendUpdates(false), 5000);
     }
 
-    // 4. Send to Backend
+    // 4. Send to Backend (Dedicated Hierarchy Update handler)
     window.parent.postMessage({
-        type: "UPDATE_PROFILE",
-        payload: { hierarchy: newRank }
+        type: "updateHierarchy",
+        newRank: newRank
     }, "*");
 
     // 5. Visual Feedback
@@ -1834,8 +1836,8 @@ window.openDataEntry = function (type) {
         let chipsHtml = `<div id="chipContainer" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">`;
         list.forEach(item => {
             chipsHtml += `
-                <div class="kink-chip" 
-                     onclick="window.toggleChip(this, ${itemCost})" 
+                <div class="kink-chip"
+                     onclick="window.toggleChip(this, ${itemCost})"
                      data-value="${item}"
                      style="width:100%; padding:12px; border:1px solid #333; background:rgba(0,0,0,0.6); font-size:0.9rem; font-family:'Cinzel', serif; color:#aaa; cursor:pointer; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center;">
                     <span>${item}</span>
@@ -1888,8 +1890,8 @@ window.openDataEntry = function (type) {
         let chipsHtml = `<div id="chipContainer" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">`;
         list.forEach(item => {
             chipsHtml += `
-                <div class="kink-chip" 
-                     onclick="window.selectRoutineChip(this)" 
+                <div class="kink-chip"
+                     onclick="window.selectRoutineChip(this)"
                      data-value="${item}"
                      style="width:100%; padding:12px; border:1px solid #333; background:rgba(0,0,0,0.6); font-size:0.9rem; font-family:'Cinzel', serif; color:#aaa; cursor:pointer; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center;">
                     <span>${item}</span>
@@ -2265,7 +2267,7 @@ window.renderRewards = function () {
             const isLegendary = index === data.length - 1 ? "legendary" : "";
 
             return `
-                <div class="reward-badge ${shapeClass} ${statusClass} ${isLegendary}" 
+                <div class="reward-badge ${shapeClass} ${statusClass} ${isLegendary}"
                      onclick="window.openRewardCard('${item.name}', '${item.icon}', ${currentVal}, ${targetVal}, '${typeLabel}')">
                     <div class="rb-inner" style="display:flex; flex-direction:column; align-items:center;">
                         <svg class="rb-icon" viewBox="0 0 24 24"><path d="${item.icon}"/></svg>
