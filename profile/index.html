@@ -1470,12 +1470,13 @@
                 </div>
             </div>
 
-            <!-- DESKTOP SIDEBAR SCROLLABLE CONTENT -->
-            <div id="deskSidebarScrollWrap" class="hide-scrollbar"
-                style="flex: 1; overflow-y: auto; width: 100%; display: flex; flex-direction: column; gap: 20px; padding: 0 15px 30px 15px; box-sizing: border-box;">
+            <!-- DESKTOP SIDEBAR SCROLLABLE AREA -->
+            <div class="sidebar-scrollable-area"
+                style="flex: 1; overflow-y: auto; width: 100%; display: flex; flex-direction: column; padding: 0 15px; box-sizing: border-box;">
 
                 <!-- 1. WHO YOU ARE (Current) -->
-                <div style="width:100%; text-align:center; padding-top:10px;">
+                <div id="deskStatsContent"
+                    style="width: 100%; text-align:center; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:12px; flex-shrink: 0;">
                     <div
                         style="font-family:'Cinzel'; font-size:0.55rem; color:rgba(255,255,255,0.4); letter-spacing:2px;">
                         CURRENT CLASSIFICATION</div>
@@ -1487,25 +1488,25 @@
                     </div>
                 </div>
 
-                <!-- 2. WORKING ON (Goal) -->
-                <div
-                    style="width:100%; text-align:center; padding:15px; background:rgba(197, 160, 89, 0.05); border:1px solid rgba(197, 160, 89, 0.1); border-radius:8px;">
+                <!-- 2. THE TARGET (Next Rank - WORKING ON) -->
+                <div id="desk_WorkingOnSection"
+                    style="width: 100%; text-align:center; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:15px; flex-shrink: 0;">
                     <div
-                        style="font-family:'Orbitron'; font-size:0.5rem; color:var(--gold); letter-spacing:1px; margin-bottom:5px;">
-                        WORKING ON PROMOTION TO</div>
-                    <div id="desk_NextRank"
-                        style="font-family:'Orbitron'; font-size:0.8rem; color:#fff; text-transform:uppercase; font-weight:bold;">
+                        style="font-family:'Orbitron'; font-size:0.55rem; color:#c5a059; letter-spacing:2px; margin-bottom:2px;">
+                        WORKING ON</div>
+                    <div id="desk_WorkingOnRank"
+                        style="font-family:'Orbitron'; font-size:0.9rem; color:#fff; text-transform:uppercase; font-weight:bold;">
                         ...</div>
                 </div>
 
                 <!-- 3. THE MATH (Progress Bars) -->
                 <div id="desk_ProgressContainer"
-                    style="width:100%; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:4px; padding:12px;">
+                    style="width:100%; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:4px; padding:12px; margin-bottom:15px; flex-shrink: 0;">
                     <!-- JS will fill this -->
                 </div>
 
                 <!-- 4. THE PRIZE (Next Benefits) -->
-                <div style="width:100%; text-align:left; padding:0 2px;">
+                <div style="width:100%; text-align:left; padding:0 2px; margin-bottom: 25px; flex-shrink: 0;">
                     <div style="font-family:'Orbitron'; font-size:0.55rem; color:#c5a059; margin-bottom:6px;">
                         PRIVILEGES GRANTED</div>
                     <ul id="desk_NextBenefits"
@@ -1513,427 +1514,435 @@
                     </ul>
                 </div>
             </div>
-        </div>
 
-        <div class="nav-menu"
-            style="width: 100%; padding: 15px; box-sizing: border-box; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.05);">
-            <button class="nav-btn active" onclick="switchTab('serve')">
-                <span style="font-size: 1.2rem; margin-right: 10px;">🏠</span> DASHBOARD
-            </button>
-            <button class="nav-btn" onclick="switchTab('record')">
-                <span style="font-size: 1.2rem; margin-right: 10px;">📜</span> RECORDS
-            </button>
-            <button class="nav-btn" onclick="switchTab('news')">
-                <span style="font-size: 1.2rem; margin-right: 10px;">👑</span> QUEEN KARIN
-            </button>
-            <button class="nav-btn" onclick="switchTab('buy')">
-                <span style="font-size: 1.2rem; margin-right: 10px;">💰</span> EXCHEQUER
-            </button>
-        </div>
-    </div>
-
-    <!-- DASHBOARD GRID WRAPPER (FOR NAVIGATION FIX) -->
-    <div id="viewServingTopDesktop" style="display: contents !important;">
-
-        <!-- GRID ITEM: ROW 1, COL 2 (STAT CARD 1) -->
-        <div id="gridStat1" class="v-card v-stat-card serve-grid-item"
-            style="flex-direction: column; align-items: stretch; gap: 10px;">
-            <div class="ribbon-label" style="text-align: center;">KNEELING HOURS</div>
-            <div class="prog-bg"
-                style="height: 25px; border-radius: 12px; position: relative; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
-                <div id="deskKneelDailyFill" class="prog-fill"
-                    style="width: 0%; background: var(--gold); height: 100%; transition: width 0.5s ease;">
-                </div>
-                <div id="deskKneelDailyText"
-                    style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: 0.8rem; color: white; text-shadow: 0 1px 3px black;">
-                    0 / 8</div>
-            </div>
-        </div>
-
-        <!-- GRID ITEM: ROW 1, COL 3 (STAT CARD 2) -->
-        <div id="gridStat2" class="v-card v-stat-card serve-grid-item"
-            style="flex-direction: column; align-items: stretch; gap: 5px;">
-            <div class="ribbon-label" style="text-align: center;">DAILY ROUTINE</div>
-            <div id="deskRoutineDisplay"
-                style="font-family: 'Orbitron'; font-size: 0.75rem; color: white; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 5px;">
-                LOADING...
-            </div>
-            <div
-                style="display: flex; justify-content: center; gap: 5px; align-items: center; margin-top: 5px; flex-direction: column;">
-                <button id="deskRoutineUploadBtn" class="v-icon-box"
-                    style="width: 30px; height: 30px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; background: var(--blue-accent);"
-                    onclick="document.getElementById('routineUploadInput').click()">
-                    <i class="fas fa-upload"></i>
+            <!-- 5. NAVIGATION MENU (Fixed at bottom) -->
+            <div class="nav-menu"
+                style="width: 100%; padding: 15px; box-sizing: border-box; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button class="nav-btn active" onclick="switchTab('serve')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">🏠</span> DASHBOARD
                 </button>
-                <div id="deskRoutineTimeMsg" class="hidden"
-                    style="color: #666; font-family: 'Orbitron'; font-size: 0.6rem; text-align: center;">
-                    NO PROTOCOL
-                </div>
-                <div id="deskRoutineDoneMsg" class="hidden"
-                    style="color: var(--neon-green); font-family: 'Orbitron'; font-size: 0.7rem; text-align: center; line-height: 1.3;">
-                    ✔ DONE
-                </div>
+                <button class="nav-btn" onclick="switchTab('record')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">📜</span> RECORDS
+                </button>
+                <button class="nav-btn" onclick="switchTab('news')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">👑</span> QUEEN KARIN
+                </button>
+                <button class="nav-btn" onclick="switchTab('buy')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">💰</span> EXCHEQUER
+                </button>
             </div>
         </div>
 
-        <!-- GRID ITEM: ROW 1, COL 4 (STAT CARD 3) -->
-        <div id="gridStat3" class="v-card v-stat-card serve-grid-item"
-            style="flex-direction: column; align-items: stretch; gap: 10px;">
-            <div class="ribbon-label" style="text-align: center;">STREAK RECORD</div>
-            <div style="display: flex; width: 100%; justify-content: space-around; align-items: center; flex: 1;">
-                <div style="text-align: center;">
-                    <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7; margin-bottom: 5px;">STREAK
+        <!-- DASHBOARD GRID WRAPPER (FOR NAVIGATION FIX) -->
+        <div id="viewServingTopDesktop">
+
+            <!-- GRID ITEM: ROW 1, COL 2 (STAT CARD 1) -->
+            <div id="gridStat1" class="v-card v-stat-card serve-grid-item"
+                style="flex-direction: column; align-items: stretch; gap: 10px;">
+                <div class="ribbon-label" style="text-align: center;">KNEELING HOURS</div>
+                <div class="prog-bg"
+                    style="height: 25px; border-radius: 12px; position: relative; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
+                    <div id="deskKneelDailyFill" class="prog-fill"
+                        style="width: 0%; background: var(--gold); height: 100%; transition: width 0.5s ease;">
                     </div>
-                    <div id="deskStreak" style="font-family: 'Orbitron'; font-size: 1.5rem; color: white;">0
-                    </div>
+                    <div id="deskKneelDailyText"
+                        style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: 0.8rem; color: white; text-shadow: 0 1px 3px black;">
+                        0 / 8</div>
                 </div>
-                <div style="height: 30px; width: 1px; background: rgba(255,255,255,0.1);"></div>
-                <div style="text-align: center;">
-                    <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7; margin-bottom: 5px;">TOTAL
+            </div>
+
+            <!-- GRID ITEM: ROW 1, COL 3 (STAT CARD 2) -->
+            <div id="gridStat2" class="v-card v-stat-card serve-grid-item"
+                style="flex-direction: column; align-items: stretch; gap: 5px;">
+                <div class="ribbon-label" style="text-align: center;">DAILY ROUTINE</div>
+                <div id="deskRoutineDisplay"
+                    style="font-family: 'Orbitron'; font-size: 0.75rem; color: white; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 5px;">
+                    LOADING...
+                </div>
+                <div
+                    style="display: flex; justify-content: center; gap: 5px; align-items: center; margin-top: 5px; flex-direction: column;">
+                    <button id="deskRoutineUploadBtn" class="v-icon-box"
+                        style="width: 30px; height: 30px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; background: var(--blue-accent);"
+                        onclick="document.getElementById('routineUploadInput').click()">
+                        <i class="fas fa-upload"></i>
+                    </button>
+                    <div id="deskRoutineTimeMsg" class="hidden"
+                        style="color: #666; font-family: 'Orbitron'; font-size: 0.6rem; text-align: center;">
+                        NO PROTOCOL
                     </div>
-                    <div id="deskTotal" style="font-family: 'Orbitron'; font-size: 1.5rem; color: var(--gold);">
-                        0
+                    <div id="deskRoutineDoneMsg" class="hidden"
+                        style="color: var(--neon-green); font-family: 'Orbitron'; font-size: 0.7rem; text-align: center; line-height: 1.3;">
+                        ✔ DONE
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- GRID ITEM: ROW 1, COL 5 (STAT CARD 4) -->
-        <div id="gridStat4" class="v-card v-stat-card serve-grid-item"
-            style="flex-direction: column; justify-content: center; align-items: center; cursor: pointer;"
-            onclick="switchTab('record')">
-            <div class="ribbon-label" style="text-align: center;">CLASSIFICATION</div>
-            <div id="desk_DashboardRank"
-                style="font-family: 'Orbitron'; font-size: 1.1rem; color: #fff; margin-top: 5px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 10px rgba(197, 160, 89, 0.4);">
-                LOADING...</div>
-        </div>
-
-        <!-- GRID ITEM: ROW 2, SPAN COL 2-3 (HERO CARD) -->
-        <div id="gridHero" class="v-card serve-grid-item"
-            style="background: url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png'); background-size: cover; background-position: center; min-height: unset; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;">
-            <div
-                style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(2,5,18,0.9) 0%, rgba(2,5,18,0.4) 100%);">
-            </div>
-
-            <!-- JAILED KNEEL REWARD OVERLAY -->
-            <div id="kneelRewardOverlay" class="hidden"
-                style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; backdrop-filter: blur(20px); align-items: center; justify-content: center;">
-                <div style="text-align: center; width: 100%; padding: 20px;">
-                    <div class="mob-reward-card"
-                        style="background: transparent; border: none; box-shadow: none; padding: 0; width: 100%; max-height: unset; overflow: visible;">
-                        <div class="mob-hex-wrap small-reward" style="margin-bottom: 20px;">
-                            <div class="mob-rank-stamp"
-                                style="right: auto; left: -5px; color: #fff; border-color: #fff; font-family: 'Orbitron'; font-size: 0.6rem; letter-spacing: 2px;">
-                                AUTHORIZED</div>
+            <!-- GRID ITEM: ROW 1, COL 4 (STAT CARD 3) -->
+            <div id="gridStat3" class="v-card v-stat-card serve-grid-item"
+                style="flex-direction: column; align-items: stretch; gap: 10px;">
+                <div class="ribbon-label" style="text-align: center;">STREAK RECORD</div>
+                <div style="display: flex; width: 100%; justify-content: space-around; align-items: center; flex: 1;">
+                    <div style="text-align: center;">
+                        <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7; margin-bottom: 5px;">
+                            STREAK
                         </div>
+                        <div id="deskStreak" style="font-family: 'Orbitron'; font-size: 1.5rem; color: white;">0
+                        </div>
+                    </div>
+                    <div style="height: 30px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+                    <div style="text-align: center;">
+                        <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7; margin-bottom: 5px;">
+                            TOTAL
+                        </div>
+                        <div id="deskTotal" style="font-family: 'Orbitron'; font-size: 1.5rem; color: var(--gold);">
+                            0
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        <h2
-                            style="font-family:'Cinzel'; color: #c5a059; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 20px; text-transform: uppercase;">
-                            DEVOTION RECOGNIZED</h2>
+            <!-- GRID ITEM: ROW 1, COL 5 (STAT CARD 4) -->
+            <div id="gridStat4" class="v-card v-stat-card serve-grid-item"
+                style="flex-direction: column; justify-content: center; align-items: center; cursor: pointer;"
+                onclick="switchTab('record')">
+                <div class="ribbon-label" style="text-align: center;">CLASSIFICATION</div>
+                <div id="desk_DashboardRank"
+                    style="font-family: 'Orbitron'; font-size: 1.1rem; color: #fff; margin-top: 5px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 10px rgba(197, 160, 89, 0.4);">
+                    LOADING...</div>
+            </div>
 
-                        <div class="mob-reward-actions"
-                            style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                            <button onclick="window.claimKneelReward('coins')" class="action-btn"
-                                style="border-color: #ffd700; color: #ffd700; background: rgba(255,215,0,0.05); font-size: 0.7rem;">CLAIM
-                                COINS</button>
-                            <button onclick="window.claimKneelReward('points')" class="action-btn"
-                                style="border-color: #fff; color: #fff; background: rgba(255,255,255,0.05); font-size: 0.7rem;">CLAIM
-                                MERIT</button>
+            <!-- GRID ITEM: ROW 2, SPAN COL 2-3 (HERO CARD) -->
+            <div id="gridHero" class="v-card serve-grid-item"
+                style="background: url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png'); background-size: cover; background-position: center; min-height: unset; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;">
+                <div
+                    style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(2,5,18,0.9) 0%, rgba(2,5,18,0.4) 100%);">
+                </div>
 
-                            <div style="margin: 5px 0; color: #444; font-size: 0.5rem; letter-spacing: 2px;">— OR —
+                <!-- JAILED KNEEL REWARD OVERLAY -->
+                <div id="kneelRewardOverlay" class="hidden"
+                    style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; backdrop-filter: blur(20px); align-items: center; justify-content: center;">
+                    <div style="text-align: center; width: 100%; padding: 20px;">
+                        <div class="mob-reward-card"
+                            style="background: transparent; border: none; box-shadow: none; padding: 0; width: 100%; max-height: unset; overflow: visible;">
+                            <div class="mob-hex-wrap small-reward" style="margin-bottom: 20px;">
+                                <div class="mob-rank-stamp"
+                                    style="right: auto; left: -5px; color: #fff; border-color: #fff; font-family: 'Orbitron'; font-size: 0.6rem; letter-spacing: 2px;">
+                                    AUTHORIZED</div>
                             </div>
 
-                            <button onclick="handleRevealFragment()" class="action-btn"
-                                style="border-color: var(--blue-accent); color: var(--blue-accent); font-size: 0.7rem; margin-top: 0;">REVEAL
-                                GIFT</button>
+                            <h2
+                                style="font-family:'Cinzel'; color: #c5a059; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 20px; text-transform: uppercase;">
+                                DEVOTION RECOGNIZED</h2>
+
+                            <div class="mob-reward-actions"
+                                style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                                <button onclick="window.claimKneelReward('coins')" class="action-btn"
+                                    style="border-color: #ffd700; color: #ffd700; background: rgba(255,215,0,0.05); font-size: 0.7rem;">CLAIM
+                                    COINS</button>
+                                <button onclick="window.claimKneelReward('points')" class="action-btn"
+                                    style="border-color: #fff; color: #fff; background: rgba(255,255,255,0.05); font-size: 0.7rem;">CLAIM
+                                    MERIT</button>
+
+                                <div style="margin: 5px 0; color: #444; font-size: 0.5rem; letter-spacing: 2px;">—
+                                    OR —
+                                </div>
+
+                                <button onclick="handleRevealFragment()" class="action-btn"
+                                    style="border-color: var(--blue-accent); color: var(--blue-accent); font-size: 0.7rem; margin-top: 0;">REVEAL
+                                    GIFT</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- THE REVEAL TARGET -->
-            <div id="revealSection"
-                style="display: none; position: absolute; inset: 0; z-index: 5001; background: #000; flex-direction: column;">
-                <div id="revealLevelLabel"
-                    style="font-family:'Orbitron'; font-size: 0.6rem; color: var(--gold); padding: 10px; text-align: center; border-bottom: 1px solid #222;">
-                    Kneeling rewards:</div>
+                <!-- THE REVEAL TARGET -->
+                <div id="revealSection"
+                    style="display: none; position: absolute; inset: 0; z-index: 5001; background: #000; flex-direction: column;">
+                    <div id="revealLevelLabel"
+                        style="font-family:'Orbitron'; font-size: 0.6rem; color: var(--gold); padding: 10px; text-align: center; border-bottom: 1px solid #222;">
+                        Kneeling rewards:</div>
 
-                <!-- THE PRIZE GRID (Opened) -->
-                <div id="revealGridContainer" style="flex: 1; position: relative; overflow: hidden;">
-                    <!-- Media and grid overlay will be injected here by renderRewardGrid() -->
+                    <!-- THE PRIZE GRID (Opened) -->
+                    <div id="revealGridContainer" style="flex: 1; position: relative; overflow: hidden;">
+                        <!-- Media and grid overlay will be injected here by renderRewardGrid() -->
 
-                    <!-- THE INTEGRATED COMMAND BLOCK -->
-                    <div class="reveal-market-row"
-                        style="position: absolute; bottom: 10px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 100;">
+                        <!-- THE INTEGRATED COMMAND BLOCK -->
+                        <div class="reveal-market-row"
+                            style="position: absolute; bottom: 10px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 100;">
 
-                        <!-- TIER 1: MAIN OPTIONS -->
-                        <div id="reward-main-menu"
-                            style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
-                            <button onclick="toggleRewardSubMenu(true)" class="dr-enforce-btn close-btn"
-                                style="border-color:var(--blue-accent) !important; color:var(--blue-accent) !important;">
-                                OPEN MORE
-                            </button>
-                            <button onclick="toggleRewardGrid()" class="dr-enforce-btn close-btn">
-                                CLOSE VIEW
-                            </button>
-                        </div>
+                            <!-- TIER 1: MAIN OPTIONS -->
+                            <div id="reward-main-menu"
+                                style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                                <button onclick="toggleRewardSubMenu(true)" class="dr-enforce-btn close-btn"
+                                    style="border-color:var(--blue-accent) !important; color:var(--blue-accent) !important;">
+                                    OPEN MORE
+                                </button>
+                                <button onclick="toggleRewardGrid()" class="dr-enforce-btn close-btn">
+                                    CLOSE VIEW
+                                </button>
+                            </div>
 
-                        <!-- TIER 2: PURCHASE OPTIONS (Starts Hidden) -->
-                        <div id="reward-buy-menu" class="hidden"
-                            style="display: none; flex-direction: column; gap: 6px; align-items: center;">
-                            <button onclick="buyRewardFragment(100)" class="dr-enforce-btn market-btn">
-                                1 SQUARE (100 🪙)
-                            </button>
-                            <button onclick="buyRewardFragment(500)" class="dr-enforce-btn market-btn"
-                                style="font-weight:900;">
-                                ENTIRE PICTURE (500 🪙)
-                            </button>
-                            <button onclick="toggleRewardSubMenu(false)" class="dr-enforce-btn close-btn"
-                                style="font-size:0.45rem; padding:4px 10px !important; margin-top:5px;">
-                                &larr; BACK
-                            </button>
+                            <!-- TIER 2: PURCHASE OPTIONS (Starts Hidden) -->
+                            <div id="reward-buy-menu" class="hidden"
+                                style="display: none; flex-direction: column; gap: 6px; align-items: center;">
+                                <button onclick="buyRewardFragment(100)" class="dr-enforce-btn market-btn">
+                                    1 SQUARE (100 🪙)
+                                </button>
+                                <button onclick="buyRewardFragment(500)" class="dr-enforce-btn market-btn"
+                                    style="font-weight:900;">
+                                    ENTIRE PICTURE (500 🪙)
+                                </button>
+                                <button onclick="toggleRewardSubMenu(false)" class="dr-enforce-btn close-btn"
+                                    style="font-size:0.45rem; padding:4px 10px !important; margin-top:5px;">
+                                    &larr; BACK
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div style="position: relative; z-index: 10; padding: 10px; box-sizing: border-box;">
-                <p
-                    style="color: rgba(255,255,255,0.6); font-family: 'Cinzel'; font-size: 0.8rem; letter-spacing: 2px; margin: 0; text-transform: uppercase;">
-                    Welcome back,</p>
-                <h2 id="heroUserName"
-                    style="font-family: 'Orbitron'; font-size: 2rem; margin: 5px 0; color: white; letter-spacing: 2px; font-weight: 700;">
-                    LOYAL SUBJECT</h2>
+                <div style="position: relative; z-index: 10; padding: 10px; box-sizing: border-box;">
+                    <p
+                        style="color: rgba(255,255,255,0.6); font-family: 'Cinzel'; font-size: 0.8rem; letter-spacing: 2px; margin: 0; text-transform: uppercase;">
+                        Welcome back,</p>
+                    <h2 id="heroUserName"
+                        style="font-family: 'Orbitron'; font-size: 2rem; margin: 5px 0; color: white; letter-spacing: 2px; font-weight: 700;">
+                        LOYAL SUBJECT</h2>
 
-                <button id="heroKneelBtn" class="mob-kneel-bar"
-                    style="height: 48px; width: 220px; cursor: pointer; border-radius: 4px; overflow: hidden; position: relative; background: rgba(0,0,0,0.5); border: 1px solid var(--gold); margin: 20px 0; display: flex; align-items: center; justify-content: center; padding: 0; outline: none; transition: 0.3s;"
-                    onmousedown="window.handleHoldStart(event)" onmouseup="window.handleHoldEnd(event)"
-                    onmouseleave="window.handleHoldEnd(event)" ontouchstart="window.handleHoldStart(event)"
-                    ontouchend="window.handleHoldEnd(event)">
-                    <div id="heroKneelFill" class="mob-bar-fill"
-                        style="width: 0%; background: linear-gradient(90deg, #4b0000 0%, #000000 100%); height: 100%; position: absolute; left: 0; top: 0; transition: width 0.3s ease; pointer-events: none;">
-                    </div>
-                    <div class="mob-bar-content"
-                        style="position: relative; z-index: 2; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: none;">
-                        <span id="heroKneelText"
-                            style="font-family: 'Orbitron'; font-size: 0.8rem; color: white; text-shadow: 0 1px 3px black; letter-spacing: 2px;">HOLD
-                            TO KNEEL</span>
-                    </div>
-                </button>
-
-                <p
-                    style="color: var(--gold); font-family: 'Cinzel'; font-size: 0.85rem; letter-spacing: 1px; margin: 0; opacity: 0.8; font-style: italic;">
-                    "Your devotion determines your destiny."</p>
-            </div>
-        </div>
-
-        <!-- GRID ITEM: ROW 2, SPAN COL 4-5 (TASK PANEL) -->
-        <div id="gridTask" class="v-card serve-grid-item"
-            style="display: flex; flex-direction: column; justify-content: space-between; gap: 10px; min-height: unset;">
-            <div class="ribbon-label">CURRENT ORDERS</div>
-            <div class="task-interface-container"
-                style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <div id="mainButtonsArea" style="width: 100%; text-align: center;">
-                    <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn"
-                        style="width: 100%; border-radius: 12px; background: var(--blue-accent); color: white; padding: 15px; font-weight: bold; letter-spacing: 2px;">
-                        REQUEST TASK
+                    <button id="heroKneelBtn" class="mob-kneel-bar"
+                        style="height: 48px; width: 220px; cursor: pointer; border-radius: 4px; overflow: hidden; position: relative; background: rgba(0,0,0,0.5); border: 1px solid var(--gold); margin: 20px 0; display: flex; align-items: center; justify-content: center; padding: 0; outline: none; transition: 0.3s;"
+                        onmousedown="window.handleHoldStart(event)" onmouseup="window.handleHoldEnd(event)"
+                        onmouseleave="window.handleHoldEnd(event)" ontouchstart="window.handleHoldStart(event)"
+                        ontouchend="window.handleHoldEnd(event)">
+                        <div id="heroKneelFill" class="mob-bar-fill"
+                            style="width: 0%; background: linear-gradient(90deg, #4b0000 0%, #000000 100%); height: 100%; position: absolute; left: 0; top: 0; transition: width 0.3s ease; pointer-events: none;">
+                        </div>
+                        <div class="mob-bar-content"
+                            style="position: relative; z-index: 2; height: 100%; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: none;">
+                            <span id="heroKneelText"
+                                style="font-family: 'Orbitron'; font-size: 0.8rem; color: white; text-shadow: 0 1px 3px black; letter-spacing: 2px;">HOLD
+                                TO KNEEL</span>
+                        </div>
                     </button>
-                    <div id="idleMessage"
-                        style="font-family: 'Cinzel'; font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 10px;">
-                        Awaiting direct orders from the Void...
-                    </div>
-                </div>
-                <div id="activeTaskContent" class="hidden"
-                    style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
-                    <h2 id="readyText"
-                        style="font-family: 'Cinzel'; font-size: 1.1rem; text-align: center; margin: 0; line-height: 1.4; color: white;">
-                        -</h2>
-                    <div id="activeTimerRow" class="card-timer-row">
-                        <div id="timerH" class="card-t-box">00</div>
-                        <div class="t-sep">:</div>
-                        <div id="timerM" class="card-t-box">00</div>
-                        <div class="t-sep">:</div>
-                        <div id="timerS" class="card-t-box">00</div>
-                    </div>
 
-                    <!-- REDESIGNED TASK ACTIONS PANEL -->
-                    <div id="uploadBtnContainer" class="hidden"
-                        style="display: flex; flex-direction: column; gap: 5px; margin-top: 10px; align-items: center;">
-                        <button id="uploadBtn" class="action-btn"
-                            style="width: 180px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); color: var(--gold); font-weight: bold; border: 1px solid var(--gold); box-shadow: 0 0 15px rgba(197,160,89,0.2);"
-                            onclick="document.getElementById('routineUploadInput').click()">
-                            UPDATE TASK
+                    <p
+                        style="color: var(--gold); font-family: 'Cinzel'; font-size: 0.85rem; letter-spacing: 1px; margin: 0; opacity: 0.8; font-style: italic;">
+                        "Your devotion determines your destiny."</p>
+                </div>
+            </div>
+
+            <!-- GRID ITEM: ROW 2, SPAN COL 4-5 (TASK PANEL) -->
+            <div id="gridTask" class="v-card serve-grid-item"
+                style="display: flex; flex-direction: column; justify-content: space-between; gap: 10px; min-height: unset;">
+                <div class="ribbon-label">CURRENT ORDERS</div>
+                <div class="task-interface-container"
+                    style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="mainButtonsArea" style="width: 100%; text-align: center;">
+                        <button id="newTaskBtn" onclick="window.getRandomTask()" class="action-btn"
+                            style="width: 100%; border-radius: 12px; background: var(--blue-accent); color: white; padding: 15px; font-weight: bold; letter-spacing: 2px;">
+                            REQUEST TASK
                         </button>
-                        <button id="btnSkip" onclick="window.cancelPendingTask()" class="text-btn"
-                            style="color: #aaa; font-family: 'Orbitron'; font-size: 0.7rem; letter-spacing: 1px; background: none; border: none; padding: 5px; width: 180px;">
-                            SKIP TASK (-300 🪙)
-                        </button>
+                        <div id="idleMessage"
+                            style="font-family: 'Cinzel'; font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 10px;">
+                            Awaiting direct orders from the Void...
+                        </div>
+                    </div>
+                    <div id="activeTaskContent" class="hidden"
+                        style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
+                        <h2 id="readyText"
+                            style="font-family: 'Cinzel'; font-size: 1.1rem; text-align: center; margin: 0; line-height: 1.4; color: white;">
+                            -</h2>
+                        <div id="activeTimerRow" class="card-timer-row">
+                            <div id="timerH" class="card-t-box">00</div>
+                            <div class="t-sep">:</div>
+                            <div id="timerM" class="card-t-box">00</div>
+                            <div class="t-sep">:</div>
+                            <div id="timerS" class="card-t-box">00</div>
+                        </div>
+
+                        <!-- REDESIGNED TASK ACTIONS PANEL -->
+                        <div id="uploadBtnContainer" class="hidden"
+                            style="display: flex; flex-direction: column; gap: 5px; margin-top: 10px; align-items: center;">
+                            <button id="uploadBtn" class="action-btn"
+                                style="width: 180px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); color: var(--gold); font-weight: bold; border: 1px solid var(--gold); box-shadow: 0 0 15px rgba(197,160,89,0.2);"
+                                onclick="document.getElementById('routineUploadInput').click()">
+                                UPDATE TASK
+                            </button>
+                            <button id="btnSkip" onclick="window.cancelPendingTask()" class="text-btn"
+                                style="color: #aaa; font-family: 'Orbitron'; font-size: 0.7rem; letter-spacing: 1px; background: none; border: none; padding: 5px; width: 180px;">
+                                SKIP TASK (-300 🪙)
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- GRID ITEM: ROW 3, SPAN COL 2-3 (CHAT) -->
-        <div id="viewServingTop" class="v-card serve-grid-item"
-            style="display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 20px;">
-            <div id="chatCard" class="chat-container"
-                style="flex: 1; min-height: 0; background: transparent; margin: 0; border: none; border-radius: 0; display: flex; flex-direction: column;">
-                <div id="chatBox" class="chat-body-frame"
-                    style="background: transparent; flex: 1; min-height: 0; overflow-y: auto;">
-                    <div id="chatContent" class="chat-area" style="padding: 20px;"></div>
-                </div>
-                <div class="chat-footer"
-                    style="background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.1); padding: 15px; display: flex; align-items: center; gap: 10px;">
-                    <div class="chat-input-wrapper"
-                        style="flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
-                        <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()"
-                            style="background: var(--blue-accent);">+</button>
-                        <input type="text" id="chatMsgInput" class="chat-input"
-                            placeholder="Communicate with the Void..." onkeypress="handleChatKey(event)">
+            <!-- GRID ITEM: ROW 3, SPAN COL 2-3 (CHAT) -->
+            <div id="viewServingTop" class="v-card serve-grid-item"
+                style="display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 20px;">
+                <div id="chatCard" class="chat-container"
+                    style="flex: 1; min-height: 0; background: transparent; margin: 0; border: none; border-radius: 0; display: flex; flex-direction: column;">
+                    <div id="chatBox" class="chat-body-frame"
+                        style="background: transparent; flex: 1; min-height: 0; overflow-y: auto;">
+                        <div id="chatContent" class="chat-area" style="padding: 20px;"></div>
                     </div>
-                    <button class="chat-btn-send" onclick="sendChatMessage()"
-                        style="background: var(--gold); border-radius: 15px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- GRID ITEM: ROW 3, SPAN COL 4-5 (RIGHT SECTION) -->
-        <div id="gridRightSection" class="serve-grid-item hide-scrollbar"
-            style="display:flex; flex-direction:row; gap:25px; overflow-y: auto;">
-            <!-- DAILY DISCIPLINE -->
-            <div class="v-card" style="flex: 1; display: flex; flex-direction: column;">
-                <div class="ribbon-label" style="margin-bottom: 15px;">DAILY DISCIPLINE</div>
-                <div id="shelfRanks" class="mob-streak-strip" style="justify-content: center; gap: 8px;"></div>
-                <div
-                    style="text-align: center; margin-top: auto; font-size: 0.7rem; color: rgba(255,255,255,0.5); font-family: 'Cinzel';">
-                    SINCE <span id="slaveSinceDate" style="color: white;">--/--/--</span>
+                    <div class="chat-footer"
+                        style="background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.1); padding: 15px; display: flex; align-items: center; gap: 10px;">
+                        <div class="chat-input-wrapper"
+                            style="flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px;">
+                            <button id="btnMediaPlus" class="chat-btn-plus" onclick="window.handleMediaPlus()"
+                                style="background: var(--blue-accent);">+</button>
+                            <input type="text" id="chatMsgInput" class="chat-input"
+                                placeholder="Communicate with the Void..." onkeypress="handleChatKey(event)">
+                        </div>
+                        <button class="chat-btn-send" onclick="sendChatMessage()"
+                            style="background: var(--gold); border-radius: 15px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">></button>
+                    </div>
                 </div>
             </div>
 
-            <!-- TRIBUTE STORE (SIMPLIFIED FOR GRID) -->
-            <div class="v-card" style="flex: 1; display: flex; flex-direction: column;">
-                <div class="ribbon-label" style="margin-bottom: 10px;">STORE</div>
-                <div id="huntStoreGrid" class="store-grid"
-                    style="grid-template-columns: repeat(1, 1fr); gap: 5px; overflow-y: auto; flex: 1;">
+            <!-- GRID ITEM: ROW 3, SPAN COL 4-5 (RIGHT SECTION) -->
+            <div id="gridRightSection" class="serve-grid-item"
+                style="display:flex; flex-direction:row; gap:25px; overflow: hidden;">
+                <!-- DAILY DISCIPLINE -->
+                <div class="v-card" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="ribbon-label" style="margin-bottom: 15px;">DAILY DISCIPLINE</div>
+                    <div id="shelfRanks" class="mob-streak-strip" style="justify-content: center; gap: 8px;"></div>
+                    <div
+                        style="text-align: center; margin-top: auto; font-size: 0.7rem; color: rgba(255,255,255,0.5); font-family: 'Cinzel';">
+                        SINCE <span id="slaveSinceDate" style="color: white;">--/--/--</span>
+                    </div>
+                </div>
+
+                <!-- TRIBUTE STORE (SIMPLIFIED FOR GRID) -->
+                <div class="v-card" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="ribbon-label" style="margin-bottom: 10px;">STORE</div>
+                    <div id="huntStoreGrid" class="store-grid"
+                        style="grid-template-columns: repeat(1, 1fr); gap: 5px; overflow-y: auto; flex: 1;">
+                    </div>
+                </div>
+            </div>
+        </div> <!-- END viewServingTopDesktop (GRID WRAPPER) -->
+
+        <!-- OTHER VIEWS (RECORDS, NEWS, BUY) - SPAN COL 2-5, ROWS 1-3 -->
+        <div id="historySection" class="view-wrapper hidden alt-grid-view" style="background: transparent;">
+            <div class="v-card" style="margin-bottom: 20px;">
+                <h2 style="font-family: 'Cinzel'; color: var(--gold); text-align: center;">SERVICE RECORD</h2>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+                <div class="v-card" style="padding: 15px; text-align: center;">
+                    <div class="ribbon-label">TOTAL TASKS</div>
+                    <div id="statTotal" style="font-size: 1.5rem; font-family: 'Orbitron'; color: white;">0</div>
+                </div>
+                <div class="v-card" style="padding: 15px; text-align: center;">
+                    <div class="ribbon-label">SKIPPED</div>
+                    <div id="statSkipped" style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-red);">0
+                    </div>
+                </div>
+                <div class="v-card" style="padding: 15px; text-align: center;">
+                    <div class="ribbon-label">KNEELS</div>
+                    <div id="statTotalKneels"
+                        style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">0</div>
+                </div>
+            </div>
+            <div id="historyGrid"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; overflow-y: auto;">
+            </div>
+            <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
+                <div class="ribbon-label" style="padding: 10px;">ACCEPTED OFFERINGS</div>
+                <div id="gridOkay" class="horizontal-scroll-track" style="height: 180px; padding-bottom: 10px;">
+                </div>
+            </div>
+            <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
+                <div class="ribbon-label" style="padding: 10px;">PENDING VERDICT</div>
+                <div id="gridPending" class="horizontal-scroll-track" style="height: 180px; padding-bottom: 10px;">
+                </div>
+            </div>
+            <div class="v-card" style="padding: 10px;">
+                <div class="ribbon-label" style="padding: 10px;">DENIED / VOIDED</div>
+                <div id="gridFailed" class="horizontal-scroll-track" style="height: 180px; padding-bottom: 10px;">
                 </div>
             </div>
         </div>
-    </div> <!-- END viewServingTopDesktop (GRID WRAPPER) -->
-
-    <!-- OTHER VIEWS (RECORDS, NEWS, BUY) - SPAN COL 2-5, ROWS 1-3 -->
-    <div id="historySection" class="view-wrapper hidden alt-grid-view" style="background: transparent;">
-        <div class="v-card" style="margin-bottom: 20px;">
-            <h2 style="font-family: 'Cinzel'; color: var(--gold); text-align: center;">SERVICE RECORD</h2>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
-            <div class="v-card" style="padding: 15px; text-align: center;">
-                <div class="ribbon-label">TOTAL TASKS</div>
-                <div id="statTotal" style="font-size: 1.5rem; font-family: 'Orbitron'; color: white;">0</div>
+        <div id="viewNews" class="view-wrapper hidden v-span-4" style="padding: 0;">
+            <div class="v-card">
+                <h2 style="font-family:'Cinzel'; color: var(--gold); text-align: center; margin-bottom: 20px;">
+                    LIBRARY</h2>
+                <div id="newsGrid" class="gallery-grid"
+                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;"></div>
             </div>
-            <div class="v-card" style="padding: 15px; text-align: center;">
-                <div class="ribbon-label">SKIPPED</div>
-                <div id="statSkipped" style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-red);">0
+        </div> <!-- END viewNews -->
+
+        <!-- EXCHEQUER VIEW (Correct Location: Outside Dashboard, Inside Desktop App) -->
+        <div id="viewBuy" class="v-card v-span-4 hidden" style="flex-direction: column; gap: 20px;">
+            <!-- TITLE -->
+            <div class="ribbon-label" style="align-self: flex-start;">EXCHEQUER & TRIBUTE</div>
+            <!-- TOP SECTION: FEES & HISTORY -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; width:100%;">
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 10px;">
+                    <div
+                        style="color: var(--gold); font-family: 'Orbitron'; font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px;">
+                        OUTSTANDING FEES</div>
+                    <div
+                        style="color: #666; font-size: 0.7rem; font-family: 'Cinzel'; text-align: center; padding: 20px;">
+                        NO FEES PENDING</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 10px;">
+                    <div
+                        style="color: var(--gold); font-family: 'Orbitron'; font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px;">
+                        TRANSACTION HISTORY</div>
+                    <div
+                        style="color: #666; font-size: 0.7rem; font-family: 'Cinzel'; text-align: center; padding: 20px;">
+                        ACCESSING STRIPE CONNECT...</div>
                 </div>
             </div>
-            <div class="v-card" style="padding: 15px; text-align: center;">
-                <div class="ribbon-label">KNEELS</div>
-                <div id="statTotalKneels" style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">
-                    0</div>
-            </div>
-        </div>
-        <div id="historyGrid"
-            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; overflow-y: auto;">
-        </div>
-        <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
-            <div class="ribbon-label" style="padding: 10px;">ACCEPTED OFFERINGS</div>
-            <div id="gridOkay" class="horizontal-scroll-track" style="height: 180px; padding-bottom: 10px;">
-            </div>
-        </div>
-        <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
-            <div class="ribbon-label" style="padding: 10px;">PENDING VERDICT</div>
-            <div id="gridPending" class="horizontal-scroll-track" style="height: 180px; padding-bottom: 10px;">
-            </div>
-        </div>
-        <div class="v-card" style="padding: 10px;">
-            <div class="ribbon-label" style="padding: 10px;">DENIED / VOIDED</div>
-            <div id="gridFailed" class="horizontal-scroll-track" style="height: 180px; padding-bottom: 10px;"></div>
-        </div>
-    </div>
-    <div id="viewNews" class="view-wrapper hidden v-span-4" style="padding: 0;">
-        <div class="v-card">
-            <h2 style="font-family:'Cinzel'; color: var(--gold); text-align: center; margin-bottom: 20px;">
-                LIBRARY</h2>
-            <div id="newsGrid" class="gallery-grid"
-                style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;"></div>
-        </div>
-    </div> <!-- END viewNews -->
 
-    <!-- EXCHEQUER VIEW (Correct Location: Outside Dashboard, Inside Desktop App) -->
-    <div id="viewBuy" class="v-card v-span-4 hidden" style="flex-direction: column; gap: 20px;">
-        <!-- TITLE -->
-        <div class="ribbon-label" style="align-self: flex-start;">EXCHEQUER & TRIBUTE</div>
-        <!-- TOP SECTION: FEES & HISTORY -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; width:100%;">
-            <div style="background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 10px;">
-                <div
-                    style="color: var(--gold); font-family: 'Orbitron'; font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px;">
-                    OUTSTANDING FEES</div>
-                <div style="color: #666; font-size: 0.7rem; font-family: 'Cinzel'; text-align: center; padding: 20px;">
-                    NO FEES PENDING</div>
+            <!-- TRIBUTE STORE (Rendered by JS) -->
+            <div class="ribbon-label"
+                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">TRIBUTE STORE
             </div>
-            <div style="background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 10px;">
-                <div
-                    style="color: var(--gold); font-family: 'Orbitron'; font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px;">
-                    TRANSACTION HISTORY</div>
-                <div style="color: #666; font-size: 0.7rem; font-family: 'Cinzel'; text-align: center; padding: 20px;">
-                    ACCESSING STRIPE CONNECT...</div>
+            <div id="storeGrid" class="store-grid"
+                style="grid-template-columns: repeat(3, 1fr); gap: 20px; min-height: 100px;">
+                <!-- Wishlist items load here -->
             </div>
-        </div>
 
-        <!-- TRIBUTE STORE (Rendered by JS) -->
-        <div class="ribbon-label" style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">
-            TRIBUTE STORE</div>
-        <div id="storeGrid" class="store-grid"
-            style="grid-template-columns: repeat(3, 1fr); gap: 20px; min-height: 100px;">
-            <!-- Wishlist items load here -->
-        </div>
-
-        <!-- STRIPE COIN PACKAGES -->
-        <div class="ribbon-label" style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">
-            PURCHASE COINS</div>
-        <div class="store-grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
-            <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                <div style="font-size: 1.2rem; margin-bottom: 10px;">1,000 🪙</div>
-                <button class="action-btn" onclick="buyRealCoins(1000)"
-                    style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€10.00</button>
+            <!-- STRIPE COIN PACKAGES -->
+            <div class="ribbon-label"
+                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">PURCHASE COINS
             </div>
-            <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                <div style="font-size: 1.2rem; margin-bottom: 10px;">5,500 🪙</div>
-                <button class="action-btn" onclick="buyRealCoins(5500)"
-                    style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€50.00</button>
+            <div class="store-grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">1,000 🪙</div>
+                    <button class="action-btn" onclick="buyRealCoins(1000)"
+                        style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€10.00</button>
+                </div>
+                <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">5,500 🪙</div>
+                    <button class="action-btn" onclick="buyRealCoins(5500)"
+                        style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€50.00</button>
+                </div>
+                <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">12,000 🪙</div>
+                    <button class="action-btn" onclick="buyRealCoins(12000)"
+                        style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€100.00</button>
+                </div>
+                <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">30,000 🪙</div>
+                    <button class="action-btn" onclick="buyRealCoins(30000)"
+                        style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€250.00</button>
+                </div>
+                <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">70,000 🪙</div>
+                    <button class="action-btn" onclick="buyRealCoins(70000)"
+                        style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€500.00</button>
+                </div>
+                <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">150,000 🪙</div>
+                    <button class="action-btn" onclick="buyRealCoins(150000)"
+                        style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€1000.00</button>
+                </div>
             </div>
-            <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                <div style="font-size: 1.2rem; margin-bottom: 10px;">12,000 🪙</div>
-                <button class="action-btn" onclick="buyRealCoins(12000)"
-                    style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€100.00</button>
-            </div>
-            <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                <div style="font-size: 1.2rem; margin-bottom: 10px;">30,000 🪙</div>
-                <button class="action-btn" onclick="buyRealCoins(30000)"
-                    style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€250.00</button>
-            </div>
-            <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                <div style="font-size: 1.2rem; margin-bottom: 10px;">70,000 🪙</div>
-                <button class="action-btn" onclick="buyRealCoins(70000)"
-                    style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€500.00</button>
-            </div>
-            <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
-                <div style="font-size: 1.2rem; margin-bottom: 10px;">150,000 🪙</div>
-                <button class="action-btn" onclick="buyRealCoins(150000)"
-                    style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€1000.00</button>
-            </div>
-        </div>
-    </div> <!-- END viewBuy -->
+        </div> <!-- END viewBuy -->
 
     </div> <!-- END DESKTOP_APP -->
 
