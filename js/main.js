@@ -1098,7 +1098,8 @@ window.addEventListener("message", (event) => {
                     // NEW: REQUIRED FOR HIERARCHY LOGIC
                     kinks: data.profile.kinks,
                     limits: data.profile.limits,
-                    rawImage: data.profile.rawImage
+                    rawImage: data.profile.rawImage,
+                    tributeHistory: (typeof data.profile.tributeHistory === 'string' ? JSON.parse(data.profile.tributeHistory || "[]") : data.profile.tributeHistory) || []
                 });
 
                 if (data.profile.taskQueue) setTaskQueue(data.profile.taskQueue);
