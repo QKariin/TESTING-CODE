@@ -171,8 +171,13 @@
         flex-direction: column;
         padding: 40px;
         overflow-y: auto;
-        z-index: 50 !important;
-        background: var(--bg-deep);
+        z-index: 205 !important;
+        /* Higher than regular cards */
+        background: rgba(2, 5, 18, 0.7);
+        /* Translucent */
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border-left: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     /* GENERAL CARD STYLING FOR GRID */
