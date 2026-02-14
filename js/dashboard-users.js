@@ -25,12 +25,12 @@ const REWARD_DATA = {
         },
         {
             name: "FOOTMAN", icon: "👞", tax: 15,
-            req: { tasks: 5, kneels: 10, points: 500, spent: 0, streak: 0, name: true, photo: true },
+            req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0, name: true, photo: true },
             benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."]
         },
         {
             name: "SILVERMAN", icon: "🥈", tax: 10,
-            req: { tasks: 25, kneels: 65, points: 2500, spent: 5000, streak: 5, limits: true, kinks: true },
+            req: { tasks: 25, kneels: 65, points: 5000, spent: 5000, streak: 5, limits: true, kinks: true },
             benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."]
         },
         {
