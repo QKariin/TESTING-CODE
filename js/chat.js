@@ -97,14 +97,13 @@ export async function renderChat(messages) {
                     const item = JSON.parse(jsonStr);
                     
                     // 1. CHECK ALL POSSIBLE PROPERTIES FOR THE IMAGE
-                    let cardImgUrl = item.img || item.image || item.itemImage || item.mediaUrl || "";
-
-                    // 2. APPLY FIXES (CPU Quota & Auth)
-                    if (cardImgUrl && cardImgUrl.includes('upcdn.io')) {
-                        let clean = cardImgUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
-                        try { cardImgUrl = await getSignedUrl(clean); } 
-                        catch(e) { cardImgUrl = clean; }
-                    }
+                    let cardImgUrl = item.img;
+                        if (cardImgUrl && cardImgUrl.includes('upcdn.io')) {
+                            // Apply the SAME fix as above to the card image
+                            let clean = cardImgUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
+                            try { cardImgUrl = await getSignedUrl(clean); } catch(e) { cardImgUrl = clean; }
+                        }
+                        <img src="${cardImgUrl}" ...>
 
                     // 3. RENDER CARD
                     contentHtml = `
