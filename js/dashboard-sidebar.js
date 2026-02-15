@@ -122,7 +122,7 @@ export function renderSidebar() {
         html += `
             <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" onclick="selUser('${u.memberId}')">
                 <div class="u-avatar-main">
-                    <img src="${getOptimizedUrl(finalPic, 100)}" alt="${u.name}">
+                    <img src="${finalPic}" alt="${clean(u.name)}">
                 </div>
                 <div class="u-info">
                     <div class="u-name">${clean(u.name)}</div>
