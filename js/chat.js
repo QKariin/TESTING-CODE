@@ -1,11 +1,11 @@
-// Chat functionality - FIXED: TRIBUTE CARD IMAGE AUTH
+// Chat functionality - FIXED: TRIBUTE IMAGE SELECTION & AUTH
 import {
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
 } from './state.js';
 import { URLS } from './config.js';
 import { triggerSound } from './utils.js';
-import { getOptimizedUrl, getSignedUrl } from './media.js'; 
+import { getSignedUrl } from './media.js'; 
 import { mediaType } from './media.js';
 
 let lastTickerText = "";
@@ -90,27 +90,27 @@ export async function renderChat(messages) {
         // --- MEDIA HANDLER ---
         if (m.message) {
             
-            // A. WISHLIST CARD (FIXED IMAGE LOADING)
+            // A. WISHLIST CARD (FIXED IMAGE SELECTION)
             if (m.message.startsWith('WISHLIST::')) {
                 try {
                     const jsonStr = m.message.replace('WISHLIST::', '');
                     const item = JSON.parse(jsonStr);
                     
-                    // --- APPLY IMAGE FIX TO TRIBUTE CARD ---
-                    let cardImgUrl = item.img;
+                    // 1. CHECK ALL POSSIBLE PROPERTIES FOR THE IMAGE
+                    let cardImgUrl = item.img || item.image || item.itemImage || item.mediaUrl || "";
+
+                    // 2. APPLY FIXES (CPU Quota & Auth)
                     if (cardImgUrl && cardImgUrl.includes('upcdn.io')) {
-                        // 1. Strip resize params (Fixes CPU Quota)
                         let clean = cardImgUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
-                        // 2. Sign URL (Fixes Auth Error)
                         try { cardImgUrl = await getSignedUrl(clean); } 
                         catch(e) { cardImgUrl = clean; }
                     }
-                    // ---------------------------------------
 
+                    // 3. RENDER CARD
                     contentHtml = `
                     <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; width:60vw;">
                         <div style="width:100%; height:120px; overflow:hidden; position:relative;">
-                             <img src="${cardImgUrl}" style="width:100%; height:100%; object-fit:cover;">
+                             <img src="${cardImgUrl}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
                              <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
                                  TRIBUTE SENT
                              </div>
@@ -122,7 +122,7 @@ export async function renderChat(messages) {
                         </div>
                     </div>`;
                 } catch (e) {
-                    console.error("Failed to parse wishlist card", e);
+                    console.error("Card Error:", e);
                     contentHtml = `<div class="msg ${msgClass}">🎁 TRIBUTE ERROR</div>`;
                 }
             }
@@ -154,9 +154,6 @@ export async function renderChat(messages) {
                         }
                     }
                 }
-                else {
-                    srcUrl = getOptimizedUrl(rawUrl, 600); 
-                }
 
                 if (mediaType(srcUrl) === "video" || srcUrl.includes(".mp4")) {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
@@ -166,7 +163,6 @@ export async function renderChat(messages) {
             }
         }
 
-        // Layout wrappers
         if (m.message && m.message.startsWith('WISHLIST::')) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
@@ -238,8 +234,8 @@ export function sendCoins(amount) {
 export function openChatPreview(url, isVideo) {
     const overlay = document.getElementById('chatMediaOverlay');
     const content = document.getElementById('chatMediaOverlayContent');
-    if (!overlay || !content) return;
     const decoded = decodeURIComponent(url);
+    if (!overlay || !content) return;
     content.innerHTML = isVideo ? `<video src="${decoded}" controls autoplay class="cmo-media"></video>` : `<img src="${decoded}" class="cmo-media">`;
     overlay.classList.remove('hidden');
     overlay.style.display = 'flex';
