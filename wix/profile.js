@@ -614,10 +614,7 @@ async function syncProfileAndTasks() {
         $w("#html2").postMessage({
             type: "UPDATE_FULL_DATA",
             profile: {
-                taskdom_streak: statsItem.taskdom_current_streak || 0,
                 taskdom_completed_tasks: statsItem.taskdom_completed_tasks || 0,
-                taskdom_streak_val: statsItem.taskdom_current_streak || 0, // Fallback
-                taskdom_current_streak: statsItem.taskdom_current_streak || 0,
                 taskdom_skipped_tasks: statsItem.taskdom_skipped_tasks || 0,
                 points: statsItem.score || 0,
                 kneelCount: statsItem.kneelCount || 0,
