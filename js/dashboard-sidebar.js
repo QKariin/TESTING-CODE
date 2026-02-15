@@ -203,7 +203,8 @@ export function selUser(id) {
     document.getElementById('viewHome').style.display = 'none';
     document.getElementById('viewProfile').style.display = 'none';
     const vUser = document.getElementById('viewUser');
-    if (vUser) vUser.classList.add('active');
+    vUser.style.display = 'flex';
+    vUser.classList.add('active');
 
     // Mark as read
     localStorage.setItem('read_' + id, Date.now());
