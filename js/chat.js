@@ -1,14 +1,38 @@
-// Chat functionality - FIXED: FORCE RAW MODE (NO RESIZING)
+// Chat functionality - PASSIVE MODE (Trusts the Database Link)
 import {
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
 } from './state.js';
-import { URLS } from './config.js';
 import { triggerSound } from './utils.js';
-import { getOptimizedUrl } from './media.js';
-import { mediaType } from './media.js';
 
 let lastTickerText = "";
+
+// --- URL HELPER ---
+function getSafeSrc(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return "";
+
+    // 1. STANDARD WEB LINKS (TRUST THE DB)
+    // If it works on Dashboard, it works here. Do NOT modify it.
+    if (rawUrl.startsWith('http')) {
+        return rawUrl;
+    }
+
+    // 2. WIX DATABASE FIX ONLY (Only fix what is actually broken)
+    if (rawUrl.includes('wix:image') || rawUrl.includes('wix:video')) {
+        const parts = rawUrl.split('/');
+        for (let i = 0; i < parts.length; i++) {
+            if (parts[i] === 'v1' && parts[i+1]) {
+                const id = parts[i+1].split('#')[0];
+                if (rawUrl.includes('video')) {
+                    return `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
+                }
+                return `https://static.wixstatic.com/media/${id}/v1/fill/w_600,h_600,al_c,q_80/file.jpg`;
+            }
+        }
+    }
+
+    return ""; // Unknown format
+}
 
 export async function renderChat(messages) {
     const deskChat = document.getElementById('chatContent');
@@ -26,23 +50,23 @@ export async function renderChat(messages) {
 
     // 2. FILTER STREAMS
     const systemMessages = sortedMessages.filter(m => {
-        const s = (m.sender || "").toLowerCase();
-        const txt = (m.message || "");
+        const txt = m.message || "";
         if (txt.startsWith('WISHLIST::')) return false;
+        const s = (m.sender || "").toLowerCase();
         return s === 'system' || txt.includes("Task Verified") || txt.includes("FAILURE");
     });
 
     const conversationMessages = sortedMessages.filter(m => {
-        const s = (m.sender || "").toLowerCase();
-        const txt = (m.message || "");
+        const txt = m.message || "";
         if (txt.startsWith('WISHLIST::')) return true;
+        const s = (m.sender || "").toLowerCase();
         return s !== 'system' && !txt.includes("Task Verified") && !txt.includes("FAILURE");
     });
 
     // 3. TICKER
     if (systemMessages.length > 0) {
         const latest = systemMessages[systemMessages.length - 1];
-        const txt = DOMPurify.sanitize(latest.message);
+        const txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(latest.message) : latest.message;
         if (txt !== lastTickerText) {
             lastTickerText = txt;
             const tickerHtml = `<span style="color:#fff;">◈</span> ${txt}`;
@@ -77,12 +101,12 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    // 5. RENDER CHAT
+    // 5. RENDER MESSAGES
     const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit;
     const visibleMessages = conversationMessages.slice(-activeLimit);
 
     let messagesHtml = visibleMessages.map((m) => {
-        let txt = DOMPurify.sanitize(m.message);
+        let txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(m.message) : m.message;
         const isMe = (m.sender || "").toLowerCase() === 'user' || (m.sender || "").toLowerCase() === 'slave';
         
         txt = txt.replace(/\n/g, "<br>");
@@ -91,7 +115,10 @@ export async function renderChat(messages) {
         let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
 
         // --- MEDIA HANDLER ---
-        if (m.message) {
+        const rawUrl = m.mediaUrl || m.message;
+        const isUrl = rawUrl.startsWith('http') || rawUrl.includes('wix:') || rawUrl.includes('upcdn');
+
+        if (m.message && (isUrl || m.message.startsWith('WISHLIST::'))) {
             // A. WISHLIST
             if (m.message.startsWith('WISHLIST::')) {
                 try {
@@ -104,49 +131,19 @@ export async function renderChat(messages) {
                 } catch (e) { contentHtml = `<div class="msg ${msgClass}">🎁 ERROR</div>`; }
             }
             // B. IMAGES / VIDEO
-            else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:') || m.message.includes('upcdn')) {
-                const rawUrl = m.mediaUrl || m.message;
-                let srcUrl = rawUrl;
-
-                // 1. BYTESCALE RAW FIX (The Magic Line)
-                if (rawUrl.includes('upcdn.io')) {
-                    // Force path to /raw/ and STRIP ALL PARAMETERS to avoid Quota Error
-                    srcUrl = rawUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
-                }
-                // 2. Wix Fix
-                else if (rawUrl.includes('wix:image')) {
-                    const parts = rawUrl.split('/');
-                    for(let i=0; i<parts.length; i++) {
-                        if(parts[i] === 'v1' && parts[i+1]) {
-                            srcUrl = `https://static.wixstatic.com/media/${parts[i+1].split('#')[0]}`;
-                            break;
-                        }
-                    }
-                } 
-                else if (rawUrl.includes('wix:video')) {
-                    const parts = rawUrl.split('/');
-                    for(let i=0; i<parts.length; i++) {
-                        if(parts[i] === 'v1' && parts[i+1]) {
-                            srcUrl = `https://video.wixstatic.com/video/${parts[i+1].split('#')[0]}/mp4/file.mp4`;
-                            break;
-                        }
-                    }
-                }
-                else {
-                    srcUrl = getOptimizedUrl(rawUrl, 600); 
-                }
-
-                // Render
-                const isVideo = srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm') || mediaType(srcUrl) === "video";
+            else if (isUrl) {
+                const srcUrl = getSafeSrc(rawUrl);
+                
+                // Video Check
+                const isVideo = srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm') || rawUrl.includes('wix:video');
 
                 if (isVideo) {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
                 } else {
-                    // Added fallback to open in new tab if it fails visually
+                    // Simple Image - No error fallback text, just the image
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
                         <img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit; cursor:pointer;" 
-                             onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"
-                             onerror="this.onerror=null; this.parentElement.innerHTML='<a href=\\'${srcUrl}\\' target=\\'_blank\\' style=\\'color:#c5a059; font-size:10px; padding:10px; display:block;\\'>[VIEW IMAGE]</a>'">
+                             onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
                     </div>`;
                 }
             }
@@ -156,14 +153,12 @@ export async function renderChat(messages) {
             return `<div class="msg-row" style="justify-content:center; margin:10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
-        if (!isMe) {
-            const avatarUrl = "https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png";
-            if (!m.message.startsWith('WISHLIST::') && !m.message.startsWith('http') && !m.mediaUrl && !m.message.startsWith('wix:')) {
-                contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
-                    <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
-                    <span>${txt}</span>
-                </div>`;
-            }
+        const avatarUrl = "https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png";
+        if (!isMe && !isUrl && !m.message.startsWith('WISHLIST::')) {
+            contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
+                <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
+                <span>${txt}</span>
+            </div>`;
         }
 
         return `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">
