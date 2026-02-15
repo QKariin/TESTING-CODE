@@ -5,17 +5,7 @@ import { currId, cooldownInterval, setCurrId, setCooldownInterval } from './dash
 import { renderSidebar } from './dashboard-sidebar.js';
 
 export function showHome() {
-    if (cooldownInterval) {
-        clearInterval(cooldownInterval);
-        setCooldownInterval(null);
-    }
-    
-    setCurrId(null);
-    document.getElementById('viewUser').classList.remove('active');
-    document.getElementById('viewProfile').style.display = 'none';
-    document.getElementById('viewHome').style.display = 'grid';
-    
-    renderSidebar();
+    window.location.href = "../index.html";
 }
 
 export function showProfile() {
@@ -23,12 +13,12 @@ export function showProfile() {
         clearInterval(cooldownInterval);
         setCooldownInterval(null);
     }
-    
+
     setCurrId(null);
     document.getElementById('viewUser').classList.remove('active');
     document.getElementById('viewHome').style.display = 'none';
     document.getElementById('viewProfile').style.display = 'flex';
-    
+
     import('./dashboard-profile.js').then(({ renderProfile }) => {
         renderProfile();
     });
