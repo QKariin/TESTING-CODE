@@ -360,7 +360,7 @@ async function updateReviewQueue(u) {
         // Sign URLs for thumbnails
         const signingPromises = u.reviewQueue.map(async t => {
             if (t.proofUrl) {
-                t.thumbSigned = await getSignedUrl(t.proofUrl);
+                t.thumbSigned = await getSignedUrl(getOptimizedUrl(t.proofUrl, 150));
                 t.fullSigned = await getSignedUrl(t.proofUrl);
             }
         });
@@ -607,8 +607,8 @@ async function updateHistory(u) {
 
         // Sign URLs
         const signingPromises = historyToShow.map(async h => {
-            if (h.proofUrl && h.proofUrl.startsWith('https://upcdn')) h.thumbSigned = await getSignedUrl(h.proofUrl);
-            else h.thumbSigned = h.proofUrl;
+            if (h.proofUrl && h.proofUrl.startsWith('https://upcdn')) h.thumbSigned = await getSignedUrl(getOptimizedUrl(h.proofUrl, 150));
+            else h.thumbSigned = getOptimizedUrl(h.proofUrl, 150);
         });
         await Promise.all(signingPromises);
 
