@@ -1579,7 +1579,7 @@
             <!-- GRID ITEM: ROW 1, COL 4 (STAT CARD 3) -->
             <div id="gridStat3" class="v-card v-stat-card serve-grid-item"
                 style="flex-direction: column; align-items: stretch; gap: 10px;">
-                <div class="ribbon-label" style="text-align: center;">STREAK RECORD</div>
+                <div class="ribbon-label" style="text-align: center;">CONSISTENCY</div>
                 <div style="display: flex; width: 100%; justify-content: space-around; align-items: center; flex: 1;">
                     <div style="text-align: center;">
                         <div class="ribbon-label" style="font-size: 0.55rem; opacity: 0.7; margin-bottom: 5px;">
@@ -2722,53 +2722,53 @@
                     </div>
                 </div>
 
-            </div> 
+            </div>
 
 
-    <script>
+            <script>
 
-        // =========================================
-        // IOS VISUAL VIEWPORT RESIZER
-        // =========================================
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                // When keyboard opens/closes, browser resizes visualViewport.
-                // We force the body height to match, preventing the "Halfway Scroll" bug.
-                document.body.style.height = window.visualViewport.height + 'px';
+                // =========================================
+                // IOS VISUAL VIEWPORT RESIZER
+                // =========================================
+                if (window.visualViewport) {
+                    window.visualViewport.addEventListener('resize', () => {
+                        // When keyboard opens/closes, browser resizes visualViewport.
+                        // We force the body height to match, preventing the "Halfway Scroll" bug.
+                        document.body.style.height = window.visualViewport.height + 'px';
 
-                // Force scroll to top to kill any offsets
-                window.scrollTo(0, 0);
-            });
-        }
-
-        function checkDevice() {
-            const isMobile = window.innerWidth <= 768;
-            const desktop = document.getElementById('DESKTOP_APP');
-            const mobile = document.getElementById('MOBILE_APP');
-            const dashboard = document.getElementById('viewMobileHome');
-
-            if (isMobile) {
-                if (desktop) desktop.style.display = 'none';
-                if (mobile) mobile.style.display = 'flex';
-                // Force Dashboard Visible
-                if (dashboard) {
-                    dashboard.style.display = 'flex';
-                    dashboard.style.visibility = 'visible';
-                    dashboard.style.opacity = '1';
+                        // Force scroll to top to kill any offsets
+                        window.scrollTo(0, 0);
+                    });
                 }
-            } else {
-                if (mobile) mobile.style.display = 'none';
-                if (desktop) desktop.style.display = 'flex';
-            }
-        }
-        // Run immediately and on resize
-        checkDevice();
-        window.addEventListener('resize', checkDevice);
-        window.addEventListener('load', checkDevice);
-    </script>
-    <script type="module">
-        import '../profile/kneeling/kneeling.js';
-    </script>
+
+                function checkDevice() {
+                    const isMobile = window.innerWidth <= 768;
+                    const desktop = document.getElementById('DESKTOP_APP');
+                    const mobile = document.getElementById('MOBILE_APP');
+                    const dashboard = document.getElementById('viewMobileHome');
+
+                    if (isMobile) {
+                        if (desktop) desktop.style.display = 'none';
+                        if (mobile) mobile.style.display = 'flex';
+                        // Force Dashboard Visible
+                        if (dashboard) {
+                            dashboard.style.display = 'flex';
+                            dashboard.style.visibility = 'visible';
+                            dashboard.style.opacity = '1';
+                        }
+                    } else {
+                        if (mobile) mobile.style.display = 'none';
+                        if (desktop) desktop.style.display = 'flex';
+                    }
+                }
+                // Run immediately and on resize
+                checkDevice();
+                window.addEventListener('resize', checkDevice);
+                window.addEventListener('load', checkDevice);
+            </script>
+            <script type="module">
+                import '../profile/kneeling/kneeling.js';
+            </script>
 </body>
 
 </html>
