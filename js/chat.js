@@ -166,9 +166,10 @@ export async function renderChat(messages) {
                     // ADDED: onloadeddata="window.forceBottom()"
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" onloadeddata="window.forceBottom()" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
                 } else {
-                    // ADDED: onload="window.forceBottom()"
+                    // DIV: padding:0 (no gaps), overflow:hidden (rounded corners), width:fit-content (hug image)
+                    // IMG: max-height:300px (limit height), width:auto (keep ratio)
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; overflow:hidden; width:fit-content;">
-                        <img src="${srcUrl}" onload="window.forceBottom()" style="max-width:200px; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
+                        <img src="${srcUrl}" onload="window.forceBottom()" style="max-height:300px; width:auto; max-width:100%; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
                     </div>`;
                 }
             }
