@@ -5,7 +5,17 @@ import { currId, cooldownInterval, setCurrId, setCooldownInterval } from './dash
 import { renderSidebar } from './dashboard-sidebar.js';
 
 export function showHome() {
-    window.location.href = "../index.html";
+    if (cooldownInterval) {
+        clearInterval(cooldownInterval);
+        setCooldownInterval(null);
+    }
+
+    setCurrId(null);
+    document.getElementById('viewUser').classList.remove('active');
+    document.getElementById('viewProfile').style.display = 'none';
+    document.getElementById('viewHome').style.display = 'grid';
+
+    renderSidebar();
 }
 
 export function showProfile() {
