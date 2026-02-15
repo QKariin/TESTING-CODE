@@ -1574,26 +1574,33 @@ window.updateHierarchyDrawer = function (currentStreak) {
     // Normalize string to match config (e.g. "Hall Boy" vs "HallBoy")
     const cleanName = (name) => (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
-    // --- GATEKEEPER START (Copied from updateStats) ---
+    // --- GATEKEEPER START (Updated with Sync Guard) ---
+    // We use the "True" hierarchy from the DB, but protect it from accidental sync demotions.
     let currentRaw = userProfile.hierarchy || "Hall Boy";
 
     // 1. GATEKEEPER: Identity & Photo
     const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
-    // Check if name is "Slave" (default) or empty OR photo is missing/silhouette
-    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture || userProfile.profilePicture.includes(SILHOUETTE)) {
-        currentRaw = "Hall Boy";
-    }
 
-    // 2. GATEKEEPER: Preferences (Silverman+)
-    const dbRankLower = currentRaw.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const isAboveFootman = dbRankLower !== "hallboy" && dbRankLower !== "footman";
+    // SYNC GUARD: If we are lacking critical profile keys, skip demotion (it's likely a partial data sync)
+    const dataIsComplete = (userProfile.kinks !== undefined && userProfile.limits !== undefined);
 
-    if (isAboveFootman) {
-        const hasKinks = (userProfile.kinks && userProfile.kinks.length > 2);
-        const hasLimits = (userProfile.limits && userProfile.limits.length > 2);
+    if (dataIsComplete) {
+        // Only run demotion checks if we are NOT in the middle of a sync/initial load
+        if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture || userProfile.profilePicture.includes(SILHOUETTE)) {
+            currentRaw = "Hall Boy";
+        }
 
-        if (!hasKinks || !hasLimits) {
-            currentRaw = "Footman";
+        // 2. GATEKEEPER: Preferences (Silverman+)
+        const dbRankLower = currentRaw.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const isAboveFootman = dbRankLower !== "hallboy" && dbRankLower !== "footman";
+
+        if (isAboveFootman) {
+            const hasKinks = (userProfile.kinks && userProfile.kinks.length > 2);
+            const hasLimits = (userProfile.limits && userProfile.limits.length > 2);
+
+            if (!hasKinks || !hasLimits) {
+                currentRaw = "Footman";
+            }
         }
     }
     // --- GATEKEEPER END ---
@@ -1760,6 +1767,12 @@ window.updateHierarchyDrawer = function (currentStreak) {
     // 6. PROMOTION BUTTON (NEW)
     const allMet = (() => {
         if (isMax) return false;
+
+        // NEW: RANK LOCK GUARD
+        // Never suggest claiming a rank if the user's master record (userProfile.hierarchy) 
+        // already says they are that rank.
+        if (cleanName(nextRankObj.name) === cleanName(userProfile.hierarchy)) return false;
+
         // Checks
         if (req.name) {
             const name = (userProfile.name || userProfile.title || "").trim().toUpperCase();
