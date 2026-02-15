@@ -153,8 +153,18 @@ function generateReport(item, currentRank) {
 
     statsMap.forEach(s => {
         if (req[s.reqKey] > 0 || (s.reqKey === "tasks" && req.tasks >= 0)) {
-            const current = item[s.key] || 0;
+            let current = item[s.key] || 0;
+            let active = item[s.activeKey] || 0;
             const target = req[s.reqKey];
+
+            // --- STREAK FALLBACK: CALCULATE FROM HISTORY IF DATA IS MISSING ---
+            if (s.reqKey === "streak" && current === 0 && active === 0) {
+                const historyStr = item.routineHistory || item.routinehistory || "[]";
+                const calculated = calculateInternalStreak(historyStr);
+                active = calculated.current;
+                current = calculated.best;
+            }
+
             const pct = Math.min((current / (target || 1)) * 100, 100);
 
             const requirement = {
@@ -168,7 +178,7 @@ function generateReport(item, currentRank) {
 
             // Add Active (Current) Streak if applicable
             if (s.activeKey) {
-                requirement.active = item[s.activeKey] || 0;
+                requirement.active = active;
             }
 
             report.requirements.push(requirement);
@@ -183,4 +193,84 @@ function generateReport(item, currentRank) {
     });
 
     return report;
+}
+
+/**
+ * Internal streak calculator for backend fallback
+ */
+function calculateInternalStreak(historyStr) {
+    let history = [];
+    try {
+        if (typeof historyStr === 'string') history = JSON.parse(historyStr);
+        else if (Array.isArray(historyStr)) history = historyStr;
+    } catch (e) { return { current: 0, best: 0 }; }
+
+    if (!history || history.length === 0) return { current: 0, best: 0 };
+
+    // Sort Newest First
+    history.sort((a, b) => new Date(b.date || b._createdDate || b) - new Date(a.date || a._createdDate || a));
+
+    const getDutyDay = (d) => {
+        let date = new Date(d);
+        if (date.getHours() < 6) date.setDate(date.getDate() - 1);
+        return date.toISOString().split('T')[0];
+    };
+
+    let current = 0;
+    let best = 0;
+    let tempCurrent = 0;
+
+    const todayCode = getDutyDay(new Date());
+    const lastSubmissionDate = history[0].date || history[0]._createdDate || history[0];
+    const lastCode = getDutyDay(lastSubmissionDate);
+
+    // Calculate Active Streak (Current)
+    const diffDays = (new Date(todayCode) - new Date(lastCode)) / (1000 * 60 * 60 * 24);
+    if (diffDays <= 1) {
+        tempCurrent = 1;
+        let lastDay = lastCode;
+        for (let i = 1; i < history.length; i++) {
+            const day = getDutyDay(history[i].date || history[i]._createdDate || history[i]);
+            if (day === lastDay) continue;
+
+            const prevDay = new Date(lastDay);
+            prevDay.setDate(prevDay.getDate() - 1);
+            if (day === prevDay.toISOString().split('T')[0]) {
+                tempCurrent++;
+                lastDay = day;
+            } else { break; }
+        }
+    }
+    current = tempCurrent;
+
+    // Calculate All-Time Best (High Water Mark)
+    // To be efficient, we scan the history
+    let maxBest = current;
+    let streakCount = 0;
+    let lastDate = null;
+
+    // Sort Oldest First for best streak scan
+    const chronHistory = [...history].sort((a, b) => new Date(a.date || a._createdDate || a) - new Date(b.date || b._createdDate || b));
+
+    chronHistory.forEach(h => {
+        const day = getDutyDay(h.date || h._createdDate || h);
+        if (day === lastDate) return;
+
+        if (!lastDate) {
+            streakCount = 1;
+        } else {
+            const yesterday = new Date(day);
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (lastDate === yesterday.toISOString().split('T')[0]) {
+                streakCount++;
+            } else {
+                streakCount = 1;
+            }
+        }
+        lastDate = day;
+        if (streakCount > maxBest) maxBest = streakCount;
+    });
+
+    best = maxBest;
+    return { current, best };
 }

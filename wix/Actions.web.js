@@ -456,7 +456,26 @@ export const getHierarchyReportAction = webMethod(Permissions.Anyone, async (mem
     try {
         const results = await wixData.query("Tasks").eq("memberId", memberId).find(options);
         if (results.items.length > 0) {
-            const report = getHierarchyReport(results.items[0]);
+            let item = results.items[0];
+            const report = getHierarchyReport(item);
+
+            // --- AUTO-MIGRATE: If the report found values but DB is empty, SYNC BACK ---
+            const consistencyReq = report.requirements.find(r => r.id === "streak");
+            if (consistencyReq && consistencyReq.type === "bar") {
+                let changed = false;
+                if ((item.bestRoutinestreak || 0) < consistencyReq.current) {
+                    item.bestRoutinestreak = consistencyReq.current;
+                    changed = true;
+                }
+                if ((item.routinestreak || 0) < consistencyReq.active) {
+                    item.routinestreak = consistencyReq.active;
+                    changed = true;
+                }
+                if (changed) {
+                    await wixData.update("Tasks", item, options);
+                }
+            }
+
             return { success: true, report };
         }
         return { success: false, error: "User not found" };

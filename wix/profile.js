@@ -599,12 +599,6 @@ async function syncProfileAndTasks() {
 
         let statsItem = statsResults.items[0];
 
-        // --- DATA MIGRATION: INITIALIZE BEST STREAK ---
-        if (typeof statsItem.bestRoutinestreak === 'undefined' || statsItem.bestRoutinestreak < (statsItem.routinestreak || 0)) {
-            statsItem.bestRoutinestreak = statsItem.routinestreak || 0;
-            await wixData.update("Tasks", statsItem, { suppressAuth: true });
-        }
-
         // FETCH THE HIERARCHY REPORT (Instruction Packet)
         const reportRes = await getHierarchyReportAction(currentUserEmail);
         const hierarchyReport = reportRes.success ? reportRes.report : null;
