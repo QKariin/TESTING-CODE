@@ -1,13 +1,14 @@
-// Chat functionality - FIXED: RESTORED TRIBUTE CARD + SIGNED RAW IMAGES
+// Chat functionality - STRICT REVERT + AUTH/QUOTA FIX
 import {
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
 } from './state.js';
 import { URLS } from './config.js';
 import { triggerSound } from './utils.js';
-import { getSignedUrl } from './media.js'; 
+import { getOptimizedUrl, getSignedUrl } from './media.js'; // Added getSignedUrl
 import { mediaType } from './media.js';
 
+// Add this variable at the TOP of chat.js (outside the function)
 let lastTickerText = "";
 
 export async function renderChat(messages) {
@@ -24,43 +25,72 @@ export async function renderChat(messages) {
         (a, b) => new Date(a._createdDate) - new Date(b._createdDate)
     );
 
-    // 2. SEPARATE STREAMS
+    // 2. SEPARATE STREAMS (STRICTER FILTER)
     const systemMessages = sortedMessages.filter(m => {
         const s = (m.sender || "").toLowerCase();
         const txt = (m.message || "");
+
+        // EXCLUDE WISHLIST FROM TICKER (It goes to main chat)
         if (txt.startsWith('WISHLIST::')) return false;
-        return s === 'system' || txt.includes("Task Verified") || txt.includes("Task Rejected");
+
+        // Catch 'system' sender OR any auto-generated messages
+        return s === 'system' ||
+            txt.includes("Task Verified") ||
+            txt.includes("Task Rejected") ||
+            txt.includes("FAILURE RECORDED") ||
+            txt.includes("earned");
     });
 
     const conversationMessages = sortedMessages.filter(m => {
         const s = (m.sender || "").toLowerCase();
         const txt = (m.message || "");
+
+        // ALWAYS ALLOW WISHLIST CARDS
         if (txt.startsWith('WISHLIST::')) return true;
-        return s !== 'system' && !txt.includes("Task Verified") && !txt.includes("Task Rejected");
+
+        // Only allow Human Conversation
+        return s !== 'system' &&
+            !txt.includes("Task Verified") &&
+            !txt.includes("Task Rejected") &&
+            !txt.includes("FAILURE RECORDED") &&
+            !txt.includes("earned");
     });
 
-    // 3. TICKER
+    // 3. TICKER LOGIC (ANTI-BLINK FIX)
     if (systemMessages.length > 0) {
         const latest = systemMessages[systemMessages.length - 1];
-        const txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(latest.message) : latest.message;
+        const txt = DOMPurify.sanitize(latest.message);
+
+        // ONLY ANIMATE IF TEXT CHANGED
         if (txt !== lastTickerText) {
-            lastTickerText = txt;
+            lastTickerText = txt; // Update memory
             const tickerHtml = `<span style="color:#fff;">◈</span> ${txt}`;
+
             [ticker, mobTicker].forEach(el => {
                 if (el) {
                     el.classList.remove('hidden');
                     el.innerHTML = tickerHtml;
+                    // Reset Animation
                     el.classList.remove('ticker-flash');
-                    void el.offsetWidth;
+                    void el.offsetWidth; // Force Reflow
                     el.classList.add('ticker-flash');
                 }
+            });
+        } else {
+            // Text is same, just ensure it's visible (No Flash)
+            [ticker, mobTicker].forEach(el => {
+                if (el) el.classList.remove('hidden');
             });
         }
     }
 
-    // 4. CHECK UPDATES
+    // 4. CHAT LOGIC (Standard)
     const currentJson = JSON.stringify(conversationMessages);
     if (currentJson === lastChatJson) return;
+
+    const dBox = document.getElementById('chatBox');
+    const isAtBottom = dBox ? (dBox.scrollHeight - dBox.scrollTop - dBox.clientHeight < 150) : true;
+    const wasInitialLoad = isInitialLoad;
 
     if (!isInitialLoad && conversationMessages.length > 0) {
         const lastMsg = conversationMessages[conversationMessages.length - 1];
@@ -73,26 +103,29 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    // 5. RENDER CHAT (ASYNC FOR SIGNING)
+    // 5. RENDER CHAT (ASYNC MAP REQUIRED FOR URL SIGNING)
     const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit;
     const visibleMessages = conversationMessages.slice(-activeLimit);
 
+    // We must use Promise.all to wait for signatures to fix "auth_headers_missing"
     const messagesHtmlArray = await Promise.all(visibleMessages.map(async (m) => {
-        let txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(m.message) : m.message;
+        let txt = DOMPurify.sanitize(m.message);
         const senderLower = (m.sender || "").toLowerCase();
         const isMe = senderLower === 'user' || senderLower === 'slave';
-        
+
         txt = txt.replace(/\n/g, "<br>");
         const timeStr = new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const msgClass = isMe ? 'm-slave' : 'm-queen';
         let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
 
-        // --- MEDIA HANDLER ---
+        // Media
         if (m.message) {
-            // A. WISHLIST CARD (RESTORED ORIGINAL)
+            // 1. WISHLIST CARD (EXACT ORIGINAL RESTORED)
             if (m.message.startsWith('WISHLIST::')) {
                 try {
-                    const item = JSON.parse(m.message.replace('WISHLIST::', ''));
+                    const jsonStr = m.message.replace('WISHLIST::', '');
+                    const item = JSON.parse(jsonStr);
+
                     contentHtml = `
                     <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; width:60vw;">
                         <div style="width:100%; height:120px; overflow:hidden; position:relative;">
@@ -107,14 +140,17 @@ export async function renderChat(messages) {
                             <div style="color:#c5a059; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold;">${item.price}</div>
                         </div>
                     </div>`;
-                } catch (e) { contentHtml = `<div class="msg ${msgClass}">🎁 TRIBUTE ERROR</div>`; }
+                } catch (e) {
+                    console.error("Failed to parse wishlist card", e);
+                    contentHtml = `<div class="msg ${msgClass}">🎁 TRIBUTE ERROR</div>`;
+                }
             }
-            // B. IMAGES / VIDEO (FIXED AUTH & QUOTA)
-            else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:') || m.message.includes('upcdn')) {
+            // 2. STANDARD MEDIA (FIXED FOR AUTH & QUOTA)
+            else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:image') || m.message.includes('wix:video')) {
                 const rawUrl = m.mediaUrl || m.message;
                 let srcUrl = rawUrl;
 
-                // 1. BYTESCALE FIX (FORCE RAW + SIGN)
+                // --- BYTESCALE FIX (FORCE RAW + SIGN) ---
                 if (rawUrl.includes('upcdn.io')) {
                     // Force /raw/ to avoid CPU Quota error
                     let clean = rawUrl
@@ -129,7 +165,7 @@ export async function renderChat(messages) {
                         srcUrl = clean; // Fallback
                     }
                 }
-                // 2. WIX FIX (DATABASE LINKS)
+                // --- WIX FIX (DATABASE LINKS) ---
                 else if (rawUrl.includes('wix:image')) {
                     const parts = rawUrl.split('/');
                     for(let i=0; i<parts.length; i++) {
@@ -148,34 +184,34 @@ export async function renderChat(messages) {
                         }
                     }
                 }
+                else {
+                    srcUrl = getOptimizedUrl(rawUrl, 600); 
+                }
 
-                // Render Media
-                const isVideo = srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm') || mediaType(srcUrl) === "video";
-
-                if (isVideo) {
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
+                if (mediaType(srcUrl) === "video" || srcUrl.includes(".mp4")) {
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%;"></video></div>`;
                 } else {
-                    // Standard Image Tag
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
-                        <img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit; cursor:pointer;" 
-                             onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"
-                             onerror="this.style.display='none'; this.parentElement.innerHTML='<a href=\\'${srcUrl}\\' target=\\'_blank\\' style=\\'color:red; font-size:10px; padding:10px; display:block;\\'>[AUTH FAILED]</a>'">
-                    </div>`;
+                    // Assume Image
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;"><img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"></div>`;
                 }
             }
         }
 
-        // Layout wrappers
+        // Center Wishlist Cards specifically
         if (m.message && m.message.startsWith('WISHLIST::')) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
-        const avatarUrl = "https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png";
-        if (!isMe && !m.message.startsWith('WISHLIST::') && !m.message.startsWith('http')) {
-            contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
-                <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
-                <span>${txt}</span>
-            </div>`;
+        // Avatar Logic (Queen Only - Inside Bubble)
+        if (!isMe) {
+            const avatarUrl = "https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png";
+            // Inject avatar INSIDE the message bubble for Queen text messages
+            if (!m.message.startsWith('WISHLIST::') && !m.message.startsWith('http') && !m.mediaUrl && !m.message.startsWith('wix:')) {
+                contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
+                    <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
+                    <span>${txt}</span>
+                </div>`;
+            }
         }
 
         return `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">
@@ -184,12 +220,19 @@ export async function renderChat(messages) {
                 <div class="msg-time">${timeStr}</div>
             </div>
         </div>`;
-    }));
+    })); // End Map
 
     const messagesHtml = messagesHtmlArray.join('');
 
-    if (deskChat) deskChat.innerHTML = messagesHtml;
-    if (mobChat) mobChat.innerHTML = messagesHtml;
+    if (conversationMessages.length > visibleMessages.length) {
+        // Updated HTML join logic means we need to prepend the button manually
+        const btnHtml = `<div style="width:100%; text-align:center; padding:10px;"><button onclick="window.loadMoreChat()" style="background:transparent; border:none; color:#666; font-size:0.6rem;">▲ LOAD HISTORY</button></div>`;
+        if (deskChat) deskChat.innerHTML = btnHtml + messagesHtml;
+        if (mobChat) mobChat.innerHTML = btnHtml + messagesHtml;
+    } else {
+        if (deskChat) deskChat.innerHTML = messagesHtml;
+        if (mobChat) mobChat.innerHTML = messagesHtml;
+    }
 
     if (wasInitialLoad || isAtBottom) forceBottom();
 }
@@ -197,25 +240,33 @@ export async function renderChat(messages) {
 export function forceBottom() {
     const dBox = document.getElementById('chatBox');
     const mBox = document.getElementById('mob_chatBox');
+
     if (dBox) dBox.scrollTop = dBox.scrollHeight;
     if (mBox) mBox.scrollTop = mBox.scrollHeight;
 }
 
 export function loadMoreChat() {
     setChatLimit(chatLimit + 10);
-    if (lastChatJson) renderChat(JSON.parse(lastChatJson));
+    if (lastChatJson) {
+        renderChat(JSON.parse(lastChatJson));
+    }
 }
 
 export function sendChatMessage() {
     const dInput = document.getElementById('chatMsgInput');
     const mInput = document.getElementById('mob_chatMsgInput');
+
+    // Determine which input is being used
     let activeInput = null;
     if (dInput && dInput.value.trim() !== "") activeInput = dInput;
     else if (mInput && mInput.value.trim() !== "") activeInput = mInput;
 
-    if (!activeInput) return;
+    if (!activeInput) return; // No text found
 
-    window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: activeInput.value.trim() }, "*");
+    const txt = activeInput.value.trim();
+    window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: txt }, "*");
+
+    // Clear BOTH inputs to be safe
     if (dInput) dInput.value = "";
     if (mInput) mInput.value = "";
 }
