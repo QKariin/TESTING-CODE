@@ -168,7 +168,7 @@ export async function renderChat(messages) {
                 } else {
                     // ADDED: onload="window.forceBottom()"
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
-                        <img src="${srcUrl}" onload="window.forceBottom()" style="max-width:100%; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
+                        <img src="${srcUrl}" onload="window.forceBottom()" style="max-width:300px; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
                     </div>`;
                 }
             }
