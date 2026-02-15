@@ -1,66 +1,3 @@
-Skip to content
-QKariin
-Entire-ecosystem
-Repository navigation
-Code
-Issues
-Pull requests
-Agents
-Actions
-Projects
-Security
-Insights
-Settings
-Files
-Go to file
-t
-api
-audio
-css
-dashboard
-icons
-js
-bridge.js
-chat.js
-config.js
-dashboard-chat.js
-dashboard-main.js
-dashboard-modals.js
-dashboard-navigation.js
-dashboard-operations.js
-dashboard-profile.js
-dashboard-protocol.js
-dashboard-sidebar.js
-dashboard-state.js
-dashboard-users.js
-dashboard-utils.js
-gallery.js
-main.js
-media.js
-mediaBytescale.js
-sound.js
-state.js
-tasks.js
-ui.js
-uploads.js
-utils.js
-lib
-profile
-wix
-README.md
-index.html
-manifest.json
-package.json
-service-worker.js
-shared-chat-example.html
-Entire-ecosystem/js
-/dashboard-operations.js
- 
-
-Code
-
-Blame
-169 lines (141 loc) · 6.25 KB
 // Dashboard Operations Monitor
 // Operations grid, monitoring cards, and feed management
 
@@ -76,13 +13,13 @@ export function renderOperationsMonitor() {
 function renderOperationsGrid() {
     const opsList = document.getElementById('opsList');
     if (!opsList) return;
-    
+
     // Get active users (those with active tasks or pending reviews)
-    const activeUsers = users.filter(u => 
-        (u.activeTask && u.endTime && u.endTime > Date.now()) || 
+    const activeUsers = users.filter(u =>
+        (u.activeTask && u.endTime && u.endTime > Date.now()) ||
         (u.reviewQueue && u.reviewQueue.length > 0)
     );
-    
+
     if (activeUsers.length === 0) {
         opsList.innerHTML = `
             <div class="ops-grid">
@@ -93,20 +30,20 @@ function renderOperationsGrid() {
         `;
         return;
     }
-    
+
     let html = '<div class="ops-grid">';
-    
+
     activeUsers.forEach(u => {
         const hasActiveTask = u.activeTask && u.endTime && u.endTime > Date.now();
         const hasPendingReview = u.reviewQueue && u.reviewQueue.length > 0;
-        
+
         const cardClass = hasPendingReview ? 'red' : 'blue';
         const badgeClass = hasPendingReview ? 'badge-r' : 'badge-b';
         const badgeText = hasPendingReview ? 'REVIEW' : 'ACTIVE';
-        
+
         let detail = '';
         let timer = '';
-        
+
         if (hasPendingReview) {
             detail = `${u.reviewQueue.length} pending`;
         } else if (hasActiveTask) {
@@ -114,12 +51,14 @@ function renderOperationsGrid() {
             const timeLeft = u.endTime - Date.now();
             timer = formatTimer(timeLeft);
         }
-        
+
+        const finalPic = u.avatar || u.profilePicture || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png';
+
         html += `
             <div class="mon-card ${cardClass}" onclick="selectUserFromOps('${u.memberId}')">
                 <div class="mon-badge ${badgeClass}">${badgeText}</div>
                 <div class="mon-av-box">
-                    <img src="${getOptimizedUrl(u.avatar, 100)}" class="mon-av" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMzMzMiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzY2NiI+CjxwYXRoIGQ9Ik0xMiAyQzEzLjEgMiAxNCAyLjkgMTQgNEMxNCA1LjEgMTMuMSA2IDEyIDZDMTAuOSA2IDEwIDUuMSAxMCA0QzEwIDIuOSAxMC45IDIgMTIgMlpNMjEgOVYyMkgxNVYxNkgxM1YyMkg3VjlDNyA4LjQ1IDcuNDUgOCA4IDhIMTZDMTYuNTUgOCAxNyA4LjQ1IDE3IDlWMTBIMTlWOUgyMVoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
+                    <img src="${finalPic}" class="mon-av" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMzMzMiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzY2NiI+CjxwYXRoIGQ9Ik0xMiAyQzEzLjEgMiAxNCAyLjkgMTQgNEMxNCA1LjEgMTMuMSA2IDEyIDZDMTAuOSA2IDEwIDUuMSAxMCA0QzEwIDIuOSAxMC45IDIgMTIgMlpNMjEgOVYyMkgxNVYxNkgxM1YyMkg3VjlDNyA4LjQ1IDcuNDUgOCA4IDhIMTZDMTYuNTUgOCAxNyA4LjQ1IDE3IDlWMTBIMTlWOUgyMVoiLz4KPC9zdmc+Cjwvc3ZnPgo='">
                 </div>
                 <div class="mon-name">${clean(u.name)}</div>
                 <div class="mon-detail">${detail}</div>
@@ -127,7 +66,7 @@ function renderOperationsGrid() {
             </div>
         `;
     });
-    
+
     html += '</div>';
     opsList.innerHTML = html;
 }
@@ -135,10 +74,10 @@ function renderOperationsGrid() {
 function renderFeedLog() {
     const feedLog = document.getElementById('feedLog');
     if (!feedLog) return;
-    
+
     // Combine tributes and other activities
     let feedItems = [];
-    
+
     // Add tributes
     globalTributes.slice(0, 10).forEach(tribute => {
         feedItems.push({
@@ -147,12 +86,12 @@ function renderFeedLog() {
             timestamp: new Date(tribute.date).getTime()
         });
     });
-    
+
     // Add recent completions from global queue (approved items)
     const recentCompletions = globalQueue
         .filter(item => item.status === 'approve')
         .slice(0, 5);
-    
+
     recentCompletions.forEach(completion => {
         feedItems.push({
             type: 'completion',
@@ -160,12 +99,12 @@ function renderFeedLog() {
             timestamp: Date.now() - Math.random() * 3600000 // Random time within last hour
         });
     });
-    
+
     // Sort by timestamp (newest first)
     feedItems.sort((a, b) => b.timestamp - a.timestamp);
-    
+
     let html = '';
-    
+
     feedItems.slice(0, 15).forEach(item => {
         if (item.type === 'tribute') {
             html += renderTributeFeedCard(item.data);
@@ -173,7 +112,7 @@ function renderFeedLog() {
             html += renderCompletionFeedCard(item.data);
         }
     });
-    
+
     if (html === '') {
         html = `
             <div style="text-align: center; color: #666; padding: 40px; font-family: 'Rajdhani'; font-size: 0.9rem;">
@@ -181,16 +120,18 @@ function renderFeedLog() {
             </div>
         `;
     }
-    
+
     feedLog.innerHTML = html;
 }
 
 function renderTributeFeedCard(tribute) {
     const timeStr = new Date(tribute.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+    const u = users.find(x => x.memberId === tribute.memberId);
+    const finalPic = tribute.memberAvatar || tribute.avatar || tribute.profilePicture || u?.avatar || u?.profilePicture || '';
+
     return `
         <div class="feed-trib-card">
-            <img src="${getOptimizedUrl(tribute.memberAvatar || tribute.avatar, 72)}" class="ft-avatar" onerror="this.style.display='none'">
+            <img src="${finalPic}" class="ft-avatar" onerror="this.style.display='none'">
             <div class="ft-content">
                 <div class="ft-top">
                     <span>${clean(tribute.memberName || 'Unknown')}</span>
@@ -205,10 +146,12 @@ function renderTributeFeedCard(tribute) {
 
 function renderCompletionFeedCard(completion) {
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+    const u = users.find(x => x.memberId === completion.memberId);
+    const finalPic = completion.avatar || completion.profilePicture || u?.avatar || u?.profilePicture || '';
+
     return `
         <div class="feed-buy-card">
-            <img src="${getOptimizedUrl(completion.avatar, 72)}" class="ft-avatar" onerror="this.style.display='none'">
+            <img src="${finalPic}" class="ft-avatar" onerror="this.style.display='none'">
             <div class="ft-content">
                 <div class="ft-top">
                     <span>${clean(completion.userName || 'User')}</span>
@@ -230,20 +173,3 @@ function selectUserFromOps(memberId) {
 
 // Make functions available globally
 window.selectUserFromOps = selectUserFromOps;
-Symbols
-Find definitions and references for functions and other symbols in this file by clicking a symbol below or in the code.
-
-Filter symbols
-r
-func
-renderOperationsMonitor
-func
-renderOperationsGrid
-func
-renderFeedLog
-func
-renderTributeFeedCard
-func
-renderCompletionFeedCard
-func
-selectUserFromOps
