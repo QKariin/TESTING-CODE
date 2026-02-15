@@ -1,4 +1,4 @@
-// Chat functionality - FAIL-SAFE VERSION
+// Chat functionality - ECONOMY MODE (No Image Processing)
 import {
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
@@ -7,41 +7,43 @@ import { triggerSound } from './utils.js';
 
 let lastTickerText = "";
 
-// --- URL CLEANER ---
+// --- URL REPAIR (ECONOMY VERSION) ---
 function getSafeSrc(rawUrl) {
     if (!rawUrl || typeof rawUrl !== 'string') return "";
 
-    // 1. WIX FIX (Case Insensitive)
-    if (rawUrl.toLowerCase().includes('wix:image') || rawUrl.toLowerCase().includes('wix:video')) {
+    // 1. BYTESCALE / MOBILE UPLOADS (THE FIX)
+    if (rawUrl.includes('upcdn.io')) {
+        // STOP using /image/ (Costs CPU)
+        // FORCE /raw/ (Cheaper/Free bandwidth only)
+        // Remove all fancy parameters like ?w=600
+        let clean = rawUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/');
+        return clean.split('?')[0]; 
+    }
+
+    // 2. WIX DATABASE IMAGES (Standard)
+    if (rawUrl.includes('wix:image') || rawUrl.includes('wix:video')) {
         const parts = rawUrl.split('/');
-        // Look for the part AFTER "v1" (case insensitive)
-        for (let i = 0; i < parts.length; i++) {
-            if (parts[i].toLowerCase() === 'v1' && parts[i+1]) {
-                const id = parts[i+1].split('#')[0]; // Clean ID
-                if (rawUrl.toLowerCase().includes('video')) {
+        for (let part of parts) {
+            // Ignore protocol parts
+            if (part.includes(':') || part === '' || part === 'v1') continue;
+            
+            // Find the ID part
+            if (part.includes('_') || part.length > 20) {
+                const id = part.split('#')[0]; 
+                
+                if (rawUrl.includes('video')) {
                     return `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
                 }
-                // Use generic media URL (safest)
-                return `https://static.wixstatic.com/media/${id}`;
+                // Wix hosting is usually robust, we can keep using it
+                return `https://static.wixstatic.com/media/${id}/v1/fill/w_600,h_600,al_c,q_80/file.jpg`;
             }
         }
     }
 
-    // 2. BYTESCALE / MOBILE FIX (HEIC -> JPG)
-    if (rawUrl.includes('upcdn.io')) {
-        // Switch to image processing endpoint
-        let clean = rawUrl
-            .replace('/raw/', '/image/')
-            .replace('/thumbnail/', '/image/');
-        clean = clean.split('?')[0]; 
-        // Force JPG
-        return `${clean}?w=600&q=80&f=jpg`;
-    }
-
-    // 3. Already a web link
+    // 3. FALLBACK
     if (rawUrl.startsWith('http')) return rawUrl;
 
-    return ""; // Return empty if we can't figure it out
+    return ""; 
 }
 
 export async function renderChat(messages) {
@@ -58,7 +60,7 @@ export async function renderChat(messages) {
         (a, b) => new Date(a._createdDate) - new Date(b._createdDate)
     );
 
-    // 2. FILTER
+    // 2. FILTER STREAMS
     const systemMessages = sortedMessages.filter(m => {
         const txt = m.message || "";
         if (txt.startsWith('WISHLIST::')) return false;
@@ -92,9 +94,13 @@ export async function renderChat(messages) {
         }
     }
 
-    // 4. CHECK UPDATES
+    // 4. CHECK FOR UPDATES
     const currentJson = JSON.stringify(conversationMessages);
     if (currentJson === lastChatJson) return;
+
+    const dBox = document.getElementById('chatBox');
+    const isAtBottom = dBox ? (dBox.scrollHeight - dBox.scrollTop - dBox.clientHeight < 150) : true;
+    const wasInitialLoad = isInitialLoad;
 
     if (!isInitialLoad && conversationMessages.length > 0) {
         const lastMsg = conversationMessages[conversationMessages.length - 1];
@@ -137,26 +143,24 @@ export async function renderChat(messages) {
                     </div>`;
                 } catch (e) { contentHtml = `<div class="msg ${msgClass}">🎁 ERROR</div>`; }
             }
-            // B. MEDIA
+            // B. MEDIA (ECONOMY MODE)
             else if (isUrl) {
                 const srcUrl = getSafeSrc(rawUrl);
                 
-                // If getSafeSrc returned empty string, give clickable raw link
                 if (!srcUrl) {
-                    contentHtml = `<div class="msg ${msgClass}"><a href="${rawUrl}" target="_blank" style="color:red; text-decoration:underline;">[UNKNOWN MEDIA LINK]</a></div>`;
+                    contentHtml = `<div class="msg ${msgClass}"><a href="${rawUrl}" target="_blank" style="color:red; font-size:0.7rem;">[LINK ERROR]</a></div>`;
                 } else {
                     const isVideo = srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm');
 
                     if (isVideo) {
                         contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
                     } else {
-                        // *** FAIL-SAFE IMAGE ***
-                        // If image fails to load, it becomes a text button
+                        // Standard Image Tag
                         contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
                             <img src="${srcUrl}" 
-                                 style="max-width:100%; display:block; border-radius:inherit; cursor:pointer; min-height:50px;" 
+                                 style="max-width:100%; display:block; border-radius:inherit; cursor:pointer;" 
                                  onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"
-                                 onerror="this.style.display='none'; this.parentElement.innerHTML='<a href=\\'${srcUrl}\\' target=\\'_blank\\' style=\\'display:block; padding:10px; color:#c5a059; text-align:center; font-size:0.8rem; border:1px dashed #c5a059;\\'>⚠️ VIEW IMAGE</a>'">
+                                 onerror="this.style.display='none'; this.parentElement.innerHTML='<a href=\\'${srcUrl}\\' target=\\'_blank\\' style=\\'display:block; padding:10px; color:#c5a059; text-align:center; font-size:0.7rem; border:1px dashed #c5a059;\\'>⚠️ VIEW RAW FILE</a>'">
                         </div>`;
                     }
                 }
@@ -239,6 +243,7 @@ export function closeChatPreview() {
     }
 }
 
+// Global Exports
 window.loadMoreChat = loadMoreChat;
 window.openChatPreview = openChatPreview;
 window.closeChatPreview = closeChatPreview;
