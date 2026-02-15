@@ -1,53 +1,14 @@
-// Chat functionality - UNIFIED IMAGE FIX (TRIBUTES + UPLOADS)
+// Chat functionality - FIXED: AUTO-SCROLL ON IMAGE LOAD
 import {
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
 } from './state.js';
 import { URLS } from './config.js';
 import { triggerSound } from './utils.js';
-import { getSignedUrl, getOptimizedUrl } from './media.js'; 
+import { getSignedUrl, getOptimizedUrl } from './media.js';
 import { mediaType } from './media.js';
 
 let lastTickerText = "";
-
-// --- INTERNAL HELPER: FIXES CPU QUOTA & AUTH ---
-async function processUrl(rawUrl) {
-    if (!rawUrl) return "";
-    
-    // 1. BYTESCALE (Mobile Uploads / Tributes)
-    if (rawUrl.includes('upcdn.io')) {
-        // FORCE RAW (No CPU Usage)
-        let clean = rawUrl.replace('/image/', '/raw/')
-                          .replace('/thumbnail/', '/raw/')
-                          .split('?')[0]; 
-        // SIGN (Fixes Auth Error)
-        try { return await getSignedUrl(clean); } 
-        catch(e) { return clean; }
-    }
-
-    // 2. WIX IMAGE (Database)
-    if (rawUrl.includes('wix:image')) {
-        const parts = rawUrl.split('/');
-        for(let i=0; i<parts.length; i++) {
-            if(parts[i] === 'v1' && parts[i+1]) {
-                return `https://static.wixstatic.com/media/${parts[i+1].split('#')[0]}`;
-            }
-        }
-    } 
-
-    // 3. WIX VIDEO
-    if (rawUrl.includes('wix:video')) {
-        const parts = rawUrl.split('/');
-        for(let i=0; i<parts.length; i++) {
-            if(parts[i] === 'v1' && parts[i+1]) {
-                return `https://video.wixstatic.com/video/${parts[i+1].split('#')[0]}/mp4/file.mp4`;
-            }
-        }
-    }
-
-    // 4. STANDARD / FALLBACK
-    return getOptimizedUrl(rawUrl, 600);
-}
 
 export async function renderChat(messages) {
     const deskChat = document.getElementById('chatContent');
@@ -101,6 +62,10 @@ export async function renderChat(messages) {
     const currentJson = JSON.stringify(conversationMessages);
     if (currentJson === lastChatJson) return;
 
+    const dBox = document.getElementById('chatBox');
+    const isAtBottom = dBox ? (dBox.scrollHeight - dBox.scrollTop - dBox.clientHeight < 150) : true;
+    const wasInitialLoad = isInitialLoad;
+
     if (!isInitialLoad && conversationMessages.length > 0) {
         const lastMsg = conversationMessages[conversationMessages.length - 1];
         if (lastMsg._id !== lastNotifiedMessageId) {
@@ -112,7 +77,7 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    // 5. RENDER CHAT (ASYNC)
+    // 5. RENDER CHAT
     const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit;
     const visibleMessages = conversationMessages.slice(-activeLimit);
 
@@ -132,16 +97,22 @@ export async function renderChat(messages) {
             // A. WISHLIST CARD
             if (m.message.startsWith('WISHLIST::')) {
                 try {
-                    const item = JSON.parse(m.message.replace('WISHLIST::', ''));
-                    // Check various image properties
-                    let rawImg = item.img || item.image || item.itemImage || "";
-                    // Process URL (Sign + Fix Quota)
-                    let cardImgUrl = await processUrl(rawImg);
+                    const jsonStr = m.message.replace('WISHLIST::', '');
+                    const item = JSON.parse(jsonStr);
+                    
+                    // Tribute Image Logic
+                    let cardImgUrl = item.img || item.image || item.itemImage || "";
+                    if (cardImgUrl && cardImgUrl.includes('upcdn.io')) {
+                        let clean = cardImgUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
+                        try { cardImgUrl = await getSignedUrl(clean); } 
+                        catch(e) { cardImgUrl = clean; }
+                    }
 
+                    // ADDED: onload="window.forceBottom()" to the IMG tag
                     contentHtml = `
                     <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; width:60vw;">
                         <div style="width:100%; height:120px; overflow:hidden; position:relative;">
-                             <img src="${cardImgUrl}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                             <img src="${cardImgUrl}" onload="window.forceBottom()" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
                              <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
                                  TRIBUTE SENT
                              </div>
@@ -157,30 +128,53 @@ export async function renderChat(messages) {
                 }
             }
             
-            // B. STANDARD MEDIA (Direct Uploads)
+            // B. STANDARD MEDIA
             else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:') || m.message.includes('upcdn')) {
                 const rawUrl = m.mediaUrl || m.message;
-                // Process URL (Sign + Fix Quota)
-                const srcUrl = await processUrl(rawUrl);
+                let srcUrl = rawUrl;
 
-                // Detection logic handling Signed URLs (which might have query strings)
-                let isVideo = false;
-                if (srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm') || rawUrl.includes('wix:video')) {
-                    isVideo = true;
+                if (rawUrl.includes('upcdn.io')) {
+                    let clean = rawUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
+                    try { srcUrl = await getSignedUrl(clean); } catch(e) { srcUrl = clean; }
+                }
+                else if (rawUrl.includes('wix:image')) {
+                    const parts = rawUrl.split('/');
+                    for(let i=0; i<parts.length; i++) {
+                        if(parts[i] === 'v1' && parts[i+1]) {
+                            srcUrl = `https://static.wixstatic.com/media/${parts[i+1].split('#')[0]}`;
+                            break;
+                        }
+                    }
+                } 
+                else if (rawUrl.includes('wix:video')) {
+                    const parts = rawUrl.split('/');
+                    for(let i=0; i<parts.length; i++) {
+                        if(parts[i] === 'v1' && parts[i+1]) {
+                            srcUrl = `https://video.wixstatic.com/video/${parts[i+1].split('#')[0]}/mp4/file.mp4`;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    srcUrl = getOptimizedUrl(rawUrl, 600); 
                 }
 
+                // Render Media
+                const isVideo = mediaType(srcUrl) === "video" || srcUrl.includes(".mp4");
+
                 if (isVideo) {
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
+                    // ADDED: onloadeddata="window.forceBottom()"
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" onloadeddata="window.forceBottom()" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
                 } else {
+                    // ADDED: onload="window.forceBottom()"
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
-                        <img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit;" 
-                             onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
+                        <img src="${srcUrl}" onload="window.forceBottom()" style="max-width:100%; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
                     </div>`;
                 }
             }
         }
 
-        // Layout wrappers
+        // WRAPPERS
         if (m.message && m.message.startsWith('WISHLIST::')) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
@@ -252,8 +246,8 @@ export function sendCoins(amount) {
 export function openChatPreview(url, isVideo) {
     const overlay = document.getElementById('chatMediaOverlay');
     const content = document.getElementById('chatMediaOverlayContent');
-    const decoded = decodeURIComponent(url);
     if (!overlay || !content) return;
+    const decoded = decodeURIComponent(url);
     content.innerHTML = isVideo ? `<video src="${decoded}" controls autoplay class="cmo-media"></video>` : `<img src="${decoded}" class="cmo-media">`;
     overlay.classList.remove('hidden');
     overlay.style.display = 'flex';
@@ -272,3 +266,4 @@ export function closeChatPreview() {
 window.loadMoreChat = loadMoreChat;
 window.openChatPreview = openChatPreview;
 window.closeChatPreview = closeChatPreview;
+window.forceBottom = forceBottom; // NEW: EXPORTED FOR INLINE HTML
