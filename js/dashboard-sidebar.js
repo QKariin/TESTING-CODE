@@ -108,13 +108,27 @@ export function renderSidebar() {
         const hasMsg = hasUnreadMessage(u);
         const online = isUserOnline(u);
 
+        // --- UPDATED LAST SEEN LOGIC ---
         const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
-        const diff = ls > 0 ? Math.floor((now - ls) / 60000) : 999;
-
         let statusText = "OFFLINE";
-        if (online) statusText = "ONLINE";
-        else if (ls > 0 && diff < 60) statusText = `${diff} MIN AGO`;
-        else if (ls > 0) statusText = new Date(ls).toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+        if (online) {
+            statusText = "ONLINE";
+        } else if (ls > 0) {
+            const diffMins = Math.floor((now - ls) / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+
+            if (diffMins < 60) {
+                statusText = `${Math.max(1, diffMins)} MIN AGO`;
+            } else if (diffHours < 24) {
+                statusText = `${diffHours} HR${diffHours > 1 ? 'S' : ''} AGO`;
+            } else if (diffHours < 48) {
+                statusText = "YESTERDAY";
+            } else {
+                statusText = new Date(ls).toLocaleDateString([], { month: 'short', day: 'numeric' });
+            }
+        }
+        // -------------------------------
 
         const defaultPic = "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
         const finalPic = u.avatar || u.profilePicture || defaultPic;
