@@ -118,14 +118,13 @@ export async function renderChat(messages) {
         const msgClass = isMe ? 'm-slave' : 'm-queen';
         let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
 
-        // Media
+        // --- MEDIA HANDLER (IMAGES / VIDEO / WISHLIST) ---
         if (m.message) {
-            // 1. WISHLIST CARD (EXACT ORIGINAL RESTORED)
+            // A. WISHLIST CARD
             if (m.message.startsWith('WISHLIST::')) {
                 try {
                     const jsonStr = m.message.replace('WISHLIST::', '');
                     const item = JSON.parse(jsonStr);
-
                     contentHtml = `
                     <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; width:60vw;">
                         <div style="width:100%; height:120px; overflow:hidden; position:relative;">
@@ -141,7 +140,6 @@ export async function renderChat(messages) {
                         </div>
                     </div>`;
                 } catch (e) {
-                    console.error("Failed to parse wishlist card", e);
                     contentHtml = `<div class="msg ${msgClass}">🎁 TRIBUTE ERROR</div>`;
                 }
             }
