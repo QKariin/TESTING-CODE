@@ -58,11 +58,7 @@ export function getOptimizedUrl(url, width = 400) {
   if (url.includes("upcdn.io")) {
     if (url.includes("&sig=")) return url; // Already signed
 
-    // Use standard /thumbnail/ for cards to ensure compatibility with signers
-    if (width <= 300) {
-      return url.replace("/raw/", "/thumbnail/").split('?')[0];
-    }
-
+    // Fix: Do not use getThumbnail() here as it hardcodes w=300
     // 1. Force transformation endpoint
     let clean = url.replace("/raw/", "/image/").replace("/thumbnail/", "/image/");
 
