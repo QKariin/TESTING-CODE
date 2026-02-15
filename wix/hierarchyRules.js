@@ -148,7 +148,7 @@ function generateReport(item, currentRank) {
         { key: "kneelCount", label: "ENDURANCE", reqKey: "kneels" },
         { key: "score", label: "MERIT", reqKey: "points" },
         { key: "total_coins_spent", label: "SACRIFICE", reqKey: "spent" },
-        { key: "taskdom_streak", label: "CONSISTENCY", reqKey: "streak" }
+        { key: "taskdom_current_streak", label: "CONSISTENCY", reqKey: "streak" }
     ];
 
     statsMap.forEach(s => {
