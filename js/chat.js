@@ -1,4 +1,4 @@
-// Chat functionality - DESKTOP & MOBILE FIX
+// Chat functionality - UNIVERSAL MEDIA RESOLVER
 import {
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
@@ -7,42 +7,47 @@ import { triggerSound } from './utils.js';
 
 let lastTickerText = "";
 
-// --- INTERNAL URL REPAIR ---
-function getSafeSrc(rawUrl) {
-    if (!rawUrl) return "";
-    
-    // 1. WIX DATABASE IMAGES (Regex Extraction)
-    // Pattern: wix:image://v1/ <THE_ID> / <FILENAME>
+// --- THE FIX: UNIVERSAL URL PARSER ---
+function resolveMediaUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return "";
+
+    // 1. ALREADY A WEB LINK? (https://...)
+    if (rawUrl.startsWith('http')) {
+        // Fix Bytescale/HEIC (Mobile Uploads)
+        if (rawUrl.includes('upcdn.io')) {
+            let clean = rawUrl.replace('/raw/', '/image/').replace('/thumbnail/', '/image/');
+            clean = clean.split('?')[0]; // Strip old params
+            return `${clean}?w=600&q=80&f=jpg`; // Force JPG
+        }
+        return rawUrl;
+    }
+
+    // 2. WIX IMAGE (wix:image://v1/ID/name.jpg)
     if (rawUrl.includes('wix:image')) {
-        const match = rawUrl.match(/wix:image:\/\/v1\/([^/]+)/); 
-        if (match && match[1]) {
-            // Found the ID (e.g. "82739_2398...")
-            // Return clean standard Wix URL
-            return `https://static.wixstatic.com/media/${match[1]}`;
+        // Split by '/' to break it into chunks
+        const parts = rawUrl.split('/');
+        
+        // Find the chunk that is the ID (it's the one after 'v1')
+        for (let i = 0; i < parts.length; i++) {
+            if (parts[i] === 'v1' && parts[i+1]) {
+                const id = parts[i+1].split('#')[0]; // Remove hash params
+                return `https://static.wixstatic.com/media/${id}/v1/fill/w_600,h_600,al_c,q_80/file.jpg`;
+            }
         }
     }
 
-    // 2. WIX DATABASE VIDEOS
+    // 3. WIX VIDEO (wix:video://v1/ID/name.mp4)
     if (rawUrl.includes('wix:video')) {
-        const match = rawUrl.match(/wix:video:\/\/v1\/([^/]+)/);
-        if (match && match[1]) {
-            return `https://video.wixstatic.com/video/${match[1]}/mp4/file.mp4`;
+        const parts = rawUrl.split('/');
+        for (let i = 0; i < parts.length; i++) {
+            if (parts[i] === 'v1' && parts[i+1]) {
+                const id = parts[i+1].split('#')[0];
+                return `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
+            }
         }
     }
 
-    // 3. BYTESCALE / MOBILE UPLOADS (HEIC Fix)
-    if (rawUrl.includes('upcdn.io')) {
-        // Convert /raw/ to /image/ to enable processing
-        let clean = rawUrl.replace('/raw/', '/image/').replace('/thumbnail/', '/image/');
-        clean = clean.split('?')[0]; // Strip old params
-        // Force JPG format (browsers can't read iPhone HEIC)
-        return `${clean}?w=600&q=80&f=jpg`;
-    }
-
-    // 4. ALREADY VALID HTTP LINKS
-    if (rawUrl.startsWith('http')) return rawUrl;
-
-    return rawUrl; // Fallback
+    return ""; // Could not resolve
 }
 
 export async function renderChat(messages) {
@@ -59,7 +64,7 @@ export async function renderChat(messages) {
         (a, b) => new Date(a._createdDate) - new Date(b._createdDate)
     );
 
-    // 2. FILTER STREAMS
+    // 2. SEPARATE STREAMS
     const systemMessages = sortedMessages.filter(m => {
         const txt = m.message || "";
         if (txt.startsWith('WISHLIST::')) return false;
@@ -74,7 +79,7 @@ export async function renderChat(messages) {
         return s !== 'system' && !txt.includes("Task Verified") && !txt.includes("FAILURE");
     });
 
-    // 3. TICKER (Anti-Blink)
+    // 3. TICKER
     if (systemMessages.length > 0) {
         const latest = systemMessages[systemMessages.length - 1];
         const txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(latest.message) : latest.message;
@@ -93,7 +98,7 @@ export async function renderChat(messages) {
         }
     }
 
-    // 4. CHECK UPDATES
+    // 4. CHECK UPDATE
     const currentJson = JSON.stringify(conversationMessages);
     if (currentJson === lastChatJson) return;
 
@@ -112,22 +117,26 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    // 5. BUILD CHAT HTML
+    // 5. BUILD MESSAGES
     const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit;
     const visibleMessages = conversationMessages.slice(-activeLimit);
 
     let messagesHtml = visibleMessages.map((m) => {
         let txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(m.message) : m.message;
-        const senderLower = (m.sender || "").toLowerCase();
-        const isMe = senderLower === 'user' || senderLower === 'slave';
+        const isMe = (m.sender || "").toLowerCase() === 'user' || (m.sender || "").toLowerCase() === 'slave';
         
         txt = txt.replace(/\n/g, "<br>");
         const timeStr = new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const msgClass = isMe ? 'm-slave' : 'm-queen';
         let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
 
-        // --- MEDIA RENDERING ---
-        if (m.message) {
+        // --- MEDIA HANDLER ---
+        // Check message text OR specific media fields
+        const rawUrl = m.mediaUrl || m.message; 
+        const hasMediaSignal = rawUrl.startsWith('http') || rawUrl.includes('wix:') || rawUrl.includes('upcdn');
+
+        if (m.message && (hasMediaSignal || m.message.startsWith('WISHLIST::'))) {
+            
             // A. WISHLIST
             if (m.message.startsWith('WISHLIST::')) {
                 try {
@@ -140,38 +149,42 @@ export async function renderChat(messages) {
                 } catch (e) { contentHtml = `<div class="msg ${msgClass}">🎁 ERROR</div>`; }
             }
             // B. IMAGES / VIDEO
-            else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:') || m.message.includes('upcdn')) {
-                const rawUrl = m.mediaUrl || m.message;
+            else if (hasMediaSignal) {
                 
-                // USE THE SAFE REPAIR FUNCTION
-                const srcUrl = getSafeSrc(rawUrl);
+                // *** RESOLVE URL ***
+                const srcUrl = resolveMediaUrl(rawUrl);
                 
-                // DEBUGGING: Print broken links to console so we can see them
-                if (srcUrl === "") console.log("Failed to resolve URL:", rawUrl);
-
-                const isVideo = srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm') || rawUrl.includes('wix:video');
-
-                if (isVideo) {
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
+                // If it resolves to empty, show error (helps debugging)
+                if (!srcUrl) {
+                    console.warn("Could not resolve:", rawUrl);
+                    // Fallback to text so we don't lose the message content
+                    // contentHtml = `<div class="msg ${msgClass}">[UNSUPPORTED MEDIA]</div>`; 
                 } else {
-                    // Added min-width and min-height so broken images are visible as broken blocks
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
-                        <img src="${srcUrl}" 
-                             style="max-width:100%; display:block; border-radius:inherit; cursor:pointer; min-height:50px;" 
-                             onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"
-                             onerror="console.log('Img Load Error:', '${srcUrl}'); this.style.opacity='0.5';">
-                    </div>`;
+                    const isVideo = srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm');
+
+                    if (isVideo) {
+                        contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
+                    } else {
+                        // Image with Error Handler
+                        contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
+                            <img src="${srcUrl}" 
+                                 style="max-width:100%; display:block; border-radius:inherit; cursor:pointer;" 
+                                 onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"
+                                 onerror="this.style.display='none'; this.parentElement.innerText='❌ BROKEN IMAGE'; console.error('Failed to load:', '${srcUrl}')">
+                        </div>`;
+                    }
                 }
             }
         }
 
+        // Layout wrappers
         if (m.message && m.message.startsWith('WISHLIST::')) {
             return `<div class="msg-row" style="justify-content:center; margin:10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
         if (!isMe) {
             const avatarUrl = "https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png";
-            if (!m.message.startsWith('WISHLIST::') && !m.message.startsWith('http') && !m.mediaUrl && !m.message.startsWith('wix:')) {
+            if (!hasMediaSignal && !m.message.startsWith('WISHLIST::')) {
                 contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
                     <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
                     <span>${txt}</span>
