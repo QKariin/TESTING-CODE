@@ -40,73 +40,130 @@ export const HIERARCHY_RULES = [
 ];
 
 // --- HELPER: RANK DETERMINATION (Dynamic Logic) ---
+// --- HELPER: RANK DETERMINATION (Dynamic Logic) ---
 export function determineRank(item) {
-    const tasks = item.taskdom_completed_tasks || 0;
-    const kneels = item.kneelCount || 0;
-    const points = item.score || 0;
-    const spent = item.total_coins_spent || 0;
-    const streak = item.routinestreak || 0;
-    const name = item.title_fld || item.title || "";
+    const report = getHierarchyReport(item);
+    return report.currentRank;
+}
 
-    // 1. GATEKEEPER: MUST HAVE PROFILE IMAGE (image_fld)
-    // Must exist AND not be the default silhouette
+/**
+ * THE BRAIN: Audits a user record and returns exactly what the frontend should draw.
+ * This keeps the frontend "dumb" and prevents flickering.
+ */
+export function getHierarchyReport(item) {
+    const clean = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const currentHierarchy = item.hierarchy || "Hall Boy";
+
+    // Find index of current rank
+    let currentIndex = HIERARCHY_RULES.findIndex(r => clean(r.name) === clean(currentHierarchy));
+    if (currentIndex === -1) currentIndex = HIERARCHY_RULES.length - 1; // Default to Hall Boy
+
+    // Determine if we should be demoted (Gatekeeper Logic)
+    // 1. Photo Check
     const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
-    let img = item.image_fld || item.image || item.profilePicture;
+    const img = item.image_fld || item.image || item.profilePicture || "";
+    const hasPhoto = (img && img.length > 5 && !img.includes(SILHOUETTE) && img !== "undefined" && img !== "null");
 
-    // Sanitize
-    if (typeof img !== 'string') img = "";
+    // 2. Name Check
+    const nameStr = (item.title_fld || item.title || "").toUpperCase().trim();
+    const hasName = (nameStr.length > 0 && nameStr !== "SLAVE" && nameStr !== "NEW SLAVE");
 
-    // Check for "undefined" string, "null" string, or empty
-    if (!img || img === "undefined" || img === "null" || img.trim() === "") {
-        return "Hall Boy";
+    // 3. Demotion Logic (Surgical)
+    // If rank is above Hall Boy but missing Name/Photo -> Demote to Hall Boy
+    if (currentIndex < HIERARCHY_RULES.length - 1 && (!hasName || !hasPhoto)) {
+        return generateReport(item, "Hall Boy");
     }
 
-    // Check for specific silhouette ID
-    if (img.includes(SILHOUETTE)) {
-        return "Hall Boy";
-    }
-
-    // 2. GATEKEEPER: MUST HAVE VALID NAME
-    // Case insensitive check against forbidden names
-    const n = name.toUpperCase().trim();
-    if (!n || n === "SLAVE" || n === "NEW SLAVE") {
-        return "Hall Boy";
-    }
-
-    // 3. GATEKEEPER: MUST HAVE 10+ KNEELS (Footman Minimum)
-    if (kneels < 10) {
-        return "Hall Boy";
-    }
-
-    // --- PREFS CHECK ---
+    // 4. Prefs/Routine Checks (For Silverman+)
     const hasLimits = item.limits && item.limits.length > 2;
     const hasKinks = (item.kinks || item.kink) && (item.kinks || item.kink).length > 2;
     const hasPrefs = hasLimits && hasKinks;
-
-    // --- ROUTINE CHECK ---
     const hasRoutineSet = (item.routine && item.routine.length > 5) || (item.taskdom_routine && item.taskdom_routine.length > 5);
 
-    // --- ITERATE RULES (Descending) ---
-    for (const rank of HIERARCHY_RULES) {
-        // Skip Hall Boy in loop (default return)
-        if (rank.name === "Hall Boy") continue;
-
-        const req = rank.req;
-
-        // Check Metrics
-        if (tasks < req.tasks) continue;
-        if (kneels < req.kneels) continue;
-        if (points < req.points) continue;
-        if (spent < req.spent) continue;
-        if (streak < req.streak) continue;
-
-        // Check Flags
-        if (req.prefs && !hasPrefs) continue;
-        if (req.routine && !hasRoutineSet) continue;
-
-        // If we passed all checks for this rank, return it!
-        return rank.name;
+    if (currentIndex <= 4) { // Silverman or higher
+        if (!hasPrefs || !hasRoutineSet) {
+            return generateReport(item, "Footman");
+        }
     }
 
-    return "Hall Boy";
+    return generateReport(item, currentHierarchy);
+}
+
+function generateReport(item, currentRank) {
+    const clean = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const currentIndex = HIERARCHY_RULES.findIndex(r => clean(r.name) === clean(currentRank));
+    const nextIndex = currentIndex - 1;
+    const isMax = nextIndex < 0;
+
+    const nextRankObj = isMax ? HIERARCHY_RULES[0] : HIERARCHY_RULES[nextIndex];
+    const req = nextRankObj.req;
+
+    const report = {
+        currentRank: currentRank,
+        nextRank: nextRankObj.name,
+        isMax: isMax,
+        canPromote: false,
+        requirements: []
+    };
+
+    if (isMax) return report;
+
+    // Build the instruction packet
+    // 1. Identity
+    if (req.name || req.photo) {
+        const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
+        const img = item.image_fld || item.image || item.profilePicture || "";
+        const hasPhoto = (img && img.length > 5 && !img.includes(SILHOUETTE));
+        const nameStr = (item.title_fld || item.title || "").toUpperCase().trim();
+        const hasName = (nameStr.length > 0 && nameStr !== "SLAVE" && nameStr !== "NEW SLAVE");
+
+        if (req.name) report.requirements.push({ id: "name", label: "IDENTITY", status: hasName ? "VERIFIED" : "MISSING", type: "check" });
+        if (req.photo) report.requirements.push({ id: "photo", label: "PHOTO", status: hasPhoto ? "VERIFIED" : "MISSING", type: "check" });
+    }
+
+    // 2. Prefs/Routine
+    if (req.prefs || req.limits || req.kinks) {
+        const hasLimits = item.limits && item.limits.length > 2;
+        const hasKinks = (item.kinks || item.kink) && (item.kinks || item.kink).length > 2;
+        if (req.limits) report.requirements.push({ id: "limits", label: "LIMITS", status: hasLimits ? "VERIFIED" : "MISSING", type: "check" });
+        if (req.kinks) report.requirements.push({ id: "kinks", label: "KINKS", status: hasKinks ? "VERIFIED" : "MISSING", type: "check" });
+    }
+    if (req.routine) {
+        const hasRoutine = (item.routine && item.routine.length > 5) || (item.taskdom_routine && item.taskdom_routine.length > 5);
+        report.requirements.push({ id: "routine", label: "ROUTINE", status: hasRoutine ? "VERIFIED" : "MISSING", type: "check" });
+    }
+
+    // 3. Stats (Bars)
+    const statsMap = [
+        { key: "taskdom_completed_tasks", label: "LABOR", reqKey: "tasks" },
+        { key: "kneelCount", label: "ENDURANCE", reqKey: "kneels" },
+        { key: "score", label: "MERIT", reqKey: "points" },
+        { key: "total_coins_spent", label: "SACRIFICE", reqKey: "spent" },
+        { key: "routinestreak", label: "CONSISTENCY", reqKey: "streak" }
+    ];
+
+    statsMap.forEach(s => {
+        if (req[s.reqKey] > 0 || (s.reqKey === "tasks" && req.tasks >= 0)) {
+            const current = item[s.key] || 0;
+            const target = req[s.reqKey];
+            const pct = Math.min((current / (target || 1)) * 100, 100);
+            report.requirements.push({
+                id: s.reqKey,
+                label: s.label,
+                current: current,
+                target: target,
+                percent: pct,
+                type: "bar"
+            });
+        }
+    });
+
+    // 4. Can Promote?
+    report.canPromote = report.requirements.every(r => {
+        if (r.type === "check") return r.status === "VERIFIED";
+        if (r.type === "bar") return r.current >= r.target;
+        return true;
+    });
+
+    return report;
 }

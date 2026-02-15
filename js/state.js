@@ -73,6 +73,7 @@ export let WISHLIST_ITEMS = [];
 export let lastWorshipTime = 0;
 export let currentHistoryIndex = 0;
 export let touchStartX = 0;
+export let hierarchyReport = null;
 
 // --- 3. SETTERS (THE ONLY WAY TO UPDATE STATE SAFELY) ---
 
@@ -113,6 +114,7 @@ export function setLastWorshipTime(val) { lastWorshipTime = val; }
 export function setIsLocked(val) { isLocked = val; }
 export function setCurrentHistoryIndex(val) { currentHistoryIndex = val; }
 export function setTouchStartX(val) { touchStartX = val; }
+export function setHierarchyReport(val) { hierarchyReport = val; }
 
 // REWARD SETTERS
 export function setActiveRevealMap(val) { activeRevealMap = val || []; }

@@ -4,7 +4,7 @@ import wixSecretsBackend from 'wix-secrets-backend';
 import Stripe from 'stripe';
 
 // --- IMPORT CENTRAL LOGIC FROM PUBLIC ---
-import { determineRank, HIERARCHY_RULES } from 'public/hierarchyRules.js';
+import { determineRank, getHierarchyReport, HIERARCHY_RULES } from 'public/hierarchyRules.js';
 
 // --- PUBLIC API: GET RULES ---
 export const getHierarchyRequirements = webMethod(Permissions.Anyone, async () => {
@@ -21,16 +21,13 @@ export const updateScoreAction = webMethod(Permissions.Anyone, async (memberId, 
             let item = results.items[0];
             item.score = (item.score || 0) + amount;
 
-            // Re-Evaluate Rank on Score Change
-            const newRank = determineRank(item);
-            if (newRank !== item.hierarchy) {
-                item.hierarchy = newRank;
-            }
+            const report = getHierarchyReport(item);
+            item.hierarchy = report.currentRank;
 
             await wixData.update("Tasks", item, options);
-            return item;
+            return { item, report };
         }
-        return null; // User not found
+        return null;
     } catch (e) {
         console.error("updateScoreAction Error", e);
         return null;
@@ -178,21 +175,17 @@ export const secureUpdateTaskAction = webMethod(
 
                 // --- FINAL SAVE ---
                 if (needsUpdate) {
-                    // ALWAYS VALIDATE RANK BEFORE SAVING
-                    const currentRank = determineRank(item);
-                    if (currentRank !== item.hierarchy) {
-                        item.hierarchy = currentRank;
-                        console.log(`Rank corrected to ${currentRank} during update.`);
-                    }
+                    const report = getHierarchyReport(item);
+                    item.hierarchy = report.currentRank;
 
                     await wixData.update("Tasks", item, options);
-                    return true;
+                    return { success: true, report };
                 }
             }
-            return false;
+            return { success: false };
         } catch (error) {
             console.error("Backend Save Error:", error);
-            return false;
+            return { success: false };
         }
     }
 );
@@ -242,10 +235,11 @@ export const reviewTaskAction = webMethod(
                     }
 
                     // RE-EVALUATE RANK
-                    item.hierarchy = determineRank(item);
+                    const report = getHierarchyReport(item);
+                    item.hierarchy = report.currentRank;
 
                     await wixData.update("Tasks", item, options);
-                    return item;
+                    return { item, report };
                 }
             }
             return null;
@@ -301,10 +295,11 @@ export const processCoinTransaction = webMethod(
                 }
 
                 // RE-EVALUATE RANK (Spending changes rank)
-                item.hierarchy = determineRank(item);
+                const report = getHierarchyReport(item);
+                item.hierarchy = report.currentRank;
 
                 await wixData.update("Tasks", item, options);
-                return { success: true, newBalance: item.wallet };
+                return { success: true, newBalance: item.wallet, report };
             }
             return { success: false, error: "User not found" };
         } catch (e) {
@@ -388,13 +383,12 @@ export const updateProfileAction = webMethod(
                 if (data.kinks) { item.kink = data.kinks; changed = true; }
 
                 if (changed || cost > 0) {
-                    const newRank = determineRank(item);
-                    if (newRank !== item.hierarchy) {
-                        item.hierarchy = newRank;
-                        item.hierarchyChangeDate = new Date();
-                    }
+                    const report = getHierarchyReport(item);
+                    item.hierarchy = report.currentRank;
+                    item.hierarchyChangeDate = new Date();
+
                     await wixData.update("Tasks", item, options);
-                    return { success: true, hierarchy: item.hierarchy, cost: cost, newBalance: item.wallet };
+                    return { success: true, hierarchy: item.hierarchy, report, cost: cost, newBalance: item.wallet };
                 }
             }
             return { success: false, error: "User not found" };
@@ -413,7 +407,9 @@ export const setHierarchyAction = webMethod(
                 let item = results.items[0];
                 item.hierarchy = newRank;
                 await wixData.update("Tasks", item, options);
-                return { success: true };
+
+                const report = getHierarchyReport(item);
+                return { success: true, report };
             }
             return { success: false, error: "User not found" };
         } catch (e) {
@@ -422,6 +418,18 @@ export const setHierarchyAction = webMethod(
         }
     }
 );
+
+export const getHierarchyReportAction = webMethod(Permissions.Anyone, async (memberId) => {
+    const options = { suppressAuth: true };
+    try {
+        const results = await wixData.query("Tasks").eq("memberId", memberId).find(options);
+        if (results.items.length > 0) {
+            const report = getHierarchyReport(results.items[0]);
+            return { success: true, report };
+        }
+        return { success: false, error: "User not found" };
+    } catch (e) { return { success: false, error: e.message }; }
+});
 
 // --- 5. STRIPE SUBSCRIPTION ---
 export const getSubscriptionLink = webMethod(

@@ -13,13 +13,13 @@ import {
     lastChatJson, lastGalleryJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     historyLimit, pendingLimit, currentView, resetUiTimer, taskQueue,
     audioUnlocked, cmsHierarchyData, WISHLIST_ITEMS, lastWorshipTime,
-    currentHistoryIndex, touchStartX, isLocked, COOLDOWN_MINUTES,
+    currentHistoryIndex, touchStartX, isLocked, COOLDOWN_MINUTES, hierarchyReport,
     setGameStats, setStats, setUserProfile, setCurrentTask, setTaskDatabase,
     setGalleryData, setPendingTaskState, setTaskJustFinished, setIgnoreBackendUpdates,
     setLastChatJson, setLastGalleryJson, setIsInitialLoad, setChatLimit,
     setLastNotifiedMessageId, setHistoryLimit, setCurrentView, setResetUiTimer,
     setTaskQueue, setCmsHierarchyData, setWishlistItems, setLastWorshipTime,
-    setCurrentHistoryIndex, setTouchStartX, setIsLocked, setCooldownInterval, setActiveRevealMap, setVaultItems, setCurrentLibraryMedia, setLibraryProgressIndex
+    setCurrentHistoryIndex, setTouchStartX, setIsLocked, setCooldownInterval, setActiveRevealMap, setVaultItems, setCurrentLibraryMedia, setLibraryProgressIndex, setHierarchyReport
 } from './state.js';
 import { renderRewardGrid, runTargetingAnimation } from '../profile/kneeling/reward.js';
 import { triggerSound, migrateGameStatsToStats } from './utils.js';
@@ -1121,6 +1121,7 @@ window.addEventListener("message", (event) => {
                 renderRewardGrid();
                 if (data.profile.lastWorship) setLastWorshipTime(new Date(data.profile.lastWorship).getTime());
                 setStats(migrateGameStatsToStats(data.profile, stats));
+                if (data.hierarchyReport) setHierarchyReport(data.hierarchyReport);
 
                 // Profile Pic Sync
                 if (data.profile.profilePicture) {
@@ -1549,70 +1550,38 @@ window.addEventListener("message", (event) => {
 });
 
 // --- NEW: HIERARCHY DRAWER LOGIC ---
-window.updateHierarchyDrawer = function (currentStreak) {
-    // 1. Safety Check: Do the elements exist?
-    // BLOCK IF EDITING (Fix disappearing overlay)
+window.updateHierarchyDrawer = function () {
     if (window.isEditingProfile === true) return;
 
     const container = document.getElementById('drawer_ProgressContainer');
     const deskContainer = document.getElementById('desk_ProgressContainer');
-    // REWARD_DATA is available in local scope
     if (!container && !deskContainer) return;
-    if (!window.gameStats) return;
 
-    const ranks = REWARD_DATA.ranks;
-
-    // SAFETY CHECK: IF RANKS NOT LOADED YET (Wait for Backend Message)
-    if (!ranks || ranks.length === 0) {
-        const loadingHtml = '<div style="color:#666; font-size:0.7rem; text-align:center; padding:20px; font-family:"Orbitron";">LOADING HIERARCHY...</div>';
+    // IF NO REPORT YET, WAIT
+    if (!hierarchyReport) {
+        const loadingHtml = '<div style="color:#666; font-size:0.7rem; text-align:center; padding:20px; font-family:\'Orbitron\';">SYNCHRONIZING WITH BACKEND...</div>';
         if (container) container.innerHTML = loadingHtml;
         if (deskContainer) deskContainer.innerHTML = loadingHtml;
         return;
     }
 
-    // 2. Identify Ranks (Current vs Next)
-    // Normalize string to match config (e.g. "Hall Boy" vs "HallBoy")
-    const cleanName = (name) => (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    // Identify Ranks for UI Labels
+    const currentRank = hierarchyReport.currentRank;
+    const nextRank = hierarchyReport.nextRank;
+    const isMax = hierarchyReport.isMax;
 
-    // --- GATEKEEPER START (Copied from updateStats) ---
-    let currentRaw = userProfile.hierarchy || "Hall Boy";
-
-    // 1. GATEKEEPER: Identity & Photo
-    const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
-    // Check if name is "Slave" (default) or empty OR photo is missing/silhouette
-    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture || userProfile.profilePicture.includes(SILHOUETTE)) {
-        currentRaw = "Hall Boy";
-    }
-
-    // 2. GATEKEEPER: Preferences (Silverman+)
-    const dbRankLower = currentRaw.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const isAboveFootman = dbRankLower !== "hallboy" && dbRankLower !== "footman";
-
-    if (isAboveFootman) {
-        const hasKinks = (userProfile.kinks && userProfile.kinks.length > 2);
-        const hasLimits = (userProfile.limits && userProfile.limits.length > 2);
-
-        if (!hasKinks || !hasLimits) {
-            currentRaw = "Footman";
-        }
-    }
-    // --- GATEKEEPER END ---
-
-    let currentIdx = ranks.findIndex(r => cleanName(r.name) === cleanName(currentRaw));
-    if (currentIdx === -1) currentIdx = 0;
-
-    // Define Targets
-    const currentRankObj = ranks[currentIdx];
-    // If max rank, stay on current. Otherwise, look at next.
-    const isMax = currentIdx >= ranks.length - 1;
-    const nextRankObj = isMax ? currentRankObj : ranks[currentIdx + 1];
-
+    // 1. Update Labels (Dashboard / Sidebar)
     const elements = {
         currentName: [document.getElementById('drawer_CurrentRank'), document.getElementById('desk_CurrentRank'), document.getElementById('desk_DashboardRank')],
         currentBen: [document.getElementById('drawer_CurrentBenefits'), document.getElementById('desk_CurrentBenefits')],
         nextName: [document.getElementById('drawer_NextRank'), document.getElementById('desk_NextRank'), document.getElementById('desk_WorkingOnRank')],
         nextBenList: [document.getElementById('drawer_NextBenefits'), document.getElementById('desk_NextBenefits')]
     };
+
+    // Find the rank objects in REWARD_DATA (config.js) for benefits text
+    const ranks = REWARD_DATA.ranks || [];
+    const currentRankObj = ranks.find(r => r.name.toLowerCase().replace(/ /g, '') === currentRank.toLowerCase().replace(/ /g, '')) || { name: currentRank, benefits: [] };
+    const nextRankObj = ranks.find(r => r.name.toLowerCase().replace(/ /g, '') === nextRank.toLowerCase().replace(/ /g, '')) || { name: nextRank, benefits: [] };
 
     elements.currentName.forEach(el => { if (el) el.innerText = currentRankObj.name; });
     elements.currentBen.forEach(el => {
@@ -1622,7 +1591,7 @@ window.updateHierarchyDrawer = function (currentStreak) {
     elements.nextName.forEach(el => {
         if (el) {
             el.innerText = isMax ? "MAXIMUM RANK" : nextRankObj.name;
-            el.style.color = "#c5a059"; // Gold
+            el.style.color = "#c5a059";
         }
     });
 
@@ -1636,164 +1605,67 @@ window.updateHierarchyDrawer = function (currentStreak) {
         }
     });
 
-    // 4. Calculate Stats (Consolidated)
-    const stats = {
-        tasks: gameStats.completed || gameStats.taskdom_completed || 0,
-        kneels: gameStats.kneelCount || 0,
-        points: gameStats.points || 0,
-        spent: gameStats.totalSpent || gameStats.total_coins_spent || 0,
-        streak: currentStreak || gameStats.taskdom_streak || 0
-    };
-
-    // 5. Build Progress Bars (The "Green Bar" Logic)
-    const req = nextRankObj.req; // Requirements for NEXT rank
-
-    // Helper to generate HTML for one bar
-    const buildBar = (label, current, target, icon) => {
-        if (isMax) target = current; // If max, bar is full
-        if (target <= 0) target = 1; // Prevent divide by zero
-
-        const pct = Math.min((current / target) * 100, 100);
-        const isDone = current >= target;
-
-        // Colors: Green (#00ff00) if done, Gold (#c5a059) if in progress
-        const color = isDone ? "#00ff00" : "#c5a059";
-        const labelColor = isDone ? "#fff" : "#888";
-        const valColor = isDone ? "#00ff00" : "#c5a059";
-
-        return `
-        <div style="margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${labelColor};">
-                <span>${label}</span>
-                <span style="color:${valColor}; opacity: 0.7; font-size: 0.55rem;">${current.toLocaleString()} / ${target.toLocaleString()}</span>
-            </div>
-            <div style="width:100%; height:6px; background:#000; border:1px solid #333; border-radius:3px; overflow:hidden;">
-                <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40; transition: width 0.5s ease;"></div>
-            </div>
-        </div>`;
-    };
-
-    const buildCheck = (label, isMet, iconSvg, type) => {
-        const statusColor = isMet ? "#00ff00" : "#ff4444";
-        const statusText = isMet ? "VERIFIED" : "MISSING";
-        const iconColor = isMet ? "#00ff00" : "#888"; // Grey if missing, Green if done
-
-        // USER APP: ADD BUTTONS ARE REQUIRED
-        let actionBtn = "";
-        if (!isMet && !isMax) {
-            actionBtn = `<span onclick="window.openDataEntry('${type}')" style="cursor:pointer; color:#ffd700; font-size:0.6rem; border:1px solid #ffd700; padding:2px 6px; border-radius:4px; margin-left:8px;">ADD</span>`;
-        }
-
-        return `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-family:'Orbitron'; font-size:0.65rem; border-bottom:1px solid #222; padding-bottom:4px;">
-            <div style="display:flex; align-items:center; color:${iconColor};">
-                <div style="width:16px; height:16px; fill:${iconColor}; margin-right:8px;">${iconSvg}</div>
-                <span>${label}</span>
-            </div>
-            <div style="display:flex; align-items:center;">
-                <span style="color:${statusColor}; letter-spacing:1px; opacity:0.7; font-size:0.55rem;">${statusText}</span>
-                ${actionBtn}
-            </div>
-        </div>`;
-    };
-
-    // SVGs
-    const SVG_ID = '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
-    const SVG_PHOTO = '<svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
-    const SVG_LIMITS = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
-    const SVG_KINKS = '<svg viewBox="0 0 24 24"><path d="M10.59 13.41c.41.39.41 1.03 0 1.42-.39.41-1.03.41-1.42 0a5.003 5.003 0 0 1 0-7.07l3.54-3.54a5.003 5.003 0 0 1 7.07 0 5.003 5.003 0 0 1 0 7.07l-1.49 1.49c.01-.82-.12-1.64-.4-2.42l.47-.48a2.982 2.982 0 0 0 0-4.24 2.982 2.982 0 0 0-4.24 0l-3.53 3.53a2.982 2.982 0 0 0 0 4.24zm2.82-4.24c.39-.41 1.03-.41 1.42 0a5.003 5.003 0 0 1 0 7.07l-3.54 3.54a5.003 5.003 0 0 1-7.07 0 5.003 5.003 0 0 1 0-7.07l1.49-1.49c-.01.82.12 1.64.4 2.43l-.47.47a2.982 2.982 0 0 0 0 4.24 2.982 2.982 0 0 0 4.24 0l3.53-3.53a2.982 2.982 0 0 0 0-4.24.973.973 0 0 1 0-1.42z"/></svg>';
-
+    // 2. Render Requirements (The Ladder)
     let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>`;
 
-    // Identity Checks (Footman+)
-    if (req.name) {
-        // Name must exist and NOT be "Slave" or "New Slave" (Case Insensitive)
-        const name = (userProfile.name || userProfile.title || "").trim().toUpperCase();
-        const hasName = (name.length > 0 && name !== "SLAVE" && name !== "NEW SLAVE");
-        html += buildCheck("IDENTITY", hasName, SVG_ID, 'name');
-    }
-    if (req.photo) {
-        // Check RAW image. Must exist AND not be the default silhouette.
-        let raw = userProfile.rawImage;
-        // Fallback: If raw is missing but profilePicture is CUSTOM (not default), use that
-        if (!raw && userProfile.profilePicture && !userProfile.profilePicture.includes('ce3e5b_e06c7a')) {
-            raw = userProfile.profilePicture;
+    // SVGs for Icons
+    const ICONS = {
+        name: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
+        photo: '<svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>',
+        limits: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
+        kinks: '<svg viewBox="0 0 24 24"><path d="M10.59 13.41c.41.39.41 1.03 0 1.42-.39.41-1.03.41-1.42 0a5.003 5.003 0 0 1 0-7.07l3.54-3.54a5.003 5.003 0 0 1 7.07 0 5.003 5.003 0 0 1 0 7.07l-1.49 1.49c.01-.82-.12-1.64-.4-2.42l.47-.48a2.982 2.982 0 0 0 0-4.24 2.982 2.982 0 0 0-4.24 0l-3.53 3.53a2.982 2.982 0 0 0 0 4.24zm2.82-4.24c.39-.41 1.03-.41 1.42 0a5.003 5.003 0 0 1 0 7.07l-3.54 3.54a5.003 5.003 0 0 1-7.07 0 5.003 5.003 0 0 1 0-7.07l1.49-1.49c-.01.82.12 1.64.4 2.43l-.47.47a2.982 2.982 0 0 0 0 4.24 2.982 2.982 0 0 0 4.24 0l3.53-3.53a2.982 2.982 0 0 0 0-4.24.973.973 0 0 1 0-1.42z"/></svg>',
+        routine: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>', // Placeholder
+        tasks: "🛠️", kneels: "🧎", points: "✨", spent: "💰", streak: "🔥"
+    };
+
+    hierarchyReport.requirements.forEach(r => {
+        if (r.type === "check") {
+            const isMet = (r.status === "VERIFIED");
+            const color = isMet ? "#00ff00" : "#ff4444";
+            const iconColor = isMet ? "#00ff00" : "#888";
+            let actionBtn = "";
+            if (!isMet && !isMax) {
+                actionBtn = `<span onclick="window.openDataEntry('${r.id}')" style="cursor:pointer; color:#ffd700; font-size:0.6rem; border:1px solid #ffd700; padding:2px 6px; border-radius:4px; margin-left:8px;">ADD</span>`;
+            }
+            html += `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-family:'Orbitron'; font-size:0.65rem; border-bottom:1px solid #222; padding-bottom:4px;">
+                <div style="display:flex; align-items:center; color:${iconColor};">
+                    <div style="width:16px; height:16px; fill:${iconColor}; margin-right:8px;">${ICONS[r.id] || ''}</div>
+                    <span>${r.label}</span>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <span style="color:${color}; letter-spacing:1px; opacity:0.7; font-size:0.55rem;">${r.status}</span>
+                    ${actionBtn}
+                </div>
+            </div>`;
+        } else if (r.type === "bar") {
+            const isDone = r.current >= r.target;
+            const color = isDone ? "#00ff00" : "#c5a059";
+            const labelColor = isDone ? "#fff" : "#888";
+            const valColor = isDone ? "#00ff00" : "#c5a059";
+            html += `
+            <div style="margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${labelColor};">
+                    <span>${r.label}</span>
+                    <span style="color:${valColor}; opacity: 0.7; font-size: 0.55rem;">${r.current.toLocaleString()} / ${r.target.toLocaleString()}</span>
+                </div>
+                <div style="width:100%; height:6px; background:#000; border:1px solid #333; border-radius:3px; overflow:hidden;">
+                    <div style="width:${r.percent}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40; transition: width 0.5s ease;"></div>
+                </div>
+            </div>`;
         }
+    });
 
-        const hasPhoto = (raw && raw.length > 5 && !raw.includes('ce3e5b_e06c7a'));
-
-        html += buildCheck("PHOTO", hasPhoto, SVG_PHOTO, 'photo');
-    }
-
-    // Preference Checks (Silverman+)
-    if (req.limits) {
-        const hasLimits = (userProfile.limits && userProfile.limits.length > 2);
-        html += buildCheck("LIMITS", hasLimits, SVG_LIMITS, 'limits');
-    }
-    if (req.kinks) {
-        const hasKinks = ((userProfile.kinks && userProfile.kinks.length > 2) || (userProfile.kink && userProfile.kink.length > 2));
-        html += buildCheck("KINKS", hasKinks, SVG_KINKS, 'kinks');
-    }
-
-    if (req.routine) {
-        // Check if routine is set (length > 5)
-        const hasRoutine = (userProfile.routine && userProfile.routine.length > 5);
-        // Using ID SVG as placeholder for Routine/Order
-        html += buildCheck("ROUTINE", hasRoutine, SVG_ID, 'routine');
-    }
-
-    // BARS (Conditional)
-    html += buildBar("LABOR", stats.tasks, req.tasks, "🛠️");
-    html += buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎");
-    html += buildBar("MERIT", stats.points, req.points, "✨");
-
-    if (req.spent > 0) {
-        html += buildBar("SACRIFICE", stats.spent, req.spent, "💰");
-    }
-
-    if (req.streak > 0) {
-        html += buildBar("CONSISTENCY", stats.streak, req.streak, "🔥");
-    }
-
-    // DEBUG INFO REMOVED
-
-    // 6. PROMOTION BUTTON (NEW)
-    const allMet = (() => {
-        if (isMax) return false;
-        // Checks
-        if (req.name) {
-            const name = (userProfile.name || userProfile.title || "").trim().toUpperCase();
-            if (!(name.length > 0 && name !== "SLAVE" && name !== "NEW SLAVE")) return false;
-        }
-        if (req.photo) {
-            let raw = userProfile.rawImage;
-            if (!raw && userProfile.profilePicture && !userProfile.profilePicture.includes('ce3e5b_e06c7a')) raw = userProfile.profilePicture;
-            if (!(raw && raw.length > 5 && !raw.includes('ce3e5b_e06c7a'))) return false;
-        }
-        if (req.limits && !(userProfile.limits && userProfile.limits.length > 2)) return false;
-        if (req.kinks && !((userProfile.kinks && userProfile.kinks.length > 2) || (userProfile.kink && userProfile.kink.length > 2))) return false;
-        if (req.routine && !(userProfile.routine && userProfile.routine.length > 5)) return false;
-
-        // Bars
-        if (stats.tasks < req.tasks) return false;
-        if (stats.kneels < req.kneels) return false;
-        if (stats.points < req.points) return false;
-        if (req.spent > 0 && stats.spent < req.spent) return false;
-        if (req.streak > 0 && stats.streak < req.streak) return false;
-
-        return true;
-    })();
-
-    if (allMet) {
-        const promoHtml = `
+    // 3. Promotion Button
+    if (hierarchyReport.canPromote) {
+        html += `
         <div style="margin-top:20px; padding:15px; border:2px solid #00ff00; background:rgba(0,255,0,0.1); text-align:center; border-radius:8px; animation: pulse 2s infinite;">
             <div style="font-family:'Orbitron'; font-size:0.75rem; color:#00ff00; margin-bottom:10px; font-weight:bold; letter-spacing:1px;">PROMOTION AUTHORIZED</div>
-            <button onclick="window.claimPromotion('${nextRankObj.name}')"
+            <button onclick="window.claimPromotion('${nextRank}')" 
                     style="background:#00ff00; color:#000; border:none; padding:12px 25px; font-family:'Orbitron'; font-weight:bold; cursor:pointer; width:100%; border-radius:4px; font-size:0.9rem;">
-                CLAIM ${nextRankObj.name.toUpperCase()} RANK
+                CLAIM ${nextRank.toUpperCase()} RANK
             </button>
         </div>`;
-        html += promoHtml;
     }
 
     const finalHtml = html + `<div id="inlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;

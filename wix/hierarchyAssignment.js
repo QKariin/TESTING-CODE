@@ -4,7 +4,7 @@ import wixSecretsBackend from 'wix-secrets-backend';
 import Stripe from 'stripe';
 
 // --- IMPORT CENTRAL LOGIC FROM PUBLIC ---
-import { determineRank } from 'public/hierarchyRules.js';
+import { determineRank, getHierarchyReport } from 'public/hierarchyRules.js';
 // (Logic moved to public/hierarchyRules)
 
 // --- BULK UPDATE JOB (invoke) ---
@@ -65,9 +65,12 @@ export const updateScoreAction = webMethod(Permissions.Anyone, async (memberId, 
         if (results.items.length > 0) {
             let item = results.items[0];
             item.score = (item.score || 0) + amount;
-            item.hierarchy = determineRank(item);
+
+            const report = getHierarchyReport(item);
+            item.hierarchy = report.currentRank;
+
             await wixData.update("Tasks", item, options);
-            return item;
+            return { item, report };
         }
         return null;
     } catch (error) {
@@ -140,17 +143,15 @@ export const secureUpdateTaskAction = webMethod(Permissions.Anyone, async (membe
 
             if (needsUpdate) {
                 // ALWAYS CHECK RANK BEFORE SAVE
-                const newRank = determineRank(item);
-                if (newRank !== item.hierarchy) {
-                    item.hierarchy = newRank;
-                }
+                const report = getHierarchyReport(item);
+                item.hierarchy = report.currentRank;
 
                 await wixData.update("Tasks", item, options);
-                return true;
+                return { success: true, report };
             }
         }
-        return false;
-    } catch (error) { console.error(error); return false; }
+        return { success: false };
+    } catch (error) { console.error(error); return { success: false }; }
 });
 
 // --- 3. REVIEW TASK ---
@@ -173,12 +174,15 @@ export const reviewTaskAction = webMethod(Permissions.Anyone, async (memberId, d
                 if (decision === 'approve') {
                     item.taskdom_completed_tasks = (item.taskdom_completed_tasks || 0) + 1;
                     item.taskdom_current_streak = (item.taskdom_current_streak || 0) + 1;
-                    item.hierarchy = determineRank(item);
                 } else if (decision === 'reject') {
                     item.taskdom_current_streak = 0;
                 }
+
+                const report = getHierarchyReport(item);
+                item.hierarchy = report.currentRank;
+
                 await wixData.update("Tasks", item, options);
-                return item;
+                return { item, report };
             }
         }
         return null;
@@ -208,10 +212,11 @@ export const processCoinTransaction = webMethod(Permissions.Anyone, async (membe
             }
 
             // Rank Check
-            item.hierarchy = determineRank(item);
+            const report = getHierarchyReport(item);
+            item.hierarchy = report.currentRank;
 
             await wixData.update("Tasks", item, options);
-            return { success: true, newBalance: item.wallet };
+            return { success: true, newBalance: item.wallet, report };
         }
         return { success: false, error: "User not found" };
     } catch (e) { return { success: false, error: e.message }; }
@@ -231,7 +236,7 @@ export const updatePresenceAction = webMethod(Permissions.Anyone, async (memberI
 
 export const SendSlaveMessageAction = webMethod(Permissions.Anyone, async (sender, type, message) => { return true; });
 
-// --- 6. HIERARCHY OVERRIDE ---
+// --- 6. HIERARCHY OVERRIDE & REPORT ---
 export const setHierarchyAction = webMethod(Permissions.Anyone, async (memberId, newRank) => {
     const options = { suppressAuth: true };
     try {
@@ -240,7 +245,21 @@ export const setHierarchyAction = webMethod(Permissions.Anyone, async (memberId,
             let item = results.items[0];
             item.hierarchy = newRank;
             await wixData.update("Tasks", item, options);
-            return { success: true };
+
+            const report = getHierarchyReport(item);
+            return { success: true, report };
+        }
+        return { success: false, error: "User not found" };
+    } catch (e) { return { success: false, error: e.message }; }
+});
+
+export const getHierarchyReportAction = webMethod(Permissions.Anyone, async (memberId) => {
+    const options = { suppressAuth: true };
+    try {
+        const results = await wixData.query("Tasks").eq("memberId", memberId).find(options);
+        if (results.items.length > 0) {
+            const report = getHierarchyReport(results.items[0]);
+            return { success: true, report };
         }
         return { success: false, error: "User not found" };
     } catch (e) { return { success: false, error: e.message }; }

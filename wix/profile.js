@@ -3,7 +3,7 @@ import wixData from 'wix-data';
 import wixLocation from 'wix-location';
 
 // --- BACKEND IMPORTS --- 
-import { updatePresenceAction, secureUpdateTaskAction, processCoinTransaction, setHierarchyAction, updateProfileAction, getHierarchyRequirements, getProfileUploadUrl } from 'backend/Actions.web.js';
+import { updatePresenceAction, secureUpdateTaskAction, processCoinTransaction, setHierarchyAction, updateProfileAction, getHierarchyRequirements, getProfileUploadUrl, getHierarchyReportAction } from 'backend/Actions.web.js';
 import { insertMessage, loadUserMessages } from 'backend/Chat.web.js';
 import { getPaymentLink } from 'backend/pay';
 import { secureGetProfile } from 'backend/Profile.web.js';
@@ -599,6 +599,11 @@ async function syncProfileAndTasks() {
         if (statsResults.items.length === 0) return;
 
         let statsItem = statsResults.items[0];
+
+        // FETCH THE HIERARCHY REPORT (Instruction Packet)
+        const reportRes = await getHierarchyReportAction(currentUserEmail);
+        const hierarchyReport = reportRes.success ? reportRes.report : null;
+
         const silhouette = "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png";
         const userPic = statsItem.image_fld ? getPublicUrl(statsItem.image_fld) : silhouette;
 
@@ -638,6 +643,7 @@ async function syncProfileAndTasks() {
                 tributetotal: statsItem.total_coins_spent || 0, // <--- ADDED FOR SPEND TRACKING
                 tributeHistory: statsItem.tributeHistory || "[]" // <--- NEW: TRANSACTION LOG
             },
+            hierarchyReport: hierarchyReport, // THE "DUMB MIRROR" PACKET
             pendingState: statsItem.taskdom_pending_state || null,
             galleryData: galleryData,
             dailyTasks: staticTasksPool
