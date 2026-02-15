@@ -68,10 +68,61 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 500);
     }
 
+    // --- FORCE NAVIGATION LISTENER (DELEGATION) ---
+    // This bypasses inline onclick issues.
+    document.addEventListener('click', (e) => {
+        const item = e.target.closest('.u-item');
+        if (item) {
+            const onclickAttr = item.getAttribute('onclick');
+            if (onclickAttr) {
+                const match = onclickAttr.match(/'([^']+)'/);
+                if (match && match[1]) {
+                    const id = match[1];
+                    console.log("FORCE CLICK DETECTED ON:", id);
+
+                    // 1. FORCE UI SWITCH
+                    document.getElementById('viewHome').style.display = 'none';
+                    document.getElementById('viewProfile').style.display = 'none';
+                    const vUser = document.getElementById('viewUser');
+                    if (vUser) {
+                        vUser.style.display = 'flex';
+                        vUser.classList.add('active');
+                    }
+
+                    // 2. LOAD DATA
+                    if (window.selUser) {
+                        try {
+                            window.selUser(id);
+                        } catch (err) {
+                            console.error("Data load failed:", err);
+                        }
+                    }
+                }
+            }
+        }
+    });
 
     console.log('Dashboard initialized. ID:', dayCode);
 });
 
+// NAVIGATION: BACK TO DASHBOARD
+export function showHome() {
+    console.log("NAVIGATING TO HOME");
+    setCurrId(null);
+
+    document.getElementById('viewUser').style.display = 'none';
+    document.getElementById('viewUser').classList.remove('active');
+
+    document.getElementById('viewProfile').style.display = 'none';
+    document.getElementById('viewProfile').classList.remove('active');
+
+    const vHome = document.getElementById('viewHome');
+    vHome.style.display = 'grid';
+    vHome.classList.add('active');
+
+    renderMainDashboard();
+}
+window.showHome = showHome;
 
 // --- 3. BRIDGE LISTENER (The Radio) ---
 Bridge.listen((data) => {
