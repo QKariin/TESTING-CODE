@@ -7,7 +7,7 @@ import {
 } from './dashboard-state.js';
 import { clean, raw, formatTimer } from './dashboard-utils.js';
 import { Bridge } from './bridge.js';
-import { getOptimizedUrl, getSignedUrl } from './media.js';
+import { getOptimizedUrl, getSignedUrl, mediaType as mediaTypeFunction } from './media.js';
 import { LEVELS } from './config.js'; // IMPORT REAL LEVELS
 
 // --- STABILITY CACHE ---
@@ -360,9 +360,14 @@ async function updateReviewQueue(u) {
         // Sign URLs for thumbnails
         const signingPromises = u.reviewQueue.map(async t => {
             if (t.proofUrl) {
-                const signed = await getSignedUrl(t.proofUrl);
-                t.thumbSigned = signed.replace("/raw/", "/thumbnail/");
-                t.fullSigned = signed;
+                const isVideo = mediaTypeFunction(t.proofUrl) === 'video';
+                t.fullSigned = await getSignedUrl(t.proofUrl);
+
+                if (isVideo && t.proofUrl.includes("upcdn.io")) {
+                    t.thumbSigned = await getSignedUrl(t.proofUrl.replace("/raw/", "/thumbnail/"));
+                } else {
+                    t.thumbSigned = t.fullSigned;
+                }
             }
         });
         await Promise.all(signingPromises);
@@ -609,9 +614,13 @@ async function updateHistory(u) {
         // Sign URLs
         const signingPromises = historyToShow.map(async h => {
             if (h.proofUrl && h.proofUrl.startsWith('https://upcdn')) {
-                const signed = await getSignedUrl(h.proofUrl);
-                h.thumbSigned = signed.replace("/raw/", "/thumbnail/");
-                h.fullSigned = signed;
+                const isVideo = mediaTypeFunction(h.proofUrl) === 'video';
+                h.fullSigned = await getSignedUrl(h.proofUrl);
+                if (isVideo) {
+                    h.thumbSigned = await getSignedUrl(h.proofUrl.replace("/raw/", "/thumbnail/"));
+                } else {
+                    h.thumbSigned = h.fullSigned;
+                }
             } else {
                 h.thumbSigned = getOptimizedUrl(h.proofUrl, 150);
                 h.fullSigned = h.proofUrl;
