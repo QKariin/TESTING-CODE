@@ -1,4 +1,3 @@
-
 // Dashboard Navigation
 // View switching and navigation functions
 
@@ -10,12 +9,12 @@ export function showHome() {
         clearInterval(cooldownInterval);
         setCooldownInterval(null);
     }
-
+    
     setCurrId(null);
     document.getElementById('viewUser').classList.remove('active');
     document.getElementById('viewProfile').style.display = 'none';
     document.getElementById('viewHome').style.display = 'grid';
-
+    
     renderSidebar();
 }
 
@@ -24,12 +23,12 @@ export function showProfile() {
         clearInterval(cooldownInterval);
         setCooldownInterval(null);
     }
-
+    
     setCurrId(null);
     document.getElementById('viewUser').classList.remove('active');
     document.getElementById('viewHome').style.display = 'none';
     document.getElementById('viewProfile').style.display = 'flex';
-
+    
     import('./dashboard-profile.js').then(({ renderProfile }) => {
         renderProfile();
     });
