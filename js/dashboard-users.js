@@ -369,7 +369,7 @@ async function updateReviewQueue(u) {
         qSec.style.display = 'flex';
         qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` +
             u.reviewQueue.map(t => `<div class="pend-card" onclick="openModById('${t.id}', '${t.memberId}', false, '${t.fullSigned}')">
-                    <img src="${t.thumbSigned}" class="pend-thumb">
+                    <img src="${t.thumbSigned}" class="pend-thumb" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">
                     <div class="pend-info"><div class="pend-act">PENDING</div><div class="pend-txt">${clean(t.text)}</div></div>
                 </div>`).join('');
     } else {
@@ -618,8 +618,8 @@ async function updateHistory(u) {
             // Only show if image exists
             if (!img) return '';
             return `<div class="h-card-mini" style="position:relative; width:100%; aspect-ratio:1/1; background:black; border:1px solid #333; cursor:pointer;" 
-                     onclick='openModal(null, null, "${h.proofUrl}", "${h.proofType || 'text'}", "${raw(h.text)}", true, "${h.status}")'>
-                <img src="${img}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;">
+                     onclick="openModById('${h.id}', '${u.memberId}', true, '${h.fullSigned}')">
+                <img src="${img}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">
                 <div class="h-badge ${cls}" style="position:absolute; bottom:0; left:0; width:100%; font-size:0.5rem; text-align:center;">${h.status.toUpperCase()}</div>
             </div>`;
         }).join('') : '<div style="color:#444; font-size:0.7rem; padding:10px;">No history records.</div>';
