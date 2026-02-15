@@ -1078,8 +1078,10 @@ window.addEventListener("message", (event) => {
                     ...data.profile, // Load everything
 
                     // Explicit Mappings for Hierarchy Logic
-                    total_coins_spent: data.profile.tributetotal || 0, // NEW CMS FIELD
-                    routine_streak: data.profile.routinestreak || 0,   // NEW CMS FIELD
+                    total_coins_spent: data.profile.tributetotal || 0,
+                    totalSpent: data.profile.tributetotal || 0,        // Unified for Dashboard
+                    routine_streak: data.profile.routinestreak || 0,
+                    taskdom_streak: data.profile.routinestreak || 0,    // Unified for Slave App
                     kneelCount: data.profile.kneelCount || 0,
                     taskdom_completed: data.profile.taskdom_completed_tasks || 0
                 });
@@ -1638,9 +1640,8 @@ window.updateHierarchyDrawer = function (currentStreak) {
         tasks: gameStats.taskdom_completed || 0,
         kneels: gameStats.kneelCount || 0,
         points: gameStats.points || 0,
-        spent: gameStats.total_coins_spent || 0,
-        // Use the passed streak or fallback
-        streak: currentStreak || 0
+        spent: gameStats.total_coins_spent || gameStats.totalSpent || 0,
+        streak: currentStreak || gameStats.taskdom_streak || 0
     };
 
     // 5. Build Progress Bars (The "Green Bar" Logic)
