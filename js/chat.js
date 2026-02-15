@@ -1,13 +1,14 @@
-// Chat functionality - FIXED: TRIBUTE IMAGE SELECTION & AUTH
+// Chat functionality - FIXED: TRIBUTE CARD IMAGE ONLY
 import {
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
 } from './state.js';
 import { URLS } from './config.js';
 import { triggerSound } from './utils.js';
-import { getSignedUrl } from './media.js'; 
+import { getSignedUrl, getOptimizedUrl } from './media.js';
 import { mediaType } from './media.js';
 
+// Add this variable at the TOP of chat.js (outside the function)
 let lastTickerText = "";
 
 export async function renderChat(messages) {
@@ -24,25 +25,34 @@ export async function renderChat(messages) {
         (a, b) => new Date(a._createdDate) - new Date(b._createdDate)
     );
 
-    // 2. FILTER STREAMS
+    // 2. SEPARATE STREAMS
     const systemMessages = sortedMessages.filter(m => {
         const s = (m.sender || "").toLowerCase();
         const txt = (m.message || "");
         if (txt.startsWith('WISHLIST::')) return false;
-        return s === 'system' || txt.includes("Task Verified") || txt.includes("Task Rejected");
+        return s === 'system' ||
+            txt.includes("Task Verified") ||
+            txt.includes("Task Rejected") ||
+            txt.includes("FAILURE RECORDED") ||
+            txt.includes("earned");
     });
 
     const conversationMessages = sortedMessages.filter(m => {
         const s = (m.sender || "").toLowerCase();
         const txt = (m.message || "");
         if (txt.startsWith('WISHLIST::')) return true;
-        return s !== 'system' && !txt.includes("Task Verified") && !txt.includes("Task Rejected");
+        return s !== 'system' &&
+            !txt.includes("Task Verified") &&
+            !txt.includes("Task Rejected") &&
+            !txt.includes("FAILURE RECORDED") &&
+            !txt.includes("earned");
     });
 
-    // 3. TICKER
+    // 3. TICKER LOGIC
     if (systemMessages.length > 0) {
         const latest = systemMessages[systemMessages.length - 1];
         const txt = DOMPurify.sanitize(latest.message);
+
         if (txt !== lastTickerText) {
             lastTickerText = txt;
             const tickerHtml = `<span style="color:#fff;">◈</span> ${txt}`;
@@ -55,12 +65,20 @@ export async function renderChat(messages) {
                     el.classList.add('ticker-flash');
                 }
             });
+        } else {
+            [ticker, mobTicker].forEach(el => {
+                if (el) el.classList.remove('hidden');
+            });
         }
     }
 
-    // 4. CHECK UPDATES
+    // 4. CHAT LOGIC
     const currentJson = JSON.stringify(conversationMessages);
     if (currentJson === lastChatJson) return;
+
+    const dBox = document.getElementById('chatBox');
+    const isAtBottom = dBox ? (dBox.scrollHeight - dBox.scrollTop - dBox.clientHeight < 150) : true;
+    const wasInitialLoad = isInitialLoad;
 
     if (!isInitialLoad && conversationMessages.length > 0) {
         const lastMsg = conversationMessages[conversationMessages.length - 1];
@@ -73,7 +91,7 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    // 5. RENDER CHAT
+    // 5. RENDER CHAT (Switched to Async Map to allow Image Signing)
     const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit;
     const visibleMessages = conversationMessages.slice(-activeLimit);
 
@@ -81,35 +99,36 @@ export async function renderChat(messages) {
         let txt = DOMPurify.sanitize(m.message);
         const senderLower = (m.sender || "").toLowerCase();
         const isMe = senderLower === 'user' || senderLower === 'slave';
-        
+
         txt = txt.replace(/\n/g, "<br>");
         const timeStr = new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const msgClass = isMe ? 'm-slave' : 'm-queen';
         let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
 
-        // --- MEDIA HANDLER ---
+        // Media
         if (m.message) {
-            
-            // A. WISHLIST CARD (FIXED IMAGE SELECTION)
+            // 1. WISHLIST CARD (GRAPHICAL)
             if (m.message.startsWith('WISHLIST::')) {
                 try {
                     const jsonStr = m.message.replace('WISHLIST::', '');
                     const item = JSON.parse(jsonStr);
-                    
-                    // 1. CHECK ALL POSSIBLE PROPERTIES FOR THE IMAGE
-                    let cardImgUrl = item.img;
-                        if (cardImgUrl && cardImgUrl.includes('upcdn.io')) {
-                            // Apply the SAME fix as above to the card image
-                            let clean = cardImgUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
-                            try { cardImgUrl = await getSignedUrl(clean); } catch(e) { cardImgUrl = clean; }
-                        }
-                        <img src="${cardImgUrl}" ...>
 
-                    // 3. RENDER CARD
+                    // --- FIX: TRIBUTE CARD IMAGE PROCESSING ---
+                    // This is the ONLY logic change. It forces Raw mode and signs the URL.
+                    let cardImgUrl = item.img; 
+                    if (cardImgUrl && cardImgUrl.includes('upcdn.io')) {
+                        // Strip /image/ to avoid CPU Quota error
+                        let clean = cardImgUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
+                        // Sign URL to avoid Auth error
+                        try { cardImgUrl = await getSignedUrl(clean); } 
+                        catch(e) { cardImgUrl = clean; }
+                    }
+                    // ------------------------------------------
+
                     contentHtml = `
                     <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; width:60vw;">
                         <div style="width:100%; height:120px; overflow:hidden; position:relative;">
-                             <img src="${cardImgUrl}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                             <img src="${cardImgUrl}" style="width:100%; height:100%; object-fit:cover;">
                              <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
                                  TRIBUTE SENT
                              </div>
@@ -121,57 +140,37 @@ export async function renderChat(messages) {
                         </div>
                     </div>`;
                 } catch (e) {
-                    console.error("Card Error:", e);
+                    console.error("Failed to parse wishlist card", e);
                     contentHtml = `<div class="msg ${msgClass}">🎁 TRIBUTE ERROR</div>`;
                 }
             }
-            
-            // B. STANDARD MEDIA
+            // 2. STANDARD MEDIA
             else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:image') || m.message.includes('wix:video')) {
                 const rawUrl = m.mediaUrl || m.message;
-                let srcUrl = rawUrl;
+                const srcUrl = getOptimizedUrl(rawUrl, 600); 
 
-                if (rawUrl.includes('upcdn.io')) {
-                    let clean = rawUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
-                    try { srcUrl = await getSignedUrl(clean); } catch(e) { srcUrl = clean; }
-                }
-                else if (rawUrl.includes('wix:image')) {
-                    const parts = rawUrl.split('/');
-                    for(let i=0; i<parts.length; i++) {
-                        if(parts[i] === 'v1' && parts[i+1]) {
-                            srcUrl = `https://static.wixstatic.com/media/${parts[i+1].split('#')[0]}`;
-                            break;
-                        }
-                    }
-                } 
-                else if (rawUrl.includes('wix:video')) {
-                    const parts = rawUrl.split('/');
-                    for(let i=0; i<parts.length; i++) {
-                        if(parts[i] === 'v1' && parts[i+1]) {
-                            srcUrl = `https://video.wixstatic.com/video/${parts[i+1].split('#')[0]}/mp4/file.mp4`;
-                            break;
-                        }
-                    }
-                }
-
-                if (mediaType(srcUrl) === "video" || srcUrl.includes(".mp4")) {
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
+                if (mediaType(srcUrl) === "video") {
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%;"></video></div>`;
                 } else {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0;"><img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"></div>`;
                 }
             }
         }
 
+        // Center Wishlist Cards
         if (m.message && m.message.startsWith('WISHLIST::')) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
-        const avatarUrl = "https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png";
-        if (!isMe && !m.message.startsWith('WISHLIST::') && !m.message.startsWith('http')) {
-            contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
-                <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
-                <span>${txt}</span>
-            </div>`;
+        // Avatar Logic
+        if (!isMe) {
+            const avatarUrl = "https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png";
+            if (!m.message.startsWith('WISHLIST::') && !m.message.startsWith('http') && !m.mediaUrl && !m.message.startsWith('wix:')) {
+                contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
+                    <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
+                    <span>${txt}</span>
+                </div>`;
+            }
         }
 
         return `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">
@@ -185,6 +184,7 @@ export async function renderChat(messages) {
     const messagesHtml = messagesHtmlArray.join('');
 
     if (conversationMessages.length > visibleMessages.length) {
+        // Prepend button manually since we joined the array
         const btnHtml = `<div style="width:100%; text-align:center; padding:10px;"><button onclick="window.loadMoreChat()" style="background:transparent; border:none; color:#666; font-size:0.6rem;">▲ LOAD HISTORY</button></div>`;
         if (deskChat) deskChat.innerHTML = btnHtml + messagesHtml;
         if (mobChat) mobChat.innerHTML = btnHtml + messagesHtml;
@@ -199,25 +199,31 @@ export async function renderChat(messages) {
 export function forceBottom() {
     const dBox = document.getElementById('chatBox');
     const mBox = document.getElementById('mob_chatBox');
+
     if (dBox) dBox.scrollTop = dBox.scrollHeight;
     if (mBox) mBox.scrollTop = mBox.scrollHeight;
 }
 
 export function loadMoreChat() {
     setChatLimit(chatLimit + 10);
-    if (lastChatJson) renderChat(JSON.parse(lastChatJson));
+    if (lastChatJson) {
+        renderChat(JSON.parse(lastChatJson));
+    }
 }
 
 export function sendChatMessage() {
     const dInput = document.getElementById('chatMsgInput');
     const mInput = document.getElementById('mob_chatMsgInput');
+
     let activeInput = null;
     if (dInput && dInput.value.trim() !== "") activeInput = dInput;
     else if (mInput && mInput.value.trim() !== "") activeInput = mInput;
 
-    if (!activeInput) return;
+    if (!activeInput) return; 
 
-    window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: activeInput.value.trim() }, "*");
+    const txt = activeInput.value.trim();
+    window.parent.postMessage({ type: "SEND_CHAT_TO_BACKEND", text: txt }, "*");
+
     if (dInput) dInput.value = "";
     if (mInput) mInput.value = "";
 }
