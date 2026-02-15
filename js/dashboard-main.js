@@ -68,59 +68,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 500);
     }
 
-    // --- FORCE NAVIGATION LISTENER (DELEGATION) ---
-    // Fixes all buttons being "blind" in certain environments
-    document.addEventListener('click', (e) => {
-        // 1. Sidebar User Items
-        const uItem = e.target.closest('.u-item');
-        if (uItem) {
-            const id = uItem.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-            if (id) {
-                console.log("FORCE SELECT USER:", id);
-                if (window.selUser) window.selUser(id);
-                else {
-                    // Manual backup
-                    document.getElementById('viewHome').style.display = 'none';
-                    document.getElementById('viewProfile').style.display = 'none';
-                    const vUser = document.getElementById('viewUser');
-                    if (vUser) { vUser.style.display = 'flex'; vUser.classList.add('active'); }
-                }
-            }
-            return;
-        }
-
-        // 2. Main Sidebar Navigation (DASHBOARD / PROFILE)
-        const navBtn = e.target.closest('.sb-dash-btn');
-        if (navBtn) {
-            const text = navBtn.innerText.toUpperCase();
-            if (text.includes('DASHBOARD')) {
-                console.log("FORCE NAV: HOME");
-                showHome();
-            } else if (text.includes('PROFILE')) {
-                console.log("FORCE NAV: PROFILE");
-                if (window.showProfile) window.showProfile();
-            }
-            return;
-        }
-
-        // 3. Admin Tabs (OPS / INTEL / RECORD)
-        const tabBtn = e.target.closest('.ap-tab');
-        if (tabBtn) {
-            const tabName = tabBtn.innerText.toLowerCase();
-            console.log("FORCE TAB:", tabName);
-            switchAdminTab(tabName);
-            return;
-        }
-    });
 
     console.log('Dashboard initialized. ID:', dayCode);
 });
 
-// NAVIGATION: BACK TO DASHBOARD
-export function showHome() {
-    window.location.href = "../index.html";
-}
-window.showHome = showHome;
 
 // --- 3. BRIDGE LISTENER (The Radio) ---
 Bridge.listen((data) => {
