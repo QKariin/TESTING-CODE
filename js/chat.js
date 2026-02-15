@@ -1,13 +1,11 @@
 // Chat functionality - FIXED FOR MODULES & LUXURY UI & SYSTEM TICKER
 import {
-    lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId
-} from './state.js';
-import {
+    lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
 } from './state.js';
 import { URLS } from './config.js';
 import { triggerSound } from './utils.js';
-import { getSignedUrl, getOptimizedUrl } from './media.js';
+import { getOptimizedUrl } from './media.js'; // Keep import, but we override logic below
 import { mediaType } from './media.js';
 
 // Add this variable at the TOP of chat.js (outside the function)
@@ -32,10 +30,8 @@ export async function renderChat(messages) {
         const s = (m.sender || "").toLowerCase();
         const txt = (m.message || "");
 
-        // EXCLUDE WISHLIST FROM TICKER (It goes to main chat)
         if (txt.startsWith('WISHLIST::')) return false;
 
-        // Catch 'system' sender OR any auto-generated messages
         return s === 'system' ||
             txt.includes("Task Verified") ||
             txt.includes("Task Rejected") ||
@@ -47,11 +43,8 @@ export async function renderChat(messages) {
         const s = (m.sender || "").toLowerCase();
         const txt = (m.message || "");
 
-        // ALWAYS ALLOW WISHLIST CARDS
         if (txt.startsWith('WISHLIST::')) return true;
 
-        // Only allow Human Conversation
-        // (If it was caught by the filter above, exclude it here)
         return s !== 'system' &&
             !txt.includes("Task Verified") &&
             !txt.includes("Task Rejected") &&
@@ -62,25 +55,22 @@ export async function renderChat(messages) {
     // 3. TICKER LOGIC (ANTI-BLINK FIX)
     if (systemMessages.length > 0) {
         const latest = systemMessages[systemMessages.length - 1];
-        const txt = DOMPurify.sanitize(latest.message);
+        const txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(latest.message) : latest.message;
 
-        // ONLY ANIMATE IF TEXT CHANGED
         if (txt !== lastTickerText) {
-            lastTickerText = txt; // Update memory
+            lastTickerText = txt; 
             const tickerHtml = `<span style="color:#fff;">◈</span> ${txt}`;
 
             [ticker, mobTicker].forEach(el => {
                 if (el) {
                     el.classList.remove('hidden');
                     el.innerHTML = tickerHtml;
-                    // Reset Animation
                     el.classList.remove('ticker-flash');
-                    void el.offsetWidth; // Force Reflow
+                    void el.offsetWidth; 
                     el.classList.add('ticker-flash');
                 }
             });
         } else {
-            // Text is same, just ensure it's visible (No Flash)
             [ticker, mobTicker].forEach(el => {
                 if (el) el.classList.remove('hidden');
             });
@@ -111,7 +101,7 @@ export async function renderChat(messages) {
     const visibleMessages = conversationMessages.slice(-activeLimit);
 
     let messagesHtml = visibleMessages.map((m) => {
-        let txt = DOMPurify.sanitize(m.message);
+        let txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(m.message) : m.message;
         const senderLower = (m.sender || "").toLowerCase();
         const isMe = senderLower === 'user' || senderLower === 'slave';
 
@@ -147,27 +137,54 @@ export async function renderChat(messages) {
                     contentHtml = `<div class="msg ${msgClass}">🎁 TRIBUTE ERROR</div>`;
                 }
             }
-            // 2. STANDARD MEDIA (FIXED FOR CPU QUOTA)
+            // 2. STANDARD MEDIA (FIXED FOR WIX & BYTESCALE)
             else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:image') || m.message.includes('wix:video')) {
                 const rawUrl = m.mediaUrl || m.message;
-                let srcUrl = "";
-
-                // --- BYTESCALE FIX START ---
+                let srcUrl = rawUrl;
+                
+                // --- INLINE URL FIXER (NO EXTERNAL DEPENDENCY) ---
+                
+                // A. Bytescale Fix (Quota Error)
                 if (rawUrl.includes('upcdn.io')) {
-                    // Force RAW mode to bypass "Transformation CPU quota used" error
-                    // This strips resize params (?w=600) and uses /raw/ path
-                    srcUrl = rawUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
-                } else {
-                    // Standard Wix or other URL
-                    srcUrl = getOptimizedUrl(rawUrl, 600); 
+                    let clean = rawUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/');
+                    srcUrl = clean.split('?')[0]; 
                 }
-                // --- BYTESCALE FIX END ---
+                // B. Wix Fix (Database Format)
+                else if (rawUrl.includes('wix:image')) {
+                    const parts = rawUrl.split('/');
+                    for (let i = 0; i < parts.length; i++) {
+                        if (parts[i] === 'v1' && parts[i+1]) {
+                            const id = parts[i+1].split('#')[0];
+                            srcUrl = `https://static.wixstatic.com/media/${id}/v1/fill/w_600,h_600,al_c,q_80/file.jpg`;
+                            break;
+                        }
+                    }
+                }
+                else if (rawUrl.includes('wix:video')) {
+                    const parts = rawUrl.split('/');
+                    for (let i = 0; i < parts.length; i++) {
+                        if (parts[i] === 'v1' && parts[i+1]) {
+                            const id = parts[i+1].split('#')[0];
+                            srcUrl = `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    // Fallback to existing logic for standard links
+                    srcUrl = getOptimizedUrl(rawUrl, 600);
+                }
+                // ------------------------------------------------
 
-                if (mediaType(srcUrl) === "video") {
+                if (mediaType(srcUrl) === "video" || srcUrl.endsWith('.mp4')) {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%;"></video></div>`;
                 } else {
-                    // Assume Image
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;"><img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"></div>`;
+                    // Image with error handler to show link if broken
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
+                        <img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit;" 
+                             onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<a href=\\'${srcUrl}\\' target=\\'_blank\\' style=\\'color:red; font-size:10px; padding:5px; display:block;\\'>[IMAGE LINK]</a>'">
+                    </div>`;
                 }
             }
         }
@@ -262,7 +279,13 @@ export function openChatPreview(url, isVideo) {
 export function closeChatPreview() {
     const overlay = document.getElementById('chatMediaOverlay');
     const container = document.getElementById('chatMediaOverlayContent');
-    if (!overlay || !container) return;
-    overlay.classList.add('hidden');
-    container.innerHTML = "";
+    if (overlay) {
+        overlay.classList.add('hidden');
+        if (container) container.innerHTML = "";
+    }
 }
+
+// Global Exports
+window.loadMoreChat = loadMoreChat;
+window.openChatPreview = openChatPreview;
+window.closeChatPreview = closeChatPreview;
