@@ -47,6 +47,35 @@ document.addEventListener('DOMContentLoaded', function () {
     startTimerLoop();
     renderMainDashboard();
 
+    // --- FIX: HARD-WIRE DASHBOARD BUTTON ---
+    // This forces the button to close the user window immediately
+    const dashBtn = document.querySelector('.sb-dash-btn');
+    if (dashBtn) {
+        dashBtn.removeAttribute('onclick'); // Remove broken HTML link
+        dashBtn.style.cursor = "pointer";
+        dashBtn.addEventListener('click', () => {
+            console.log("Force-Closing User Window...");
+            
+            // 1. Hide User View
+            const vUser = document.getElementById('viewUser');
+            if (vUser) {
+                vUser.style.display = 'none';
+                vUser.classList.remove('active');
+            }
+
+            // 2. Hide Profile View
+            const vProfile = document.getElementById('viewProfile');
+            if (vProfile) vProfile.style.display = 'none';
+
+            // 3. Show Dashboard
+            const vHome = document.getElementById('viewHome');
+            if (vHome) vHome.style.display = 'grid';
+
+            // 4. Reset ID State (Safe check)
+            if (typeof setCurrId === 'function') setCurrId(null);
+        });
+    }
+
     // --- FORCE MOCK DATA LOADING (LOCAL PREVIEW) ---
     if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
         console.log("%c⚠️ STANDALONE MODE: INJECTING SNAPSHOT ⚠️", "color:cyan; font-size:16px; font-weight:bold;");
