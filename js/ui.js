@@ -127,9 +127,9 @@ export function renderWishlist(maxBudget = 999999) {
             const displayImg = item.img || item.image || "";
             const safeImg = getOptimizedUrl(displayImg, 400);
 
-            // UPDATED: Calls 'quickBuyItem' which we defined in main.js
+           // UPDATED: Calls 'quickBuyItem' which we defined in main.js
             return `
-                <div class="store-item ${canAfford ? 'can-afford' : 'locked'}" style="cursor:pointer;" onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}})">
+                <div class="store-item ${canAfford ? 'can-afford' : 'locked'}" style="cursor:pointer;" onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}, img:'${displayImg}'})">
                     <div class="si-img-box">
                         <img src="${safeImg}" class="si-img" onerror="this.style.display='none'">
                         <div class="si-price">${item.price} 🪙</div>
