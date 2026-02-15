@@ -51,6 +51,15 @@ export function determineRank(item) {
  * This keeps the frontend "dumb" and prevents flickering.
  */
 export function getHierarchyReport(item) {
+    if (!item) {
+        return {
+            currentRank: "Hall Boy",
+            nextRank: HIERARCHY_RULES[HIERARCHY_RULES.length - 2].name,
+            isMax: false,
+            canPromote: false,
+            requirements: []
+        };
+    }
     const clean = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const currentHierarchy = item.hierarchy || "Hall Boy";
 

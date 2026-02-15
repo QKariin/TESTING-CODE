@@ -1,6 +1,7 @@
 import wixData from 'wix-data';
 import { Permissions, webMethod } from 'wix-web-module';
 import wixSecretsBackend from 'wix-secrets-backend';
+import { mediaBackend } from 'wix-media-backend';
 import Stripe from 'stripe';
 
 // --- IMPORT CENTRAL LOGIC FROM PUBLIC ---
@@ -9,6 +10,32 @@ import { determineRank, getHierarchyReport, HIERARCHY_RULES } from 'public/hiera
 // --- PUBLIC API: GET RULES ---
 export const getHierarchyRequirements = webMethod(Permissions.Anyone, async () => {
     return HIERARCHY_RULES;
+});
+
+// --- NEW/RESTORED: GET SECURE PROFILE ---
+export const secureGetProfile = webMethod(Permissions.Anyone, async (memberId) => {
+    try {
+        const results = await wixData.query("Tasks").eq("memberId", memberId).find({ suppressAuth: true });
+        if (results.items.length > 0) {
+            const item = results.items[0];
+            // Fetch parameters or other related data if necessary
+            // For now, returning the item as profile
+            return { success: true, profile: item };
+        }
+        return { success: false, error: "User not found" };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+});
+
+// --- NEW/RESTORED: GET UPLOAD URL ---
+export const getProfileUploadUrl = webMethod(Permissions.Anyone, async () => {
+    try {
+        const uploadUrl = await mediaBackend.getUploadUrl();
+        return { success: true, url: uploadUrl };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
 });
 
 

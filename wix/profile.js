@@ -3,10 +3,9 @@ import wixData from 'wix-data';
 import wixLocation from 'wix-location';
 
 // --- BACKEND IMPORTS --- 
-import { updatePresenceAction, secureUpdateTaskAction, processCoinTransaction, setHierarchyAction, updateProfileAction, getHierarchyRequirements, getProfileUploadUrl, getHierarchyReportAction } from 'backend/Actions.web.js';
+import { updatePresenceAction, secureUpdateTaskAction, processCoinTransaction, setHierarchyAction, updateProfileAction, getHierarchyRequirements, getProfileUploadUrl, getHierarchyReportAction, secureGetProfile } from 'backend/Actions.web.js';
 import { insertMessage, loadUserMessages } from 'backend/Chat.web.js';
 import { getPaymentLink } from 'backend/pay';
-import { secureGetProfile } from 'backend/Profile.web.js';
 import { determineRank } from 'public/hierarchyRules.js';
 
 let currentUserEmail = "";
