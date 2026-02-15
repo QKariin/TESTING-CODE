@@ -383,11 +383,24 @@
                 justify-content: center;
                 box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
                 transition: 0.2s;
+
+                /* --- THE FIX IS HERE --- */
+                -webkit-touch-callout: none; /* Stops the iOS popup menu */
+                -webkit-user-select: none;   /* Chrome/Safari */
+                -moz-user-select: none;      /* Firefox */
+                -ms-user-select: none;       /* IE/Edge */
+                user-select: none;           /* Standard */
             }
 
             .mob-kneel-bar:active {
                 border-color: #fff;
                 transform: scale(0.98);
+
+                -webkit-touch-callout: none; /* Stops the iOS popup menu */
+                -webkit-user-select: none;   /* Chrome/Safari */
+                -moz-user-select: none;      /* Firefox */
+                -ms-user-select: none;       /* IE/Edge */
+                user-select: none;           /* Standard */
             }
 
             .mob-bar-fill,
