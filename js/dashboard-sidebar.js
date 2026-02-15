@@ -1,3 +1,4 @@
+
 // Dashboard Sidebar Management
 // User list rendering and sidebar interactions
 
@@ -116,13 +117,10 @@ export function renderSidebar() {
         else if (ls > 0 && diff < 60) statusText = `${diff} MIN AGO`;
         else if (ls > 0) statusText = new Date(ls).toLocaleDateString([], { month: 'short', day: 'numeric' });
 
-        const defaultPic = "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
-        const finalPic = u.avatar || u.profilePicture || defaultPic;
-
         html += `
             <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" onclick="selUser('${u.memberId}')">
                 <div class="u-avatar-main">
-                    <img src="${finalPic}" alt="${clean(u.name)}">
+                    ${u.avatar ? `<img src="${getOptimizedUrl(u.avatar, 100)}" alt="${u.name}">` : ''}
                 </div>
                 <div class="u-info">
                     <div class="u-name">${clean(u.name)}</div>
