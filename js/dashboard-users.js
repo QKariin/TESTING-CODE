@@ -219,11 +219,11 @@ export async function updateDetail(u) {
     const calculatedStreak = calculateRoutineStreak(u.routineHistory);
 
     const stats = {
-        tasks: completedCount,
+        tasks: u.completed || u.taskdom_completed_tasks || completedCount,
         kneels: u.kneelCount || 0,
         points: u.points || 0,
-        spent: u.totalSpent || 0, // Ensure this field exists in your user object or it will be 0
-        streak: calculatedStreak || u.routinestreak || 0
+        spent: u.total_coins_spent || u.totalSpent || u.tributetotal || 0,
+        streak: u.taskdom_streak || u.routinestreak || calculatedStreak || 0
     };
 
     // Build Progress Bars
