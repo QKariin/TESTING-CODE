@@ -148,7 +148,7 @@ function generateReport(item, currentRank) {
         { key: "kneelCount", label: "ENDURANCE", reqKey: "kneels" },
         { key: "score", label: "MERIT", reqKey: "points" },
         { key: "total_coins_spent", label: "SACRIFICE", reqKey: "spent" },
-        { key: "routinestreak", label: "CONSISTENCY", reqKey: "streak" }
+        { key: "bestRoutinestreak", label: "CONSISTENCY", reqKey: "streak", activeKey: "routinestreak" }
     ];
 
     statsMap.forEach(s => {
@@ -156,14 +156,22 @@ function generateReport(item, currentRank) {
             const current = item[s.key] || 0;
             const target = req[s.reqKey];
             const pct = Math.min((current / (target || 1)) * 100, 100);
-            report.requirements.push({
+
+            const requirement = {
                 id: s.reqKey,
                 label: s.label,
-                current: current,
+                current: current, // Best Streak (fills progress)
                 target: target,
                 percent: pct,
                 type: "bar"
-            });
+            };
+
+            // Add Active (Current) Streak if applicable
+            if (s.activeKey) {
+                requirement.active = item[s.activeKey] || 0;
+            }
+
+            report.requirements.push(requirement);
         }
     });
 

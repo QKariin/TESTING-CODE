@@ -223,7 +223,7 @@ export async function updateDetail(u) {
         kneels: u.kneelCount || 0,
         points: u.points || 0,
         spent: u.total_coins_spent || u.totalSpent || u.tributetotal || 0,
-        streak: u.routinestreak || calculatedStreak || 0
+        streak: u.bestRoutinestreak || u.routinestreak || calculatedStreak || 0
     };
 
     // Build Progress Bars
@@ -231,7 +231,7 @@ export async function updateDetail(u) {
     const container = document.getElementById('admin_ProgressContainer');
 
     if (container) {
-        const buildBar = (label, current, target, icon) => {
+        const buildBar = (label, current, target, icon, active) => {
             if (isMax) target = current;
             if (target <= 0) target = 1;
 
@@ -241,14 +241,29 @@ export async function updateDetail(u) {
             const labelColor = isDone ? "#fff" : "#888";
             const valColor = isDone ? "#00ff00" : "#c5a059";
 
+            let innerBars = `<div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40; transition: width 0.5s ease;"></div>`;
+            let valDisplay = `${current.toLocaleString()} / ${target.toLocaleString()}`;
+
+            if (typeof active !== 'undefined') {
+                const activePct = Math.min((active / target) * 100, 100);
+                const ghostColor = "rgba(197, 160, 89, 0.2)";
+                const activeColor = "#00ff00";
+
+                valDisplay = `<span style="color:#00ff00">${active}</span> <span style="opacity:0.4">[${current}]</span> / ${target}`;
+                innerBars = `
+                    <div style="position:absolute; top:0; left:0; width:${pct}%; height:100%; background:${ghostColor}; transition: width 0.5s ease;"></div>
+                    <div style="position:absolute; top:0; left:0; width:${activePct}%; height:100%; background:${activeColor}; box-shadow: 0 0 15px ${activeColor}80; transition: width 0.5s ease;"></div>
+                `;
+            }
+
             return `
             <div style="margin-bottom:12px;">
                 <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${labelColor};">
                     <span>${icon} ${label}</span>
-                    <span style="color:${valColor}">${current.toLocaleString()} / ${target.toLocaleString()}</span>
+                    <span style="color:${valColor}">${valDisplay}</span>
                 </div>
-                <div style="width:100%; height:6px; background:#000; border:1px solid #333; border-radius:3px; overflow:hidden;">
-                    <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40; transition: width 0.5s ease;"></div>
+                <div style="width:100%; height:8px; background:#000; border:1px solid #333; border-radius:4px; overflow:hidden; position:relative;">
+                    ${innerBars}
                 </div>
             </div>`;
         };
@@ -305,8 +320,8 @@ export async function updateDetail(u) {
             html += buildBar("SACRIFICE", stats.spent, req.spent, "💰");
         }
 
-        if (req.streak > 0) {
-            html += buildBar("CONSISTENCY", stats.streak, req.streak, "🔥");
+        if (req.streak >= 0) {
+            html += buildBar("CONSISTENCY", stats.streak, req.streak, "🔥", u.routinestreak);
         }
 
         container.innerHTML = html + `<div id="adminInlineDataEntry" style="margin-top:15px; border-top:1px solid #333; padding-top:10px; display:none;"></div>`;

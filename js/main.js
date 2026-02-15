@@ -1082,6 +1082,7 @@ window.addEventListener("message", (event) => {
                     totalSpent: data.profile.tributetotal || 0,        // Unified for Dashboard
                     routine_streak: data.profile.routinestreak || 0,
                     taskdom_streak: data.profile.routinestreak || 0,    // Unified for Slave App
+                    bestRoutinestreak: data.profile.bestRoutinestreak || 0, // NEW: For Ghost Mirror
                     kneelCount: data.profile.kneelCount || 0,
                     taskdom_completed: data.profile.taskdom_completed_tasks || 0,
                     completed: data.profile.taskdom_completed_tasks || 0 // Unified for Dashboard
@@ -1358,7 +1359,7 @@ function updateStats() {
     const dStreak = document.getElementById('deskStreak');
     if (dStreak) dStreak.innerText = gameStats.routinestreak || 0;
     const dTotal = document.getElementById('deskTotal');
-    if (dTotal) dTotal.innerText = gameStats.taskdom_total_tasks || 0;
+    if (dTotal) dTotal.innerText = gameStats.bestRoutinestreak || 0;
     const dNet = document.getElementById('deskNetTribute');
     if (dNet) dNet.innerText = gameStats.coins || 0;
 
@@ -1634,14 +1635,34 @@ window.updateHierarchyDrawer = function () {
             const color = isDone ? "#00ff00" : "#c5a059";
             const labelColor = isDone ? "#fff" : "#888";
             const valColor = isDone ? "#00ff00" : "#c5a059";
+
+            // --- GHOST MIRROR RENDERING ---
+            let innerBars = `<div style="width:${r.percent}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40; transition: width 0.5s ease;"></div>`;
+            let valDisplay = `${r.current.toLocaleString()} / ${r.target.toLocaleString()}`;
+
+            if (typeof r.active !== 'undefined') {
+                const activePct = Math.min((r.active / (r.target || 1)) * 100, 100);
+                const ghostColor = "rgba(197, 160, 89, 0.2)"; // Faint gold for the ghost
+                const activeColor = "#00ff00"; // Vivid green for current
+
+                valDisplay = `<span style="color:#00ff00">${r.active}</span> <span style="opacity:0.4">[${r.current}]</span> / ${r.target}`;
+
+                innerBars = `
+                    <!-- Ghost Bar (Personal Best) -->
+                    <div style="position:absolute; top:0; left:0; width:${r.percent}%; height:100%; background:${ghostColor}; transition: width 0.5s ease;"></div>
+                    <!-- Active Bar (Current Streak) -->
+                    <div style="position:absolute; top:0; left:0; width:${activePct}%; height:100%; background:${activeColor}; box-shadow: 0 0 15px ${activeColor}80; transition: width 0.5s ease;"></div>
+                `;
+            }
+
             html += `
             <div style="margin-bottom:12px;">
                 <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${labelColor};">
                     <span>${r.label}</span>
-                    <span style="color:${valColor}; opacity: 0.7; font-size: 0.55rem;">${r.current.toLocaleString()} / ${r.target.toLocaleString()}</span>
+                    <span style="color:${valColor}; opacity: 0.7; font-size: 0.55rem;">${valDisplay}</span>
                 </div>
-                <div style="width:100%; height:6px; background:#000; border:1px solid #333; border-radius:3px; overflow:hidden;">
-                    <div style="width:${r.percent}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40; transition: width 0.5s ease;"></div>
+                <div style="width:100%; height:8px; background:#000; border:1px solid #333; border-radius:4px; overflow:hidden; position:relative;">
+                    ${innerBars}
                 </div>
             </div>`;
         }

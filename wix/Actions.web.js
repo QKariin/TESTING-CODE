@@ -162,6 +162,11 @@ export const secureUpdateTaskAction = webMethod(
                             // If today, do nothing (keep streak)
                         }
                         item.lastRoutineDate = now;
+
+                        // UPDATE BEST STREAK (HIGH WATER MARK)
+                        if (item.routinestreak > (item.bestRoutinestreak || 0)) {
+                            item.bestRoutinestreak = item.routinestreak;
+                        }
                     }
 
                     // --- THE JUDGE: CHECK RANK ---

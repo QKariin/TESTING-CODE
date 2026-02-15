@@ -599,6 +599,12 @@ async function syncProfileAndTasks() {
 
         let statsItem = statsResults.items[0];
 
+        // --- DATA MIGRATION: INITIALIZE BEST STREAK ---
+        if (typeof statsItem.bestRoutinestreak === 'undefined' || statsItem.bestRoutinestreak < (statsItem.routinestreak || 0)) {
+            statsItem.bestRoutinestreak = statsItem.routinestreak || 0;
+            await wixData.update("Tasks", statsItem, { suppressAuth: true });
+        }
+
         // FETCH THE HIERARCHY REPORT (Instruction Packet)
         const reportRes = await getHierarchyReportAction(currentUserEmail);
         const hierarchyReport = reportRes.success ? reportRes.report : null;
@@ -629,7 +635,8 @@ async function syncProfileAndTasks() {
                 kneelHistory: statsItem.kneel_history, // Syncs Grid
                 routine: statsItem.routine,            // Syncs Routine Name
                 routineHistory: statsItem.routineHistory,
-                routinestreak: statsItem.routinestreak || 0, // NEW: Syncs Hierarchy Requirement
+                routinestreak: statsItem.routinestreak || 0,
+                bestRoutinestreak: statsItem.bestRoutinestreak || 0, // NEW: For Ghost Mirror
 
                 // NEW: SYNC KINKS/LIMITS
                 kinks: statsItem.kink || "",
