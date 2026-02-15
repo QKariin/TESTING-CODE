@@ -1,4 +1,4 @@
-// Chat functionality - DIAGNOSTIC MODE
+// Chat functionality - FAIL-SAFE VERSION
 import {
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
@@ -7,46 +7,41 @@ import { triggerSound } from './utils.js';
 
 let lastTickerText = "";
 
-// --- THE TRANSLATOR ---
+// --- URL CLEANER ---
 function getSafeSrc(rawUrl) {
     if (!rawUrl || typeof rawUrl !== 'string') return "";
 
-    // 1. WIX DATABASE FIX
-    if (rawUrl.includes('wix:image') || rawUrl.includes('wix:video')) {
-        // Method: Split by "/" and grab the long ID string
+    // 1. WIX FIX (Case Insensitive)
+    if (rawUrl.toLowerCase().includes('wix:image') || rawUrl.toLowerCase().includes('wix:video')) {
         const parts = rawUrl.split('/');
-        for (let part of parts) {
-            // Ignore common protocol parts
-            if (part.includes(':') || part === '' || part === 'v1') continue;
-            
-            // If it looks like an ID (contains underscores or numbers), use it
-            if (part.includes('_') || part.length > 20) {
-                const id = part.split('#')[0]; // Remove hash params
-                
-                if (rawUrl.includes('video')) {
+        // Look for the part AFTER "v1" (case insensitive)
+        for (let i = 0; i < parts.length; i++) {
+            if (parts[i].toLowerCase() === 'v1' && parts[i+1]) {
+                const id = parts[i+1].split('#')[0]; // Clean ID
+                if (rawUrl.toLowerCase().includes('video')) {
                     return `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
                 }
-                return `https://static.wixstatic.com/media/${id}/v1/fill/w_600,h_600,al_c,q_80/file.jpg`;
+                // Use generic media URL (safest)
+                return `https://static.wixstatic.com/media/${id}`;
             }
         }
     }
 
-    // 2. BYTESCALE / IPHONE FIX
+    // 2. BYTESCALE / MOBILE FIX (HEIC -> JPG)
     if (rawUrl.includes('upcdn.io')) {
-        // Force endpoint to /image/ for processing
+        // Switch to image processing endpoint
         let clean = rawUrl
             .replace('/raw/', '/image/')
-            .replace('/thumbnail/', '/image/')
-            .replace('/original/', '/image/');
-            
-        clean = clean.split('?')[0]; // Clean old params
-        
-        // Force JPG output (Fixes HEIC)
-        return `${clean}?w=600&q=80&f=jpg`; 
+            .replace('/thumbnail/', '/image/');
+        clean = clean.split('?')[0]; 
+        // Force JPG
+        return `${clean}?w=600&q=80&f=jpg`;
     }
 
-    // 3. Fallback
-    return rawUrl;
+    // 3. Already a web link
+    if (rawUrl.startsWith('http')) return rawUrl;
+
+    return ""; // Return empty if we can't figure it out
 }
 
 export async function renderChat(messages) {
@@ -63,7 +58,14 @@ export async function renderChat(messages) {
         (a, b) => new Date(a._createdDate) - new Date(b._createdDate)
     );
 
-    // 2. FILTERING
+    // 2. FILTER
+    const systemMessages = sortedMessages.filter(m => {
+        const txt = m.message || "";
+        if (txt.startsWith('WISHLIST::')) return false;
+        const s = (m.sender || "").toLowerCase();
+        return s === 'system' || txt.includes("Task Verified") || txt.includes("FAILURE");
+    });
+
     const conversationMessages = sortedMessages.filter(m => {
         const txt = m.message || "";
         if (txt.startsWith('WISHLIST::')) return true;
@@ -71,8 +73,7 @@ export async function renderChat(messages) {
         return s !== 'system' && !txt.includes("Task Verified") && !txt.includes("FAILURE");
     });
 
-    // 3. TICKER UPDATE
-    const systemMessages = sortedMessages.filter(m => !conversationMessages.includes(m));
+    // 3. TICKER
     if (systemMessages.length > 0) {
         const latest = systemMessages[systemMessages.length - 1];
         const txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(latest.message) : latest.message;
@@ -80,12 +81,18 @@ export async function renderChat(messages) {
             lastTickerText = txt;
             const tickerHtml = `<span style="color:#fff;">◈</span> ${txt}`;
             [ticker, mobTicker].forEach(el => {
-                if(el) { el.classList.remove('hidden'); el.innerHTML = tickerHtml; }
+                if (el) {
+                    el.classList.remove('hidden');
+                    el.innerHTML = tickerHtml;
+                    el.classList.remove('ticker-flash');
+                    void el.offsetWidth;
+                    el.classList.add('ticker-flash');
+                }
             });
         }
     }
 
-    // 4. CHECK FOR NEW MESSAGES
+    // 4. CHECK UPDATES
     const currentJson = JSON.stringify(conversationMessages);
     if (currentJson === lastChatJson) return;
 
@@ -108,19 +115,18 @@ export async function renderChat(messages) {
         let txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(m.message) : m.message;
         const senderLower = (m.sender || "").toLowerCase();
         const isMe = senderLower === 'user' || senderLower === 'slave';
+        
+        txt = txt.replace(/\n/g, "<br>");
         const timeStr = new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const msgClass = isMe ? 'm-slave' : 'm-queen';
-        
-        let contentHtml = `<div class="msg ${msgClass}">${txt.replace(/\n/g, "<br>")}</div>`;
+        let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
 
-        // --- MEDIA LOGIC ---
+        // --- MEDIA HANDLER ---
         const rawUrl = m.mediaUrl || m.message;
-        // Check if message LOOKS like a URL
         const isUrl = rawUrl.startsWith('http') || rawUrl.includes('wix:') || rawUrl.includes('upcdn');
 
         if (m.message && (isUrl || m.message.startsWith('WISHLIST::'))) {
-            
-            // A. WISHLIST CARD
+            // A. WISHLIST
             if (m.message.startsWith('WISHLIST::')) {
                 try {
                     const item = JSON.parse(m.message.replace('WISHLIST::', ''));
@@ -131,29 +137,33 @@ export async function renderChat(messages) {
                     </div>`;
                 } catch (e) { contentHtml = `<div class="msg ${msgClass}">🎁 ERROR</div>`; }
             }
-            
-            // B. MEDIA PROCESSING
+            // B. MEDIA
             else if (isUrl) {
-                // ATTEMPT TRANSLATION
                 const srcUrl = getSafeSrc(rawUrl);
-                const isVideo = srcUrl.includes('.mp4') || srcUrl.includes('.mov') || rawUrl.includes('wix:video');
-
-                if (isVideo) {
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
+                
+                // If getSafeSrc returned empty string, give clickable raw link
+                if (!srcUrl) {
+                    contentHtml = `<div class="msg ${msgClass}"><a href="${rawUrl}" target="_blank" style="color:red; text-decoration:underline;">[UNKNOWN MEDIA LINK]</a></div>`;
                 } else {
-                    // *** DIAGNOSTIC IMAGE TAG ***
-                    // If this image fails, it replaces itself with red text showing the URL
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
-                        <img src="${srcUrl}" 
-                             style="max-width:100%; display:block; border-radius:inherit; cursor:pointer; min-height:50px;" 
-                             onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"
-                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding:10px; color:#ff003c; font-size:10px; background:#220000; border:1px solid red; word-break:break-all;\\'><strong>BROKEN LINK:</strong><br>' + '${srcUrl}' + '<br><br><strong>RAW:</strong><br>' + '${rawUrl}' + '</div>'">
-                    </div>`;
+                    const isVideo = srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm');
+
+                    if (isVideo) {
+                        contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
+                    } else {
+                        // *** FAIL-SAFE IMAGE ***
+                        // If image fails to load, it becomes a text button
+                        contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
+                            <img src="${srcUrl}" 
+                                 style="max-width:100%; display:block; border-radius:inherit; cursor:pointer; min-height:50px;" 
+                                 onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"
+                                 onerror="this.style.display='none'; this.parentElement.innerHTML='<a href=\\'${srcUrl}\\' target=\\'_blank\\' style=\\'display:block; padding:10px; color:#c5a059; text-align:center; font-size:0.8rem; border:1px dashed #c5a059;\\'>⚠️ VIEW IMAGE</a>'">
+                        </div>`;
+                    }
                 }
             }
         }
 
-        // Layout
+        // WRAPPERS
         if (m.message && m.message.startsWith('WISHLIST::')) {
             return `<div class="msg-row" style="justify-content:center; margin:10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
@@ -229,7 +239,6 @@ export function closeChatPreview() {
     }
 }
 
-// Global Exports
 window.loadMoreChat = loadMoreChat;
 window.openChatPreview = openChatPreview;
 window.closeChatPreview = closeChatPreview;
