@@ -11,11 +11,7 @@ export function showHome() {
     }
 
     setCurrId(null);
-    const vUser = document.getElementById('viewUser');
-    if (vUser) {
-        vUser.style.display = 'none';
-        vUser.classList.remove('active');
-    }
+    document.getElementById('viewUser').classList.remove('active');
     document.getElementById('viewProfile').style.display = 'none';
     document.getElementById('viewHome').style.display = 'grid';
 
@@ -29,11 +25,7 @@ export function showProfile() {
     }
 
     setCurrId(null);
-    const vUser = document.getElementById('viewUser');
-    if (vUser) {
-        vUser.style.display = 'none';
-        vUser.classList.remove('active');
-    }
+    document.getElementById('viewUser').classList.remove('active');
     document.getElementById('viewHome').style.display = 'none';
     document.getElementById('viewProfile').style.display = 'flex';
 
