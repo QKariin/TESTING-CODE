@@ -137,39 +137,50 @@ export async function renderChat(messages) {
                     contentHtml = `<div class="msg ${msgClass}">🎁 TRIBUTE ERROR</div>`;
                 }
             }
-            // B. IMAGES & VIDEOS (WIX FIX INCLUDED)
+            // B. IMAGES & VIDEOS (SAFER ID EXTRACTION)
             else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:image') || m.message.includes('wix:video')) {
                 let rawUrl = m.mediaUrl || m.message;
                 let srcUrl = rawUrl;
                 let isVideo = false;
 
-                // --- WIX URL FIXER ---
-                if (rawUrl.startsWith('wix:image')) {
+                console.log("Processing Media URL:", rawUrl); // Check Console (F12) to see the real link
+
+                // --- WIX URL FIXER (SPLIT METHOD) ---
+                if (rawUrl.includes('wix:image')) {
                     try {
-                        const id = rawUrl.split('/')[3].split('#')[0];
-                        srcUrl = `https://static.wixstatic.com/media/${id}/v1/fill/w_600,h_600,al_c,q_80/file.jpg`;
-                    } catch(e) { console.warn("Wix Image Parse Fail", e); }
+                        // 1. Remove the protocol prefix to isolate the rest
+                        // Handles "wix:image://v1/" OR "wix:image://V1/"
+                        let cleanPath = rawUrl.replace(/wix:image:\/\/v1\//i, "").replace(/wix:image:\/\//i, "");
+                        
+                        // 2. The ID is now the first part before the next slash
+                        const id = cleanPath.split('/')[0].split('#')[0]; 
+
+                        // 3. Build the Simple Web Link (No filters initially to ensure it works)
+                        srcUrl = `https://static.wixstatic.com/media/${id}`;
+                        
+                    } catch(e) { console.error("Chat Image Error:", e); }
                 } 
-                else if (rawUrl.startsWith('wix:video')) {
+                else if (rawUrl.includes('wix:video')) {
                     try {
-                        const id = rawUrl.split('/')[3].split('#')[0];
-                        srcUrl = `https://video.wixstatic.com/video/${id}/file`;
+                        let cleanPath = rawUrl.replace(/wix:video:\/\/v1\//i, "").replace(/wix:video:\/\//i, "");
+                        const id = cleanPath.split('/')[0].split('#')[0];
+                        srcUrl = `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
                         isVideo = true;
-                    } catch(e) { console.warn("Wix Video Parse Fail", e); }
+                    } catch(e) { console.error("Chat Video Error:", e); }
                 }
                 // --- STANDARD URLS ---
                 else {
                     srcUrl = getOptimizedUrl(rawUrl, 600);
-                    if (srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm')) {
+                    if (/\.(mp4|mov|webm)($|\?)/i.test(srcUrl)) {
                         isVideo = true;
                     }
                 }
 
-                // Render Media
+                // Render
                 if (isVideo) {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
                 } else {
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;"><img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit; cursor:pointer;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"></div>`;
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;"><img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit; cursor:pointer;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)" onerror="this.style.display='none';"></div>`;
                 }
             }
         }
