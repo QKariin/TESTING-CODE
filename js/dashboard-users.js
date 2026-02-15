@@ -223,7 +223,7 @@ export async function updateDetail(u) {
         kneels: u.kneelCount || 0,
         points: u.points || 0,
         spent: u.total_coins_spent || u.totalSpent || u.tributetotal || 0,
-        streak: u.taskdom_streak || u.routinestreak || calculatedStreak || 0
+        streak: u.routinestreak || calculatedStreak || 0
     };
 
     // Build Progress Bars

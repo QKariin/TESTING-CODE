@@ -1145,6 +1145,7 @@ window.addEventListener("message", (event) => {
                     if (typeof userProfile !== 'undefined') userProfile.profilePicture = rawUrl;
                 }
                 updateStats();
+                if (window.updateHierarchyDrawer) window.updateHierarchyDrawer();
 
                 // TRIGGER UI REFRESH
                 if (window.syncMobileDashboard) window.syncMobileDashboard();
@@ -1256,8 +1257,6 @@ window.WISHLIST_ITEMS = WISHLIST_ITEMS;
 window.gameStats = gameStats;
 
 function updateStats() {
-    // 1. DESKTOP UPDATE (Basic Header)
-    // 1. DESKTOP UPDATE (Basic Header)
     const subName = document.getElementById('subName') || document.getElementById('heroUserName');
     const subHierarchy = document.getElementById('subHierarchy');
     const coinsEl = document.getElementById('coins') || document.getElementById('mobCoins');
@@ -1265,201 +1264,192 @@ function updateStats() {
 
     if ((!subName && !document.getElementById('mob_slaveName')) || !userProfile || !gameStats) return;
 
-    // --- VISUAL HIERARCHY LOGIC (STRICT) ---
-    // Start with what the DB says
-    let visualRank = userProfile.hierarchy || "Hall Boy";
-
-    // 1. GATEKEEPER: Identity & Photo
-    // If these are missing, you ARE Hall Boy, no matter what the DB says (catch latency)
-    if (!userProfile.name || userProfile.name === "Slave" || !userProfile.profilePicture) {
-        visualRank = "Hall Boy";
-    }
-
-    // 2. GATEKEEPER: Preferences (Silverman+)
-    // If you are visually marked as Silverman+, but have no Kinks, degrade to Footman visually
-    // (This hides the rank until they fix it)
-    const dbRankLower = visualRank.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const isAboveFootman = dbRankLower !== "hallboy" && dbRankLower !== "footman";
-
-    if (isAboveFootman) {
-        const hasKinks = (userProfile.kinks && userProfile.kinks.length > 2);
-        const hasLimits = (userProfile.limits && userProfile.limits.length > 2);
-
-        if (!hasKinks || !hasLimits) {
-            visualRank = "Footman";
-        }
-    }
-
-    // 3. NO OPTIMISTIC PROMOTION. 
-    // We strictly follow the backend, only applying local degradation for instant feedback.
+    // --- MIRROR BACKEND TRUTH ---
+    const visualRank = userProfile.hierarchy || "Hall Boy";
 
     // Update Basic Desktop Elements
     if (subName) subName.textContent = userProfile.name || "Slave";
-    if (subHierarchy) subHierarchy.textContent = visualRank; // VISUAL PROMOTION
+    if (subHierarchy) subHierarchy.textContent = visualRank;
     if (coinsEl) coinsEl.textContent = gameStats.coins ?? 0;
     if (pointsEl) pointsEl.textContent = gameStats.points ?? 0;
 
-    // --- CONNECT DESKTOP EXPANDED STATS ---
-    const meritEl = document.getElementById('sidebarMerit');
-    const netEl = document.getElementById('sidebarNet');
-    if (meritEl) meritEl.textContent = gameStats.points ?? 0;
-    if (netEl) netEl.textContent = gameStats.coins ?? 0;
-
-    if (document.getElementById('statStreak')) document.getElementById('statStreak').innerText = gameStats.taskdom_streak || 0;
-    if (document.getElementById('statTotal')) document.getElementById('statTotal').innerText = gameStats.taskdom_total_tasks || 0;
-    if (document.getElementById('statCompleted')) document.getElementById('statCompleted').innerText = gameStats.taskdom_completed || 0;
-    if (document.getElementById('statSkipped')) document.getElementById('statSkipped').innerText = gameStats.taskdom_skipped || 0;
-    if (document.getElementById('statTotalKneels')) document.getElementById('statTotalKneels').innerText = gameStats.kneelCount || 0;
-
-    if (window.renderRewards) window.renderRewards();
-
-
-
-    // 2. MOBILE UPDATE (The New Connection)
-    // Header Identity
+    // Update Mobile Dashboard (Halo)
     const mobName = document.getElementById('mob_slaveName');
-    const mobRank = document.getElementById('mob_rankStamp');
-    const mobPic = document.getElementById('mob_profilePic'); // Center Hexagon
+    const mobRank = document.getElementById('mob_slaveRank');
+    const mobPoints = document.getElementById('mob_slavePoints');
+    const mobCoins = document.getElementById('mob_slaveCoins');
+    const mobSpent = document.getElementById('mob_slaveSpent');
 
-    // Header Stats (Visible)
-    const mobPoints = document.getElementById('mobPoints');
-    const mobCoins = document.getElementById('mobCoins');
+    if (mobName) mobName.innerText = userProfile.name || "Slave";
+    if (mobRank) mobRank.innerText = visualRank.toUpperCase();
+    if (mobPoints) mobPoints.innerText = (gameStats.points || 0).toLocaleString();
+    if (mobCoins) mobCoins.innerText = (gameStats.coins || 0).toLocaleString();
+    if (mobSpent) mobSpent.innerText = (gameStats.totalSpent || 0).toLocaleString();
 
-    // Drawer Stats (Hidden)
-    const mobStreak = document.getElementById('mobStreak');
-    const mobTotal = document.getElementById('mobTotal');
-    const mobKneels = document.getElementById('mobKneels');
-
-    // Daily duties
-    const mobDailyKneels = document.getElementById('kneelDailyText');
-    const kneelDailyFill = document.getElementById("kneelDailyFill");
-
-    // FILL MOBILE TEXT DATA
-    if (mobName) mobName.innerText = userProfile.name || "SLAVE";
-    const heroName = document.getElementById('heroUserName');
-    if (heroName) heroName.innerText = (userProfile.name || "LOYAL SUBJECT").toUpperCase();
-    if (mobRank) mobRank.innerText = visualRank; // VISUAL PROMOTION
-
-    if (mobPoints) mobPoints.innerText = gameStats.points || 0;
-
-    // --- NEW ACTION PANEL SYNC ---
-    if (window.updateActionPanelStats) window.updateActionPanelStats();
-    if (mobCoins) mobCoins.innerText = gameStats.coins || 0;
-
-    if (mobStreak) mobStreak.innerText = gameStats.taskdom_streak || 0;
-    if (mobTotal) mobTotal.innerText = gameStats.taskdom_total_tasks || 0;
-    if (mobKneels) mobKneels.innerText = gameStats.kneelCount || 0;
-
-    // Daily Duties Logic
-    const dailyKneels = (gameStats.kneelHistory ? JSON.parse(gameStats.kneelHistory).hours?.length || 0 : 0);
-    if (mobDailyKneels) mobDailyKneels.innerText = dailyKneels + " / 8";
-    const deskKneelText = document.getElementById('deskKneelDailyText');
-    if (deskKneelText) deskKneelText.innerText = dailyKneels + " / 8";
-
-    if (kneelDailyFill || document.getElementById('deskKneelDailyFill')) {
-        const percent = Math.min((dailyKneels / 8) * 100, 100);
-        if (kneelDailyFill) kneelDailyFill.style.width = percent + "%";
-        const dkf = document.getElementById('deskKneelDailyFill');
-        if (dkf) dkf.style.width = percent + "%";
-    }
-
-    // Desktop Stat Bar Sync
-    const dStreak = document.getElementById('deskStreak');
-    if (dStreak) dStreak.innerText = gameStats.taskdom_streak || 0;
-    const dTotal = document.getElementById('deskTotal');
-    if (dTotal) dTotal.innerText = gameStats.taskdom_total_tasks || 0;
-    const dNet = document.getElementById('deskNetTribute');
-    if (dNet) dNet.innerText = gameStats.coins || 0;
-
-    // --- SIDEBAR STATS SYNC ---
-    const sbMerit = document.getElementById('sidebarMerit');
-    if (sbMerit) sbMerit.innerText = (gameStats.points || 0).toLocaleString();
-    const sbNet = document.getElementById('sidebarNet');
-    if (sbNet) sbNet.innerText = (gameStats.coins || 0).toLocaleString();
-
-    // --- [FIX] PROFILE PICTURE LOGIC (SYNC ALL 3 IMAGES) ---
-    if (userProfile.profilePicture) {
-        let rawUrl = userProfile.profilePicture;
-        let finalUrl = rawUrl;
-
-        // Fix Wix URLs
-        if (rawUrl.startsWith("wix:image")) {
-            const uri = rawUrl.split('/')[3].split('#')[0];
-            finalUrl = `https://static.wixstatic.com/media/${uri}`;
-        }
-
-        // 1. Update the Big Hexagon (Dashboard Center)
-        if (mobPic) mobPic.src = finalUrl;
-
-        // 2. Update the Background Blur
-        const mobBg = document.getElementById('mob_bgPic');
-        if (mobBg) mobBg.src = finalUrl;
-
-        // 3. Update the Right Circle (Slave ID)
-        const rightCircle = document.getElementById('hudSlavePic');
-        if (rightCircle) rightCircle.src = finalUrl;
-
-        // 4. Update Desktop Avatar (Just in case)
-        const deskPic = document.getElementById('profilePic');
-        if (deskPic) deskPic.src = finalUrl;
-    }
-
-    // --- GRID SYNC (TRUST THE BACKEND) ---
-    const grid = document.getElementById('mob_streakGrid');
-    if (grid) {
-        grid.innerHTML = '';
-        let loggedHours = [];
-        const now = new Date();
-
-        if (userProfile.kneelHistory) {
-            try {
-                const hObj = JSON.parse(userProfile.kneelHistory);
-                loggedHours = hObj.hours || [];
-            } catch (e) { console.error("Grid parse error", e); }
-        }
-
-        for (let i = 0; i < 24; i++) {
-            const sq = document.createElement('div');
-            sq.className = 'streak-sq';
-
-            // 1. Is this hour logged? (Gold)
-            if (loggedHours.includes(i)) {
-                sq.classList.add('active');
-            }
-            // 2. Has this hour passed? (Dim/Dark)
-            else if (i < now.getHours()) {
-                sq.style.opacity = "0.3";
-                sq.style.borderColor = "#333";
-            }
-            // 3. Future hours are normal style
-            grid.appendChild(sq);
-        }
-    }
-
-    // 4. DESKTOP EXTRAS (Progress Bar etc)
-    const sinceEl = document.getElementById('slaveSinceDate');
-    if (sinceEl && userProfile.joined) {
-        try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch (e) { sinceEl.textContent = "--/--/--"; }
-    }
-
-    if (typeof LEVELS !== 'undefined' && LEVELS.length > 0) {
-        let nextLevel = LEVELS.find(l => l.min > gameStats.points) || LEVELS[LEVELS.length - 1];
-        const nln = document.getElementById('nextLevelName');
-        const pnd = document.getElementById('pointsNeeded');
-
-        if (nln) nln.innerText = nextLevel.name;
-        if (pnd) pnd.innerText = Math.max(0, nextLevel.min - gameStats.points) + " to go";
-
-        const pb = document.getElementById('progressBar');
-        const progress = ((gameStats.points - 0) / (nextLevel.min - 0)) * 100;
-        if (pb) pb.style.width = Math.min(100, Math.max(0, progress)) + "%";
-
-        const sp = document.getElementById('satisfactionPercent');
-        if (sp) sp.innerText = Math.round(Math.min(100, Math.max(0, progress))) + "%";
-    }
-
-    updateKneelingStatus();
+    // TRIGGER DRAWER REFRESH
+    if (window.updateHierarchyDrawer) window.updateHierarchyDrawer();
 }
+
+// --- CONNECT DESKTOP EXPANDED STATS ---
+const meritEl = document.getElementById('sidebarMerit');
+const netEl = document.getElementById('sidebarNet');
+if (meritEl) meritEl.textContent = gameStats.points ?? 0;
+if (netEl) netEl.textContent = gameStats.coins ?? 0;
+
+if (document.getElementById('statStreak')) document.getElementById('statStreak').innerText = gameStats.taskdom_streak || 0;
+if (document.getElementById('statTotal')) document.getElementById('statTotal').innerText = gameStats.taskdom_total_tasks || 0;
+if (document.getElementById('statCompleted')) document.getElementById('statCompleted').innerText = gameStats.taskdom_completed || 0;
+if (document.getElementById('statSkipped')) document.getElementById('statSkipped').innerText = gameStats.taskdom_skipped || 0;
+if (document.getElementById('statTotalKneels')) document.getElementById('statTotalKneels').innerText = gameStats.kneelCount || 0;
+
+if (window.renderRewards) window.renderRewards();
+
+
+
+// 2. MOBILE UPDATE (The New Connection)
+// Header Identity
+const mobName = document.getElementById('mob_slaveName');
+const mobRank = document.getElementById('mob_rankStamp');
+const mobPic = document.getElementById('mob_profilePic'); // Center Hexagon
+
+// Header Stats (Visible)
+const mobPoints = document.getElementById('mobPoints');
+const mobCoins = document.getElementById('mobCoins');
+
+// Drawer Stats (Hidden)
+const mobStreak = document.getElementById('mobStreak');
+const mobTotal = document.getElementById('mobTotal');
+const mobKneels = document.getElementById('mobKneels');
+
+// Daily duties
+const mobDailyKneels = document.getElementById('kneelDailyText');
+const kneelDailyFill = document.getElementById("kneelDailyFill");
+
+// FILL MOBILE TEXT DATA
+if (mobName) mobName.innerText = userProfile.name || "SLAVE";
+const heroName = document.getElementById('heroUserName');
+if (heroName) heroName.innerText = (userProfile.name || "LOYAL SUBJECT").toUpperCase();
+if (mobRank) mobRank.innerText = visualRank; // VISUAL PROMOTION
+
+if (mobPoints) mobPoints.innerText = gameStats.points || 0;
+
+// --- NEW ACTION PANEL SYNC ---
+if (window.updateActionPanelStats) window.updateActionPanelStats();
+if (mobCoins) mobCoins.innerText = gameStats.coins || 0;
+
+if (mobStreak) mobStreak.innerText = gameStats.taskdom_streak || 0;
+if (mobTotal) mobTotal.innerText = gameStats.taskdom_total_tasks || 0;
+if (mobKneels) mobKneels.innerText = gameStats.kneelCount || 0;
+
+// Daily Duties Logic
+const dailyKneels = (gameStats.kneelHistory ? JSON.parse(gameStats.kneelHistory).hours?.length || 0 : 0);
+if (mobDailyKneels) mobDailyKneels.innerText = dailyKneels + " / 8";
+const deskKneelText = document.getElementById('deskKneelDailyText');
+if (deskKneelText) deskKneelText.innerText = dailyKneels + " / 8";
+
+if (kneelDailyFill || document.getElementById('deskKneelDailyFill')) {
+    const percent = Math.min((dailyKneels / 8) * 100, 100);
+    if (kneelDailyFill) kneelDailyFill.style.width = percent + "%";
+    const dkf = document.getElementById('deskKneelDailyFill');
+    if (dkf) dkf.style.width = percent + "%";
+}
+
+// Desktop Stat Bar Sync
+const dStreak = document.getElementById('deskStreak');
+if (dStreak) dStreak.innerText = gameStats.routinestreak || 0;
+const dTotal = document.getElementById('deskTotal');
+if (dTotal) dTotal.innerText = gameStats.taskdom_total_tasks || 0;
+const dNet = document.getElementById('deskNetTribute');
+if (dNet) dNet.innerText = gameStats.coins || 0;
+
+// --- SIDEBAR STATS SYNC ---
+const sbMerit = document.getElementById('sidebarMerit');
+if (sbMerit) sbMerit.innerText = (gameStats.points || 0).toLocaleString();
+const sbNet = document.getElementById('sidebarNet');
+if (sbNet) sbNet.innerText = (gameStats.coins || 0).toLocaleString();
+
+// --- [FIX] PROFILE PICTURE LOGIC (SYNC ALL 3 IMAGES) ---
+if (userProfile.profilePicture) {
+    let rawUrl = userProfile.profilePicture;
+    let finalUrl = rawUrl;
+
+    // Fix Wix URLs
+    if (rawUrl.startsWith("wix:image")) {
+        const uri = rawUrl.split('/')[3].split('#')[0];
+        finalUrl = `https://static.wixstatic.com/media/${uri}`;
+    }
+
+    // 1. Update the Big Hexagon (Dashboard Center)
+    if (mobPic) mobPic.src = finalUrl;
+
+    // 2. Update the Background Blur
+    const mobBg = document.getElementById('mob_bgPic');
+    if (mobBg) mobBg.src = finalUrl;
+
+    // 3. Update the Right Circle (Slave ID)
+    const rightCircle = document.getElementById('hudSlavePic');
+    if (rightCircle) rightCircle.src = finalUrl;
+
+    // 4. Update Desktop Avatar (Just in case)
+    const deskPic = document.getElementById('profilePic');
+    if (deskPic) deskPic.src = finalUrl;
+}
+
+// --- GRID SYNC (TRUST THE BACKEND) ---
+const grid = document.getElementById('mob_streakGrid');
+if (grid) {
+    grid.innerHTML = '';
+    let loggedHours = [];
+    const now = new Date();
+
+    if (userProfile.kneelHistory) {
+        try {
+            const hObj = JSON.parse(userProfile.kneelHistory);
+            loggedHours = hObj.hours || [];
+        } catch (e) { console.error("Grid parse error", e); }
+    }
+
+    for (let i = 0; i < 24; i++) {
+        const sq = document.createElement('div');
+        sq.className = 'streak-sq';
+
+        // 1. Is this hour logged? (Gold)
+        if (loggedHours.includes(i)) {
+            sq.classList.add('active');
+        }
+        // 2. Has this hour passed? (Dim/Dark)
+        else if (i < now.getHours()) {
+            sq.style.opacity = "0.3";
+            sq.style.borderColor = "#333";
+        }
+        // 3. Future hours are normal style
+        grid.appendChild(sq);
+    }
+}
+
+// 4. DESKTOP EXTRAS (Progress Bar etc)
+const sinceEl = document.getElementById('slaveSinceDate');
+if (sinceEl && userProfile.joined) {
+    try { sinceEl.textContent = new Date(userProfile.joined).toLocaleDateString(); } catch (e) { sinceEl.textContent = "--/--/--"; }
+}
+
+if (typeof LEVELS !== 'undefined' && LEVELS.length > 0) {
+    let nextLevel = LEVELS.find(l => l.min > gameStats.points) || LEVELS[LEVELS.length - 1];
+    const nln = document.getElementById('nextLevelName');
+    const pnd = document.getElementById('pointsNeeded');
+
+    if (nln) nln.innerText = nextLevel.name;
+    if (pnd) pnd.innerText = Math.max(0, nextLevel.min - gameStats.points) + " to go";
+
+    const pb = document.getElementById('progressBar');
+    const progress = ((gameStats.points - 0) / (nextLevel.min - 0)) * 100;
+    if (pb) pb.style.width = Math.min(100, Math.max(0, progress)) + "%";
+
+    const sp = document.getElementById('satisfactionPercent');
+    if (sp) sp.innerText = Math.round(Math.min(100, Math.max(0, progress))) + "%";
+}
+
+updateKneelingStatus();
 
 // =========================================
 // REWARD SYSTEM CONFIG & RENDER
@@ -2061,8 +2051,8 @@ window.renderRewards = function () {
         }
     }
 
-    // --- SYNC ALL STREAK DISPLAYS ---
-    gameStats.taskdom_streak = finalStreak;
+    // --- SYNC ALL STREAK DISPLAYS (STRICT MIRROR) ---
+    gameStats.taskdom_streak = userProfile.routinestreak || finalStreak || 0;
     const ids = ['statStreak', 'mobStreak', 'deskStreak'];
     ids.forEach(id => {
         const el = document.getElementById(id);
