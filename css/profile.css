@@ -27,9 +27,9 @@
         color: var(--text-white);
         font-family: 'Cinzel', serif;
         /* GLOBAL FONT CHANGE */
-        height: 100vh;
+        min-height:100vh
         width: 100vw;
-        overflow: hidden;
+        overflow: scroll;
     }
 
     .app-container {
@@ -67,7 +67,7 @@
         width: 45px;
         height: 45px;
         border-radius: 12px;
-        background: var(--blue-accent);
+        background: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -82,7 +82,7 @@
         grid-template-rows: 20% 30% 50% !important;
         width: 100vw !important;
         height: 100vh !important;
-        background: var(--bg-deep);
+        background: transparent;
         color: white;
         overflow: hidden !important;
         gap: 0 !important;
@@ -94,12 +94,12 @@
     .v-sidebar {
         grid-column: 1 / 2 !important;
         grid-row: 1 / 4 !important;
-        background: rgba(0, 0, 0, 0.5);
+        background: transparent;
         backdrop-filter: blur(20px);
         border-right: 1px solid rgba(255, 255, 255, 0.1);
         display: flex;
         flex-direction: column;
-        padding: 20px 0 0 0;
+        padding: 20px 0 0 20px;
         /* Header stays at top, internal area scrolls */
         overflow: hidden;
         z-index: 100 !important;

@@ -1732,24 +1732,24 @@ window.openDataEntry = function (type) {
     // Helper for Kink/Limit Chips (Vertical List)
     const renderChips = (dataType) => {
         const list = (typeof KINK_LIST !== 'undefined') ? KINK_LIST : ["JOI", "Humiliation", "Control", "Chastity", "Pain", "Service"];
-        let chipsHtml = `<div id="chipContainer" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">`;
+        let chipsHtml = `< div id = "chipContainer" style = "display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;" > `;
         list.forEach(item => {
             chipsHtml += `
-                <div class="kink-chip"
-                     onclick="window.toggleChip(this, ${itemCost})"
-                     data-value="${item}"
-                     style="width:100%; padding:12px; border:1px solid #333; background:rgba(0,0,0,0.6); font-size:0.9rem; font-family:'Cinzel', serif; color:#aaa; cursor:pointer; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center;">
+            < div class="kink-chip"
+        onclick = "window.toggleChip(this, ${itemCost})"
+        data - value="${item}"
+        style = "width:100%; padding:12px; border:1px solid #333; background:rgba(0,0,0,0.6); font-size:0.9rem; font-family:'Cinzel', serif; color:#aaa; cursor:pointer; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center;" >
                     <span>${item}</span>
                     <span class="cost-badge" style="font-size:0.7rem; color:#666;">${itemCost}</span>
-                </div>`;
+                </div > `;
         });
-        chipsHtml += `</div><style>#chipContainer::-webkit-scrollbar{display:none;} .kink-chip.selected{border-color:#c5a059; color:#c5a059; background:rgba(197,160,89,0.1);}</style>`;
+        chipsHtml += `</div > <style>#chipContainer::-webkit-scrollbar{display:none;} .kink-chip.selected{border - color:#c5a059; color:#c5a059; background:rgba(197,160,89,0.1);}</style>`;
         return chipsHtml;
     };
 
     if (type === 'name') {
         contentHtml = `
-            <div style="${headerStyle}">Identity Protocol</div>
+            < div style = "${headerStyle}" > Identity Protocol</div >
             <div style="text-align:left;">
                 <div style="${labelStyle}">Designation</div>
                 <input type="text" id="inlineNameInput" placeholder="Enter Name..." style="${inputStyle}">
@@ -1759,7 +1759,7 @@ window.openDataEntry = function (type) {
         `;
     } else if (type === 'photo') {
         contentHtml = `
-            <div style="${headerStyle}">Visual Verification</div>
+            < div style = "${headerStyle}" > Visual Verification</div >
             <div style="text-align:center; margin-bottom:15px;">
                 <input type="file" id="inlinePhotoUpload" accept="image/*" style="display:none;" onchange="window.previewInlinePhoto(this)">
                 <label for="inlinePhotoUpload" style="display:block; padding:20px; border:1px dashed #444; color:#888; font-family:'Cinzel', serif; cursor:pointer; background:rgba(0,0,0,0.3); transition:all 0.2s;" onmouseover="this.style.borderColor='#c5a059';this.style.color='#c5a059'" onmouseout="this.style.borderColor='#444';this.style.color='#888'">
@@ -1772,46 +1772,46 @@ window.openDataEntry = function (type) {
         `;
     } else if (type === 'limits') {
         contentHtml = `
-            <div style="${headerStyle}">Hard Limits</div>
-            ${renderChips('limits')}
+            < div style = "${headerStyle}" > Hard Limits</div >
+                ${renderChips('limits')}
             <div id="costDisplay" style="${costStyle}">Total Cost: 0 Coins</div>
             <button id="actionBtn" onclick="window.saveInlineData('limits')" style="${btnStyle}">Update Limits</button>
         `;
     } else if (type === 'kinks') {
         contentHtml = `
-            <div style="${headerStyle}">Desired Protocols</div>
-            ${renderChips('kinks')}
+            < div style = "${headerStyle}" > Desired Protocols</div >
+                ${renderChips('kinks')}
             <div id="costDisplay" style="${costStyle}">Total Cost: 0 Coins</div>
             <button id="actionBtn" onclick="window.saveInlineData('kinks')" style="${btnStyle}">Update Desires</button>
         `;
     } else if (type === 'routine') {
         const list = ["Morning Kneel", "Chastity Check", "Cleanliness Check", "Custom Order"];
-        let chipsHtml = `<div id="chipContainer" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">`;
+        let chipsHtml = `< div id = "chipContainer" style = "display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; padding-right:5px; margin-bottom:15px;" > `;
         list.forEach(item => {
             chipsHtml += `
-                <div class="kink-chip"
-                     onclick="window.selectRoutineChip(this)"
-                     data-value="${item}"
-                     style="width:100%; padding:12px; border:1px solid #333; background:rgba(0,0,0,0.6); font-size:0.9rem; font-family:'Cinzel', serif; color:#aaa; cursor:pointer; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center;">
-                    <span>${item}</span>
-                </div>`;
+            < div class="kink-chip"
+        onclick = "window.selectRoutineChip(this)"
+        data - value="${item}"
+        style = "width:100%; padding:12px; border:1px solid #333; background:rgba(0,0,0,0.6); font-size:0.9rem; font-family:'Cinzel', serif; color:#aaa; cursor:pointer; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center;" >
+            <span>${item}</span>
+                </div > `;
         });
-        chipsHtml += `</div><style>#chipContainer::-webkit-scrollbar{display:none;} .kink-chip.selected{border-color:#c5a059; color:#c5a059; background:rgba(197,160,89,0.1);}</style>`;
+        chipsHtml += `</div > <style>#chipContainer::-webkit-scrollbar{display:none;} .kink-chip.selected{border - color:#c5a059; color:#c5a059; background:rgba(197,160,89,0.1);}</style>`;
 
         contentHtml = `
-            <div style="${headerStyle}">Protocol Assignment</div>
-            ${chipsHtml}
+            < div style = "${headerStyle}" > Protocol Assignment</div >
+                ${chipsHtml}
             <div id="costDisplay" style="${costStyle}">Cost: 1000 Coins</div>
             <button id="actionBtn" onclick="window.saveInlineData('routine')" style="${btnStyle}">Assign Protocol</button>
         `;
     }
 
     container.innerHTML = `
-        <div style="padding:20px; border:1px solid #c5a059; background:#050505; box-shadow:0 0 50px rgba(0,0,0,1); position:relative;">
-             ${contentHtml}
-            <button onclick="window.closeDataEntry()" style="${backStyle}">Return</button>
-        </div>
-    `;
+            < div style = "padding:20px; border:1px solid #c5a059; background:#050505; box-shadow:0 0 50px rgba(0,0,0,1); position:relative;" >
+                ${contentHtml}
+        <button onclick="window.closeDataEntry()" style="${backStyle}">Return</button>
+        </div >
+            `;
 };
 
 window.toggleChip = function (el, costPerItem) {
