@@ -635,7 +635,8 @@ async function syncProfileAndTasks() {
 
                 taskQueue: statsItem.taskQueue || [],
                 joined: statsItem.joined || new Date().toISOString(),
-                tributetotal: statsItem.total_coins_spent || 0 // <--- ADDED FOR SPEND TRACKING
+                tributetotal: statsItem.total_coins_spent || 0, // <--- ADDED FOR SPEND TRACKING
+                tributeHistory: statsItem.tributeHistory || "[]" // <--- NEW: TRANSACTION LOG
             },
             pendingState: statsItem.taskdom_pending_state || null,
             galleryData: galleryData,

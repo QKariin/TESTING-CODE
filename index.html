@@ -1470,12 +1470,13 @@
                 </div>
             </div>
 
-            <!-- DESKTOP SLAVE STATS SECTION (FIXED) -->
-            <div id="deskStatsContent"
-                style="width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 0 15px; box-sizing: border-box; flex-shrink: 0;">
+            <!-- DESKTOP SIDEBAR SCROLLABLE AREA -->
+            <div class="sidebar-scrollable-area"
+                style="flex: 1; overflow-y: auto; width: 100%; display: flex; flex-direction: column; padding: 0 15px; box-sizing: border-box;">
+
                 <!-- 1. WHO YOU ARE (Current) -->
-                <div
-                    style="width:100%; text-align:center; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:12px;">
+                <div id="deskStatsContent"
+                    style="width: 100%; text-align:center; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:12px; flex-shrink: 0;">
                     <div
                         style="font-family:'Cinzel'; font-size:0.55rem; color:rgba(255,255,255,0.4); letter-spacing:2px;">
                         CURRENT CLASSIFICATION</div>
@@ -1486,44 +1487,54 @@
                         style="font-family:'Cinzel'; font-size:0.6rem; color:rgba(255,255,255,0.3); font-style:italic; padding:0 5px; line-height:1.4;">
                     </div>
                 </div>
-            </div>
 
-            <div class="sidebar-menu-wrapper"
-                style="flex: 1; overflow-y: auto; width: 100%; scrollbar-width: thin; padding: 0 15px; box-sizing: border-box;">
-                <!-- 3. THE MATH (Progress Bars - SCROLLABLE) -->
+                <!-- 2. THE TARGET (Next Rank - WORKING ON) -->
+                <div id="desk_WorkingOnSection"
+                    style="width: 100%; text-align:center; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:15px; flex-shrink: 0;">
+                    <div
+                        style="font-family:'Orbitron'; font-size:0.55rem; color:#c5a059; letter-spacing:2px; margin-bottom:2px;">
+                        WORKING ON</div>
+                    <div id="desk_WorkingOnRank"
+                        style="font-family:'Orbitron'; font-size:0.9rem; color:#fff; text-transform:uppercase; font-weight:bold;">
+                        ...</div>
+                </div>
+
+                <!-- 3. THE MATH (Progress Bars) -->
                 <div id="desk_ProgressContainer"
-                    style="width:100%; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:4px; padding:12px; margin-bottom:15px;">
+                    style="width:100%; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:4px; padding:12px; margin-bottom:15px; flex-shrink: 0;">
                     <!-- JS will fill this -->
                 </div>
 
-                <!-- 4. THE PRIZE (Next Benefits - SCROLLABLE) -->
-                <div style="width:100%; text-align:left; padding:0 2px; margin-bottom: 25px;">
+                <!-- 4. THE PRIZE (Next Benefits) -->
+                <div style="width:100%; text-align:left; padding:0 2px; margin-bottom: 25px; flex-shrink: 0;">
                     <div style="font-family:'Orbitron'; font-size:0.55rem; color:#c5a059; margin-bottom:6px;">
                         PRIVILEGES GRANTED</div>
                     <ul id="desk_NextBenefits"
                         style="color:rgba(255,255,255,0.6); font-size:0.7rem; font-family:'Cinzel'; padding-left:15px; line-height:1.5; margin:0;">
                     </ul>
                 </div>
+            </div>
 
-                <div class="nav-menu">
-                    <button class="nav-btn active" onclick="switchTab('serve')">
-                        <span style="font-size: 1.2rem; margin-right: 10px;">🏠</span> DASHBOARD
-                    </button>
-                    <button class="nav-btn" onclick="switchTab('record')">
-                        <span style="font-size: 1.2rem; margin-right: 10px;">📜</span> RECORDS
-                    </button>
-                    <button class="nav-btn" onclick="switchTab('news')">
-                        <span style="font-size: 1.2rem; margin-right: 10px;">👑</span> QUEEN KARIN
-                    </button>
-                    <button class="nav-btn" onclick="switchTab('buy')">
-                        <span style="font-size: 1.2rem; margin-right: 10px;">💰</span> EXCHEQUER
-                    </button>
-                </div>
+            <!-- 5. NAVIGATION MENU (Fixed at bottom) -->
+            <div class="nav-menu"
+                style="width: 100%; padding: 15px; box-sizing: border-box; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button class="nav-btn active" onclick="switchTab('serve')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">🏠</span> DASHBOARD
+                </button>
+                <button class="nav-btn" onclick="switchTab('record')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">📜</span> RECORDS
+                </button>
+                <button class="nav-btn" onclick="switchTab('news')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">👑</span> QUEEN KARIN
+                </button>
+                <button class="nav-btn" onclick="switchTab('buy')">
+                    <span style="font-size: 1.2rem; margin-right: 10px;">💰</span> EXCHEQUER
+                </button>
             </div>
         </div>
 
         <!-- DASHBOARD GRID WRAPPER (FOR NAVIGATION FIX) -->
-        <div id="viewServingTopDesktop" style="display: contents !important;">
+        <div id="viewServingTopDesktop">
 
             <!-- GRID ITEM: ROW 1, COL 2 (STAT CARD 1) -->
             <div id="gridStat1" class="v-card v-stat-card serve-grid-item"
@@ -1590,10 +1601,12 @@
 
             <!-- GRID ITEM: ROW 1, COL 5 (STAT CARD 4) -->
             <div id="gridStat4" class="v-card v-stat-card serve-grid-item"
-                style="flex-direction: column; justify-content: center; align-items: center;">
-                <div class="ribbon-label" style="text-align: center;">YOU GLOBAL</div>
-                <div style="color: rgba(255,255,255,0.2); font-family: 'Cinzel'; font-size: 0.6rem; margin-top: 10px;">
-                    INITIALIZING...</div>
+                style="flex-direction: column; justify-content: center; align-items: center; cursor: pointer;"
+                onclick="switchTab('record')">
+                <div class="ribbon-label" style="text-align: center;">CLASSIFICATION</div>
+                <div id="desk_DashboardRank"
+                    style="font-family: 'Orbitron'; font-size: 1.1rem; color: #fff; margin-top: 5px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 10px rgba(197, 160, 89, 0.4);">
+                    LOADING...</div>
             </div>
 
             <!-- GRID ITEM: ROW 2, SPAN COL 2-3 (HERO CARD) -->
@@ -1825,7 +1838,8 @@
                 <div class="v-card" style="padding: 15px; text-align: center;">
                     <div class="ribbon-label">KNEELS</div>
                     <div id="statTotalKneels"
-                        style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">0</div>
+                        style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">
+                        0</div>
                 </div>
             </div>
             <div id="historyGrid"
@@ -1881,7 +1895,8 @@
 
             <!-- TRIBUTE STORE (Rendered by JS) -->
             <div class="ribbon-label"
-                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">TRIBUTE STORE</div>
+                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">
+                TRIBUTE STORE</div>
             <div id="storeGrid" class="store-grid"
                 style="grid-template-columns: repeat(3, 1fr); gap: 20px; min-height: 100px;">
                 <!-- Wishlist items load here -->
@@ -1889,7 +1904,8 @@
 
             <!-- STRIPE COIN PACKAGES -->
             <div class="ribbon-label"
-                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">PURCHASE COINS</div>
+                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">
+                PURCHASE COINS</div>
             <div class="store-grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
                 <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">
                     <div style="font-size: 1.2rem; margin-bottom: 10px;">1,000 🪙</div>

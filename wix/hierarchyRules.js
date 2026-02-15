@@ -24,12 +24,12 @@ export const HIERARCHY_RULES = [
     },
     {
         name: "Silverman",
-        req: { tasks: 25, kneels: 65, points: 2500, spent: 5000, streak: 5, prefs: true, limits: true, kinks: true, routine: true },
+        req: { tasks: 25, kneels: 65, points: 5000, spent: 5000, streak: 5, prefs: true, limits: true, kinks: true, routine: true },
         benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."]
     },
     {
         name: "Footman",
-        req: { tasks: 5, kneels: 10, points: 500, spent: 0, streak: 0, name: true, photo: true },
+        req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0, name: true, photo: true },
         benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."]
     },
     {
