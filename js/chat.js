@@ -147,19 +147,46 @@ export async function renderChat(messages) {
                     contentHtml = `<div class="msg ${msgClass}">🎁 TRIBUTE ERROR</div>`;
                 }
             }
-            // 2. STANDARD MEDIA
+            // 2. STANDARD MEDIA (FIXED FOR WIX & BYTESCALE)
             else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:image') || m.message.includes('wix:video')) {
-                const rawUrl = m.mediaUrl || m.message;
-                const srcUrl = getOptimizedUrl(rawUrl, 600); // FIX: Verify WIX/Bytescale URLs
+                
+                let rawUrl = m.mediaUrl || m.message;
+                let srcUrl = rawUrl;
+                let isVideo = false;
 
-                if (mediaType(srcUrl) === "video") {
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%;"></video></div>`;
+                // --- A. DETECT & FIX WIX URLS ---
+                if (rawUrl.startsWith('wix:image')) {
+                    // Convert wix:image://v1/ID/name -> https://static.wixstatic.com/media/ID
+                    try {
+                        const id = rawUrl.split('/')[3].split('#')[0];
+                        srcUrl = `https://static.wixstatic.com/media/${id}/v1/fill/w_600,h_600,al_c,q_80/file.jpg`;
+                    } catch(e) { srcUrl = ""; } // Fail safe
+                } 
+                else if (rawUrl.startsWith('wix:video')) {
+                    // Convert wix:video://v1/ID/name -> https://video.wixstatic.com/video/ID/file
+                    try {
+                        const id = rawUrl.split('/')[3].split('#')[0];
+                        srcUrl = `https://video.wixstatic.com/video/${id}/file`;
+                        isVideo = true;
+                    } catch(e) { srcUrl = ""; }
+                }
+                // --- B. DETECT STANDARD URLS ---
+                else {
+                    // Use existing helper, but verify it works
+                    srcUrl = getOptimizedUrl(rawUrl, 600);
+                    // Check extension for video
+                    if (srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm')) {
+                        isVideo = true;
+                    }
+                }
+
+                // --- RENDER ---
+                if (isVideo) {
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
                 } else {
-                    // Assume Image
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;"><img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"></div>`;
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;"><img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit; cursor:pointer;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"></div>`;
                 }
             }
-        }
 
         // Center Wishlist Cards specifically
         if (m.message && m.message.startsWith('WISHLIST::')) {
