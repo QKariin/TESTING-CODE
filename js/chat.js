@@ -1,11 +1,11 @@
-// Chat functionality - FIXED: RAW MODE + URL SIGNING (Fixes Auth & Quota)
+// Chat functionality - FIXED: RESTORED TRIBUTE CARD + SIGNED RAW IMAGES
 import {
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
 } from './state.js';
 import { URLS } from './config.js';
 import { triggerSound } from './utils.js';
-import { getSignedUrl } from './media.js'; // MUST be present in media.js
+import { getSignedUrl } from './media.js'; 
 import { mediaType } from './media.js';
 
 let lastTickerText = "";
@@ -73,11 +73,10 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    // 5. RENDER CHAT (ASYNC MAP FOR SIGNING)
+    // 5. RENDER CHAT (ASYNC FOR SIGNING)
     const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit;
     const visibleMessages = conversationMessages.slice(-activeLimit);
 
-    // We use Promise.all to wait for URL signatures
     const messagesHtmlArray = await Promise.all(visibleMessages.map(async (m) => {
         let txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(m.message) : m.message;
         const senderLower = (m.sender || "").toLowerCase();
@@ -90,18 +89,27 @@ export async function renderChat(messages) {
 
         // --- MEDIA HANDLER ---
         if (m.message) {
-            // A. WISHLIST
+            // A. WISHLIST CARD (RESTORED ORIGINAL)
             if (m.message.startsWith('WISHLIST::')) {
                 try {
                     const item = JSON.parse(m.message.replace('WISHLIST::', ''));
                     contentHtml = `
-                    <div class="msg-wishlist-card" style="margin:0 auto; background:#111; border:1px solid #c5a059; border-radius:4px; width:200px;">
-                        <img src="${item.img}" style="width:100%; height:120px; object-fit:cover;">
-                        <div style="padding:5px; text-align:center; font-size:0.7rem; color:#fff;">${item.name}</div>
+                    <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; width:60vw;">
+                        <div style="width:100%; height:120px; overflow:hidden; position:relative;">
+                             <img src="${item.img}" style="width:100%; height:100%; object-fit:cover;">
+                             <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
+                                 TRIBUTE SENT
+                             </div>
+                        </div>
+                        <div style="padding:8px; text-align:center;">
+                            <div style="color:#eee; font-family:'Cinzel'; font-size:0.6rem; margin-bottom:2px; opacity:0.8;">${item.sender} sent</div>
+                            <div style="color:#fff; font-family:'Cinzel'; font-size:0.7rem; margin-bottom:4px;">${item.name}</div>
+                            <div style="color:#c5a059; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold;">${item.price}</div>
+                        </div>
                     </div>`;
-                } catch (e) { contentHtml = `<div class="msg ${msgClass}">🎁 ERROR</div>`; }
+                } catch (e) { contentHtml = `<div class="msg ${msgClass}">🎁 TRIBUTE ERROR</div>`; }
             }
-            // B. IMAGES / VIDEO
+            // B. IMAGES / VIDEO (FIXED AUTH & QUOTA)
             else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:') || m.message.includes('upcdn')) {
                 const rawUrl = m.mediaUrl || m.message;
                 let srcUrl = rawUrl;
@@ -115,12 +123,10 @@ export async function renderChat(messages) {
                         .split('?')[0]; // Strip old params
                     
                     // SIGN IT to fix "Auth Headers Missing" error
-                    // (This assumes getSignedUrl in media.js works correctly)
                     try {
                         srcUrl = await getSignedUrl(clean);
                     } catch(e) { 
-                        console.error("Signing failed", e);
-                        srcUrl = clean; // Fallback try
+                        srcUrl = clean; // Fallback
                     }
                 }
                 // 2. WIX FIX (DATABASE LINKS)
