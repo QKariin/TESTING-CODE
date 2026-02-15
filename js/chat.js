@@ -167,7 +167,7 @@ export async function renderChat(messages) {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" onloadeddata="window.forceBottom()" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
                 } else {
                     // ADDED: onload="window.forceBottom()"
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:20;">
                         <img src="${srcUrl}" onload="window.forceBottom()" style="max-width:300px; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
                     </div>`;
                 }
