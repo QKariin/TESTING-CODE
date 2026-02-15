@@ -82,8 +82,8 @@ function extractQueryString(url) {
 }
 
 function extractFilePath(url) {
-  // Matches: upcdn.io/{accountId}/raw/... or /thumbnail/...
-  const match = url.match(/upcdn\.io\/[^/]+\/(?:raw|thumbnail)\/(.+?)(?:\?|$)/);
+  // Matches: upcdn.io/{accountId}/raw/... or /thumbnail/... or /image/...
+  const match = url.match(/upcdn\.io\/[^/]+\/(?:raw|thumbnail|image)\/(.+?)(?:\?|$)/);
   if (!match) return null;
   return "/" + match[1];
 }
