@@ -144,20 +144,23 @@ export async function renderChat(messages) {
                     contentHtml = `<div class="msg ${msgClass}">🎁 TRIBUTE ERROR</div>`;
                 }
             }
-            // 2. STANDARD MEDIA (FIXED FOR BROKEN PICS)
+            // 2. STANDARD MEDIA
             else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:image') || m.message.includes('wix:video')) {
                 const rawUrl = m.mediaUrl || m.message;
                 let srcUrl = rawUrl;
 
-                // --- FIX: Force RAW link for Bytescale to avoid CPU Error ---
+                // --- BYTESCALE FIX (CPU QUOTA) ---
                 if (rawUrl.includes('upcdn.io')) {
-                    // Replace /image/ with /raw/ and strip resize params
-                    srcUrl = rawUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
+                    // Force /raw/ path and strip ALL parameters (like ?w=600)
+                    // This bypasses the transformation engine entirely
+                    srcUrl = rawUrl
+                        .replace('/image/', '/raw/')
+                        .replace('/thumbnail/', '/raw/')
+                        .split('?')[0];
                 }
-                // --- FIX: Handle Wix ID Extraction Manually if Optimized Fails ---
+                // --- WIX FIX ---
                 else if (rawUrl.includes('wix:image')) {
                     const parts = rawUrl.split('/');
-                    // Try to find the ID after 'v1'
                     for(let i=0; i<parts.length; i++) {
                         if(parts[i] === 'v1' && parts[i+1]) {
                             srcUrl = `https://static.wixstatic.com/media/${parts[i+1].split('#')[0]}`;
@@ -185,8 +188,12 @@ export async function renderChat(messages) {
                 if (isVideo) {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%;"></video></div>`;
                 } else {
-                    // Assume Image
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;"><img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"></div>`;
+                    // Assume Image - Added fallback to open in new tab if display fails
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
+                        <img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit;" 
+                             onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"
+                             onerror="this.onerror=null; this.src='${srcUrl}';">
+                    </div>`;
                 }
             }
         }
