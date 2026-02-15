@@ -67,7 +67,7 @@ export function getOptimizedUrl(url, width = 400) {
 
     // 3. Apply requested width and auto format
     // Note: Bytescale uses 'w' and 'h'. Chat asks for 600.
-    return `${clean}?w=${width}&h=${width}&fit=cover&q=80&f=auto`;
+    return `${clean}?w=${width}&h=${width}&fit=cover&q=80&f=jpg`;
   }
 
   // 3. WIX VECTORS
