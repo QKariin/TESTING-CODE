@@ -1083,7 +1083,8 @@ window.addEventListener("message", (event) => {
                     routine_streak: data.profile.routinestreak || 0,
                     taskdom_streak: data.profile.routinestreak || 0,    // Unified for Slave App
                     kneelCount: data.profile.kneelCount || 0,
-                    taskdom_completed: data.profile.taskdom_completed_tasks || 0
+                    taskdom_completed: data.profile.taskdom_completed_tasks || 0,
+                    completed: data.profile.taskdom_completed_tasks || 0 // Unified for Dashboard
                 });
 
                 setUserProfile({
@@ -1637,10 +1638,10 @@ window.updateHierarchyDrawer = function (currentStreak) {
 
     // 4. Calculate Stats (Consolidated)
     const stats = {
-        tasks: gameStats.taskdom_completed || 0,
+        tasks: gameStats.completed || gameStats.taskdom_completed || 0,
         kneels: gameStats.kneelCount || 0,
         points: gameStats.points || 0,
-        spent: gameStats.total_coins_spent || gameStats.totalSpent || 0,
+        spent: gameStats.totalSpent || gameStats.total_coins_spent || 0,
         streak: currentStreak || gameStats.taskdom_streak || 0
     };
 
@@ -2115,7 +2116,7 @@ window.renderRewards = function () {
     let streakCount = 0;
     let routinePhotos = [];
 
-    // 1. DATA SOURCE: Prefer specific history, fallback to gallery
+    // 1. DATA SOURCE: Dashboard only uses routineHistory
     let rawHistory = userProfile.routineHistory || userProfile.routinehistory;
 
     if (rawHistory) {
@@ -2124,9 +2125,6 @@ window.renderRewards = function () {
         } else if (Array.isArray(rawHistory)) {
             routinePhotos = rawHistory;
         }
-    }
-    else if (typeof galleryData !== 'undefined' && Array.isArray(galleryData)) {
-        routinePhotos = galleryData.filter(item => (item.category || "").toLowerCase() === 'routine');
     }
 
     // 2. SORT (Newest First)
@@ -2180,8 +2178,10 @@ window.renderRewards = function () {
     const strBest = document.getElementById('dispBestStreak');
     const strShelf = document.getElementById('shelfRoutine');
 
+    const finalStreak = streakCount || gameStats.taskdom_streak || 0;
+
     if (strVal) {
-        strVal.innerText = streakCount;
+        strVal.innerText = finalStreak;
         strVal.style.color = "#c5a059";
         if (strVal.parentElement) {
             strVal.parentElement.style.borderColor = "#c5a059";
@@ -2189,7 +2189,15 @@ window.renderRewards = function () {
         }
     }
 
-    if (strBest) strBest.innerText = Math.max(streakCount, gameStats.bestRoutineStreak || 0);
+    // --- SYNC ALL STREAK DISPLAYS ---
+    gameStats.taskdom_streak = finalStreak;
+    const ids = ['statStreak', 'mobStreak', 'deskStreak'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = finalStreak;
+    });
+
+    if (strBest) strBest.innerText = Math.max(finalStreak, gameStats.bestRoutineStreak || 0);
 
     if (strShelf) {
         if (routinePhotos.length === 0) {
