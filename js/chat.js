@@ -1,38 +1,14 @@
-// Chat functionality - PASSIVE MODE (Trusts the Database Link)
+// Chat functionality - FIXED: RAW MODE + URL SIGNING (Fixes Auth & Quota)
 import {
     lastChatJson, isInitialLoad, chatLimit, lastNotifiedMessageId,
     setLastChatJson, setIsInitialLoad, setChatLimit, setLastNotifiedMessageId
 } from './state.js';
+import { URLS } from './config.js';
 import { triggerSound } from './utils.js';
+import { getSignedUrl } from './media.js'; // MUST be present in media.js
+import { mediaType } from './media.js';
 
 let lastTickerText = "";
-
-// --- URL HELPER ---
-function getSafeSrc(rawUrl) {
-    if (!rawUrl || typeof rawUrl !== 'string') return "";
-
-    // 1. STANDARD WEB LINKS (TRUST THE DB)
-    // If it works on Dashboard, it works here. Do NOT modify it.
-    if (rawUrl.startsWith('http')) {
-        return rawUrl;
-    }
-
-    // 2. WIX DATABASE FIX ONLY (Only fix what is actually broken)
-    if (rawUrl.includes('wix:image') || rawUrl.includes('wix:video')) {
-        const parts = rawUrl.split('/');
-        for (let i = 0; i < parts.length; i++) {
-            if (parts[i] === 'v1' && parts[i+1]) {
-                const id = parts[i+1].split('#')[0];
-                if (rawUrl.includes('video')) {
-                    return `https://video.wixstatic.com/video/${id}/mp4/file.mp4`;
-                }
-                return `https://static.wixstatic.com/media/${id}/v1/fill/w_600,h_600,al_c,q_80/file.jpg`;
-            }
-        }
-    }
-
-    return ""; // Unknown format
-}
 
 export async function renderChat(messages) {
     const deskChat = document.getElementById('chatContent');
@@ -48,19 +24,19 @@ export async function renderChat(messages) {
         (a, b) => new Date(a._createdDate) - new Date(b._createdDate)
     );
 
-    // 2. FILTER STREAMS
+    // 2. SEPARATE STREAMS
     const systemMessages = sortedMessages.filter(m => {
-        const txt = m.message || "";
-        if (txt.startsWith('WISHLIST::')) return false;
         const s = (m.sender || "").toLowerCase();
-        return s === 'system' || txt.includes("Task Verified") || txt.includes("FAILURE");
+        const txt = (m.message || "");
+        if (txt.startsWith('WISHLIST::')) return false;
+        return s === 'system' || txt.includes("Task Verified") || txt.includes("Task Rejected");
     });
 
     const conversationMessages = sortedMessages.filter(m => {
-        const txt = m.message || "";
-        if (txt.startsWith('WISHLIST::')) return true;
         const s = (m.sender || "").toLowerCase();
-        return s !== 'system' && !txt.includes("Task Verified") && !txt.includes("FAILURE");
+        const txt = (m.message || "");
+        if (txt.startsWith('WISHLIST::')) return true;
+        return s !== 'system' && !txt.includes("Task Verified") && !txt.includes("Task Rejected");
     });
 
     // 3. TICKER
@@ -86,10 +62,6 @@ export async function renderChat(messages) {
     const currentJson = JSON.stringify(conversationMessages);
     if (currentJson === lastChatJson) return;
 
-    const dBox = document.getElementById('chatBox');
-    const isAtBottom = dBox ? (dBox.scrollHeight - dBox.scrollTop - dBox.clientHeight < 150) : true;
-    const wasInitialLoad = isInitialLoad;
-
     if (!isInitialLoad && conversationMessages.length > 0) {
         const lastMsg = conversationMessages[conversationMessages.length - 1];
         if (lastMsg._id !== lastNotifiedMessageId) {
@@ -101,13 +73,15 @@ export async function renderChat(messages) {
     setLastChatJson(currentJson);
     setIsInitialLoad(false);
 
-    // 5. RENDER MESSAGES
+    // 5. RENDER CHAT (ASYNC MAP FOR SIGNING)
     const activeLimit = window.innerWidth <= 768 ? 20 : chatLimit;
     const visibleMessages = conversationMessages.slice(-activeLimit);
 
-    let messagesHtml = visibleMessages.map((m) => {
+    // We use Promise.all to wait for URL signatures
+    const messagesHtmlArray = await Promise.all(visibleMessages.map(async (m) => {
         let txt = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(m.message) : m.message;
-        const isMe = (m.sender || "").toLowerCase() === 'user' || (m.sender || "").toLowerCase() === 'slave';
+        const senderLower = (m.sender || "").toLowerCase();
+        const isMe = senderLower === 'user' || senderLower === 'slave';
         
         txt = txt.replace(/\n/g, "<br>");
         const timeStr = new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -115,10 +89,7 @@ export async function renderChat(messages) {
         let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
 
         // --- MEDIA HANDLER ---
-        const rawUrl = m.mediaUrl || m.message;
-        const isUrl = rawUrl.startsWith('http') || rawUrl.includes('wix:') || rawUrl.includes('upcdn');
-
-        if (m.message && (isUrl || m.message.startsWith('WISHLIST::'))) {
+        if (m.message) {
             // A. WISHLIST
             if (m.message.startsWith('WISHLIST::')) {
                 try {
@@ -131,30 +102,70 @@ export async function renderChat(messages) {
                 } catch (e) { contentHtml = `<div class="msg ${msgClass}">🎁 ERROR</div>`; }
             }
             // B. IMAGES / VIDEO
-            else if (isUrl) {
-                const srcUrl = getSafeSrc(rawUrl);
-                
-                // Video Check
-                const isVideo = srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm') || rawUrl.includes('wix:video');
+            else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:') || m.message.includes('upcdn')) {
+                const rawUrl = m.mediaUrl || m.message;
+                let srcUrl = rawUrl;
+
+                // 1. BYTESCALE FIX (FORCE RAW + SIGN)
+                if (rawUrl.includes('upcdn.io')) {
+                    // Force /raw/ to avoid CPU Quota error
+                    let clean = rawUrl
+                        .replace('/image/', '/raw/')
+                        .replace('/thumbnail/', '/raw/')
+                        .split('?')[0]; // Strip old params
+                    
+                    // SIGN IT to fix "Auth Headers Missing" error
+                    // (This assumes getSignedUrl in media.js works correctly)
+                    try {
+                        srcUrl = await getSignedUrl(clean);
+                    } catch(e) { 
+                        console.error("Signing failed", e);
+                        srcUrl = clean; // Fallback try
+                    }
+                }
+                // 2. WIX FIX (DATABASE LINKS)
+                else if (rawUrl.includes('wix:image')) {
+                    const parts = rawUrl.split('/');
+                    for(let i=0; i<parts.length; i++) {
+                        if(parts[i] === 'v1' && parts[i+1]) {
+                            srcUrl = `https://static.wixstatic.com/media/${parts[i+1].split('#')[0]}`;
+                            break;
+                        }
+                    }
+                } 
+                else if (rawUrl.includes('wix:video')) {
+                    const parts = rawUrl.split('/');
+                    for(let i=0; i<parts.length; i++) {
+                        if(parts[i] === 'v1' && parts[i+1]) {
+                            srcUrl = `https://video.wixstatic.com/video/${parts[i+1].split('#')[0]}/mp4/file.mp4`;
+                            break;
+                        }
+                    }
+                }
+
+                // Render Media
+                const isVideo = srcUrl.includes('.mp4') || srcUrl.includes('.mov') || srcUrl.includes('.webm') || mediaType(srcUrl) === "video";
 
                 if (isVideo) {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
                 } else {
-                    // Simple Image - No error fallback text, just the image
+                    // Standard Image Tag
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0;">
                         <img src="${srcUrl}" style="max-width:100%; display:block; border-radius:inherit; cursor:pointer;" 
-                             onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
+                             onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<a href=\\'${srcUrl}\\' target=\\'_blank\\' style=\\'color:red; font-size:10px; padding:10px; display:block;\\'>[AUTH FAILED]</a>'">
                     </div>`;
                 }
             }
         }
 
+        // Layout wrappers
         if (m.message && m.message.startsWith('WISHLIST::')) {
-            return `<div class="msg-row" style="justify-content:center; margin:10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
+            return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
         const avatarUrl = "https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png";
-        if (!isMe && !isUrl && !m.message.startsWith('WISHLIST::')) {
+        if (!isMe && !m.message.startsWith('WISHLIST::') && !m.message.startsWith('http')) {
             contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
                 <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
                 <span>${txt}</span>
@@ -167,7 +178,9 @@ export async function renderChat(messages) {
                 <div class="msg-time">${timeStr}</div>
             </div>
         </div>`;
-    }).join('');
+    }));
+
+    const messagesHtml = messagesHtmlArray.join('');
 
     if (deskChat) deskChat.innerHTML = messagesHtml;
     if (mobChat) mobChat.innerHTML = messagesHtml;
