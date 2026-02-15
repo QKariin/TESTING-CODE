@@ -383,24 +383,11 @@
                 justify-content: center;
                 box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
                 transition: 0.2s;
-
-                /* --- THE FIX IS HERE --- */
-                -webkit-touch-callout: none; /* Stops the iOS popup menu */
-                -webkit-user-select: none;   /* Chrome/Safari */
-                -moz-user-select: none;      /* Firefox */
-                -ms-user-select: none;       /* IE/Edge */
-                user-select: none;           /* Standard */
             }
 
             .mob-kneel-bar:active {
                 border-color: #fff;
                 transform: scale(0.98);
-
-                -webkit-touch-callout: none; /* Stops the iOS popup menu */
-                -webkit-user-select: none;   /* Chrome/Safari */
-                -moz-user-select: none;      /* Firefox */
-                -ms-user-select: none;       /* IE/Edge */
-                user-select: none;           /* Standard */
             }
 
             .mob-bar-fill,
@@ -1470,7 +1457,7 @@
                             <span style="color: #fff; opacity:0.8;"><i class="fas fa-award"></i></span>
                             <div id="points">0</div>
                         </div>
-                        <div class="sidebar-stat-label">POINTS</div>
+                        <div class="sidebar-stat-label">MERIT</div>
                     </div>
                     <div style="height: 30px; width: 1px; background: rgba(255,255,255,0.05);"></div>
                     <div class="sidebar-stat-block">
@@ -1478,7 +1465,7 @@
                             <span style="color: var(--gold);"><i class="fas fa-coins"></i></span>
                             <div id="coins">0</div>
                         </div>
-                        <div class="sidebar-stat-label">COINS</div>
+                        <div class="sidebar-stat-label">CAPITAL</div>
                     </div>
                 </div>
             </div>
@@ -1631,32 +1618,41 @@
                 </div>
 
                 <!-- JAILED KNEEL REWARD OVERLAY -->
-                <!-- JAILED KNEEL REWARD OVERLAY (DESKTOP - BUTTON VERSION) -->
-                    <div id="kneelRewardOverlay" class="hidden"
-                        style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center;">
-                        
-                        <!-- Reuse the Mobile Card Style, but remove the border/shadow so it fits the jail better -->
-                        <div class="mob-reward-card" style="border: none; box-shadow: none; background: transparent; width: 100%; max-width: 300px;">
-                            
-                            <div class="mob-hex-wrap small-reward">
-                                <div class="mob-rank-stamp" style="right: auto; left: -5px; color: #fff; border-color: #fff;">
+                <div id="kneelRewardOverlay" class="hidden"
+                    style="position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; backdrop-filter: blur(20px); align-items: center; justify-content: center;">
+                    <div style="text-align: center; width: 100%; padding: 20px;">
+                        <div class="mob-reward-card"
+                            style="background: transparent; border: none; box-shadow: none; padding: 0; width: 100%; max-height: unset; overflow: visible;">
+                            <div class="mob-hex-wrap small-reward" style="margin-bottom: 20px;">
+                                <div class="mob-rank-stamp"
+                                    style="right: auto; left: -5px; color: #fff; border-color: #fff; font-family: 'Orbitron'; font-size: 0.6rem; letter-spacing: 2px;">
                                     AUTHORIZED</div>
                             </div>
-                            
-                            <h2 class="mob-reward-title" style="color: #c5a059; font-family: 'Cinzel'; letter-spacing: 2px;">
+
+                            <h2
+                                style="font-family:'Cinzel'; color: #c5a059; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 20px; text-transform: uppercase;">
                                 DEVOTION RECOGNIZED</h2>
-                            
-                            <!-- BUTTONS ONLY (No Reveal) -->
+
                             <div class="mob-reward-actions"
-                                style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                                <button onclick="window.claimKneelReward('coins')" class="mob-action-btn"
-                                    style="border-color: #ffd700; color: #ffd700;">CLAIM COINS</button>
-                                <button onclick="window.claimKneelReward('points')" class="mob-action-btn"
-                                    style="border-color: #fff; color: #fff;">CLAIM MERIT</button>
+                                style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                                <button onclick="window.claimKneelReward('coins')" class="action-btn"
+                                    style="border-color: #ffd700; color: #ffd700; background: rgba(255,215,0,0.05); font-size: 0.7rem;">CLAIM
+                                    COINS</button>
+                                <button onclick="window.claimKneelReward('points')" class="action-btn"
+                                    style="border-color: #fff; color: #fff; background: rgba(255,255,255,0.05); font-size: 0.7rem;">CLAIM
+                                    MERIT</button>
+
+                                <div style="margin: 5px 0; color: #444; font-size: 0.5rem; letter-spacing: 2px;">—
+                                    OR —
+                                </div>
+
+                                <button onclick="handleRevealFragment()" class="action-btn"
+                                    style="border-color: var(--blue-accent); color: var(--blue-accent); font-size: 0.7rem; margin-top: 0;">REVEAL
+                                    GIFT</button>
                             </div>
-                    
                         </div>
                     </div>
+                </div>
 
                 <!-- THE REVEAL TARGET -->
                 <div id="revealSection"
@@ -2726,7 +2722,7 @@
                     </div>
                 </div>
 
-            </div>
+            </div> 
 
 
     <script>
