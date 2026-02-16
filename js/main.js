@@ -2822,146 +2822,146 @@ window.mobileSkipTask = function () {
     console.log("Skip Clicked");
 
     // 1. CHECK FUNDS (Need 300)
-    parseInt(gameStats.coins || 0) < 300) {
-        ow.triggerPoverty();
-        rn;
-    
+    if (parseInt(gameStats.coins || 0) < 300) {
+        window.triggerPoverty();
+        return;
+    }
 
-    . DEDUCT COINS
-        Stats.coins -= 300;
-        window.updateStats) window.updateStats(); // Refresh headers immediately
+    // 2. DEDUCT COINS
+    gameStats.coins -= 300;
+    if (window.updateStats) window.updateStats(); // Refresh headers immediately
 
-    . PLAY SOUND & INSULT
-        gerSound('sfx-deny');
+    // 3. PLAY SOUND & INSULT
+    triggerSound('sfx-deny');
 
-    . SHOW NOTIFICATION
-        window.showSystemNotification) {
-            ow.showSystemNotification("Task ABORTED", "PENALTY: 300 coins", true);
-    
+    // 4. SHOW NOTIFICATION
+    if (window.showSystemNotification) {
+        window.showSystemNotification("Task ABORTED", "PENALTY: 300 coins", true);
+    }
 
-    . CANCEL TASK(Backend)
-            window.cancelPendingTask) window.cancelPendingTask();
+    // 5. CANCEL TASK (Backend)
+    if (window.cancelPendingTask) window.cancelPendingTask();
 
-    . FORCE UI RESET(Crucial Fix)
-            ow.updateTaskUIState(false);
-            window.syncMobileDashboard) window.syncMobileDashboard();
+    // 6. FORCE UI RESET (Crucial Fix)
+    window.updateTaskUIState(false);
+    if (window.syncMobileDashboard) window.syncMobileDashboard();
+};
 
+// TRIBUTE TO THE "BLINKING" VERSION (Force Refresh Loop)
+// The user requested this specifically because it ensures images eventually load.
+setInterval(() => {
+    if (window.renderGallery) window.renderGallery();
+}, 3000);
 
-RIBUTE TO THE "BLINKING" VERSION(Force Refresh Loop)
-he user requested this specifically because it ensures images eventually load.
-                nterval(() => {
-                    window.renderGallery) window.renderGallery();
-000);
+// TIMER SYNC & VISUALIZATION (UPDATED TO HANDLE ALL IDS)
+setInterval(() => {
+    // 1. Get Source (Desktop Hidden Elements)
+    const desktopH = document.getElementById('timerH');
+    const desktopM = document.getElementById('timerM');
+    const desktopS = document.getElementById('timerS');
 
-IMER SYNC & VISUALIZATION(UPDATED TO HANDLE ALL IDS)
-            nterval(() => {
-    . Get Source(Desktop Hidden Elements)
-    t desktopH = document.getElementById('timerH');
-    t desktopM = document.getElementById('timerM');
-    t desktopS = document.getElementById('timerS');
+    // 2. Mobile Dashboard Elements (DASH_)
+    const dH = document.getElementById('dash_timerH');
+    const dM = document.getElementById('dash_timerM');
+    const dS = document.getElementById('dash_timerS');
 
-    . Mobile Dashboard Elements(DASH_)
-    t dH = document.getElementById('dash_timerH');
-    t dM = document.getElementById('dash_timerM');
-    t dS = document.getElementById('dash_timerS');
+    // 3. Queen Menu Elements (QM_)
+    const qH = document.getElementById('qm_timerH');
+    const qM = document.getElementById('qm_timerM');
+    const qS = document.getElementById('qm_timerS');
 
-    . Queen Menu Elements(QM_)
-    t qH = document.getElementById('qm_timerH');
-    t qM = document.getElementById('qm_timerM');
-    t qS = document.getElementById('qm_timerS');
+    // 4. Update Values
+    if (desktopH) {
+        const hTxt = desktopH.innerText;
+        const mTxt = desktopM.innerText;
+        const sTxt = desktopS.innerText;
 
-    . Update Values
-    desktopH) {
-        t hTxt = desktopH.innerText;
-        t mTxt = desktopM.innerText;
-        t sTxt = desktopS.innerText;
+        // Update Dashboard
+        if (dH) { dH.innerText = hTxt; dM.innerText = mTxt; dS.innerText = sTxt; }
 
-        pdate Dashboard
-        dH) { dH.innerText = hTxt; dM.innerText = mTxt; dS.innerText = sTxt; }
+        // Update Queen Menu Card
+        if (qH) { qH.innerText = hTxt; qM.innerText = mTxt; qS.innerText = sTxt; }
 
-        pdate Queen Menu Card
-        qH) { qH.innerText = hTxt; qM.innerText = mTxt; qS.innerText = sTxt; }
+        // Update Rings (Dashboard)
+        const hVal = parseInt(hTxt) || 0;
+        const mVal = parseInt(mTxt) || 0;
+        const sVal = parseInt(sTxt) || 0;
 
-        pdate Rings(Dashboard)
-        t hVal = parseInt(hTxt) || 0;
-        t mVal = parseInt(mTxt) || 0;
-        t sVal = parseInt(sTxt) || 0;
+        const ringH = document.getElementById('ring_H');
+        const ringM = document.getElementById('ring_M');
+        const ringS = document.getElementById('ring_S');
 
-        t ringH = document.getElementById('ring_H');
-        t ringM = document.getElementById('ring_M');
-        t ringS = document.getElementById('ring_S');
+        if (ringH) ringH.style.background = `conic-gradient(#c5a059 ${(hVal / 24) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if (ringM) ringM.style.background = `conic-gradient(#c5a059 ${(mVal / 60) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+        if (ringS) ringS.style.background = `conic-gradient(#c5a059 ${(sVal / 60) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+    }
 
-        ringH) ringH.style.background = `conic-gradient(#c5a059 ${(hVal / 24) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
-        ringM) ringM.style.background = `conic-gradient(#c5a059 ${(mVal / 60) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
-        ringS) ringS.style.background = `conic-gradient(#c5a059 ${(sVal / 60) * 360}deg, rgba(197, 160, 89, 0.1) 0deg)`;
+    // --- VISIBILITY SYNC (THE FIX) ---
 
+    // IF WE ARE CURRENTLY REQUESTING A TASK, DO NOT RUN THIS LOGIC
+    if (window.isRequestingTask === true) return;
 
-                --VISIBILITY SYNC(THE FIX)-- -
+    const activeRow = document.getElementById('activeTimerRow');
+    if (!activeRow) return;
 
-                    F WE ARE CURRENTLY REQUESTING A TASK, DO NOT RUN THIS LOGIC
-                window.isRequestingTask === true) return;
+    const isWorking = !activeRow.classList.contains('hidden');
 
-    t activeRow = document.getElementById('activeTimerRow');
-                !activeRow) return;
+    // A. Update Dashboard (dash_ IDs)
+    const dashIdle = document.getElementById('dash_TaskIdle');
+    const dashActive = document.getElementById('dash_TaskActive');
 
-    t isWorking = !activeRow.classList.contains('hidden');
+    if (dashIdle && dashActive) {
+        if (isWorking) {
+            dashIdle.classList.add('hidden');
+            dashActive.classList.remove('hidden');
+            const light = document.getElementById('mob_statusLight');
+            const text = document.getElementById('mob_statusText');
+            if (light) light.className = 'status-light green';
+            if (text) text.innerText = "WORKING";
+        } else {
+            dashIdle.classList.remove('hidden');
+            dashActive.classList.add('hidden');
+            const light = document.getElementById('mob_statusLight');
+            const text = document.getElementById('mob_statusText');
+            if (light) light.className = 'status-light red';
+            if (text) text.innerText = "UNPRODUCTIVE";
+        }
+    }
 
-    . Update Dashboard(dash_ IDs)
-    t dashIdle = document.getElementById('dash_TaskIdle');
-    t dashActive = document.getElementById('dash_TaskActive');
+    // B. Update Queen Menu (qm_ IDs)
+    const qmIdle = document.getElementById('qm_TaskIdle');
+    const qmActive = document.getElementById('qm_TaskActive');
 
-                dashIdle && dashActive) {
-        isWorking) {
-                        Idle.classList.add('hidden');
-                        Active.classList.remove('hidden');
-            t light = document.getElementById('mob_statusLight');
-            t text = document.getElementById('mob_statusText');
-            light) light.className = 'status-light green';
-            text) text.innerText = "WORKING";
-        se {
-                            Idle.classList.remove('hidden');
-                            Active.classList.add('hidden');
-            t light = document.getElementById('mob_statusLight');
-            t text = document.getElementById('mob_statusText');
-            light) light.className = 'status-light red';
-            text) text.innerText = "UNPRODUCTIVE";
-        
-    
+    if (qmIdle && qmActive) {
+        if (isWorking) {
+            qmIdle.classList.add('hidden');
+            qmActive.classList.remove('hidden');
+        } else {
+            qmIdle.classList.remove('hidden');
+            qmActive.classList.add('hidden');
+        }
+    }
+}, 500);
 
-    . Update Queen Menu(qm_ IDs)
-    t qmIdle = document.getElementById('qm_TaskIdle');
-    t qmActive = document.getElementById('qm_TaskActive');
+window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
+window.parent.postMessage({ type: "UI_READY" }, "*");
+setTimeout(() => {
+    if (window.renderDesktopRecord) window.renderDesktopRecord();
+    if (typeof renderLatestKarinPhoto === 'function') renderLatestKarinPhoto();
+}, 1000); // Initial Desktop Load
 
-                            qmIdle && qmActive) {
-        isWorking) {
-                                    le.classList.add('hidden');
-                                    tive.classList.remove('hidden');
-        se {
-                                        le.classList.remove('hidden');
-                                        tive.classList.add('hidden');
-        
-    
-00);
+window.toggleMobileChat = function (open) {
+    const btn = document.getElementById('btnEnterChatPanel');
+    const panel = document.getElementById('inlineChatPanel');
+    const scrollBox = document.getElementById('mob_chatBox');
 
-                                        ow.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
-                                        ow.parent.postMessage({ type: "UI_READY" }, "*");
-                                        imeout(() => {
-                                            window.renderDesktopRecord) window.renderDesktopRecord();
-                                        typeof renderLatestKarinPhoto === 'function') renderLatestKarinPhoto();
-000); // Initial Desktop Load
-
-                                        ow.toggleMobileChat = function (open) {
-    t btn = document.getElementById('btnEnterChatPanel');
-    t panel = document.getElementById('inlineChatPanel');
-    t scrollBox = document.getElementById('mob_chatBox');
-
-    open) {
-                                                classList.add('hidden');       // Hide Button
-                                                l.classList.remove('hidden');  // Show Chat
-                                                uto - scroll to bottom
-        scrollBox) setTimeout(() => { scrollBox.scrollTop = scrollBox.scrollHeight; }, 50);
-    se {
-                                                    classList.remove('hidden');    // Show Button
-                                                    l.classList.add('hidden');     // Hide Chat
-
-
+    if (open) {
+        btn.classList.add('hidden');       // Hide Button
+        panel.classList.remove('hidden');  // Show Chat
+        // Auto-scroll to bottom
+        if (scrollBox) setTimeout(() => { scrollBox.scrollTop = scrollBox.scrollHeight; }, 50);
+    } else {
+        btn.classList.remove('hidden');    // Show Button
+        panel.classList.add('hidden');     // Hide Chat
+    }
+};
