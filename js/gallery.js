@@ -165,6 +165,7 @@ export async function renderGallery() {
     const gridPending = document.getElementById('gridPending');
     const gridRoutine = document.getElementById('gridRoutine');
     const historySection = document.getElementById('historySection');
+    const orbitalCanvas = document.getElementById('orbitalCanvas');
 
     // Altar Slots (Desktop)
     const slot1 = { card: document.getElementById('altarSlot1'), img: document.getElementById('imgSlot1'), ref: document.getElementById('reflectSlot1') };
@@ -180,9 +181,10 @@ export async function renderGallery() {
     const recGrid = document.getElementById('mobRec_Grid');
     const recHeap = document.getElementById('mobRec_Heap');
 
-    if (!gridFailed || !gridOkay) return;
+    // EMERGENCY CHECK: If we have NO Desktop/Mobile container, stop
+    if (!historySection && !recGrid) return;
 
-    // Reset
+    // Reset Existing Containers (Only if they exist)
     if (gridFailed) gridFailed.innerHTML = "";
     if (gridOkay) gridOkay.innerHTML = "";
     if (gridPending) gridPending.innerHTML = "";
@@ -235,6 +237,14 @@ export async function renderGallery() {
 
     // F. Standard Accepted (Excluding Routine and Altar Highlights)
     const standardAccepted = acceptedBase.filter(item => !routineList.includes(item) && !bestOf.includes(item));
+
+    // --- 4. CACHE FOR ORBITAL NODES ---
+    window.lastCategoryData = {
+        accepted: standardAccepted,
+        routine: routineList,
+        pending: pendingList,
+        denied: deniedList
+    };
 
     // --- 5. IMAGE LOADER (SEQUENTIAL & ROBUST) ---
     const getThumb = async (item, size = 300) => {
@@ -460,7 +470,58 @@ export async function renderGallery() {
 
     await renderMobSlot(bestOf[1], mob2, 300);
     await renderMobSlot(bestOf[2], mob3, 300);
+
+    // --- 6. ATTACH DATA TO NODES (For Instant Preview/Counts) ---
+    // (Optional: Could add item counts to node labels here)
 }
+
+// --- SOVEREIGN ALTAR INTERACTION HELPERS ---
+window.expandCategory = async function (category) {
+    const overlay = document.getElementById('categoryExpansionOverlay');
+    const grid = document.getElementById('expansionGrid');
+    const title = document.getElementById('expansionTitle');
+    const canvas = document.getElementById('orbitalCanvas');
+
+    if (!overlay || !grid || !title) return;
+
+    // 1. Get List Based on Category
+    // We already have these separate in the renderGallery scope, but let's re-acquire the ones we need
+    // To be efficient, we can store them in a window variable during renderGallery
+    const data = window.lastCategoryData ? window.lastCategoryData[category] : [];
+
+    // 2. Setup UI
+    title.innerText = category.toUpperCase() + (category === 'denied' ? ' (THE VOID)' : ' OFFERINGS');
+    grid.innerHTML = "";
+    overlay.classList.remove('hidden');
+    if (canvas) canvas.style.filter = "blur(15px) scale(0.9)";
+
+    // 3. Render Grid
+    if (data.length === 0) {
+        grid.innerHTML = `<div style="color:#666; font-family:'Cinzel'; text-align:center; grid-column:1/-1; padding-top:50px;">NO RECORDS FOUND IN THIS SECTOR.</div>`;
+    } else {
+        // Reuse renderChunk logic or simple loop
+        for (let item of data) {
+            const el = document.createElement('div');
+            el.className = 'item-blueprint';
+            if (category === 'denied') el.classList.add('item-trash');
+
+            const img = document.createElement('img');
+            img.className = category === 'denied' ? 'trash-img' : 'blueprint-img';
+            img.src = await getSignedUrl(item.proofUrl || PLACEHOLDER_IMG);
+
+            el.appendChild(img);
+            el.onclick = () => window.openHistoryModal(getGalleryList().indexOf(item));
+            grid.appendChild(el);
+        }
+    }
+};
+
+window.closeCategoryExpansion = function () {
+    const overlay = document.getElementById('categoryExpansionOverlay');
+    const canvas = document.getElementById('orbitalCanvas');
+    if (overlay) overlay.classList.add('hidden');
+    if (canvas) canvas.style.filter = "none";
+};
 // --- CRITICAL FIX: EXPORT THIS EMPTY FUNCTION TO PREVENT CRASH ---
 export function loadMoreHistory() {
     setHistoryLimit(historyLimit + 25);

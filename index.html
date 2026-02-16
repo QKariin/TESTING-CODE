@@ -1820,94 +1820,81 @@
             </div>
         </div> <!-- END viewServingTopDesktop (GRID WRAPPER) -->
 
-        <!-- OTHER VIEWS (RECORDS, NEWS, BUY) - SPAN COL 2-5, ROWS 1-3 -->
-        <div id="historySection" class="view-wrapper hidden alt-grid-view" style="background: transparent;">
-            <div class="v-card" style="margin-bottom: 20px;">
-                <h2 style="font-family: 'Cinzel'; color: var(--gold); text-align: center;">SERVICE RECORD</h2>
+        <!-- THE SOVEREIGN ALTAR (VISIONARY ORBITAL LAYOUT) -->
+        <div id="historySection" class="view-wrapper hidden"
+            style="background: transparent; perspective: 1000px; padding: 0; min-height: 80vh;">
+
+            <div id="orbitalCanvas" class="orbital-canvas">
+
+                <!-- 1. THE CENTRAL ALTAR (TOP 3) -->
+                <div class="altar-hub">
+                    <div class="altar-ring-glow"></div>
+                    <div class="altar-hub-content section-altar triptych-stage">
+                        <div id="altarSlot2" class="altar-card left-offering">
+                            <img id="imgSlot2" class="altar-img" src="">
+                        </div>
+                        <div id="altarSlot1" class="altar-card center-idol">
+                            <img id="imgSlot1" class="altar-img" src="">
+                            <div id="reflectSlot1" class="reflection-mask">
+                                <img src="" class="reflect-img">
+                            </div>
+                        </div>
+                        <div id="altarSlot3" class="altar-card right-offering">
+                            <img id="imgSlot3" class="altar-img" src="">
+                        </div>
+                    </div>
+                    <div class="hub-label">Sovereign Altar</div>
+                </div>
+
+                <!-- 2. THE ORBITAL NODES (CATEGORY TRIGGERS) -->
+                <!-- Top Left: Accepted -->
+                <div class="orbital-node node-accepted" onclick="window.expandCategory('accepted')">
+                    <div class="node-icon">✨</div>
+                    <div class="node-label">Accepted</div>
+                    <div class="node-glow"></div>
+                </div>
+
+                <!-- Top Right: Pending -->
+                <div class="orbital-node node-pending" onclick="window.expandCategory('pending')">
+                    <div class="node-icon">💠</div>
+                    <div class="node-label">Pending</div>
+                    <div class="node-glow"></div>
+                </div>
+
+                <!-- Bottom Left: Routine -->
+                <div class="orbital-node node-routine" onclick="window.expandCategory('routine')">
+                    <div class="node-icon">⚖️</div>
+                    <div class="node-label">Routine</div>
+                    <div class="node-glow"></div>
+                </div>
+
+                <!-- Bottom Right: Denied -->
+                <div class="orbital-node node-denied" onclick="window.expandCategory('denied')">
+                    <div class="node-icon">💀</div>
+                    <div class="node-label">Void</div>
+                    <div class="node-glow"></div>
+                </div>
+
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
-                <div class="v-card" style="padding: 15px; text-align: center;">
-                    <div class="ribbon-label">TOTAL TASKS</div>
-                    <div id="statTotal" style="font-size: 1.5rem; font-family: 'Orbitron'; color: white;">0</div>
+
+            <!-- 3. EXPANDED VIEW OVERLAY (Hidden by default) -->
+            <div id="categoryExpansionOverlay" class="expansion-overlay hidden">
+                <div class="expansion-header">
+                    <div id="expansionTitle" class="expansion-title">ACCEPTED OFFERINGS</div>
+                    <button class="btn-close-expansion" onclick="window.closeCategoryExpansion()">BACK TO ALTAR</button>
                 </div>
-                <div class="v-card" style="padding: 15px; text-align: center;">
-                    <div class="ribbon-label">SKIPPED</div>
-                    <div id="statSkipped" style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-red);">0
-                    </div>
-                </div>
-                <div class="v-card" style="padding: 15px; text-align: center;">
-                    <div class="ribbon-label">KNEELS</div>
-                    <div id="statTotalKneels"
-                        style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">
-                        0</div>
-                </div>
-            </div>
-            <!-- THE VISION BENTO GRID -->
-            <div class="record-bento-container" style="display: flex; flex-direction: column; gap: 25px;">
-
-                <!-- 1. THE ALTAR (TOP PIER) -->
-                <div class="v-card section-altar triptych-stage"
-                    style="padding: 0; min-height: 280px; margin-bottom: 0;">
-                    <div class="ribbon-label" style="position: absolute; top: 15px; left: 20px; z-index: 20;">THE ALTAR
-                    </div>
-                    <div class="altar-halo"></div>
-
-                    <!-- SLOT 2: LEFT -->
-                    <div id="altarSlot2" class="altar-card left-offering">
-                        <img id="imgSlot2" class="altar-img" src="">
-                    </div>
-
-                    <!-- SLOT 1: CENTER (HIGHEST) -->
-                    <div id="altarSlot1" class="altar-card center-idol">
-                        <img id="imgSlot1" class="altar-img" src="">
-                        <div id="reflectSlot1" class="reflection-mask">
-                            <img src="" class="reflect-img">
-                        </div>
-                    </div>
-
-                    <!-- SLOT 3: RIGHT -->
-                    <div id="altarSlot3" class="altar-card right-offering">
-                        <img id="imgSlot3" class="altar-img" src="">
-                    </div>
-
-                    <div class="gold-bar" style="position: absolute; bottom: 0; left: 0;"></div>
-                </div>
-
-                <!-- 2. THE BENTO BODY -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-
-                    <!-- LEFT COL: ACCEPTED & ROUTINE -->
-                    <div style="display: flex; flex-direction: column; gap: 20px;">
-                        <div class="v-card bento-section" style="padding: 15px;">
-                            <div class="ribbon-label">ACCEPTED OFFERINGS</div>
-                            <div id="gridOkay" class="horizontal-scroll-track"
-                                style="height: 160px; padding-bottom: 5px;"></div>
-                        </div>
-
-                        <div class="v-card bento-section" style="padding: 15px;">
-                            <div class="ribbon-label">DAILY DISCIPLINE RECORD</div>
-                            <div id="gridRoutine" class="horizontal-scroll-track"
-                                style="height: 160px; padding-bottom: 5px;"></div>
-                        </div>
-                    </div>
-
-                    <!-- RIGHT COL: PENDING & DENIED -->
-                    <div style="display: flex; flex-direction: column; gap: 20px;">
-                        <div class="v-card bento-section" style="padding: 15px;">
-                            <div class="ribbon-label">PENDING VERDICT</div>
-                            <div id="gridPending" class="horizontal-scroll-track"
-                                style="height: 160px; padding-bottom: 5px;"></div>
-                        </div>
-
-                        <div class="v-card bento-section" style="padding: 15px;">
-                            <div class="ribbon-label">THE VOID (DENIED)</div>
-                            <div id="gridFailed" class="horizontal-scroll-track"
-                                style="height: 160px; padding-bottom: 5px;"></div>
-                        </div>
-                    </div>
-
+                <div id="expansionGrid" class="expansion-grid">
+                    <!-- Populated by JS -->
                 </div>
             </div>
+
+            <!-- STATS (MINIMIZED FOR CRYSTAL DESIGN) -->
+            <div class="altar-stats-row">
+                <div class="mini-stat">TASKS: <span id="statTotal">0</span></div>
+                <div class="mini-stat">SKIPPED: <span id="statSkipped">0</span></div>
+                <div class="mini-stat">KNEELS: <span id="statTotalKneels">0</span></div>
+            </div>
+
         </div>
         <div id="viewNews" class="view-wrapper hidden v-span-4" style="padding: 0;">
             <div class="v-card">
