@@ -1,5 +1,5 @@
 // UI management functions - FULL LOGIC WITH WISHLIST & VAULT SYNC & SLAVE RECORD FIX
-import { currentView, cmsHierarchyData, setCurrentView, WISHLIST_ITEMS, gameStats } from './state.js';
+import { currentView, cmsHierarchyData, setCurrentView, WISHLIST_ITEMS, gameStats, setWishlistItems } from './state.js';
 import { CMS_HIERARCHY } from './config.js';
 import { renderGallery, loadMoreHistory } from './gallery.js';
 import { getOptimizedUrl, getThumbnail, getSignedUrl } from './media.js';
@@ -127,7 +127,7 @@ export function renderWishlist(maxBudget = 999999) {
             const displayImg = item.img || item.image || "";
             const safeImg = getOptimizedUrl(displayImg, 400);
 
-           // UPDATED: Calls 'quickBuyItem' which we defined in main.js
+            // UPDATED: Calls 'quickBuyItem' which we defined in main.js
             return `
                 <div class="store-item ${canAfford ? 'can-afford' : 'locked'}" style="cursor:pointer;" onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}, img:'${displayImg}'})">
                     <div class="si-img-box">
@@ -143,6 +143,40 @@ export function renderWishlist(maxBudget = 999999) {
                 </div>`;
         }).join('');
     });
+}
+
+// --- NEW: QUICK TRIBUTE RENDERER (DESKTOP) ---
+export function renderQuickTributes() {
+    const container = document.getElementById('desk_QuickTribute');
+    if (!container) return;
+
+    if (!WISHLIST_ITEMS || WISHLIST_ITEMS.length === 0) {
+        container.innerHTML = "<div style='color:#444; font-size:0.6rem; text-align:center;'>INITIALIZING STORE...</div>";
+        return;
+    }
+
+    // Pick 2 random items
+    const shuffled = [...WISHLIST_ITEMS].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 2);
+
+    container.innerHTML = selected.map(item => {
+        const displayImg = item.img || item.image || "";
+        const safeImg = getOptimizedUrl(displayImg, 200);
+        const canAfford = gameStats.coins >= item.price;
+
+        return `
+            <div class="v-card" style="padding: 8px; background: rgba(255,255,255,0.02); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; border: 1px solid rgba(255,255,255,0.05);" 
+                 onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}, img:'${displayImg}'})" 
+                 onmouseover="this.style.borderColor='var(--gold)'; this.style.background='rgba(197,160,89,0.05)'" 
+                 onmouseout="this.style.borderColor='rgba(255,255,255,0.05)'; this.style.background='rgba(255,255,255,0.02)'">
+                <img src="${safeImg}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-family:'Cinzel'; font-size:0.6rem; color:#ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name.toUpperCase()}</div>
+                    <div style="font-family:'Orbitron'; font-size:0.75rem; color:${canAfford ? 'var(--gold)' : '#ff4444'}; font-weight: bold;">${item.price} 🪙</div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 export function toggleStats() {

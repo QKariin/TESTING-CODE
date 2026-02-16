@@ -1440,6 +1440,23 @@
      UNIVERSE A: DESKTOP APP (WRAPPED)
      ======================================================= -->
     <div id="DESKTOP_APP">
+        <!-- DESKTOP TRIBUTE STORE OVERLAY -->
+        <div id="tributeHuntOverlay" class="hidden"
+            style="position: fixed; inset: 0; background: rgba(2,5,18,0.98); z-index: 10000; flex-direction: column; padding: 60px; backdrop-filter: blur(20px);">
+            <div
+                style="width:100%; max-width: 1200px; margin: 0 auto; display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:1px solid #333; padding-bottom:20px;">
+                <span
+                    style="font-family:'Cinzel'; color:#c5a059; font-size: 2rem; letter-spacing: 6px; font-weight: 700;">TRIBUTE
+                    STORE</span>
+                <button onclick="toggleTributeHunt()"
+                    style="color: #666; background:none; border:none; cursor:pointer; font-family:'Orbitron'; font-size:2.5rem; transition: 0.3s;"
+                    onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#666'">×</button>
+            </div>
+            <div id="huntStoreGrid" class="store-grid"
+                style="width: 100%; max-width: 1200px; margin: 0 auto; flex: 1; overflow-y: auto; display:grid; grid-template-columns: repeat(4, 1fr); gap:25px; padding: 10px;">
+            </div>
+        </div>
+
         <!-- GRID ITEM: COLUMN 1, SPAN ROWS 1-3 (SIDEBAR) -->
         <div class="v-sidebar">
             <div class="v-card"
@@ -1802,21 +1819,26 @@
             <!-- GRID ITEM: ROW 3, SPAN COL 4-5 (RIGHT SECTION) -->
             <div id="gridRightSection" class="serve-grid-item"
                 style="display:flex; flex-direction:row; gap:25px; overflow: hidden;">
-                <!-- DAILY DISCIPLINE -->
+
+                <!-- 1. TRIBUTE (Random 2) -->
+                <div class="v-card" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="ribbon-label" style="margin-bottom: 15px;">TRIBUTE</div>
+                    <div id="desk_QuickTribute"
+                        style="flex: 1; display: flex; flex-direction: column; gap: 8px; justify-content: center;">
+                        <!-- JS injected 2 random items -->
+                    </div>
+                    <button class="action-btn" onclick="window.toggleTributeHunt()"
+                        style="width: 100%; font-size: 0.6rem; padding: 6px; border-radius: 8px; margin-top: 10px; background: rgba(255,255,255,0.05); color: #888;">SEE
+                        MORE</button>
+                </div>
+
+                <!-- 2. DAILY DISCIPLINE -->
                 <div class="v-card" style="flex: 1; display: flex; flex-direction: column;">
                     <div class="ribbon-label" style="margin-bottom: 15px;">DAILY DISCIPLINE</div>
                     <div id="shelfRanks" class="mob-streak-strip" style="justify-content: center; gap: 8px;"></div>
                     <div
                         style="text-align: center; margin-top: auto; font-size: 0.7rem; color: rgba(255,255,255,0.5); font-family: 'Cinzel';">
                         SINCE <span id="slaveSinceDate" style="color: white;">--/--/--</span>
-                    </div>
-                </div>
-
-                <!-- TRIBUTE STORE (SIMPLIFIED FOR GRID) -->
-                <div class="v-card" style="flex: 1; display: flex; flex-direction: column;">
-                    <div class="ribbon-label" style="margin-bottom: 10px;">STORE</div>
-                    <div id="huntStoreGrid" class="store-grid"
-                        style="grid-template-columns: repeat(1, 1fr); gap: 5px; overflow-y: auto; flex: 1;">
                     </div>
                 </div>
             </div>
@@ -1840,7 +1862,8 @@
                 <div class="v-card" style="padding: 15px; text-align: center;">
                     <div class="ribbon-label">KNEELS</div>
                     <div id="statTotalKneels"
-                        style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">0</div>
+                        style="font-size: 1.5rem; font-family: 'Orbitron'; color: var(--neon-green);">
+                        0</div>
                 </div>
             </div>
             <div id="historyGrid"
@@ -1897,7 +1920,8 @@
 
             <!-- TRIBUTE STORE (Rendered by JS) -->
             <div class="ribbon-label"
-                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">TRIBUTE STORE
+                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">
+                TRIBUTE STORE
             </div>
             <div id="storeGrid" class="store-grid"
                 style="grid-template-columns: repeat(3, 1fr); gap: 20px; min-height: 100px;">
@@ -1906,7 +1930,8 @@
 
             <!-- STRIPE COIN PACKAGES -->
             <div class="ribbon-label"
-                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">PURCHASE COINS
+                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">
+                PURCHASE COINS
             </div>
             <div id="buyCoinsGrid" class="store-grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
                 <div class="v-card store-item" style="background: rgba(255,255,255,0.03);">

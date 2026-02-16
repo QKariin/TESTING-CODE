@@ -23,7 +23,7 @@ import {
 } from './state.js';
 import { renderRewardGrid, runTargetingAnimation } from '../profile/kneeling/reward.js';
 import { triggerSound, migrateGameStatsToStats } from './utils.js';
-import { switchTab, toggleStats, openSessionUI, closeSessionUI, updateSessionCost, toggleSection, renderDomVideos, renderNews, renderWishlist } from './ui.js';
+import { switchTab, toggleStats, openSessionUI, closeSessionUI, updateSessionCost, toggleSection, renderDomVideos, renderNews, renderWishlist, renderQuickTributes } from './ui.js';
 import { getRandomTask, restorePendingUI, finishTask, cancelPendingTask, resetTaskDisplay } from './tasks.js';
 import { renderChat, sendChatMessage, handleChatKey, sendCoins, loadMoreChat, openChatPreview, closeChatPreview, forceBottom } from './chat.js';
 import { renderGallery, loadMoreHistory, initModalSwipeDetection, closeModal, toggleHistoryView, openHistoryModal, openModal } from './gallery.js';
@@ -991,6 +991,7 @@ window.addEventListener("message", (event) => {
             setWishlistItems(data.wishlist || []);
             window.WISHLIST_ITEMS = data.wishlist || [];
             renderWishlist();
+            if (typeof renderQuickTributes === 'function') renderQuickTributes();
         }
 
         // 3. STATUS UPDATES (Header Signals)

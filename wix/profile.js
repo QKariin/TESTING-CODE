@@ -6,7 +6,7 @@ import wixLocation from 'wix-location';
 import { updatePresenceAction, secureUpdateTaskAction, processCoinTransaction, setHierarchyAction, updateProfileAction, getHierarchyRequirements, getProfileUploadUrl, getHierarchyReportAction, secureGetProfile } from 'backend/Actions.web.js';
 import { insertMessage, loadUserMessages } from 'backend/Chat.web.js';
 import { getPaymentLink } from 'backend/pay';
-import { determineRank, updateStreakLogic } from 'public/hierarchyRules.js';
+import { determineRank, updateStreakLogic, HIERARCHY_RULES, getHierarchyReport } from 'public/hierarchyRules.js';
 
 let currentUserEmail = "";
 let staticTasksPool = [];
@@ -385,8 +385,18 @@ $w("#html2").onMessage(async (event) => {
         else if (data.type === "SEND_CHAT_TO_BACKEND") {
             const profileResult = await secureGetProfile(currentUserEmail);
             if (profileResult.success) {
-                const messageCoins = (profileResult.profile.parameters || {}).MessageCoins || 10;
-                const result = await processCoinTransaction(currentUserEmail, -messageCoins, "TAX");
+                const item = profileResult.profile;
+                const report = getHierarchyReport(item);
+                const rule = HIERARCHY_RULES.find(r => r.name === report.currentRank);
+
+                // Rank-based cost (default to 20 if lookup fails)
+                const rankCost = rule ? (rule.speakCost ?? 20) : 20;
+
+                // Priority: Manual Override (parameters.MessageCoins) > Rank-based Cost > Default (10)
+                const overrideCoins = (item.parameters || {}).MessageCoins;
+                const finalCost = (overrideCoins !== undefined) ? Number(overrideCoins) : rankCost;
+
+                const result = await processCoinTransaction(currentUserEmail, -finalCost, "TAX");
                 if (result.success) {
                     await insertMessage({
                         memberId: currentUserEmail,
