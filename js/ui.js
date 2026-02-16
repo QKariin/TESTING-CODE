@@ -1,7 +1,7 @@
 // UI management functions - FULL LOGIC WITH WISHLIST & VAULT SYNC & SLAVE RECORD FIX
 import { currentView, cmsHierarchyData, setCurrentView, WISHLIST_ITEMS, gameStats, setWishlistItems } from './state.js';
 import { CMS_HIERARCHY } from './config.js';
-import { renderGallery, loadMoreHistory } from './gallery.js';
+import { renderGallery, loadMoreHistory, getGalleryList } from './gallery.js';
 import { getOptimizedUrl, getThumbnail, getSignedUrl } from './media.js';
 import { renderVault } from '../profile/kneeling/reward.js';
 
@@ -197,6 +197,39 @@ export function renderQuickTributes() {
             </div>
         `;
     }).join('');
+}
+
+export async function renderLatestKarinPhoto() {
+    const container = document.getElementById('desk_LatestKarinPhoto');
+    if (!container) return;
+
+    try {
+        const items = getGalleryList();
+        if (!items || items.length === 0) {
+            container.innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#444; font-family:'Cinzel'; font-size:0.7rem;">NO OFFERINGS YET</div>`;
+            return;
+        }
+
+        const latest = items[0];
+        const displayImg = latest.proofUrl || latest.media || latest.image || "";
+        const safeImg = getOptimizedUrl(displayImg, 800);
+
+        container.innerHTML = `
+            <div style="width:100%; height:100%; position:relative; overflow:hidden;">
+                <img src="${safeImg}" 
+                     style="width:100%; height:100%; object-fit:cover; transition: 1.2s cubic-bezier(0.4, 0, 0.2, 1); filter: brightness(0.8);"
+                     onmouseover="this.style.transform='scale(1.15)'; this.style.filter='brightness(1.1)';"
+                     onmouseout="this.style.transform='scale(1)'; this.style.filter='brightness(0.8)';"
+                     onerror="this.style.display='none'">
+                <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:25px 15px 15px; text-align:center; pointer-events:none;">
+                     <div style="font-family:'Cinzel'; font-size:0.75rem; color:var(--gold); letter-spacing:2px; font-weight:700; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${(latest.text || "LATEST OFFERING").toUpperCase()}</div>
+                     <div style="font-family:'Orbitron'; font-size:0.55rem; color:#fff; opacity:0.6; margin-top:5px; letter-spacing:1px;">CLICK TO VIEW RECORD</div>
+                </div>
+            </div>
+        `;
+    } catch (e) {
+        console.error("Error rendering latest photo:", e);
+    }
 }
 
 export function toggleStats() {

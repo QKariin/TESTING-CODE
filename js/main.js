@@ -23,7 +23,7 @@ import {
 } from './state.js';
 import { renderRewardGrid, runTargetingAnimation } from '../profile/kneeling/reward.js';
 import { triggerSound, migrateGameStatsToStats } from './utils.js';
-import { switchTab, toggleStats, openSessionUI, closeSessionUI, updateSessionCost, toggleSection, renderDomVideos, renderNews, renderWishlist, renderQuickTributes } from './ui.js';
+import { switchTab, toggleStats, openSessionUI, closeSessionUI, updateSessionCost, toggleSection, renderDomVideos, renderNews, renderWishlist, renderQuickTributes, renderLatestKarinPhoto } from './ui.js';
 import { getRandomTask, restorePendingUI, finishTask, cancelPendingTask, resetTaskDisplay } from './tasks.js';
 import { renderChat, sendChatMessage, handleChatKey, sendCoins, loadMoreChat, openChatPreview, closeChatPreview, forceBottom } from './chat.js';
 import { renderGallery, loadMoreHistory, initModalSwipeDetection, closeModal, toggleHistoryView, openHistoryModal, openModal } from './gallery.js';
@@ -1042,6 +1042,7 @@ window.addEventListener("message", (event) => {
                     setLastGalleryJson(currentGalleryJson);
                     renderGallery();
                     if (window.renderDesktopRecord) window.renderDesktopRecord(); // SYNC DESKTOP
+                    if (typeof renderLatestKarinPhoto === 'function') renderLatestKarinPhoto();
                 }
             }
 
@@ -2295,44 +2296,14 @@ window.toggleTributeHunt = function () {
 
     if (overlay.classList.contains('hidden')) {
         overlay.classList.remove('hidden');
-        renderSimpleStore(root); // Load items immediately
+        renderWishlist(); // Load items with full UI (buttons, budget, etc)
     } else {
         overlay.classList.add('hidden');
     }
 };
 
-// 2. RENDER: Loops through wishlist and makes simple buttons
-window.renderSimpleStore = function (rootElement) {
-    const grid = rootElement.querySelector('#huntStoreGrid');
-    if (!grid) return;
 
-    grid.innerHTML = ""; // Clear old stuff
-
-    // Use global wishlist data
-    const items = window.WISHLIST_ITEMS || [];
-
-    if (items.length === 0) {
-        grid.innerHTML = "<div style='color:#666; width:200%; text-align:center;'>NO ITEMS LOADED</div>";
-        return;
-    }
-
-    items.forEach(item => {
-        // Create the card
-        const card = document.createElement('div');
-        card.className = "store-item"; // Reuse your existing CSS class
-        card.style.cursor = "pointer";
-        card.onclick = () => window.quickBuyItem(item); // Click to buy
-
-        card.innerHTML = `
-            <img src="${item.img || item.image}" style="width:100%; height:100px; object-fit:cover; opacity:0.8;">
-            <div style="padding:10px; text-align:center;">
-                <div style="color:#c5a059; font-family:'Orbitron'; font-weight:bold;">${item.price}</div>
-                <div style="color:#ccc; font-size:0.7rem; font-family:'Cinzel'; margin-top:5px;">${item.name.toUpperCase()}</div>
-            </div>
-        `;
-        grid.appendChild(card);
-    });
-};
+// 3. BUY: Instant purchase logic
 
 // 3. BUY: Instant purchase logic
 window.quickBuyItem = function (item) {

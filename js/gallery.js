@@ -71,7 +71,7 @@ function getSortedGallery() {
 }
 
 // --- HELPER: GET FILTERED LIST (SEPARATED BY BUTTON TYPE) ---
-function getGalleryList() {
+export function getGalleryList() {
     if (!galleryData || !Array.isArray(galleryData)) return [];
 
     // Normalize data structure first
@@ -787,6 +787,7 @@ document.addEventListener('click', (e) => {
 
 // --- FORCE WINDOW EXPORTS ---
 window.renderGallery = renderGallery;
+window.getGalleryList = getGalleryList;
 window.openHistoryModal = openHistoryModal;
 window.toggleHistoryView = toggleHistoryView;
 window.closeModal = closeModal;
