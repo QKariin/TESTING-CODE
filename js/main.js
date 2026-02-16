@@ -1598,7 +1598,7 @@ window.updateHierarchyDrawer = function () {
     });
 
     // 2. Render Requirements (The Ladder)
-    let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px; padding:0 8px;">PROMOTION REQUIREMENTS</div>`;
+    let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:12px; font-family:'Orbitron'; letter-spacing:2px; text-transform:uppercase; text-align:center;">PROMOTION REQUIREMENTS</div>`;
 
     // SVGs for Icons
     const ICONS = {
@@ -1620,9 +1620,9 @@ window.updateHierarchyDrawer = function () {
                 actionBtn = `<span onclick="window.openDataEntry('${r.id}')" style="cursor:pointer; color:#ffd700; font-size:0.6rem; border:1px solid #ffd700; padding:2px 6px; border-radius:4px; margin-left:8px;">ADD</span>`;
             }
             html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-family:'Orbitron'; font-size:0.68rem; border-bottom:1px solid #222; padding:0 12px 6px 12px; position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-family:'Orbitron'; font-size:0.68rem; border-bottom:1px solid rgba(255,255,255,0.1); padding:0 5px 8px 5px; position:relative;">
                 <div style="display:flex; align-items:center; color:${iconColor}; flex:1;">
-                    <div style="width:16px; height:16px; fill:${iconColor}; margin-right:10px;">${ICONS[r.id] || ''}</div>
+                    <div style="width:14px; height:14px; fill:${iconColor}; margin-right:10px;">${ICONS[r.id] || ''}</div>
                     <span style="letter-spacing:1px; font-weight: 300;">${r.label}</span>
                 </div>
                 <!-- Vertical Divider -->
@@ -1658,12 +1658,12 @@ window.updateHierarchyDrawer = function () {
             }
 
             html += `
-            <div style="margin-bottom:12px; padding:0 8px;">
-                <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:5px; color:${labelColor};">
+            <div style="margin-bottom:14px; padding:0 5px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:6px; color:${labelColor};">
                     <span style="letter-spacing:1px;">${r.label}</span>
                     <span style="color:${valColor}; opacity: 0.7; font-size: 0.55rem;">${valDisplay}</span>
                 </div>
-                <div style="width:100%; height:8px; background:#000; border:1px solid #333; border-radius:4px; overflow:hidden; position:relative;">
+                <div style="width:100%; height:6px; background:#000; border:1px solid rgba(255,255,255,0.05); border-radius:3px; overflow:hidden; position:relative;">
                     ${innerBars}
                 </div>
             </div>`;
