@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -327,24 +326,71 @@
                                 </div>
 
                                 <!-- RECORD VIEW -->
-                                <div id="tabRecord" class="ap-view hidden" style="padding:10px;">
-                                    <div class="sec-box">
-                                        <div class="sec-title" style="color:var(--gold);">THE ALTAR</div>
+                                <div id="tabRecord" class="ap-view hidden"
+                                    style="padding:10px; height: 100%; position: relative;">
+                                    <!-- THE SOVEREIGN ALTAR (ADMIN EDITION) -->
+                                    <div id="adminOrbitalCanvas" class="admin-orbital-canvas">
+                                        <div class="altar-label">THE SUPREME ALTAR</div>
                                         <div class="altar-admin-row">
-                                            <div class="aa-slot" id="adminAltar1" onclick="manageAltar(1)">I</div>
-                                            <div class="aa-slot" id="adminAltar2" onclick="manageAltar(2)">II</div>
-                                            <div class="aa-slot" id="adminAltar3" onclick="manageAltar(3)">III</div>
+                                            <div class="aa-slot" id="adminAltarSlot1" onclick="manageAltar(1)">
+                                                <div class="aa-slot-label">I</div>
+                                                <img src="" id="adminAltarImg1" class="aa-img hidden">
+                                                <div class="aa-glow"></div>
+                                            </div>
+                                            <div class="aa-slot central" id="adminAltarSlot2" onclick="manageAltar(2)">
+                                                <div class="aa-slot-label">II</div>
+                                                <img src="" id="adminAltarImg2" class="aa-img hidden">
+                                                <div class="aa-glow"></div>
+                                            </div>
+                                            <div class="aa-slot" id="adminAltarSlot3" onclick="manageAltar(3)">
+                                                <div class="aa-slot-label">III</div>
+                                                <img src="" id="adminAltarImg3" class="aa-img hidden">
+                                                <div class="aa-glow"></div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="sec-box">
-                                        <div class="sec-title">HONORS</div>
-                                        <div id="userStickerCase" class="trophy-case-admin"></div>
+
+                                    <!-- CATEGORY TRIGGERS (BENTO STYLE) -->
+                                    <div class="admin-record-bento">
+                                        <div class="admin-bento-node node-accepted"
+                                            onclick="expandAdminCategory('accepted')">
+                                            <div class="node-icon">✔️</div>
+                                            <div class="node-label">ACCEPTED</div>
+                                            <div class="node-count" id="adminAcceptedCount">0</div>
+                                        </div>
+                                        <div class="admin-bento-node node-routine"
+                                            onclick="expandAdminCategory('routine')">
+                                            <div class="node-icon">⚓</div>
+                                            <div class="node-label">ROUTINE</div>
+                                            <div class="node-count" id="adminRoutineCount">0</div>
+                                        </div>
+                                        <div class="admin-bento-node node-pending"
+                                            onclick="expandAdminCategory('pending')">
+                                            <div class="node-icon">⏳</div>
+                                            <div class="node-label">PENDING</div>
+                                            <div class="node-count" id="adminPendingCount">0</div>
+                                        </div>
+                                        <div class="admin-bento-node node-denied"
+                                            onclick="expandAdminCategory('denied')">
+                                            <div class="node-icon">💀</div>
+                                            <div class="node-label">THE VOID</div>
+                                            <div class="node-count" id="adminDeniedCount">0</div>
+                                        </div>
                                     </div>
-                                    <div class="sec-title">ARCHIVE</div>
-                                    <div id="userHistoryGrid" class="history-grid"></div>
-                                    <button id="loadMoreHist" class="load-more-btn" onclick="loadMoreHist()">LOAD
-                                        MORE</button>
+
+                                    <!-- ADMIN EXPANSION OVERLAY -->
+                                    <div id="adminRecordExpansion" class="admin-expansion-overlay hidden">
+                                        <div class="ae-header">
+                                            <div class="ae-title" id="adminExpansionTitle">CATEGORY</div>
+                                            <button class="ae-close"
+                                                onclick="closeAdminCategoryExpansion()">&times;</button>
+                                        </div>
+                                        <div id="adminExpansionGrid" class="ae-grid"></div>
+                                        <button id="adminLoadMoreBtn" class="ae-load-more hidden"
+                                            onclick="loadMoreHist()">LOAD MORE</button>
+                                    </div>
                                 </div>
+
                             </div>
                         </div>
                         <!--Show media in chat -->

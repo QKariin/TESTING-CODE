@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dashBtn.style.cursor = "pointer";
         dashBtn.addEventListener('click', () => {
             console.log("Force-Closing User Window...");
-            
+
             // 1. Hide User View
             const vUser = document.getElementById('viewUser');
             if (vUser) {
@@ -385,6 +385,11 @@ function switchAdminTab(tabName) {
         view.classList.add('hidden');
         view.classList.remove('active');
     });
+
+    // 2b. Reset Overlays
+    if (typeof window.closeAdminCategoryExpansion === 'function') {
+        window.closeAdminCategoryExpansion();
+    }
 
     // 3. Show Target
     const targetId = 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1);

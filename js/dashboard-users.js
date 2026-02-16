@@ -586,8 +586,36 @@ function updateInventory(u) {
 // TAB 3: RECORD (HISTORY & GLORY)
 // =========================================
 function updateAltar(u) {
-    // This connects to the HTML slots we made
-    // Future expansion: Make these droppable targets
+    const altarHits = (u.history || []).filter(h => h.status === 'approve').slice(0, 3);
+
+    [1, 2, 3].forEach(async (num, i) => {
+        const slot = document.getElementById(`adminAltarSlot${num}`);
+        const img = document.getElementById(`adminAltarImg${num}`);
+        const hit = altarHits[i];
+
+        if (slot && img) {
+            if (hit && hit.proofUrl) {
+                // Ensure signed URL
+                if (hit.proofUrl.startsWith('https://upcdn') && !hit.thumbSigned) {
+                    const isVideo = mediaTypeFunction(hit.proofUrl) === 'video';
+                    hit.fullSigned = await getSignedUrl(hit.proofUrl);
+                    if (isVideo) {
+                        hit.thumbSigned = await getSignedUrl(hit.proofUrl.replace("/raw/", "/thumbnail/"));
+                    } else {
+                        hit.thumbSigned = hit.fullSigned;
+                    }
+                }
+
+                img.src = hit.thumbSigned || hit.proofUrl;
+                img.classList.remove('hidden');
+                slot.classList.add('has-hit');
+            } else {
+                img.src = "";
+                img.classList.add('hidden');
+                slot.classList.remove('has-hit');
+            }
+        }
+    });
 }
 
 function updateTrophies(u) {
@@ -613,49 +641,63 @@ function updateTrophies(u) {
 }
 
 async function updateHistory(u) {
-    const currentJson = JSON.stringify(u.history || []);
-    if (currentJson !== lastHistoryJson || histLimit > 10) {
-        setLastHistoryJson(currentJson);
-        const hGrid = document.getElementById('userHistoryGrid');
-        if (!hGrid) return;
+    const history = u.history || [];
 
-        const cleanHist = (u.history || []).filter(h => h.status && h.status !== 'fail');
-        const historyToShow = cleanHist.slice(0, histLimit);
+    // 1. CATEGORIZE FOR BENTO
+    const accepted = history.filter(h => h.status === 'approve' && !h.text?.toUpperCase().includes('ROUTINE'));
+    const routine = history.filter(h => h.text?.toUpperCase().includes('ROUTINE'));
+    const pending = history.filter(h => h.status === 'pending');
+    const denied = history.filter(h => h.status === 'fail' || h.status === 'rejected');
 
-        // Show/Hide Load More
-        const loadBtn = document.getElementById('loadMoreHist');
-        if (loadBtn) loadBtn.style.display = (cleanHist.length > histLimit) ? 'block' : 'none';
+    // 2. UPDATE BENTO COUNTS
+    setText('adminAcceptedCount', accepted.length);
+    setText('adminRoutineCount', routine.length);
+    setText('adminPendingCount', pending.length);
+    setText('adminDeniedCount', denied.length);
 
-        // Sign URLs
-        const signingPromises = historyToShow.map(async h => {
-            if (h.proofUrl && h.proofUrl.startsWith('https://upcdn')) {
-                const isVideo = mediaTypeFunction(h.proofUrl) === 'video';
-                h.fullSigned = await getSignedUrl(h.proofUrl);
-                if (isVideo) {
-                    h.thumbSigned = await getSignedUrl(h.proofUrl.replace("/raw/", "/thumbnail/"));
-                } else {
-                    h.thumbSigned = h.fullSigned;
-                }
-            } else {
-                h.thumbSigned = getOptimizedUrl(h.proofUrl, 150);
-                h.fullSigned = h.proofUrl;
-            }
-        });
-        await Promise.all(signingPromises);
+    // 3. CACHE FOR EXPANSION
+    window.adminLastCategoryData = { accepted, routine, pending, denied };
 
-        hGrid.innerHTML = historyToShow.length > 0 ? historyToShow.map(h => {
-            const cls = h.status === 'approve' ? 'hb-app' : 'hb-rej';
-            const img = h.thumbSigned || '';
-            // Only show if image exists
-            if (!img) return '';
-            return `<div class="h-card-mini" style="position:relative; width:100%; aspect-ratio:1/1; background:black; border:1px solid #333; cursor:pointer;" 
-                     onclick="openModById('${h.id}', '${u.memberId}', true, '${h.fullSigned}')">
-                <img src="${img}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">
-                <div class="h-badge ${cls}" style="position:absolute; bottom:0; left:0; width:100%; font-size:0.5rem; text-align:center;">${h.status.toUpperCase()}</div>
-            </div>`;
-        }).join('') : '<div style="color:#444; font-size:0.7rem; padding:10px;">No history records.</div>';
-    }
+    // 4. SYNC ALTAR (Uses signed URLs if available)
+    updateAltar(u);
 }
+
+window.expandAdminCategory = async function (category) {
+    const data = window.adminLastCategoryData ? window.adminLastCategoryData[category] : [];
+    const overlay = document.getElementById('adminRecordExpansion');
+    const grid = document.getElementById('adminExpansionGrid');
+    const title = document.getElementById('adminExpansionTitle');
+
+    if (!overlay || !grid || !title) return;
+
+    title.innerText = category.toUpperCase();
+    overlay.classList.remove('hidden');
+
+    // Sign URLs for visible items
+    const signingPromises = data.slice(0, 50).map(async h => {
+        if (h.proofUrl && h.proofUrl.startsWith('https://upcdn')) {
+            h.fullSigned = await getSignedUrl(h.proofUrl);
+        } else {
+            h.fullSigned = h.proofUrl;
+        }
+    });
+    await Promise.all(signingPromises);
+
+    grid.innerHTML = data.length > 0 ? data.map(h => {
+        const cls = h.status === 'approve' ? 'hb-app' : (h.status === 'pending' ? 'hb-pend' : 'hb-rej');
+        const img = h.proofUrl || '';
+        return `<div class="h-card-mini" style="position:relative; width:100%; aspect-ratio:1/1; background:black; border:1px solid #333; cursor:pointer;" 
+                 onclick="openModById('${h.id}', '${currId}', true, '${h.fullSigned}')">
+            <img src="${img}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">
+            <div class="h-badge ${cls}" style="position:absolute; bottom:0; left:0; width:100%; font-size:0.5rem; text-align:center;">${h.status.toUpperCase()}</div>
+        </div>`;
+    }).join('') : `<div style="color:#444; font-size:0.7rem; padding:20px;">No records in ${category}.</div>`;
+};
+
+window.closeAdminCategoryExpansion = function () {
+    const overlay = document.getElementById('adminRecordExpansion');
+    if (overlay) overlay.classList.add('hidden');
+};
 
 // =========================================
 // ACTION FUNCTIONS (EXPOSED TO WINDOW)
