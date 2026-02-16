@@ -367,7 +367,7 @@ export async function renderNews(posts) {
         }).join('');
     }
 
-    // --- 3. DESKTOP RENDER (ROYAL GAZETTE LAYOUT) ---
+    // --- 3. DESKTOP RENDER: BENTO GRID (CYBER-NOIR ROYALTY) ---
     if (deskGrid) {
         deskGrid.innerHTML = "";
         deskGrid.className = "";
@@ -375,83 +375,50 @@ export async function renderNews(posts) {
         const layoutWrapper = document.createElement("div");
         layoutWrapper.className = "royal-gazette-layout";
 
-        // A. HERO SECTION (Latest Post)
-        if (processedPosts.length > 0) {
-            const heroPost = processedPosts[0];
-            const heroTitle = heroPost.title || heroPost.text || "ROYAL DECREE";
-            const heroDate = heroPost._createdDate ? new Date(heroPost._createdDate).toLocaleDateString() : "RECENT";
+        processedPosts.forEach((p, index) => {
+            if (!p._thumbUrl && !p._fullUrl) return;
 
-            if (heroPost._fullUrl) { // Only show if we explicitly have a full URL
-                // Determine if video
-                const isVideo = heroPost._rawUrl.toLowerCase().includes('.mp4') ||
-                    heroPost._rawUrl.toLowerCase().includes('.mov') ||
-                    heroPost._rawUrl.toLowerCase().includes('.webm') ||
-                    heroPost._rawUrl.startsWith('wix:video');
+            // Determine Size Category
+            let sizeClass = "bento-card";
+            if (index === 0) sizeClass += " bento-hero";
+            else if (index % 5 === 1) sizeClass += " bento-tall";
+            else if (index % 5 === 3) sizeClass += " bento-wide";
 
-                // For video, we try to construct the direct video URL if possible
-                let videoSrc = heroPost._fullUrl;
-                if (isVideo && heroPost._rawUrl.startsWith('wix:video')) {
-                    try { videoSrc = `https://video.wixstatic.com/video/${heroPost._rawUrl.split('/')[3].split('#')[0]}/mp4/file.mp4`; } catch (e) { }
-                }
+            const txt = p.title || p.text || "ROYAL DECREE";
+            const dateStr = p._createdDate ? new Date(p._createdDate).toLocaleDateString() : "RECENT";
 
-                const mediaTag = isVideo
-                    ? `<video src="${videoSrc}" class="hero-img" autoplay muted loop playsinline></video>`
-                    : `<img src="${heroPost._fullUrl}" class="hero-img" onerror="this.closest('.news-hero-section').style.display='none'">`;
+            // Media Logic: Hero gets high-res, others get thumb
+            const mediaUrl = (index === 0) ? p._fullUrl : p._thumbUrl;
+            const isVideo = p._rawUrl.toLowerCase().includes('.mp4') ||
+                p._rawUrl.toLowerCase().includes('.mov') ||
+                p._rawUrl.toLowerCase().includes('.webm') ||
+                p._rawUrl.startsWith('wix:video');
 
-                const heroHTML = `
-                <div class="news-hero-section" onclick="window.openChatPreview('${heroPost._fullUrl}', false)">
-                    <div class="hero-image-wrapper">
-                        ${mediaTag}
-                        <div class="hero-overlay-grad"></div>
-                    </div>
-                    <div class="hero-content">
-                        <div class="hero-label">LATEST TRANSMISSION</div>
-                        <div class="hero-title">${heroTitle}</div>
-                        <div class="hero-meta">${heroDate}</div>
-                    </div>
-                </div>`;
-                layoutWrapper.innerHTML += heroHTML;
-            }
-        }
-
-        // B. MASONRY GRID (Older Posts)
-        if (processedPosts.length > 1) {
-            const gridHTML = `
-            <div class="news-magazine-grid">
-                ${processedPosts.slice(1).map(p => {
-                if (!p._thumbUrl) return "";
-                const txt = p.title || p.text || "Update";
-
-                const isVideo = p._rawUrl.toLowerCase().includes('.mp4') ||
-                    p._rawUrl.toLowerCase().includes('.mov') ||
-                    p._rawUrl.toLowerCase().includes('.webm') ||
-                    p._rawUrl.startsWith('wix:video');
-
-                let videoSrc = p._thumbUrl; // Default to thumb for video poster/src
-                if (isVideo && p._rawUrl.startsWith('wix:video')) {
+            let mediaTag = "";
+            if (isVideo) {
+                let videoSrc = mediaUrl;
+                if (p._rawUrl.startsWith('wix:video')) {
                     try { videoSrc = `https://video.wixstatic.com/video/${p._rawUrl.split('/')[3].split('#')[0]}/mp4/file.mp4`; } catch (e) { }
                 }
+                mediaTag = `<video src="${videoSrc}" class="bento-media" autoplay muted loop playsinline></video>`;
+            } else {
+                mediaTag = `<img src="${mediaUrl}" class="bento-media" loading="lazy" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png'">`;
+            }
 
-                const mediaTag = isVideo
-                    ? `<video src="${videoSrc}" class="magazine-img" autoplay muted loop playsinline></video>`
-                    : `<img src="${p._thumbUrl}" class="magazine-img" loading="lazy" onerror="this.closest('.magazine-card').style.display='none'">`;
-
-                return `
-                    <div class="magazine-card" onclick="window.openChatPreview('${p._fullUrl}', false)">
-                        <div class="mag-img-box">
-                            ${mediaTag}
-                            <div class="mag-overlay">
-                                <span class="mag-view-btn">VIEW</span>
-                            </div>
-                        </div>
-                        <div class="mag-footer">
-                            <div class="mag-text">${txt.substring(0, 50)}${txt.length > 50 ? '...' : ''}</div>
-                        </div>
-                    </div>`;
-            }).join('')}
-            </div>`;
-            layoutWrapper.innerHTML += gridHTML;
-        }
+            const cardHTML = `
+                <div class="${sizeClass}" onclick="window.openChatPreview('${p._fullUrl}', false)">
+                    <div class="bento-media-box">
+                        ${mediaTag}
+                    </div>
+                    <div class="bento-overlay">
+                        <div class="bento-label">${index === 0 ? "LATEST TRANSMISSION" : "ARCHIVE"}</div>
+                        <h3 class="bento-title">${txt}</h3>
+                        <div class="bento-meta">${dateStr}</div>
+                    </div>
+                </div>
+            `;
+            layoutWrapper.innerHTML += cardHTML;
+        });
 
         deskGrid.appendChild(layoutWrapper);
     }
