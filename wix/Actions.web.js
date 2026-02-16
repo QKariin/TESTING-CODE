@@ -5,7 +5,7 @@ import { mediaBackend } from 'wix-media-backend';
 import Stripe from 'stripe';
 
 // --- IMPORT CENTRAL LOGIC FROM PUBLIC ---
-import { determineRank, getHierarchyReport, HIERARCHY_RULES } from 'public/hierarchyRules.js';
+import { determineRank, getHierarchyReport, HIERARCHY_RULES, updateStreakLogic } from 'public/hierarchyRules.js';
 
 // --- PUBLIC API: GET RULES ---
 export const getHierarchyRequirements = webMethod(Permissions.Anyone, async () => {
@@ -138,35 +138,9 @@ export const secureUpdateTaskAction = webMethod(
                         item.taskdom_pending_state = null;
                     }
 
-                    // --- ROUTINE STREAK LOGIC ---
+                    // --- ROUTINE STREAK LOGIC (Unified Authority) ---
                     if (updateData.addToQueue.isRoutine === true) {
-                        const now = new Date();
-                        const last = item.lastRoutineDate ? new Date(item.lastRoutineDate) : null;
-
-                        if (!last) {
-                            item.routinestreak = 1;
-                        } else {
-                            // Simplify dates to YYYY-MM-DD for comparison
-                            const todayStr = now.toISOString().split('T')[0];
-                            const lastStr = last.toISOString().split('T')[0];
-                            const yesterday = new Date(now);
-                            yesterday.setDate(yesterday.getDate() - 1);
-                            const yestStr = yesterday.toISOString().split('T')[0];
-
-                            if (lastStr === yestStr) {
-                                item.routinestreak = (item.routinestreak || 0) + 1;
-                            } else if (lastStr !== todayStr) {
-                                // If not today and not yesterday, it's older -> Reset
-                                item.routinestreak = 1;
-                            }
-                            // If today, do nothing (keep streak)
-                        }
-                        item.lastRoutineDate = now;
-
-                        // UPDATE BEST STREAK (HIGH WATER MARK)
-                        if (item.routinestreak > (item.bestRoutinestreak || 0)) {
-                            item.bestRoutinestreak = item.routinestreak;
-                        }
+                        item = updateStreakLogic(item, new Date());
                     }
 
                     // --- THE JUDGE: CHECK RANK ---

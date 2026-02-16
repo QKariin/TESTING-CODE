@@ -6,7 +6,7 @@ import wixLocation from 'wix-location';
 import { updatePresenceAction, secureUpdateTaskAction, processCoinTransaction, setHierarchyAction, updateProfileAction, getHierarchyRequirements, getProfileUploadUrl, getHierarchyReportAction, secureGetProfile } from 'backend/Actions.web.js';
 import { insertMessage, loadUserMessages } from 'backend/Chat.web.js';
 import { getPaymentLink } from 'backend/pay';
-import { determineRank } from 'public/hierarchyRules.js';
+import { determineRank, updateStreakLogic } from 'public/hierarchyRules.js';
 
 let currentUserEmail = "";
 let staticTasksPool = [];
@@ -306,6 +306,12 @@ $w("#html2").onMessage(async (event) => {
 
                         // Save back to DB
                         item.routineHistory = JSON.stringify(history);
+
+                        // --- [FIX] UNIFIED STREAK SYNC ---
+                        // Ensure that uploading via profile ALSO updates the streak counters 
+                        // so the Dashboard doesn't think there's a gap!
+                        updateStreakLogic(item, new Date());
+
                         await wixData.update("Tasks", item, { suppressAuth: true });
                     }
                 } catch (e) { console.error("Routine Save Error", e); }
