@@ -199,19 +199,21 @@ export function renderQuickTributes() {
     }).join('');
 }
 
-export async function renderLatestKarinPhoto() {
+export async function renderLatestKarinPhoto(feedData) {
     const container = document.getElementById('desk_LatestKarinPhoto');
     if (!container) return;
 
     try {
-        const items = getGalleryList();
-        if (!items || items.length === 0) {
-            container.innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#444; font-family:'Cinzel'; font-size:0.7rem;">NO OFFERINGS YET</div>`;
+        // Use feedData if provided, otherwise fallback to any existing feed logic or clear
+        const items = feedData && Array.isArray(feedData) ? feedData : [];
+        if (items.length === 0) {
+            // Container persists, just shows placeholder if no news yet
             return;
         }
 
         const latest = items[0];
-        const displayImg = latest.proofUrl || latest.media || latest.image || "";
+        // News feed items typically use 'media' or 'url' 
+        const displayImg = latest.media || latest.url || latest.image || latest.proofUrl || "";
         const safeImg = getOptimizedUrl(displayImg, 800);
 
         container.innerHTML = `
@@ -222,8 +224,8 @@ export async function renderLatestKarinPhoto() {
                      onmouseout="this.style.transform='scale(1)'; this.style.filter='brightness(0.8)';"
                      onerror="this.style.display='none'">
                 <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:25px 15px 15px; text-align:center; pointer-events:none;">
-                     <div style="font-family:'Cinzel'; font-size:0.75rem; color:var(--gold); letter-spacing:2px; font-weight:700; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${(latest.text || "LATEST OFFERING").toUpperCase()}</div>
-                     <div style="font-family:'Orbitron'; font-size:0.55rem; color:#fff; opacity:0.6; margin-top:5px; letter-spacing:1px;">CLICK TO VIEW RECORD</div>
+                     <div style="font-family:'Cinzel'; font-size:0.75rem; color:var(--gold); letter-spacing:2px; font-weight:700; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${(latest.title || latest.text || "QUEEN KARIN").toUpperCase()}</div>
+                     <div style="font-family:'Orbitron'; font-size:0.55rem; color:#fff; opacity:0.6; margin-top:5px; letter-spacing:1px;">CLICK TO ENTER SECTION</div>
                 </div>
             </div>
         `;

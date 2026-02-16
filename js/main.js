@@ -1025,6 +1025,7 @@ window.addEventListener("message", (event) => {
             if (feedData && Array.isArray(feedData)) {
                 if (typeof renderDomVideos === 'function') renderDomVideos(feedData);
                 if (typeof renderNews === 'function') renderNews(feedData);
+                if (typeof renderLatestKarinPhoto === 'function') renderLatestKarinPhoto(feedData);
                 const pc = document.getElementById('cntPosts');
                 if (pc) pc.innerText = feedData.length;
             }
@@ -1042,7 +1043,6 @@ window.addEventListener("message", (event) => {
                     setLastGalleryJson(currentGalleryJson);
                     renderGallery();
                     if (window.renderDesktopRecord) window.renderDesktopRecord(); // SYNC DESKTOP
-                    if (typeof renderLatestKarinPhoto === 'function') renderLatestKarinPhoto();
                 }
             }
 
