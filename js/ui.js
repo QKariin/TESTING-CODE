@@ -166,31 +166,31 @@ export function renderQuickTributes() {
 
     container.innerHTML = selected.map(item => {
         const displayImg = item.img || item.image || "";
-        const safeImg = getOptimizedUrl(displayImg, 800); // Very high res
+        const safeImg = getOptimizedUrl(displayImg, 600);
         const canAfford = gameStats.coins >= item.price;
 
         return `
-            <div class="v-card" style="padding: 0; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; cursor: default; transition: 0.4s ease; border: 1px solid rgba(255,255,255,0.1); flex: 1; min-width: 0; overflow: hidden; border-radius: 12px; position: relative;" 
-                 onmouseover="this.style.borderColor='var(--gold)'; this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 30px rgba(197,160,89,0.2)'" 
-                 onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.transform='scale(1)'; this.style.boxShadow='none'">
+            <div class="v-card" style="padding: 0; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; cursor: default; transition: 0.3s ease; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; border-radius: 10px; position: relative;" 
+                 onmouseover="this.style.borderColor='var(--gold)'; this.style.transform='translateY(-2px)'" 
+                 onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.transform='translateY(0)'">
                 
-                <!-- PREMIUM TALL IMAGE (TICKER RATIO) -->
-                <div style="position: relative; width: 100%; height: 280px; overflow: hidden; background: #000;">
-                    <img src="${safeImg}" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85); transition: 0.8s ease;" 
-                         onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='scale(1.1)'" 
-                         onmouseout="this.style.filter='brightness(0.85)'; this.style.transform='scale(1)'">
+                <!-- COMPACT IMAGE FOR VERTICAL STACK -->
+                <div style="position: relative; width: 100%; height: 120px; overflow: hidden; background: #000;">
+                    <img src="${safeImg}" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9); transition: 0.6s ease;" 
+                         onmouseover="this.style.filter='brightness(1.1)'" 
+                         onmouseout="this.style.filter='brightness(0.9)'">
                     
-                    <div style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--gold); backdrop-filter: blur(8px);">
-                        <span style="font-family:'Orbitron'; font-size:0.85rem; color:${canAfford ? 'var(--gold)' : '#ff4444'}; font-weight: bold;">${item.price} 🪙</span>
+                    <div style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 20px; border: 1px solid var(--gold); backdrop-filter: blur(5px);">
+                        <span style="font-family:'Orbitron'; font-size:0.75rem; color:${canAfford ? 'var(--gold)' : '#ff4444'}; font-weight: bold;">${item.price} 🪙</span>
                     </div>
                 </div>
 
-                <div style="padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; background: linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(0,0,0,0.3));">
-                    <div style="font-family:'Cinzel'; font-size:0.85rem; color:#fff; text-align: center; letter-spacing: 2.5px; font-weight: 700; min-height: 2.8em; display: flex; align-items: center; justify-content: center; overflow: hidden; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,0,0,1);">${item.name.toUpperCase()}</div>
+                <div style="padding: 10px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.2);">
+                    <div style="font-family:'Cinzel'; font-size:0.75rem; color:#fff; text-align: center; letter-spacing: 1.5px; font-weight: 700; height: 1.2em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0,0,0,1);">${item.name.toUpperCase()}</div>
                     
                     <button class="action-btn" 
                             onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}, img:'${displayImg}'})"
-                            style="width: 100%; background: var(--gold); color: #000; font-weight: 900; font-family: 'Orbitron'; font-size: 0.75rem; padding: 12px; border-radius: 8px; border: none; cursor: pointer; transition: 0.3s; letter-spacing: 2px; text-transform: uppercase;">
+                            style="width: 100%; background: var(--gold); color: #000; font-weight: 800; font-family: 'Orbitron'; font-size: 0.65rem; padding: 8px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; letter-spacing: 1px; text-transform: uppercase;">
                         QUICK SEND
                     </button>
                 </div>
