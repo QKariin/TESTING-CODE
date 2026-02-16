@@ -1842,9 +1842,31 @@
                         0</div>
                 </div>
             </div>
-            <div id="historyGrid"
-                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; overflow-y: auto;">
+            <!-- THE COLDEN TRIPTYCH (ALTAR) -->
+            <div class="v-card section-altar triptych-stage" style="margin-bottom: 25px; padding: 0;">
+                <div class="altar-halo"></div>
+
+                <!-- SLOT 2: LEFT -->
+                <div id="altarSlot2" class="altar-card left-offering">
+                    <img id="imgSlot2" class="altar-img" src="">
+                </div>
+
+                <!-- SLOT 1: CENTER (HIGHEST) -->
+                <div id="altarSlot1" class="altar-card center-idol">
+                    <img id="imgSlot1" class="altar-img" src="">
+                    <div id="reflectSlot1" class="reflection-mask">
+                        <img src="" class="reflect-img">
+                    </div>
+                </div>
+
+                <!-- SLOT 3: RIGHT -->
+                <div id="altarSlot3" class="altar-card right-offering">
+                    <img id="imgSlot3" class="altar-img" src="">
+                </div>
+
+                <div class="gold-bar" style="position: absolute; bottom: 0; left: 0;"></div>
             </div>
+
             <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
                 <div class="ribbon-label" style="padding: 10px;">ACCEPTED OFFERINGS</div>
                 <div id="gridOkay" class="horizontal-scroll-track" style="height: 180px; padding-bottom: 10px;">

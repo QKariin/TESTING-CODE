@@ -89,8 +89,8 @@ export function getGalleryList() {
         const cat = (i.category || "").toLowerCase();
         const txt = (i.text || "").toLowerCase();
 
-        // Hide "Routine" uploads from here
-        if (cat === 'routine' || txt.includes('daily routine')) return false;
+        // Hide "Routine" uploads from here (UNLESS it has text worth seeing)
+        if ((cat === 'routine' || txt.includes('daily routine')) && !i.proofUrl) return false;
 
         // Hide "System" updates (Level ups, badge earns, profile changes)
         if (cat === 'profile' || cat === 'system' || cat === 'level' || cat === 'badge' || cat === 'rank') return false;
