@@ -35,18 +35,11 @@ function getPoints(item) {
     return Number(val);
 }
 
-// --- HELPER: NORMALIZE DATA (FIXED) ---
-let normalizedCache = new Set();
-
 function normalizeGalleryItem(item) {
     if (!item) return;
 
     // 1. Ensure Status is a String
     if (!item.status) item.status = "";
-
-    // Use item ID/timestamp as cache key to avoid re-normalizing
-    const cacheKey = item._id || item._createdDate;
-    if (normalizedCache.has(cacheKey)) return;
 
     // 2. Find Proof URL (Aggressive Search)
     if (!item.proofUrl || item.proofUrl.length < 5) {
@@ -61,7 +54,6 @@ function normalizeGalleryItem(item) {
             }
         }
     }
-    normalizedCache.add(cacheKey);
 }
 
 // --- HELPER: SORTED LIST ---
@@ -82,8 +74,8 @@ export function getGalleryList() {
         // 1. Basic Check: Must have data
         if (!i) return false;
 
-        // 2. Must have VISUAL PROOF (Fixes empty Altar slots)
-        if (!i.proofUrl || i.proofUrl.length < 5) return false;
+        // 2. No mandatory proof check - let text records through
+        // if (!i.proofUrl || i.proofUrl.length < 5) return false;
 
         // 3. THE SEPARATOR (Based on category)
         const cat = (i.category || "").toLowerCase();
@@ -224,17 +216,7 @@ export async function renderGallery() {
     // C. Accepted (Base)
     const acceptedBase = allItems.filter(item => !deniedList.includes(item) && !pendingList.includes(item));
 
-    // D. Routine List (From Accepted)
-    const routineList = acceptedBase.filter(item => {
-        const cat = (item.category || "").toLowerCase();
-        const txt = (item.text || "").toLowerCase();
-        return cat === 'routine' || txt.includes('daily routine');
-    });
-
-    // E. Standard Accepted (Excluding Routine and Altar Highlights)
-    const standardAccepted = acceptedBase.filter(item => !routineList.includes(item) && !bestOf.includes(item));
-
-    // F. Altar Sorting (Best of ALL Accepted)
+    // D. Altar Sorting (Best of ALL Accepted)
     const altarCandidates = [...acceptedBase].sort((a, b) => {
         const statsA = getPoints(a);
         const statsB = getPoints(b);
@@ -243,6 +225,16 @@ export async function renderGallery() {
     });
 
     const bestOf = altarCandidates.slice(0, 3);
+
+    // E. Routine List (From Accepted)
+    const routineList = acceptedBase.filter(item => {
+        const cat = (item.category || "").toLowerCase();
+        const txt = (item.text || "").toLowerCase();
+        return cat === 'routine' || txt.includes('daily routine');
+    });
+
+    // F. Standard Accepted (Excluding Routine and Altar Highlights)
+    const standardAccepted = acceptedBase.filter(item => !routineList.includes(item) && !bestOf.includes(item));
 
     // --- 5. IMAGE LOADER (SEQUENTIAL & ROBUST) ---
     const getThumb = async (item, size = 300) => {
