@@ -1620,13 +1620,15 @@ window.updateHierarchyDrawer = function () {
                 actionBtn = `<span onclick="window.openDataEntry('${r.id}')" style="cursor:pointer; color:#ffd700; font-size:0.6rem; border:1px solid #ffd700; padding:2px 6px; border-radius:4px; margin-left:8px;">ADD</span>`;
             }
             html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-family:'Orbitron'; font-size:0.65rem; border-bottom:1px solid #222; padding:0 10px 6px 10px;">
-                <div style="display:flex; align-items:center; color:${iconColor};">
-                    <div style="width:16px; height:16px; fill:${iconColor}; margin-right:8px;">${ICONS[r.id] || ''}</div>
-                    <span style="letter-spacing:1px;">${r.label}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-family:'Orbitron'; font-size:0.68rem; border-bottom:1px solid #222; padding:0 12px 6px 12px; position:relative;">
+                <div style="display:flex; align-items:center; color:${iconColor}; flex:1;">
+                    <div style="width:16px; height:16px; fill:${iconColor}; margin-right:10px;">${ICONS[r.id] || ''}</div>
+                    <span style="letter-spacing:1px; font-weight: 300;">${r.label}</span>
                 </div>
-                <div style="display:flex; align-items:center;">
-                    <span style="color:${color}; letter-spacing:1px; opacity:0.7; font-size:0.55rem;">${r.status}</span>
+                <!-- Vertical Divider -->
+                <div style="width:1px; height:12px; background:rgba(255,255,255,0.05); margin: 0 10px;"></div>
+                <div style="display:flex; align-items:center; flex:1; justify-content: flex-end;">
+                    <span style="color:${color}; letter-spacing:2px; opacity:0.8; font-size:0.55rem; font-weight: bold;">${r.status}</span>
                     ${actionBtn}
                 </div>
             </div>`;
