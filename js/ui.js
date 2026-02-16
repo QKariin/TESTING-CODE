@@ -107,8 +107,12 @@ export function switchTab(mode) {
 
 // --- THE WISHLIST RENDERER (Updated to match main.js logic) ---
 export function renderWishlist(maxBudget = 999999) {
-    // Supports both Desktop 'storeGrid' and Mobile 'huntStoreGrid' if needed
-    const grids = [document.getElementById('storeGrid'), document.getElementById('huntStoreGrid')];
+    // Supports Desktop 'huntStoreGridDesk', Mobile 'huntStoreGrid', and potentially others
+    const grids = [
+        document.getElementById('huntStoreGridDesk'),
+        document.getElementById('huntStoreGrid'),
+        document.getElementById('storeGrid')
+    ].filter(el => el !== null);
 
     // Filter items
     const items = (WISHLIST_ITEMS || []).filter(i => i.price <= maxBudget);
@@ -128,16 +132,16 @@ export function renderWishlist(maxBudget = 999999) {
             const safeImg = getOptimizedUrl(displayImg, 400);
 
             return `
-                <div class="store-item ${canAfford ? 'can-afford' : 'locked'}" style="cursor:default;">
-                    <div class="si-img-box">
-                        <img src="${safeImg}" class="si-img" onerror="this.style.display='none'">
-                        <div class="si-price">${item.price} 🪙</div>
+                <div class="store-item ${canAfford ? 'can-afford' : 'locked'}" style="cursor:default; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(0,0,0,0.4);">
+                    <div class="si-img-box" style="position: relative; height: 140px; overflow: hidden; border-radius: 8px 8px 0 0;">
+                        <img src="${safeImg}" class="si-img" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                        <div class="si-price" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 4px; font-family: 'Orbitron'; font-size: 0.8rem; color: var(--gold);">${item.price} 🪙</div>
                     </div>
-                    <div class="si-info">
-                        <div class="si-name">${item.name}</div>
+                    <div class="si-info" style="padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                        <div class="si-name" style="font-family:'Cinzel'; font-size: 0.75rem; color: #fff; text-align: center; height: 2.4em; overflow: hidden; display: flex; align-items: center; justify-content: center; line-height: 1.2;">${item.name}</div>
                         <button class="si-btn" 
                                 onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}, img:'${displayImg}'})"
-                                style="background: var(--gold); color: #000; font-weight: bold; width: 100%; border-radius: 4px; padding: 8px 0; margin-top: 5px; border: none; font-family: 'Orbitron'; font-size: 0.7rem; cursor: pointer;">
+                                style="background: var(--gold); color: #000; font-weight: 800; width: 100%; border-radius: 6px; padding: 10px 0; border: none; font-family: 'Orbitron'; font-size: 0.75rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(197, 160, 89, 0.3);">
                             SEND TRIBUTE
                         </button>
                     </div>
@@ -162,26 +166,31 @@ export function renderQuickTributes() {
 
     container.innerHTML = selected.map(item => {
         const displayImg = item.img || item.image || "";
-        const safeImg = getOptimizedUrl(displayImg, 400); // Higher res for larger cards
+        const safeImg = getOptimizedUrl(displayImg, 800); // Very high res
         const canAfford = gameStats.coins >= item.price;
 
         return `
-            <div class="v-card" style="padding: 10px; background: rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 10px; cursor: default; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); flex: 1; overflow: hidden;" 
-                 onmouseover="this.style.borderColor='rgba(197,160,89,0.3)'; this.style.background='rgba(197,160,89,0.02)'" 
-                 onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(255,255,255,0.03)'">
+            <div class="v-card" style="padding: 0; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; cursor: default; transition: 0.4s ease; border: 1px solid rgba(255,255,255,0.1); flex: 1; min-width: 0; overflow: hidden; border-radius: 12px; position: relative;" 
+                 onmouseover="this.style.borderColor='var(--gold)'; this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 30px rgba(197,160,89,0.2)'" 
+                 onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.transform='scale(1)'; this.style.boxShadow='none'">
                 
-                <div style="position: relative; width: 100%; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-                    <img src="${safeImg}" style="width: 100%; height: 100%; object-fit: cover;">
-                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 5px 10px;">
-                        <span style="font-family:'Orbitron'; font-size:0.8rem; color:${canAfford ? 'var(--gold)' : '#ff4444'}; font-weight: bold;">${item.price} 🪙</span>
+                <!-- PREMIUM TALL IMAGE (TICKER RATIO) -->
+                <div style="position: relative; width: 100%; height: 280px; overflow: hidden; background: #000;">
+                    <img src="${safeImg}" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85); transition: 0.8s ease;" 
+                         onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='scale(1.1)'" 
+                         onmouseout="this.style.filter='brightness(0.85)'; this.style.transform='scale(1)'">
+                    
+                    <div style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--gold); backdrop-filter: blur(8px);">
+                        <span style="font-family:'Orbitron'; font-size:0.85rem; color:${canAfford ? 'var(--gold)' : '#ff4444'}; font-weight: bold;">${item.price} 🪙</span>
                     </div>
                 </div>
 
-                <div style="flex: 1; min-width: 0;">
-                    <div style="font-family:'Cinzel'; font-size:0.7rem; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; letter-spacing: 1px;">${item.name.toUpperCase()}</div>
+                <div style="padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; background: linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(0,0,0,0.3));">
+                    <div style="font-family:'Cinzel'; font-size:0.85rem; color:#fff; text-align: center; letter-spacing: 2.5px; font-weight: 700; min-height: 2.8em; display: flex; align-items: center; justify-content: center; overflow: hidden; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,0,0,1);">${item.name.toUpperCase()}</div>
+                    
                     <button class="action-btn" 
                             onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}, img:'${displayImg}'})"
-                            style="width: 100%; background: var(--gold); color: #000; font-weight: bold; font-family: 'Orbitron'; font-size: 0.6rem; padding: 6px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); letter-spacing: 1px;">
+                            style="width: 100%; background: var(--gold); color: #000; font-weight: 900; font-family: 'Orbitron'; font-size: 0.75rem; padding: 12px; border-radius: 8px; border: none; cursor: pointer; transition: 0.3s; letter-spacing: 2px; text-transform: uppercase;">
                         QUICK SEND
                     </button>
                 </div>
