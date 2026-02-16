@@ -204,17 +204,45 @@ export async function renderLatestKarinPhoto(feedData) {
     if (!container) return;
 
     try {
-        // Use feedData if provided, otherwise fallback to any existing feed logic or clear
-        const items = feedData && Array.isArray(feedData) ? feedData : [];
+        // 1. DATA SOURCE: Priority to feedData, otherwise check window, otherwise check localStorage
+        let items = feedData && Array.isArray(feedData) ? feedData : [];
+
+        // Initial load logic: if no fresh feedData, try to recover from window or localStorage
         if (items.length === 0) {
-            // Container persists, just shows placeholder if no news yet
-            return;
+            if (window.LAST_NEWS_FEED && window.LAST_NEWS_FEED.length > 0) {
+                items = window.LAST_NEWS_FEED;
+            } else {
+                const cached = localStorage.getItem('lastQueenKarinPost');
+                if (cached) {
+                    try { items = [JSON.parse(cached)]; } catch (e) { }
+                }
+            }
         }
 
+        if (items.length === 0) return;
+
         const latest = items[0];
-        // News feed items typically use 'media' or 'url' 
-        const displayImg = latest.media || latest.url || latest.image || latest.proofUrl || "";
-        const safeImg = getOptimizedUrl(displayImg, 800);
+        // Cache for next page load
+        localStorage.setItem('lastQueenKarinPost', JSON.stringify(latest));
+        window.LAST_NEWS_FEED = items;
+
+        // 2. ROBUST URL RESOLVER (News Specific)
+        const getThumb = async (item, size) => {
+            let raw = item.image || item.img || item.thumbnail || item.cover || item.media || item.url || "";
+            if (typeof raw === 'string' && (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video'))) {
+                if (item.cover) raw = item.cover;
+                else if (item.thumbnail) raw = item.thumbnail;
+                else if (item.poster) raw = item.poster;
+            }
+            if (raw && raw.startsWith('wix:image')) {
+                try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
+            }
+            try {
+                return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
+            } catch (e) { return raw; }
+        };
+
+        const safeImg = await getThumb(latest, 800);
 
         container.innerHTML = `
             <div style="width:100%; height:100%; position:relative; overflow:hidden;">
@@ -222,7 +250,7 @@ export async function renderLatestKarinPhoto(feedData) {
                      style="width:100%; height:100%; object-fit:cover; transition: 1.2s cubic-bezier(0.4, 0, 0.2, 1); filter: brightness(0.8);"
                      onmouseover="this.style.transform='scale(1.15)'; this.style.filter='brightness(1.1)';"
                      onmouseout="this.style.transform='scale(1)'; this.style.filter='brightness(0.8)';"
-                     onerror="this.style.display='none'">
+                     onerror="this.src='https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png'">
                 <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:25px 15px 15px; text-align:center; pointer-events:none;">
                      <div style="font-family:'Cinzel'; font-size:0.75rem; color:var(--gold); letter-spacing:2px; font-weight:700; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${(latest.title || latest.text || "QUEEN KARIN").toUpperCase()}</div>
                      <div style="font-family:'Orbitron'; font-size:0.55rem; color:#fff; opacity:0.6; margin-top:5px; letter-spacing:1px;">CLICK TO ENTER SECTION</div>

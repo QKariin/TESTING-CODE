@@ -2945,7 +2945,10 @@ setInterval(() => {
 
 window.parent.postMessage({ type: "LOAD_Q_FEED" }, "*");
 window.parent.postMessage({ type: "UI_READY" }, "*");
-setTimeout(() => { if (window.renderDesktopRecord) window.renderDesktopRecord(); }, 1000); // Initial Desktop Load
+setTimeout(() => {
+    if (window.renderDesktopRecord) window.renderDesktopRecord();
+    if (typeof renderLatestKarinPhoto === 'function') renderLatestKarinPhoto();
+}, 1000); // Initial Desktop Load
 
 window.toggleMobileChat = function (open) {
     const btn = document.getElementById('btnEnterChatPanel');
