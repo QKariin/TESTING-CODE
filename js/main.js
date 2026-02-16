@@ -1598,7 +1598,7 @@ window.updateHierarchyDrawer = function () {
     });
 
     // 2. Render Requirements (The Ladder)
-    let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>`;
+    let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px; padding:0 8px;">PROMOTION REQUIREMENTS</div>`;
 
     // SVGs for Icons
     const ICONS = {
@@ -1620,10 +1620,10 @@ window.updateHierarchyDrawer = function () {
                 actionBtn = `<span onclick="window.openDataEntry('${r.id}')" style="cursor:pointer; color:#ffd700; font-size:0.6rem; border:1px solid #ffd700; padding:2px 6px; border-radius:4px; margin-left:8px;">ADD</span>`;
             }
             html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-family:'Orbitron'; font-size:0.65rem; border-bottom:1px solid #222; padding-bottom:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-family:'Orbitron'; font-size:0.65rem; border-bottom:1px solid #222; padding:0 10px 6px 10px;">
                 <div style="display:flex; align-items:center; color:${iconColor};">
                     <div style="width:16px; height:16px; fill:${iconColor}; margin-right:8px;">${ICONS[r.id] || ''}</div>
-                    <span>${r.label}</span>
+                    <span style="letter-spacing:1px;">${r.label}</span>
                 </div>
                 <div style="display:flex; align-items:center;">
                     <span style="color:${color}; letter-spacing:1px; opacity:0.7; font-size:0.55rem;">${r.status}</span>
@@ -1656,9 +1656,9 @@ window.updateHierarchyDrawer = function () {
             }
 
             html += `
-            <div style="margin-bottom:12px;">
-                <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${labelColor};">
-                    <span>${r.label}</span>
+            <div style="margin-bottom:12px; padding:0 8px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:5px; color:${labelColor};">
+                    <span style="letter-spacing:1px;">${r.label}</span>
                     <span style="color:${valColor}; opacity: 0.7; font-size: 0.55rem;">${valDisplay}</span>
                 </div>
                 <div style="width:100%; height:8px; background:#000; border:1px solid #333; border-radius:4px; overflow:hidden; position:relative;">
