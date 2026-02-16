@@ -1143,14 +1143,14 @@
    TOP: THE GOLDEN TRIPTYCH (Square Altar)
    ========================================= */
 .section-altar.triptych-stage {
-    flex: 0 0 260px !important;
-    height: 260px !important;
-    min-height: 260px !important;
+    flex: 0 0 280px !important;
+    height: 280px !important;
+    min-height: 280px !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
     position: relative !important;
-    background: transparent !important;
+    background: radial-gradient(circle at center, rgba(197, 160, 89, 0.05) 0%, transparent 70%) !important;
     z-index: 10;
     overflow: visible !important;
     border-bottom: 1px solid rgba(197, 160, 89, 0.1) !important;
@@ -1195,8 +1195,14 @@
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 20;
-    border: 1px solid rgba(255, 215, 0, 0.5);
-    box-shadow: 0 0 40px rgba(255, 215, 0, 0.25);
+    border: 2px solid var(--gold) !important;
+    box-shadow: 0 0 50px rgba(197, 160, 89, 0.3), inset 0 0 20px rgba(197, 160, 89, 0.2) !important;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.center-idol:hover {
+    transform: translate(-50%, -55%) scale(1.05);
+    box-shadow: 0 0 80px rgba(197, 160, 89, 0.5) !important;
 }
 
 .left-offering,
@@ -1259,11 +1265,23 @@
 
 
 /* =========================================
-   MIDDLE: THE ARCHIVE (STRICT FIX)
+   MIDDLE: THE ARCHIVE (VISION BENTO GRID)
    ========================================= */
-.section-archive {
-    flex: 1;
-    position: relative;
+.record-bento-container {
+    animation: fadeIn 0.8s ease-out;
+}
+
+.bento-section {
+    background: rgba(10, 10, 10, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-section:hover {
+    border-color: rgba(197, 160, 89, 0.2) !important;
+    background: rgba(0, 0, 0, 0.4) !important;
 }
 
 /* The Container (Strict Cage) */
@@ -1283,6 +1301,15 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden !important;
     /* FORCE CROP */
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+    border-radius: 12px;
+}
+
+.item-blueprint:hover {
+    transform: scale(1.08) translateY(-5px);
+    z-index: 100;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+    border-color: var(--gold);
 }
 
 /* Image Layer */
@@ -1300,8 +1327,32 @@
 
 .item-blueprint:hover .blueprint-img {
     opacity: 1;
-    filter: grayscale(0%);
+    filter: grayscale(0%) contrast(1.1);
     transform: scale(1.05);
+}
+
+/* --- THE VOID (DENIED) --- */
+.item-trash {
+    filter: grayscale(100%) brightness(0.5);
+    transition: all 0.3s ease;
+    border: 1px dashed rgba(255, 0, 60, 0.2) !important;
+}
+
+.item-trash:hover {
+    filter: grayscale(50%) brightness(0.8);
+    border-color: var(--neon-red) !important;
+    transform: rotate(-2deg) scale(1.05);
+}
+
+.trash-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    opacity: 0.3;
+}
+
+.item-trash:hover .trash-img {
+    opacity: 0.6;
 }
 
 /* LAYOUT: The Technical Corners */

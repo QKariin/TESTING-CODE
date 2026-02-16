@@ -171,6 +171,7 @@ export async function renderGallery() {
     const gridFailed = document.getElementById('gridFailed');
     const gridOkay = document.getElementById('gridOkay');
     const gridPending = document.getElementById('gridPending');
+    const gridRoutine = document.getElementById('gridRoutine');
     const historySection = document.getElementById('historySection');
 
     // Altar Slots (Desktop)
@@ -190,9 +191,10 @@ export async function renderGallery() {
     if (!gridFailed || !gridOkay) return;
 
     // Reset
-    gridFailed.innerHTML = "";
-    gridOkay.innerHTML = "";
+    if (gridFailed) gridFailed.innerHTML = "";
+    if (gridOkay) gridOkay.innerHTML = "";
     if (gridPending) gridPending.innerHTML = "";
+    if (gridRoutine) gridRoutine.innerHTML = "";
     if (recGrid) recGrid.innerHTML = "";
     if (recHeap) recHeap.innerHTML = "";
 
@@ -204,13 +206,7 @@ export async function renderGallery() {
         else historySection.classList.remove('solo-mode');
     }
 
-    // --- 3. SEPARATE LISTS (STRICTER) ---
-    /* 
-       LOGIC:
-       - FAILED: Explicit "Fail", "Reject", "Denied"
-       - PENDING: Explicit "Pending", "Wait", "Review" OR Empty Status (Assume pending if new)
-       - ACCEPTED: Everything else (Approved, Completed, or Legacy valid)
-    */
+    // --- 3. SEPARATE LISTS (5 CATEGORIES) ---
 
     // A. Denied
     const deniedList = allItems.filter(item => {
@@ -221,34 +217,32 @@ export async function renderGallery() {
     // B. Pending
     const pendingList = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
-        // If status is empty, treat as Pending (safer than Accepted)
         if (s === "") return true;
         return s.includes('pending') || s.includes('wait') || s.includes('review') || s.includes('process');
     });
 
-    // C. Accepted (Candidates)
-    const candidates = allItems.filter(item => {
-        if (deniedList.includes(item)) return false;
-        if (pendingList.includes(item)) return false;
-        return true;
+    // C. Accepted (Base)
+    const acceptedBase = allItems.filter(item => !deniedList.includes(item) && !pendingList.includes(item));
+
+    // D. Routine List (From Accepted)
+    const routineList = acceptedBase.filter(item => {
+        const cat = (item.category || "").toLowerCase();
+        const txt = (item.text || "").toLowerCase();
+        return cat === 'routine' || txt.includes('daily routine');
     });
 
-    // --- 4. ALTAR SORTING (HIGHEST RATED) ---
-    // User Request: "pictures with an highest rating"
-    // Sort by Points (Desc) -> Date (Desc)
-    candidates.sort((a, b) => {
+    // E. Standard Accepted (Excluding Routine and Altar Highlights)
+    const standardAccepted = acceptedBase.filter(item => !routineList.includes(item) && !bestOf.includes(item));
+
+    // F. Altar Sorting (Best of ALL Accepted)
+    const altarCandidates = [...acceptedBase].sort((a, b) => {
         const statsA = getPoints(a);
         const statsB = getPoints(b);
-        if (statsB !== statsA) return statsB - statsA; // Higher score first
-        return new Date(b.date || b._createdDate) - new Date(a.date || a._createdDate); // Then newer
+        if (statsB !== statsA) return statsB - statsA;
+        return new Date(b._createdDate) - new Date(a._createdDate);
     });
 
-    let bestOf = [];
-
-    // Take top 3 highest rated items
-    if (candidates.length > 0) bestOf.push(candidates.shift());
-    if (candidates.length > 0) bestOf.push(candidates.shift());
-    if (candidates.length > 0) bestOf.push(candidates.shift());
+    const bestOf = altarCandidates.slice(0, 3);
 
     // --- 5. IMAGE LOADER (SEQUENTIAL & ROBUST) ---
     const getThumb = async (item, size = 300) => {
@@ -360,23 +354,34 @@ export async function renderGallery() {
 
     // --- 7. EXECUTE RENDERS ---
 
-    // A. Accepted (Candidates)
-    // Note: Added 'await' because renderChunk is async again
-    const acceptedHTML = await renderChunk(candidates, false);
-    gridOkay.innerHTML = acceptedHTML.desk;
-    if (recGrid) recGrid.innerHTML += acceptedHTML.mob;
+    // A. Standard Accepted
+    if (gridOkay) {
+        const acceptedHTML = await renderChunk(standardAccepted, false);
+        gridOkay.innerHTML = acceptedHTML.desk;
+        if (recGrid) recGrid.innerHTML += acceptedHTML.mob;
+    }
 
-    // B. Pending
+    // B. Routine Record
+    if (gridRoutine) {
+        const routineHTML = await renderChunk(routineList, false);
+        gridRoutine.innerHTML = routineHTML.desk;
+        // Optional: on mobile we can merge or keep separate. Let's merge for now.
+        if (recGrid) recGrid.innerHTML += routineHTML.mob;
+    }
+
+    // C. Pending
     if (pendingList.length > 0) {
         const pendingHTML = await renderChunk(pendingList, false);
         if (gridPending) gridPending.innerHTML = pendingHTML.desk;
         if (recGrid) recGrid.innerHTML = pendingHTML.mob + recGrid.innerHTML;
     }
 
-    // C. Denied (Heap)
-    const deniedHTML = await renderChunk(deniedList, true);
-    gridFailed.innerHTML = deniedHTML.desk;
-    if (recHeap) recHeap.innerHTML = deniedHTML.mob;
+    // D. Denied (Heap)
+    if (gridFailed) {
+        const deniedHTML = await renderChunk(deniedList, true);
+        gridFailed.innerHTML = deniedHTML.desk;
+        if (recHeap) recHeap.innerHTML = deniedHTML.mob;
+    }
 
 
     // --- 8. RENDER DESKTOP ALTAR ---

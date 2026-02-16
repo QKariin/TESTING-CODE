@@ -1842,44 +1842,71 @@
                         0</div>
                 </div>
             </div>
-            <!-- THE COLDEN TRIPTYCH (ALTAR) -->
-            <div class="v-card section-altar triptych-stage" style="margin-bottom: 25px; padding: 0;">
-                <div class="altar-halo"></div>
+            <!-- THE VISION BENTO GRID -->
+            <div class="record-bento-container" style="display: flex; flex-direction: column; gap: 25px;">
 
-                <!-- SLOT 2: LEFT -->
-                <div id="altarSlot2" class="altar-card left-offering">
-                    <img id="imgSlot2" class="altar-img" src="">
-                </div>
-
-                <!-- SLOT 1: CENTER (HIGHEST) -->
-                <div id="altarSlot1" class="altar-card center-idol">
-                    <img id="imgSlot1" class="altar-img" src="">
-                    <div id="reflectSlot1" class="reflection-mask">
-                        <img src="" class="reflect-img">
+                <!-- 1. THE ALTAR (TOP PIER) -->
+                <div class="v-card section-altar triptych-stage"
+                    style="padding: 0; min-height: 280px; margin-bottom: 0;">
+                    <div class="ribbon-label" style="position: absolute; top: 15px; left: 20px; z-index: 20;">THE ALTAR
                     </div>
+                    <div class="altar-halo"></div>
+
+                    <!-- SLOT 2: LEFT -->
+                    <div id="altarSlot2" class="altar-card left-offering">
+                        <img id="imgSlot2" class="altar-img" src="">
+                    </div>
+
+                    <!-- SLOT 1: CENTER (HIGHEST) -->
+                    <div id="altarSlot1" class="altar-card center-idol">
+                        <img id="imgSlot1" class="altar-img" src="">
+                        <div id="reflectSlot1" class="reflection-mask">
+                            <img src="" class="reflect-img">
+                        </div>
+                    </div>
+
+                    <!-- SLOT 3: RIGHT -->
+                    <div id="altarSlot3" class="altar-card right-offering">
+                        <img id="imgSlot3" class="altar-img" src="">
+                    </div>
+
+                    <div class="gold-bar" style="position: absolute; bottom: 0; left: 0;"></div>
                 </div>
 
-                <!-- SLOT 3: RIGHT -->
-                <div id="altarSlot3" class="altar-card right-offering">
-                    <img id="imgSlot3" class="altar-img" src="">
-                </div>
+                <!-- 2. THE BENTO BODY -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
 
-                <div class="gold-bar" style="position: absolute; bottom: 0; left: 0;"></div>
-            </div>
+                    <!-- LEFT COL: ACCEPTED & ROUTINE -->
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="v-card bento-section" style="padding: 15px;">
+                            <div class="ribbon-label">ACCEPTED OFFERINGS</div>
+                            <div id="gridOkay" class="horizontal-scroll-track"
+                                style="height: 160px; padding-bottom: 5px;"></div>
+                        </div>
 
-            <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
-                <div class="ribbon-label" style="padding: 10px;">ACCEPTED OFFERINGS</div>
-                <div id="gridOkay" class="horizontal-scroll-track" style="height: 180px; padding-bottom: 10px;">
+                        <div class="v-card bento-section" style="padding: 15px;">
+                            <div class="ribbon-label">DAILY DISCIPLINE RECORD</div>
+                            <div id="gridRoutine" class="horizontal-scroll-track"
+                                style="height: 160px; padding-bottom: 5px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COL: PENDING & DENIED -->
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="v-card bento-section" style="padding: 15px;">
+                            <div class="ribbon-label">PENDING VERDICT</div>
+                            <div id="gridPending" class="horizontal-scroll-track"
+                                style="height: 160px; padding-bottom: 5px;"></div>
+                        </div>
+
+                        <div class="v-card bento-section" style="padding: 15px;">
+                            <div class="ribbon-label">THE VOID (DENIED)</div>
+                            <div id="gridFailed" class="horizontal-scroll-track"
+                                style="height: 160px; padding-bottom: 5px;"></div>
+                        </div>
+                    </div>
+
                 </div>
-            </div>
-            <div class="v-card" style="padding: 10px; margin-bottom: 20px;">
-                <div class="ribbon-label" style="padding: 10px;">PENDING VERDICT</div>
-                <div id="gridPending" class="horizontal-scroll-track" style="height: 180px; padding-bottom: 10px;">
-                </div>
-            </div>
-            <div class="v-card" style="padding: 10px;">
-                <div class="ribbon-label" style="padding: 10px;">DENIED / VOIDED</div>
-                <div id="gridFailed" class="horizontal-scroll-track" style="height: 180px; padding-bottom: 10px;"></div>
             </div>
         </div>
         <div id="viewNews" class="view-wrapper hidden v-span-4" style="padding: 0;">
