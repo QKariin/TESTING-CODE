@@ -127,17 +127,18 @@ export function renderWishlist(maxBudget = 999999) {
             const displayImg = item.img || item.image || "";
             const safeImg = getOptimizedUrl(displayImg, 400);
 
-            // UPDATED: Calls 'quickBuyItem' which we defined in main.js
             return `
-                <div class="store-item ${canAfford ? 'can-afford' : 'locked'}" style="cursor:pointer;" onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}, img:'${displayImg}'})">
+                <div class="store-item ${canAfford ? 'can-afford' : 'locked'}" style="cursor:default;">
                     <div class="si-img-box">
                         <img src="${safeImg}" class="si-img" onerror="this.style.display='none'">
                         <div class="si-price">${item.price} 🪙</div>
                     </div>
                     <div class="si-info">
                         <div class="si-name">${item.name}</div>
-                        <button class="si-btn">
-                            TRIBUTE
+                        <button class="si-btn" 
+                                onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}, img:'${displayImg}'})"
+                                style="background: var(--gold); color: #000; font-weight: bold; width: 100%; border-radius: 4px; padding: 8px 0; margin-top: 5px; border: none; font-family: 'Orbitron'; font-size: 0.7rem; cursor: pointer;">
+                            SEND TRIBUTE
                         </button>
                     </div>
                 </div>`;
@@ -161,18 +162,28 @@ export function renderQuickTributes() {
 
     container.innerHTML = selected.map(item => {
         const displayImg = item.img || item.image || "";
-        const safeImg = getOptimizedUrl(displayImg, 200);
+        const safeImg = getOptimizedUrl(displayImg, 400); // Higher res for larger cards
         const canAfford = gameStats.coins >= item.price;
 
         return `
-            <div class="v-card" style="padding: 8px; background: rgba(255,255,255,0.02); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; border: 1px solid rgba(255,255,255,0.05);" 
-                 onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}, img:'${displayImg}'})" 
-                 onmouseover="this.style.borderColor='var(--gold)'; this.style.background='rgba(197,160,89,0.05)'" 
-                 onmouseout="this.style.borderColor='rgba(255,255,255,0.05)'; this.style.background='rgba(255,255,255,0.02)'">
-                <img src="${safeImg}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+            <div class="v-card" style="padding: 10px; background: rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 10px; cursor: default; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); flex: 1; overflow: hidden;" 
+                 onmouseover="this.style.borderColor='rgba(197,160,89,0.3)'; this.style.background='rgba(197,160,89,0.02)'" 
+                 onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(255,255,255,0.03)'">
+                
+                <div style="position: relative; width: 100%; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                    <img src="${safeImg}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 5px 10px;">
+                        <span style="font-family:'Orbitron'; font-size:0.8rem; color:${canAfford ? 'var(--gold)' : '#ff4444'}; font-weight: bold;">${item.price} 🪙</span>
+                    </div>
+                </div>
+
                 <div style="flex: 1; min-width: 0;">
-                    <div style="font-family:'Cinzel'; font-size:0.6rem; color:#ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name.toUpperCase()}</div>
-                    <div style="font-family:'Orbitron'; font-size:0.75rem; color:${canAfford ? 'var(--gold)' : '#ff4444'}; font-weight: bold;">${item.price} 🪙</div>
+                    <div style="font-family:'Cinzel'; font-size:0.7rem; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; letter-spacing: 1px;">${item.name.toUpperCase()}</div>
+                    <button class="action-btn" 
+                            onclick="window.quickBuyItem({name:'${item.name}', price:${item.price}, img:'${displayImg}'})"
+                            style="width: 100%; background: var(--gold); color: #000; font-weight: bold; font-family: 'Orbitron'; font-size: 0.6rem; padding: 6px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); letter-spacing: 1px;">
+                        QUICK SEND
+                    </button>
                 </div>
             </div>
         `;
