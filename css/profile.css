@@ -1774,6 +1774,8 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center 20%;
+    /* Prioritize tops of images (faces/altars) */
     transition: transform 1.2s ease;
 }
 
@@ -1886,18 +1888,20 @@
 
 .chronicle-mosaic {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 200px;
+    grid-template-columns: repeat(5, 1fr);
+    grid-auto-rows: 240px;
     gap: 15px;
 }
 
-/* Bento Sizing */
+/* Bento Sizing Optimized for 9:16 Portrait */
 .m-wide {
     grid-column: span 2;
+    grid-row: span 1;
 }
 
 .m-tall {
     grid-row: span 2;
+    grid-column: span 1;
 }
 
 .m-big {

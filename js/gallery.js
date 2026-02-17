@@ -334,19 +334,24 @@ export async function renderGallery() {
     await renderMiniGrid(routineList, 'gridAltarRoutine');
     await renderMiniGrid(deniedList, 'gridAltarFailed');
 
-    // --- 5. RENDER MOSAIC (DEDICATED ENTRIES - PICTURES ONLY) ---
+    // --- 5. RENDER MOSAIC (DEDICATED ENTRIES - PORTRAIT OPTIMIZED) ---
     if (mosaicGrid) {
         // FILTER: Only show items that HAVE a proofUrl
         const approvedPictures = standardAccepted.filter(item => item.proofUrl && item.proofUrl.length > 10);
 
         const promises = approvedPictures.map(async (item, i) => {
-            const src = await getThumb(item, 400);
+            const src = await getThumb(item, 500);
             const idx = allItems.indexOf(item);
 
+            // BENTO LOGIC (5-Column Grid)
             let bentoClass = "";
-            if (i % 7 === 0) bentoClass = "m-big";
-            else if (i % 5 === 0) bentoClass = "m-wide";
-            else if (i % 3 === 0) bentoClass = "m-tall";
+            const mod = i % 11;
+            if (mod === 0) bentoClass = "m-big";      // 2x2
+            else if (mod === 2) bentoClass = "m-tall"; // 1x2 (Portrait)
+            else if (mod === 5) bentoClass = "m-tall"; // 1x2 (Portrait)
+            else if (mod === 8) bentoClass = "m-wide"; // 2x1
+            else if (mod === 10) bentoClass = "m-tall"; // 1x2 (Portrait)
+            // Others are standard 1x1
 
             const div = document.createElement('div');
             div.className = `mosaic-card ${bentoClass}`;
@@ -355,7 +360,7 @@ export async function renderGallery() {
                 <img src="${src}" class="hero-img" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
                 <div class="hero-overlay" style="padding: 15px;">
                     <div class="hero-label" style="font-size:0.5rem;">${(item.category || 'ENTRY').toUpperCase()}</div>
-                    <div class="hero-title" style="font-size:0.8rem;">${(item.text || '...').substring(0, 30)}</div>
+                    <div class="hero-title" style="font-size:0.75rem;">${(item.text || '...').substring(0, 30)}</div>
                 </div>
             `;
             return div;
