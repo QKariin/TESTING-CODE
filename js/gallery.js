@@ -253,20 +253,35 @@ export async function renderGallery() {
     };
 
     // --- 4. RENDER HERO SLOTS ---
-    const renderHero = async (item, target, size) => {
-        if (!item || !target.img) return;
+    const renderHero = async (item, target, size, containerId) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        if (!item || !target.img) {
+            container.style.opacity = "0.3"; // Dim empty slots
+            container.onclick = null;
+            if (target.img) target.img.src = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
+            if (target.title) target.title.innerText = "NO OFFERING";
+            return;
+        }
+
+        container.style.opacity = "1";
+        const idx = allItems.indexOf(item);
+        container.onclick = () => window.openHistoryModal(idx);
+
         const src = await getThumb(item, size);
         target.img.src = src;
+        target.img.onerror = () => { target.img.src = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; };
+
         if (target.title) {
             target.title.innerText = item.text || "SACRED OFFERING";
-            // If text is too long, truncate
             if (target.title.innerText.length > 50) target.title.innerText = target.title.innerText.substring(0, 47) + "...";
         }
     };
 
-    await renderHero(bestOf[0], heroMain, 800);
-    await renderHero(bestOf[1], heroSub1, 400);
-    await renderHero(bestOf[2], heroSub2, 400);
+    await renderHero(bestOf[0], heroMain, 800, 'altarMain');
+    await renderHero(bestOf[1], heroSub1, 400, 'altarSub1');
+    await renderHero(bestOf[2], heroSub2, 400, 'altarSub2');
 
     // --- 5. RENDER MOSAIC (CARDS) ---
     if (mosaicGrid) {
@@ -274,7 +289,6 @@ export async function renderGallery() {
             const src = await getThumb(item, 400);
             const idx = allItems.indexOf(item);
 
-            // Randomly assign bento classes for variety
             let bentoClass = "";
             if (i % 7 === 0) bentoClass = "m-big";
             else if (i % 5 === 0) bentoClass = "m-wide";
@@ -284,7 +298,7 @@ export async function renderGallery() {
             div.className = `mosaic-card ${bentoClass}`;
             div.onclick = () => window.openHistoryModal(idx);
             div.innerHTML = `
-                <img src="${src}" class="hero-img" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
+                <img src="${src}" class="hero-img" loading="lazy" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png'">
                 <div class="hero-overlay" style="padding: 15px;">
                     <div class="hero-label" style="font-size:0.5rem;">${(item.category || 'ENTRY').toUpperCase()}</div>
                     <div class="hero-title" style="font-size:0.8rem;">${(item.text || '...').substring(0, 30)}</div>
@@ -294,6 +308,10 @@ export async function renderGallery() {
         });
         const nodes = await Promise.all(promises);
         nodes.forEach(n => mosaicGrid.appendChild(n));
+
+        if (standardAccepted.length === 0) {
+            mosaicGrid.innerHTML = `<div style="grid-column: 1/-1; padding: 40px; text-align: center; font-family: 'Cinzel'; color: #444;">ECHOES OF THE PAST... (NO ADDITIONAL RECORDS)</div>`;
+        }
     }
 
     // --- 6. RENDER STATUS COLUMNS (SLATS) ---
@@ -318,14 +336,22 @@ export async function renderGallery() {
     };
 
     if (routineCol) {
-        const htmls = await Promise.all(routineList.map(item => renderSlat(item)));
-        routineCol.innerHTML = htmls.join('');
+        if (routineList.length > 0) {
+            const htmls = await Promise.all(routineList.map(item => renderSlat(item)));
+            routineCol.innerHTML = htmls.join('');
+        } else {
+            routineCol.innerHTML = `<div style="padding: 10px; color: #444; font-size: 0.7rem;">NO ROUTINE LOGS RECORDED.</div>`;
+        }
     }
 
     if (statusCol) {
         const combined = [...pendingList, ...deniedList];
-        const htmls = await Promise.all(combined.map(item => renderSlat(item)));
-        statusCol.innerHTML = htmls.join('');
+        if (combined.length > 0) {
+            const htmls = await Promise.all(combined.map(item => renderSlat(item)));
+            statusCol.innerHTML = htmls.join('');
+        } else {
+            statusCol.innerHTML = `<div style="padding: 10px; color: #444; font-size: 0.7rem;">THE VOID IS SILENT.</div>`;
+        }
     }
 
     // --- 7. MOBILE FALLBACKS ---
@@ -336,12 +362,12 @@ export async function renderGallery() {
             el.src = url;
             el.style.filter = "none";
             el.onerror = function () {
-                this.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
+                this.src = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
                 this.style.filter = "grayscale(100%) brightness(0.5)";
             };
             el.onclick = () => window.openHistoryModal(allItems.indexOf(item));
         } else {
-            el.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
+            el.src = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
             el.style.filter = "grayscale(100%) brightness(0.5)";
         }
     };
