@@ -43,13 +43,26 @@ function normalizeGalleryItem(item) {
 
     // 2. Find Proof URL (Aggressive Search)
     if (!item.proofUrl || item.proofUrl.length < 5) {
-        const candidates = ['media', 'file', 'evidence', 'url', 'image', 'src', 'attachment', 'photo', 'cover', 'thumbnail', 'poster'];
+        // PRIORITIZE: 'file', 'evidence', 'proofUrl', 'attachment'
+        // BLACKLIST: 'avatar', 'profile', 'userImage', 'ownerAvatar'
+        const candidates = ['file', 'evidence', 'proofUrl', 'attachment', 'media', 'url', 'image', 'src', 'photo', 'cover', 'thumbnail', 'poster'];
+        const blacklist = ['avatar', 'profile', 'userimage', 'owneravatar'];
+
         for (let key of candidates) {
             if (item[key] && typeof item[key] === 'string' && item[key].length > 5) {
-                // Ignore "Avatar" completely - User does not want profile pics as evidence
-                if (key === 'avatar') continue;
+                // Robust Blacklist Check
+                const lowKey = key.toLowerCase();
+                if (blacklist.some(b => lowKey.includes(b))) continue;
+
+                // Value Check: If the URL itself contains "avatar", skip it
+                const val = item[key].toLowerCase();
+                if (val.includes('avatar') || val.includes('profile')) continue;
 
                 item.proofUrl = item[key];
+                break;
+            } else if (item[key] && typeof item[key] === 'object' && item[key].src) {
+                // Handle Wix Media Object
+                item.proofUrl = item[key].src;
                 break;
             }
         }
@@ -88,16 +101,19 @@ export function getGalleryList() {
         if (cat === 'profile' || cat === 'system' || cat === 'level' || cat === 'badge' || cat === 'rank') return false;
 
         // 4. BLOCK AVATARS (Image Comparison)
-        // If the proofUrl matches the user's current profile picture, it's not a task proof.
-        if (userProfile && userProfile.profilePicture && i.proofUrl) {
-            // Check for exact match or Wix media ID match
-            if (i.proofUrl === userProfile.profilePicture) return false;
-            if (userProfile.profilePicture.includes(i.proofUrl)) return false;
+        if (i.proofUrl) {
+            const lowerUrl = i.proofUrl.toLowerCase();
+            // Aggressive string checks
+            if (lowerUrl.includes('avatar') || lowerUrl.includes('profilepic') || lowerUrl.includes('userimage')) return false;
 
-            // Wix often appends dims to the end, so check pure filename if possible
-            const p1 = i.proofUrl.split('/').pop().split('.')[0];
-            const p2 = userProfile.profilePicture.split('/').pop().split('.')[0];
-            if (p1.length > 5 && p1 === p2) return false;
+            if (userProfile && userProfile.profilePicture) {
+                if (i.proofUrl === userProfile.profilePicture) return false;
+                if (userProfile.profilePicture.includes(i.proofUrl)) return false;
+
+                const p1 = i.proofUrl.split('/').pop().split('.')[0];
+                const p2 = userProfile.profilePicture.split('/').pop().split('.')[0];
+                if (p1.length > 5 && p1 === p2) return false;
+            }
         }
 
         return true;
@@ -228,7 +244,10 @@ export async function renderGallery() {
     // --- 3. HELPERS ---
     const getThumb = async (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
-        let raw = item.proofUrl || item.media || item.url || item.image || "";
+
+        // STRICT: Only use proofUrl (which we cleaned in normalizeGalleryItem)
+        let raw = item.proofUrl || "";
+
         if (typeof raw === 'object' && raw.src) raw = raw.src;
         if (!raw || typeof raw !== 'string' || raw.length < 5) return PLACEHOLDER_IMG;
 
