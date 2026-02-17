@@ -274,14 +274,15 @@ export async function renderGallery() {
     };
 
     // --- 4. RENDER HERO SLOTS ---
+    // --- 4. RENDER HERO & MINI-GRIDS ---
     const renderHero = async (item, target, size, containerId) => {
         const container = document.getElementById(containerId);
         if (!container) return;
 
         if (!item || !target.img) {
-            container.style.opacity = "0.3"; // Dim empty slots
+            container.style.opacity = "0.3";
             container.onclick = null;
-            if (target.img) target.img.src = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
+            if (target.img) target.img.src = PLACEHOLDER_IMG;
             if (target.title) target.title.innerText = "NO OFFERING";
             return;
         }
@@ -292,7 +293,7 @@ export async function renderGallery() {
 
         const src = await getThumb(item, size);
         target.img.src = src;
-        target.img.onerror = () => { target.img.src = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"; };
+        target.img.onerror = () => { target.img.src = PLACEHOLDER_IMG; };
 
         if (target.title) {
             target.title.innerText = item.text || "SACRED OFFERING";
@@ -300,13 +301,37 @@ export async function renderGallery() {
         }
     };
 
-    await renderHero(bestOf[0], heroMain, 800, 'altarMain');
-    await renderHero(bestOf[1], heroSub1, 400, 'altarSub1');
-    await renderHero(bestOf[2], heroSub2, 400, 'altarSub2');
+    const renderMiniGrid = async (list, containerId) => {
+        const grid = document.getElementById(containerId);
+        if (!grid) return;
 
-    // --- 5. RENDER MOSAIC (CARDS) ---
+        if (list.length === 0) {
+            grid.innerHTML = '<div class="mini-empty">SILENT VOID</div>';
+            return;
+        }
+
+        const promises = list.slice(0, 6).map(async item => {
+            const src = await getThumb(item, 150);
+            const idx = allItems.indexOf(item);
+            return `<img src="${src}" class="mini-thumb" onclick="window.openHistoryModal(${idx})" onerror="this.src='${PLACEHOLDER_IMG}'">`;
+        });
+        const thumbs = await Promise.all(promises);
+        grid.innerHTML = thumbs.join('');
+    };
+
+    // 4a. Hero Main
+    await renderHero(bestOf[0], heroMain, 800, 'altarMain');
+
+    // 4b. Mini Grids
+    await renderMiniGrid(routineList, 'gridAltarRoutine');
+    await renderMiniGrid(deniedList, 'gridAltarFailed');
+
+    // --- 5. RENDER MOSAIC (DEDICATED ENTRIES - PICTURES ONLY) ---
     if (mosaicGrid) {
-        const promises = standardAccepted.map(async (item, i) => {
+        // FILTER: Only show items that HAVE a proofUrl
+        const approvedPictures = standardAccepted.filter(item => item.proofUrl && item.proofUrl.length > 10);
+
+        const promises = approvedPictures.map(async (item, i) => {
             const src = await getThumb(item, 400);
             const idx = allItems.indexOf(item);
 
@@ -319,7 +344,7 @@ export async function renderGallery() {
             div.className = `mosaic-card ${bentoClass}`;
             div.onclick = () => window.openHistoryModal(idx);
             div.innerHTML = `
-                <img src="${src}" class="hero-img" loading="lazy" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png'">
+                <img src="${src}" class="hero-img" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
                 <div class="hero-overlay" style="padding: 15px;">
                     <div class="hero-label" style="font-size:0.5rem;">${(item.category || 'ENTRY').toUpperCase()}</div>
                     <div class="hero-title" style="font-size:0.8rem;">${(item.text || '...').substring(0, 30)}</div>
@@ -330,8 +355,8 @@ export async function renderGallery() {
         const nodes = await Promise.all(promises);
         nodes.forEach(n => mosaicGrid.appendChild(n));
 
-        if (standardAccepted.length === 0) {
-            mosaicGrid.innerHTML = `<div style="grid-column: 1/-1; padding: 40px; text-align: center; font-family: 'Cinzel'; color: #444;">ECHOES OF THE PAST... (NO ADDITIONAL RECORDS)</div>`;
+        if (approvedPictures.length === 0) {
+            mosaicGrid.innerHTML = `<div style="grid-column: 1/-1; padding: 40px; text-align: center; font-family: 'Cinzel'; color: #444;">NO APPROVED VISUALS RECORDED.</div>`;
         }
     }
 
