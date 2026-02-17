@@ -205,10 +205,24 @@ export async function renderGallery() {
     // --- 2. GET DATA ---
     const allItems = getGalleryList();
 
-    // Separate Lists
+    // 2a. REJECTED (Mini-Grid Target)
     const deniedList = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
-        return s.includes('rej') || s.includes('fail') || s.includes('deni') || s.includes('refus');
+        return s.includes('rej');
+    });
+
+    // 2b. APPROVED (Centerpiece & Mosaic Target)
+    const approvedList = allItems.filter(item => {
+        const s = (item.status || "").toLowerCase();
+        return s.includes('appr');
+    });
+
+    // 2c. ROUTINES (Mini-Grid Target - Track where they upload it)
+    const routineList = allItems.filter(item => {
+        const cat = (item.category || "").toLowerCase();
+        const txt = (item.text || "").toLowerCase();
+        const isRoutine = item.isRoutine === true;
+        return isRoutine || cat === 'routine' || txt.includes('daily routine');
     });
 
     const pendingList = allItems.filter(item => {
@@ -217,9 +231,8 @@ export async function renderGallery() {
         return s.includes('pending') || s.includes('wait') || s.includes('review') || s.includes('process');
     });
 
-    const acceptedBase = allItems.filter(item => !deniedList.includes(item) && !pendingList.includes(item));
-
-    const altarCandidates = [...acceptedBase].sort((a, b) => {
+    // 2d. ALTAR CANDIDATES (Approved only)
+    const altarCandidates = [...approvedList].sort((a, b) => {
         const statsA = getPoints(a);
         const statsB = getPoints(b);
         if (statsB !== statsA) return statsB - statsA;
@@ -228,13 +241,8 @@ export async function renderGallery() {
 
     const bestOf = altarCandidates.slice(0, 3);
 
-    const routineList = acceptedBase.filter(item => {
-        const cat = (item.category || "").toLowerCase();
-        const txt = (item.text || "").toLowerCase();
-        return cat === 'routine' || txt.includes('daily routine');
-    });
-
-    const standardAccepted = acceptedBase.filter(item => !routineList.includes(item) && !bestOf.includes(item));
+    // Standard accepted for mosaic (Approved pictures excluding Hero)
+    const standardAccepted = approvedList.filter(item => !bestOf.includes(item));
 
     window.lastCategoryData = {
         accepted: standardAccepted,
