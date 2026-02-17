@@ -21,11 +21,18 @@ import { getOptimizedUrl, getThumbnail, getSignedUrl } from './media.js';
 // STICKERS
 const STICKER_APPROVE = "https://static.wixstatic.com/media/ce3e5b_a19d81b7f45c4a31a4aeaf03a41b999f~mv2.png";
 const STICKER_DENIED = "https://static.wixstatic.com/media/ce3e5b_63a0c8320e29416896d071d5b46541d7~mv2.png";
-const PLACEHOLDER_IMG = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
+const PLACEHOLDER_IMG = "https://static.wixstatic.com/media/ce3e5b_33f53711eece453da8f3d04caddd7743~mv2.png";
 const IMG_QUEEN_MAIN = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
 const IMG_STATUE_SIDE = "https://static.wixstatic.com/media/ce3e5b_5424edc9928d49e5a3c3a102cb4e3525~mv2.png";
 const IMG_MIDDLE_EMPTY = "https://static.wixstatic.com/media/ce3e5b_1628753a2b5743f1bef739cc392c67b5~mv2.webp";
-const IMG_BOTTOM_EMPTY = "https://static.wixstatic.com/media/ce3e5b_33f53711eece453da8f3d04caddd7743~mv2.png";
+
+// "FOREVER FIX" BLACKLIST: Exact Wix IDs of Queen headshots/avatars
+const BLACKLIST_IDS = [
+    '5fc6a144908b493b9473757471ec7ebb', // Queen Main Avatar
+    '1bd27ba758ce465fa89a36d70a68f355', // Previous Placeholder (Queen Headshot)
+    'ce3e5b_5fc6a144908b493b9473757471ec7ebb',
+    'ce3e5b_1bd27ba758ce465fa89a36d70a68f355'
+];
 
 let activeStickerFilter = "ALL";
 
@@ -35,6 +42,17 @@ function getPoints(item) {
     return Number(val);
 }
 
+// --- HELPER: BLACKLIST CHECK ---
+function isBlacklisted(url) {
+    if (!url || typeof url !== 'string') return false;
+    const lower = url.toLowerCase();
+    // 1. Text-based blacklist
+    if (lower.includes('avatar') || lower.includes('profilepic') || lower.includes('userimage')) return true;
+
+    // 2. Exact ID-based blacklist
+    return BLACKLIST_IDS.some(id => lower.includes(id.toLowerCase()));
+}
+
 function normalizeGalleryItem(item) {
     if (!item) return;
 
@@ -42,27 +60,22 @@ function normalizeGalleryItem(item) {
     if (!item.status) item.status = "";
 
     // 2. Find Proof URL (Aggressive Search)
-    if (!item.proofUrl || item.proofUrl.length < 5) {
-        // PRIORITIZE: 'file', 'evidence', 'proofUrl', 'attachment'
-        // BLACKLIST: 'avatar', 'profile', 'userImage', 'ownerAvatar'
+    if (!item.proofUrl || item.proofUrl.length < 5 || isBlacklisted(item.proofUrl)) {
+        item.proofUrl = ""; // Reset if blacklisted or empty
+
         const candidates = ['file', 'evidence', 'proofUrl', 'attachment', 'media', 'url', 'image', 'src', 'photo', 'cover', 'thumbnail', 'poster'];
-        const blacklist = ['avatar', 'profile', 'userimage', 'owneravatar'];
+        const blacklistKeys = ['avatar', 'profile', 'userimage', 'owneravatar'];
 
         for (let key of candidates) {
-            if (item[key] && typeof item[key] === 'string' && item[key].length > 5) {
-                // Robust Blacklist Check
+            let val = item[key];
+            if (val && typeof val === 'object' && val.src) val = val.src;
+
+            if (val && typeof val === 'string' && val.length > 5) {
                 const lowKey = key.toLowerCase();
-                if (blacklist.some(b => lowKey.includes(b))) continue;
+                if (blacklistKeys.some(b => lowKey.includes(b))) continue;
+                if (isBlacklisted(val)) continue;
 
-                // Value Check: If the URL itself contains "avatar", skip it
-                const val = item[key].toLowerCase();
-                if (val.includes('avatar') || val.includes('profile')) continue;
-
-                item.proofUrl = item[key];
-                break;
-            } else if (item[key] && typeof item[key] === 'object' && item[key].src) {
-                // Handle Wix Media Object
-                item.proofUrl = item[key].src;
+                item.proofUrl = val;
                 break;
             }
         }
@@ -101,20 +114,9 @@ export function getGalleryList() {
         if (cat === 'profile' || cat === 'system' || cat === 'level' || cat === 'badge' || cat === 'rank') return false;
 
         // 4. BLOCK AVATARS (Image Comparison)
-        if (i.proofUrl) {
-            const lowerUrl = i.proofUrl.toLowerCase();
-            // Aggressive string checks
-            if (lowerUrl.includes('avatar') || lowerUrl.includes('profilepic') || lowerUrl.includes('userimage')) return false;
-
-            if (userProfile && userProfile.profilePicture) {
-                if (i.proofUrl === userProfile.profilePicture) return false;
-                if (userProfile.profilePicture.includes(i.proofUrl)) return false;
-
-                const p1 = i.proofUrl.split('/').pop().split('.')[0];
-                const p2 = userProfile.profilePicture.split('/').pop().split('.')[0];
-                if (p1.length > 5 && p1 === p2) return false;
-            }
-        }
+        // We DON'T block items from the list just because they have an avatar.
+        // We let them through so the task is visible, but we swap the image for a placeholder in rendering.
+        // However, we still block strict Profile/System categories.
 
         return true;
     });
