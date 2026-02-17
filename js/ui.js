@@ -37,7 +37,7 @@ export function switchTab(mode) {
 
     // 4. Hide all views
     const allViews = [
-        'viewServingTop', 'viewNews', 'viewSession',
+        'viewServingTop', 'viewServingTopDesktop', 'viewNews', 'viewSession',
         'viewVault', 'viewProtocol', 'viewBuy',
         'viewTribute', 'viewHierarchy', 'viewRewards', 'historySection'
     ];
@@ -76,10 +76,10 @@ export function switchTab(mode) {
                     chatEl.classList.remove('hidden');
                     chatEl.style.display = 'flex';
                 }
-            }
-
-            // New Layout Logic
-            if (['viewNews', 'viewVault', 'historySection', 'viewServingTop', 'viewBuy'].includes(targetId)) {
+                targetEl.style.display = 'grid'; // Ensure grid for desktop dashboard
+            } else if (targetId === 'viewServingTop') {
+                targetEl.style.display = 'flex'; // Mobile dashboard
+            } else if (['viewNews', 'viewVault', 'historySection', 'viewBuy'].includes(targetId)) {
                 targetEl.style.display = 'flex';
                 targetEl.style.flexDirection = 'column';
             } else {
