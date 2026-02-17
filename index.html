@@ -1919,7 +1919,7 @@
         <!-- EXCHEQUER VIEW (Correct Location: Outside Dashboard, Inside Desktop App) -->
         <div id="viewBuy" class="v-card v-span-4 hidden" style="flex-direction: column; gap: 20px;">
             <!-- TITLE -->
-            <div class="ribbon-label" style="align-self: flex-start;">EXCHEQUER & TRIBUTE</div>
+            <div class="ribbon-label" style="align-self: flex-start;">EXCHEQUER</div>
             <!-- TOP SECTION: FEES & HISTORY -->
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; width:100%;">
                 <div style="background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 10px;">
@@ -1940,14 +1940,6 @@
                 </div>
             </div>
 
-            <!-- TRIBUTE STORE (Rendered by JS) -->
-            <div class="ribbon-label"
-                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">
-                TRIBUTE STORE</div>
-            <div id="storeGrid" class="store-grid"
-                style="grid-template-columns: repeat(3, 1fr); gap: 20px; min-height: 100px;">
-                <!-- Wishlist items load here -->
-            </div>
 
             <!-- STRIPE COIN PACKAGES -->
             <div class="ribbon-label"
@@ -1984,6 +1976,16 @@
                     <button class="action-btn" onclick="buyRealCoins(150000)"
                         style="font-size: 0.8rem; background: var(--blue-accent); color: white; border: none;">€1000.00</button>
                 </div>
+            </div>
+
+            <!-- SUBSCRIPTIONS -->
+            <div class="ribbon-label"
+                style="align-self: flex-start; margin-top: 10px; font-size: 0.6rem; opacity: 0.8;">
+                SUBSCRIPTIONS</div>
+            <div
+                style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 30px; border-radius: 12px; text-align: center;">
+                <div style="font-family: 'Cinzel'; color: #666; font-size: 0.8rem;">ACCESSING PROTOCOL TIERS...</div>
+                <div style="margin-top: 10px; font-size: 0.6rem; color: #444;">(SUBSCRIPTIONS COMING SOON)</div>
             </div>
         </div> <!-- END viewBuy -->
 

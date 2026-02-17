@@ -97,11 +97,8 @@ export function switchTab(mode) {
         renderVault();
     }
 
-    if ((mode === 'buy' || mode === 'record' || mode === 'history')) {
+    if ((mode === 'record' || mode === 'history')) {
         if (typeof renderGallery === 'function') renderGallery();
-        if (mode === 'buy' && typeof renderWishlist === 'function') {
-            renderWishlist();
-        }
     }
 }
 
