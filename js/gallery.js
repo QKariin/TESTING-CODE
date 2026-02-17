@@ -151,74 +151,56 @@ export async function renderGallery() {
     if (!galleryData) return;
 
     // --- 0. STATE CHECK (PREVENT BLINKING) ---
-    // Create a signature of the current state: Data Length + Data Timestamp + Filter
     const newestItem = galleryData.length > 0 ? galleryData[0]._createdDate : "0";
     const stateSig = `${galleryData.length}-${newestItem}-${activeStickerFilter}`;
 
-    // If state hasn't changed, DO NOT TOUCH THE DOM
     if (window.lastGalleryRenderState === stateSig) return;
     window.lastGalleryRenderState = stateSig;
 
     // --- 1. TARGETS ---
-    const gridFailed = document.getElementById('gridFailed');
-    const gridOkay = document.getElementById('gridOkay');
-    const gridPending = document.getElementById('gridPending');
-    const gridRoutine = document.getElementById('gridRoutine');
     const historySection = document.getElementById('historySection');
-    const orbitalCanvas = document.getElementById('orbitalCanvas');
+    const mosaicGrid = document.getElementById('mosaicGrid');
+    const routineCol = document.getElementById('routineColumn');
+    const statusCol = document.getElementById('statusColumn');
 
-    // Altar Slots (Desktop)
-    const slot1 = { card: document.getElementById('altarSlot1'), img: document.getElementById('imgSlot1'), ref: document.getElementById('reflectSlot1') };
-    const slot2 = { card: document.getElementById('altarSlot2'), img: document.getElementById('imgSlot2') };
-    const slot3 = { card: document.getElementById('altarSlot3'), img: document.getElementById('imgSlot3') };
+    // Hero Slots
+    const heroMain = { img: document.getElementById('imgAltarMain'), title: document.getElementById('titleAltarMain') };
+    const heroSub1 = { img: document.getElementById('imgAltarSub1'), title: document.getElementById('titleAltarSub1') };
+    const heroSub2 = { img: document.getElementById('imgAltarSub2'), title: document.getElementById('titleAltarSub2') };
 
-    // Mobile Altar Slots
+    // Mobile Targets (Keeping for fallback/sync)
+    const recGrid = document.getElementById('mobRec_Grid');
+    const recHeap = document.getElementById('mobRec_Heap');
     const mob1 = document.getElementById('mobRec_Slot1');
     const mob2 = document.getElementById('mobRec_Slot2');
     const mob3 = document.getElementById('mobRec_Slot3');
 
-    // Mobile Lists
-    const recGrid = document.getElementById('mobRec_Grid');
-    const recHeap = document.getElementById('mobRec_Heap');
-
-    // EMERGENCY CHECK: If we have NO Desktop/Mobile container, stop
     if (!historySection && !recGrid) return;
 
-    // Reset Existing Containers (Only if they exist)
-    if (gridFailed) gridFailed.innerHTML = "";
-    if (gridOkay) gridOkay.innerHTML = "";
-    if (gridPending) gridPending.innerHTML = "";
-    if (gridRoutine) gridRoutine.innerHTML = "";
+    // Reset Containers
+    if (mosaicGrid) mosaicGrid.innerHTML = "";
+    if (routineCol) routineCol.innerHTML = "";
+    if (statusCol) statusCol.innerHTML = "";
     if (recGrid) recGrid.innerHTML = "";
     if (recHeap) recHeap.innerHTML = "";
 
     // --- 2. GET DATA ---
     const allItems = getGalleryList();
 
-    if (historySection) {
-        if (allItems.length === 0) historySection.classList.add('solo-mode');
-        else historySection.classList.remove('solo-mode');
-    }
-
-    // --- 3. SEPARATE LISTS (5 CATEGORIES) ---
-
-    // A. Denied
+    // Separate Lists
     const deniedList = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
         return s.includes('rej') || s.includes('fail') || s.includes('deni') || s.includes('refus');
     });
 
-    // B. Pending
     const pendingList = allItems.filter(item => {
         const s = (item.status || "").toLowerCase();
         if (s === "") return true;
         return s.includes('pending') || s.includes('wait') || s.includes('review') || s.includes('process');
     });
 
-    // C. Accepted (Base)
     const acceptedBase = allItems.filter(item => !deniedList.includes(item) && !pendingList.includes(item));
 
-    // D. Altar Sorting (Best of ALL Accepted)
     const altarCandidates = [...acceptedBase].sort((a, b) => {
         const statsA = getPoints(a);
         const statsB = getPoints(b);
@@ -228,17 +210,14 @@ export async function renderGallery() {
 
     const bestOf = altarCandidates.slice(0, 3);
 
-    // E. Routine List (From Accepted)
     const routineList = acceptedBase.filter(item => {
         const cat = (item.category || "").toLowerCase();
         const txt = (item.text || "").toLowerCase();
         return cat === 'routine' || txt.includes('daily routine');
     });
 
-    // F. Standard Accepted (Excluding Routine and Altar Highlights)
     const standardAccepted = acceptedBase.filter(item => !routineList.includes(item) && !bestOf.includes(item));
 
-    // --- 4. CACHE FOR ORBITAL NODES ---
     window.lastCategoryData = {
         accepted: standardAccepted,
         routine: routineList,
@@ -246,35 +225,19 @@ export async function renderGallery() {
         denied: deniedList
     };
 
-    // --- 5. IMAGE LOADER (SEQUENTIAL & ROBUST) ---
+    // --- 3. HELPERS ---
     const getThumb = async (item, size = 300) => {
         if (!item) return PLACEHOLDER_IMG;
-
-        // 1. Get Initial Raw URL
         let raw = item.proofUrl || item.media || item.url || item.image || "";
         if (typeof raw === 'object' && raw.src) raw = raw.src;
-
         if (!raw || typeof raw !== 'string' || raw.length < 5) return PLACEHOLDER_IMG;
 
-        // *** FIX 1: FORCE IMAGE FORMAT FOR BYTESCALE ***
         if (raw.includes("upcdn.io")) {
-            // Convert /raw/ to /image/ so we get a JPG (Fixes Videos & iPhone HEIC)
             let thumbUrl = raw.replace('/raw/', '/image/');
-            if (!thumbUrl.includes('?')) {
-                thumbUrl += `?w=${size}&h=${size}&fit=crop&f=jpg&q=80`;
-            }
-
-            // Attempt to sign the *Thumbnail* URL, not the Raw one
-            try {
-                return await getSignedUrl(thumbUrl);
-            } catch (e) {
-                // If signing fails, return the unsigned JPG link. 
-                // It is better to try loading an image than a raw video.
-                return thumbUrl;
-            }
+            if (!thumbUrl.includes('?')) thumbUrl += `?w=${size}&h=${size}&fit=crop&f=jpg&q=80`;
+            try { return await getSignedUrl(thumbUrl); } catch (e) { return thumbUrl; }
         }
 
-        // 2. Standard Logic for Non-Bytescale
         if (raw.includes('.mp4') || raw.includes('.mov') || raw.includes('.webm') || raw.startsWith('wix:video')) {
             if (item.cover) raw = item.cover;
             else if (item.thumbnail) raw = item.thumbnail;
@@ -285,194 +248,113 @@ export async function renderGallery() {
             try { raw = "https://static.wixstatic.com/media/" + raw.split('/')[3].split('#')[0]; } catch (e) { }
         }
 
-        try {
-            return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size)));
-        } catch (e) {
-            return raw;
+        try { return await getSignedUrl(getThumbnail(getOptimizedUrl(raw, size))); }
+        catch (e) { return raw; }
+    };
+
+    // --- 4. RENDER HERO SLOTS ---
+    const renderHero = async (item, target, size) => {
+        if (!item || !target.img) return;
+        const src = await getThumb(item, size);
+        target.img.src = src;
+        if (target.title) {
+            target.title.innerText = item.text || "SACRED OFFERING";
+            // If text is too long, truncate
+            if (target.title.innerText.length > 50) target.title.innerText = target.title.innerText.substring(0, 47) + "...";
         }
     };
 
-    // --- 6. RENDER TRACKS (ASYNC PARALLEL - RESTORED) ---
-    const renderChunk = async (list, isTrash) => {
-        if (!list || list.length === 0) return { desk: "", mob: "" };
+    await renderHero(bestOf[0], heroMain, 800);
+    await renderHero(bestOf[1], heroSub1, 400);
+    await renderHero(bestOf[2], heroSub2, 400);
 
-        // We process all items in parallel to resolve their URLs
-        const promises = list.map(async (item) => {
+    // --- 5. RENDER MOSAIC (CARDS) ---
+    if (mosaicGrid) {
+        const promises = standardAccepted.map(async (item, i) => {
+            const src = await getThumb(item, 400);
             const idx = allItems.indexOf(item);
 
-            // 1. Get the Resolved URL (Async)
-            // This handles Wix, Bytescale, Video Posters, everything.
-            let src = await getThumb(item, 300);
+            // Randomly assign bento classes for variety
+            let bentoClass = "";
+            if (i % 7 === 0) bentoClass = "m-big";
+            else if (i % 5 === 0) bentoClass = "m-wide";
+            else if (i % 3 === 0) bentoClass = "m-tall";
 
-            const imgStyle = isTrash ? 'filter: grayscale(100%) brightness(0.7);' : '';
-
-            // Video Indicator
-            const raw = (item.proofUrl || item.media || item.url || "").toLowerCase();
-            const isVideo = raw.includes('video') || raw.includes('.mp4') || raw.includes('.mov');
-            const videoIcon = isVideo ? `<div class="video-indicator">▶</div>` : "";
-
-            const isPending = (item.status || "").toLowerCase().includes('pending');
-            const overlay = isPending ? `<div class="pending-overlay"><div class="pending-badge">AWAITING<br>VERDICT</div></div>` : ``;
-            const mobBadge = isPending ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;"><div class="pending-badge" style="font-size:0.4rem; padding:3px; border-width:1px;">WATCHING</div></div>` : ``;
-
-            let stickerHtml = "";
-            if (item.sticker && !isTrash && !isPending) {
-                stickerHtml = `<img src="${item.sticker}" class="gallery-sticker-badge">`;
-            }
-
-            const desk = `
-                <div class="${isTrash ? 'item-trash' : 'item-blueprint'}" onclick="window.openHistoryModal(${idx})">
-                    <img class="${isTrash ? 'trash-img' : 'blueprint-img'}" 
-                         src="${src}" 
-                         loading="lazy" 
-                         style="${imgStyle}"
-                         onerror="this.src='${PLACEHOLDER_IMG}'">
-                    ${videoIcon}
-                    ${stickerHtml}
-                    ${isTrash ? '<div class="trash-stamp">DENIED</div>' : ''}
-                    ${overlay}
-                </div>`;
-
-            const mob = `
-                <div class="mob-scroll-item" onclick="window.openHistoryModal(${idx})" style="${isTrash ? 'height:80px; width:80px;' : ''}">
-                    <img src="${src}" class="mob-scroll-img" 
-                         loading="lazy" 
-                         style="${imgStyle}" 
-                         onerror="this.src='${PLACEHOLDER_IMG}'">
-                    ${videoIcon}
-                    ${stickerHtml}
-                    ${mobBadge}
-                </div>`;
-
-            return { desk, mob };
+            const div = document.createElement('div');
+            div.className = `mosaic-card ${bentoClass}`;
+            div.onclick = () => window.openHistoryModal(idx);
+            div.innerHTML = `
+                <img src="${src}" class="hero-img" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'">
+                <div class="hero-overlay" style="padding: 15px;">
+                    <div class="hero-label" style="font-size:0.5rem;">${(item.category || 'ENTRY').toUpperCase()}</div>
+                    <div class="hero-title" style="font-size:0.8rem;">${(item.text || '...').substring(0, 30)}</div>
+                </div>
+            `;
+            return div;
         });
+        const nodes = await Promise.all(promises);
+        nodes.forEach(n => mosaicGrid.appendChild(n));
+    }
 
-        const results = await Promise.all(promises);
-        return {
-            desk: results.map(r => r.desk).join(''),
-            mob: results.map(r => r.mob).join('')
-        };
+    // --- 6. RENDER STATUS COLUMNS (SLATS) ---
+    const renderSlat = async (item) => {
+        const src = await getThumb(item, 100);
+        const idx = allItems.indexOf(item);
+        const isDenied = (item.status || "").toLowerCase().includes('rej');
+        const isPending = (item.status || "").toLowerCase().includes('pending');
+
+        return `
+            <div class="status-item" onclick="window.openHistoryModal(${idx})">
+                <img src="${src}" class="status-thumb" onerror="this.src='${PLACEHOLDER_IMG}'">
+                <div class="status-info">
+                    <div class="status-text">${item.text || '...'}</div>
+                    <div class="status-meta">
+                        ${isDenied ? '<span style="color:var(--neon-red)">VOIDED</span>' : (isPending ? '<span style="color:var(--neon-yellow)">AWAITING VERDICT</span>' : 'LOGGED')}
+                        • ${new Date(item._createdDate).toLocaleDateString()}
+                    </div>
+                </div>
+            </div>
+        `;
     };
 
-    // --- 7. EXECUTE RENDERS ---
-
-    // A. Standard Accepted
-    if (gridOkay) {
-        const acceptedHTML = await renderChunk(standardAccepted, false);
-        gridOkay.innerHTML = acceptedHTML.desk;
-        if (recGrid) recGrid.innerHTML += acceptedHTML.mob;
+    if (routineCol) {
+        const htmls = await Promise.all(routineList.map(item => renderSlat(item)));
+        routineCol.innerHTML = htmls.join('');
     }
 
-    // B. Routine Record
-    if (gridRoutine) {
-        const routineHTML = await renderChunk(routineList, false);
-        gridRoutine.innerHTML = routineHTML.desk;
-        // Optional: on mobile we can merge or keep separate. Let's merge for now.
-        if (recGrid) recGrid.innerHTML += routineHTML.mob;
+    if (statusCol) {
+        const combined = [...pendingList, ...deniedList];
+        const htmls = await Promise.all(combined.map(item => renderSlat(item)));
+        statusCol.innerHTML = htmls.join('');
     }
 
-    // C. Pending
-    if (pendingList.length > 0) {
-        const pendingHTML = await renderChunk(pendingList, false);
-        if (gridPending) gridPending.innerHTML = pendingHTML.desk;
-        if (recGrid) recGrid.innerHTML = pendingHTML.mob + recGrid.innerHTML;
-    }
-
-    // D. Denied (Heap)
-    if (gridFailed) {
-        const deniedHTML = await renderChunk(deniedList, true);
-        gridFailed.innerHTML = deniedHTML.desk;
-        if (recHeap) recHeap.innerHTML = deniedHTML.mob;
-    }
-
-
-    // --- 8. RENDER DESKTOP ALTAR ---
-    // --- 8. RENDER DESKTOP ALTAR ---
-    const renderAltarSlot = async (item, slotObj, isMain) => {
-        if (!item || !slotObj.card) {
-            if (slotObj.card) slotObj.card.style.display = 'none';
-            return;
-        }
-        slotObj.card.style.display = 'flex';
-
-        // 1. Get Initial Thumb
-        let url = await getThumb(item, isMain ? 800 : 400);
-
-        // 2. EXTERNAL IMAGE FIX (UpCDN / Bytescale / Firebase)
-        // If it's an external image, getThumb might have messed it up with optimization params.
-        // We prefer the RAW proofUrl if it's a direct image link.
-        if (item.proofUrl && item.proofUrl.startsWith('http') && !item.proofUrl.includes('wix:')) {
-            const ext = item.proofUrl.split('?')[0].split('.').pop().toLowerCase();
-            if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
-                url = item.proofUrl;
-            }
-        }
-
-        // 3. VIDEO SAFETY
-        if (typeof url === 'string' && (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || url.startsWith('wix:video'))) {
-            // ... video fallback logic ...
-            if (item.cover) url = await getThumb({ proofUrl: item.cover }, isMain ? 800 : 400);
-            else if (item.thumbnail) url = await getThumb({ proofUrl: item.thumbnail }, isMain ? 800 : 400);
-            else url = PLACEHOLDER_IMG;
-        }
-
-        if (slotObj.img) {
-            slotObj.img.src = url;
-            slotObj.img.onerror = function () { this.src = PLACEHOLDER_IMG; }; // Double safety
-        }
-        if (slotObj.ref) {
-            slotObj.ref.src = url;
-            slotObj.ref.onerror = function () { this.src = PLACEHOLDER_IMG; };
-        }
-
-        const scoreEl = document.getElementById(isMain ? 'scoreSlot1' : (slotObj === slot2 ? 'scoreSlot2' : 'scoreSlot3'));
-        if (scoreEl) scoreEl.innerText = getPoints(item);
-    };
-
-    await renderAltarSlot(bestOf[0], slot1, true);
-    await renderAltarSlot(bestOf[1], slot2, false);
-    await renderAltarSlot(bestOf[2], slot3, false);
-
-    // --- 9. RENDER MOBILE ALTAR (INSIDE THE FUNCTION NOW) ---
+    // --- 7. MOBILE FALLBACKS ---
     const renderMobSlot = async (item, el, size) => {
         if (!el) return;
         if (item) {
             let url = await getThumb(item, size);
-
-            // EXTERNAL IMAGE FIX (Mobile)
-            if (item.proofUrl && item.proofUrl.startsWith('http') && !item.proofUrl.includes('wix:')) {
-                const ext = item.proofUrl.split('?')[0].split('.').pop().toLowerCase();
-                if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
-                    url = item.proofUrl;
-                }
-            }
-
             el.src = url;
             el.style.filter = "none";
             el.onerror = function () {
-                this.src = IMG_QUEEN_MAIN;
+                this.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
                 this.style.filter = "grayscale(100%) brightness(0.5)";
             };
             el.onclick = () => window.openHistoryModal(allItems.indexOf(item));
         } else {
-            el.src = IMG_QUEEN_MAIN; // Fallback
+            el.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
             el.style.filter = "grayscale(100%) brightness(0.5)";
         }
     };
 
-    await renderMobSlot(bestOf[0], mob1, 400);
+    if (mob1) await renderMobSlot(bestOf[0], mob1, 400);
+    if (mob2) await renderMobSlot(bestOf[1], mob2, 300);
+    if (mob3) await renderMobSlot(bestOf[2], mob3, 300);
 
-    // Explicit Fallback for Center Slot (Queen) if empty
-    if (!bestOf[0] && mob1) {
-        mob1.src = "https://static.wixstatic.com/media/ce3e5b_5fc6a144908b493b9473757471ec7ebb~mv2.png";
-        mob1.style.filter = "grayscale(100%) brightness(0.5)";
+    // --- 8. UI POLISH ---
+    if (historySection) {
+        if (allItems.length === 0) historySection.classList.add('solo-mode');
+        else historySection.classList.remove('solo-mode');
     }
-
-    await renderMobSlot(bestOf[1], mob2, 300);
-    await renderMobSlot(bestOf[2], mob3, 300);
-
-    // --- 6. ATTACH DATA TO NODES (For Instant Preview/Counts) ---
-    // (Optional: Could add item counts to node labels here)
 }
 
 // --- SOVEREIGN ALTAR INTERACTION HELPERS ---

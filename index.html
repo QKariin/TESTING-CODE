@@ -1823,75 +1823,87 @@
         <!-- THE SOVEREIGN ALTAR (VISIONARY ORBITAL LAYOUT) -->
         <div id="historySection" class="view-wrapper hidden" style="perspective: 1000px; padding: 0; min-height: 80vh;">
 
-            <div id="orbitalCanvas" class="orbital-canvas">
+            <div class="record-landing">
+                <!-- Header -->
+                <header class="chronicle-header">
+                    <h1 class="chronicle-title">THE CHRONICLES</h1>
+                </header>
 
-                <!-- 1. THE CENTRAL ALTAR (TOP 3) -->
-                <div class="altar-hub">
-                    <div class="altar-ring-glow"></div>
-                    <div class="altar-hub-content section-altar triptych-stage">
-                        <div id="altarSlot2" class="altar-card left-offering">
-                            <img id="imgSlot2" class="altar-img" src="">
-                        </div>
-                        <div id="altarSlot1" class="altar-card center-idol">
-                            <img id="imgSlot1" class="altar-img" src="">
-                            <div id="reflectSlot1" class="reflection-mask">
-                                <img src="" class="reflect-img">
+                <!-- 1. HERO: THE SOVEREIGN ALTAR -->
+                <section class="chronicle-section">
+                    <div class="chronicle-section-label">THE SOVEREIGN ALTAR</div>
+                    <div class="chronicle-hero">
+                        <div id="altarMain" class="hero-main mosaic-card" onclick="window.openHistoryModal(0)">
+                            <img id="imgAltarMain" src="" class="hero-img"
+                                onerror="this.src='https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png'">
+                            <div class="hero-overlay">
+                                <div class="hero-label">SUPREME HIGHLIGHT</div>
+                                <h2 id="titleAltarMain" class="hero-title">...</h2>
                             </div>
                         </div>
-                        <div id="altarSlot3" class="altar-card right-offering">
-                            <img id="imgSlot3" class="altar-img" src="">
+                        <div id="altarSub1" class="hero-sub mosaic-card" onclick="window.openHistoryModal(1)">
+                            <img id="imgAltarSub1" src="" class="hero-img"
+                                onerror="this.src='https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png'">
+                            <div class="hero-overlay">
+                                <div class="hero-label">OFFERING II</div>
+                                <h2 id="titleAltarSub1" class="hero-title">...</h2>
+                            </div>
+                        </div>
+                        <div id="altarSub2" class="hero-sub mosaic-card" onclick="window.openHistoryModal(2)">
+                            <img id="imgAltarSub2" src="" class="hero-img"
+                                onerror="this.src='https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png'">
+                            <div class="hero-overlay">
+                                <div class="hero-label">OFFERING III</div>
+                                <h2 id="titleAltarSub2" class="hero-title">...</h2>
+                            </div>
                         </div>
                     </div>
-                    <div class="hub-label">Sovereign Altar</div>
-                </div>
+                </section>
 
-                <!-- 2. THE ORBITAL NODES (CATEGORY TRIGGERS) -->
-                <!-- Top Left: Accepted -->
-                <div class="orbital-node node-accepted" onclick="window.expandCategory('accepted')">
-                    <div class="node-icon">✨</div>
-                    <div class="node-label">Accepted</div>
-                    <div class="node-glow"></div>
-                </div>
+                <!-- 2. MOSAIC: ACCEPTED OFFERINGS -->
+                <section class="chronicle-section">
+                    <div class="chronicle-section-label">DEDICATED ENTRIES</div>
+                    <div id="mosaicGrid" class="chronicle-mosaic">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
 
-                <!-- Top Right: Pending -->
-                <div class="orbital-node node-pending" onclick="window.expandCategory('pending')">
-                    <div class="node-icon">💠</div>
-                    <div class="node-label">Pending</div>
-                    <div class="node-glow"></div>
-                </div>
+                <!-- 3. STATUS COLUMNS -->
+                <section class="chronicle-section">
+                    <div class="chronicle-status-grid">
+                        <div class="status-block">
+                            <div class="chronicle-section-label">ROUTINE LOGS</div>
+                            <div id="routineColumn" class="status-list">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        <div class="status-block">
+                            <div class="chronicle-section-label">VERDICTS & THE VOID</div>
+                            <div id="statusColumn" class="status-list">
+                                <!-- Populated by JS (Pending + Denied) -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-                <!-- Bottom Left: Routine -->
-                <div class="orbital-node node-routine" onclick="window.expandCategory('routine')">
-                    <div class="node-icon">⚖️</div>
-                    <div class="node-label">Routine</div>
-                    <div class="node-glow"></div>
+                <!-- STATS (MINIMIZED FOR CRYSTAL DESIGN) -->
+                <div class="altar-stats-row" style="margin-top: 50px; opacity: 0.5;">
+                    <div class="mini-stat">TASKS: <span id="statTotal">0</span></div>
+                    <div class="mini-stat">SKIPPED: <span id="statSkipped">0</span></div>
+                    <div class="mini-stat">KNEELS: <span id="statTotalKneels">0</span></div>
                 </div>
-
-                <!-- Bottom Right: Denied -->
-                <div class="orbital-node node-denied" onclick="window.expandCategory('denied')">
-                    <div class="node-icon">💀</div>
-                    <div class="node-label">Void</div>
-                    <div class="node-glow"></div>
-                </div>
-
             </div>
 
-            <!-- 3. EXPANDED VIEW OVERLAY (Hidden by default) -->
+            <!-- 3. EXPANDED VIEW OVERLAY -->
             <div id="categoryExpansionOverlay" class="expansion-overlay hidden">
                 <div class="expansion-header">
                     <div id="expansionTitle" class="expansion-title">ACCEPTED OFFERINGS</div>
-                    <button class="btn-close-expansion" onclick="window.closeCategoryExpansion()">BACK TO ALTAR</button>
+                    <button class="btn-close-expansion" onclick="window.closeCategoryExpansion()">BACK TO
+                        CHRONICLES</button>
                 </div>
                 <div id="expansionGrid" class="expansion-grid">
                     <!-- Populated by JS -->
                 </div>
-            </div>
-
-            <!-- STATS (MINIMIZED FOR CRYSTAL DESIGN) -->
-            <div class="altar-stats-row">
-                <div class="mini-stat">TASKS: <span id="statTotal">0</span></div>
-                <div class="mini-stat">SKIPPED: <span id="statSkipped">0</span></div>
-                <div class="mini-stat">KNEELS: <span id="statTotalKneels">0</span></div>
             </div>
 
         </div>
