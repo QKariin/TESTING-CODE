@@ -228,21 +228,24 @@
     }
 
     .v-main-content,
+    .view-wrapper,
     #viewServingTopDesktop {
         grid-column: 2 / 6 !important;
         grid-row: 1 / 4 !important;
-        display: grid !important;
-        grid-template-columns: repeat(4, 25%) !important;
-        grid-template-rows: auto auto auto !important;
-        /* Natural growth */
-        grid-auto-rows: auto !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
         height: 100vh !important;
         width: 100% !important;
         padding: 10px 40px 10px 10px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         align-content: start !important;
-        /* Pack items to top */
+    }
+
+    /* Dashboard-specific Grid Layout */
+    #viewServingTopDesktop {
+        display: grid !important;
+        grid-template-columns: repeat(4, 25%) !important;
+        grid-template-rows: auto auto auto !important;
+        grid-auto-rows: auto !important;
     }
 
     /* Fill grid cell minus margins */
