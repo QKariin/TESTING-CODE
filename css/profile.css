@@ -22,6 +22,10 @@
    ========================================= */
 @media (min-width: 769px) {
 
+    * {
+        box-sizing: border-box;
+    }
+
     body {
         background: transparent;
         color: var(--text-white);
@@ -29,7 +33,9 @@
         /* GLOBAL FONT CHANGE */
         min-height: 100vh;
         width: 100vw;
-        overflow: scroll;
+        overflow: hidden;
+        /* Trap overflow at root */
+        margin: 0;
     }
 
     .app-container {
@@ -699,7 +705,9 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* Allow vertical scrolling internal to views */
     /* Ensures the Chat Container inside stays trapped */
 }
 
@@ -1728,6 +1736,9 @@
     gap: 60px;
     padding: 40px;
     width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .chronicle-header {
