@@ -165,6 +165,76 @@ function renderStickerFilters() {
     filterBar.innerHTML = html;
 }
 
+// --- STREAK CALCULATION ---
+function calculateStreaks(list) {
+    if (!list || list.length === 0) return { current: 0, best: 0 };
+
+    // 1. Get unique YYYY-MM-DD dates, sorted newest first
+    const dates = [...new Set(list.map(i => {
+        const d = new Date(i._createdDate);
+        return d.toISOString().split('T')[0];
+    }))].sort((a, b) => new Date(b) - new Date(a));
+
+    if (dates.length === 0) return { current: 0, best: 0 };
+
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+    // 2. Current Streak
+    let current = 0;
+    let expectedDate = today;
+
+    // If today is empty, check if we can start from yesterday
+    if (dates[0] !== today && dates[0] !== yesterday) {
+        current = 0;
+    } else {
+        expectedDate = dates[0];
+        for (let i = 0; i < dates.length; i++) {
+            const d = new Date(dates[i]);
+            const exp = new Date(expectedDate);
+
+            if (dates[i] === expectedDate) {
+                current++;
+                // Set expected to day before
+                exp.setDate(exp.getDate() - 1);
+                expectedDate = exp.toISOString().split('T')[0];
+            } else {
+                break;
+            }
+        }
+    }
+
+    // 3. Best Streak
+    let best = 0;
+    let temp = 0;
+    let lastDate = null;
+
+    // For best streak, we sort ascending to count up
+    const ascDates = [...dates].sort((a, b) => new Date(a) - new Date(b));
+
+    ascDates.forEach(dStr => {
+        if (!lastDate) {
+            temp = 1;
+        } else {
+            const d = new Date(dStr);
+            const prev = new Date(lastDate);
+            prev.setDate(prev.getDate() + 1);
+            const nextDay = prev.toISOString().split('T')[0];
+
+            if (dStr === nextDay) {
+                temp++;
+            } else {
+                if (temp > best) best = temp;
+                temp = 1;
+            }
+        }
+        lastDate = dStr;
+    });
+    if (temp > best) best = temp;
+
+    return { current, best };
+}
+
 export async function renderGallery() {
     if (!galleryData) return;
 
@@ -333,6 +403,17 @@ export async function renderGallery() {
     // 4b. Mini Grids
     await renderMiniGrid(routineList, 'gridAltarRoutine');
     await renderMiniGrid(deniedList, 'gridAltarFailed');
+
+    // 4c. Inject Streaks into Routine Label
+    const routineContainer = document.getElementById('gridAltarRoutine');
+    if (routineContainer) {
+        const parent = routineContainer.parentElement;
+        const label = parent ? parent.querySelector('.mini-grid-label') : null;
+        if (label) {
+            const stats = calculateStreaks(routineList);
+            label.innerHTML = `DAILY ROUTINES <span style="float:right; opacity:0.7; font-size:0.4rem; letter-spacing:1px;">CURR: ${stats.current} | BEST: ${stats.best}</span>`;
+        }
+    }
 
     // --- 5. RENDER MOSAIC (DEDICATED ENTRIES - PORTRAIT OPTIMIZED) ---
     if (mosaicGrid) {
