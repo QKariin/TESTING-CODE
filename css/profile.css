@@ -163,7 +163,8 @@
     }
 
     /* ALT VIEWS (Records, etc.) - Occupy Right 4 Columns */
-    .alt-grid-view {
+    .alt-grid-view,
+    #historySection {
         grid-column: 2 / 6 !important;
         grid-row: 1 / 4 !important;
         display: none;
@@ -172,9 +173,9 @@
         /* Default */
         overflow-y: auto;
         z-index: 205 !important;
-        background: rgba(2, 5, 18, 0.7);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
+        background: rgba(2, 5, 18, 0.7) !important;
+        backdrop-filter: blur(25px) !important;
+        -webkit-backdrop-filter: blur(25px) !important;
         border-left: 1px solid rgba(255, 255, 255, 0.05);
     }
 
