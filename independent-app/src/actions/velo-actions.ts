@@ -536,13 +536,143 @@ export async function loadUserMessages(memberId: string) {
     }
 }
 
-export async function markChatAsRead(memberId: string) {
+
+// --- 12. DASHBOARD CONTROLLER (backend/DashboardController.jsw) ---
+
+// --- HELPER: Fix WIX URLs ---
+function fixUrl(url: string) {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    if (url.startsWith("wix:image")) return `https://static.wixstatic.com/media/${url.split('/')[3].split('#')[0]}`;
+    if (url.startsWith("wix:video")) return `https://video.wixstatic.com/video/${url.split('/')[3].split('#')[0]}/mp4/file.mp4`;
+    return url;
+}
+
+// --- 1. GET ALL USERS & TASKS ---
+export async function getMasterData() {
     try {
-        const profile = await getProfile(memberId);
-        if (profile) {
-            const params = profile.parameters || {};
-            params.lastReadByAdmin = new Date().toISOString();
-            await updateProfile(profile.id, { parameters: params });
+        const { data: profiles, error } = await supabaseAdmin
+            .from('profiles')
+            .select('*')
+            .limit(1000);
+
+        if (error) throw error;
+
+        return (profiles || []).map((item: any) => {
+            // 1. Parse Queue (Handle CSV Text vs Array)
+            let queue: any[] = [];
+            // Map taskdom_review_queue -> task_queue (Schema)
+            // But Velo code says taskdom_review_queue. 
+            // In schema we have 'task_queue'. Let's use that.
+            let rawQueue = item.task_queue || item.taskdom_review_queue;
+
+            if (rawQueue) {
+                if (typeof rawQueue === 'string') {
+                    try { queue = JSON.parse(rawQueue); } catch (e) { }
+                } else if (Array.isArray(rawQueue)) {
+                    queue = rawQueue;
+                }
+            }
+
+            // 2. Fix URLs for HTML Display
+            queue = queue.map((q: any) => ({
+                ...q,
+                proofUrl: fixUrl(q.proofUrl)
+            }));
+
+            // 3. Return Clean Object
+            return {
+                id: item.member_id || item.id,
+                name: item.name || item.title || "Unknown",
+                hierarchy: item.hierarchy || "Newbie",
+                score: Number(item.score || 0),
+                wallet: Number(item.wallet || 0),
+                queue: queue,
+                // Pass raw item for other fields if needed
+                _raw: item
+            };
+        });
+    } catch (err) {
+        console.error("Dashboard Data Error:", err);
+        return [];
+    }
+}
+
+// --- 2. DECISION ENGINE (APPROVE/REJECT) ---
+export async function adminReviewTask(userId: string, taskId: string, decision: 'approve' | 'reject') {
+    try {
+        // Find user by member_id
+        const profile = await getProfile(userId);
+        if (!profile) return false;
+
+        let queue: any[] = [];
+        let rawQueue = profile.task_queue || profile.taskdom_review_queue;
+        if (typeof rawQueue === 'string') {
+            try { queue = JSON.parse(rawQueue); } catch (e) { }
+        } else if (Array.isArray(rawQueue)) {
+            queue = rawQueue;
         }
-    } catch (e) { console.log(e); }
+
+        let history: any[] = [];
+        let rawHistory = profile.routine_history || profile.taskdom_history;
+        if (typeof rawHistory === 'string') {
+            try { history = JSON.parse(rawHistory); } catch (e) { }
+        } else if (Array.isArray(rawHistory)) {
+            history = rawHistory;
+        }
+
+        // Find specific task
+        const index = queue.findIndex((t: any) => t.id === taskId || (t.proofUrl && t.proofUrl.includes(taskId)));
+
+        if (index > -1) {
+            const task = queue[index];
+
+            let updates: any = {};
+            let params = profile.parameters || {};
+
+            // Update stats based on decision
+            if (decision === 'approve') {
+                updates.score = (Number(profile.score) || 0) + 50;
+                updates.wallet = (Number(profile.wallet) || 0) + 10;
+
+                params.taskdom_completed_tasks = (Number(params.taskdom_completed_tasks) || 0) + 1;
+                params.taskdom_streak = (Number(params.taskdom_streak) || 0) + 1; // Velo used Taskdom_Streak
+            } else {
+                params.taskdom_streak = 0;
+            }
+            updates.parameters = params;
+
+            // Move to history
+            const historyItem = { ...task, status: decision, reviewedAt: new Date().toISOString() };
+            history.unshift(historyItem);
+            queue.splice(index, 1);
+
+            // Save back
+            updates.task_queue = queue;
+            updates.routine_history = history;
+
+            await updateProfile(profile.id, updates);
+            return true;
+        }
+        return false;
+
+    } catch (err) {
+        console.error("Review Error:", err);
+        return false;
+    }
+}
+
+// --- 3. CHAT SYSTEM (Admin View) ---
+export async function getChatData(userId: string) {
+    // Reusing loadUserMessages logic but strictly for admin use
+    return await loadUserMessages(userId);
+}
+
+export async function sendAdminMessage(userId: string, text: string) {
+    await insertMessage({
+        memberId: userId,
+        message: text,
+        sender: "agent", // Admin is 'agent' or 'admin'? Velo code says 'agent'.
+        read: true
+    });
 }
