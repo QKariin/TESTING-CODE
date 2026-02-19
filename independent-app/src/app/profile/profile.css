@@ -1,0 +1,321 @@
+/* src/app/profile/profile.css */
+
+:root {
+    --gold: #c5a059;
+    --silver: #888;
+    --blue-accent: #007bff;
+    --neon-green: #00ff00;
+}
+
+body {
+    background: #000;
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* DESKTOP STYLES */
+#DESKTOP_APP {
+    display: flex;
+    min-height: 100vh;
+}
+
+.v-sidebar {
+    width: 300px;
+    background: rgba(2, 5, 18, 0.95);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.v-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.big-profile-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    border: 2px solid var(--gold);
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.identity-name {
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+}
+
+.sidebar-stat-block {
+    text-align: center;
+}
+
+.sidebar-stat-value-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: 'Orbitron';
+}
+
+.sidebar-stat-label {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 2px;
+    margin-top: 5px;
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    text-align: left;
+    padding: 12px;
+    font-family: 'Orbitron';
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 8px;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--gold);
+}
+
+.view-wrapper {
+    flex: 1;
+    padding: 30px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto auto 1fr;
+    gap: 20px;
+}
+
+.v-stat-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.ribbon-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    color: var(--gold);
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+}
+
+.prog-bg {
+    background: rgba(0, 0, 0, 0.4);
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.prog-fill {
+    height: 100%;
+    background: var(--gold);
+    transition: width 0.3s ease;
+}
+
+/* MOBILE STYLES */
+@media (max-width: 768px) {
+    #DESKTOP_APP {
+        display: none !important;
+    }
+
+    #MOBILE_APP {
+        display: flex !important;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .mob-hud-row {
+        position: fixed;
+        top: 15px;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+        z-index: 100;
+    }
+
+    .hud-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 1px solid var(--gold);
+        overflow: hidden;
+        background: #000;
+    }
+
+    .hud-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .halo-section {
+        margin-top: 80px;
+        position: relative;
+    }
+
+    .halo-ring {
+        width: 250px;
+        height: 250px;
+        border-radius: 50%;
+        border: 1px solid rgba(197, 160, 89, 0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .halo-name {
+        font-size: 1.5rem;
+        letter-spacing: 5px;
+        color: #fff;
+    }
+
+    .halo-rank {
+        font-size: 0.7rem;
+        color: var(--gold);
+        letter-spacing: 3px;
+    }
+
+    .mob-kneel-bar {
+        width: 100%;
+        height: 50px;
+        background: rgba(197, 160, 89, 0.1);
+        border: 1px solid var(--gold);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .mob-bar-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        background: var(--gold);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    .mob-bar-content {
+        position: relative;
+        z-index: 1;
+        font-family: 'Orbitron';
+        color: #fff;
+    }
+}
+
+/* SHARED COMPONENTS */
+.hidden {
+    display: none !important;
+}
+
+.action-btn {
+    background: var(--gold);
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    font-family: 'Orbitron';
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.action-btn:hover {
+    filter: brightness(1.2);
+}
+
+/* CHAT STYLES */
+.chat-container {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chat-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-family: 'Orbitron';
+    outline: none;
+}
+
+.chat-btn-send {
+    background: var(--gold);
+    border: none;
+    color: #000;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* STORE STYLES */
+.store-item {
+    text-align: center;
+    padding: 30px;
+    transition: 0.3s;
+}
+
+.store-item:hover {
+    border-color: var(--gold);
+    background: rgba(197, 160, 89, 0.05);
+}
+
+.mob-reward-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+.mob-reward-card {
+    background: #111;
+    border: 1px solid var(--gold);
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    width: 80%;
+    max-width: 400px;
+}
