@@ -135,9 +135,50 @@ function startTimerLoop() {
     setTimerInterval(interval);
 }
 
+export function switchAdminTab(tab: 'ops' | 'intel' | 'record') {
+    const tabs = document.querySelectorAll('.ap-tab');
+    const views = document.querySelectorAll('.ap-view');
+
+    tabs.forEach(t => t.classList.remove('active'));
+    views.forEach(v => v.classList.add('hidden'));
+
+    if (tab === 'ops') {
+        tabs[0].classList.add('active');
+        document.getElementById('tabOps')?.classList.remove('hidden');
+    } else if (tab === 'intel') {
+        tabs[1].classList.add('active');
+        document.getElementById('tabIntel')?.classList.remove('hidden');
+    } else {
+        tabs[2].classList.add('active');
+        document.getElementById('tabRecord')?.classList.remove('hidden');
+    }
+}
+
+export function adjustWallet(action: 'add' | 'sub') {
+    console.log("Adjusting wallet:", action);
+}
+
+export function manageAltar(slot: number) {
+    console.log("Managing altar slot:", slot);
+}
+
+export function adminTaskAction(id: string | null, action: 'skip' | 'send') {
+    console.log("Admin task action:", action, "for ID:", id);
+}
+
+export function toggleTaskQueue() {
+    const container = document.getElementById('taskQueueContainer');
+    if (container) container.classList.toggle('hidden');
+}
+
 // Global Exports for legacy window compatibility
 if (typeof window !== 'undefined') {
     (window as any).showHome = showHome;
     (window as any).renderMainDashboard = renderMainDashboard;
     (window as any).initDashboard = initDashboard;
+    (window as any).switchAdminTab = switchAdminTab;
+    (window as any).adjustWallet = adjustWallet;
+    (window as any).manageAltar = manageAltar;
+    (window as any).adminTaskAction = adminTaskAction;
+    (window as any).toggleTaskQueue = toggleTaskQueue;
 }

@@ -160,7 +160,25 @@ export function openTaskGallery() {
     if (!u) return;
     const titleEl = document.getElementById('armoryTitle');
     if (titleEl) titleEl.innerText = `${u.name.toUpperCase()} TASKS`;
-    // More gallery rendering would go here
+    const gallery = document.getElementById('taskGalleryModal');
+    if (gallery) gallery.classList.add('active');
+}
+
+export function closeTaskGallery() {
+    const gallery = document.getElementById('taskGalleryModal');
+    if (gallery) gallery.classList.remove('active');
+}
+
+export function filterTaskGallery() {
+    console.log("Filtering task gallery");
+}
+
+export function addQueueTask() {
+    console.log("Adding task to queue");
+}
+
+export function deleteQueueItem(id: string) {
+    console.log("Deleting queue item:", id);
 }
 
 if (typeof window !== 'undefined') {
@@ -169,9 +187,14 @@ if (typeof window !== 'undefined') {
     (window as any).openModById = openModById;
     (window as any).reviewTask = reviewTask;
     (window as any).openTaskGallery = openTaskGallery;
+    (window as any).closeTaskGallery = closeTaskGallery;
+    (window as any).filterTaskGallery = filterTaskGallery;
+    (window as any).addQueueTask = addQueueTask;
+    (window as any).deleteQueueItem = deleteQueueItem;
     (window as any).cancelReward = cancelReward;
     (window as any).selectSticker = selectSticker;
     (window as any).handleRewardFileUpload = handleRewardFileUpload;
     (window as any).toggleRewardRecord = toggleRewardRecord;
     (window as any).confirmReward = confirmReward;
 }
+

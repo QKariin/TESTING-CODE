@@ -152,3 +152,86 @@ export async function cancelPendingTask() {
         console.error("Error skipping task", err);
     }
 }
+
+// Missing stubs for Profile restoration
+export function openQueenMenu() {
+    document.getElementById('queenOverlay')?.classList.remove('hidden');
+}
+
+export function closeQueenMenu() {
+    document.getElementById('queenOverlay')?.classList.add('hidden');
+}
+
+export function toggleMobileStats() {
+    const content = document.getElementById('mobStatsContent');
+    const arrow = document.getElementById('mobStatsArrow');
+    if (content) {
+        const isHidden = content.classList.toggle('hidden');
+        if (arrow) arrow.innerText = isHidden ? '▼' : '▲';
+    }
+}
+
+export function toggleMobileChat(show: boolean) {
+    if (show) {
+        document.getElementById('inlineChatPanel')?.classList.remove('hidden');
+        document.getElementById('btnEnterChatPanel')?.classList.add('hidden');
+    } else {
+        document.getElementById('inlineChatPanel')?.classList.add('hidden');
+        document.getElementById('btnEnterChatPanel')?.classList.remove('hidden');
+    }
+}
+
+export function mobileRequestTask() { getRandomTask(); }
+export function mobileSkipTask() { cancelPendingTask(); }
+export function mobileUploadEvidence(input: HTMLInputElement) { console.log("Upload evidence", input.files); }
+
+export function handleRoutineUpload(input: HTMLInputElement) { console.log("Routine upload", input.files); }
+export function handleProfileUpload(input: HTMLInputElement) { console.log("Profile upload", input.files); }
+export function handleAdminUpload(input: HTMLInputElement) { console.log("Admin upload", input.files); }
+
+export function handleMediaPlus() { console.log("Media plus clicked"); }
+export function handleChatKey(e: React.KeyboardEvent) { if (e.key === 'Enter') sendChatMessage(); }
+export function sendChatMessage() {
+    const input = document.getElementById('chatMsgInput') as HTMLInputElement;
+    const msg = input?.value;
+    if (msg) {
+        console.log("Sending message:", msg);
+        input.value = '';
+    }
+}
+
+export function buyRealCoins(amount: number) { console.log("Buying coins:", amount); }
+
+export function toggleRewardSubMenu(show: boolean) {
+    document.getElementById('reward-buy-menu')?.classList.toggle('hidden', !show);
+    document.getElementById('reward-main-menu')?.classList.toggle('hidden', show);
+}
+
+export function buyRewardFragment(cost: number) { console.log("Buying reward fragment:", cost); }
+
+export function closeModal() { document.getElementById('glassModal')!.style.display = 'none'; }
+export function closePoverty() { document.getElementById('povertyOverlay')?.classList.add('hidden'); }
+export function goToExchequer() { switchTab('buy'); closePoverty(); }
+export function closeRewardCard() { document.getElementById('rewardCardOverlay')?.classList.add('hidden'); }
+
+export function showLobbyAction(type: string) {
+    console.log("Show lobby action:", type);
+    document.getElementById('lobbyMenu')?.classList.add('hidden');
+    document.getElementById('lobbyActionView')?.classList.remove('hidden');
+}
+
+export function confirmLobbyAction() {
+    console.log("Confirm lobby action");
+    backToLobbyMenu();
+}
+
+export function backToLobbyMenu() {
+    document.getElementById('lobbyMenu')?.classList.remove('hidden');
+    document.getElementById('lobbyActionView')?.classList.add('hidden');
+}
+
+export function selectRoutineItem(el: HTMLElement, type: string) {
+    console.log("Select routine item:", type);
+    document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+}

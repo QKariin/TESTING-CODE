@@ -43,8 +43,34 @@ export function showProfile() {
     console.log("Profile view requested");
 }
 
+export function switchProfileTab(tab: 'media' | 'text') {
+    const media = document.getElementById('profileMediaGrid');
+    const text = document.getElementById('profileTextGrid');
+    const tabs = document.querySelectorAll('.qp-tab');
+
+    if (media && text) {
+        if (tab === 'media') {
+            media.classList.remove('d-none');
+            text.classList.add('d-none');
+            tabs[0].classList.add('active');
+            tabs[1].classList.remove('active');
+        } else {
+            media.classList.add('d-none');
+            text.classList.remove('d-none');
+            tabs[0].classList.remove('active');
+            tabs[1].classList.add('active');
+        }
+    }
+}
+
+export function openProfileUpload(isStory: boolean = false) {
+    console.log("Profile upload requested, isStory:", isStory);
+}
+
 // Global Exports
 if (typeof window !== 'undefined') {
     (window as any).showHome = showHome;
     (window as any).showProfile = showProfile;
+    (window as any).switchProfileTab = switchProfileTab;
+    (window as any).openProfileUpload = openProfileUpload;
 }

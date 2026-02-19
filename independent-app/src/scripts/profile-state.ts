@@ -40,3 +40,13 @@ export function setState(updates: Partial<ProfileState>) {
 export function resetState() {
     state = { ...DEFAULT_STATE };
 }
+
+export function initProfileState(data: any) {
+    setState({
+        memberId: data.member_id,
+        coins: data.coins || 0,
+        points: data.points || 0,
+        userName: data.name || "SLAVE",
+        rank: data.rank || "INITIATE"
+    });
+}
