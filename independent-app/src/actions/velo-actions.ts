@@ -723,3 +723,21 @@ export async function secureUpdateProfileStats(memberId: string, type: 'skipped'
         return false;
     }
 }
+
+// --- 14. REALTIME PUBLISH (backend/publish.js) ---
+export async function sendMessage(memberId: string, text: string, sender: string) {
+    // Determine read status based on sender
+    const isRead = (sender === "agent");
+
+    // Reuse insertMessage logic but with explicit sender
+    // backend/publish.js uses 'Chat' collection. We map to 'messages'.
+    // It also triggers a 'chatChannel' publish. In Supabase, clients subscribe to 'messages' table changes.
+    // So the INSERT itself acts as the publish.
+
+    return await insertMessage({
+        memberId: memberId,
+        message: text,
+        sender: sender,
+        read: isRead
+    });
+}
