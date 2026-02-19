@@ -672,7 +672,54 @@ export async function sendAdminMessage(userId: string, text: string) {
     await insertMessage({
         memberId: userId,
         message: text,
-        sender: "agent", // Admin is 'agent' or 'admin'? Velo code says 'agent'.
+        sender: "agent",
         read: true
     });
+}
+
+// --- 13. PROFILE STATS MANAGER (backend/profile.web.js) ---
+export async function secureUpdateProfileStats(memberId: string, type: 'skipped' | 'completed' | 'approved' | 'rejected') {
+    try {
+        const profile = await getProfile(memberId);
+        if (!profile) return false;
+
+        let params = profile.parameters || {};
+        let updates: any = {};
+
+        // Initialize numeric fields if missing
+        params.taskdom_total_tasks = Number(params.taskdom_total_tasks || 0);
+        params.taskdom_current_streak = Number(params.taskdom_current_streak || 0);
+        params.taskdom_skipped_tasks = Number(params.taskdom_skipped_tasks || 0);
+        params.taskdom_completed_tasks = Number(params.taskdom_completed_tasks || 0);
+        params.taskdom_approved_tasks = Number(params.taskdom_approved_tasks || 0);
+        params.taskdom_rejected_tasks = Number(params.taskdom_rejected_tasks || 0);
+
+        // Also map profile 'score'
+        let currentScore = Number(profile.score || 0);
+
+        if (type === "skipped") {
+            params.taskdom_total_tasks++;
+            params.taskdom_current_streak = 0;
+            params.taskdom_skipped_tasks++;
+        } else if (type === "completed") {
+            params.taskdom_total_tasks++;
+            params.taskdom_current_streak++;
+            params.taskdom_completed_tasks++;
+        } else if (type === "approved") {
+            params.taskdom_approved_tasks++;
+            currentScore += 5; // Specific logic from profile.web.js
+            updates.score = currentScore;
+        } else if (type === "rejected") {
+            params.taskdom_rejected_tasks++;
+        }
+
+        updates.parameters = params;
+        await updateProfile(profile.id, updates);
+
+        return true;
+
+    } catch (error) {
+        console.error("secureUpdateProfileStats Save Error:", error);
+        return false;
+    }
 }
