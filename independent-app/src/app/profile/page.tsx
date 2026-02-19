@@ -36,7 +36,8 @@ import {
     backToLobbyMenu,
     selectRoutineItem,
     getRandomTask,
-    cancelPendingTask
+    cancelPendingTask,
+    renderProfileSidebar
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -91,6 +92,7 @@ export default function ProfilePage() {
                 if (data.profile) {
                     setProfile(data.profile);
                     initProfileState(data.profile);
+                    renderProfileSidebar(data.profile);
                 }
             } catch (err) {
                 console.error("Failed to load profile", err);
@@ -115,7 +117,15 @@ export default function ProfilePage() {
     );
 
     return (
-        <div id="PROFILE_CONTAINER">
+        <div id="PROFILE_CONTAINER" style={{
+            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+            minHeight: '100vh',
+            width: '100vw',
+            overflowX: 'hidden'
+        }}>
             {/* SOUNDS & INPUTS */}
             <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
             <audio id="coinSound" src="/audio/2019-preview1.mp3"></audio>
@@ -146,15 +156,17 @@ export default function ProfilePage() {
                     <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '25px', padding: '10px' }}></div>
                 </div>
 
-                {/* SIDEBAR */}
-                <div className="v-sidebar">
-                    <div className="v-card" style={{ marginBottom: '20px', textAlign: 'center', padding: '25px 15px', marginTop: '20px', marginRight: '20px', position: 'relative' }}>
+                {/* SIDEBAR: SLAVE PROFILE STYLE */}
+                <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
+                    <div className="v-card" style={{ marginBottom: 20, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()}>
-                            <img id="profilePic" src={profile?.profile_pic || ""} alt="Avatar" className="profile-img" />
+                            <img id="profilePic" src={profile?.profile_pic || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" />
                         </div>
-                        <div id="subName" className="identity-name" style={{ fontSize: '1.2rem', letterSpacing: '4px', marginBottom: '15px', fontWeight: 'bold' }}>{profile?.name || "SLAVE"}</div>
+                        <div id="subName" className="identity-name" style={{ fontSize: '1.2rem', letterSpacing: 4, marginBottom: 15, fontWeight: 'bold' }}>
+                            {profile?.name || "SLAVE"}
+                        </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '15px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
                             <div className="sidebar-stat-block">
                                 <div className="sidebar-stat-value-row">
                                     <span style={{ color: '#fff', opacity: 0.8 }}><i className="fas fa-award"></i></span>
@@ -162,10 +174,10 @@ export default function ProfilePage() {
                                 </div>
                                 <div className="sidebar-stat-label">MERIT</div>
                             </div>
-                            <div style={{ height: '30px', width: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
+                            <div style={{ height: 30, width: 1, background: 'rgba(255,255,255,0.05)' }}></div>
                             <div className="sidebar-stat-block">
                                 <div className="sidebar-stat-value-row">
-                                    <span style={{ color: 'var(--gold)' }}><i className="fas fa-coins"></i></span>
+                                    <span style={{ color: '#c5a059' }}><i className="fas fa-coins"></i></span>
                                     <div id="coins">{profile?.coins || 0}</div>
                                 </div>
                                 <div className="sidebar-stat-label">CAPITAL</div>
@@ -173,44 +185,51 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div className="sidebar-scrollable-area" style={{ flex: 1, overflowY: 'auto', width: '100%', display: 'flex', flexDirection: 'column', padding: '0 15px 0 15px', boxSizing: 'border-box', paddingRight: '30px' }}>
-                        <div id="deskStatsContent" style={{ width: '100%', textAlign: 'center', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: '12px', flexShrink: 0 }}>
+                    {/* DESKTOP SIDEBAR SCROLLABLE AREA */}
+                    <div className="sidebar-scrollable-area" style={{ flex: 1, overflowY: 'auto', width: '100%', display: 'flex', flexDirection: 'column', padding: '0 15px 0 15px', boxSizing: 'border-box', paddingRight: 30 }}>
+
+                        {/* 1. WHO YOU ARE (Current) */}
+                        <div id="deskStatsContent" style={{ width: '100%', textAlign: 'center', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 12, flexShrink: 0 }}>
                             <div style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>CURRENT CLASSIFICATION</div>
                             <div id="desk_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.1rem', color: '#fff', margin: '4px 0', textTransform: 'uppercase' }}>{profile?.rank || "LOADING..."}</div>
                             <div id="desk_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', padding: '0 5px', lineHeight: 1.4 }}></div>
                         </div>
 
-                        <div id="desk_WorkingOnSection" style={{ width: '100%', textAlign: 'center', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: '15px', flexShrink: 0 }}>
+                        {/* 2. THE TARGET (Next Rank - WORKING ON) */}
+                        <div id="desk_WorkingOnSection" style={{ width: '100%', textAlign: 'center', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 15, flexShrink: 0 }}>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: 2, marginBottom: 2 }}>WORKING ON</div>
                             <div id="desk_WorkingOnRank" style={{ fontFamily: 'Orbitron', fontSize: '0.9rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold' }}>...</div>
                         </div>
 
-                        <div id="desk_ProgressContainer" style={{ width: '100%', marginBottom: '15px', flexShrink: 0 }}></div>
+                        {/* 3. THE MATH (Progress Bars) */}
+                        <div id="desk_ProgressContainer" style={{ width: '100%', marginBottom: 15, flexShrink: 0 }}></div>
 
+                        {/* 4. THE PRIZE (Next Benefits) */}
                         <div style={{ width: '100%', textAlign: 'left', padding: '0 2px', marginBottom: 25, flexShrink: 0 }}>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', marginBottom: 6 }}>PRIVILEGES GRANTED</div>
                             <ul id="desk_NextBenefits" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, margin: 0 }}></ul>
                         </div>
 
-                        <div className="nav-menu" style={{ width: '100%', padding: '15px 0', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '20px' }}>
-                            <button className="nav-btn active" onClick={() => switchTab('serve')}>
-                                <span style={{ fontSize: '1.2rem', marginRight: '10px' }}>🏠</span> DASHBOARD
+                        {/* 5. NAVIGATION MENU (Inside scrollable flow) */}
+                        <div className="nav-menu" style={{ width: '100%', padding: '15px 0', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 20 }}>
+                            <button className="nav-btn" onClick={() => switchTab('serve')}>
+                                <span style={{ fontSize: '1.2rem', marginRight: 10 }}>🏠</span> DASHBOARD
                             </button>
-                            <button className="nav-btn" onClick={() => switchTab('record')}>
-                                <span style={{ fontSize: '1.2rem', marginRight: '10px' }}>📜</span> RECORDS
+                            <button className="nav-btn active" onClick={() => switchTab('record')}>
+                                <span style={{ fontSize: '1.2rem', marginRight: 10 }}>📜</span> RECORDS
                             </button>
                             <button className="nav-btn" onClick={() => switchTab('news')}>
-                                <span style={{ fontSize: '1.2rem', marginRight: '10px' }}>👑</span> QUEEN KARIN
+                                <span style={{ fontSize: '1.2rem', marginRight: 10 }}>👑</span> QUEEN KARIN
                             </button>
                             <button className="nav-btn" onClick={() => switchTab('buy')}>
-                                <span style={{ fontSize: '1.2rem', marginRight: '10px' }}>💰</span> EXCHEQUER
+                                <span style={{ fontSize: '1.2rem', marginRight: 10 }}>💰</span> EXCHEQUER
                             </button>
                         </div>
                     </div>
                 </div>
 
                 {/* MAIN CONTENT STAGE */}
-                <div id="viewServingTopDesktop" className="view-wrapper">
+                <div id="viewServingTopDesktop" className="view-wrapper hidden">
                     <div id="gridStat1" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
                         <div className="ribbon-label" style={{ textAlign: 'center' }}>KNEELING HOURS</div>
                         <div className="prog-bg" style={{ height: 25, borderRadius: 12, position: 'relative', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
@@ -311,7 +330,7 @@ export default function ProfilePage() {
                             </div>
                             <div className="chat-footer" style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.1)', padding: 15, display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <div className="chat-input-wrapper" style={{ flexGrow: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 15 }}>
-                                    <button id="btnMediaPlus" className="chat-btn-plus" onClick={() => handleMediaPlus()} style={{ background: '#0075ff' }}>+</button>
+                                    <button id="btnMediaPlus" className="chat-btn-plus" onClick={() => handleMediaPlus()}>+</button>
                                     <input type="text" id="chatMsgInput" className="chat-input" placeholder="Communicate with the Void..." onKeyPress={handleChatKey} />
                                 </div>
                                 <button className="chat-btn-send" onClick={() => sendChatMessage()} style={{ background: '#c5a059', borderRadius: 15, width: 45, height: 45, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{'>'}</button>
@@ -333,7 +352,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* OTHER VIEWS */}
-                <div id="historySection" className="view-wrapper hidden" style={{ perspective: 1000, padding: 0, minHeight: '80vh' }}>
+                <div id="historySection" className="view-wrapper" style={{ perspective: 1000, padding: 0, minHeight: '80vh' }}>
                     <div className="record-landing">
                         <header className="chronicle-header"><h1 className="chronicle-title">THE CHRONICLES</h1></header>
                         <section className="chronicle-section">
@@ -473,8 +492,6 @@ export default function ProfilePage() {
                     <button onClick={() => claimKneelReward('points')} className="mob-action-btn">CLAIM MERIT</button>
                 </div>
             </div>
-
-            <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
-        </div>
+        </div >
     );
 }
