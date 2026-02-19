@@ -10,7 +10,8 @@ export function getOptimizedUrl(url: string | null | undefined, width: number): 
     if (url.includes("cloudinary")) return "https://upcdn.io/kW2K8hR/raw/uploads/2025/12/06/collar-512.png";
 
     if (url.includes("upcdn.io")) {
-        let cleanUrl = getThumbnail(url);
+        const cleanUrl = getThumbnail(url);
+        if (!cleanUrl) return url;
         const sep = cleanUrl.includes("?") ? "&" : "?";
         return `${cleanUrl}${sep}width=${width}&format=auto&quality=auto&dpr=auto`;
     }
