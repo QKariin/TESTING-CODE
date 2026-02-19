@@ -422,7 +422,7 @@ export default function ProfilePage() {
                     </div>
 
                     {/* === POPUP OVERLAYS === */}
-                    <div id="lobbyOverlay" className="mob-reward-overlay hidden">
+                    <div id="lobbyOverlay" className="mob-reward-overlay hidden" style={{ display: 'none' }}>
                         <div className="mob-reward-card lobby-card">
                             <div id="lobbyMenu" className="lobby-content">
                                 <button className="lobby-btn" onClick={() => (window as any).showLobbyAction('name')}>ADD YOUR NAME</button>
@@ -457,7 +457,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="queenOverlay" className="mob-reward-overlay hidden">
+                    <div id="queenOverlay" className="mob-reward-overlay hidden" style={{ display: 'none' }}>
                         <div className="mob-reward-card queen-card-layout" style={{ width: '90%', maxHeight: '80vh', overflowY: 'auto' }}>
                             <div className="mob-chat-header" style={{ width: '100%', justifyContent: 'space-between', marginBottom: '20px', background: 'transparent', border: 'none', padding: 0 }}>
                                 <div className="chat-queen-name" style={{ color: '#c5a059', fontSize: '1.2rem' }}>DAILY DUTIES</div>
@@ -497,7 +497,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="povertyOverlay" className="mob-reward-overlay hidden">
+                    <div id="povertyOverlay" className="mob-reward-overlay hidden" style={{ display: 'none' }}>
                         <div className="mob-reward-card" style={{ borderColor: '#ff003c', boxShadow: '0 0 30px rgba(255, 0, 60, 0.2)' }}>
                             <div className="mob-hex-wrap small-reward" style={{ background: 'linear-gradient(135deg, #ff003c, #000)' }}>
                                 <div className="mob-rank-stamp" style={{ right: 'auto', left: '-5px', color: '#fff', borderColor: '#fff' }}>DENIED</div>
@@ -511,7 +511,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="mobKneelReward" className="mob-reward-overlay hidden">
+                    <div id="mobKneelReward" className="mob-reward-overlay hidden" style={{ display: 'none' }}>
                         <div className="mob-reward-card">
                             <div className="mob-hex-wrap small-reward">
                                 <div className="mob-rank-stamp" style={{ right: 'auto', left: '-5px', color: '#fff', borderColor: '#fff' }}>AUTHORIZED</div>
@@ -524,7 +524,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="rewardCardOverlay" className="mob-reward-overlay hidden" onClick={() => (window as any).closeRewardCard()}>
+                    <div id="rewardCardOverlay" className="mob-reward-overlay hidden" style={{ display: 'none' }} onClick={() => (window as any).closeRewardCard()}>
                         <div className="mob-reward-card" onClick={(e) => e.stopPropagation()}>
                             <div className="rc-header">
                                 <div id="rcIcon" className="rc-icon-large"></div>
