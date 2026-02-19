@@ -32,150 +32,165 @@ export default function DashboardPage() {
             (window as any).handleBroadcastFile = handleBroadcastFile;
             (window as any).showHome = showHome;
             (window as any).showProfile = showProfile;
+
+            // Additional Bindings from scripts
+            (window as any).initDashboard = initDashboard;
         }
 
         initDashboard();
     }, []);
 
     return (
-        <div className="dashboard-root">
-            {/* HEADER */}
-            <header className="dash-header">
-                <div className="logo-section">
-                    <div className="logo-hex">Q</div>
-                    <div className="logo-text">QUEENDOM <span>CONTROL</span></div>
+        <div className="layout">
+            {/* SIDEBAR */}
+            <aside className="sidebar">
+                <div className="sb-dash-btn" onClick={() => (window as any).showHome()}>
+                    QUEENDOM CONTROL
                 </div>
-                <nav className="nav-main">
-                    <button className="nav-item active" onClick={() => showHome()}>OVERVIEW</button>
-                    <button className="nav-item" onClick={() => showProfile()}>PROFILE</button>
-                    <button className="nav-item">FINANCE</button>
-                    <button className="nav-item">RECORDS</button>
-                </nav>
-                <div className="header-status">
-                    <div className="status-indicator online"></div>
-                    <span className="status-label">MASTER CONNECTION ACTIVE</span>
+                <div className="sb-head">OPERATIONS MANAGEMENT</div>
+                <div id="userList" className="user-list">
+                    {/* Populated by renderSidebar() */}
                 </div>
-            </header>
 
-            <main className="dash-main">
-                {/* LEFT BAR: USER LIST */}
-                <aside className="user-sidebar">
-                    <div className="sidebar-header">
-                        <h3>CITIZENS</h3>
-                        <span className="count" id="userCount">0</span>
+                <div className="sb-footer" style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
+                    <div style={{ color: '#444', fontSize: '0.6rem', fontFamily: 'Orbitron' }}>
+                        v1.0.1 // STANDALONE_CORE
                     </div>
-                    <div className="user-list" id="userList">
-                        {/* React or Script-driven user items */}
-                    </div>
-                </aside>
+                </div>
+            </aside>
 
-                {/* CENTER AREA: DYNAMIC VIEWS */}
-                <section className="viewport">
-                    <div id="viewHome" className="view-container grid-view">
-                        {/* HOME VIEW: OPS MONITOR & PROTOCOLS */}
-                        <div className="ops-monitor">
-                            <div className="sec-header">
-                                <h2>OPERATIONS MONITOR</h2>
-                                <div className="live-badge">LIVE</div>
+            {/* MAIN CONTENT AREA */}
+            <main className="content">
+
+                {/* 1. HOME VIEW (DASHBOARD) */}
+                <div id="viewHome" className="view-container grid-view">
+
+                    {/* STATS DECK */}
+                    <div className="stats-deck">
+                        <div className="d-stat-card">
+                            <div id="statTributes" className="dsc-val gold">0</div>
+                            <div className="dsc-lbl">TRIBUTES COLLECTED</div>
+                        </div>
+                        <div className="d-stat-card">
+                            <div id="statActive" className="dsc-val green">0</div>
+                            <div className="dsc-lbl">ACTIVE OPERATIONS</div>
+                        </div>
+                        <div className="d-stat-card">
+                            <div id="statPending" className="dsc-val blue">0</div>
+                            <div className="dsc-lbl">PENDING REVIEWS</div>
+                        </div>
+                        <div className="d-stat-card">
+                            <div id="statSkipped" className="dsc-val red">0</div>
+                            <div className="dsc-lbl">STRIKES ISSUED</div>
+                        </div>
+                    </div>
+
+                    {/* PROTOCOL CENTER */}
+                    <div id="protocolDeck" className="protocol-deck">
+                        <div className="pd-label">
+                            <div className="pd-title">SILENCE PROTOCOL</div>
+                            <div className="pd-sub">SYSTEM ENFORCEMENT</div>
+                        </div>
+                        <div className="pd-controls">
+                            <div className="pd-column-group">
+                                <div className="pd-input-group">
+                                    <input type="number" id="pdGoal" className="pd-input" defaultValue="1000" />
+                                </div>
                             </div>
-                            <div id="opsList" className="ops-list">
-                                {/* Active task cards */}
+                            <button id="pdBtn" className="pd-action-btn engage" onClick={() => (window as any).toggleProtocol()}>ENGAGE</button>
+                            <button className="pd-broadcast-btn" onClick={() => (window as any).sendBroadcast()}>
+                                SYSTEM BROADCAST
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* DASHBOARD SPLIT */}
+                    <div className="dash-split">
+                        <div className="dash-panel">
+                            <div className="dp-head">OPERATIONS MONITOR</div>
+                            <div id="opsList" className="dp-body">
+                                {/* Populated by renderOperationsGrid() */}
+                            </div>
+                        </div>
+                        <div className="dash-panel">
+                            <div className="dp-head">SYSTEM FEED</div>
+                            <div id="feedLog" className="dp-body">
+                                {/* Populated by renderFeedLog() */}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. USER VIEW (CHAT & PROFILE) */}
+                <div id="viewUser" className="view-container user-view" style={{ display: 'none' }}>
+                    <div className="chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div id="adminChatBox" className="chat-box" style={{ flex: 1, padding: '20px', overflowY: 'auto' }}></div>
+                        <div className="chat-input-area" style={{ padding: '15px' }}>
+                            <input type="text" id="adminChatInput" className="chat-inp" placeholder="TRANSMIT DIRECTIVE..." />
+                        </div>
+                    </div>
+
+                    <div className="profile-mirror" style={{ width: '400px', borderLeft: '1px solid var(--border)', background: 'rgba(0,0,0,0.3)' }}>
+                        <div id="apMirrorHeader" className="mirror-header" style={{ height: '200px', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
+                            <div style={{ position: 'absolute', bottom: '20px', left: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <img id="dProfilePic" src="" alt="Profile" className="mon-av" style={{ width: '80px', height: '80px', borderRadius: '50%', border: '2px solid var(--gold)' }} />
+                                <div>
+                                    <div id="dMirrorName" className="mon-name" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>NAME</div>
+                                    <div id="dMirrorHierarchy" className="mon-hierarchy" style={{ color: 'var(--gold)', fontSize: '0.8rem' }}>RANK</div>
+                                    <div id="dMirrorStatus" className="mon-status">ONLINE</div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="protocol-center">
-                            <div className="protocol-card">
-                                <div className="card-header">SILENCE PROTOCOL</div>
-                                <div className="pd-controls" id="pdControls">
-                                    <input type="number" id="pdGoal" defaultValue="1000" />
-                                    <button id="pdBtn" className="engage" onClick={() => toggleProtocol()}>ENGAGE</button>
+                        <div className="profile-body" style={{ padding: '20px' }}>
+                            <div className="stats-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                                <div className="stat-box">
+                                    <div className="sb-lbl">POINTS</div>
+                                    <div id="dMirrorPoints" className="sb-val">0</div>
+                                </div>
+                                <div className="stat-box">
+                                    <div className="sb-lbl">WALLET</div>
+                                    <div id="dMirrorWallet" className="sb-val">0</div>
+                                </div>
+                                <div className="stat-box">
+                                    <div className="sb-lbl">KNEEL</div>
+                                    <div id="dMirrorKneel" className="sb-val">0</div>
                                 </div>
                             </div>
 
-                            <div className="broadcast-card">
-                                <button className="br-btn" style={{ width: '100%' }} onClick={() => (window as any).openBroadcastModal()}>SYSTEM BROADCAST</button>
-                            </div>
+                            <div id="admin_ProgressContainer"></div>
+                            <div id="userQueueSec"></div>
+                            <div id="qListContainer"></div>
                         </div>
                     </div>
+                </div>
 
-                    <div id="viewUser" className="view-container user-view" style={{ display: 'none' }}>
-                        {/* USER VIEW: CHAT & PROFILE MIRROR */}
-                        <div className="chat-section">
-                            <div id="adminChatBox" className="chat-box"></div>
-                            <div className="chat-input-area">
-                                <input type="text" id="adminChatInput" placeholder="TRANSMIT DIRECTIVE..." />
-                            </div>
-                        </div>
-                        <div className="profile-mirror">
-                            <div id="apMirrorHeader" className="mirror-header">
-                                <img id="dProfilePic" src="" alt="Profile" />
-                                <h2 id="dMirrorName">NAME</h2>
-                                <div id="dMirrorHierarchy">HIERARCHY</div>
-                            </div>
-                            {/* Statistics etc */}
-                        </div>
+                {/* 3. PROFILE VIEW (ME) */}
+                <div id="viewProfile" className="view-container" style={{ display: 'none' }}>
+                    <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+                        SYSTEM_ADMIN_PROFILE_LOAD...
                     </div>
-                </section>
+                </div>
+
             </main>
 
-            {/* MODALS */}
-            <div id="reviewModal" className="modal" onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
+            {/* SHARED MODALS */}
+            <div id="reviewModal" className="modal" style={{ display: 'none' }}>
+                {/* Modal content should be filled by script as before but ensure container exists */}
                 <div className="m-content">
-                    <span onClick={() => closeModal()} className="m-close">&times;</span>
+                    <span onClick={() => (window as any).closeModal()} className="m-close">&times;</span>
                     <div id="mMediaBox" className="m-media-box"></div>
                     <div className="m-info">
                         <div id="reviewNormalContent">
                             <div id="mText" className="m-text-scroll"></div>
                             <div id="modalActions"></div>
                         </div>
-                        <div id="reviewRewardOverlay" style={{ display: 'none' }}>
-                            <h3 style={{ color: 'var(--green)', marginBottom: '15px', textAlign: 'center' }}>REWARD PROTOCOL</h3>
-                            <div id="stickerGrid" className="sticker-grid"></div>
-                            <div className="reward-inputs">
-                                <input type="number" id="rewardBonus" className="rw-inp" defaultValue="50" />
-                                <input type="text" id="rewardComment" className="rw-inp" placeholder="Optional message..." />
-                            </div>
-                            <div className="rw-media-row">
-                                <div id="btnRecordReward" className="rw-icon-btn" onClick={() => toggleRewardRecord()}>REC</div>
-                                <div id="rewardMediaPreview" className="rw-preview-box d-none"></div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                                <button onClick={() => cancelReward()} className="btn-sec">CANCEL</button>
-                                <button onClick={() => confirmReward()} className="btn-pri">CONFIRM</button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <div id="broadcastModal" className="modal">
-                <div className="m-content br-modal-content">
-                    <div className="br-head">BROADCAST MESSAGE</div>
-                    <textarea id="brText" className="br-inp" placeholder="Enter your message..."></textarea>
-                    <div className="br-preset-row">
-                        <button className="br-mini-btn" onClick={() => saveBroadcastPreset()}>SAVE PRESET</button>
-                        <button className="br-mini-btn" onClick={() => togglePresets()}>LOAD PRESET</button>
-                    </div>
-                    <div id="presetList" style={{ display: 'none' }}></div>
-                    <input type="file" id="brFile" accept="image/*,video/*" onChange={(e) => handleBroadcastFile(e.target)} style={{ display: 'none' }} />
-                    <img id="brPreviewImg" className="br-prev" style={{ display: 'none' }} alt="Preview" />
-                    <video id="brPreviewVid" className="br-prev" style={{ display: 'none' }} muted autoPlay loop></video>
-                    <div id="brUserList" className="ex-list"></div>
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                        <button onClick={() => closeBroadcastModal()} className="btn-sec">CANCEL</button>
-                        <button onClick={() => sendBroadcast()} className="br-btn">SEND BROADCAST</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="exclusionModal" className="modal">
-                <div className="m-content">
-                    <h3 style={{ color: 'var(--red)', marginBottom: '15px', textAlign: 'center' }}>PROTOCOL EXCLUSIONS</h3>
-                    <div id="exclusionList" className="ex-list"></div>
-                    <button onClick={() => closeExclusionModal()} className="btn-sec">CLOSE</button>
-                </div>
-            </div>
-
+            {/* SOUND ASSETS */}
+            <audio id="msgSound" src="https://static.wixstatic.com/mp3/ce3e5b_7b8a7b3...mp3" preload="auto"></audio>
         </div>
     );
 }
