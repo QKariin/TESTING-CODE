@@ -1,7 +1,67 @@
 // --- CENTRAL HIERARCHY CONFIGURATION (Source of Truth) ---
 // PLACE THIS FILE IN: Public > hierarchyRules.js
 
-export const HIERARCHY_RULES = [
+export interface SlaveRecord {
+    hierarchy?: string;
+    image_fld?: string;
+    image?: string;
+    profilePicture?: string;
+    title_fld?: string;
+    title?: string;
+    limits?: string;
+    kinks?: string;
+    kink?: string;
+    routine?: string;
+    taskdom_routine?: string;
+    taskdom_completed_tasks?: number;
+    kneelCount?: number;
+    score?: number;
+    total_coins_spent?: number;
+    bestRoutinestreak?: number;
+    routinestreak?: number;
+    routineHistory?: string | any[];
+    routinehistory?: string | any[];
+    [key: string]: any;
+}
+
+export interface HierarchyRequirement {
+    id: string;
+    label: string;
+    status?: "VERIFIED" | "MISSING";
+    current?: number;
+    target?: number;
+    percent?: number;
+    active?: number;
+    type: "check" | "bar";
+}
+
+export interface HierarchyReport {
+    currentRank: string;
+    nextRank: string;
+    isMax: boolean;
+    canPromote: boolean;
+    requirements: HierarchyRequirement[];
+}
+
+export interface HierarchyRule {
+    name: string;
+    req: {
+        tasks?: number;
+        kneels?: number;
+        points?: number;
+        spent?: number;
+        streak?: number;
+        prefs?: boolean;
+        limits?: boolean;
+        kinks?: boolean;
+        routine?: boolean;
+        name?: boolean;
+        photo?: boolean;
+    };
+    benefits: string[];
+}
+
+export const HIERARCHY_RULES: HierarchyRule[] = [
     {
         name: "Queen's Champion",
         req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 365, prefs: true, limits: true, kinks: true, routine: true },
@@ -40,8 +100,7 @@ export const HIERARCHY_RULES = [
 ];
 
 // --- HELPER: RANK DETERMINATION (Dynamic Logic) ---
-// --- HELPER: RANK DETERMINATION (Dynamic Logic) ---
-export function determineRank(item) {
+export function determineRank(item: SlaveRecord): string {
     const report = getHierarchyReport(item);
     return report.currentRank;
 }
@@ -50,7 +109,7 @@ export function determineRank(item) {
  * THE BRAIN: Audits a user record and returns exactly what the frontend should draw.
  * This keeps the frontend "dumb" and prevents flickering.
  */
-export function getHierarchyReport(item) {
+export function getHierarchyReport(item: SlaveRecord): HierarchyReport {
     if (!item) {
         return {
             currentRank: "Hall Boy",
@@ -60,7 +119,7 @@ export function getHierarchyReport(item) {
             requirements: []
         };
     }
-    const clean = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const clean = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const currentHierarchy = item.hierarchy || "Hall Boy";
 
     // Find index of current rank
@@ -98,8 +157,8 @@ export function getHierarchyReport(item) {
     return generateReport(item, currentHierarchy);
 }
 
-function generateReport(item, currentRank) {
-    const clean = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport {
+    const clean = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const currentIndex = HIERARCHY_RULES.findIndex(r => clean(r.name) === clean(currentRank));
     const nextIndex = currentIndex - 1;
     const isMax = nextIndex < 0;
@@ -107,7 +166,7 @@ function generateReport(item, currentRank) {
     const nextRankObj = isMax ? HIERARCHY_RULES[0] : HIERARCHY_RULES[nextIndex];
     const req = nextRankObj.req;
 
-    const report = {
+    const report: HierarchyReport = {
         currentRank: currentRank,
         nextRank: nextRankObj.name,
         isMax: isMax,
@@ -144,18 +203,18 @@ function generateReport(item, currentRank) {
 
     // 3. Stats (Bars)
     const statsMap = [
-        { key: "taskdom_completed_tasks", label: "LABOR", reqKey: "tasks" },
-        { key: "kneelCount", label: "ENDURANCE", reqKey: "kneels" },
-        { key: "score", label: "MERIT", reqKey: "points" },
-        { key: "total_coins_spent", label: "SACRIFICE", reqKey: "spent" },
-        { key: "bestRoutinestreak", label: "CONSISTENCY", reqKey: "streak", activeKey: "routinestreak" }
+        { key: "taskdom_completed_tasks", label: "LABOR", reqKey: "tasks" as keyof typeof req },
+        { key: "kneelCount", label: "ENDURANCE", reqKey: "kneels" as keyof typeof req },
+        { key: "score", label: "MERIT", reqKey: "points" as keyof typeof req },
+        { key: "total_coins_spent", label: "SACRIFICE", reqKey: "spent" as keyof typeof req },
+        { key: "bestRoutinestreak", label: "CONSISTENCY", reqKey: "streak" as keyof typeof req, activeKey: "routinestreak" }
     ];
 
     statsMap.forEach(s => {
-        if (req[s.reqKey] > 0 || (s.reqKey === "tasks" && req.tasks >= 0)) {
-            let current = item[s.key] || 0;
-            let active = item[s.activeKey] || 0;
-            const target = req[s.reqKey];
+        const target = req[s.reqKey] as number | undefined;
+        if (target !== undefined && target >= 0) {
+            let current = (item[s.key] as number) || 0;
+            let active = s.activeKey ? (item[s.activeKey] as number) || 0 : 0;
 
             // --- STREAK FALLBACK: CALCULATE FROM HISTORY IF DATA IS MISSING ---
             if (s.reqKey === "streak" && current === 0 && active === 0) {
@@ -167,8 +226,8 @@ function generateReport(item, currentRank) {
 
             const pct = Math.min((current / (target || 1)) * 100, 100);
 
-            const requirement = {
-                id: s.reqKey,
+            const requirement: HierarchyRequirement = {
+                id: String(s.reqKey),
                 label: s.label,
                 current: current, // Best Streak (fills progress)
                 target: target,
@@ -188,7 +247,7 @@ function generateReport(item, currentRank) {
     // 4. Can Promote?
     report.canPromote = report.requirements.every(r => {
         if (r.type === "check") return r.status === "VERIFIED";
-        if (r.type === "bar") return r.current >= r.target;
+        if (r.type === "bar") return (r.current ?? 0) >= (r.target ?? 0);
         return true;
     });
 
@@ -198,8 +257,8 @@ function generateReport(item, currentRank) {
 /**
  * Internal streak calculator for backend fallback
  */
-function calculateInternalStreak(historyStr) {
-    let history = [];
+function calculateInternalStreak(historyStr: string | any[]): { current: number, best: number } {
+    let history: any[] = [];
     try {
         if (typeof historyStr === 'string') history = JSON.parse(historyStr);
         else if (Array.isArray(historyStr)) history = historyStr;
@@ -208,9 +267,9 @@ function calculateInternalStreak(historyStr) {
     if (!history || history.length === 0) return { current: 0, best: 0 };
 
     // Sort Newest First
-    history.sort((a, b) => new Date(b.date || b._createdDate || b) - new Date(a.date || a._createdDate || a));
+    history.sort((a, b) => new Date(b.date || b._createdDate || b).getTime() - new Date(a.date || a._createdDate || a).getTime());
 
-    const getDutyDay = (d) => {
+    const getDutyDay = (d: any) => {
         let date = new Date(d);
         if (date.getHours() < 6) date.setDate(date.getDate() - 1);
         return date.toISOString().split('T')[0];
@@ -225,7 +284,7 @@ function calculateInternalStreak(historyStr) {
     const lastCode = getDutyDay(lastSubmissionDate);
 
     // Calculate Active Streak (Current)
-    const diffDays = (new Date(todayCode) - new Date(lastCode)) / (1000 * 60 * 60 * 24);
+    const diffDays = (new Date(todayCode).getTime() - new Date(lastCode).getTime()) / (1000 * 60 * 60 * 24);
     if (diffDays <= 1) {
         tempCurrent = 1;
         let lastDay = lastCode;
@@ -244,13 +303,12 @@ function calculateInternalStreak(historyStr) {
     current = tempCurrent;
 
     // Calculate All-Time Best (High Water Mark)
-    // To be efficient, we scan the history
     let maxBest = current;
     let streakCount = 0;
-    let lastDate = null;
+    let lastDate: string | null = null;
 
     // Sort Oldest First for best streak scan
-    const chronHistory = [...history].sort((a, b) => new Date(a.date || a._createdDate || a) - new Date(b.date || b._createdDate || b));
+    const chronHistory = [...history].sort((a, b) => new Date(a.date || a._createdDate || a).getTime() - new Date(b.date || b._createdDate || b).getTime());
 
     chronHistory.forEach(h => {
         const day = getDutyDay(h.date || h._createdDate || h);
