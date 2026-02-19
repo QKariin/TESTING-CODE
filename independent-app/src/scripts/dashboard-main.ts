@@ -105,8 +105,8 @@ function updateStatsDeck() {
     const activeK = users.filter(u => u.status === 'Kneeling').length;
 
     if (tkMins) tkMins.innerText = totalMins.toLocaleString();
-    if (tkSessions) tkSessions.innerText = totalSess;
-    if (akCount) akCount.innerText = activeK;
+    if (tkSessions) tkSessions.innerText = totalSess.toString();
+    if (akCount) akCount.innerText = activeK.toString();
 
     // Best Sub Logic
     if (users.length > 0) {
