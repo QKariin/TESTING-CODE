@@ -145,16 +145,16 @@ export default function DashboardPage() {
                         <div className="profile-body" style={{ padding: '20px' }}>
                             <div className="stats-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '20px' }}>
                                 <div className="stat-box">
-                                    <div className="sb-lbl">POINTS</div>
-                                    <div id="dMirrorPoints" className="sb-val">0</div>
+                                    <div className="dsc-lbl">POINTS</div>
+                                    <div id="dMirrorPoints" className="dsc-val gold">0</div>
                                 </div>
                                 <div className="stat-box">
-                                    <div className="sb-lbl">WALLET</div>
-                                    <div id="dMirrorWallet" className="sb-val">0</div>
+                                    <div className="dsc-lbl">WALLET</div>
+                                    <div id="dMirrorWallet" className="dsc-val gold">0</div>
                                 </div>
                                 <div className="stat-box">
-                                    <div className="sb-lbl">KNEEL</div>
-                                    <div id="dMirrorKneel" className="sb-val">0</div>
+                                    <div className="dsc-lbl">KNEEL</div>
+                                    <div id="dMirrorKneel" className="dsc-val gold">0</div>
                                 </div>
                             </div>
 
