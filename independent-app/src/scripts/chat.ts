@@ -262,7 +262,9 @@ export function closeChatPreview() {
 }
 
 // Global Exports
-(window as any).loadMoreChat = loadMoreChat;
-(window as any).openChatPreview = openChatPreview;
-(window as any).closeChatPreview = closeChatPreview;
-(window as any).forceBottom = forceBottom;
+if (typeof window !== 'undefined') {
+    (window as any).loadMoreChat = loadMoreChat;
+    (window as any).openChatPreview = openChatPreview;
+    (window as any).closeChatPreview = closeChatPreview;
+    (window as any).forceBottom = forceBottom;
+}

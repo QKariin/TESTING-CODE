@@ -234,5 +234,7 @@ export async function handleAdminUpload(input: HTMLInputElement) {
     }
 }
 
-(window as any).sendMsg = sendMsg;
-(window as any).handleAdminUpload = handleAdminUpload;
+if (typeof window !== 'undefined') {
+    (window as any).sendMsg = sendMsg;
+    (window as any).handleAdminUpload = handleAdminUpload;
+}
