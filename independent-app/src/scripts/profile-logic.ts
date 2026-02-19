@@ -213,6 +213,7 @@ export function closeModal() { document.getElementById('glassModal')!.style.disp
 export function closePoverty() { document.getElementById('povertyOverlay')?.classList.add('hidden'); }
 export function goToExchequer() { switchTab('buy'); closePoverty(); }
 export function closeRewardCard() { document.getElementById('rewardCardOverlay')?.classList.add('hidden'); }
+export function closeExchequer() { document.getElementById('mobExchequer')?.classList.add('hidden'); }
 
 export function showLobbyAction(type: string) {
     console.log("Show lobby action:", type);
