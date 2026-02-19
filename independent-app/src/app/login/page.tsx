@@ -1,3 +1,4 @@
+/** v1.0.1 - Force build Google OAuth integration */
 "use client";
 
 import { useState } from 'react';
