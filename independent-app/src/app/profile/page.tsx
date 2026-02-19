@@ -139,7 +139,7 @@ export default function ProfilePage() {
             <input type="file" id="chatMediaInput" accept="image/*,video/*" className="hidden" />
 
             {/* CELEBRATION OVERLAY */}
-            <div id="celebrationOverlay" className="hidden" style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 2147483647, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.3s' }}>
+            <div id="celebrationOverlay" className="hidden" style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 2147483647, display: 'none', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.3s' }}>
                 <div className="glass-card" style={{ border: '2px solid #00ff00', textAlign: 'center' }}>
                     <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#00ff00', textShadow: '0 0 20px #00ff00', fontFamily: 'Orbitron' }}>
                         TASK<br />SUBMITTED
@@ -150,7 +150,7 @@ export default function ProfilePage() {
             {/* UNIVERSAL DESKTOP APP */}
             <div id="DESKTOP_APP">
                 {/* TRIBUTE STORE OVERLAY */}
-                <div id="tributeHuntOverlay" className="hidden" style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.98)', zIndex: 10000, flexDirection: 'column', padding: '60px', backdropFilter: 'blur(20px)' }}>
+                <div id="tributeHuntOverlay" className="hidden" style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.98)', zIndex: 10000, display: 'none', flexDirection: 'column', padding: '60px', backdropFilter: 'blur(20px)' }}>
                     <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
                         <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '2rem', letterSpacing: '6px', fontWeight: 700 }}>TRIBUTE STORE</span>
                         <button onClick={() => toggleTributeHunt()} style={{ color: '#666', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '2.5rem', transition: '0.3s' }}>×</button>
@@ -275,7 +275,7 @@ export default function ProfilePage() {
                     <div id="gridHero" className="v-card serve-grid-item" style={{ background: "url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png')", backgroundSize: 'cover', backgroundPosition: 'center', minHeight: 'unset', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(2,5,18,0.9) 0%, rgba(2,5,18,0.4) 100%)' }}></div>
 
-                        <div id="kneelRewardOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 5000, backdropFilter: 'blur(20px)', alignItems: 'center', justifyContent: 'center' }}>
+                        <div id="kneelRewardOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 5000, backdropFilter: 'blur(20px)', display: 'none', alignItems: 'center', justifyContent: 'center' }}>
                             <div style={{ textAlign: 'center', width: '100%', padding: 20 }}>
                                 <div className="mob-reward-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, width: '100%', maxHeight: 'unset', overflow: 'visible' }}>
                                     <h2 style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '1.2rem', letterSpacing: 4, marginBottom: 20, textTransform: 'uppercase' }}>DEVOTION RECOGNIZED</h2>
@@ -544,7 +544,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="mobExchequer" className="mob-reward-overlay hidden" style={{ zIndex: 2147483640 }}>
+                    <div id="mobExchequer" className="mob-reward-overlay hidden" style={{ zIndex: 2147483640, display: 'none' }}>
                         <div className="mob-reward-card lobby-card" style={{ border: '1px solid #c5a059' }}>
                             <div className="lobby-header">
                                 <div className="lobby-title">EXCHEQUER</div>

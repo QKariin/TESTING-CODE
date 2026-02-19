@@ -66,9 +66,7 @@
         overflow: hidden;
     }
 
-    .hidden {
-        display: none !important;
-    }
+
 
     /* --- VISION UI UTILITIES --- */
     .v-card {
@@ -4133,4 +4131,8 @@
         letter-spacing: 2px;
         text-transform: uppercase;
     }
+}
+
+.hidden {
+    display: none !important;
 }
