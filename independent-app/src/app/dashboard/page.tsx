@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import './dashboard.css';
-import './dashboard-modals.css';
-import './dashboard-mobile.css';
+import '../../css/dashboard.css';
+import '../../css/dashboard-modals.css';
+import '../../css/dashboard-mobile.css';
 
 // Scripts
 import { initDashboard, showHome } from '@/scripts/dashboard-main';
