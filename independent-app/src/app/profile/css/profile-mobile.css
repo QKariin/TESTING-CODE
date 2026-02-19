@@ -1,0 +1,437 @@
+/* =========================================
+   MOBILE RECONSTRUCTION (MIRRORED FROM INDEX.HTML)
+   ========================================= */
+@media screen and (max-width: 768px) {
+    #DESKTOP_APP {
+        display: none !important;
+    }
+
+    #MOBILE_APP {
+        display: block !important;
+        width: 100vw;
+        height: 100dvh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 999999;
+        background-color: transparent !important;
+        color: white;
+        font-family: 'Cinzel', serif;
+        overflow: hidden;
+    }
+
+    #viewMobileHome {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100dvh;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-y !important;
+        overscroll-behavior: none !important;
+        will-change: scroll-position;
+        transform: translateZ(0);
+        display: block;
+        padding: 0;
+        z-index: 1;
+        background: transparent !important;
+    }
+
+    #viewMobileHome::-webkit-scrollbar,
+    #mobHomeScroll::-webkit-scrollbar,
+    #mobGlobalScroll::-webkit-scrollbar,
+    #mobRecordScroll::-webkit-scrollbar,
+    .mob-horiz-scroll::-webkit-scrollbar,
+    .qm-scroll-content::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        background: transparent !important;
+    }
+
+    .halo-section {
+        position: relative;
+        z-index: 2;
+        margin-top: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .halo-ring {
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        border: 2px solid #c5a059;
+        box-shadow: 0 0 30px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .halo-name {
+        font-family: 'Cinzel', serif;
+        font-size: 2.2rem;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        line-height: 1;
+        margin-bottom: 5px;
+        text-align: center;
+    }
+
+    .halo-rank {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.7rem;
+        color: #c5a059;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+    }
+
+    .halo-stats-card {
+        position: relative;
+        z-index: 3;
+        margin-top: -40px;
+        width: 90%;
+        background: rgba(10, 10, 10, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(15px);
+        margin-bottom: 20px;
+    }
+
+    .h-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .h-val {
+        font-family: 'Orbitron', serif;
+        font-size: 1.5rem;
+        color: #fff;
+        line-height: 1;
+    }
+
+    .h-lbl {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.5rem;
+        color: #888;
+        letter-spacing: 2px;
+        margin-top: 4px;
+    }
+
+    .h-divider {
+        width: 1px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .mob-hud-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 20px;
+        box-sizing: border-box;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    .hud-circle {
+        width: 45px;
+        height: 45px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        cursor: pointer;
+        position: relative;
+    }
+
+    .hud-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .mob-stats-toggle-btn {
+        width: 100%;
+        background: transparent;
+        border: 1px solid rgba(136, 136, 136, 0.3);
+        color: #888;
+        opacity: 0.7;
+        font-family: 'Cinzel', serif;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 8px 0;
+        cursor: pointer;
+        letter-spacing: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 4px;
+        transition: 0.3s;
+    }
+
+    .mob-internal-drawer {
+        width: 100%;
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        background: transparent;
+        border-top: 1px solid transparent;
+        box-sizing: border-box;
+    }
+
+    .mob-internal-drawer.open {
+        max-height: 1200px;
+        opacity: 1;
+        margin-top: 15px;
+        padding: 20px 10px;
+        border: 1px solid #333;
+        background: rgba(0, 0, 0, 0.9);
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    }
+
+    .mob-kneel-bar {
+        width: 100%;
+        height: 50px;
+        background: #080808;
+        border: 1px solid #c5a059;
+        border-radius: 4px;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
+        transition: 0.2s;
+    }
+
+    .mob-bar-fill {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, #8b0000, #000000);
+        z-index: 1;
+        transition: width 0.1s linear;
+    }
+
+    .mob-bar-content {
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .kneel-icon-sm {
+        color: #c5a059;
+        font-size: 1.2rem;
+    }
+
+    .kneel-text {
+        font-family: 'Cinzel', serif;
+        letter-spacing: 3px;
+        color: #ccc;
+    }
+
+    .mob-reward-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 2147483647;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start !important;
+        padding-top: 80px !important;
+        backdrop-filter: blur(8px);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .mob-reward-card {
+        background: #111;
+        border: 1px solid #c5a059;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        width: 90%;
+        box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin-bottom: 50px;
+    }
+
+    .duty-label {
+        font-family: 'Cinzel', serif;
+        font-weight: 700;
+        font-size: 0.7rem;
+        color: #888;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        text-align: center;
+        margin-bottom: 20px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 30px;
+    }
+
+    .duty-label::before,
+    .duty-label::after {
+        content: '';
+        height: 1px;
+        width: 30px;
+        background: #333;
+    }
+
+    #mobTaskText {
+        font-family: 'Cinzel', serif;
+        font-size: 0.85rem;
+        color: #e0e0e0;
+        text-align: center;
+        line-height: 1.4;
+        margin: 5px 0 15px 0;
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.3);
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mob-horiz-scroll {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 10px;
+        width: 100%;
+        padding-right: 20px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-left: 10px;
+    }
+
+    .mob-pyramid-stage {
+        position: relative;
+        width: 100%;
+        height: 260px;
+        margin-top: 15px;
+        perspective: 1000px;
+    }
+
+    .mob-idol {
+        position: absolute;
+        background: #000;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .mob-idol img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .mob-idol.center {
+        width: 160px;
+        height: 230px;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        border: 2px solid #c5a059;
+    }
+
+    .mob-idol.side {
+        width: 130px;
+        height: 190px;
+        top: 50px;
+        left: 10%;
+        z-index: 5;
+        border: 1px solid #444;
+        filter: brightness(0.5) grayscale(50%);
+        transform: rotate(-6deg);
+    }
+
+    .mob-idol.side.right {
+        left: auto;
+        right: 10%;
+        transform: rotate(6deg);
+    }
+
+    .mob-rank-badge {
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #000;
+        border: 1px solid #333;
+        color: #888;
+        font-family: 'Cinzel', serif;
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        z-index: 30;
+    }
+
+    .mob-scroll-item {
+        flex: 0 0 120px;
+        height: 160px;
+        position: relative;
+        border: 1px solid #333;
+        background: #111;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-right: 10px;
+    }
+
+    .system-ticker {
+        width: 100%;
+        padding: 8px 0;
+        background: #080808;
+        border-bottom: 1px solid #222;
+        color: #c5a059;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        text-align: center;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+}

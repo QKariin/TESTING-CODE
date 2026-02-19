@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import './profile.css';
+import './css/profile-mobile.css';
 import { getState, setState, initProfileState } from '@/scripts/profile-state';
 import { handleHoldStart, handleHoldEnd, updateKneelingUI } from '@/scripts/kneeling';
 import {
