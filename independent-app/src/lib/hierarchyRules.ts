@@ -143,10 +143,10 @@ export function getHierarchyReport(item: SlaveRecord): HierarchyReport {
     }
 
     // 4. Prefs/Routine Checks (For Silverman+)
-    const hasLimits = item.limits && item.limits.length > 2;
-    const hasKinks = (item.kinks || item.kink) && (item.kinks || item.kink).length > 2;
+    const hasLimits = (item.limits?.length ?? 0) > 2;
+    const hasKinks = ((item.kinks || item.kink)?.length ?? 0) > 2;
     const hasPrefs = hasLimits && hasKinks;
-    const hasRoutineSet = (item.routine && item.routine.length > 5) || (item.taskdom_routine && item.taskdom_routine.length > 5);
+    const hasRoutineSet = (item.routine?.length ?? 0) > 5 || (item.taskdom_routine?.length ?? 0) > 5;
 
     if (currentIndex <= 4) { // Silverman or higher
         if (!hasPrefs || !hasRoutineSet) {
@@ -191,13 +191,13 @@ function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport
 
     // 2. Prefs/Routine
     if (req.prefs || req.limits || req.kinks) {
-        const hasLimits = item.limits && item.limits.length > 2;
-        const hasKinks = (item.kinks || item.kink) && (item.kinks || item.kink).length > 2;
+        const hasLimits = (item.limits?.length ?? 0) > 2;
+        const hasKinks = ((item.kinks || item.kink)?.length ?? 0) > 2;
         if (req.limits) report.requirements.push({ id: "limits", label: "LIMITS", status: hasLimits ? "VERIFIED" : "MISSING", type: "check" });
         if (req.kinks) report.requirements.push({ id: "kinks", label: "KINKS", status: hasKinks ? "VERIFIED" : "MISSING", type: "check" });
     }
     if (req.routine) {
-        const hasRoutine = (item.routine && item.routine.length > 5) || (item.taskdom_routine && item.taskdom_routine.length > 5);
+        const hasRoutine = (item.routine?.length ?? 0) > 5 || (item.taskdom_routine?.length ?? 0) > 5;
         report.requirements.push({ id: "routine", label: "ROUTINE", status: hasRoutine ? "VERIFIED" : "MISSING", type: "check" });
     }
 
