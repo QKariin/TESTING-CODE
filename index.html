@@ -1,1418 +1,1423 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content" />
-    <title>Command Console</title>
-
-    <script type="module" src="../js/main.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
-
-    <!-- FONTS -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@200;300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap"
-        rel="stylesheet" />
-
-    <!-- DESKTOP STYLES -->
-    <link rel="stylesheet" href="../css/chat.css">
-    <link rel="stylesheet" href="../css/profile.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="../css/reward.css">
-
+    <meta name="theme-color" content="#000000">
     <style>
-        /* =========================================
-       1. CORE LAYOUT & SCROLLING (CLEANED)
-       ========================================= */
-        #MOBILE_APP {
-            display: none;
-        }
-
-        /* --- CRITICAL APP SHELL LOCK (GLOBAL) --- */
-        /* This applies to BOTH Desktop and Mobile to stop the "Wix Scroll" */
         html,
         body {
-
-            width: 100% !important;
-            height: 100% !important;
-            overflow: hidden !important;
-            /* Kills outer scrollbar */
-            background-color: transparent !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            top: 0 !important;
-            left: 0 !important;
-            overscroll-behavior: none !important;
-            /* Kills iOS bounce */
-            touch-action: none;
-            /* Kills pinch-zoom on mobile */
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background: black;
         }
 
-        .mobile-only-trigger {
-            display: none !important;
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
-        /* --- MOBILE SPECIFIC STYLES --- */
-        @media screen and (max-width: 768px) {
-
-            #MOBILE_APP {
-                display: block !important;
-                width: 100vw;
-                height: 100dvh;
-                position: fixed;
-                top: 0;
-                left: 0;
-                z-index: 999999;
-                background-color: transparent !important;
-                color: white;
-                font-family: 'Cinzel', serif;
-                overflow: hidden;
-            }
-
-            #DESKTOP_APP {
-                display: none !important;
-            }
-
-            /* NOTE: I removed the duplicate 'html, body' block here. 
-           The global one at the top handles it perfectly. */
-
-            /* The ONLY thing allowed to scroll is the View Container */
-            /* The ONLY thing allowed to scroll is the View Container */
-            /* The ONLY thing allowed to scroll is the View Container */
-            #viewMobileHome {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                /* CHANGED FROM 100vw TO 100% */
-                height: 100dvh;
-
-                overflow-y: auto !important;
-                overflow-x: hidden !important;
-
-                /* SCROLL PHYSICS */
-                -webkit-overflow-scrolling: touch !important;
-                touch-action: pan-y !important;
-                overscroll-behavior: none !important;
-
-                /* GPU */
-                will-change: scroll-position;
-                transform: translateZ(0);
-
-                display: block;
-                padding: 0;
-                z-index: 1;
-                background: transparent !important;
-            }
-
-            /* HIDE ALL SCROLLBARS */
-            #viewMobileHome::-webkit-scrollbar,
-            #mobHomeScroll::-webkit-scrollbar,
-            #mobGlobalScroll::-webkit-scrollbar,
-            #mobRecordScroll::-webkit-scrollbar,
-            .mob-horiz-scroll::-webkit-scrollbar,
-            .qm-scroll-content::-webkit-scrollbar {
-                display: none !important;
-                width: 0 !important;
-                height: 0 !important;
-                background: transparent !important;
-            }
-
-            /* =========================================
-           2. HALO DASHBOARD
-           ========================================= */
-            .mobile-only-trigger {
-                display: block !important;
-            }
-
-            .halo-section {
-                position: relative;
-                z-index: 2;
-                margin-top: 60px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .halo-ring {
-                width: 280px;
-                height: 280px;
-                border-radius: 50%;
-                border: 2px solid #c5a059;
-                box-shadow: 0 0 30px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-
-                /* --- ADD THIS FOR THE BLUR --- */
-                background: rgba(0, 0, 0, 0.3);
-                /* Slight dark tint so text pops */
-                backdrop-filter: blur(10px);
-                /* The Blur Effect */
-                -webkit-backdrop-filter: blur(10px);
-                /* Required for iPhone */
-            }
-
-            .halo-name {
-                font-family: 'Cinzel', serif;
-                font-size: 2.2rem;
-                color: #fff;
-                text-transform: uppercase;
-                letter-spacing: 2px;
-                text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-                line-height: 1;
-                margin-bottom: 5px;
-                text-align: center;
-            }
-
-            .halo-rank {
-                font-family: 'Orbitron', sans-serif;
-                font-size: 0.7rem;
-                color: #c5a059;
-                letter-spacing: 4px;
-                text-transform: uppercase;
-            }
-
-            /* STATS CARD */
-            .halo-stats-card {
-                position: relative;
-                z-index: 3;
-                margin-top: -40px;
-                width: 90%;
-                background: rgba(10, 10, 10, 0.85);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 8px;
-                padding: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: space-around;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                backdrop-filter: blur(15px);
-                margin-bottom: 20px;
-            }
-
-            .h-stat {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .h-val {
-                font-family: 'Orbitron', serif;
-                font-size: 1.5rem;
-                color: #fff;
-                line-height: 1;
-            }
-
-            .h-lbl {
-                font-family: 'Orbitron', sans-serif;
-                font-size: 0.5rem;
-                color: #888;
-                letter-spacing: 2px;
-                margin-top: 4px;
-            }
-
-            .h-divider {
-                width: 1px;
-                height: 30px;
-                background: rgba(255, 255, 255, 0.15);
-            }
-
-            .halo-stack {
-                position: relative;
-                z-index: 3;
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 15px;
-                padding: 0 20px;
-            }
-
-            /* =========================================
-           3. STATS DRAWER (RESTORED)
-           ========================================= */
-            .mob-hud-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                width: 100%;
-                padding: 20px;
-                box-sizing: border-box;
-                position: absolute;
-                top: 0;
-                left: 0;
-                z-index: 10;
-            }
-
-            .hud-circle {
-                width: 45px;
-                height: 45px;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(0, 0, 0, 0.5);
-                backdrop-filter: blur(5px);
-                cursor: pointer;
-                position: relative;
-            }
-
-            .hud-circle img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                border-radius: 50%;
-            }
-
-            .mob-stats-toggle-btn {
-                width: 100%;
-                background: transparent;
-                border: 1px solid rgba(136, 136, 136, 0.3);
-                color: #888;
-                opacity: 0.7;
-                font-family: 'Cinzel', serif;
-                font-weight: 700;
-                font-size: 0.75rem;
-                padding: 8px 0;
-                cursor: pointer;
-                letter-spacing: 2px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                border-radius: 4px;
-                transition: 0.3s;
-            }
-
-            .mob-stats-toggle-btn:active {
-                opacity: 1;
-                border-color: #fff;
-                color: #fff;
-            }
-
-            .mob-internal-drawer {
-                width: 100%;
-                max-height: 0;
-                opacity: 0;
-                overflow: hidden;
-                transition: all 0.4s ease;
-                transition: all 0.4s ease;
-                background: transparent;
-                border-top: 1px solid transparent;
-                box-sizing: border-box;
-            }
-
-            /* SAFETY: PREVENT LONG TEXT EXPANDING DRAWER */
-            #drawer_CurrentRank,
-            #drawer_NextRank {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 100%;
-                display: block;
-            }
-
-            #drawer_ProgressContainer {
-                max-width: 100%;
-                overflow: hidden;
-                box-sizing: border-box;
-            }
-
-            .mob-internal-drawer.open {
-                max-height: 1200px;
-                opacity: 1;
-                margin-top: 15px;
-                padding: 20px 10px;
-                border: 1px solid #333;
-                background: rgba(0, 0, 0, 0.9);
-                border-radius: 8px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-            }
-
-            .drawer-row {
-                display: flex;
-                justify-content: space-between;
-                padding: 8px 0;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            }
-
-            .drawer-row:last-child {
-                border-bottom: none;
-            }
-
-            .d-lbl {
-                font-size: 0.7rem;
-                color: #888;
-                font-family: 'Cinzel';
-                letter-spacing: 1px;
-            }
-
-            .d-val {
-                font-size: 0.8rem;
-                color: #c5a059;
-                font-family: 'Orbitron';
-            }
-
-            /* =========================================
-           4. KNEEL BAR & BUTTONS (RESTORED)
-           ========================================= */
-            .mob-section-wrapper {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 5px;
-            }
-
-            .mob-kneel-bar {
-                width: 100%;
-                height: 50px;
-                background: #080808;
-                border: 1px solid #c5a059;
-                border-radius: 4px;
-                position: relative;
-                overflow: hidden;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
-                transition: 0.2s;
-            }
-
-            .mob-kneel-bar:active {
-                border-color: #fff;
-                transform: scale(0.98);
-            }
-
-            .mob-bar-fill,
-            .mob-kneel-fill {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 0%;
-                height: 100%;
-                background: linear-gradient(90deg, #8b0000, #000000);
-                z-index: 1;
-                transition: width 0.1s linear;
-            }
-
-            .mob-bar-content {
-                z-index: 2;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .kneel-icon-sm {
-                color: #c5a059;
-                font-size: 1.2rem;
-            }
-
-            .kneel-text {
-                font-family: 'Cinzel', serif;
-                letter-spacing: 3px;
-                color: #ccc;
-            }
-
-            .mob-action-btn {
-                width: 100%;
-                padding: 15px;
-                background: transparent;
-                margin-top: 15px;
-                border: 1px solid #c5a059;
-                color: #c5a059;
-                font-family: 'Cinzel', serif;
-                font-weight: 700;
-                font-size: 0.9rem;
-                letter-spacing: 2px;
-                cursor: pointer;
-            }
-
-            /* FIX MOBILE CHAT SCROLL GLITCH */
-            #mob_chatBox {
-                /* 1. TRAP THE SCROLL (Stop it from moving the dashboard) */
-                overscroll-behavior: contain !important;
-
-                /* 2. FORCE GPU (Smoothness) */
-                will-change: scroll-position;
-                transform: translateZ(0);
-
-                /* 3. STRICT VERTICAL ONLY */
-                touch-action: pan-y !important;
-
-                /* 4. ENSURE WIDTH SAFETY */
-                width: 100% !important;
-                max-width: 100% !important;
-                overflow-x: hidden !important;
-            }
-
-            /* Ensure the wrapper doesn't cause issues either */
-            #inlineChatPanel {
-                width: 100% !important;
-                max-width: 100% !important;
-                overflow: hidden !important;
-                /* No scrolling on the wrapper, only the box */
-            }
-
-            /* FIX MODAL SCROLL GLITCH */
-            #glassModal {
-                /* Prevent scroll from passing through to the dashboard */
-                overscroll-behavior: contain !important;
-
-                /* Force GPU to prevent rendering glitches */
-                will-change: transform;
-                transform: translateZ(0);
-            }
-
-            /* If the text box inside needs scrolling, let it scroll smoothly */
-            .theater-text-box,
-            .modal-verdict-box {
-                -webkit-overflow-scrolling: touch;
-                overscroll-behavior: contain;
-            }
-
-            /* --- JAIL LOGIC --- */
-            /* Forces the overlay to stick inside the trophy box */
-            #trophySectionJail #rewardCardOverlay {
-                position: absolute !important;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 50;
-                background: rgba(0, 0, 0, 0.98) !important;
-                padding-top: 20px !important;
-                align-items: flex-start !important;
-            }
-
-            /* Adjust card size to fit the jail */
-            #trophySectionJail .mob-reward-card {
-                width: 95% !important;
-                max-height: 95% !important;
-                margin: 0 auto !important;
-                border: 1px solid #c5a059;
-            }
-
-            /* --- GALLERY STICKER (Reward Badge) --- */
-            .gallery-sticker-badge {
-                position: absolute;
-                bottom: 5px;
-                right: 5px;
-                width: 35px;
-                /* Adjust size as needed */
-                height: 35px;
-                z-index: 5;
-                object-fit: contain;
-                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
-                transform: rotate(-10deg);
-                /* Slight tilt for realism */
-                pointer-events: none;
-                /* Let clicks pass through to the card */
-            }
-
-            /* Make it slightly smaller on mobile lists if needed */
-            .mob-scroll-item .gallery-sticker-badge {
-                width: 25px;
-                height: 25px;
-                bottom: 2px;
-                right: 2px;
-            }
-
-
-
-            /* FIX QUEEN'S WALL ON MOBILE */
-            #mobNewsGrid {
-                display: grid !important;
-                grid-template-columns: 1fr 1fr !important;
-                /* 2 Columns */
-                gap: 10px !important;
-                width: 100% !important;
-                padding-bottom: 50px;
-            }
-
-            /* Force the items to fit the mobile grid */
-            #mobNewsGrid .sg-item {
-                width: 100% !important;
-                height: auto !important;
-                min-height: 150px !important;
-                position: relative !important;
-                /* Reset any desktop absolute positioning */
-                display: flex !important;
-                flex-direction: column !important;
-                background: #000;
-                border: 1px solid #333;
-            }
-
-            /* Make images fill the box */
-            #mobNewsGrid .sg-img {
-                width: 100% !important;
-                height: 120px !important;
-                object-fit: cover !important;
-            }
-
-            /* Make text visible */
-            #mobNewsGrid .news-txt {
-                display: block !important;
-                padding: 5px;
-                font-size: 0.7rem;
-                color: #ccc;
-            }
-
-            /* =========================================
-           5. LUXURY CARDS (RESTORED)
-           ========================================= */
-            .luxury-wrap {
-                padding: 0 20px;
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-                width: 100%;
-            }
-
-            .luxury-card {
-                background: linear-gradient(180deg, rgba(30, 30, 30, 0.6) 0%, rgba(10, 10, 10, 0.9) 100%);
-                border: 1px solid rgba(197, 160, 89, 0.2);
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                border-radius: 2px;
-                padding: 20px 15px;
-                position: relative;
-                overflow: hidden;
-                width: 90%;
-                margin: 10px auto;
-            }
-
-            .luxury-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 1px;
-                background: linear-gradient(90deg, transparent 0%, #c5a059 50%, transparent 100%);
-                opacity: 0.7;
-            }
-
-            .duty-label {
-                font-family: 'Cinzel', serif;
-                font-weight: 700;
-                font-size: 0.7rem;
-                color: #888;
-                letter-spacing: 4px;
-                text-transform: uppercase;
-                text-align: center;
-                margin-bottom: 20px;
-                position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                margin-top: 30px;
-            }
-
-            .duty-label::before,
-            .duty-label::after {
-                content: '';
-                height: 1px;
-                width: 30px;
-                background: #333;
-            }
-
-            /* Timers & Task Text */
-            .card-timer-row {
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: center;
-                justify-content: center;
-                gap: 5px;
-                margin: 15px 0;
-                width: 100%;
-            }
-
-            .card-t-box {
-                background: #000;
-                border: 1px solid #333;
-                color: #c5a059;
-                font-family: 'Rajdhani', sans-serif;
-                font-size: 1.5rem;
-                padding: 5px 10px;
-                border-radius: 4px;
-                min-width: 40px;
-                text-align: center;
-                line-height: 1;
-            }
-
-            #mobTaskText {
-                font-family: 'Cinzel', serif;
-                font-size: 0.85rem;
-                color: #e0e0e0;
-                text-align: center;
-                line-height: 1.4;
-                margin: 5px 0 15px 0;
-                padding: 8px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                background: rgba(0, 0, 0, 0.3);
-                min-height: 50px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.3s ease;
-            }
-
-            .text-pulse {
-                animation: pulseText 1.5s infinite;
-                color: #c5a059 !important;
-                font-family: 'Orbitron' !important;
-            }
-
-            @keyframes pulseText {
-                0% {
-                    opacity: 0.5;
-                }
-
-                50% {
-                    opacity: 1;
-                }
-
-                100% {
-                    opacity: 0.5;
-                }
-            }
-
-            /* Status Texts */
-            .txt-status-red {
-                color: #ff003c;
-                font-family: 'Orbitron';
-                font-size: 0.8rem;
-                letter-spacing: 1px;
-                text-shadow: 0 0 5px rgba(255, 0, 60, 0.4);
-            }
-
-            .txt-status-green {
-                color: #00ff00;
-                font-family: 'Orbitron';
-                font-size: 0.8rem;
-                letter-spacing: 1px;
-                text-shadow: 0 0 5px rgba(0, 255, 0, 0.4);
-            }
-
-            .txt-status-gold {
-                color: #c5a059;
-                font-family: 'Orbitron';
-                font-size: 0.8rem;
-                letter-spacing: 1px;
-            }
-
-            .btn-upload-sm {
-                background: transparent;
-                border: 1px solid #c5a059;
-                color: #c5a059;
-                font-family: 'Cinzel';
-                font-size: 0.65rem;
-                padding: 6px 12px;
-                cursor: pointer;
-                align-self: flex-start;
-            }
-
-            .btn-skip-sm {
-                background: transparent;
-                border: 1px solid #444;
-                color: #666;
-                font-family: 'Cinzel';
-                font-size: 0.65rem;
-                padding: 6px 12px;
-                cursor: pointer;
-            }
-
-            /* =========================================
-           6. RECORD / GALLERY / STREAKS (RESTORED THE SQUARES)
-           ========================================= */
-            .mob-grid-label-center {
-                font-size: 0.5rem;
-                color: #444;
-                letter-spacing: 3px;
-                margin-bottom: 5px;
-                text-align: center;
-                width: 100%;
-            }
-
-            .mob-streak-strip {
-                display: grid;
-                grid-template-columns: repeat(12, 1fr);
-                gap: 3px;
-                width: 70%;
-                margin-bottom: 10px;
-            }
-
-            .streak-sq {
-                height: 6px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 1px;
-            }
-
-            .streak-sq.active {
-                background: rgba(197, 160, 89, 0.6);
-                border-color: #c5a059;
-                box-shadow: 0 0 8px rgba(197, 160, 89, 0.2);
-            }
-
-            .mob-horiz-scroll {
-                display: flex;
-                flex-direction: row;
-                overflow-x: auto;
-                gap: 10px;
-                width: 100%;
-                padding-right: 20px;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-                padding-left: 10px;
-            }
-
-            .mob-horiz-scroll::-webkit-scrollbar {
-                display: none;
-            }
-
-            .mob-pyramid-stage {
-                position: relative;
-                width: 100%;
-                height: 260px;
-                margin-top: 15px;
-                perspective: 1000px;
-            }
-
-            .mob-idol {
-                position: absolute;
-                background: #000;
-                overflow: hidden;
-                transition: all 0.3s ease;
-            }
-
-            .mob-idol img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-            }
-
-            .mob-idol.center {
-                width: 160px;
-                height: 230px;
-                top: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 20;
-                border: 2px solid #c5a059;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(197, 160, 89, 0.2);
-            }
-
-            .mob-idol.side {
-                width: 130px;
-                height: 190px;
-                top: 50px;
-                left: 10%;
-                z-index: 5;
-                border: 1px solid #444;
-                filter: brightness(0.5) grayscale(50%);
-                transform: rotate(-6deg);
-            }
-
-            .mob-idol.side.right {
-                left: auto;
-                right: 10%;
-                transform: rotate(6deg);
-            }
-
-            .mob-rank-badge {
-                position: absolute;
-                bottom: -10px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #000;
-                border: 1px solid #333;
-                color: #888;
-                font-family: 'Cinzel', serif;
-                font-size: 0.6rem;
-                padding: 2px 6px;
-                z-index: 30;
-            }
-
-            .mob-rank-badge.main {
-                border-color: #c5a059;
-                color: #c5a059;
-                bottom: 10px;
-                background: rgba(0, 0, 0, 0.8);
-            }
-
-            .mob-scroll-item {
-                flex: 0 0 120px;
-                height: 160px;
-                position: relative;
-                border: 1px solid #333;
-                background: #111;
-                border-radius: 4px;
-                overflow: hidden;
-                margin-right: 10px;
-            }
-
-            .mob-horiz-scroll.small .mob-scroll-item {
-                flex: 0 0 80px;
-                height: 80px;
-                opacity: 0.6;
-            }
-
-            .mob-scroll-img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-            }
-
-            /* =========================================
-           7. HUD & LOBBY (RESTORED TOP CIRCLES)
-           ========================================= */
-            .mob-hud-row {
-                position: absolute;
-                top: 15px;
-                left: 0;
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                padding: 0 20px;
-                z-index: 10;
-            }
-
-            .hud-circle {
-                width: 45px;
-                height: 45px;
-                border-radius: 50%;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                background: #000;
-                position: relative;
-                overflow: visible;
-                box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-            }
-
-            .hud-circle img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                border-radius: 50%;
-                opacity: 0.8;
-            }
-
-            .hud-gear {
-                position: absolute;
-                bottom: -5px;
-                right: -5px;
-                font-size: 0.8rem;
-                color: #fff;
-                text-shadow: 0 0 5px #000;
-            }
-
-            .hud-status-dot {
-                position: absolute;
-                bottom: 0;
-                right: 0;
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                border: 2px solid #000;
-            }
-
-            .hud-status-dot.online {
-                background: #00ff00;
-                box-shadow: 0 0 10px #00ff00;
-            }
-
-            .hud-status-dot.offline {
-                background: #c5a059;
-                box-shadow: 0 0 5px #c5a059;
-                opacity: 0.5;
-            }
-
-            /* LOBBY / SETTINGS */
-            .lobby-card {
-                max-height: 75vh !important;
-                overflow-y: auto !important;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
-
-            .lobby-card::-webkit-scrollbar {
-                display: none;
-            }
-
-            .lobby-header {
-                margin-bottom: 25px;
-                text-align: center;
-            }
-
-            .lobby-title {
-                font-family: 'Cinzel', serif;
-                font-size: 1.4rem;
-                color: #c5a059;
-                letter-spacing: 4px;
-                border-bottom: 1px solid #333;
-                padding-bottom: 10px;
-                display: inline-block;
-            }
-
-            .lobby-subtitle {
-                font-family: 'Cinzel', serif;
-                font-size: 0.6rem;
-                color: #666;
-                margin-top: 5px;
-                letter-spacing: 2px;
-            }
-
-            .lobby-content {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-                align-items: center;
-            }
-
-            .lobby-btn {
-                background: transparent;
-                border: 1px solid #333;
-                color: #ccc;
-                font-family: 'Cinzel', serif;
-                font-size: 0.8rem;
-                padding: 12px;
-                width: 100%;
-                cursor: pointer;
-                transition: 0.3s;
-                letter-spacing: 2px;
-            }
-
-            .lobby-btn:active {
-                background: rgba(255, 255, 255, 0.05);
-                border-color: #666;
-            }
-
-            .lobby-btn.gold {
-                border-color: #c5a059;
-                color: #c5a059;
-                font-weight: 700;
-            }
-
-            .lobby-btn.close {
-                border: none;
-                color: #555;
-                font-size: 0.7rem;
-                margin-top: 5px;
-            }
-
-            .lobby-prompt {
-                font-family: 'Cinzel', serif;
-                color: white;
-                font-size: 1rem;
-                text-align: center;
-                margin-bottom: 15px;
-                line-height: 1.4;
-            }
-
-            .lobby-input {
-                background: #111;
-                border: 1px solid #444;
-                color: #c5a059;
-                font-family: 'Cinzel', serif;
-                font-size: 1rem;
-                padding: 10px;
-                width: 100%;
-                text-align: center;
-                outline: none;
-            }
-
-            .lobby-cost-area {
-                margin-top: 10px;
-                margin-bottom: 5px;
-                font-size: 0.7rem;
-                color: #666;
-                font-family: 'Orbitron';
-                letter-spacing: 1px;
-            }
-
-            .cost-val {
-                color: #c5a059;
-                font-weight: bold;
-                margin-left: 5px;
-            }
-
-            .routine-grid {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                width: 100%;
-                margin-bottom: 15px;
-            }
-
-            .routine-tile {
-                width: 100%;
-                background: rgba(255, 255, 255, 0.03);
-                border: 1px solid #333;
-                padding: 15px;
-                text-align: center;
-                font-family: 'Cinzel', serif;
-                font-size: 0.8rem;
-                color: #888;
-                cursor: pointer;
-                transition: 0.2s;
-                border-radius: 2px;
-                letter-spacing: 2px;
-            }
-
-            .routine-tile.selected {
-                background: rgba(197, 160, 89, 0.1);
-                border-color: #c5a059;
-                color: #c5a059;
-                font-weight: 700;
-            }
-
-            .routine-tile.special {
-                border-style: dashed;
-                color: #ccc;
-            }
-
-            /* =========================================
-           8. GLOBAL / COINS / OVERLAYS (RESTORED)
-           ========================================= */
-            .wallet-btn {
-                width: 100%;
-                padding: 15px;
-                background: transparent;
-                border: 1px solid #c5a059;
-                color: #c5a059;
-                font-family: 'Cinzel', serif;
-                font-weight: 700;
-                font-size: 0.9rem;
-                letter-spacing: 2px;
-                cursor: pointer;
-                box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
-            }
-
-            .coin-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-                width: 100%;
-                margin-top: 15px;
-            }
-
-            .coin-tile {
-                background: rgba(20, 20, 20, 0.9);
-                border: 1px solid #333;
-                border-radius: 4px;
-                padding: 15px 5px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 5px;
-                cursor: pointer;
-            }
-
-            .coin-amount {
-                font-family: 'Rajdhani', sans-serif;
-                font-size: 1.4rem;
-                color: #c5a059;
-                font-weight: 700;
-                line-height: 1;
-            }
-
-            .coin-price {
-                font-family: 'Cinzel', serif;
-                font-size: 0.7rem;
-                color: #888;
-            }
-
-            .hidden {
-                display: none !important;
-            }
-
-            /* 1. OVERLAY: ALIGN TO TOP (Instead of Center) */
-            .mob-reward-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.95);
-                z-index: 2147483647;
-                /* Highest Level */
-
-                /* THE ALIGNMENT FIX */
-                display: flex;
-                justify-content: center;
-                align-items: flex-start !important;
-                /* Pushes content to the top */
-                padding-top: 80px !important;
-                /* Adds space so it doesn't hit the very top edge */
-
-                backdrop-filter: blur(8px);
-                animation: fadeIn 0.3s ease;
-            }
-
-            /* 2. THE CARD: ENABLE SCROLLING (The Right Circle Fix) */
-            /* Applies to both Lobby and Queen Menu */
-            .mob-reward-card,
-            .queen-card-layout,
-            .lobby-card {
-                background: #111;
-                border: 1px solid #c5a059;
-                padding: 20px;
-                border-radius: 8px;
-                text-align: center;
-                width: 90%;
-                box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 20px;
-
-                /* THE SCROLL FIX */
-                max-height: 80vh !important;
-                /* Limits height to 80% of screen */
-                overflow-y: auto !important;
-                /* Enables vertical scrolling */
-                -webkit-overflow-scrolling: touch !important;
-                /* Smooth scroll on iPhone */
-
-                /* PREVENTS CLIPPING */
-                margin-bottom: 50px;
-            }
-
-            /* REWARDS TROPHY CASE STYLES */
-            .reward-shelf {
-                display: flex;
-                gap: 15px;
-                padding: 10px 15px;
-                width: 100%;
-                overflow-x: auto;
-                scrollbar-width: none;
-                align-items: center;
-            }
-
-            .reward-badge {
-                flex: 0 0 70px;
-                height: 70px;
-                background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-                border: 1px solid #333;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                position: relative;
-                transition: all 0.3s;
-            }
-
-            .reward-badge.shape-hex {
-                clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-                width: 70px;
-                height: 80px;
-                border: none;
-                background: #111;
-            }
-
-            .reward-badge.shape-hex::before {
-                content: '';
-                position: absolute;
-                inset: 1px;
-                background: #1a1a1a;
-                clip-path: inherit;
-                z-index: -1;
-            }
-
-            .reward-badge.shape-chip {
-                clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
-            }
-
-            .reward-badge.shape-circle {
-                border-radius: 50%;
-            }
-
-            .reward-badge.shape-diamond {
-                transform: rotate(45deg);
-                width: 55px;
-                height: 55px;
-                margin: 10px;
-            }
-
-            .reward-badge.shape-diamond .rb-inner {
-                transform: rotate(-45deg);
-            }
-
-            .rb-icon {
-                width: 24px;
-                height: 24px;
-                fill: #444;
-                margin-bottom: 5px;
-            }
-
-            .rb-label {
-                font-family: 'Orbitron';
-                font-size: 0.45rem;
-                color: #444;
-                text-transform: uppercase;
-            }
-
-            .reward-badge.unlocked .rb-icon {
-                fill: #c5a059;
-                filter: drop-shadow(0 0 5px rgba(197, 160, 89, 0.5));
-            }
-
-            .reward-badge.unlocked .rb-label {
-                color: #ccc;
-            }
-
-            .reward-badge.unlocked.shape-hex {
-                background: #c5a059;
-            }
-
-            .reward-badge.unlocked.shape-hex::before {
-                background: #111;
-            }
-
-            .reward-badge.unlocked.shape-circle {
-                border-color: #c5a059;
-            }
-
-            .reward-badge.unlocked.shape-chip {
-                border-right: 2px solid #c5a059;
-            }
-
-            .reward-badge.unlocked.shape-diamond {
-                border-color: #c5a059;
-            }
-
-            /* THE WALL (NEWS GRID) */
-            #mobNewsGrid {
-                padding-bottom: 40px;
-            }
-
-            .news-item {
-                border: 1px solid #333;
-                background: #000;
-                min-height: 150px;
-                display: flex;
-                flex-direction: column;
-            }
-
-            .news-img {
-                width: 100%;
-                height: 150px;
-                object-fit: cover;
-            }
-
-            .news-txt {
-                padding: 10px;
-                color: #888;
-                font-family: 'Cinzel';
-                font-size: 0.7rem;
-            }
-
-            /* CHAT OVERLAY STYLE (FORCED HIDDEN) */
-            #chatCard {
-                display: none !important;
-            }
-
-            .mob-chat-header {
-                display: flex;
-                align-items: center;
-                padding: 10px 15px;
-                background: #111;
-                border-bottom: 1px solid #333;
-            }
-
-            .queen-av-wrap {
-                position: relative;
-                width: 40px;
-                height: 40px;
-                margin-right: 10px;
-            }
-
-            .queen-av-img {
-                width: 100%;
-                height: 100%;
-                border-radius: 50%;
-                object-fit: cover;
-            }
-
-            .chat-meta-col {
-                display: flex;
-                flex-direction: column;
-            }
-
-            .chat-queen-name {
-                color: #fff;
-                font-family: 'Cinzel';
-                font-size: 0.9rem;
-            }
-
-            .chat-status-text {
-                color: #00ff00;
-                font-family: 'Orbitron';
-                font-size: 0.6rem;
-                letter-spacing: 1px;
-            }
-
-            .chat-footer {
-                display: flex;
-                align-items: center;
-                padding: 10px;
-                background: #111;
-                border-top: 1px solid #333;
-                gap: 10px;
-            }
-
-            .chat-input-wrapper {
-                flex: 1;
-                position: relative;
-                display: flex;
-                align-items: center;
-            }
-
-            .chat-input {
-                width: 100%;
-                background: #000;
-                border: 1px solid #333;
-                color: #fff;
-                padding: 10px 10px 10px 40px;
-                font-family: 'Cinzel';
-                outline: none;
-                border-radius: 20px;
-            }
-
-            .chat-btn-plus {
-                position: absolute;
-                left: 5px;
-                width: 30px;
-                height: 30px;
-                border-radius: 50%;
-                background: #222;
-                border: 1px solid #444;
-                color: #fff;
-                cursor: pointer;
-            }
-
-            .chat-btn-send {
-                background: #c5a059;
-                color: #000;
-                border: none;
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                font-weight: bold;
-                cursor: pointer;
-            }
+        #installBanner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111;
+            border: 1px solid #444;
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: #ccc;
+            font-family: 'Rajdhani', sans-serif;
+            display: none;
+            z-index: 9999;
+        }
+
+        #installBtn {
+            background: #222;
+            border: 1px solid #555;
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: #ccc;
+            cursor: pointer;
+        }
+
+        #pushContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .push-btn {
+            background: #222;
+            border: 1px solid #555;
+            padding: 8px 14px;
+            border-radius: 6px;
+            color: #ccc;
+            font-family: 'Rajdhani', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .push-btn:hover {
+            background: #333;
+            border-color: #777;
         }
     </style>
+</head>
+
+<body>
+
+
+    <div id="installBanner">
+        Install Queendom App
+        <button id="installBtn">Install</button>
+    </div>
+    <div id="pushContainer">
+        <button id="enablePush" class="push-btn">Enable Notifications</button>
+    </div>
+
+    <iframe src="https://www.qkarin.com/private"></iframe>
+
+    <script>
+        const VAPID_PUBLIC_KEY = "BDtVl6DWNkaFQj9VhDk7POUptz4t6JklRJg0dd2SIfRDJRRuTZqi7cCB88VeKatXlYGb8w0QhbNR_TmrdpR_qzI";
+        let deferredPrompt = null;
+
+        window.addEventListener("beforeinstallprompt", (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById("installBanner").style.display = "block";
+        });
+
+        document.getElementById("installBtn").addEventListener("click", async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.getElementById("installBanner").style.display = "none";
+        });
+
+        async function askNotificationPermission() {
+            const permission = await Notification.requestPermission();
+            return permission
+            /*if (permission !== "granted") {
+                console.log("Notifications denied");
+                return null;
+            }*/
+            console.log("Notification:", permission);
+        }
+
+        document.getElementById("enablePush").addEventListener("click", async () => {
+            const permission = await askNotificationPermission();
+
+            if (permission === "granted") {
+                await subscribeUserToPush();
+                document.getElementById("enablePush").style.display = "none";
+            }
+        });
+
+        async function subscribeUserToPush() {
+            // Ensure service worker is ready
+            const registration = await navigator.serviceWorker.ready;
+
+            // Convert the VAPID key to a Uint8Array
+            const convertedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+
+            // Create the subscription
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedKey
+            });
+
+            console.log("Push subscription created:", subscription);
+
+            // Send subscription to your backend (Step 4)
+            await fetch("/api/save-subscription", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(subscription)
+            });
+
+            return subscription;
+        }
+
+        // Helper to convert VAPID key
+        function urlBase64ToUint8Array(base64String) {
+            const padding = "=".repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/-/g, "+")
+                .replace(/_/g, "/");
+
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/service-worker.js")
+                .then(() => console.log("Service worker registered"))
+                .catch(err => console.error("SW registration failed:", err));
+        }
+
+    </script>
+
+</body>
+
+</html>
+.halo-rank {
+font-family: 'Orbitron', sans-serif;
+font-size: 0.7rem;
+color: #c5a059;
+letter-spacing: 4px;
+text-transform: uppercase;
+}
+
+/* STATS CARD */
+.halo-stats-card {
+position: relative;
+z-index: 3;
+margin-top: -40px;
+width: 90%;
+background: rgba(10, 10, 10, 0.85);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 8px;
+padding: 10px;
+display: flex;
+align-items: center;
+justify-content: space-around;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+backdrop-filter: blur(15px);
+margin-bottom: 20px;
+}
+
+.h-stat {
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+.h-val {
+font-family: 'Orbitron', serif;
+font-size: 1.5rem;
+color: #fff;
+line-height: 1;
+}
+
+.h-lbl {
+font-family: 'Orbitron', sans-serif;
+font-size: 0.5rem;
+color: #888;
+letter-spacing: 2px;
+margin-top: 4px;
+}
+
+.h-divider {
+width: 1px;
+height: 30px;
+background: rgba(255, 255, 255, 0.15);
+}
+
+.halo-stack {
+position: relative;
+z-index: 3;
+width: 100%;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 15px;
+padding: 0 20px;
+}
+
+/* =========================================
+3. STATS DRAWER (RESTORED)
+========================================= */
+.mob-hud-row {
+display: flex;
+justify-content: space-between;
+align-items: center;
+width: 100%;
+padding: 20px;
+box-sizing: border-box;
+position: absolute;
+top: 0;
+left: 0;
+z-index: 10;
+}
+
+.hud-circle {
+width: 45px;
+height: 45px;
+border: 1px solid rgba(255, 255, 255, 0.2);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+background: rgba(0, 0, 0, 0.5);
+backdrop-filter: blur(5px);
+cursor: pointer;
+position: relative;
+}
+
+.hud-circle img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+border-radius: 50%;
+}
+
+.mob-stats-toggle-btn {
+width: 100%;
+background: transparent;
+border: 1px solid rgba(136, 136, 136, 0.3);
+color: #888;
+opacity: 0.7;
+font-family: 'Cinzel', serif;
+font-weight: 700;
+font-size: 0.75rem;
+padding: 8px 0;
+cursor: pointer;
+letter-spacing: 2px;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 6px;
+border-radius: 4px;
+transition: 0.3s;
+}
+
+.mob-stats-toggle-btn:active {
+opacity: 1;
+border-color: #fff;
+color: #fff;
+}
+
+.mob-internal-drawer {
+width: 100%;
+max-height: 0;
+opacity: 0;
+overflow: hidden;
+transition: all 0.4s ease;
+transition: all 0.4s ease;
+background: transparent;
+border-top: 1px solid transparent;
+box-sizing: border-box;
+}
+
+/* SAFETY: PREVENT LONG TEXT EXPANDING DRAWER */
+#drawer_CurrentRank,
+#drawer_NextRank {
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+max-width: 100%;
+display: block;
+}
+
+#drawer_ProgressContainer {
+max-width: 100%;
+overflow: hidden;
+box-sizing: border-box;
+}
+
+.mob-internal-drawer.open {
+max-height: 1200px;
+opacity: 1;
+margin-top: 15px;
+padding: 20px 10px;
+border: 1px solid #333;
+background: rgba(0, 0, 0, 0.9);
+border-radius: 8px;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+.drawer-row {
+display: flex;
+justify-content: space-between;
+padding: 8px 0;
+border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.drawer-row:last-child {
+border-bottom: none;
+}
+
+.d-lbl {
+font-size: 0.7rem;
+color: #888;
+font-family: 'Cinzel';
+letter-spacing: 1px;
+}
+
+.d-val {
+font-size: 0.8rem;
+color: #c5a059;
+font-family: 'Orbitron';
+}
+
+/* =========================================
+4. KNEEL BAR & BUTTONS (RESTORED)
+========================================= */
+.mob-section-wrapper {
+width: 100%;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 5px;
+}
+
+.mob-kneel-bar {
+width: 100%;
+height: 50px;
+background: #080808;
+border: 1px solid #c5a059;
+border-radius: 4px;
+position: relative;
+overflow: hidden;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
+transition: 0.2s;
+}
+
+.mob-kneel-bar:active {
+border-color: #fff;
+transform: scale(0.98);
+}
+
+.mob-bar-fill,
+.mob-kneel-fill {
+position: absolute;
+bottom: 0;
+left: 0;
+width: 0%;
+height: 100%;
+background: linear-gradient(90deg, #8b0000, #000000);
+z-index: 1;
+transition: width 0.1s linear;
+}
+
+.mob-bar-content {
+z-index: 2;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.kneel-icon-sm {
+color: #c5a059;
+font-size: 1.2rem;
+}
+
+.kneel-text {
+font-family: 'Cinzel', serif;
+letter-spacing: 3px;
+color: #ccc;
+}
+
+.mob-action-btn {
+width: 100%;
+padding: 15px;
+background: transparent;
+margin-top: 15px;
+border: 1px solid #c5a059;
+color: #c5a059;
+font-family: 'Cinzel', serif;
+font-weight: 700;
+font-size: 0.9rem;
+letter-spacing: 2px;
+cursor: pointer;
+}
+
+/* FIX MOBILE CHAT SCROLL GLITCH */
+#mob_chatBox {
+/* 1. TRAP THE SCROLL (Stop it from moving the dashboard) */
+overscroll-behavior: contain !important;
+
+/* 2. FORCE GPU (Smoothness) */
+will-change: scroll-position;
+transform: translateZ(0);
+
+/* 3. STRICT VERTICAL ONLY */
+touch-action: pan-y !important;
+
+/* 4. ENSURE WIDTH SAFETY */
+width: 100% !important;
+max-width: 100% !important;
+overflow-x: hidden !important;
+}
+
+/* Ensure the wrapper doesn't cause issues either */
+#inlineChatPanel {
+width: 100% !important;
+max-width: 100% !important;
+overflow: hidden !important;
+/* No scrolling on the wrapper, only the box */
+}
+
+/* FIX MODAL SCROLL GLITCH */
+#glassModal {
+/* Prevent scroll from passing through to the dashboard */
+overscroll-behavior: contain !important;
+
+/* Force GPU to prevent rendering glitches */
+will-change: transform;
+transform: translateZ(0);
+}
+
+/* If the text box inside needs scrolling, let it scroll smoothly */
+.theater-text-box,
+.modal-verdict-box {
+-webkit-overflow-scrolling: touch;
+overscroll-behavior: contain;
+}
+
+/* --- JAIL LOGIC --- */
+/* Forces the overlay to stick inside the trophy box */
+#trophySectionJail #rewardCardOverlay {
+position: absolute !important;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+z-index: 50;
+background: rgba(0, 0, 0, 0.98) !important;
+padding-top: 20px !important;
+align-items: flex-start !important;
+}
+
+/* Adjust card size to fit the jail */
+#trophySectionJail .mob-reward-card {
+width: 95% !important;
+max-height: 95% !important;
+margin: 0 auto !important;
+border: 1px solid #c5a059;
+}
+
+/* --- GALLERY STICKER (Reward Badge) --- */
+.gallery-sticker-badge {
+position: absolute;
+bottom: 5px;
+right: 5px;
+width: 35px;
+/* Adjust size as needed */
+height: 35px;
+z-index: 5;
+object-fit: contain;
+filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+transform: rotate(-10deg);
+/* Slight tilt for realism */
+pointer-events: none;
+/* Let clicks pass through to the card */
+}
+
+/* Make it slightly smaller on mobile lists if needed */
+.mob-scroll-item .gallery-sticker-badge {
+width: 25px;
+height: 25px;
+bottom: 2px;
+right: 2px;
+}
+
+
+
+/* FIX QUEEN'S WALL ON MOBILE */
+#mobNewsGrid {
+display: grid !important;
+grid-template-columns: 1fr 1fr !important;
+/* 2 Columns */
+gap: 10px !important;
+width: 100% !important;
+padding-bottom: 50px;
+}
+
+/* Force the items to fit the mobile grid */
+#mobNewsGrid .sg-item {
+width: 100% !important;
+height: auto !important;
+min-height: 150px !important;
+position: relative !important;
+/* Reset any desktop absolute positioning */
+display: flex !important;
+flex-direction: column !important;
+background: #000;
+border: 1px solid #333;
+}
+
+/* Make images fill the box */
+#mobNewsGrid .sg-img {
+width: 100% !important;
+height: 120px !important;
+object-fit: cover !important;
+}
+
+/* Make text visible */
+#mobNewsGrid .news-txt {
+display: block !important;
+padding: 5px;
+font-size: 0.7rem;
+color: #ccc;
+}
+
+/* =========================================
+5. LUXURY CARDS (RESTORED)
+========================================= */
+.luxury-wrap {
+padding: 0 20px;
+display: flex;
+flex-direction: column;
+gap: 20px;
+width: 100%;
+}
+
+.luxury-card {
+background: linear-gradient(180deg, rgba(30, 30, 30, 0.6) 0%, rgba(10, 10, 10, 0.9) 100%);
+border: 1px solid rgba(197, 160, 89, 0.2);
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+border-radius: 2px;
+padding: 20px 15px;
+position: relative;
+overflow: hidden;
+width: 90%;
+margin: 10px auto;
+}
+
+.luxury-card::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 1px;
+background: linear-gradient(90deg, transparent 0%, #c5a059 50%, transparent 100%);
+opacity: 0.7;
+}
+
+.duty-label {
+font-family: 'Cinzel', serif;
+font-weight: 700;
+font-size: 0.7rem;
+color: #888;
+letter-spacing: 4px;
+text-transform: uppercase;
+text-align: center;
+margin-bottom: 20px;
+position: relative;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 10px;
+margin-top: 30px;
+}
+
+.duty-label::before,
+.duty-label::after {
+content: '';
+height: 1px;
+width: 30px;
+background: #333;
+}
+
+/* Timers & Task Text */
+.card-timer-row {
+display: flex !important;
+flex-direction: row !important;
+align-items: center;
+justify-content: center;
+gap: 5px;
+margin: 15px 0;
+width: 100%;
+}
+
+.card-t-box {
+background: #000;
+border: 1px solid #333;
+color: #c5a059;
+font-family: 'Rajdhani', sans-serif;
+font-size: 1.5rem;
+padding: 5px 10px;
+border-radius: 4px;
+min-width: 40px;
+text-align: center;
+line-height: 1;
+}
+
+#mobTaskText {
+font-family: 'Cinzel', serif;
+font-size: 0.85rem;
+color: #e0e0e0;
+text-align: center;
+line-height: 1.4;
+margin: 5px 0 15px 0;
+padding: 8px;
+border: 1px solid rgba(255, 255, 255, 0.1);
+background: rgba(0, 0, 0, 0.3);
+min-height: 50px;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.3s ease;
+}
+
+.text-pulse {
+animation: pulseText 1.5s infinite;
+color: #c5a059 !important;
+font-family: 'Orbitron' !important;
+}
+
+@keyframes pulseText {
+0% {
+opacity: 0.5;
+}
+
+50% {
+opacity: 1;
+}
+
+100% {
+opacity: 0.5;
+}
+}
+
+/* Status Texts */
+.txt-status-red {
+color: #ff003c;
+font-family: 'Orbitron';
+font-size: 0.8rem;
+letter-spacing: 1px;
+text-shadow: 0 0 5px rgba(255, 0, 60, 0.4);
+}
+
+.txt-status-green {
+color: #00ff00;
+font-family: 'Orbitron';
+font-size: 0.8rem;
+letter-spacing: 1px;
+text-shadow: 0 0 5px rgba(0, 255, 0, 0.4);
+}
+
+.txt-status-gold {
+color: #c5a059;
+font-family: 'Orbitron';
+font-size: 0.8rem;
+letter-spacing: 1px;
+}
+
+.btn-upload-sm {
+background: transparent;
+border: 1px solid #c5a059;
+color: #c5a059;
+font-family: 'Cinzel';
+font-size: 0.65rem;
+padding: 6px 12px;
+cursor: pointer;
+align-self: flex-start;
+}
+
+.btn-skip-sm {
+background: transparent;
+border: 1px solid #444;
+color: #666;
+font-family: 'Cinzel';
+font-size: 0.65rem;
+padding: 6px 12px;
+cursor: pointer;
+}
+
+/* =========================================
+6. RECORD / GALLERY / STREAKS (RESTORED THE SQUARES)
+========================================= */
+.mob-grid-label-center {
+font-size: 0.5rem;
+color: #444;
+letter-spacing: 3px;
+margin-bottom: 5px;
+text-align: center;
+width: 100%;
+}
+
+.mob-streak-strip {
+display: grid;
+grid-template-columns: repeat(12, 1fr);
+gap: 3px;
+width: 70%;
+margin-bottom: 10px;
+}
+
+.streak-sq {
+height: 6px;
+background: rgba(255, 255, 255, 0.05);
+border: 1px solid rgba(255, 255, 255, 0.08);
+border-radius: 1px;
+}
+
+.streak-sq.active {
+background: rgba(197, 160, 89, 0.6);
+border-color: #c5a059;
+box-shadow: 0 0 8px rgba(197, 160, 89, 0.2);
+}
+
+.mob-horiz-scroll {
+display: flex;
+flex-direction: row;
+overflow-x: auto;
+gap: 10px;
+width: 100%;
+padding-right: 20px;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+padding-left: 10px;
+}
+
+.mob-horiz-scroll::-webkit-scrollbar {
+display: none;
+}
+
+.mob-pyramid-stage {
+position: relative;
+width: 100%;
+height: 260px;
+margin-top: 15px;
+perspective: 1000px;
+}
+
+.mob-idol {
+position: absolute;
+background: #000;
+overflow: hidden;
+transition: all 0.3s ease;
+}
+
+.mob-idol img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+display: block;
+}
+
+.mob-idol.center {
+width: 160px;
+height: 230px;
+top: 0;
+left: 50%;
+transform: translateX(-50%);
+z-index: 20;
+border: 2px solid #c5a059;
+box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(197, 160, 89, 0.2);
+}
+
+.mob-idol.side {
+width: 130px;
+height: 190px;
+top: 50px;
+left: 10%;
+z-index: 5;
+border: 1px solid #444;
+filter: brightness(0.5) grayscale(50%);
+transform: rotate(-6deg);
+}
+
+.mob-idol.side.right {
+left: auto;
+right: 10%;
+transform: rotate(6deg);
+}
+
+.mob-rank-badge {
+position: absolute;
+bottom: -10px;
+left: 50%;
+transform: translateX(-50%);
+background: #000;
+border: 1px solid #333;
+color: #888;
+font-family: 'Cinzel', serif;
+font-size: 0.6rem;
+padding: 2px 6px;
+z-index: 30;
+}
+
+.mob-rank-badge.main {
+border-color: #c5a059;
+color: #c5a059;
+bottom: 10px;
+background: rgba(0, 0, 0, 0.8);
+}
+
+.mob-scroll-item {
+flex: 0 0 120px;
+height: 160px;
+position: relative;
+border: 1px solid #333;
+background: #111;
+border-radius: 4px;
+overflow: hidden;
+margin-right: 10px;
+}
+
+.mob-horiz-scroll.small .mob-scroll-item {
+flex: 0 0 80px;
+height: 80px;
+opacity: 0.6;
+}
+
+.mob-scroll-img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+display: block;
+}
+
+/* =========================================
+7. HUD & LOBBY (RESTORED TOP CIRCLES)
+========================================= */
+.mob-hud-row {
+position: absolute;
+top: 15px;
+left: 0;
+width: 100%;
+display: flex;
+justify-content: space-between;
+padding: 0 20px;
+z-index: 10;
+}
+
+.hud-circle {
+width: 45px;
+height: 45px;
+border-radius: 50%;
+border: 1px solid rgba(255, 255, 255, 0.2);
+background: #000;
+position: relative;
+overflow: visible;
+box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.hud-circle img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+border-radius: 50%;
+opacity: 0.8;
+}
+
+.hud-gear {
+position: absolute;
+bottom: -5px;
+right: -5px;
+font-size: 0.8rem;
+color: #fff;
+text-shadow: 0 0 5px #000;
+}
+
+.hud-status-dot {
+position: absolute;
+bottom: 0;
+right: 0;
+width: 10px;
+height: 10px;
+border-radius: 50%;
+border: 2px solid #000;
+}
+
+.hud-status-dot.online {
+background: #00ff00;
+box-shadow: 0 0 10px #00ff00;
+}
+
+.hud-status-dot.offline {
+background: #c5a059;
+box-shadow: 0 0 5px #c5a059;
+opacity: 0.5;
+}
+
+/* LOBBY / SETTINGS */
+.lobby-card {
+max-height: 75vh !important;
+overflow-y: auto !important;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+}
+
+.lobby-card::-webkit-scrollbar {
+display: none;
+}
+
+.lobby-header {
+margin-bottom: 25px;
+text-align: center;
+}
+
+.lobby-title {
+font-family: 'Cinzel', serif;
+font-size: 1.4rem;
+color: #c5a059;
+letter-spacing: 4px;
+border-bottom: 1px solid #333;
+padding-bottom: 10px;
+display: inline-block;
+}
+
+.lobby-subtitle {
+font-family: 'Cinzel', serif;
+font-size: 0.6rem;
+color: #666;
+margin-top: 5px;
+letter-spacing: 2px;
+}
+
+.lobby-content {
+width: 100%;
+display: flex;
+flex-direction: column;
+gap: 12px;
+align-items: center;
+}
+
+.lobby-btn {
+background: transparent;
+border: 1px solid #333;
+color: #ccc;
+font-family: 'Cinzel', serif;
+font-size: 0.8rem;
+padding: 12px;
+width: 100%;
+cursor: pointer;
+transition: 0.3s;
+letter-spacing: 2px;
+}
+
+.lobby-btn:active {
+background: rgba(255, 255, 255, 0.05);
+border-color: #666;
+}
+
+.lobby-btn.gold {
+border-color: #c5a059;
+color: #c5a059;
+font-weight: 700;
+}
+
+.lobby-btn.close {
+border: none;
+color: #555;
+font-size: 0.7rem;
+margin-top: 5px;
+}
+
+.lobby-prompt {
+font-family: 'Cinzel', serif;
+color: white;
+font-size: 1rem;
+text-align: center;
+margin-bottom: 15px;
+line-height: 1.4;
+}
+
+.lobby-input {
+background: #111;
+border: 1px solid #444;
+color: #c5a059;
+font-family: 'Cinzel', serif;
+font-size: 1rem;
+padding: 10px;
+width: 100%;
+text-align: center;
+outline: none;
+}
+
+.lobby-cost-area {
+margin-top: 10px;
+margin-bottom: 5px;
+font-size: 0.7rem;
+color: #666;
+font-family: 'Orbitron';
+letter-spacing: 1px;
+}
+
+.cost-val {
+color: #c5a059;
+font-weight: bold;
+margin-left: 5px;
+}
+
+.routine-grid {
+display: flex;
+flex-direction: column;
+gap: 10px;
+width: 100%;
+margin-bottom: 15px;
+}
+
+.routine-tile {
+width: 100%;
+background: rgba(255, 255, 255, 0.03);
+border: 1px solid #333;
+padding: 15px;
+text-align: center;
+font-family: 'Cinzel', serif;
+font-size: 0.8rem;
+color: #888;
+cursor: pointer;
+transition: 0.2s;
+border-radius: 2px;
+letter-spacing: 2px;
+}
+
+.routine-tile.selected {
+background: rgba(197, 160, 89, 0.1);
+border-color: #c5a059;
+color: #c5a059;
+font-weight: 700;
+}
+
+.routine-tile.special {
+border-style: dashed;
+color: #ccc;
+}
+
+/* =========================================
+8. GLOBAL / COINS / OVERLAYS (RESTORED)
+========================================= */
+.wallet-btn {
+width: 100%;
+padding: 15px;
+background: transparent;
+border: 1px solid #c5a059;
+color: #c5a059;
+font-family: 'Cinzel', serif;
+font-weight: 700;
+font-size: 0.9rem;
+letter-spacing: 2px;
+cursor: pointer;
+box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
+}
+
+.coin-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+width: 100%;
+margin-top: 15px;
+}
+
+.coin-tile {
+background: rgba(20, 20, 20, 0.9);
+border: 1px solid #333;
+border-radius: 4px;
+padding: 15px 5px;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 5px;
+cursor: pointer;
+}
+
+.coin-amount {
+font-family: 'Rajdhani', sans-serif;
+font-size: 1.4rem;
+color: #c5a059;
+font-weight: 700;
+line-height: 1;
+}
+
+.coin-price {
+font-family: 'Cinzel', serif;
+font-size: 0.7rem;
+color: #888;
+}
+
+.hidden {
+display: none !important;
+}
+
+/* 1. OVERLAY: ALIGN TO TOP (Instead of Center) */
+.mob-reward-overlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.95);
+z-index: 2147483647;
+/* Highest Level */
+
+/* THE ALIGNMENT FIX */
+display: flex;
+justify-content: center;
+align-items: flex-start !important;
+/* Pushes content to the top */
+padding-top: 80px !important;
+/* Adds space so it doesn't hit the very top edge */
+
+backdrop-filter: blur(8px);
+animation: fadeIn 0.3s ease;
+}
+
+/* 2. THE CARD: ENABLE SCROLLING (The Right Circle Fix) */
+/* Applies to both Lobby and Queen Menu */
+.mob-reward-card,
+.queen-card-layout,
+.lobby-card {
+background: #111;
+border: 1px solid #c5a059;
+padding: 20px;
+border-radius: 8px;
+text-align: center;
+width: 90%;
+box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 20px;
+
+/* THE SCROLL FIX */
+max-height: 80vh !important;
+/* Limits height to 80% of screen */
+overflow-y: auto !important;
+/* Enables vertical scrolling */
+-webkit-overflow-scrolling: touch !important;
+/* Smooth scroll on iPhone */
+
+/* PREVENTS CLIPPING */
+margin-bottom: 50px;
+}
+
+/* REWARDS TROPHY CASE STYLES */
+.reward-shelf {
+display: flex;
+gap: 15px;
+padding: 10px 15px;
+width: 100%;
+overflow-x: auto;
+scrollbar-width: none;
+align-items: center;
+}
+
+.reward-badge {
+flex: 0 0 70px;
+height: 70px;
+background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+border: 1px solid #333;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+position: relative;
+transition: all 0.3s;
+}
+
+.reward-badge.shape-hex {
+clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+width: 70px;
+height: 80px;
+border: none;
+background: #111;
+}
+
+.reward-badge.shape-hex::before {
+content: '';
+position: absolute;
+inset: 1px;
+background: #1a1a1a;
+clip-path: inherit;
+z-index: -1;
+}
+
+.reward-badge.shape-chip {
+clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
+}
+
+.reward-badge.shape-circle {
+border-radius: 50%;
+}
+
+.reward-badge.shape-diamond {
+transform: rotate(45deg);
+width: 55px;
+height: 55px;
+margin: 10px;
+}
+
+.reward-badge.shape-diamond .rb-inner {
+transform: rotate(-45deg);
+}
+
+.rb-icon {
+width: 24px;
+height: 24px;
+fill: #444;
+margin-bottom: 5px;
+}
+
+.rb-label {
+font-family: 'Orbitron';
+font-size: 0.45rem;
+color: #444;
+text-transform: uppercase;
+}
+
+.reward-badge.unlocked .rb-icon {
+fill: #c5a059;
+filter: drop-shadow(0 0 5px rgba(197, 160, 89, 0.5));
+}
+
+.reward-badge.unlocked .rb-label {
+color: #ccc;
+}
+
+.reward-badge.unlocked.shape-hex {
+background: #c5a059;
+}
+
+.reward-badge.unlocked.shape-hex::before {
+background: #111;
+}
+
+.reward-badge.unlocked.shape-circle {
+border-color: #c5a059;
+}
+
+.reward-badge.unlocked.shape-chip {
+border-right: 2px solid #c5a059;
+}
+
+.reward-badge.unlocked.shape-diamond {
+border-color: #c5a059;
+}
+
+/* THE WALL (NEWS GRID) */
+#mobNewsGrid {
+padding-bottom: 40px;
+}
+
+.news-item {
+border: 1px solid #333;
+background: #000;
+min-height: 150px;
+display: flex;
+flex-direction: column;
+}
+
+.news-img {
+width: 100%;
+height: 150px;
+object-fit: cover;
+}
+
+.news-txt {
+padding: 10px;
+color: #888;
+font-family: 'Cinzel';
+font-size: 0.7rem;
+}
+
+/* CHAT OVERLAY STYLE (FORCED HIDDEN) */
+#chatCard {
+display: none !important;
+}
+
+.mob-chat-header {
+display: flex;
+align-items: center;
+padding: 10px 15px;
+background: #111;
+border-bottom: 1px solid #333;
+}
+
+.queen-av-wrap {
+position: relative;
+width: 40px;
+height: 40px;
+margin-right: 10px;
+}
+
+.queen-av-img {
+width: 100%;
+height: 100%;
+border-radius: 50%;
+object-fit: cover;
+}
+
+.chat-meta-col {
+display: flex;
+flex-direction: column;
+}
+
+.chat-queen-name {
+color: #fff;
+font-family: 'Cinzel';
+font-size: 0.9rem;
+}
+
+.chat-status-text {
+color: #00ff00;
+font-family: 'Orbitron';
+font-size: 0.6rem;
+letter-spacing: 1px;
+}
+
+.chat-footer {
+display: flex;
+align-items: center;
+padding: 10px;
+background: #111;
+border-top: 1px solid #333;
+gap: 10px;
+}
+
+.chat-input-wrapper {
+flex: 1;
+position: relative;
+display: flex;
+align-items: center;
+}
+
+.chat-input {
+width: 100%;
+background: #000;
+border: 1px solid #333;
+color: #fff;
+padding: 10px 10px 10px 40px;
+font-family: 'Cinzel';
+outline: none;
+border-radius: 20px;
+}
+
+.chat-btn-plus {
+position: absolute;
+left: 5px;
+width: 30px;
+height: 30px;
+border-radius: 50%;
+background: #222;
+border: 1px solid #444;
+color: #fff;
+cursor: pointer;
+}
+
+.chat-btn-send {
+background: #c5a059;
+color: #000;
+border: none;
+width: 40px;
+height: 40px;
+border-radius: 50%;
+font-weight: bold;
+cursor: pointer;
+}
+}
+</style>
 </head>
 
 <body>
