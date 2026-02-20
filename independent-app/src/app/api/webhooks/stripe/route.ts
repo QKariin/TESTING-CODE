@@ -43,10 +43,19 @@ export async function POST(req: Request) {
 
         try {
             // ====================================================
-            // A. COIN PURCHASE
-            // Metadata: wixUserEmail (legacy), wixUserId (new), coinsToAdd
+            // A. COIN PURCHASE & TRIBUTE ACTIVATION
             // ====================================================
-            if (metadata.coinsToAdd) {
+            if (metadata.type === 'ENTRANCE_TRIBUTE') {
+                const userId = metadata.userId;
+                console.log(`📜 Activating Account: ${userId}`);
+
+                await supabaseAdmin
+                    .from('profiles')
+                    .update({ hierarchy: 'Hall Boy' })
+                    .eq('id', userId);
+
+                console.log(`✅ Account Activated as Hall Boy.`);
+            } else if (metadata.coinsToAdd) {
                 const coins = parseInt(metadata.coinsToAdd, 10);
                 const userEmail = metadata.wixUserEmail;
                 const userId = metadata.wixUserId; // Passed from stripepay.js

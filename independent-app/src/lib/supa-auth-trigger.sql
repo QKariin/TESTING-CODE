@@ -23,7 +23,7 @@ begin
     split_part(new.email, '@', 1), -- Default name from email
     0,         --- score: 0
     0,         --- wallet: 0
-    'Hall Boy', 
+    'PENDING_TRIBUTE', 
     jsonb_build_object(
       'devotion', 100
     )

@@ -35,15 +35,41 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
+    // 1. If no user, and not on login page -> redirect to login
     if (
         !user &&
         !request.nextUrl.pathname.startsWith('/login') &&
         !request.nextUrl.pathname.startsWith('/auth')
     ) {
-        // no user, potentially respond by redirecting the user to the login page
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
+    }
+
+    // 2. If user exists, check for Profile status (Paywall)
+    if (user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('hierarchy')
+            .eq('id', user.id)
+            .single()
+
+        const isTributePage = request.nextUrl.pathname.startsWith('/tribute')
+        const isApiPage = request.nextUrl.pathname.startsWith('/api')
+
+        // Redirect to /tribute if they haven't paid (unless they are already on /tribute or calling an API)
+        if ((!profile || profile.hierarchy === 'PENDING_TRIBUTE') && !isTributePage && !isApiPage) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/tribute'
+            return NextResponse.redirect(url)
+        }
+
+        // Redirect AWAY from /tribute if they have already paid
+        if (profile && profile.hierarchy !== 'PENDING_TRIBUTE' && isTributePage) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/dashboard'
+            return NextResponse.redirect(url)
+        }
     }
 
     // IMPORTANT: You *must* return the supabaseResponse object as is. If you're creating a
