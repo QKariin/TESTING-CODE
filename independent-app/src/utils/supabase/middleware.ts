@@ -75,7 +75,7 @@ export async function updateSession(request: NextRequest) {
         if (isCEO) {
             console.log(`[AUTH_MIDDLEWARE] CEO/Queen bypass triggered for ${userEmailNormalized}`);
             if (isTributePage) {
-                return NextResponse.redirect(new URL('/dashboard', request.url))
+                return NextResponse.redirect(new URL('/profile', request.url))
             }
             return supabaseResponse
         }
@@ -105,8 +105,8 @@ export async function updateSession(request: NextRequest) {
                 console.log(`[AUTH_MIDDLEWARE] Strategy B: Searching 'tasks' for \"MemberID\": ${userEmailNormalized}`);
                 const { data: taskMatch } = await supabase
                     .from('tasks')
-                    .select('"MemberID"')
-                    .ilike('"MemberID"', userEmailNormalized)
+                    .select('MemberID')
+                    .ilike('MemberID', userEmailNormalized)
                     .limit(1)
                     .maybeSingle();
 
@@ -149,8 +149,8 @@ export async function updateSession(request: NextRequest) {
 
         // Redirect AWAY from /tribute if they have already paid (profile exists)
         if (profile && isTributePage) {
-            console.log(`[AUTH_MIDDLEWARE] Profile exists. Redirecting away from /tribute to dashboard`);
-            return NextResponse.redirect(new URL('/dashboard', request.url))
+            console.log(`[AUTH_MIDDLEWARE] Profile exists. Redirecting away from /tribute to profile`);
+            return NextResponse.redirect(new URL('/profile', request.url))
         }
     }
 

@@ -12,11 +12,15 @@ export default function TributePage() {
     const supabase = createClient();
 
     useEffect(() => {
-        const fetchUser = async () => {
+        const fetchUserAndCheck = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (user?.email) setUserEmail(user.email);
+            if (user?.email) {
+                setUserEmail(user.email);
+                // Auto-trigger refresh to catch legacy matches immediately
+                handleRefresh();
+            }
         };
-        fetchUser();
+        fetchUserAndCheck();
     }, []);
 
     const handleTribute = async () => {
@@ -55,10 +59,10 @@ export default function TributePage() {
             if (data.success && data.linked) {
                 setStatus("PROFILE LOCATED. REDIRECTING...");
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    window.location.href = '/profile';
                 }, 1500);
             } else {
-                setStatus("NO LEGACY PROFILE FOUND FOR THIS EMAIL.");
+                setStatus(data.message === "No profile found to link" ? "NO LEGACY PROFILE FOUND FOR THIS EMAIL." : null);
                 setLoading(false);
             }
         } catch (err) {
