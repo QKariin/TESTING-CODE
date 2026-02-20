@@ -116,6 +116,39 @@ export async function POST(req: Request) {
                 console.log(`- Strategy C: No other user found with email ${userEmail} in auth.users`);
             }
         }
+        // Strategy D: Match by MemberID in 'tasks' table
+        if (!legacy) {
+            console.log(`- Strategy D: Searching 'tasks' table for MemberID: ${userEmail}`);
+            const { data: taskMatch, error: dError } = await supabaseAdmin
+                .from('tasks')
+                .select('"MemberID"')
+                .ilike('MemberID', userEmail)
+                .limit(1)
+                .maybeSingle();
+
+            if (taskMatch) {
+                console.log(`- Strategy D MATCH in tasks table! Creating skeleton profile for ${userEmail}`);
+                const { data: newProfile, error: createError } = await supabaseAdmin
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        member_id: userEmail,
+                        name: userEmail.split('@')[0],
+                        hierarchy: 'Slave'
+                    })
+                    .select()
+                    .single();
+
+                if (createError) {
+                    console.error(`- Strategy D CREATE_ERROR:`, createError);
+                } else {
+                    console.log(`- Strategy D: Profile created and linked: ${newProfile.id}`);
+                    return NextResponse.json({ success: true, linked: true });
+                }
+            } else if (dError) {
+                console.error(`- Strategy D ERROR:`, dError);
+            }
+        }
 
         return NextResponse.json({ success: true, linked: false, message: 'No profile found to link' });
     } catch (error: any) {
