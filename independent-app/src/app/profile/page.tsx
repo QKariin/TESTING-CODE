@@ -40,7 +40,8 @@ import {
     selectRoutineItem,
     getRandomTask,
     cancelPendingTask,
-    renderProfileSidebar
+    renderProfileSidebar,
+    handleLogout
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -86,6 +87,7 @@ export default function ProfilePage() {
             (window as any).selectRoutineItem = selectRoutineItem;
             (window as any).getRandomTask = getRandomTask;
             (window as any).cancelPendingTask = cancelPendingTask;
+            (window as any).handleLogout = handleLogout;
         }
 
         async function loadProfile() {
@@ -238,6 +240,9 @@ export default function ProfilePage() {
                             </button>
                             <button className="nav-btn" onClick={() => switchTab('buy')}>
                                 <span style={{ fontSize: '1.2rem', marginRight: 10 }}>💰</span> EXCHEQUER
+                            </button>
+                            <button className="nav-btn" onClick={() => (window as any).handleLogout()} style={{ marginTop: 20, borderColor: 'rgba(255,0,0,0.3)', color: 'rgba(255,0,0,0.6)' }}>
+                                <span style={{ fontSize: '1.2rem', marginRight: 10 }}>🔓</span> LOGOUT
                             </button>
                         </div>
                     </div>
@@ -444,6 +449,7 @@ export default function ProfilePage() {
                                 <button className="lobby-btn" onClick={() => (window as any).showLobbyAction('kinks')}>ADD KINKS</button>
                                 <button className="lobby-btn" onClick={() => (window as any).showLobbyAction('limits')}>ADD LIMITS</button>
                                 <div className="lobby-divider"></div>
+                                <button className="lobby-btn" style={{ color: '#ff4444' }} onClick={() => (window as any).handleLogout()}>LOGOUT</button>
                                 <button className="lobby-btn close" onClick={() => (window as any).closeLobby()}>CLOSE</button>
                             </div>
                             <div id="lobbyActionView" className="lobby-content hidden">

@@ -1,4 +1,11 @@
 import { getState, setState } from './profile-state';
+import { createClient } from '../utils/supabase/client';
+
+export async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+}
 
 export async function claimKneelReward(type: 'coins' | 'points') {
     const { id, memberId } = getState();
