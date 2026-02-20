@@ -11,6 +11,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
+        const userEmail = user.email?.trim().toLowerCase();
+        if (!userEmail) {
+            return NextResponse.json({ success: false, error: 'User has no email' }, { status: 400 });
+        }
+
         // Check for Service Role
         const hasServiceRole = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
         console.log(`\n[MANUAL_LINK_CRITICAL_DEBUG]`);
