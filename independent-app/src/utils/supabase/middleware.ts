@@ -98,12 +98,15 @@ export async function updateSession(request: NextRequest) {
 
             // Strategy B: Match by email in 'tasks' table ("MemberID" column)
             if (!targetId) {
-                const { data: taskMatch } = await supabase
+                console.log(`[AUTH_MIDDLEWARE] Strategy B: Searching 'tasks' for \"MemberID\" ilike ${userEmailNormalized}`);
+                const { data: taskMatch, error: taskError } = await supabase
                     .from('tasks')
                     .select('"MemberID"')
-                    .ilike('MemberID', userEmailNormalized)
+                    .ilike('"MemberID"', userEmailNormalized)
                     .limit(1)
                     .maybeSingle();
+
+                if (taskError) console.error(`[AUTH_MIDDLEWARE] Strategy B Error:`, taskError);
 
                 if (taskMatch) {
                     console.log(`[AUTH_MIDDLEWARE] Match found in 'tasks' table for ${userEmailNormalized}. Creating skeleton profile...`);

@@ -8,7 +8,16 @@ export default function TributePage() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const [status, setStatus] = useState<string | null>(null);
+    const [userEmail, setUserEmail] = useState<string | null>(null);
     const supabase = createClient();
+
+    useState(() => {
+        const fetchUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.email) setUserEmail(user.email);
+        };
+        fetchUser();
+    });
 
     const handleTribute = async () => {
         setLoading(true);
@@ -156,6 +165,7 @@ export default function TributePage() {
                 <p>
                     The gates are locked.
                     Your current identity has no recorded history in the command console.
+                    {userEmail && <div style={{ color: '#fff', fontSize: '0.9rem', margin: '15px 0', border: '1px dashed rgba(197, 160, 89, 0.3)', padding: '10px' }}>LOGGED IN AS: <br /><strong>{userEmail}</strong></div>}
                     Initialize your station with a one-time tribute to proceed.
                 </p>
 
