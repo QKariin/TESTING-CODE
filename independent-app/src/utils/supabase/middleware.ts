@@ -80,36 +80,32 @@ export async function updateSession(request: NextRequest) {
             return supabaseResponse
         }
 
-        // Check for profile - UPGRADED to use Admin Client if Anon check fails
-        let { data: profile, error: profileError } = await supabase
+        // Check for profile - UPGRADED to use Service Role key for Bouncer bypassing
+        const adminSupabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            {
+                cookies: {
+                    getAll() { return request.cookies.getAll() },
+                    setAll(cookiesToSet) {
+                        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+                    },
+                },
+            }
+        )
+
+        let { data: profile } = await adminSupabase
             .from('profiles')
-            .select('id, rank')
+            .select('id, rank, member_id')
             .eq('id', user.id)
             .single()
 
-        if (!profile && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-            console.log(`[AUTH_MIDDLEWARE] Anon check failed. Trying Admin check for ${user.id}...`);
-            const { createClient: createAdminClient } = await import('@supabase/supabase-js');
-            const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY);
-            const { data: adminProfile } = await admin
-                .from('profiles')
-                .select('id, rank')
-                .eq('id', user.id)
-                .single();
-            if (adminProfile) {
-                console.log(`[AUTH_MIDDLEWARE] Admin check SUCCESS. Profile found.`);
-                profile = adminProfile as any;
-            }
-        }
-
         // --- BOUNCER UPGRADE: Aggressive Profile Recovery ---
-        if (!profile && userEmailNormalized && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        if (!profile && userEmailNormalized) {
             console.log(`[AUTH_MIDDLEWARE] No profile for ${userEmailNormalized}. Attempting recovery via Admin...`);
-            const { createClient: createAdminClient } = await import('@supabase/supabase-js');
-            const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
             // 1. Check if ANY profile exists with this email (Strategy A)
-            const { data: legacyProfile } = await admin
+            const { data: legacyProfile } = await adminSupabase
                 .from('profiles')
                 .select('id, member_id')
                 .or(`member_id.eq.${userEmailNormalized},member_id.ilike.${userEmailNormalized},memberId.eq.${userEmailNormalized},memberId.ilike.${userEmailNormalized}`)
@@ -120,7 +116,7 @@ export async function updateSession(request: NextRequest) {
             // 2. Check 'tasks' table if still not found (Strategy B)
             if (!targetId) {
                 console.log(`[AUTH_MIDDLEWARE] Strategy B: Searching 'tasks' for \"MemberID\": ${userEmailNormalized}`);
-                const { data: taskMatch } = await admin
+                const { data: taskMatch } = await adminSupabase
                     .from('tasks')
                     .select('MemberID')
                     .ilike('MemberID', userEmailNormalized)
@@ -129,7 +125,7 @@ export async function updateSession(request: NextRequest) {
 
                 if (taskMatch) {
                     console.log(`[AUTH_MIDDLEWARE] Match found in 'tasks' table. Creating skeleton...`);
-                    const { data: newProfile } = await admin.from('profiles').insert({
+                    const { data: newProfile } = await adminSupabase.from('profiles').insert({
                         id: user.id,
                         member_id: userEmailNormalized,
                         name: userEmailNormalized.split('@')[0],
@@ -139,8 +135,8 @@ export async function updateSession(request: NextRequest) {
                 }
             } else if (targetId && !profile) {
                 // Link existing legacy profile
-                console.log(`[AUTH_MIDDLEWARE] Strategy A Match! Linking existing profile ${targetId} to user ${user.id}`);
-                await admin.from('profiles').update({ id: user.id }).eq('id', targetId);
+                console.log(`[AUTH_MIDDLEWARE] Strategy A Match! Updating profile ID from ${targetId} to user ${user.id}`);
+                await adminSupabase.from('profiles').update({ id: user.id }).eq('id', targetId);
                 profile = { id: user.id, rank: 'Legacy' } as any;
             }
         }
