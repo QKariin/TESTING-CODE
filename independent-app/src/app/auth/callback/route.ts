@@ -12,7 +12,9 @@ export async function GET(request: Request) {
         const supabase = await createClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
-            const redirectUrl = new URL(next, origin)
+            // Use the absolute URL from the request to ensure consistency
+            const requestUrl = new URL(request.url)
+            const redirectUrl = new URL(next, requestUrl.origin)
             return NextResponse.redirect(redirectUrl)
         }
     }
