@@ -94,11 +94,13 @@ export async function updateSession(request: NextRequest) {
             }
         )
 
-        let { data: profile } = await adminSupabase
+        let { data: profile, error: profileErr } = await adminSupabase
             .from('profiles')
             .select('id, rank, member_id')
             .eq('id', user.id)
-            .single()
+            .maybeSingle()
+
+        if (profileErr) console.error(`[AUTH_MIDDLEWARE] Profile query error:`, profileErr);
 
         // --- BOUNCER UPGRADE: Aggressive Profile Recovery ---
         if (!profile && userEmailNormalized) {
@@ -113,30 +115,34 @@ export async function updateSession(request: NextRequest) {
 
             let targetId = legacyProfile?.id;
 
-            // 2. Check 'tasks' table if still not found (Strategy B)
+            // 2. Check 'tasks' table if still not found (Strategy B) - RESTORED QUOTING
             if (!targetId) {
                 console.log(`[AUTH_MIDDLEWARE] Strategy B: Searching 'tasks' for \"MemberID\": ${userEmailNormalized}`);
-                const { data: taskMatch } = await adminSupabase
+                const { data: taskMatch, error: tErr } = await adminSupabase
                     .from('tasks')
-                    .select('MemberID')
-                    .ilike('MemberID', userEmailNormalized)
+                    .select('"MemberID"')
+                    .ilike('"MemberID"', userEmailNormalized)
                     .limit(1)
                     .maybeSingle();
 
+                if (tErr) console.error(`[AUTH_MIDDLEWARE] Strategy B Error:`, tErr);
+
                 if (taskMatch) {
                     console.log(`[AUTH_MIDDLEWARE] Match found in 'tasks' table. Creating skeleton...`);
-                    const { data: newProfile } = await adminSupabase.from('profiles').insert({
+                    const { data: newProfile, error: insErr } = await adminSupabase.from('profiles').insert({
                         id: user.id,
                         member_id: userEmailNormalized,
                         name: userEmailNormalized.split('@')[0],
                         hierarchy: 'Slave'
                     }).select().single();
+                    if (insErr) console.error(`[AUTH_MIDDLEWARE] Skeleton creation error:`, insErr);
                     if (newProfile) profile = newProfile as any;
                 }
             } else if (targetId && !profile) {
                 // Link existing legacy profile
                 console.log(`[AUTH_MIDDLEWARE] Strategy A Match! Updating profile ID from ${targetId} to user ${user.id}`);
-                await adminSupabase.from('profiles').update({ id: user.id }).eq('id', targetId);
+                const { error: updErr } = await adminSupabase.from('profiles').update({ id: user.id }).eq('id', targetId);
+                if (updErr) console.error(`[AUTH_MIDDLEWARE] ID update error:`, updErr);
                 profile = { id: user.id, rank: 'Legacy' } as any;
             }
         }
