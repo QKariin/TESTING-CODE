@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
@@ -11,13 +11,13 @@ export default function TributePage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const supabase = createClient();
 
-    useState(() => {
+    useEffect(() => {
         const fetchUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user?.email) setUserEmail(user.email);
         };
         fetchUser();
-    });
+    }, []);
 
     const handleTribute = async () => {
         setLoading(true);
@@ -42,7 +42,7 @@ export default function TributePage() {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
-        router.push('/login');
+        window.location.href = '/login';
     };
 
     const handleRefresh = async () => {

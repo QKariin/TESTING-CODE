@@ -118,11 +118,11 @@ export async function POST(req: Request) {
         }
         // Strategy D: Match by MemberID in 'tasks' table
         if (!legacy) {
-            console.log(`- Strategy D: Searching 'tasks' table for \"MemberID\": ${userEmail}`);
+            console.log(`- Strategy D: Searching 'tasks' table for MemberID: ${userEmail}`);
             const { data: taskMatch, error: dError } = await supabaseAdmin
                 .from('tasks')
-                .select('"MemberID"')
-                .ilike('"MemberID"', userEmail)
+                .select('*')
+                .ilike('MemberID', userEmail)
                 .limit(1)
                 .maybeSingle();
 
