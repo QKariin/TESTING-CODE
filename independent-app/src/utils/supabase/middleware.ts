@@ -66,11 +66,36 @@ export async function updateSession(request: NextRequest) {
             return supabaseResponse
         }
 
-        const { data: profile } = await supabase
+        let { data: profile } = await supabase
             .from('profiles')
-            .select('hierarchy')
+            .select('*')
             .eq('id', user.id)
             .single()
+
+        // Lazy Matching: If not found by ID, try finding by email (Legacy Wix users)
+        if (!profile && user.email) {
+            console.log(`[AUTH_LOG] ID mismatch, checking by email: ${user.email}`);
+            const { data: profileByEmail } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('member_id', user.email)
+                .single()
+
+            if (profileByEmail) {
+                console.log(`[AUTH_LOG] Found legacy profile for ${user.email}. Linking ID...`);
+                // Update the profile to link this user's permanent ID
+                const { data: updatedProfile, error: linkError } = await supabase
+                    .from('profiles')
+                    .update({ id: user.id })
+                    .eq('member_id', user.email)
+                    .select()
+                    .single()
+
+                if (!linkError) {
+                    profile = updatedProfile;
+                }
+            }
+        }
 
         const isApiPage = pathname.startsWith('/api')
 
