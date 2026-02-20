@@ -74,16 +74,16 @@ export async function updateSession(request: NextRequest) {
 
         const isApiPage = pathname.startsWith('/api')
 
-        // Redirect to /tribute if they haven't paid (unless already on /tribute or calling an API)
-        if ((!profile || profile.hierarchy === 'PENDING_TRIBUTE') && !isTributePage && !isApiPage) {
-            console.log(`[AUTH_LOG] User ${user.email} needs tribute, redirecting to /tribute`);
+        // Redirect to /tribute if no profile exists (unless already on /tribute or calling an API)
+        if (!profile && !isTributePage && !isApiPage) {
+            console.log(`[AUTH_LOG] No profile for ${user.email}, redirecting to /tribute`);
             const url = request.nextUrl.clone()
             url.pathname = '/tribute'
             return NextResponse.redirect(url)
         }
 
-        // Redirect AWAY from /tribute if they have already paid
-        if (profile && profile.hierarchy !== 'PENDING_TRIBUTE' && isTributePage) {
+        // Redirect AWAY from /tribute if they have already paid (profile exists)
+        if (profile && isTributePage) {
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }
     }

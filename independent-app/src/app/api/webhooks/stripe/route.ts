@@ -47,14 +47,23 @@ export async function POST(req: Request) {
             // ====================================================
             if (metadata.type === 'ENTRANCE_TRIBUTE') {
                 const userId = metadata.userId;
-                console.log(`📜 Activating Account: ${userId}`);
+                const userEmail = metadata.email;
+                console.log(`📜 Initializing Account for: ${userEmail}`);
 
+                // Create the profile from scratch
                 await supabaseAdmin
                     .from('profiles')
-                    .update({ hierarchy: 'Hall Boy' })
-                    .eq('id', userId);
+                    .insert({
+                        id: userId,
+                        member_id: userEmail,
+                        name: userEmail.split('@')[0],
+                        hierarchy: 'Hall Boy',
+                        score: 0,
+                        wallet: 0,
+                        parameters: { devotion: 100 }
+                    });
 
-                console.log(`✅ Account Activated as Hall Boy.`);
+                console.log(`✅ Account Created as Hall Boy.`);
             } else if (metadata.coinsToAdd) {
                 const coins = parseInt(metadata.coinsToAdd, 10);
                 const userEmail = metadata.wixUserEmail;
