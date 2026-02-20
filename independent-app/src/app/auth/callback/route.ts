@@ -17,9 +17,9 @@ export async function GET(request: Request) {
             return NextResponse.redirect(redirectUrl)
         } else {
             console.error('[AUTH_CALLBACK_ERROR]', error.message);
+            return NextResponse.redirect(`${origin}/login?error=auth_failed&msg=${encodeURIComponent(error.message)}`)
         }
+    } else {
+        return NextResponse.redirect(`${origin}/login?error=no_code`)
     }
-
-    // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
 }
