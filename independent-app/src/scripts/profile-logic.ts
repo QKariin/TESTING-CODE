@@ -329,6 +329,15 @@ export function renderProfileSidebar(u: any) {
     if (elWorkingOnRank) elWorkingOnRank.innerText = isMax ? "MAXIMUM RANK" : nextRankObj.name;
 
     const elNextBen = document.getElementById('desk_NextBenefits');
+
+    // Update Email (New)
+    const elCurEmail = document.getElementById('subEmail');
+    if (elCurEmail) elCurEmail.innerText = u.member_id || "";
+
+    const elMobEmail = document.getElementById('mob_slaveEmail');
+    if (elMobEmail) elMobEmail.innerText = u.member_id || "";
+
+    const elMobSlavePic = document.getElementById('hudSlavePic') as HTMLImageElement;
     if (elNextBen) {
         if (isMax) {
             elNextBen.innerHTML = "<li>You have reached the apex of servitude.</li>";

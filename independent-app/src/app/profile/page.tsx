@@ -174,8 +174,11 @@ export default function ProfilePage() {
                         <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()}>
                             <img id="profilePic" src={profile?.profile_pic || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" />
                         </div>
-                        <div id="subName" className="identity-name" style={{ fontSize: '1.2rem', letterSpacing: 4, marginBottom: 15, fontWeight: 'bold' }}>
+                        <div id="subName" className="identity-name" style={{ fontSize: '1.2rem', letterSpacing: 4, marginBottom: 5, fontWeight: 'bold' }}>
                             {profile?.name || "SLAVE"}
+                        </div>
+                        <div id="subEmail" style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', marginBottom: 15, letterSpacing: 1 }}>
+                            {profile?.member_id || ""}
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
@@ -596,6 +599,7 @@ export default function ProfilePage() {
                             <div className="halo-section">
                                 <div className="halo-ring">
                                     <div id="mob_slaveName" className="halo-name">{profile?.name || "SLAVE"}</div>
+                                    <div id="mob_slaveEmail" style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.2)', marginBottom: '5px', letterSpacing: '1px' }}>{profile?.member_id || ""}</div>
                                     <div id="mob_rankStamp" className="halo-rank">{profile?.rank || "INITIATE"}</div>
                                     <div className="mob-section-wrapper" style={{ width: '100%' }}>
                                         <div className="mob-grid-label-center">DAILY PROGRESS</div>
