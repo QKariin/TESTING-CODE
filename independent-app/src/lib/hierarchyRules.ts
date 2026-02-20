@@ -157,6 +157,51 @@ export function getHierarchyReport(item: SlaveRecord): HierarchyReport {
     return generateReport(item, currentHierarchy);
 }
 
+/**
+ * UNIFIED STREAK LOGIC: Ensures both Profile and Dashboard entries 
+ * follow the exact same 6 AM Duty Day rules.
+ */
+export function updateStreakLogic(item: SlaveRecord, submissionDate = new Date()): SlaveRecord {
+    const getDutyDay = (d: Date | string) => {
+        let date = new Date(d);
+        if (date.getHours() < 6) date.setDate(date.getDate() - 1);
+        return date.toISOString().split('T')[0];
+    };
+
+    const today = getDutyDay(submissionDate);
+    const lastDate = item.lastRoutineDate ? getDutyDay(item.lastRoutineDate) : null;
+
+    if (!lastDate) {
+        // First ever log
+        item.routinestreak = 1;
+    } else if (lastDate === today) {
+        // Already logged today (Duty period 6am - 6am)
+        // Do nothing, don't increment twice in same period
+    } else {
+        const yesterdayDate = new Date(submissionDate);
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterday = getDutyDay(yesterdayDate);
+
+        if (lastDate === yesterday) {
+            // Consecutive day!
+            item.routinestreak = (item.routinestreak || 0) + 1;
+        } else {
+            // Gap detected -> Reset to 1
+            item.routinestreak = 1;
+        }
+    }
+
+    // Update the pointer
+    item.lastRoutineDate = submissionDate.toISOString();
+
+    // High Water Mark (Personal Best)
+    if ((item.routinestreak || 0) > (item.bestRoutinestreak || 0)) {
+        item.bestRoutinestreak = item.routinestreak;
+    }
+
+    return item;
+}
+
 function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport {
     const clean = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const currentIndex = HIERARCHY_RULES.findIndex(r => clean(r.name) === clean(currentRank));

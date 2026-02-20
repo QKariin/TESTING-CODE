@@ -92,9 +92,53 @@ export async function handleBroadcastFile(input: HTMLInputElement) {
     }
 }
 
-export function sendBroadcast() {
-    console.log("Broadcast sent");
-    closeBroadcastModal();
+import { insertMessage } from '@/actions/velo-actions';
+
+export async function sendBroadcast() {
+    const txtEl = document.getElementById('brText') as HTMLTextAreaElement;
+    const txt = txtEl?.value;
+
+    if (!txt) {
+        alert("Please enter a message.");
+        return;
+    }
+
+    const targets = users.filter(u => !excludedIds.includes(u.memberId));
+    if (targets.length === 0) {
+        alert("No targets selected (check exclusions).");
+        return;
+    }
+
+    if (!confirm(`Send broadcast to ${targets.length} users?`)) return;
+
+    // Show loading state
+    const btn = document.querySelector('.br-btn') as HTMLButtonElement;
+    if (btn) btn.innerText = "SENDING...";
+
+    try {
+        // Send in chunks or sequentially to avoid overwhelming browser/network if many
+        // For now, sequential await needed because insertMessage is async
+        let count = 0;
+        for (const u of targets) {
+            await insertMessage({
+                memberId: u.memberId,
+                message: txt,
+                sender: 'queen',
+                type: 'text',
+                read: false
+            });
+            count++;
+        }
+
+        alert(`Broadcast sent to ${count} slaves.`);
+        txtEl.value = "";
+        closeBroadcastModal();
+    } catch (e: any) {
+        console.error("Broadcast partial failure", e);
+        alert("Error during broadcast: " + e.message);
+    } finally {
+        if (btn) btn.innerText = "SEND BROADCAST";
+    }
 }
 
 export function saveBroadcastPreset() {

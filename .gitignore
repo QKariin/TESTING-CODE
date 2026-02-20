@@ -1,0 +1,4 @@
+node_modules/
+independent-app/node_modules/
+independent-app/.next/
+.DS_Store

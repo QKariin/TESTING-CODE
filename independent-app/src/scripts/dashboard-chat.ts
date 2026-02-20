@@ -4,7 +4,7 @@
 import { currId, lastChatJson, setLastChatJson, ACCOUNT_ID, API_KEY, users } from './dashboard-state';
 import { forceBottom, isAtBottom } from './dashboard-utils';
 import { getSignedUrl, getOptimizedUrl, mediaType, fileType } from './media';
-import { DbService } from '@/lib/supabase-service';
+// import { DbService } from '@/lib/supabase-service';
 
 // Mocking DOMPurify
 const DOMPurify = (globalThis as any).DOMPurify || { sanitize: (s: string) => s };
@@ -181,6 +181,8 @@ function renderSystemMessage(message: string, type: string) {
     `;
 }
 
+import { insertMessage } from '@/actions/velo-actions';
+
 export async function sendMsg() {
     const inp = document.getElementById('adminInp') as HTMLInputElement;
     if (!inp || !currId) return;
@@ -189,7 +191,13 @@ export async function sendMsg() {
     if (!text) return;
 
     try {
-        await DbService.sendMessage(currId, text, 'queen');
+        await insertMessage({
+            memberId: currId,
+            message: text,
+            sender: 'queen',
+            type: 'text',
+            read: true
+        });
         inp.value = "";
         // Refresh chat locally if needed or rely on sync loop
     } catch (err) {

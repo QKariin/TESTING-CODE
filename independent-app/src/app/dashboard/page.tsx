@@ -6,12 +6,16 @@ import '../../css/dashboard-modals.css';
 import '../../css/dashboard-mobile.css';
 
 // Scripts
-import { initDashboard, showHome } from '@/scripts/dashboard-main';
+import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboard-main';
 import { closeModal, reviewTask, cancelReward, confirmReward, toggleRewardRecord, handleRewardFileUpload, selectSticker, openTaskGallery, closeTaskGallery, filterTaskGallery, addQueueTask, deleteQueueItem, openModById } from '@/scripts/dashboard-modals';
 import { toggleProtocol, toggleNewbieImmunity, closeExclusionModal, sendBroadcast, saveBroadcastPreset, togglePresets, closeBroadcastModal, handleBroadcastFile, openBroadcastModal, openExclusionModal } from '@/scripts/dashboard-protocol';
 import { showProfile, switchProfileTab, openProfileUpload } from '@/scripts/dashboard-navigation';
 import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQueue } from '@/scripts/dashboard-main';
 import { closeChatPreview } from '@/scripts/chat';
+
+// State & Actions
+import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes } from '@/scripts/dashboard-state';
+import { getAdminDashboardData } from '@/actions/velo-actions';
 
 export default function DashboardPage() {
     useEffect(() => {
@@ -55,7 +59,65 @@ export default function DashboardPage() {
             (window as any).initDashboard = initDashboard;
         }
 
+        // 1. Initialize System (UI Listeners)
         initDashboard();
+
+        // 2. Fetch Real Data & Hydrate State
+        const loadLiveAction = async () => {
+            console.log("Fetching Admin Dashboard Data...");
+            const data = await getAdminDashboardData();
+
+            if (data.success && data.users) {
+                // Map Supabase (snake_case) to Dashboard (camelCase)
+                const mappedUsers = data.users.map((u: any) => ({
+                    ...u,
+                    memberId: u.member_id,
+                    avatar: u.avatar_url || u.profile_picture_url || 'https://via.placeholder.com/150',
+                    points: u.score || 0,
+                    // Parse JSON params if needed
+                    activeTask: u.parameters?.taskdom_active_task || null,
+                    endTime: u.parameters?.taskdom_end_time || null,
+                    status: u.parameters?.status || u.hierarchy,
+                    kneelCount: u.kneel_history?.totalSessions || 0,
+                    kneelHistory: u.kneel_history || {}
+                }));
+
+                setUsers(mappedUsers);
+                setAvailableDailyTasks(data.dailyTasks || []);
+
+                // Aggregate Global Queue from all users
+                const allQueues = mappedUsers.flatMap((u: any) => {
+                    const q = u.task_queue || [];
+                    return q.map((task: any) => ({ ...task, ownerId: u.memberId, ownerName: u.name }));
+                });
+                setGlobalQueue(allQueues);
+
+                // Aggregate Global Tributes
+                const allTributes = mappedUsers.flatMap((u: any) => {
+                    let history = [];
+                    try {
+                        const raw = u.parameters?.tributeHistory;
+                        if (raw) {
+                            history = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                        }
+                    } catch (e) { }
+
+                    return history.map((t: any) => ({
+                        ...t,
+                        memberId: u.memberId,
+                        memberName: u.name,
+                        memberAvatar: u.avatar
+                    }));
+                }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                setGlobalTributes(allTributes);
+
+                console.log("Dashboard Hydrated with Live Data:", mappedUsers.length, "users");
+                renderMainDashboard();
+            }
+        };
+
+        loadLiveAction();
     }, []);
 
     return (

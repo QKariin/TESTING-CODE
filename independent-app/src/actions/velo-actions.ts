@@ -66,6 +66,36 @@ export async function secureGetProfile(memberId: string) {
     }
 }
 
+// --- 2.b GET ADMIN DASHBOARD DATA ---
+export async function getAdminDashboardData() {
+    try {
+        const { data: profiles, error: pError } = await supabaseAdmin
+            .from('profiles')
+            .select('*')
+            .order('name');
+
+        const { data: dailyTasks, error: tError } = await supabaseAdmin
+            .from('daily_tasks')
+            .select('*');
+
+        const { data: globalSettings, error: sError } = await supabaseAdmin
+            .from('system_rules')
+            .select('*');
+
+        if (pError) throw pError;
+
+        return {
+            success: true,
+            users: profiles || [],
+            dailyTasks: dailyTasks || [],
+            customRules: globalSettings || []
+        };
+    } catch (e: any) {
+        console.error("Dashboard Data Fetch Error", e);
+        return { success: false, users: [], dailyTasks: [] };
+    }
+}
+
 // --- 3. UPDATE SCORE ACTION ---
 export async function updateScoreAction(memberId: string, amount: number) {
     try {
@@ -223,6 +253,55 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
     } catch (error) {
         console.error("Backend Save Error:", error);
         return { success: false };
+    }
+}
+
+// --- 23. HIERARCHY MAINTENANCE (Service Plugin: Assignment) ---
+export async function runHierarchyMaintenance() {
+    try {
+        let skip = 0;
+        const limit = 50;
+        let hasMore = true;
+        let totalUpdated = 0;
+
+        while (hasMore) {
+            const { data: profiles, error } = await supabaseAdmin
+                .from('profiles')
+                .select('*')
+                .range(skip, skip + limit - 1);
+
+            if (error || !profiles || profiles.length === 0) {
+                hasMore = false;
+                break;
+            }
+
+            console.log(`Fetched ${profiles.length} profiles at offset ${skip}`);
+
+            const updates = profiles.map(async (profile: any) => {
+                const tempRecord: SlaveRecord = { ...profile };
+                const newRank = determineRank(tempRecord);
+
+                if (profile.hierarchy !== newRank) {
+                    console.log(`Updating ${profile.name}: ${profile.hierarchy} -> ${newRank}`);
+                    await updateProfile(profile.id, { hierarchy: newRank });
+                    return 1;
+                }
+                return 0;
+            });
+
+            const results = await Promise.all(updates);
+            totalUpdated += results.reduce((a: number, b: number) => a + b, 0);
+
+            skip += limit;
+            if (profiles.length < limit) hasMore = false;
+        }
+
+        console.log(`Hierarchy update completed. Total updated: ${totalUpdated}`);
+        return { success: true, updated: totalUpdated };
+
+    } catch (e: any) {
+        console.error("Hierarchy Maintenance Error:", e);
+        return { success: false, error: e.message };
     }
 }
 
@@ -729,11 +808,6 @@ export async function sendMessage(memberId: string, text: string, sender: string
     // Determine read status based on sender
     const isRead = (sender === "agent");
 
-    // Reuse insertMessage logic but with explicit sender
-    // backend/publish.js uses 'Chat' collection. We map to 'messages'.
-    // It also triggers a 'chatChannel' publish. In Supabase, clients subscribe to 'messages' table changes.
-    // So the INSERT itself acts as the publish.
-
     return await insertMessage({
         memberId: memberId,
         message: text,
@@ -741,3 +815,714 @@ export async function sendMessage(memberId: string, text: string, sender: string
         read: isRead
     });
 }
+
+// --- 15. DAILY TASK ROTATION (updateDailyTask.js) ---
+export async function updateDailyTask() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to midnight
+    const todayIso = today.toISOString();
+
+    console.log("🔍 Searching for today's task:", todayIso);
+
+    try {
+        // 1. Check if we already have a task for today
+        // Assuming 'daily_tasks' table has a 'selected_date' column (Date/Timestamp)
+        const { data: todayItems, error: todayError } = await supabaseAdmin
+            .from('daily_tasks')
+            .select('*')
+            .gte('selected_date', todayIso) // Greater than or equal to midnight today
+            .limit(1);
+
+        if (todayItems && todayItems.length > 0) {
+            const item = todayItems[0];
+            console.log("✅ Found today's task:", item.id);
+            return { source: "today", item };
+        }
+
+        console.log("⚠️ No task found for today. Searching for old tasks...");
+
+        // 2. Find old tasks (older than 6 months or never selected)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        const sixMonthsAgoIso = sixMonthsAgo.toISOString();
+
+        // Complex query: Select tasks where selected_date < 6 months OR selected_date is NULL
+        // Supabase/Postgrest doesn't support OR across different columns easily without Rpc or raw filter string
+        // We'll try a simple approach: Get pool of available tasks and pick random. 
+        // For efficiency, maybe just get tasks where selected_date < 6 months first.
+
+        const { data: oldItems, error: oldError } = await supabaseAdmin
+            .from('daily_tasks')
+            .select('*')
+            .lt('selected_date', sixMonthsAgoIso); // Only checking strict old dates for now
+
+        if (!oldItems || oldItems.length === 0) {
+            // Fallback: Check for NULL selected_date (fresh tasks)
+            const { data: freshItems } = await supabaseAdmin
+                .from('daily_tasks')
+                .select('*')
+                .is('selected_date', null);
+
+            if (freshItems && freshItems.length > 0) {
+                const randomFreshString = freshItems[Math.floor(Math.random() * freshItems.length)];
+                const updatedFresh = await supabaseAdmin
+                    .from('daily_tasks')
+                    .update({ selected_date: todayIso })
+                    .eq('id', randomFreshString.id)
+                    .select()
+                    .single();
+                return { source: "fresh", item: updatedFresh.data };
+            }
+
+            console.warn("❌ No old or fresh tasks available to reuse.");
+            return { source: "none", item: null };
+        }
+
+        const randomIndex = Math.floor(Math.random() * oldItems.length);
+        const selectedItem = oldItems[randomIndex];
+
+        // 3. Update the selected task to today
+        const { data: updatedItem, error: updateError } = await supabaseAdmin
+            .from('daily_tasks')
+            .update({ selected_date: todayIso })
+            .eq('id', selectedItem.id)
+            .select()
+            .single();
+
+        if (updateError) throw updateError;
+
+        console.log("♻️ Reused old task and updated date:", updatedItem.id);
+        return { source: "reused", item: updatedItem };
+
+    } catch (error: any) {
+        console.error("🚨 Task retrieval failed:", error);
+        return { source: "error", error: error.message };
+    }
+}
+
+// --- 16. PROFILE VIEW GENERATOR (backend/updateProfile.js) ---
+
+// 🔧 Utility: Recursively replace placeholders in all string fields
+function enrichNodeTree(node: any, replacements: Record<string, string>) {
+    const clone = JSON.parse(JSON.stringify(node));
+
+    const replaceInString = (str: string) => {
+        if (typeof str !== "string") return str;
+        let res = str;
+        Object.entries(replacements).forEach(([key, value]) => {
+            // str.replaceAll is standard in modern JS environments
+            res = res.split(`#${key}#`).join(value);
+        });
+        return res;
+    };
+
+    const recurse = (obj: any): any => {
+        if (Array.isArray(obj)) {
+            return obj.map(recurse);
+        } else if (typeof obj === "object" && obj !== null) {
+            const newObj: any = {};
+            for (const key in obj) {
+                newObj[key] = typeof obj[key] === "string"
+                    ? replaceInString(obj[key])
+                    : recurse(obj[key]);
+            }
+            return newObj;
+        } else {
+            return obj;
+        }
+    };
+
+    return recurse(clone);
+}
+
+function generateProfileView(templateHtml: any, replacements: any) {
+    if (!templateHtml || !templateHtml.nodes) return templateHtml;
+    const enrichedNodes = templateHtml.nodes.map((node: any) => enrichNodeTree(node, replacements));
+    return {
+        ...templateHtml,
+        nodes: enrichedNodes
+    };
+}
+
+export async function getLastVideoSlug(memberId: string) {
+    // 1. Get profile
+    const profile = await getProfile(memberId);
+    if (!profile) return "";
+
+    // 2. Check for gallery in parameters or check if we added a column
+    // The schema has NO 'mediagallery1'. We assume it is in parameters.
+    const params = profile.parameters || {};
+    const gallery = params.mediagallery1 || [];
+
+    if (!Array.isArray(gallery) || gallery.length === 0) {
+        // console.warn("⚠️ Media gallery is empty or missing."); 
+        return "";
+    }
+
+    const videos = gallery.filter((media: any) => media.type === "video");
+    if (!videos.length) return "";
+
+    const lastVideo = videos[videos.length - 1];
+    return lastVideo.slug || "";
+}
+
+// Renamed to avoid conflict with our own 'updateProfile' helper
+// This generates the "View Model" for the profile
+export async function updateProfileView(memberId: string) {
+    try {
+        console.log(`🔍 Searching for item with memberId: ${memberId}`);
+        const profile = await getProfile(memberId);
+        if (!profile) return { success: false, reason: "No matching item found" };
+
+        const params = profile.parameters || {};
+
+        // Validations
+        // Velo checks: score !== number || !title_fld
+        // We check profile.score and profile.name/title
+        if (profile.score === undefined || profile.score === null) {
+            return { success: false, reason: "Missing score" };
+        }
+
+        // 🔍 Fetch CanvaCode template (Stubbed, as we don't have this table)
+        // We'll use a placeholder or check parameters for a stored template
+        // For now, we return a "Not Implemented" structure or assume existing 'profile_view' logic
+        const templateHtml = {
+            nodes: [], // STUB: Add default template structure here if known
+            _stub: "Template mechanism required. Add 'canva_code' table or hardcode template."
+        };
+
+        // 🔍 Fetch last 4 point messages
+        // Velo: query("SlaveMessages").eq("memberId", memberId).or(.eq("memberId", "All"))
+        // Supabase: .or(`member_id.eq.${memberId},member_id.eq.All`)
+        const { data: messageItems } = await supabaseAdmin
+            .from('messages')
+            .select('*')
+            .or(`member_id.eq.${memberId},member_id.eq.All`)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        const pointMessages = (messageItems || []).map((m: any) => m.message);
+        const videoSlug = await getLastVideoSlug(memberId);
+
+        const replacements = {
+            name: profile.name || "Slave",
+            score: (profile.score || 0).toLocaleString(),
+            hierarchy: profile.hierarchy || "—",
+            tasks: (params.tasks_pct || "—").toString(),
+            presence: (params.presence_pct || "—").toString(),
+            appreciation: (params.appreciation_pct || "—").toString(),
+            obedience: (params.obedience_pct || "—").toString(),
+            resp1: (params.resp1 || "—").toString(),
+            resp2: (params.resp2 || "—").toString(),
+            resp3: (params.resp3 || "—").toString(),
+            resp4: (params.resp4 || "—").toString(),
+            overallPerformance: (params.overallPerformance || "—").toString(),
+            points1: pointMessages[0] || "—",
+            points2: pointMessages[1] || "—",
+            points3: pointMessages[2] || "—",
+            points4: pointMessages[3] || "—",
+            points5: pointMessages[4] || "—",
+            points6: pointMessages[5] || "—",
+            points7: pointMessages[6] || "—",
+            points8: pointMessages[7] || "—",
+            points9: pointMessages[8] || "—",
+            points10: pointMessages[9] || "—",
+            video: videoSlug
+        };
+
+        const generatedView = generateProfileView(templateHtml, replacements);
+
+        // Save back to parameters.profile_view
+        await updateProfile(profile.id, {
+            parameters: { ...params, profile_view: generatedView }
+        });
+
+        console.log(`✅ Updated profile view for ${profile.id}`);
+        return { success: true, updatedId: profile.id };
+
+    } catch (e: any) {
+        console.error("updateProfileView Error:", e);
+        return { success: false, reason: e.message };
+    }
+}
+
+// --- 17. TASK EXPIRATION JOB (update.Taskdom.js) ---
+export async function checkExpiredTasks() {
+    try {
+        console.log("⏰ Checking for expired tasks...");
+
+        // 1. Find profiles where a task is currently PENDING
+        // In Supabase, this is inside 'parameters->taskdom_pending_state'
+        // We can't easily query JSON keys with 'isNotEmpty' in standard select without PostgREST filtering syntax
+        // Best approach for now: fetch all profiles with non-null parameters, then filter in code (for < 1000 users this is fine)
+        // Or use .not('parameters->taskdom_pending_state', 'is', null) if supported.
+        // Let's safe fetch top 1000 and filter.
+
+        const { data: profiles, error } = await supabaseAdmin
+            .from('profiles')
+            .select('*')
+            .not('parameters', 'is', null) // Ensure parameters exist
+            .limit(1000);
+
+        if (error) throw error;
+        if (!profiles) return;
+
+        const now = new Date().getTime();
+
+        for (const profile of profiles) {
+            const params = profile.parameters || {};
+            const pending = params.taskdom_pending_state;
+
+            // Check if data exists and if Time has passed
+            if (pending && pending.endTime && pending.endTime < now) {
+                console.log(`Task Expired for: ${profile.member_id}`);
+
+                // --- PUNISHMENT LOGIC ---
+
+                // Reset Streak
+                // Velo: item.taskdom_current_streak = 0
+                params.taskdom_current_streak = 0;
+
+                // Deduct Points
+                let currentScore = Number(profile.score || 0);
+                currentScore = Math.max(0, currentScore - 10);
+
+                // Update History
+                let history: any[] = [];
+                if (Array.isArray(profile.routine_history)) history = profile.routine_history;
+                // Velo snippet used 'taskdom_history' on the item, which we mapped to routine_history
+
+                history.unshift({
+                    text: pending.task.text || "Unknown Task",
+                    status: "reject",
+                    resultLabel: "TIME EXPIRED",
+                    timestamp: new Date().toISOString(),
+                    completed: false
+                });
+                if (history.length > 50) history = history.slice(0, 50);
+
+                // CLEAR ACTIVE TASK
+                params.taskdom_active_task = null;
+                params.taskdom_pending_state = null;
+
+                // ACTIVITY LOG (Velo used 'ActivityLog' collection)
+                // We don't have this table. We can add to 'parameters.activity_log' or 'messages' (system)
+                // Let's add to parameters.activity_log to avoid polluting messaging
+                const activityLog = params.activity_log || [];
+                activityLog.unshift({
+                    title: `Task Expired (24h limit): ${pending.task.text}`,
+                    type: "fail",
+                    memberId: profile.member_id,
+                    memberName: profile.name || "Slave",
+                    created_at: new Date().toISOString()
+                });
+                if (activityLog.length > 50) params.activity_log = activityLog.slice(0, 50);
+                else params.activity_log = activityLog;
+
+                // SAVE UPDATES
+                await updateProfile(profile.id, {
+                    score: currentScore,
+                    routine_history: history,
+                    parameters: params
+                });
+            }
+        }
+
+        console.log("✅ Expiration check complete.");
+
+    } catch (error) {
+        console.error("Error in checkExpiredTasks:", error);
+    }
+}
+
+// --- 18. PAYMENTS (backend/pay.jsw) ---
+
+const coinsToEuroCents: Record<number, number> = {
+    1000: 1000,   // 10€
+    5500: 5000,   // 50€
+    12000: 10000, // 100€
+    30000: 25000, // 250€
+    70000: 50000, // 500€
+    150000: 100000 // 1000€
+};
+
+function getEuroCentsFromCoins(coins: number) {
+    return coinsToEuroCents[coins] ?? null;
+}
+
+export async function getPaymentLink(amountCoins: number, email?: string) {
+    try {
+        const userEmail = email; // In Velo this was wixUsersBackend.currentUser.getEmail()
+        if (!userEmail) throw new Error("User email required for payment");
+
+        const priceInCents = getEuroCentsFromCoins(amountCoins);
+
+        // Fallback or Error if invalid coin amount
+        if (!priceInCents) throw new Error("Invalid coin amount or amount too low");
+        if (priceInCents < 50) throw new Error("Amount too low");
+
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            customer_email: userEmail,
+            line_items: [{
+                price_data: {
+                    currency: 'eur',
+                    product_data: {
+                        name: `${amountCoins} Coins`,
+                        description: "Tribute to the Queen"
+                    },
+                    unit_amount: priceInCents,
+                },
+                quantity: 1,
+            }],
+            mode: 'payment',
+            success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/private?success=true&coins=${amountCoins}`,
+            cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/private?canceled=true`,
+            metadata: {
+                wixUserEmail: userEmail,
+                coinsToAdd: amountCoins.toString()
+            }
+        });
+
+        return session.url;
+    } catch (error: any) {
+        console.error("Backend Coin Error:", error);
+        throw new Error(error.message);
+    }
+}
+
+// --- 19. USD COIN CHECKOUT (backend/stripepay.js) ---
+export async function createCoinCheckout(amountCoins: number, priceInCents: number, userId: string) {
+    try {
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [{
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: `${amountCoins} Coins for Queen`,
+                    },
+                    unit_amount: priceInCents, // e.g., 1000 = $10.00
+                },
+                quantity: 1,
+            }],
+            mode: 'payment',
+            // Redirects
+            success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?payment=success`,
+            cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?payment=cancel`,
+            metadata: {
+                wixUserId: userId, // Legacy WIX ID or Supabase ID? Let's use what's passed.
+                coinsToAdd: amountCoins.toString()
+            }
+        });
+
+        return session.url;
+    } catch (error: any) {
+        console.error("createCoinCheckout Error:", error);
+        throw new Error(error.message);
+    }
+}
+
+// --- 20. PUSH NOTIFICATIONS (backend/http-functions.js) ---
+export async function savePushSubscription(subscription: any) {
+    try {
+        if (!subscription || !subscription.endpoint) {
+            return { success: false, error: "Invalid subscription" };
+        }
+
+        // Ideally we should know WHO is saving this. 
+        // If called from client, we might need to pass userId or use auth check.
+        // For now, let's assume userId is passed or we just store it.
+        // User snippet: "const member = await currentMember.getMember();"
+        // So we need memberId.
+
+        // return { success: true }; // STUB until we have auth context in this action
+        // Actually, let's assume the client passes memberId for now, or we rely on the caller.
+        return { success: true, message: "Use updateProfile to save 'parameters.push_subscription'" };
+
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+// New Action to actually save it to profile
+export async function registerPushSubscriptionAction(memberId: string, subscription: any) {
+    try {
+        const profile = await getProfile(memberId);
+        if (!profile) return { success: false, error: "User not found" };
+
+        const params = profile.parameters || {};
+
+        // Store in parameters (or a separate table 'push_subscriptions' is better for broadcasting)
+        // For 1:1 notifications, parameters is fine.
+        params.push_subscription = subscription;
+
+        await updateProfile(memberId, { parameters: params });
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e.message };
+    }
+}
+
+export async function getAllPushSubscriptionsAction() {
+    // This is for the Admin 'Push' broadcast
+    // In Velo: backend/push.js -> getAllSubscriptions
+    // We need to scan all profiles and collect 'parameters.push_subscription'
+    // Efficient? No. But for <1000 users it works.
+    try {
+        const { data: profiles, error } = await supabaseAdmin
+            .from('profiles')
+            .select('parameters')
+            .not('parameters', 'is', null);
+
+        if (error) throw error;
+
+        const subs = profiles
+            .map((p: any) => p.parameters?.push_subscription)
+            .filter((s: any) => s && s.endpoint);
+
+        return { success: true, subscriptions: subs };
+    } catch (e: any) {
+        return { success: false, error: e.message };
+    }
+}
+
+// --- 21. MEMBER INITIALIZATION (Public/events.js) ---
+// Replaces wixMembers_onLogin logic
+export async function ensureProfileExists(user: { id: string, email: string }) {
+    try {
+        if (!user || !user.id || !user.email) return { success: false, error: "Invalid user data" };
+
+        // Check if profile exists
+        const { data: existing } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('id', user.id)
+            .single();
+
+        if (existing) {
+            return { success: true, message: "Profile exists" };
+        }
+
+        console.log(`⚠️ Profile missing for ${user.email}. Creating now...`);
+
+        // Create Profile (Fallback if Trigger failed)
+        const { error } = await supabaseAdmin
+            .from('profiles')
+            .insert({
+                id: user.id,
+                member_id: user.email, // Legacy mapping
+                email: user.email,
+                name: user.email.split('@')[0],
+                score: 0,
+                wallet: 0,
+                hierarchy: "Hall Boy",
+                parameters: {
+                    devotion: 100,
+                    role: "Subject"
+                }
+            });
+
+        if (error) throw error;
+        console.log(`✅ Profile created for ${user.email}`);
+        return { success: true, created: true };
+
+    } catch (e: any) {
+        console.error("ensureProfileExists Error:", e);
+        return { success: false, error: e.message };
+    }
+}
+
+// --- 24. DAILY SCORE & LEADERBOARD (Service Plugin: DailyScore) ---
+export async function runDailyScoreReset() {
+    try {
+        // 1. Get Top 10 by Daily Score
+        const { data: topProfiles, error: fetchError } = await supabaseAdmin
+            .from('profiles')
+            .select('id, name, daily_score')
+            .order('daily_score', { ascending: false })
+            .limit(10);
+
+        if (fetchError) throw fetchError;
+
+        // 2. Update Leaderboard Table
+        if (topProfiles && topProfiles.length > 0) {
+            // Delete all previous entries
+            await supabaseAdmin.from('daily_leaderboard').delete().neq('rank', -1);
+
+            const leaderboardEntries = topProfiles.map((p: any, index: number) => ({
+                rank: index + 1,
+                name: p.name || "Unknown",
+                score: p.daily_score || 0
+            }));
+
+            const { error: insertError } = await supabaseAdmin
+                .from('daily_leaderboard')
+                .insert(leaderboardEntries);
+
+            if (insertError) console.error("Leaderboard Insert Error", insertError);
+        }
+
+        // 3. Reset Daily Score for ALL profiles
+        const { error: resetError } = await supabaseAdmin
+            .from('profiles')
+            .update({ daily_score: 0 })
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+
+        if (resetError) throw resetError;
+
+        return { success: true, message: "Daily Score Reset Complete" };
+
+    } catch (e: any) {
+        console.error("Daily Score Reset Error:", e);
+        return { success: false, error: e.message };
+    }
+}
+
+// --- 25. MONTHLY SCORE & LEADERBOARD (Service Plugin: MonthlyScore) ---
+export async function runMonthlyScoreReset() {
+    try {
+        // 1. Get Top 3 by Monthly Score
+        const { data: topProfiles, error: fetchError } = await supabaseAdmin
+            .from('profiles')
+            .select('id, name, monthly_score')
+            .order('monthly_score', { ascending: false })
+            .limit(3);
+
+        if (fetchError) throw fetchError;
+
+        // 2. Insert into Monthly Stats Log
+        if (topProfiles && topProfiles.length > 0) {
+            const entry = {
+                name1: topProfiles[0]?.name || null,
+                score1: topProfiles[0]?.monthly_score || 0,
+                name2: topProfiles[1]?.name || null,
+                score2: topProfiles[1]?.monthly_score || 0,
+                name3: topProfiles[2]?.name || null,
+                score3: topProfiles[2]?.monthly_score || 0
+            };
+
+            const { error: insertError } = await supabaseAdmin
+                .from('monthly_leaderboard')
+                .insert(entry);
+
+            if (insertError) console.error("Monthly Log Insert Error", insertError);
+        }
+
+        // 3. Reset Monthly Score for ALL profiles
+        const { error: resetError } = await supabaseAdmin
+            .from('profiles')
+            .update({ monthly_score: 0 })
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+
+        if (resetError) throw resetError;
+
+        return { success: true, message: "Monthly Score Reset Complete" };
+
+    } catch (e: any) {
+        console.error("Monthly Score Reset Error:", e);
+        return { success: false, error: e.message };
+    }
+}
+
+// --- 26. LEADERBOARD UPDATES (Service Plugin: Leaderboard) ---
+export async function updateAllLeaderboards() {
+    try {
+        const TABLES = [
+            { id: "daily_leaderboard", col: "daily_score", limit: 10 },
+            { id: "weekly_standings", col: "weekly_score", limit: 10 },
+            { id: "monthly_standings", col: "monthly_score", limit: 10 }, // Use 'monthly_standings' for current
+            { id: "yearly_standings", col: "yearly_score", limit: 10 },
+            { id: "overall_leaderboard", col: "score", limit: 10 }
+        ];
+
+        let results = [];
+
+        for (const t of TABLES) {
+            // 1. Get Top Items
+            const { data: topProfiles, error: fetchError } = await supabaseAdmin
+                .from('profiles')
+                .select(`id, name, ${t.col}`)
+                .order(t.col, { ascending: false })
+                .limit(t.limit);
+
+            if (fetchError || !topProfiles) {
+                console.error(`Error fetching for ${t.id}:`, fetchError);
+                continue;
+            }
+
+            // 2. Clear & Insert
+            // Note: In a real prod app with high concurrency, this delete-then-insert is risky.
+            // Better to use UPSERT on rank, but Supabase/Postgres needs a constraint.
+            // Our schema has 'rank' as UNIQUE, so we can UPSERT.
+
+            const entries = topProfiles.map((p: any, index: number) => ({
+                rank: index + 1,
+                name: p.name || "Unknown",
+                score: p[t.col] || 0,
+                updated_at: new Date()
+            }));
+
+            // Upsert (Conflict on 'rank')
+            const { error: upsertError } = await supabaseAdmin
+                .from(t.id)
+                .upsert(entries, { onConflict: 'rank' });
+
+            if (upsertError) console.error(`Error updating ${t.id}:`, upsertError);
+            else results.push(`${t.id} updated`);
+        }
+
+        return { success: true, updated: results };
+
+    } catch (e: any) {
+        console.error("Leaderboard Update Error:", e);
+        return { success: false, error: e.message };
+    }
+}
+
+// --- 27. YEARLY SCORE & LEADERBOARD (Service Plugin: YearlyScore) ---
+export async function runYearlyScoreReset() {
+    try {
+        // 1. Get Top 3 by Yearly Score
+        const { data: topProfiles, error: fetchError } = await supabaseAdmin
+            .from('profiles')
+            .select('id, name, yearly_score')
+            .order('yearly_score', { ascending: false })
+            .limit(3);
+
+        if (fetchError) throw fetchError;
+
+        // 2. Insert into Yearly Stats Log
+        if (topProfiles && topProfiles.length > 0) {
+            const entry = {
+                name1: topProfiles[0]?.name || null,
+                score1: topProfiles[0]?.yearly_score || 0,
+                name2: topProfiles[1]?.name || null,
+                score2: topProfiles[1]?.yearly_score || 0,
+                name3: topProfiles[2]?.name || null,
+                score3: topProfiles[2]?.yearly_score || 0
+            };
+
+            const { error: insertError } = await supabaseAdmin
+                .from('yearly_leaderboard')
+                .insert(entry);
+
+            if (insertError) console.error("Yearly Log Insert Error", insertError);
+        }
+
+        // 3. Reset Yearly Score for ALL profiles
+        const { error: resetError } = await supabaseAdmin
+            .from('profiles')
+            .update({ yearly_score: 0 })
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+
+        if (resetError) throw resetError;
+
+        return { success: true, message: "Yearly Score Reset Complete" };
+
+    } catch (e: any) {
+        console.error("Yearly Score Reset Error:", e);
+        return { success: false, error: e.message };
+    }
+}
+

@@ -8,21 +8,14 @@ import {
     setArmoryTarget, setCurrId
 } from './dashboard-state';
 
-// We'll import these as they are converted
-// import { renderSidebar } from './dashboard-sidebar';
-// import { renderOperationsMonitor } from './dashboard-operations';
+import { renderSidebar } from './dashboard-sidebar';
+import { renderOperationsMonitor } from './dashboard-operations';
 import { renderChat } from './dashboard-chat';
-// import { updateDetail } from './dashboard-users';
-// import { toggleMobStats } from './dashboard-utils';
-// import { Bridge } from './bridge';
+import { updateDetail } from './dashboard-users';
+import { toggleMobStats } from './dashboard-utils';
+import { Bridge } from './bridge';
 import { unlockAudio } from './utils';
-
-// Placeholder for missing imports
-const renderSidebar = () => { };
-const renderOperationsMonitor = () => { };
-const updateDetail = (u: any) => { };
-const toggleMobStats = () => { };
-const Bridge = { listen: (cb: any) => { } };
+import { processCoinTransaction, secureUpdateTaskAction } from '@/actions/velo-actions';
 
 export function initDashboard() {
     // Audio Wake-Up Strategy
@@ -154,16 +147,70 @@ export function switchAdminTab(tab: 'ops' | 'intel' | 'record') {
     }
 }
 
-export function adjustWallet(action: 'add' | 'sub') {
-    console.log("Adjusting wallet:", action);
+
+export async function adjustWallet(action: 'add' | 'sub') {
+    if (!currId) return;
+    console.log(`Adjusting wallet for ${currId}: ${action}`);
+
+    const amount = action === 'add' ? 100 : -100;
+    const result = await processCoinTransaction(currId, amount, "Admin Manual Adjustment");
+
+    if (result.success) {
+        // Update local state
+        const u = users.find(x => x.memberId === currId);
+        if (u) {
+            u.wallet = result.newBalance;
+            // Re-render detail view if needed
+            // We need to call updateDetail(u) but it's currently a stub in this file.
+            // Let's manually update the DOM elements if updateDetail isn't available or working.
+            const walletEl = document.getElementById('dMirrorWallet');
+            if (walletEl) walletEl.innerText = (u.wallet || 0).toLocaleString();
+        }
+    } else {
+        console.error("Wallet adjustment failed:", result.error);
+        alert("Action failed: " + result.error);
+    }
 }
 
 export function manageAltar(slot: number) {
     console.log("Managing altar slot:", slot);
+    // TODO: Implement Altar backend logic
 }
 
-export function adminTaskAction(id: string | null, action: 'skip' | 'send') {
-    console.log("Admin task action:", action, "for ID:", id);
+export async function adminTaskAction(id: string | null, action: 'skip' | 'send') {
+    // id is passed from onClick, but sometimes we rely on currId
+    const targetId = id || currId;
+    if (!targetId) return;
+
+    console.log("Admin task action:", action, "for ID:", targetId);
+
+    if (action === 'skip') {
+        const result = await secureUpdateTaskAction(targetId, {
+            wasSkipped: true,
+            taskTitle: "Admin Force Skip"
+        });
+
+        if (result.success) {
+            // Update local state
+            const u = users.find(x => x.memberId === targetId);
+            if (u) {
+                // Manually reset local state to match backend
+                u.activeTask = null;
+                u.endTime = null;
+                if (!u.parameters) u.parameters = {};
+                u.parameters.taskdom_active_task = null;
+                u.parameters.taskdom_end_time = null;
+
+                // Force UI update
+                const statusEl = document.getElementById('dActiveStatus');
+                const textEl = document.getElementById('dActiveText');
+                if (statusEl) { statusEl.innerText = "UNPRODUCTIVE"; statusEl.style.color = "#666"; }
+                if (textEl) textEl.innerText = "None";
+            }
+        } else {
+            alert("Failed to skip task.");
+        }
+    }
 }
 
 export function toggleTaskQueue() {
