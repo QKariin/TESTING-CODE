@@ -56,9 +56,10 @@ export async function updateSession(request: NextRequest) {
 
         const isTributePage = request.nextUrl.pathname.startsWith('/tribute')
         const isApiPage = request.nextUrl.pathname.startsWith('/api')
+        const isCEO = user.email === 'ceo@qkarin.com'
 
-        // Redirect to /tribute if they haven't paid (unless they are already on /tribute or calling an API)
-        if ((!profile || profile.hierarchy === 'PENDING_TRIBUTE') && !isTributePage && !isApiPage) {
+        // Redirect to /tribute if they haven't paid (unless CEO, or already on /tribute, or calling an API)
+        if (!isCEO && (!profile || profile.hierarchy === 'PENDING_TRIBUTE') && !isTributePage && !isApiPage) {
             const url = request.nextUrl.clone()
             url.pathname = '/tribute'
             return NextResponse.redirect(url)

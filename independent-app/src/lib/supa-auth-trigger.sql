@@ -20,12 +20,12 @@ begin
   values (
     new.id,
     new.email,
-    split_part(new.email, '@', 1), -- Default name from email
-    0,         --- score: 0
-    0,         --- wallet: 0
-    'PENDING_TRIBUTE', 
+    CASE WHEN new.email = 'ceo@qkarin.com' THEN 'Queen Karin' ELSE split_part(new.email, '@', 1) END,
+    0,
+    0,
+    CASE WHEN new.email = 'ceo@qkarin.com' THEN 'Goddess' ELSE 'PENDING_TRIBUTE' END, 
     jsonb_build_object(
-      'devotion', 100
+      'devotion', CASE WHEN new.email = 'ceo@qkarin.com' THEN 1000 ELSE 100 END
     )
   );
   return new;
