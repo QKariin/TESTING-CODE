@@ -66,47 +66,11 @@ export async function updateSession(request: NextRequest) {
             return supabaseResponse
         }
 
-        console.log(`[AUTH_DEBUG] User ID: ${user.id}, Email: ${user.email}`);
-
-        let { data: profile, error: profileErr } = await supabase
+        const { data: profile } = await supabase
             .from('profiles')
-            .select('*')
+            .select('id')
             .eq('id', user.id)
             .single()
-
-        if (profileErr) console.log(`[AUTH_DEBUG] Profile lookup by ID failed: ${profileErr.message}`);
-
-        // Lazy Matching: If not found by ID, try finding by email (Legacy Wix users)
-        if (!profile && user.email) {
-            console.log(`[AUTH_DEBUG] No profile for ID. Checking by email: ${user.email}`);
-            const { data: profileByEmail, error: emailErr } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('member_id', user.email)
-                .single()
-
-            if (emailErr) console.log(`[AUTH_DEBUG] Profile lookup by email failed: ${emailErr.message}`);
-
-            if (profileByEmail) {
-                console.log(`[AUTH_DEBUG] Found legacy profile for ${user.email}. ID in DB is ${profileByEmail.id}. Linking...`);
-                // Update the profile to link this user's permanent ID
-                const { data: updatedProfile, error: linkError } = await supabase
-                    .from('profiles')
-                    .update({ id: user.id })
-                    .eq('member_id', user.email)
-                    .select()
-                    .single()
-
-                if (!linkError) {
-                    console.log(`[AUTH_DEBUG] Successfully linked ID for ${user.email}`);
-                    profile = updatedProfile;
-                } else {
-                    console.error(`[AUTH_DEBUG] FAILED to link ID for ${user.email}: ${linkError.message}`);
-                }
-            } else {
-                console.log(`[AUTH_DEBUG] NO profile found for email: ${user.email}`);
-            }
-        }
 
         const isApiPage = pathname.startsWith('/api')
 
