@@ -6,12 +6,15 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const memberId = searchParams.get('memberId');
 
-        const [users, tributes, reviewQueue, profile] = await Promise.all([
-            DbService.getAllProfiles(),
-            DbService.getRecentTributes(50),
-            DbService.getReviewQueue(),
-            memberId ? DbService.getProfile(memberId) : Promise.resolve(null)
-        ]);
+        const users = await DbService.getAllProfiles();
+        const tributes = await DbService.getRecentTributes(50);
+        const reviewQueue = await DbService.getReviewQueue();
+
+        // If memberId is provided, fetch specific profile
+        let profile = null;
+        if (memberId) {
+            profile = await DbService.getProfile(memberId);
+        }
 
         return NextResponse.json({
             users: users || [],

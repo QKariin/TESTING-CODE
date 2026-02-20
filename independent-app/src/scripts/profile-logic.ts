@@ -351,7 +351,7 @@ export function renderProfileSidebar(u: any) {
             tasks: u.parameters?.taskdom_completed_tasks || 0,
             kneels: u.parameters?.kneel_count || 0,
             score: u.score || 0,
-            spent: u.total_coins_spent || 0,
+            spent: u.parameters?.total_coins_spent || 0,
             streak: u.parameters?.routine_streak || 0
         };
 

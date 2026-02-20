@@ -23,8 +23,8 @@ async function getProfile(memberId: string) {
     const { data, error } = await supabaseAdmin
         .from('profiles')
         .select('*')
-        .eq('member_id', memberId)
-        .single();
+        .or(`member_id.eq.${memberId},id.eq.${memberId}`)
+        .maybeSingle();
 
     if (error || !data) return null;
     return data;

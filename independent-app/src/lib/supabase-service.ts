@@ -3,16 +3,38 @@ import { supabase } from './supabase';
 
 export const DbService = {
     // --- PROFILES ---
-    // --- PROFILES ---
     async getProfile(memberId: string) {
         // Search by member_id (Email) or id (UUID)
+        // We check BOTH 'profiles' and 'tasks' for maximum resilience
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
             .or(`member_id.eq.${memberId},id.eq.${memberId}`)
-            .single();
+            .maybeSingle();
+
+        if (data) return data;
+
+        // Fallback: Check 'tasks' table if not in profiles yet
+        const { data: taskData } = await supabase
+            .from('tasks')
+            .select('*')
+            .ilike('MemberID', memberId)
+            .maybeSingle();
+
+        if (taskData) {
+            return {
+                id: null, // Indicates not yet linked to an auth user
+                member_id: taskData.MemberID,
+                name: taskData.Name || 'Legacy Member',
+                wallet: 0,
+                score: 0,
+                hierarchy: 'Hall Boy',
+                _isLegacy: true
+            };
+        }
+
         if (error && error.code !== 'PGRST116') throw error;
-        return data;
+        return null;
     },
 
     async updateProfile(id: string, updates: any) {
@@ -30,105 +52,50 @@ export const DbService = {
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .order('last_seen', { ascending: false });
+            .order('last_active', { ascending: false });
         if (error) throw error;
         return data;
     },
 
-    // --- TASKS ---
-    async getReviewQueue() {
-        const { data, error } = await supabase
-            .from('tasks')
-            .select('*, profiles(name, avatar)')
-            .eq('status', 'pending');
-        if (error) throw error;
-        return data;
-    },
+    // --- REWARDS & KNEELING ---
+    async claimKneel(memberId: string, amount: number, type: 'coins' | 'points') {
+        const profile = await this.getProfile(memberId);
+        if (!profile || !profile.id) throw new Error("Profile not linked");
 
-    async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
-        // 1. Update task status
-        const { error: taskError } = await supabase
-            .from('tasks')
-            .update({ status: 'approve', reviewer_comment: comment, sticker_url: sticker })
-            .eq('id', taskId);
-        if (taskError) throw taskError;
-
-        // 2. Award coins & points to profile
-        const profile = await this.getProfile(profileId);
-        if (!profile) return;
-
-        const updates = {
-            wallet: (profile.wallet || 0) + bonus,
-            score: (profile.score || 0) + bonus,
+        const updates: any = {
             parameters: {
                 ...(profile.parameters || {}),
-                taskdom_completed_tasks: (profile.parameters?.taskdom_completed_tasks || 0) + 1
+                last_kneel: new Date().toISOString(),
+                kneel_count: (profile.parameters?.kneel_count || 0) + 1
             }
         };
-        await this.updateProfile(profile.id, updates);
+
+        if (type === 'coins') updates.wallet = (profile.wallet || 0) + amount;
+        else updates.score = (profile.score || 0) + amount;
+
+        return this.updateProfile(profile.id, updates);
     },
 
-    // --- TRIBUTES ---
-    async getRecentTributes(limit = 10) {
-        const { data, error } = await supabase
-            .from('tributes')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(limit);
-        if (error) throw error;
-        return data;
-    },
-
-    // --- MESSAGES ---
-    async getMessages(memberId: string, limit = 50) {
-        const { data, error } = await supabase
-            .from('messages')
-            .select('*')
-            .eq('member_id', memberId)
-            .order('created_at', { ascending: false })
-            .limit(limit);
-        if (error) throw error;
-        return (data || []).reverse();
-    },
-
-    async sendMessage(memberId: string, text: string, sender: 'queen' | 'slave' | 'system', mediaUrl?: string) {
-        const { data, error } = await supabase
-            .from('messages')
-            .insert({
-                member_id: memberId,
-                message: (mediaUrl ? null : text),
-                sender,
-                media_url: mediaUrl || null,
-                created_at: new Date().toISOString()
-            });
-        if (error) throw error;
-        return data;
-    },
-
-    // --- COINS & TRANSACTIONS ---
-    async processTransaction(profileId: string, amount: number, category: string) {
-        const profile = await this.getProfile(profileId);
-        if (!profile) return { success: false };
+    // --- TRANSACTIONS ---
+    async processTransaction(memberId: string, amount: number, category: string) {
+        const profile = await this.getProfile(memberId);
+        if (!profile || !profile.id) throw new Error("Profile not linked");
 
         const newWallet = (profile.wallet || 0) + amount;
+        if (newWallet < 0) throw new Error("Insufficient Capital");
+
         const newSpent = amount < 0 ? (profile.total_coins_spent || 0) + Math.abs(amount) : (profile.total_coins_spent || 0);
 
-        const { error } = await supabase
-            .from('profiles')
-            .update({
-                wallet: newWallet,
-                total_coins_spent: newSpent
-            })
-            .eq('id', profile.id);
-
-        if (error) throw error;
-        return { success: true, wallet: newWallet };
+        return this.updateProfile(profile.id, {
+            wallet: newWallet,
+            total_coins_spent: newSpent
+        });
     },
 
     // --- FRAGMENTS ---
-    async revealFragment(profileId: string) {
-        const profile = await this.getProfile(profileId);
-        if (!profile) return { error: 'Not found' };
+    async revealFragment(memberId: string) {
+        const profile = await this.getProfile(memberId);
+        if (!profile || !profile.id) throw new Error("Profile not linked");
 
         const params = profile.parameters || {};
         const revealMap = params.reveal_map || [];
@@ -159,23 +126,76 @@ export const DbService = {
         return { pick, progress, revealMapCount: revealMap.length };
     },
 
-    // --- KNEEL ---
-    async claimKneel(profileId: string, amount: number, type: 'coins' | 'points') {
-        const profile = await this.getProfile(profileId);
-        if (!profile) return { success: false };
+    // --- MESSAGING ---
+    async sendMessage(memberId: string, text: string, sender: string = 'slave', mediaUrl: string | null = null) {
+        const profile = await this.getProfile(memberId);
+        const mid = profile?.member_id || memberId;
 
-        const updates: any = {
+        const { data, error } = await supabase
+            .from('messages')
+            .insert({
+                member_id: mid,
+                sender,
+                message: text,
+                media_url: mediaUrl
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    async getMessages(memberId: string, limit = 50) {
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('member_id', memberId)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+        if (error) throw error;
+        return (data || []).reverse();
+    },
+
+    // --- TASKS ---
+    async getReviewQueue() {
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('*, profiles(name, avatar_url)')
+            .eq('status', 'pending');
+        if (error) throw error;
+        return data;
+    },
+
+    async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
+        const { error: taskError } = await supabase
+            .from('tasks')
+            .update({ status: 'approve', reviewer_comment: comment, sticker_url: sticker })
+            .eq('id', taskId);
+        if (taskError) throw taskError;
+
+        const profile = await this.getProfile(profileId);
+        if (!profile || !profile.id) return;
+
+        const updates = {
+            wallet: (profile.wallet || 0) + bonus,
+            score: (profile.score || 0) + bonus,
             parameters: {
                 ...(profile.parameters || {}),
-                last_kneel: new Date().toISOString(),
-                kneel_count: (profile.parameters?.kneel_count || 0) + 1
+                taskdom_completed_tasks: (profile.parameters?.taskdom_completed_tasks || 0) + 1
             }
         };
-
-        if (type === 'coins') updates.wallet = (profile.wallet || 0) + amount;
-        else updates.score = (profile.score || 0) + amount;
-
         await this.updateProfile(profile.id, updates);
-        return { success: true };
+    },
+
+    // --- TRIBUTES ---
+    async getRecentTributes(limit = 10) {
+        const { data, error } = await supabase
+            .from('tributes')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(limit);
+        if (error) throw error;
+        return data;
     }
 };
