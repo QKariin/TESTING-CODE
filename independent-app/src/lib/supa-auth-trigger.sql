@@ -11,24 +11,21 @@ begin
   insert into public.profiles (
     id,
     member_id,
-    email,
     name,
-    score,      -- Replaces 'points'
-    wallet,     -- Replaces 'coins'
-    hierarchy,  -- Replaces 'role' 
-    parameters  -- Stores 'devotion' and other metadata
+    score,
+    wallet,
+    hierarchy,
+    parameters
   )
   values (
     new.id,
-    new.email, -- Use email as member_id for limited legacy compatibility, or just use UUID
     new.email,
     split_part(new.email, '@', 1), -- Default name from email
-    0,         -- points: 0
-    0,         -- coins: 0
-    'Hall Boy', -- Replaces 'Subject'. Velo said 'Subject', but hierarchyRules says 'Hall Boy' is bottom.
+    0,         --- score: 0
+    0,         --- wallet: 0
+    'Hall Boy', 
     jsonb_build_object(
-      'devotion', 100,
-      'role', 'Subject' -- Store original Velo role in parameters just in case
+      'devotion', 100
     )
   );
   return new;

@@ -1,22 +1,19 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server'
+import { updateSession } from '@/utils/supabase/middleware'
 
-// Next.js 16 requires a named export "proxy" or a default export
-export function middleware(request: NextRequest) {
-    const { pathname } = request.nextUrl;
-
-    console.log(`[AUTH_LOG] Request path: ${pathname}`);
-
-    // The "force-lock" has been removed to allow system access.
-    // Real session validation should be added here using Supabase cookies.
-
-    return NextResponse.next();
+export async function middleware(request: NextRequest) {
+    return await updateSession(request)
 }
 
 export const config = {
     matcher: [
-        '/dashboard/:path*',
-        '/profile/:path*',
-        '/initiate/:path*'
+        /*
+         * Match all request paths except for the ones starting with:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * Feel free to modify this pattern to include more paths.
+         */
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
-};
+}
