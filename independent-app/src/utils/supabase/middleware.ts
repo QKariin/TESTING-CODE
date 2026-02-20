@@ -35,31 +35,48 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // 1. If no user, and not on login page -> redirect to login
+    const pathname = request.nextUrl.pathname;
+
+    // 1. If hitting /auth/callback, let it pass (it will handle its own redirect)
+    if (pathname.startsWith('/auth')) {
+        return supabaseResponse
+    }
+
+    // 2. If no user, and not on login page -> redirect to login
     if (
         !user &&
-        !request.nextUrl.pathname.startsWith('/login') &&
-        !request.nextUrl.pathname.startsWith('/auth')
+        !pathname.startsWith('/login')
     ) {
+        console.log(`[AUTH_LOG] No user for ${pathname}, redirecting to /login`);
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
     }
 
-    // 2. If user exists, check for Profile status (Paywall)
+    // 3. If user exists, check for Profile status (Paywall)
     if (user) {
+        const isCEO = user.email === 'ceo@qkarin.com'
+        const isTributePage = pathname.startsWith('/tribute')
+
+        // CEO Bypass
+        if (isCEO) {
+            if (isTributePage) {
+                return NextResponse.redirect(new URL('/dashboard', request.url))
+            }
+            return supabaseResponse
+        }
+
         const { data: profile } = await supabase
             .from('profiles')
             .select('hierarchy')
             .eq('id', user.id)
             .single()
 
-        const isTributePage = request.nextUrl.pathname.startsWith('/tribute')
-        const isApiPage = request.nextUrl.pathname.startsWith('/api')
-        const isCEO = user.email === 'ceo@qkarin.com'
+        const isApiPage = pathname.startsWith('/api')
 
-        // Redirect to /tribute if they haven't paid (unless CEO, or already on /tribute, or calling an API)
-        if (!isCEO && (!profile || profile.hierarchy === 'PENDING_TRIBUTE') && !isTributePage && !isApiPage) {
+        // Redirect to /tribute if they haven't paid (unless already on /tribute or calling an API)
+        if ((!profile || profile.hierarchy === 'PENDING_TRIBUTE') && !isTributePage && !isApiPage) {
+            console.log(`[AUTH_LOG] User ${user.email} needs tribute, redirecting to /tribute`);
             const url = request.nextUrl.clone()
             url.pathname = '/tribute'
             return NextResponse.redirect(url)
@@ -67,23 +84,24 @@ export async function updateSession(request: NextRequest) {
 
         // Redirect AWAY from /tribute if they have already paid
         if (profile && profile.hierarchy !== 'PENDING_TRIBUTE' && isTributePage) {
-            const url = request.nextUrl.clone()
-            url.pathname = '/dashboard'
-            return NextResponse.redirect(url)
+            return NextResponse.redirect(new URL('/dashboard', request.url))
         }
     }
 
-    // IMPORTANT: You *must* return the supabaseResponse object as is. If you're creating a
-    // new response object with NextResponse.next() make sure to:
-    // 1. Pass the request in it, like so:
-    //    const myNewResponse = NextResponse.next({ request })
-    // 2. Copy over the cookies, like so:
-    //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-    // 3. Change the myNewResponse object to fit your needs, but avoid modifying
-    //    the cookies!
-    // Keep in mind that this should only be used in specific situations, like for examples:
-    // - Setting HTTP-only cookies
-    // - Redirecting the user to a new page but still keeping the session active
-
     return supabaseResponse
+}
+
+// IMPORTANT: You *must* return the supabaseResponse object as is. If you're creating a
+// new response object with NextResponse.next() make sure to:
+// 1. Pass the request in it, like so:
+//    const myNewResponse = NextResponse.next({ request })
+// 2. Copy over the cookies, like so:
+//    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
+// 3. Change the myNewResponse object to fit your needs, but avoid modifying
+//    the cookies!
+// Keep in mind that this should only be used in specific situations, like for examples:
+// - Setting HTTP-only cookies
+// - Redirecting the user to a new page but still keeping the session active
+
+return supabaseResponse
 }
