@@ -92,22 +92,21 @@ export async function updateSession(request: NextRequest) {
             console.log(`[AUTH_MIDDLEWARE] No profile for ${userEmailNormalized}. Attempting recovery...`);
 
             // 1. Check if ANY profile exists with this email (Strategy A)
-            // We use .eq() instead of .ilike() for Strategy A to be safer, or at least check length
             const { data: legacyProfile } = await supabase
                 .from('profiles')
                 .select('id, member_id')
-                .or(`member_id.eq.${userEmailNormalized},member_id.ilike.${userEmailNormalized}`)
+                .or(`member_id.eq.${userEmailNormalized},member_id.ilike.${userEmailNormalized},memberId.eq.${userEmailNormalized},memberId.ilike.${userEmailNormalized}`)
                 .maybeSingle();
 
             let targetId = legacyProfile?.id;
 
             // 2. Check 'tasks' table if still not found (Strategy B)
             if (!targetId) {
-                console.log(`[AUTH_MIDDLEWARE] Strategy B: Searching 'tasks' for MemberID: ${userEmailNormalized}`);
+                console.log(`[AUTH_MIDDLEWARE] Strategy B: Searching 'tasks' for \"MemberID\": ${userEmailNormalized}`);
                 const { data: taskMatch } = await supabase
                     .from('tasks')
-                    .select('*')
-                    .ilike('MemberID', userEmailNormalized)
+                    .select('"MemberID"')
+                    .ilike('"MemberID"', userEmailNormalized)
                     .limit(1)
                     .maybeSingle();
 
