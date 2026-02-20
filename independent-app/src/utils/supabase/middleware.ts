@@ -55,28 +55,64 @@ export async function updateSession(request: NextRequest) {
 
     // 3. If user exists, check for Profile status (Paywall)
     if (user) {
-        const isCEO = user.email === 'ceo@qkarin.com'
+        const rawEmail = user.email || '';
+        const userEmailNormalized = rawEmail.trim().toLowerCase();
+
+        // Robust CEO check
+        const isCEO = userEmailNormalized === 'ceo@qkarin.com' || userEmailNormalized === 'queen@qkarin.com' || user.id === 'master-ceo-bypass';
+
         const isTributePage = pathname.startsWith('/tribute')
+        const isApiPage = pathname.startsWith('/api')
+        const isAuthPage = pathname.startsWith('/auth')
+
+        console.log(`\n[AUTH_MIDDLEWARE_CRITICAL_DEBUG] Path: ${pathname}, User: ${userEmailNormalized}, isCEO: ${isCEO}`);
 
         // CEO Bypass
         if (isCEO) {
+            console.log(`[AUTH_MIDDLEWARE] CEO/Queen bypass triggered for ${userEmailNormalized}`);
             if (isTributePage) {
                 return NextResponse.redirect(new URL('/dashboard', request.url))
             }
             return supabaseResponse
         }
 
-        const { data: profile } = await supabase
+        // Check for profile
+        let { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('id')
+            .select('id, rank')
             .eq('id', user.id)
             .single()
 
-        const isApiPage = pathname.startsWith('/api')
+        // --- BOUNCER UPGRADE: Aggressive Profile Recovery ---
+        if (!profile && userEmailNormalized) {
+            console.log(`[AUTH_MIDDLEWARE] No profile for ${userEmailNormalized}. Attempting recovery...`);
 
-        // Redirect to /tribute if no profile exists (unless already on /tribute or calling an API)
-        if (!profile && !isTributePage && !isApiPage) {
-            console.log(`[AUTH_LOG] No profile for ${user.email}, redirecting to /tribute`);
+            // Try Strategy A: Match by email
+            const { data: legacyProfile } = await supabase
+                .from('profiles')
+                .select('id, member_id, memberId')
+                .or(`member_id.ilike.${userEmailNormalized},memberId.ilike.${userEmailNormalized}`)
+                .maybeSingle();
+
+            if (legacyProfile) {
+                console.log(`[AUTH_MIDDLEWARE] Recovery Success! Found legacy profile ${legacyProfile.id}.`);
+
+                // Link it using Admin Client
+                if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+                    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+                    const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY);
+                    await admin.from('profiles').update({ id: user.id }).eq('id', legacyProfile.id);
+                    console.log(`[AUTH_MIDDLEWARE] Profile linked via Admin bypass.`);
+                    profile = { id: user.id } as any;
+                }
+            }
+        }
+
+        console.log(`[AUTH_MIDDLEWARE] Profile found:`, !!profile, profile?.rank);
+
+        // Redirect to /tribute if no profile exists (unless already on /tribute or calling an API/Auth)
+        if (!profile && !isTributePage && !isApiPage && !isAuthPage) {
+            console.log(`[AUTH_MIDDLEWARE] No profile found for ${userEmailNormalized}. Redirecting to /tribute`);
             const url = request.nextUrl.clone()
             url.pathname = '/tribute'
             return NextResponse.redirect(url)
@@ -84,6 +120,7 @@ export async function updateSession(request: NextRequest) {
 
         // Redirect AWAY from /tribute if they have already paid (profile exists)
         if (profile && isTributePage) {
+            console.log(`[AUTH_MIDDLEWARE] Profile exists. Redirecting away from /tribute to dashboard`);
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }
     }

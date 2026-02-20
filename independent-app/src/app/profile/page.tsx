@@ -5,6 +5,7 @@ import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 import { getState, setState, initProfileState } from '@/scripts/profile-state';
 import { handleHoldStart, handleHoldEnd, updateKneelingUI } from '@/scripts/kneeling';
+import { createClient } from '@/utils/supabase/client';
 import {
     claimKneelReward,
     switchTab,
@@ -45,6 +46,7 @@ import {
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
+    const supabase = createClient();
 
     useEffect(() => {
         // Inject scripts into window for legacy compatibility (DOM onclick handlers)
@@ -88,14 +90,21 @@ export default function ProfilePage() {
 
         async function loadProfile() {
             try {
-                const memberId = "test-member-id"; // In real app, from auth
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const memberId = user.email || user.id;
                 const res = await fetch(`/api/dashboard-data?memberId=${memberId}`);
                 const data = await res.json();
 
                 if (data.profile) {
                     setProfile(data.profile);
                     initProfileState(data.profile);
-                    renderProfileSidebar(data.profile);
+                    // Defer sidebar render slightly to ensure DOM is ready
+                    setTimeout(() => renderProfileSidebar(data.profile), 100);
                 }
             } catch (err) {
                 console.error("Failed to load profile", err);
@@ -173,7 +182,7 @@ export default function ProfilePage() {
                             <div className="sidebar-stat-block">
                                 <div className="sidebar-stat-value-row">
                                     <span style={{ color: '#fff', opacity: 0.8 }}><i className="fas fa-award"></i></span>
-                                    <div id="points">{profile?.points || 0}</div>
+                                    <div id="points">{profile?.score || 0}</div>
                                 </div>
                                 <div className="sidebar-stat-label">MERIT</div>
                             </div>
@@ -181,7 +190,7 @@ export default function ProfilePage() {
                             <div className="sidebar-stat-block">
                                 <div className="sidebar-stat-value-row">
                                     <span style={{ color: '#c5a059' }}><i className="fas fa-coins"></i></span>
-                                    <div id="coins">{profile?.coins || 0}</div>
+                                    <div id="coins">{profile?.wallet || 0}</div>
                                 </div>
                                 <div className="sidebar-stat-label">CAPITAL</div>
                             </div>
@@ -598,9 +607,9 @@ export default function ProfilePage() {
                             {/* Stats Card */}
                             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3 }}>
                                 <div className="halo-stats-card">
-                                    <div className="h-stat"><span className="h-val" id="mobPoints">{profile?.points || 0}</span><span className="h-lbl">MERIT</span></div>
+                                    <div className="h-stat"><span className="h-val" id="mobPoints">{profile?.score || 0}</span><span className="h-lbl">MERIT</span></div>
                                     <div className="h-divider"></div>
-                                    <div className="h-stat"><span className="h-val" id="mobCoins">{profile?.coins || 0}</span><span className="h-lbl">NET</span></div>
+                                    <div className="h-stat"><span className="h-val" id="mobCoins">{profile?.wallet || 0}</span><span className="h-lbl">NET</span></div>
                                 </div>
 
                                 <div className="mob-stats-toggle-btn" onClick={() => (window as any).toggleMobileStats()}>

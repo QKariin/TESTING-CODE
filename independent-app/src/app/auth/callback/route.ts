@@ -21,21 +21,34 @@ export async function GET(request: Request) {
     }
 
     const user = authData.user;
-    const userEmail = user.email?.toLowerCase();
+    const userEmail = user.email?.trim().toLowerCase();
+
+    console.log(`\n[AUTH_CALLBACK_CRITICAL_DEBUG]`);
+    console.log(`- User: ${userEmail}`);
+    console.log(`- ID: ${user.id}`);
+    console.log(`- Service Role Key Present: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}`);
 
     // Create Admin Client for Lazy Matching (Bypasses RLS)
     const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('[AUTH_CALLBACK_ERROR] SUPABASE_SERVICE_ROLE_KEY is missing! Tier 3 will fail.');
+    }
+
     const supabaseAdmin = createAdminClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
+        process.env.SUPABASE_SERVICE_ROLE_KEY || ''
     );
 
     // 1. Check if profile exists for CURRENT user ID
-    let { data: profile } = await supabaseAdmin
+    let { data: profile, error: pError } = await supabaseAdmin
         .from('profiles')
         .select('id')
         .eq('id', user.id)
         .single();
+
+    if (pError && pError.code !== 'PGRST116') {
+        console.error(`[CALLBACK_DEBUG] Profile check error for ${user.id}:`, pError);
+    }
 
     // 2. If no profile, try to find and link legacy profile
     if (!profile && userEmail) {

@@ -1,34 +1,32 @@
-// src/scripts/profile-logic.ts
-
 import { getState, setState } from './profile-state';
 
 export async function claimKneelReward(type: 'coins' | 'points') {
-    const { memberId } = getState();
-    if (!memberId) return;
+    const { id, memberId } = getState();
+    const pid = id || memberId;
+    if (!pid) return;
 
     try {
-        const amount = type === 'coins' ? 100 : 500; // Example values
+        const amount = type === 'coins' ? 100 : 500;
         const res = await fetch('/api/profile-action', {
             method: 'POST',
             body: JSON.stringify({
                 type: 'CLAIM_KNEEL_REWARD',
-                memberId,
+                memberId: pid,
                 payload: { type, amount }
             })
         });
         const data = await res.json();
         if (data.success) {
-            // Update local state
             const currentState = getState();
-            if (type === 'coins') setState({ coins: currentState.coins + amount });
-            else setState({ points: currentState.points + amount });
+            if (type === 'coins') setState({ wallet: currentState.wallet + amount });
+            else setState({ score: currentState.score + amount });
 
-            // Hide overlays
             document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
             document.getElementById('mobKneelReward')?.classList.add('hidden');
-
-            // Trigger shower
             triggerCoinShower();
+
+            // Re-render sidebar if desktop
+            renderProfileSidebar(getState());
         }
     } catch (err) {
         console.error("Error claiming reward", err);
@@ -49,41 +47,32 @@ export function switchTab(tab: string) {
     }[tab];
 
     if (target) {
-        document.getElementById(target)?.classList.remove('hidden');
+        const el = document.getElementById(target);
+        if (el) el.classList.remove('hidden');
     }
 
-    // Update nav buttons
     const btns = document.querySelectorAll('.nav-btn');
     btns.forEach(b => b.classList.remove('active'));
-    // Find button with specific onclick or text
 }
 
 export async function revealFragment() {
-    const { memberId } = getState();
-    if (!memberId) return;
+    const { id, memberId } = getState();
+    const pid = id || memberId;
+    if (!pid) return;
 
     try {
         const res = await fetch('/api/profile-action', {
             method: 'POST',
-            body: JSON.stringify({
-                type: 'REVEAL_FRAGMENT',
-                memberId
-            })
+            body: JSON.stringify({ type: 'REVEAL_FRAGMENT', memberId: pid })
         });
         const data = await res.json();
         if (data.success) {
-            const { pick, revealMapCount } = data.result;
-            const currentState = getState();
-            const newMap = [...currentState.revealMap, pick];
-            setState({ revealMap: newMap });
-
-            if (newMap.length === 9) {
-                setState({
-                    revealMap: [],
-                    libraryProgress: currentState.libraryProgress + 1
-                });
-            }
-
+            const { pick, progress, revealMapCount } = data.result;
+            setState({
+                revealMap: data.result.revealMap || [],
+                libraryProgress: progress
+            });
+            renderProfileSidebar(getState());
             return data.result;
         }
     } catch (err) {
@@ -99,7 +88,7 @@ export function toggleRewardGrid() {
 }
 
 export function triggerCoinShower() {
-    console.log("Coin shower triggered!");
+    console.log("💰 Coin shower triggered!");
 }
 
 export function toggleTributeHunt() {
@@ -116,44 +105,39 @@ export function closeLobby() {
 }
 
 export async function getRandomTask() {
-    const { memberId } = getState();
-    if (!memberId) return;
+    const { id, memberId } = getState();
+    const pid = id || memberId;
+    if (!pid) return;
 
     try {
-        const res = await fetch('/api/dashboard-data?memberId=' + memberId); // Use existing dashboard-data route or create a task-specific one
-        const data = await res.json();
-        const tasks = data.tasks || [];
-        if (tasks.length > 0) {
-            const task = tasks[Math.floor(Math.random() * tasks.length)];
-            // Handle task assignment...
-            console.log("Assigned task:", task);
-        }
+        console.log("Requesting task for:", pid);
+        // Implementation for task generation...
     } catch (err) {
         console.error("Error getting task", err);
     }
 }
 
 export async function cancelPendingTask() {
-    const { memberId, coins } = getState();
-    if (!memberId || coins < 300) return;
+    const { id, memberId, wallet } = getState();
+    const pid = id || memberId;
+    if (!pid || wallet < 300) return;
 
     try {
         await fetch('/api/profile-action', {
             method: 'POST',
             body: JSON.stringify({
                 type: 'TRANSACTION',
-                memberId,
+                memberId: pid,
                 payload: { amount: -300, category: 'TASK_SKIP' }
             })
         });
-        setState({ coins: coins - 300 });
-        // Handle UI reset...
+        setState({ wallet: wallet - 300 });
+        renderProfileSidebar(getState());
     } catch (err) {
         console.error("Error skipping task", err);
     }
 }
 
-// Missing stubs for Profile restoration
 export function openQueenMenu() {
     document.getElementById('queenOverlay')?.classList.remove('hidden');
 }
@@ -189,25 +173,74 @@ export function handleRoutineUpload(input: HTMLInputElement) { console.log("Rout
 export function handleProfileUpload(input: HTMLInputElement) { console.log("Profile upload", input.files); }
 export function handleAdminUpload(input: HTMLInputElement) { console.log("Admin upload", input.files); }
 
-export function handleMediaPlus() { console.log("Media plus clicked"); }
-export function handleChatKey(e: React.KeyboardEvent) { if (e.key === 'Enter') sendChatMessage(); }
-export function sendChatMessage() {
+export function handleMediaPlus() {
+    const input = document.getElementById('chatMediaInput') as HTMLInputElement;
+    input?.click();
+}
+
+export function handleChatKey(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') sendChatMessage();
+}
+
+export async function sendChatMessage() {
+    const { id, memberId } = getState();
+    const pid = id || memberId;
     const input = document.getElementById('chatMsgInput') as HTMLInputElement;
     const msg = input?.value;
-    if (msg) {
-        console.log("Sending message:", msg);
-        input.value = '';
+
+    if (msg && pid) {
+        try {
+            await fetch('/api/profile-action', {
+                method: 'POST',
+                body: JSON.stringify({
+                    type: 'MESSAGE',
+                    memberId: pid,
+                    payload: { text: msg }
+                })
+            });
+            console.log("Message sent:", msg);
+            input.value = '';
+            // Ideally trigger a chat refresh or optimistic UI update
+        } catch (err) {
+            console.error("Failed to send message", err);
+        }
     }
 }
 
-export function buyRealCoins(amount: number) { console.log("Buying coins:", amount); }
+export async function buyRealCoins(amount: number) {
+    console.log("Redirecting to Stripe for amount:", amount);
+    // In a real flow: window.location.href = `/api/stripe/checkout?amount=${amount}`;
+}
 
 export function toggleRewardSubMenu(show: boolean) {
     document.getElementById('reward-buy-menu')?.classList.toggle('hidden', !show);
     document.getElementById('reward-main-menu')?.classList.toggle('hidden', show);
 }
 
-export function buyRewardFragment(cost: number) { console.log("Buying reward fragment:", cost); }
+export async function buyRewardFragment(cost: number) {
+    const { id, memberId, wallet } = getState();
+    const pid = id || memberId;
+    if (!pid || wallet < cost) return;
+
+    try {
+        const res = await fetch('/api/profile-action', {
+            method: 'POST',
+            body: JSON.stringify({
+                type: 'TRANSACTION',
+                memberId: pid,
+                payload: { amount: -cost, category: 'FRAGMENT_BUY' }
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            setState({ wallet: wallet - cost });
+            await revealFragment();
+            renderProfileSidebar(getState());
+        }
+    } catch (err) {
+        console.error("Error buying fragment", err);
+    }
+}
 
 export function closeModal() { document.getElementById('glassModal')!.style.display = 'none'; }
 export function closePoverty() { document.getElementById('povertyOverlay')?.classList.add('hidden'); }
@@ -216,13 +249,11 @@ export function closeRewardCard() { document.getElementById('rewardCardOverlay')
 export function closeExchequer() { document.getElementById('mobExchequer')?.classList.add('hidden'); }
 
 export function showLobbyAction(type: string) {
-    console.log("Show lobby action:", type);
     document.getElementById('lobbyMenu')?.classList.add('hidden');
     document.getElementById('lobbyActionView')?.classList.remove('hidden');
 }
 
 export function confirmLobbyAction() {
-    console.log("Confirm lobby action");
     backToLobbyMenu();
 }
 
@@ -232,45 +263,45 @@ export function backToLobbyMenu() {
 }
 
 export function selectRoutineItem(el: HTMLElement, type: string) {
-    console.log("Select routine item:", type);
     document.querySelectorAll('.routine-tile').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
 }
+
 const REWARD_DATA = {
     ranks: [
         {
             name: "HALL BOY", tax: 20,
-            req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
+            req: { tasks: 0, kneels: 0, score: 0, spent: 0, streak: 0 },
             benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks.", "Speak Cost: 20 Coins."]
         },
         {
             name: "FOOTMAN", tax: 15,
-            req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0, name: true, photo: true },
+            req: { tasks: 5, kneels: 10, score: 2000, spent: 0, streak: 0, name: true, photo: true },
             benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."]
         },
         {
             name: "SILVERMAN", tax: 10,
-            req: { tasks: 25, kneels: 65, points: 5000, spent: 5000, streak: 5, limits: true, kinks: true },
+            req: { tasks: 25, kneels: 65, score: 5000, spent: 5000, streak: 5, limits: true, kinks: true },
             benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."]
         },
         {
             name: "BUTLER", tax: 5,
-            req: { tasks: 100, kneels: 250, points: 10000, spent: 10000, streak: 10 },
+            req: { tasks: 100, kneels: 250, score: 10000, spent: 10000, streak: 10 },
             benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions.", "Speak Cost: 5 Coins."]
         },
         {
             name: "CHAMBERLAIN", tax: 0,
-            req: { tasks: 300, kneels: 750, points: 50000, spent: 50000, streak: 30 },
+            req: { tasks: 300, kneels: 750, score: 50000, spent: 50000, streak: 30 },
             benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."]
         },
         {
             name: "SECRETARY", tax: 0,
-            req: { tasks: 500, kneels: 1500, points: 100000, spent: 100000, streak: 100 },
+            req: { tasks: 500, kneels: 1500, score: 100000, spent: 100000, streak: 100 },
             benefits: ["The Line: A direct Audio Connection.", "Authority: Access to System Commands.", "The Throne: Total, Unfiltered Access."]
         },
         {
             name: "QUEEN'S CHAMPION", tax: 0,
-            req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 365 },
+            req: { tasks: 1000, kneels: 3000, score: 250000, spent: 1000000, streak: 365 },
             benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."]
         }
     ]
@@ -281,7 +312,7 @@ export function renderProfileSidebar(u: any) {
 
     const ranks = REWARD_DATA.ranks;
     const cleanName = (name: string) => (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-    const currentRaw = u.hierarchy || u.rank || "Hall Boy";
+    const currentRaw = u.rank || u.hierarchy || "Hall Boy";
 
     let currentIdx = ranks.findIndex(r => cleanName(r.name) === cleanName(currentRaw));
     if (currentIdx === -1) currentIdx = 0;
@@ -308,7 +339,7 @@ export function renderProfileSidebar(u: any) {
 
     const elCurBen = document.getElementById('desk_CurrentBenefits');
     if (elCurBen) {
-        elCurBen.innerText = currentRankObj.benefits[0] || ""; // Just show first benefit as sub-label
+        elCurBen.innerText = currentRankObj.benefits[0] || "";
     }
 
     // Build Progress Bars
@@ -317,11 +348,11 @@ export function renderProfileSidebar(u: any) {
 
     if (container) {
         const stats = {
-            tasks: u.completed || 0,
-            kneels: u.kneelCount || 0,
-            points: u.points || 0,
-            spent: u.totalSpent || 0,
-            streak: u.routinestreak || 0
+            tasks: u.parameters?.taskdom_completed_tasks || 0,
+            kneels: u.parameters?.kneel_count || 0,
+            score: u.score || 0,
+            spent: u.total_coins_spent || 0,
+            streak: u.parameters?.routine_streak || 0
         };
 
         const buildBar = (label: string, current: number, target: number, icon: string) => {
@@ -349,9 +380,15 @@ export function renderProfileSidebar(u: any) {
         let html = '';
         html += buildBar("LABOR", stats.tasks, req.tasks, "🛠️");
         html += buildBar("ENDURANCE", stats.kneels, req.kneels, "🧎");
-        html += buildBar("MERIT", stats.points, req.points, "✨");
+        html += buildBar("MERIT", stats.score, req.score, "✨");
         if (req.spent > 0) html += buildBar("SACRIFICE", stats.spent, req.spent, "💰");
 
         container.innerHTML = html;
+
+        // Update simple stats
+        const elPoints = document.getElementById('points');
+        if (elPoints) elPoints.innerText = stats.score.toString();
+        const elCoins = document.getElementById('coins');
+        if (elCoins) elCoins.innerText = (u.wallet || 0).toString();
     }
 }

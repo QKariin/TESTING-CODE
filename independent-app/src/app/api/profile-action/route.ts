@@ -29,6 +29,10 @@ export async function POST(req: Request) {
                 result = await DbService.updateProfile(memberId, payload);
                 break;
 
+            case 'MESSAGE':
+                result = await DbService.sendMessage(memberId, payload.text, payload.sender || 'slave', payload.mediaUrl);
+                break;
+
             default:
                 throw new Error("Invalid Action Type");
         }
