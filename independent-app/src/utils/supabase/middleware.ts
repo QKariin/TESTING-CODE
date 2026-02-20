@@ -58,6 +58,10 @@ export async function updateSession(request: NextRequest) {
         const rawEmail = user.email || '';
         const userEmailNormalized = rawEmail.trim().toLowerCase();
 
+        if (!userEmailNormalized) {
+            console.log(`[AUTH_MIDDLEWARE] User ${user.id} has no email. Skipping recovery.`);
+        }
+
         // Robust CEO check
         const isCEO = userEmailNormalized === 'ceo@qkarin.com' || userEmailNormalized === 'queen@qkarin.com' || user.id === 'master-ceo-bypass';
 
@@ -87,68 +91,49 @@ export async function updateSession(request: NextRequest) {
         if (!profile && userEmailNormalized) {
             console.log(`[AUTH_MIDDLEWARE] No profile for ${userEmailNormalized}. Attempting recovery...`);
 
-            // Try Strategy A: Match by email in 'profiles'
+            // 1. Check if ANY profile exists with this email (Strategy A)
+            // We use .eq() instead of .ilike() for Strategy A to be safer, or at least check length
             const { data: legacyProfile } = await supabase
                 .from('profiles')
-                .select('id, member_id, memberId')
-                .or(`member_id.ilike.${userEmailNormalized},memberId.ilike.${userEmailNormalized}`)
+                .select('id, member_id')
+                .or(`member_id.eq.${userEmailNormalized},member_id.ilike.${userEmailNormalized}`)
                 .maybeSingle();
 
             let targetId = legacyProfile?.id;
 
-            // Strategy B: Match by email in 'tasks' table ("MemberID" column)
+            // 2. Check 'tasks' table if still not found (Strategy B)
             if (!targetId) {
-                console.log(`[AUTH_MIDDLEWARE] Strategy B: Searching 'tasks' for "MemberID" ilike ${userEmailNormalized}`);
-                const { data: taskMatch, error: taskError } = await supabase
+                console.log(`[AUTH_MIDDLEWARE] Strategy B: Searching 'tasks' for MemberID: ${userEmailNormalized}`);
+                const { data: taskMatch } = await supabase
                     .from('tasks')
                     .select('*')
                     .ilike('MemberID', userEmailNormalized)
                     .limit(1)
                     .maybeSingle();
 
-                if (taskError) {
-                    console.error(`[AUTH_MIDDLEWARE] Strategy B Error for ${userEmailNormalized}:`, taskError);
-                }
-
                 if (taskMatch) {
-                    console.log(`[AUTH_MIDDLEWARE] Match found in 'tasks' table for ${userEmailNormalized}. Creating skeleton profile...`);
-
+                    console.log(`[AUTH_MIDDLEWARE] Match found in 'tasks' table. Creating skeleton...`);
+                    // ... create skeleton
                     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
                         const { createClient: createAdminClient } = await import('@supabase/supabase-js');
                         const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-                        // Create skeleton profile
-                        const { data: newProfile, error: createError } = await admin
-                            .from('profiles')
-                            .insert({
-                                id: user.id,
-                                member_id: userEmailNormalized,
-                                name: userEmailNormalized.split('@')[0],
-                                hierarchy: 'Slave'
-                            })
-                            .select()
-                            .single();
-
-                        if (!createError && newProfile) {
-                            console.log(`[AUTH_MIDDLEWARE] Skeleton profile created: ${newProfile.id}`);
-                            profile = newProfile;
-                        } else if (createError) {
-                            console.error(`[AUTH_MIDDLEWARE] Failed to create skeleton:`, createError);
-                        }
+                        const { data: newProfile } = await admin.from('profiles').insert({
+                            id: user.id,
+                            member_id: userEmailNormalized,
+                            name: userEmailNormalized.split('@')[0],
+                            hierarchy: 'Slave'
+                        }).select().single();
+                        if (newProfile) profile = newProfile;
                     }
                 }
-            }
-
-            if (targetId && !profile) {
-                console.log(`[AUTH_MIDDLEWARE] Recovery Success! Found legacy profile ${targetId}.`);
-
-                // Link it using Admin Client
+            } else if (targetId && !profile) {
+                // Link existing legacy profile
+                console.log(`[AUTH_MIDDLEWARE] Strategy A Match! Linking existing profile ${targetId} to user ${user.id}`);
                 if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
                     const { createClient: createAdminClient } = await import('@supabase/supabase-js');
                     const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY);
                     await admin.from('profiles').update({ id: user.id }).eq('id', targetId);
-                    console.log(`[AUTH_MIDDLEWARE] Profile linked via Admin bypass.`);
-                    profile = { id: user.id } as any;
+                    profile = { id: user.id, rank: 'Legacy' } as any;
                 }
             }
         }
