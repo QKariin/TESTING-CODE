@@ -38,7 +38,7 @@ export async function updateSession(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
     // 1. If hitting /auth routes, let it pass (it will handle its own redirect)
-    if (pathname.includes('/auth/')) {
+    if (pathname.startsWith('/auth')) {
         return supabaseResponse
     }
 
