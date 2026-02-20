@@ -102,6 +102,20 @@ export async function updateSession(request: NextRequest) {
 
         if (profileErr) console.error(`[AUTH_MIDDLEWARE] Profile query error:`, profileErr);
 
+        // --- SECOND CHANCE: If on /profile, wait 200ms and try once more (prevents race conditions)
+        if (!profile && pathname === '/profile') {
+            await new Promise(r => setTimeout(r, 200));
+            const { data: secondProfile } = await adminSupabase
+                .from('profiles')
+                .select('id, rank, member_id')
+                .eq('id', user.id)
+                .maybeSingle();
+            if (secondProfile) {
+                console.log(`[AUTH_MIDDLEWARE] Profile found on second attempt.`);
+                profile = secondProfile as any;
+            }
+        }
+
         // --- BOUNCER UPGRADE: Aggressive Profile Recovery ---
         if (!profile && userEmailNormalized) {
             console.log(`[AUTH_MIDDLEWARE] No profile for ${userEmailNormalized}. Attempting recovery via Admin...`);
