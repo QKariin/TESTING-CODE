@@ -89,12 +89,28 @@ export async function updateSession(request: NextRequest) {
 
         const isCEO = userEmailNormalized === 'ceo@qkarin.com' || userEmailNormalized === 'queen@qkarin.com';
         const hasAccess = !!profile || isLegacyMember || isCEO;
+        const isDashboardPage = pathname === '/dashboard' || pathname.startsWith('/dashboard/');
 
-        console.log(`[BOUNCER] Access Decision: Profile=${!!profile}, Legacy=${isLegacyMember}, Result=${hasAccess ? 'ALLOWED' : 'DENIED'}`);
+        console.log(`[BOUNCER] Access Decision: Profile=${!!profile}, Legacy=${isLegacyMember}, Result=${hasAccess ? 'ALLOWED' : 'DENIED'} | User: ${userEmailNormalized}`);
 
         if (hasAccess) {
-            if (isTributePage) return NextResponse.redirect(new URL('/profile', request.url))
-            return supabaseResponse
+            // 1. If non-CEO tries to access Dashboard -> go to Profile
+            if (isDashboardPage && !isCEO) {
+                console.log(`[BOUNCER] Non-CEO ${userEmailNormalized} attempted Dashboard. Redirecting to /profile.`);
+                return NextResponse.redirect(new URL('/profile', request.url));
+            }
+
+            // 2. If CEO lands on Profile or Tribute -> go to Dashboard (optional, but keep it clean)
+            if (isCEO && (isTributePage || pathname === '/')) {
+                return NextResponse.redirect(new URL('/dashboard', request.url));
+            }
+
+            // 3. If User on Tribute or Root -> go to Profile
+            if (isTributePage || pathname === '/') {
+                return NextResponse.redirect(new URL('/profile', request.url));
+            }
+
+            return supabaseResponse;
         }
 
         if (!isTributePage && !isApiPage && !isAuthPage) {
