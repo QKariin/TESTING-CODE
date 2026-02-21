@@ -1,5 +1,5 @@
 // src/lib/supabase-service.ts
-import { supabase } from './supabase';
+import { supabaseAdmin as supabase } from './supabase';
 
 export const DbService = {
     // --- PROFILES ---
