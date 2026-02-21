@@ -174,7 +174,7 @@ export default function ProfilePage() {
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div className="v-card" style={{ marginBottom: 20, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()}>
-                            <img id="profilePic" src={profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" />
+                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" />
                         </div>
                         <div id="subName" className="identity-name" style={{ fontSize: '1.2rem', letterSpacing: 4, marginBottom: 5, fontWeight: 'bold' }}>
                             {profile?.name || "SLAVE"}
@@ -430,7 +430,7 @@ export default function ProfilePage() {
                 <div id="viewMobileHome" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', maxWidth: '100vw', height: '100dvh', overflowY: 'auto', overflowX: 'hidden', display: 'block', padding: 0, zIndex: 1, background: 'transparent' }}>
                     <div className="mob-hud-row">
                         <div className="hud-circle slave" onClick={() => (window as any).openLobby()}>
-                            <img id="hudUserPic" src={profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png"} alt="Your Avatar" />
+                            <img id="hudUserPic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png"} alt="Your Avatar" />
                             <div className="hud-gear">⚙</div>
                         </div>
                         <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>

@@ -344,7 +344,7 @@ export function renderProfileSidebar(u: any) {
     if (elSubName) elSubName.innerText = u.name || 'SLAVE';
 
     // Update Profile Photos (syncs after initial render)
-    const photoSrc = u.profile_picture_url || '';
+    const photoSrc = u.avatar_url || u.profile_picture_url || '';
     if (photoSrc) {
         const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
         if (elProfilePic) elProfilePic.src = photoSrc;

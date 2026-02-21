@@ -13,7 +13,9 @@ export async function GET(req: Request) {
         // If memberId is provided, fetch specific profile
         let profile = null;
         if (memberId) {
+            console.log('[dashboard-data] fetching profile for:', memberId);
             profile = await DbService.getProfile(memberId);
+            console.log('[dashboard-data] profile result:', profile ? `found (${profile.name}, score=${profile.score})` : 'NULL - no match');
         }
 
         return NextResponse.json({

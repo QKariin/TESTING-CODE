@@ -4,17 +4,26 @@ import { supabase } from './supabase';
 export const DbService = {
     // --- PROFILES ---
     async getProfile(memberId: string) {
-        // Search by member_id (Email) or id (UUID)
-        // We check BOTH 'profiles' and 'tasks' for maximum resilience
-        const { data, error } = await supabase
+        // Try by member_id (email) first — use .eq() not .or() to avoid
+        // parser issues with email special chars (@ and .)
+        const { data: byEmail } = await supabase
             .from('profiles')
             .select('*')
-            .or(`member_id.eq.${memberId},id.eq.${memberId}`)
+            .eq('member_id', memberId)
             .maybeSingle();
 
-        if (data) return data;
+        if (byEmail) return byEmail;
 
-        // Fallback: Check 'tasks' table if not in profiles yet
+        // Try by UUID id (for admin lookups)
+        const { data: byId } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', memberId)
+            .maybeSingle();
+
+        if (byId) return byId;
+
+        // Fallback: Check 'tasks' table for legacy data — return REAL values
         const { data: taskData } = await supabase
             .from('tasks')
             .select('*')
@@ -23,17 +32,21 @@ export const DbService = {
 
         if (taskData) {
             return {
-                id: null, // Indicates not yet linked to an auth user
+                id: null,
                 member_id: taskData.MemberID,
-                name: taskData.Name || 'Legacy Member',
-                wallet: 0,
-                score: 0,
-                hierarchy: 'Hall Boy',
+                name: taskData.Name || 'Slave',
+                wallet: taskData.Wallet || 0,
+                score: taskData.Score || 0,
+                hierarchy: taskData.Hierarchy || 'Hall Boy',
+                avatar_url: null,
+                parameters: {
+                    kneel_count: taskData.kneelCount || 0,
+                    taskdom_completed_tasks: taskData.Taskdom_CompletedTasks || 0,
+                },
                 _isLegacy: true
             };
         }
 
-        if (error && error.code !== 'PGRST116') throw error;
         return null;
     },
 
