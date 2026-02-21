@@ -335,7 +335,26 @@ export function renderProfileSidebar(u: any) {
     const elWorkingOnRank = document.getElementById('desk_WorkingOnRank');
     if (elWorkingOnRank) elWorkingOnRank.innerText = isMax ? "MAXIMUM RANK" : nextRankObj.name;
 
+    // Update Dashboard Classification card
+    const elDashRank = document.getElementById('desk_DashboardRank');
+    if (elDashRank) elDashRank.innerText = currentRankObj.name;
+
+    // Update Name
+    const elSubName = document.getElementById('subName');
+    if (elSubName) elSubName.innerText = u.name || 'SLAVE';
+
+    // Update Profile Photos (syncs after initial render)
+    const photoSrc = u.profile_picture_url || '';
+    if (photoSrc) {
+        const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
+        if (elProfilePic) elProfilePic.src = photoSrc;
+
+        const elMobUserPic = document.getElementById('hudUserPic') as HTMLImageElement;
+        if (elMobUserPic) elMobUserPic.src = photoSrc;
+    }
+
     const elNextBen = document.getElementById('desk_NextBenefits');
+
 
     // Update Email (New)
     const elCurEmail = document.getElementById('subEmail');
