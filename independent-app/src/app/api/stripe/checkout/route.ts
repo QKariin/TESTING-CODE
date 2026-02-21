@@ -34,7 +34,7 @@ export async function POST(req: Request) {
                 },
             ],
             mode: 'payment',
-            success_url: `${req.headers.get('origin') || ''}/dashboard?status=success`,
+            success_url: `${req.headers.get('origin') || ''}/tribute/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${req.headers.get('origin') || ''}/tribute?status=cancelled`,
             metadata: {
                 userId: user.id,
