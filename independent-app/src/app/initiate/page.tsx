@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { CONFIG } from '@/scripts/config';
 
@@ -14,6 +14,7 @@ export default function InitiatePage() {
 
     useEffect(() => {
         const checkUser = async () => {
+            const supabase = getSupabase();
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 router.push('/login');
@@ -50,6 +51,7 @@ export default function InitiatePage() {
         if (!userEmail) return;
 
         // Create New Profile in Supabase
+        const supabase = getSupabase();
         const { error: insertError } = await supabase
             .from('Tasks')
             .insert([
@@ -59,8 +61,8 @@ export default function InitiatePage() {
                     hierarchy: 'HallBoy',
                     wallet: 500,
                     score: 0,
-                    joined: new Date().toISOString(),
-                    status: 'PUBLISHED'
+                    devotion: 100,
+                    lastWorship: new Date().toISOString()
                 }
             ]);
 

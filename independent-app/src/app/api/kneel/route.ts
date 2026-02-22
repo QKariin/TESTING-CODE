@@ -1,9 +1,9 @@
 // src/app/api/kneel/route.ts
 // Handles kneeling submission - updates tasks table (lastWorship, kneelCount, "today kneeling")
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const COOLDOWN_MS = 60 * 60 * 1000; // 60 minutes
 
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
 
         // Fetch current record from tasks table (MemberID = email, case-insensitive)
-        const { data: task } = await supabaseAdmin
+        const { data: task } = await getSupabaseAdmin()
             .from('tasks')
             .select('lastWorship, kneelCount, "today kneeling"')
             .ilike('"MemberID"', memberEmail)
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         const newKneelCount = parseInt(task?.kneelCount || '0', 10) + 1;
 
         // Update tasks table
-        const { error } = await supabaseAdmin
+        const { error } = await getSupabaseAdmin()
             .from('tasks')
             .update({
                 lastWorship: now.toISOString(),

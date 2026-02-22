@@ -1,9 +1,11 @@
 import { getState, setState } from './profile-state';
-import { createClient } from '../utils/supabase/client';
+import { getSupabase } from '@/lib/supabase';
 import { getHierarchyReport } from './hierarchy-rules';
 
+let taskTimerInterval: any = null;
+
 export async function handleLogout() {
-    const supabase = createClient();
+    const supabase = getSupabase();
     await supabase.auth.signOut();
     window.location.href = '/login';
 }
@@ -126,42 +128,144 @@ export async function getRandomTask() {
     if (!pid) return;
 
     try {
-        console.log("Requesting task from tasks_database API...");
+        console.log("Requesting task assignment API...");
 
         const mainArea = document.getElementById('mainButtonsArea');
         const activeArea = document.getElementById('activeTaskContent');
+        const uploadArea = document.getElementById('uploadBtnContainer');
         const readyText = document.getElementById('readyText');
 
         if (mainArea) mainArea.style.display = 'none';
         if (activeArea) activeArea.classList.remove('hidden');
+        if (uploadArea) uploadArea.classList.remove('hidden');
         if (readyText) readyText.innerText = 'Connecting to the Void...';
 
-        const res = await fetch('/api/tasks/random');
+        const res = await fetch('/api/tasks/active', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: memberId })
+        });
         const data = await res.json();
 
-        if (!data.success) {
-            console.error("Supabase API Error:", data.error);
+        if (!res.ok || !data.activeTask) {
+            console.error("Task API Error:", data.error);
             if (readyText) readyText.innerText = 'Failed to retrieve task. See console.';
             return;
         }
 
-        // Update UI with the task text
         if (readyText) {
-            readyText.innerText = data.task.TaskText || data.task.tasktext || 'Perform the assigned duty.';
+            readyText.innerText = data.activeTask.taskText;
         }
 
-        // Setup timer UI to look active
-        const hrs = document.getElementById('timerH');
-        const mins = document.getElementById('timerM');
-        const secs = document.getElementById('timerS');
-        if (hrs) hrs.innerText = '01';
-        if (mins) mins.innerText = '00';
-        if (secs) secs.innerText = '00';
+        startTaskTimer(data.activeTask.expiresAt);
 
     } catch (err) {
         console.error("Error getting task", err);
         const readyText = document.getElementById('readyText');
         if (readyText) readyText.innerText = 'An error occurred fetching the task.';
+    }
+}
+
+export function startTaskTimer(expiresAtIso: string) {
+    if (taskTimerInterval) clearInterval(taskTimerInterval);
+
+    const hrs = document.getElementById('timerH');
+    const mins = document.getElementById('timerM');
+    const secs = document.getElementById('timerS');
+
+    const updateTimer = () => {
+        const now = new Date().getTime();
+        const expires = new Date(expiresAtIso).getTime();
+        const diff = expires - now;
+
+        if (diff <= 0) {
+            clearInterval(taskTimerInterval);
+            if (hrs) hrs.innerText = '00';
+            if (mins) mins.innerText = '00';
+            if (secs) secs.innerText = '00';
+
+            // Auto close task UI when expired
+            const mainArea = document.getElementById('mainButtonsArea');
+            const activeArea = document.getElementById('activeTaskContent');
+            if (mainArea) mainArea.style.display = 'flex'; // It uses flex layout
+            if (activeArea) activeArea.classList.add('hidden');
+            return;
+        }
+
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+        if (hrs) hrs.innerText = h.toString().padStart(2, '0');
+        if (mins) mins.innerText = m.toString().padStart(2, '0');
+        if (secs) secs.innerText = s.toString().padStart(2, '0');
+    };
+
+    updateTimer();
+    taskTimerInterval = setInterval(updateTimer, 1000);
+}
+
+export async function checkActiveTaskOnLoad(email: string) {
+    try {
+        const res = await fetch(`/api/tasks/active?email=${encodeURIComponent(email)}`);
+        const data = await res.json();
+
+        if (data.activeTask) {
+            const mainArea = document.getElementById('mainButtonsArea');
+            const activeArea = document.getElementById('activeTaskContent');
+            const uploadArea = document.getElementById('uploadBtnContainer');
+            const readyText = document.getElementById('readyText');
+
+            if (mainArea) mainArea.style.display = 'none';
+            if (activeArea) activeArea.classList.remove('hidden');
+            if (uploadArea) uploadArea.classList.remove('hidden');
+            if (readyText) readyText.innerText = data.activeTask.taskText;
+
+            startTaskTimer(data.activeTask.expiresAt);
+        }
+    } catch (err) {
+        console.error("Failed to check active tasks on load", err);
+    }
+}
+
+export async function skipActiveTask() {
+    const { memberId } = getState();
+    if (!memberId) return;
+
+    if (!confirm("Skipping this task will cost 300 coins. Are you sure?")) {
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/tasks/skip', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: memberId })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            // Stop timer and switch UI
+            if (taskTimerInterval) clearInterval(taskTimerInterval);
+            const mainArea = document.getElementById('mainButtonsArea');
+            const activeArea = document.getElementById('activeTaskContent');
+
+            if (mainArea) mainArea.style.display = 'flex'; // restore flex 
+            if (activeArea) activeArea.classList.add('hidden');
+
+            alert("Task skipped. 300 coins deducted.");
+
+            // Quick update to sidebar wallet
+            const uCoins = document.getElementById('uCoins');
+            if (uCoins && data.newWallet !== undefined) {
+                uCoins.innerText = data.newWallet.toLocaleString();
+            }
+        } else {
+            alert(data.error || "Failed to skip task.");
+        }
+    } catch (err) {
+        console.error("Skip error", err);
+        alert("An error occurred while skipping the task.");
     }
 }
 
@@ -318,7 +422,7 @@ export function selectRoutineItem(el: HTMLElement, type: string) {
 // ─── ADD HANDLERS FOR MISSING REQUIREMENTS ────────────────────────────────────
 
 async function _doProfileUpload() {
-    const supabase = createClient();
+    const supabase = getSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return;
 
@@ -473,7 +577,7 @@ async function saveModalData(
     fieldId: string, label: string, overlay: HTMLElement, box: HTMLElement,
     isChip: boolean, isRoutine: boolean, costPerItem: number
 ) {
-    const supabase = createClient();
+    const supabase = getSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return;
 

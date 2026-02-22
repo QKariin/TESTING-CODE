@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
 // src/app/api/profile-update/route.ts
-// Server-side profile update — uses supabaseAdmin to bypass RLS
+// Server-side profile update — uses getSupabaseAdmin() to bypass RLS
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
     try {
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
 
         // If there's a coin cost, check and deduct wallet first
         if (cost && cost > 0) {
-            const { data: profile } = await supabaseAdmin
+            const { data: profile } = await getSupabaseAdmin()
                 .from('profiles')
                 .select('wallet')
                 .eq('member_id', memberEmail)
@@ -33,13 +34,13 @@ export async function POST(req: Request) {
             }
 
             // Deduct wallet
-            await supabaseAdmin
+            await getSupabaseAdmin()
                 .from('profiles')
                 .update({ wallet: (profile.wallet || 0) - cost })
                 .eq('member_id', memberEmail);
         }
 
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getSupabaseAdmin()
             .from('profiles')
             .update({ [field]: value })
             .eq('member_id', memberEmail)

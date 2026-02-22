@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
+import { getSupabase } from '@/lib/supabase';
 
 export default function TributePage() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const [status, setStatus] = useState<string | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
-    const supabase = createClient();
+    const supabase = getSupabase();
 
     useEffect(() => {
         const fetchUserAndCheck = async () => {

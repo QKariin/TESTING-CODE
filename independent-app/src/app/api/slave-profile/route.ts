@@ -1,6 +1,8 @@
-export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
+
+export const dynamic = "force-dynamic";
+
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -10,7 +12,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
         .from('profiles')
         .select('*')
         .eq('member_id', email)
@@ -31,7 +33,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
         .from('profiles')
         .update(updates)
         .eq('member_id', email)

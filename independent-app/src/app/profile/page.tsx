@@ -5,7 +5,7 @@ import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 import { getState, setState, initProfileState } from '@/scripts/profile-state';
 import { handleHoldStart, handleHoldEnd, updateKneelingUI, attachKneelListeners } from '@/scripts/kneeling';
-import { createClient } from '@/utils/supabase/client';
+import { getSupabase } from '@/lib/supabase';
 import {
     claimKneelReward,
     switchTab,
@@ -40,6 +40,8 @@ import {
     selectRoutineItem,
     getRandomTask,
     cancelPendingTask,
+    skipActiveTask,
+    checkActiveTaskOnLoad,
     renderProfileSidebar,
     handleLogout
 } from '@/scripts/profile-logic';
@@ -47,7 +49,7 @@ import {
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
-    const supabase = createClient();
+    const supabase = getSupabase();
 
     useEffect(() => {
         // Inject scripts into window for legacy compatibility (DOM onclick handlers)
@@ -87,11 +89,14 @@ export default function ProfilePage() {
             (window as any).selectRoutineItem = selectRoutineItem;
             (window as any).getRandomTask = getRandomTask;
             (window as any).cancelPendingTask = cancelPendingTask;
+            (window as any).skipActiveTask = skipActiveTask;
+            (window as any).checkActiveTaskOnLoad = checkActiveTaskOnLoad;
             (window as any).handleLogout = handleLogout;
         }
 
         async function loadProfile() {
             try {
+                const supabase = getSupabase();
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
                     window.location.href = '/login';
@@ -115,6 +120,7 @@ export default function ProfilePage() {
                         renderProfileSidebar(profileData);
                         updateKneelingUI();
                         attachKneelListeners();
+                        checkActiveTaskOnLoad(user.email!);
                     }, 150);
                 } else {
                     // Fallback: try by UUID
@@ -131,6 +137,7 @@ export default function ProfilePage() {
                             renderProfileSidebar(byId);
                             updateKneelingUI();
                             attachKneelListeners();
+                            if (user.email) checkActiveTaskOnLoad(user.email);
                         }, 150);
                     }
                 }
@@ -364,7 +371,7 @@ export default function ProfilePage() {
                                 </div>
                                 <div id="uploadBtnContainer" className="hidden" style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 10, alignItems: 'center' }}>
                                     <button id="uploadBtn" className="action-btn" style={{ width: 180, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: '#c5a059', fontWeight: 'bold', border: '1px solid #c5a059', boxShadow: '0 0 15px rgba(197,160,89,0.2)' }} onClick={() => (document.getElementById('routineUploadInput') as any)?.click()}>UPDATE TASK</button>
-                                    <button id="btnSkip" onClick={() => cancelPendingTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 180 }}>SKIP TASK (-300 🪙)</button>
+                                    <button id="btnSkip" onClick={() => skipActiveTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 180 }}>SKIP TASK (-300 🪙)</button>
                                 </div>
                             </div>
                         </div>
