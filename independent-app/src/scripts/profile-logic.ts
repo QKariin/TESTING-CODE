@@ -142,7 +142,7 @@ export async function getRandomTask() {
 
         // Fetch all tasks from the new database table
         const { data: tasks, error } = await supabase
-            .from('"TASKS DATABASE"')
+            .from('tasks_database')
             .select('*');
 
         if (error) {
@@ -693,7 +693,7 @@ export async function submitNewTask() {
         const supabase = createClient();
 
         const { error } = await supabase
-            .from('"TASKS DATABASE"')
+            .from('tasks_database')
             .insert([{ TaskText: text, Category: '[]', Difficulty: 'normal' }]);
 
         if (error) {
