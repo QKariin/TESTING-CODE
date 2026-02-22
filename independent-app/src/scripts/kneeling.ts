@@ -20,8 +20,6 @@ export function attachKneelListeners() {
         if ((btn as any).__kneelAttached) return; // only attach once
         (btn as any).__kneelAttached = true;
 
-        // mousedown + touchstart both call handleHoldStart
-        // but holdTimer guard prevents double-execution on mobile
         btn.addEventListener('mousedown', handleHoldStart as EventListener, { passive: false });
         btn.addEventListener('touchstart', handleHoldStart as EventListener, { passive: false });
         btn.addEventListener('mouseup', handleHoldEnd as EventListener, { passive: false });
@@ -32,32 +30,39 @@ export function attachKneelListeners() {
     });
 }
 
-// ─── 1. HOLD START ────────────────────────────────────────────────────────────
+// --- 1. HOLD START ---
 export function handleHoldStart(e?: Event) {
-    // GUARD: if already timing, ignore (mobile fires both touchstart AND mousedown)
-    if (holdTimer) return;
-
     const { isLocked } = getState();
     if (isLocked) return;
 
     if (e && e.cancelable) {
-        e.preventDefault();   // also blocks the synthetic mousedown after touchstart
+        e.preventDefault();
         e.stopPropagation();
     }
 
-    // ANIMATE DESKTOP
+    // DESKTOP TARGETS
     const fill = document.getElementById('heroKneelFill');
     const txtMain = document.getElementById('heroKneelText');
-    if (fill) { fill.style.transition = `width ${REQUIRED_HOLD_TIME}ms linear`; fill.style.width = '100%'; }
-    if (txtMain) txtMain.innerText = 'KNEELING...';
 
-    // ANIMATE MOBILE
+    // MOBILE TARGETS
     const mobFill = document.getElementById('mob_kneelFill');
     const mobText = document.querySelector('.kneel-label') as HTMLElement | null;
     const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement | null;
-    if (mobFill) { mobFill.style.transition = `width ${REQUIRED_HOLD_TIME}ms linear`; mobFill.style.width = '100%'; }
-    if (mobText) mobText.innerText = 'SUBMITTING...';
-    if (mobBar) mobBar.style.borderColor = 'var(--gold, #c5a059)';
+
+    // ANIMATE DESKTOP
+    if (fill) {
+        fill.style.transition = "width 2s linear";
+        fill.style.width = "100%";
+    }
+    if (txtMain) txtMain.innerText = "KNEELING...";
+
+    // ANIMATE MOBILE
+    if (mobFill) {
+        mobFill.style.transition = "width 2s linear";
+        mobFill.style.width = "100%";
+    }
+    if (mobText) mobText.innerText = "SUBMITTING...";
+    if (mobBar) mobBar.style.borderColor = "var(--gold, #c5a059)";
 
     // START TIMER
     holdTimer = setTimeout(() => {
@@ -65,7 +70,7 @@ export function handleHoldStart(e?: Event) {
     }, REQUIRED_HOLD_TIME);
 }
 
-// ─── 2. HOLD END ─────────────────────────────────────────────────────────────
+// --- 2. HOLD END ---
 export function handleHoldEnd(e?: Event) {
     if (e?.cancelable) e.preventDefault();
 
@@ -82,20 +87,27 @@ export function handleHoldEnd(e?: Event) {
         // RESET DESKTOP
         const fill = document.getElementById('heroKneelFill');
         const txtMain = document.getElementById('heroKneelText');
-        if (fill) { fill.style.transition = 'width 0.3s ease'; fill.style.width = '0%'; }
-        if (txtMain) txtMain.innerText = 'HOLD TO KNEEL';
+        if (fill) {
+            fill.style.transition = "width 0.3s ease";
+            fill.style.width = "0%";
+        }
+        if (txtMain) txtMain.innerText = "HOLD TO KNEEL";
 
         // RESET MOBILE
         const mobFill = document.getElementById('mob_kneelFill');
         const mobText = document.querySelector('.kneel-label') as HTMLElement | null;
         const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement | null;
-        if (mobFill) { mobFill.style.transition = 'width 0.3s ease'; mobFill.style.width = '0%'; }
-        if (mobText) mobText.innerText = 'HOLD TO KNEEL';
-        if (mobBar) mobBar.style.borderColor = '#c5a059';
+
+        if (mobFill) {
+            mobFill.style.transition = "width 0.3s ease";
+            mobFill.style.width = "0%";
+        }
+        if (mobText) mobText.innerText = "HOLD TO KNEEL";
+        if (mobBar) mobBar.style.borderColor = "#c5a059";
     }
 }
 
-// ─── 3. COMPLETION ────────────────────────────────────────────────────────────
+// --- 3. COMPLETION ---
 async function completeKneelAction() {
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
 
@@ -103,7 +115,20 @@ async function completeKneelAction() {
     setState({ lastWorshipTime: now, isLocked: true });
 
     updateKneelingUI();
-    showRewardScreen();
+
+    // SHOW DESKTOP REWARD
+    const deskReward = document.getElementById('kneelRewardOverlay');
+    if (deskReward) {
+        deskReward.classList.remove('hidden');
+        deskReward.style.display = 'flex';
+    }
+
+    // SHOW MOBILE REWARD
+    const mobReward = document.getElementById('mobKneelReward');
+    if (mobReward) {
+        mobReward.classList.remove('hidden');
+        mobReward.style.display = 'flex';
+    }
 
     // Sound
     const snd = document.getElementById('msgSound') as HTMLAudioElement | null;
@@ -125,23 +150,6 @@ async function completeKneelAction() {
     }
 }
 
-// ─── 4. REWARD SCREEN ─────────────────────────────────────────────────────────
-function showRewardScreen() {
-    // Show desktop hero card overlay
-    const deskOverlay = document.getElementById('kneelRewardOverlay');
-    if (deskOverlay) {
-        deskOverlay.style.display = 'flex';
-        deskOverlay.classList.remove('hidden');
-    }
-
-    // Show mobile overlay
-    const mobOverlay = document.getElementById('mobKneelReward');
-    if (mobOverlay) {
-        mobOverlay.style.display = 'flex';
-        mobOverlay.classList.remove('hidden');
-    }
-}
-
 // ─── 5. UI SYNC (restore locked/unlocked state on page load) ─────────────────
 export function updateKneelingUI() {
     const { lastWorshipTime, cooldownMinutes } = getState();
@@ -159,17 +167,33 @@ export function updateKneelingUI() {
         setState({ isLocked: true });
         const minLeft = Math.ceil((cooldownMs - diffMs) / 60000);
         const progress = 100 - (diffMs / cooldownMs) * 100;
-        if (txtMain) txtMain.innerText = `LOCKED: ${minLeft}m`;
-        if (fill) { fill.style.transition = 'none'; fill.style.width = `${Math.max(0, progress)}%`; }
-        if (mobText) mobText.innerText = `LOCKED: ${minLeft}m`;
-        if (mobFill) { mobFill.style.transition = 'none'; mobFill.style.width = `${Math.max(0, progress)}%`; }
-        if (mobBar) { mobBar.style.borderColor = '#ff003c'; (mobBar as HTMLElement).style.opacity = '0.7'; }
+
+        if (txtMain && fill) {
+            txtMain.innerText = `LOCKED: ${minLeft}m`;
+            fill.style.transition = 'none';
+            fill.style.width = `${Math.max(0, progress)}%`;
+        }
+
+        if (mobText && mobFill && mobBar) {
+            mobText.innerText = `LOCKED: ${minLeft}m`;
+            mobFill.style.transition = 'none';
+            mobFill.style.width = `${Math.max(0, progress)}%`;
+            mobBar.style.borderColor = '#ff003c';
+            (mobBar as HTMLElement).style.opacity = '0.7';
+        }
     } else {
         setState({ isLocked: false });
-        if (txtMain) txtMain.innerText = 'HOLD TO KNEEL';
-        if (fill) { fill.style.transition = 'width 0.3s ease'; fill.style.width = '0%'; }
-        if (mobText) mobText.innerText = 'HOLD TO KNEEL';
-        if (mobFill) { mobFill.style.transition = 'width 0.3s ease'; mobFill.style.width = '0%'; }
-        if (mobBar) { mobBar.style.borderColor = '#c5a059'; (mobBar as HTMLElement).style.opacity = '1'; }
+        if (txtMain && fill) {
+            txtMain.innerText = 'HOLD TO KNEEL';
+            fill.style.transition = 'width 0.3s ease';
+            fill.style.width = '0%';
+        }
+        if (mobText && mobFill && mobBar) {
+            mobText.innerText = 'HOLD TO KNEEL';
+            mobFill.style.transition = 'width 0.3s ease';
+            mobFill.style.width = '0%';
+            mobBar.style.borderColor = '#c5a059';
+            (mobBar as HTMLElement).style.opacity = '1';
+        }
     }
 }
