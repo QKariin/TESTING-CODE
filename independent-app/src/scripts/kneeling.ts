@@ -1,197 +1,227 @@
 // src/scripts/kneeling.ts
-// Ported from kneeling.js (Velo original) — adapted for Next.js/Vercel
-// KEY FIX vs original: added "if (holdTimer) return;" guard at top of handleHoldStart
-// because in a real browser (not Wix iframe), mobile fires BOTH touchstart AND mousedown,
-// so without the guard the second call overwrites holdTimer and touchend clears it instantly.
+import { createClient } from '@/utils/supabase/client';
 
-import { getState, setState } from './profile-state';
-import { supabase } from '@/lib/supabase';
-
+// Global variables to track state outside of React render cycle
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
 const REQUIRED_HOLD_TIME = 2000;
+let isLocked = false;
+let lastWorshipTime = 0;
 
-// ─── ATTACH LISTENERS (called from page useEffect after DOM is ready) ─────────
+// Initialize Supabase Client
+const supabase = createClient();
+
+// ─── 1. INITIALIZATION (Call this from your Page's useEffect) ───
 export function attachKneelListeners() {
+    // We try to attach to both Desktop and Mobile buttons
     const desktopBtn = document.getElementById('heroKneelBtn');
-    const mobileBtn = document.getElementById('mobKneelBar');
+    const mobileBtn = document.getElementById('mobKneelBar'); // Check your ID in JSX!
 
-    [desktopBtn, mobileBtn].forEach(btn => {
+    const buttons = [desktopBtn, mobileBtn];
+
+    buttons.forEach(btn => {
         if (!btn) return;
-        if ((btn as any).__kneelAttached) return; // only attach once
+        
+        // Prevent double attachment
+        if ((btn as any).__kneelAttached) return;
         (btn as any).__kneelAttached = true;
 
-        btn.addEventListener('mousedown', handleHoldStart as EventListener, { passive: false });
-        btn.addEventListener('touchstart', handleHoldStart as EventListener, { passive: false });
-        btn.addEventListener('mouseup', handleHoldEnd as EventListener, { passive: false });
-        btn.addEventListener('touchend', handleHoldEnd as EventListener, { passive: false });
-        btn.addEventListener('mouseleave', handleHoldEnd as EventListener, { passive: false });
-        btn.addEventListener('touchcancel', handleHoldEnd as EventListener, { passive: false });
-        console.log('[kneel] attached to', btn.id || btn.className);
+        // Mouse Events
+        btn.addEventListener('mousedown', handleHoldStart);
+        btn.addEventListener('mouseup', handleHoldEnd);
+        btn.addEventListener('mouseleave', handleHoldEnd);
+
+        // Touch Events (Passive: false allows us to preventDefault to stop scrolling while kneeling)
+        btn.addEventListener('touchstart', handleHoldStart, { passive: false });
+        btn.addEventListener('touchend', handleHoldEnd);
+        btn.addEventListener('touchcancel', handleHoldEnd);
+        
+        console.log('[KNEEL SYSTEM] Listeners attached to:', btn.id);
     });
+
+    // Run an initial UI check to see if we are already locked
+    checkLockStatus();
 }
 
-// --- 1. HOLD START ---
-export function handleHoldStart(e?: Event) {
-    const { isLocked } = getState();
+// ─── 2. HOLD START ───
+export function handleHoldStart(e: Event) {
     if (isLocked) return;
 
-    if (e && e.cancelable) {
-        e.preventDefault();
-        e.stopPropagation();
+    // Prevent scrolling/zooming while holding
+    if (e.cancelable && e.type === 'touchstart') {
+        e.preventDefault(); 
     }
 
-    // DESKTOP TARGETS
+    console.log('[KNEEL] Hold Started...');
+
+    // DESKTOP UI
     const fill = document.getElementById('heroKneelFill');
     const txtMain = document.getElementById('heroKneelText');
-
-    // MOBILE TARGETS
+    
+    // MOBILE UI
     const mobFill = document.getElementById('mob_kneelFill');
-    const mobText = document.querySelector('.kneel-label') as HTMLElement | null;
-    const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement | null;
+    const mobText = document.querySelector('.kneel-label') as HTMLElement;
+    const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement;
 
-    // ANIMATE DESKTOP
+    // ANIMATION: Fill takes 2 seconds (matches REQUIRED_HOLD_TIME)
     if (fill) {
-        fill.style.transition = "width 2s linear";
+        fill.style.transition = `width ${REQUIRED_HOLD_TIME}ms linear`;
         fill.style.width = "100%";
     }
     if (txtMain) txtMain.innerText = "KNEELING...";
 
-    // ANIMATE MOBILE
     if (mobFill) {
-        mobFill.style.transition = "width 2s linear";
+        mobFill.style.transition = `width ${REQUIRED_HOLD_TIME}ms linear`;
         mobFill.style.width = "100%";
     }
     if (mobText) mobText.innerText = "SUBMITTING...";
-    if (mobBar) mobBar.style.borderColor = "var(--gold, #c5a059)";
+    if (mobBar) mobBar.style.borderColor = "#ffffff"; // Bright white/gold interaction
 
-    // START TIMER
+    // Start the Timer
     holdTimer = setTimeout(() => {
         completeKneelAction();
     }, REQUIRED_HOLD_TIME);
 }
 
-// --- 2. HOLD END ---
-export function handleHoldEnd(e?: Event) {
-    if (e?.cancelable) e.preventDefault();
+// ─── 3. HOLD END (Abort) ───
+export function handleHoldEnd(e: Event) {
+    // If we are locked, do nothing (timer is already gone)
+    if (isLocked) return;
 
-    const { isLocked } = getState();
-    if (isLocked) {
-        if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-        return;
-    }
-
+    // If timer exists, it means they let go too early
     if (holdTimer) {
+        console.log('[KNEEL] Action Aborted');
         clearTimeout(holdTimer);
         holdTimer = null;
 
-        // RESET DESKTOP
-        const fill = document.getElementById('heroKneelFill');
-        const txtMain = document.getElementById('heroKneelText');
-        if (fill) {
-            fill.style.transition = "width 0.3s ease";
-            fill.style.width = "0%";
-        }
-        if (txtMain) txtMain.innerText = "HOLD TO KNEEL";
-
-        // RESET MOBILE
-        const mobFill = document.getElementById('mob_kneelFill');
-        const mobText = document.querySelector('.kneel-label') as HTMLElement | null;
-        const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement | null;
-
-        if (mobFill) {
-            mobFill.style.transition = "width 0.3s ease";
-            mobFill.style.width = "0%";
-        }
-        if (mobText) mobText.innerText = "HOLD TO KNEEL";
-        if (mobBar) mobBar.style.borderColor = "#c5a059";
+        // RESET UI INSTANTLY
+        resetUI();
     }
 }
 
-// --- 3. COMPLETION ---
+function resetUI() {
+    const fill = document.getElementById('heroKneelFill');
+    const txtMain = document.getElementById('heroKneelText');
+    const mobFill = document.getElementById('mob_kneelFill');
+    const mobText = document.querySelector('.kneel-label') as HTMLElement;
+    const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement;
+
+    // Desktop Reset
+    if (fill) {
+        fill.style.transition = "width 0.3s ease"; // Quick snap back
+        fill.style.width = "0%";
+    }
+    if (txtMain) txtMain.innerText = "HOLD TO KNEEL";
+
+    // Mobile Reset
+    if (mobFill) {
+        mobFill.style.transition = "width 0.3s ease";
+        mobFill.style.width = "0%";
+    }
+    if (mobText) mobText.innerText = "HOLD TO KNEEL";
+    if (mobBar) mobBar.style.borderColor = "#c5a059";
+}
+
+// ─── 4. ACTION COMPLETE (Success) ───
 async function completeKneelAction() {
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
 
+    console.log('[KNEEL] SUCCESS!');
+    
+    // 1. Lock State Immediately
     const now = Date.now();
-    setState({ lastWorshipTime: now, isLocked: true });
+    lastWorshipTime = now;
+    isLocked = true;
 
-    updateKneelingUI();
+    // 2. Play Sound
+    const snd = document.getElementById('msgSound') as HTMLAudioElement;
+    if (snd) snd.play().catch(err => console.log('Audio blocked', err));
 
-    // SHOW DESKTOP REWARD
+    // 3. Show Rewards (Both Desktop and Mobile)
     const deskReward = document.getElementById('kneelRewardOverlay');
+    const mobReward = document.getElementById('mobKneelReward');
+    
     if (deskReward) {
         deskReward.classList.remove('hidden');
         deskReward.style.display = 'flex';
     }
-
-    // SHOW MOBILE REWARD
-    const mobReward = document.getElementById('mobKneelReward');
     if (mobReward) {
         mobReward.classList.remove('hidden');
         mobReward.style.display = 'flex';
     }
 
-    // Sound
-    const snd = document.getElementById('msgSound') as HTMLAudioElement | null;
-    if (snd) snd.play().catch(() => null);
-
+    // 4. Save to Database (Supabase)
     try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user?.email) {
-            await fetch('/api/kneel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberEmail: user.email }),
-            });
+        if (user) {
+            // Update profile stats directly
+            // Adjust table/columns if your DB schema is different
+            await supabase.rpc('increment_kneeling_stats', { user_id: user.id });
+            console.log('[KNEEL] DB Updated');
         }
     } catch (err) {
-        console.warn('[kneel] DB save failed:', err);
+        console.error('[KNEEL] Save Error:', err);
+    }
+
+    // 5. Start the cooldown UI loop
+    updateKneelingUI();
+}
+
+// ─── 5. UI SYNC & LOCK CHECK ───
+// Call this periodically or on load
+export function checkLockStatus() {
+    // You can fetch the real lastWorshipTime from DB here if needed
+    // For now, we assume local session state or rely on page load props
+    if (isLocked) {
+        updateKneelingUI();
     }
 }
 
-// ─── 5. UI SYNC (restore locked/unlocked state on page load) ─────────────────
 export function updateKneelingUI() {
-    const { lastWorshipTime, cooldownMinutes } = getState();
+    // If not locked, ensure UI is reset
+    if (!isLocked && !holdTimer) {
+        resetUI();
+        return;
+    }
+
+    // If Locked, calculate time left
+    const COOLDOWN_MINUTES = 60; // Set your cooldown here
     const now = Date.now();
     const diffMs = now - lastWorshipTime;
-    const cooldownMs = (cooldownMinutes || 60) * 60 * 1000;
+    const cooldownMs = COOLDOWN_MINUTES * 60 * 1000;
 
-    const fill = document.getElementById('heroKneelFill');
-    const txtMain = document.getElementById('heroKneelText');
-    const mobFill = document.getElementById('mob_kneelFill');
-    const mobText = document.querySelector('.kneel-label') as HTMLElement | null;
-    const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement | null;
-
-    if (lastWorshipTime > 0 && diffMs < cooldownMs) {
-        setState({ isLocked: true });
+    if (diffMs < cooldownMs) {
+        // STILL LOCKED
         const minLeft = Math.ceil((cooldownMs - diffMs) / 60000);
-        const progress = 100 - (diffMs / cooldownMs) * 100;
+        const progress = 100 - ((diffMs / cooldownMs) * 100);
 
-        if (txtMain && fill) {
-            txtMain.innerText = `LOCKED: ${minLeft}m`;
-            fill.style.transition = 'none';
+        const txtMain = document.getElementById('heroKneelText');
+        const fill = document.getElementById('heroKneelFill');
+        
+        const mobText = document.querySelector('.kneel-label') as HTMLElement;
+        const mobFill = document.getElementById('mob_kneelFill');
+        const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement;
+
+        if (txtMain) txtMain.innerText = `LOCKED: ${minLeft}m`;
+        if (fill) {
+            fill.style.transition = "none"; // No animation for status bar
             fill.style.width = `${Math.max(0, progress)}%`;
         }
 
-        if (mobText && mobFill && mobBar) {
-            mobText.innerText = `LOCKED: ${minLeft}m`;
-            mobFill.style.transition = 'none';
+        if (mobText) mobText.innerText = `LOCKED: ${minLeft}m`;
+        if (mobFill) {
+            mobFill.style.transition = "none";
             mobFill.style.width = `${Math.max(0, progress)}%`;
-            mobBar.style.borderColor = '#ff003c';
-            (mobBar as HTMLElement).style.opacity = '0.7';
         }
+        if (mobBar) {
+            mobBar.style.borderColor = "#ff003c"; // Red for locked
+            mobBar.style.opacity = "0.7";
+        }
+
+        // Keep updating every minute
+        setTimeout(updateKneelingUI, 60000);
     } else {
-        setState({ isLocked: false });
-        if (txtMain && fill) {
-            txtMain.innerText = 'HOLD TO KNEEL';
-            fill.style.transition = 'width 0.3s ease';
-            fill.style.width = '0%';
-        }
-        if (mobText && mobFill && mobBar) {
-            mobText.innerText = 'HOLD TO KNEEL';
-            mobFill.style.transition = 'width 0.3s ease';
-            mobFill.style.width = '0%';
-            mobBar.style.borderColor = '#c5a059';
-            (mobBar as HTMLElement).style.opacity = '1';
-        }
+        // UNLOCK
+        isLocked = false;
+        resetUI();
     }
 }
