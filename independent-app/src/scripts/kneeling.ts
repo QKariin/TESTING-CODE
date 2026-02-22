@@ -20,53 +20,52 @@ export function attachKneelListeners() {
         if ((btn as any).__kneelAttached) return;
         (btn as any).__kneelAttached = true;
 
-        // Force Drag/Select disabled
-        btn.ondragstart = () => false;
+        // 👇 FORCE INJECT STYLES (To ensure no dragging/selecting happens)
+        btn.style.touchAction = "none";
+        btn.style.userSelect = "none";
+        btn.style.webkitUserSelect = "none";
         
-        // ─── MOUSE EVENTS (The Fix) ───
-        btn.addEventListener('mousedown', (e) => {
-            // Stop text selection
-            if (e.cancelable) e.preventDefault();
-            
-            // Start kneeling
-            handleHoldStart(e);
-
-            // Listen for release ANYWHERE on the screen
-            // This ignores "mouseleave" bugs completely
-            window.addEventListener('mouseup', handleGlobalEnd);
+        // Force all children (text, fill bar) to be invisible to the mouse
+        Array.from(btn.children).forEach((child) => {
+            (child as HTMLElement).style.pointerEvents = "none";
         });
 
-        // ─── TOUCH EVENTS ───
-        btn.addEventListener('touchstart', (e) => {
-            if (e.cancelable) e.preventDefault();
-            handleHoldStart(e);
-        }, { passive: false });
-        
-        btn.addEventListener('touchend', handleHoldEnd);
-        btn.addEventListener('touchcancel', handleHoldEnd);
-
-        // Disable Context Menu
-        btn.addEventListener('contextmenu', (e) => {
+        // 👇 USE POINTER EVENTS + CAPTURE (The Bulletproof Fix)
+        btn.addEventListener('pointerdown', (e) => {
+            // 1. Stop default browser actions (scrolling, text selection)
             e.preventDefault();
-            return false;
+            
+            // 2. "Capture" the pointer. 
+            // This forces the browser to send ALL future events to this button
+            // until we release it. This prevents "mouseleave" bugs.
+            (btn as HTMLElement).setPointerCapture(e.pointerId);
+            
+            handleHoldStart(e);
         });
 
-        console.log('[KNEEL] Listeners attached:', btn.id);
+        btn.addEventListener('pointerup', (e) => {
+            (btn as HTMLElement).releasePointerCapture(e.pointerId);
+            handleHoldEnd(e);
+        });
+        
+        btn.addEventListener('pointercancel', (e) => {
+            (btn as HTMLElement).releasePointerCapture(e.pointerId);
+            handleHoldEnd(e);
+        });
+        
+        // Stop Right Click Menu
+        btn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        console.log('[KNEEL] Pointer Capture Listeners Attached:', btn.id);
     });
 
     checkLockStatus();
 }
 
-// Helper to clean up the global listener
-function handleGlobalEnd(e: Event) {
-    handleHoldEnd(e);
-    window.removeEventListener('mouseup', handleGlobalEnd);
-}
-
-// ─── 2. START ───
+// ─── 2. START HOLD ───
 export function handleHoldStart(e: Event) {
     if (isLocked) return;
-    if (holdTimer) return; // Don't double-fire
+    if (holdTimer) return; // Prevent double-trigger
 
     // DESKTOP UI
     const fill = document.getElementById('heroKneelFill');
@@ -77,7 +76,7 @@ export function handleHoldStart(e: Event) {
     const mobText = document.querySelector('.kneel-label') as HTMLElement;
     const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement;
 
-    // ANIMATE (2 Seconds)
+    // ANIMATION
     if (fill) {
         fill.style.transition = `width ${REQUIRED_HOLD_TIME}ms linear`;
         fill.style.width = "100%";
@@ -94,12 +93,10 @@ export function handleHoldStart(e: Event) {
     // START TIMER
     holdTimer = setTimeout(() => {
         completeKneelAction();
-        // Remove the global listener since we finished
-        window.removeEventListener('mouseup', handleGlobalEnd);
     }, REQUIRED_HOLD_TIME);
 }
 
-// ─── 3. END (CANCEL) ───
+// ─── 3. END HOLD (CANCEL) ───
 export function handleHoldEnd(e: Event) {
     if (isLocked) return;
 
@@ -108,7 +105,7 @@ export function handleHoldEnd(e: Event) {
         clearTimeout(holdTimer);
         holdTimer = null;
 
-        // RESET UI INSTANTLY
+        // RESET UI
         resetUI();
     }
 }
@@ -144,7 +141,7 @@ async function completeKneelAction() {
 
     // SOUND
     const snd = document.getElementById('msgSound') as HTMLAudioElement;
-    if (snd) snd.play().catch(e => console.log(e));
+    if (snd) snd.play().catch(e => console.log("Audio blocked", e));
 
     // REWARDS
     const deskReward = document.getElementById('kneelRewardOverlay');
@@ -173,10 +170,8 @@ export function checkLockStatus() {
 }
 
 export function updateKneelingUI() {
-    // If not locked and not holding, keep UI reset
-    if (!isLocked && !holdTimer) {
-        return;
-    }
+    // If not locked and not holding, do nothing
+    if (!isLocked && !holdTimer) return;
 
     const COOLDOWN_MINUTES = 60;
     const now = Date.now();
@@ -201,6 +196,7 @@ export function updateKneelingUI() {
         if (mobFill) { mobFill.style.transition = "none"; mobFill.style.width = `${Math.max(0, progress)}%`; }
         if (mobBar) { mobBar.style.borderColor = "#ff003c"; }
 
+        // Keep updating only if we are actually locked
         setTimeout(updateKneelingUI, 60000);
     } else {
         // UNLOCK
