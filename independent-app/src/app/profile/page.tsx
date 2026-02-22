@@ -211,9 +211,9 @@ export default function ProfilePage() {
         return () => clearInterval(timer);
     }, []);
 
-    // ─── Kneel button listeners ── runs after each profile change ───────────────
+    // ─── Kneel button listeners ── runs after loading completes and profile is set ─
     useEffect(() => {
-        if (!profile) return;
+        if (!profile || loading) return; // wait until full page is rendered
 
         const kneelButtons = [
             document.getElementById('heroKneelBtn'),
@@ -285,7 +285,7 @@ export default function ProfilePage() {
             });
             if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
         };
-    }, [profile]);
+    }, [profile, loading]);
 
     if (loading) return (
         <div id="loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: 'var(--gold)', fontFamily: 'Cinzel' }}>
