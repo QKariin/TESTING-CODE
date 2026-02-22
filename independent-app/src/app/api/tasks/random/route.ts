@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const memberEmail = searchParams.get('memberEmail');
+        const forceNew = searchParams.get('forceNew') === 'true';
 
         if (!memberEmail) {
             return NextResponse.json({ success: false, error: 'Missing memberEmail' }, { status: 400 });
@@ -32,7 +33,16 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        // 2. Otherwise/If expired, pick a new random task
+        // 2. If no active task and NOT forceNew, return null (don't auto-assign)
+        if (!forceNew) {
+            return NextResponse.json({
+                success: true,
+                task: null,
+                isReassigned: false
+            });
+        }
+
+        // 3. Otherwise (expired or forced), pick a new random task
         const { data: tasks, error } = await supabaseAdmin
             .from('tasks_database')
             .select('*');
@@ -49,7 +59,7 @@ export async function GET(req: NextRequest) {
         const randomIndex = Math.floor(Math.random() * tasks.length);
         const randomTask = tasks[randomIndex];
 
-        // 3. Assign it in the database
+        // 4. Assign it in the database
         await DbService.assignTask(memberEmail, randomTask);
 
         return NextResponse.json({

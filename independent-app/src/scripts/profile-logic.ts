@@ -167,36 +167,56 @@ export async function getRandomTask(isSilentInit = false) {
         const mainArea = document.getElementById('mainButtonsArea');
         const activeArea = document.getElementById('activeTaskContent');
         const readyText = document.getElementById('readyText');
+        const uploadCont = document.getElementById('uploadBtnContainer');
+
+        // Mobile IDs
+        const qmIdle = document.getElementById('qm_TaskIdle');
+        const qmActive = document.getElementById('qm_TaskActive');
+        const mobTaskText = document.getElementById('mobTaskText');
 
         if (!isSilentInit) {
             if (mainArea) mainArea.style.display = 'none';
             if (activeArea) activeArea.classList.remove('hidden');
             if (readyText) readyText.innerText = 'Connecting to the Void...';
+
+            if (qmIdle) qmIdle.classList.add('hidden');
+            if (qmActive) qmActive.classList.remove('hidden');
+            if (mobTaskText) mobTaskText.innerText = 'Transmitting orders...';
         }
 
-        const res = await fetch(`/api/tasks/random?memberEmail=${encodeURIComponent(pid)}`);
+        // If not silent init, we are FORCING a new task assignment
+        const forceNew = !isSilentInit;
+        const res = await fetch(`/api/tasks/random?memberEmail=${encodeURIComponent(pid)}&forceNew=${forceNew}`);
         const data = await res.json();
 
         if (!data.success) {
-            if (isSilentInit) return; // Ignore on background load
+            if (isSilentInit) return;
             console.error("Supabase API Error:", data.error);
             if (readyText) readyText.innerText = 'Failed to retrieve task. See console.';
             return;
         }
 
-        // If we did a silent init and there is NO active task yet, don't show anything
-        if (isSilentInit && !data.task.assigned_at) {
+        // If no task returned (not active and not forced), reset UI to "Request Task"
+        if (!data.task) {
+            if (mainArea) mainArea.style.display = 'block';
+            if (activeArea) activeArea.classList.add('hidden');
+            if (qmIdle) qmIdle.classList.remove('hidden');
+            if (qmActive) qmActive.classList.add('hidden');
             return;
         }
 
-        // Show active task area
+        // Show active task area and buttons
         if (mainArea) mainArea.style.display = 'none';
         if (activeArea) activeArea.classList.remove('hidden');
+        if (uploadCont) uploadCont.classList.remove('hidden');
+
+        if (qmIdle) qmIdle.classList.add('hidden');
+        if (qmActive) qmActive.classList.remove('hidden');
 
         // Update UI with the task text
-        if (readyText) {
-            readyText.innerText = data.task.TaskText || data.task.tasktext || 'Perform the assigned duty.';
-        }
+        const taskMsg = data.task.TaskText || data.task.tasktext || 'Perform the assigned duty.';
+        if (readyText) readyText.innerText = taskMsg;
+        if (mobTaskText) mobTaskText.innerText = taskMsg;
 
         // Handle Timer
         const timeLeftMs = data.timeLeftMs || (24 * 60 * 60 * 1000);
