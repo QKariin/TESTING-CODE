@@ -1,108 +1,111 @@
 // src/scripts/kneeling.ts
-// Kneeling — Pointer Events API (works on desktop + mobile, not cancelled by scroll)
+// Ported from kneeling.js (Velo original) — adapted for Next.js/Vercel
+// KEY FIX vs original: added "if (holdTimer) return;" guard at top of handleHoldStart
+// because in a real browser (not Wix iframe), mobile fires BOTH touchstart AND mousedown,
+// so without the guard the second call overwrites holdTimer and touchend clears it instantly.
 
 import { getState, setState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
 
-const REQUIRED_HOLD_MS = 2000;
-const COOLDOWN_MS = 60 * 60 * 1000; // 60 min
-
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
-let isPointerDown = false;
+const REQUIRED_HOLD_TIME = 2000;
 
-// ─── PUBLIC: wire up both buttons with passive:false pointer events ────────────
+// ─── ATTACH LISTENERS (called from page useEffect after DOM is ready) ─────────
 export function attachKneelListeners() {
     const desktopBtn = document.getElementById('heroKneelBtn');
     const mobileBtn = document.getElementById('mobKneelBar');
+
     [desktopBtn, mobileBtn].forEach(btn => {
         if (!btn) return;
-        // Guard: only attach once
-        if ((btn as any).__kneelAttached) return;
+        if ((btn as any).__kneelAttached) return; // only attach once
         (btn as any).__kneelAttached = true;
 
-        // Prevent browser from stealing gesture for scroll/zoom
-        btn.style.touchAction = 'none';
-        btn.style.userSelect = 'none';
-        (btn.style as any).webkitUserSelect = 'none';
-
-        btn.addEventListener('pointerdown', onDown, { passive: false });
-        btn.addEventListener('pointerup', onUp, { passive: false });
-        // NOTE: NOT adding pointerleave — tiny finger shifts on mobile would cancel the hold
-        btn.addEventListener('pointercancel', onCancel, { passive: false });
-        console.log('[kneel] listeners attached to', btn.id);
+        // mousedown + touchstart both call handleHoldStart
+        // but holdTimer guard prevents double-execution on mobile
+        btn.addEventListener('mousedown', handleHoldStart as EventListener, { passive: false });
+        btn.addEventListener('touchstart', handleHoldStart as EventListener, { passive: false });
+        btn.addEventListener('mouseup', handleHoldEnd as EventListener, { passive: false });
+        btn.addEventListener('touchend', handleHoldEnd as EventListener, { passive: false });
+        console.log('[kneel] attached to', btn.id || btn.className);
     });
 }
 
-function onDown(e: PointerEvent) {
-    e.preventDefault();
+// ─── 1. HOLD START ────────────────────────────────────────────────────────────
+export function handleHoldStart(e?: Event) {
+    // GUARD: if already timing, ignore (mobile fires both touchstart AND mousedown)
+    if (holdTimer) return;
+
     const { isLocked } = getState();
-    console.log('[kneel] pointerdown', { isLocked, isPointerDown, hasTimer: !!holdTimer });
-    if (isLocked || isPointerDown || holdTimer) return;
+    if (isLocked) return;
 
-    // Capture pointer so further events go to this element even if finger moves off
-    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { }
+    if (e && e.cancelable) {
+        e.preventDefault();   // also blocks the synthetic mousedown after touchstart
+        e.stopPropagation();
+    }
 
-    isPointerDown = true;
-    setFill(true);  // Start animation
+    // ANIMATE DESKTOP
+    const fill = document.getElementById('heroKneelFill');
+    const txtMain = document.getElementById('heroKneelText');
+    if (fill) { fill.style.transition = `width ${REQUIRED_HOLD_TIME}ms linear`; fill.style.width = '100%'; }
+    if (txtMain) txtMain.innerText = 'KNEELING...';
 
+    // ANIMATE MOBILE
+    const mobFill = document.getElementById('mob_kneelFill');
+    const mobText = document.querySelector('.kneel-label') as HTMLElement | null;
+    const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement | null;
+    if (mobFill) { mobFill.style.transition = `width ${REQUIRED_HOLD_TIME}ms linear`; mobFill.style.width = '100%'; }
+    if (mobText) mobText.innerText = 'SUBMITTING...';
+    if (mobBar) mobBar.style.borderColor = 'var(--gold, #c5a059)';
+
+    // START TIMER
     holdTimer = setTimeout(() => {
-        console.log('[kneel] 2s elapsed → completing');
-        holdTimer = null;
-        isPointerDown = false;
-        completeKneel();
-    }, REQUIRED_HOLD_MS);
+        completeKneelAction();
+    }, REQUIRED_HOLD_TIME);
 }
 
-function onUp(e: Event) {
-    console.log('[kneel] pointerup/leave', { isPointerDown, hasTimer: !!holdTimer });
-    if (!isPointerDown) return;
-    isPointerDown = false;
+// ─── 2. HOLD END ─────────────────────────────────────────────────────────────
+export function handleHoldEnd(e?: Event) {
+    if (e?.cancelable) e.preventDefault();
+
+    const { isLocked } = getState();
+    if (isLocked) {
+        if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+        return;
+    }
+
     if (holdTimer) {
         clearTimeout(holdTimer);
         holdTimer = null;
-        setFill(false); // Not held long enough
-    }
-}
 
-function onCancel(e: Event) {
-    console.log('[kneel] pointercancel - resetting');
-    isPointerDown = false;
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-    setFill(false);
-}
-
-// ─── Fill bar animation helpers ───────────────────────────────────────────────
-function setFill(filling: boolean) {
-    const fill = document.getElementById('heroKneelFill');
-    const mobFill = document.getElementById('mob_kneelFill');
-    const txtMain = document.getElementById('heroKneelText');
-    const mobText = document.querySelector('.kneel-label') as HTMLElement | null;
-    const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement | null;
-
-    if (filling) {
-        if (fill) { fill.style.transition = `width ${REQUIRED_HOLD_MS}ms linear`; fill.style.width = '100%'; }
-        if (mobFill) { mobFill.style.transition = `width ${REQUIRED_HOLD_MS}ms linear`; mobFill.style.width = '100%'; }
-        if (txtMain) txtMain.innerText = 'KNEELING...';
-        if (mobText) mobText.innerText = 'SUBMITTING...';
-        if (mobBar) mobBar.style.borderColor = 'var(--gold, #c5a059)';
-    } else {
+        // RESET DESKTOP
+        const fill = document.getElementById('heroKneelFill');
+        const txtMain = document.getElementById('heroKneelText');
         if (fill) { fill.style.transition = 'width 0.3s ease'; fill.style.width = '0%'; }
-        if (mobFill) { mobFill.style.transition = 'width 0.3s ease'; mobFill.style.width = '0%'; }
         if (txtMain) txtMain.innerText = 'HOLD TO KNEEL';
+
+        // RESET MOBILE
+        const mobFill = document.getElementById('mob_kneelFill');
+        const mobText = document.querySelector('.kneel-label') as HTMLElement | null;
+        const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement | null;
+        if (mobFill) { mobFill.style.transition = 'width 0.3s ease'; mobFill.style.width = '0%'; }
         if (mobText) mobText.innerText = 'HOLD TO KNEEL';
         if (mobBar) mobBar.style.borderColor = '#c5a059';
     }
 }
 
-// ─── Kneel completion ─────────────────────────────────────────────────────────
-async function completeKneel() {
-    const { lastWorshipTime } = getState();
+// ─── 3. COMPLETION ────────────────────────────────────────────────────────────
+async function completeKneelAction() {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
 
-    // Client-side cooldown guard (server also enforces)
-    if (lastWorshipTime > 0 && Date.now() - lastWorshipTime < COOLDOWN_MS) return;
+    const now = Date.now();
+    setState({ lastWorshipTime: now, isLocked: true });
 
-    setState({ isLocked: true, lastWorshipTime: Date.now() });
-    updateKneelingUI(); // show LOCKED state immediately
+    updateKneelingUI();
+    showRewardScreen();
+
+    // Sound
+    const snd = document.getElementById('msgSound') as HTMLAudioElement | null;
+    if (snd) snd.play().catch(() => null);
 
     // Save to DB
     try {
@@ -118,54 +121,36 @@ async function completeKneel() {
     } catch (err) {
         console.warn('[kneel] DB save failed:', err);
     }
-
-    // Sound
-    const snd = document.getElementById('msgSound') as HTMLAudioElement | null;
-    if (snd) snd.play().catch(() => null);
-
-    // Show reward screen
-    showRewardScreen();
 }
 
-// ─── Reward Screen ────────────────────────────────────────────────────────────
+// ─── 4. REWARD SCREEN ─────────────────────────────────────────────────────────
 function showRewardScreen() {
     document.getElementById('_kneelReward')?.remove();
-
     const overlay = document.createElement('div');
     overlay.id = '_kneelReward';
     overlay.style.cssText = `
         position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;
         display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;
+        font-family:'Cinzel',serif;
     `;
     overlay.innerHTML = `
-        <div style="font-family:'Orbitron';color:#c5a059;font-size:1.4rem;letter-spacing:4px;text-align:center;">
-            ◈ SUBMISSION ACCEPTED ◈
-        </div>
-        <div style="font-family:'Cinzel';color:rgba(255,255,255,0.5);font-size:0.8rem;letter-spacing:2px;">
-            Choose your reward
-        </div>
+        <div style="font-family:'Orbitron',sans-serif;color:#c5a059;font-size:1.4rem;letter-spacing:4px;text-align:center;">◈ SUBMISSION ACCEPTED ◈</div>
+        <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;letter-spacing:2px;">Choose your reward</div>
         <div style="display:flex;gap:16px;margin-top:10px;">
-            <button id="_rewardMerit" style="padding:14px 28px;background:rgba(197,160,89,0.1);border:1px solid #c5a059;color:#c5a059;font-family:'Orbitron';font-size:0.75rem;letter-spacing:2px;cursor:pointer;border-radius:4px;transition:background 0.2s;">
-                +50 MERIT
-            </button>
-            <button id="_rewardNet" style="padding:14px 28px;background:rgba(0,150,255,0.08);border:1px solid #4af;color:#4af;font-family:'Orbitron';font-size:0.75rem;letter-spacing:2px;cursor:pointer;border-radius:4px;transition:background 0.2s;">
-                +10 COINS
-            </button>
+            <button id="_rewardMerit" style="padding:14px 28px;background:rgba(197,160,89,0.1);border:1px solid #c5a059;color:#c5a059;font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:2px;cursor:pointer;border-radius:4px;">+50 MERIT</button>
+            <button id="_rewardCoins" style="padding:14px 28px;background:rgba(0,150,255,0.08);border:1px solid #4af;color:#4af;font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:2px;cursor:pointer;border-radius:4px;">+10 COINS</button>
         </div>
-        <div style="font-family:'Cinzel';color:rgba(255,255,255,0.2);font-size:0.6rem;margin-top:6px;">
-            Next kneel available in 60 minutes
-        </div>
+        <div style="color:rgba(255,255,255,0.2);font-size:0.6rem;margin-top:6px;">Next kneel available in 60 minutes</div>
     `;
-
     document.body.appendChild(overlay);
 
     document.getElementById('_rewardMerit')!.addEventListener('click', () => {
+        overlay.remove();
         claimReward('merit');
-        overlay.remove();
     });
-    document.getElementById('_rewardNet')!.addEventListener('click', () => {
-        claimReward('coins');
+    document.getElementById('_rewardCoins')!.addEventListener('click', () => {
         overlay.remove();
+        claimReward('coins');
     });
 }
 
@@ -174,28 +159,15 @@ async function claimReward(type: 'merit' | 'coins') {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user?.email) return;
-
         const field = type === 'merit' ? 'score' : 'wallet';
         const delta = type === 'merit' ? 50 : 10;
-
-        // Fetch current value then increment
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('score, wallet')
-            .eq('member_id', user.email)
-            .maybeSingle();
-
-        if (profile) {
-            const current = type === 'merit' ? (profile.score || 0) : (profile.wallet || 0);
+        const { data: p } = await supabase.from('profiles').select('score,wallet').eq('member_id', user.email).maybeSingle();
+        if (p) {
+            const current = type === 'merit' ? (p.score || 0) : (p.wallet || 0);
             await fetch('/api/profile-update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    memberEmail: user.email,
-                    field,
-                    value: current + delta,
-                    cost: 0,
-                }),
+                body: JSON.stringify({ memberEmail: user.email, field, value: current + delta, cost: 0 }),
             });
         }
     } catch (err) {
@@ -203,7 +175,7 @@ async function claimReward(type: 'merit' | 'coins') {
     }
 }
 
-// ─── UI SYNC (called on page load to restore LOCKED/UNLOCKED state) ───────────
+// ─── 5. UI SYNC (restore locked/unlocked state on page load) ─────────────────
 export function updateKneelingUI() {
     const { lastWorshipTime, cooldownMinutes } = getState();
     const now = Date.now();
@@ -220,7 +192,6 @@ export function updateKneelingUI() {
         setState({ isLocked: true });
         const minLeft = Math.ceil((cooldownMs - diffMs) / 60000);
         const progress = 100 - (diffMs / cooldownMs) * 100;
-
         if (txtMain) txtMain.innerText = `LOCKED: ${minLeft}m`;
         if (fill) { fill.style.transition = 'none'; fill.style.width = `${Math.max(0, progress)}%`; }
         if (mobText) mobText.innerText = `LOCKED: ${minLeft}m`;
@@ -235,7 +206,3 @@ export function updateKneelingUI() {
         if (mobBar) { mobBar.style.borderColor = '#c5a059'; (mobBar as HTMLElement).style.opacity = '1'; }
     }
 }
-
-// Legacy exports (still used in page.tsx imports)
-export function handleHoldStart() { }
-export function handleHoldEnd() { }
