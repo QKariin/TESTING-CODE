@@ -12,9 +12,8 @@ const supabase = createClient();
 
 // ─── 1. INITIALIZATION (Call this from your Page's useEffect) ───
 export function attachKneelListeners() {
-    // We try to attach to both Desktop and Mobile buttons
     const desktopBtn = document.getElementById('heroKneelBtn');
-    const mobileBtn = document.getElementById('mobKneelBar'); // Check your ID in JSX!
+    const mobileBtn = document.getElementById('mobKneelBar'); 
 
     const buttons = [desktopBtn, mobileBtn];
 
@@ -25,22 +24,46 @@ export function attachKneelListeners() {
         if ((btn as any).__kneelAttached) return;
         (btn as any).__kneelAttached = true;
 
+        // 👇👇👇 THE FIX FOR THE 0.5s FREEZE 👇👇👇
+        // 1. Disable Text Selection (Browser won't try to highlight "HOLD TO KNEEL")
+        btn.style.userSelect = 'none';
+        btn.style.webkitUserSelect = 'none'; 
+        
+        // 2. Disable Image Dragging (Browser won't try to drag the button ghost)
+        btn.ondragstart = (e) => { e.preventDefault(); return false; };
+        // 👆👆👆 END FIX 👆👆👆
+
         // Mouse Events
-        btn.addEventListener('mousedown', handleHoldStart);
+        btn.addEventListener('mousedown', (e) => {
+             // Stop the browser from doing anything else (like selecting text)
+             if (e.cancelable) e.preventDefault();
+             handleHoldStart(e);
+        });
         btn.addEventListener('mouseup', handleHoldEnd);
         btn.addEventListener('mouseleave', handleHoldEnd);
 
-        // Touch Events (Passive: false allows us to preventDefault to stop scrolling while kneeling)
-        btn.addEventListener('touchstart', handleHoldStart, { passive: false });
+        // Touch Events
+        btn.addEventListener('touchstart', (e) => {
+            // Stop scrolling while kneeling
+            if (e.cancelable) e.preventDefault();
+            handleHoldStart(e);
+        }, { passive: false });
+        
         btn.addEventListener('touchend', handleHoldEnd);
         btn.addEventListener('touchcancel', handleHoldEnd);
+
+        // Stop Context Menu (Right click / Long press menu)
+        btn.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            return false;
+        });
         
-        console.log('[KNEEL SYSTEM] Listeners attached to:', btn.id);
+        console.log('[KNEEL SYSTEM] Listeners attached & hardened:', btn.id);
     });
 
-    // Run an initial UI check to see if we are already locked
     checkLockStatus();
 }
+
 
 // ─── 2. HOLD START ───
 export function handleHoldStart(e: Event) {
