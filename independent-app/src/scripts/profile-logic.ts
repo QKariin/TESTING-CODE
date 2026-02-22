@@ -323,57 +323,171 @@ async function _doProfileUpload() {
     input.click();
 }
 
+// ─── CHIP LISTS (ported from Velo KINK_LIST) ──────────────────────────────────
+const CHIP_LIST = [
+    "JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership",
+    "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation",
+    "Task submission", "CBT", "Training", "Power exchange", "Verbal domination",
+    "Protocol", "Obedience", "Psychological domination"
+];
+const ROUTINE_OPTIONS = ["Morning Kneel", "Chastity Check", "Cleanliness Check", "Custom Order"];
+
 export function openTextFieldModal(fieldId: string, label: string) {
     document.getElementById('_reqModal')?.remove();
 
     const overlay = document.createElement('div');
     overlay.id = '_reqModal';
-    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;`;
+    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;`;
 
     const box = document.createElement('div');
-    box.style.cssText = `background:#0a0a0f;border:1px solid #c5a059;border-radius:12px;padding:28px;width:90%;max-width:440px;font-family:'Orbitron';`;
-    box.innerHTML = `
-        <div style="color:#c5a059;font-size:0.7rem;letter-spacing:2px;margin-bottom:6px;">${label.toUpperCase()}</div>
-        <div style="color:rgba(255,255,255,0.4);font-size:0.55rem;margin-bottom:12px;">This will be stored in your profile and used to determine your rank.</div>
-        <textarea id="_reqInput" placeholder="Enter your ${label.toLowerCase()}..." style="width:100%;min-height:100px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;padding:10px;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;resize:vertical;"></textarea>
-        <div id="_reqError" style="color:#ff4444;font-size:0.55rem;margin-top:6px;display:none;"></div>
-        <div style="display:flex;gap:10px;margin-top:14px;">
-            <button id="_reqSave" style="flex:1;padding:10px;background:#c5a059;color:#000;border:none;border-radius:6px;font-family:'Orbitron';font-weight:bold;cursor:pointer;letter-spacing:1px;">SAVE</button>
-            <button id="_reqCancel" style="flex:1;padding:10px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:6px;font-family:'Orbitron';cursor:pointer;">CANCEL</button>
-        </div>`;
+    box.style.cssText = `background:#07080f;border:1px solid #c5a059;border-radius:12px;padding:24px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;font-family:'Orbitron';`;
 
+    const isChip = fieldId === 'kinks' || fieldId === 'limits';
+    const isRoutine = fieldId === 'routine';
+    const costPerItem = fieldId === 'kinks' ? 100 : fieldId === 'limits' ? 200 : 0;
+
+    let inner = `<div style="color:#c5a059;font-size:0.75rem;letter-spacing:3px;margin-bottom:6px;">${label.toUpperCase()}</div>`;
+
+    if (isChip) {
+        inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">SELECT AT LEAST 3 · ${costPerItem} COINS EACH</div>`;
+        inner += `<div id="_chipGrid" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;margin-bottom:14px;padding-right:4px;">`;
+        CHIP_LIST.forEach(item => {
+            inner += `<div class="_reqChip" data-value="${item}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #2a2a2a;background:rgba(0,0,0,0.5);color:#888;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;">
+                <span>${item}</span><span style="font-size:0.65rem;color:#555;">${costPerItem}</span>
+            </div>`;
+        });
+        inner += `</div>`;
+        inner += `<div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">TOTAL COST: 0 COINS</div>`;
+
+    } else if (isRoutine) {
+        inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">PRESET: 1,000 COINS · CUSTOM: 2,000 COINS</div>`;
+        inner += `<div id="_chipGrid" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">`;
+        ROUTINE_OPTIONS.forEach(item => {
+            const cost = item === 'Custom Order' ? 2000 : 1000;
+            inner += `<div class="_reqChip _routineChip" data-value="${item}" data-cost="${cost}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid #2a2a2a;background:rgba(0,0,0,0.5);color:#888;font-family:'Cinzel',serif;font-size:0.85rem;cursor:pointer;border-radius:4px;transition:all 0.2s;">
+                <span>${item}</span><span style="font-size:0.65rem;color:#555;">${cost.toLocaleString()}</span>
+            </div>`;
+        });
+        inner += `</div>`;
+        inner += `<div id="_customRoutineWrap" style="display:none;margin-bottom:12px;">
+            <input id="_customRoutineInput" placeholder="Describe your custom routine..." style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;" />
+        </div>`;
+        inner += `<div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">SELECT A PROTOCOL</div>`;
+
+    } else {
+        // Plain textarea for name / identity
+        inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:12px;">STORED IN YOUR PROFILE · FREE</div>`;
+        inner += `<textarea id="_reqInput" placeholder="Enter your ${label.toLowerCase()}..." style="width:100%;min-height:90px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;padding:10px;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;resize:vertical;"></textarea>`;
+    }
+
+    inner += `<div id="_reqError" style="color:#ff4444;font-size:0.55rem;margin-top:6px;display:none;margin-bottom:8px;"></div>`;
+    inner += `<div style="display:flex;gap:10px;margin-top:10px;">
+        <button id="_reqSave" style="flex:1;padding:10px;background:#c5a059;color:#000;border:none;border-radius:6px;font-family:'Orbitron';font-weight:bold;cursor:pointer;letter-spacing:1px;">SAVE</button>
+        <button id="_reqCancel" style="flex:1;padding:10px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:6px;font-family:'Orbitron';cursor:pointer;">CANCEL</button>
+    </div>`;
+
+    box.innerHTML = inner;
     overlay.appendChild(box);
     document.body.appendChild(overlay);
 
-    document.getElementById('_reqCancel')!.onclick = () => overlay.remove();
-    document.getElementById('_reqSave')!.onclick = () => saveTextField(fieldId, label, overlay);
+    // ── Chip click logic (kinks/limits)
+    if (isChip) {
+        box.querySelectorAll<HTMLElement>('._reqChip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                chip.classList.toggle('_selected');
+                const isOn = chip.classList.contains('_selected');
+                chip.style.borderColor = isOn ? '#c5a059' : '#2a2a2a';
+                chip.style.color = isOn ? '#c5a059' : '#888';
+                chip.style.background = isOn ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
+                const count = box.querySelectorAll('._selected').length;
+                const costDisplay = document.getElementById('_reqCostDisplay')!;
+                if (costDisplay) costDisplay.textContent = `TOTAL COST: ${(count * costPerItem).toLocaleString()} COINS`;
+            });
+        });
+    }
+
+    // ── Routine chip logic (single select)
+    if (isRoutine) {
+        box.querySelectorAll<HTMLElement>('._routineChip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                box.querySelectorAll<HTMLElement>('._routineChip').forEach(c => {
+                    c.classList.remove('_selected');
+                    c.style.borderColor = '#2a2a2a'; c.style.color = '#888'; c.style.background = 'rgba(0,0,0,0.5)';
+                });
+                chip.classList.add('_selected');
+                chip.style.borderColor = '#c5a059'; chip.style.color = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.1)';
+                const cost = parseInt(chip.getAttribute('data-cost') || '1000');
+                const costDisplay = document.getElementById('_reqCostDisplay')!;
+                if (costDisplay) costDisplay.textContent = `COST: ${cost.toLocaleString()} COINS`;
+                const customWrap = document.getElementById('_customRoutineWrap')!;
+                if (customWrap) customWrap.style.display = chip.getAttribute('data-value') === 'Custom Order' ? 'block' : 'none';
+            });
+        });
+    }
+
+    document.getElementById('_reqCancel')!.addEventListener('click', () => overlay.remove());
+    document.getElementById('_reqSave')!.addEventListener('click', () => saveModalData(fieldId, label, overlay, box, isChip, isRoutine, costPerItem));
 }
 
-async function saveTextField(fieldId: string, label: string, overlay: HTMLElement) {
+async function saveModalData(
+    fieldId: string, label: string, overlay: HTMLElement, box: HTMLElement,
+    isChip: boolean, isRoutine: boolean, costPerItem: number
+) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return;
 
-    const value = (document.getElementById('_reqInput') as HTMLTextAreaElement)?.value?.trim();
-    if (!value) return;
-
     const saveBtn = document.getElementById('_reqSave') as HTMLButtonElement;
     const errEl = document.getElementById('_reqError') as HTMLElement;
+    const showErr = (msg: string) => {
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = msg; }
+        if (saveBtn) { saveBtn.textContent = 'SAVE'; saveBtn.disabled = false; }
+    };
+
     if (saveBtn) { saveBtn.textContent = 'SAVING...'; saveBtn.disabled = true; }
+
+    let value: string;
+    let cost = 0;
+
+    if (isChip) {
+        const selected = Array.from(box.querySelectorAll<HTMLElement>('._selected'))
+            .map(el => el.getAttribute('data-value') || '').filter(Boolean);
+        if (selected.length < 3) { showErr('Select at least 3 items.'); return; }
+        value = selected.join(', ');
+        cost = selected.length * costPerItem;
+
+    } else if (isRoutine) {
+        const selectedChip = box.querySelector<HTMLElement>('._routineChip._selected');
+        if (!selectedChip) { showErr('Please select a protocol.'); return; }
+        const picked = selectedChip.getAttribute('data-value') || '';
+        cost = parseInt(selectedChip.getAttribute('data-cost') || '1000');
+        if (picked === 'Custom Order') {
+            const custom = (document.getElementById('_customRoutineInput') as HTMLInputElement)?.value?.trim();
+            if (!custom) { showErr('Please describe your custom routine.'); return; }
+            value = custom;
+        } else {
+            value = picked;
+        }
+
+    } else {
+        value = (document.getElementById('_reqInput') as HTMLTextAreaElement)?.value?.trim() || '';
+        if (!value) { showErr('Cannot be empty.'); return; }
+    }
 
     const res = await fetch('/api/profile-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberEmail: user.email, field: fieldId, value })
+        body: JSON.stringify({ memberEmail: user.email, field: fieldId, value, cost })
     });
     const data = await res.json();
 
-    if (data.success && data.profile) {
+    if (data.error === 'INSUFFICIENT_FUNDS') {
+        showErr(`Insufficient coins. You need ${cost} coins but have ${data.wallet || 0}.`);
+    } else if (data.success && data.profile) {
         overlay.remove();
         renderProfileSidebar(data.profile);
     } else {
-        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Save failed: ' + (data.error || 'Unknown error'); }
-        if (saveBtn) { saveBtn.textContent = 'SAVE'; saveBtn.disabled = false; }
+        showErr('Save failed: ' + (data.error || 'Unknown error'));
     }
 }
 
