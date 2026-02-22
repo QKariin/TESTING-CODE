@@ -380,6 +380,12 @@ async function saveTextField(fieldId: string, label: string, overlay: HTMLElemen
 export function renderProfileSidebar(u: any) {
     if (!u || typeof document === 'undefined') return;
 
+    // Register handlers immediately so ADD buttons always work
+    (window as any).__profileHandlers = {
+        uploadPhoto: handleProfileUpload,
+        openField: openTextFieldModal,
+    };
+
     // --- DYNAMIC RANK CALCULATION (matches Velo logic exactly) ---
     const report = getHierarchyReport(u);
     const { currentRank, nextRank, isMax, currentBenefits, nextBenefits, requirements } = report;
