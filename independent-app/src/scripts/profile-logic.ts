@@ -149,13 +149,17 @@ export function startTaskTimer(ms: number) {
             remaining = 0;
             const mainArea = document.getElementById('mainButtonsArea');
             const activeArea = document.getElementById('activeTaskContent');
+            const readyText = document.getElementById('readyText');
             const qmIdle = document.getElementById('qm_TaskIdle');
             const qmActive = document.getElementById('qm_TaskActive');
+            const mobTaskText = document.getElementById('mobTaskText');
 
-            if (mainArea) mainArea.style.display = 'block';
+            if (mainArea) mainArea.style.display = 'flex';
             if (activeArea) activeArea.classList.add('hidden');
+            if (readyText) readyText.innerText = '-';
             if (qmIdle) qmIdle.classList.remove('hidden');
             if (qmActive) qmActive.classList.add('hidden');
+            if (mobTaskText) mobTaskText.innerText = '-';
         }
         updateUI(remaining);
     }, 1000);
@@ -270,13 +274,17 @@ export async function skipTask() {
             if (taskInterval) clearInterval(taskInterval);
             const mainArea = document.getElementById('mainButtonsArea');
             const activeArea = document.getElementById('activeTaskContent');
+            const readyText = document.getElementById('readyText');
             const qmIdle = document.getElementById('qm_TaskIdle');
             const qmActive = document.getElementById('qm_TaskActive');
+            const mobTaskText = document.getElementById('mobTaskText');
 
-            if (mainArea) mainArea.style.display = 'block';
+            if (mainArea) mainArea.style.display = 'flex';
             if (activeArea) activeArea.classList.add('hidden');
+            if (readyText) readyText.innerText = '-';
             if (qmIdle) qmIdle.classList.remove('hidden');
             if (qmActive) qmActive.classList.add('hidden');
+            if (mobTaskText) mobTaskText.innerText = '-';
         } else {
             alert(data.error || "Failed to skip task.");
         }

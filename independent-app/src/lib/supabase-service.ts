@@ -97,12 +97,15 @@ export const DbService = {
         const newWallet = (profile.wallet || 0) + amount;
         if (newWallet < 0) throw new Error("Insufficient Capital");
 
-        const newSpent = amount < 0 ? (profile.total_coins_spent || 0) + Math.abs(amount) : (profile.total_coins_spent || 0);
+        // Safely handle total_coins_spent if column exists
+        const updates: any = { wallet: newWallet };
+        if ('total_coins_spent' in profile) {
+            updates.total_coins_spent = amount < 0
+                ? (profile.total_coins_spent || 0) + Math.abs(amount)
+                : (profile.total_coins_spent || 0);
+        }
 
-        return this.updateProfile(profile.id, {
-            wallet: newWallet,
-            total_coins_spent: newSpent
-        });
+        return this.updateProfile(profile.id, updates);
     },
 
     // --- FRAGMENTS ---
