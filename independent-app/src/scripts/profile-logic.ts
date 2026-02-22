@@ -142,7 +142,7 @@ export async function getRandomTask() {
 
         // Fetch all tasks from the new database table
         const { data: tasks, error } = await supabase
-            .from('TASKS DATABASE')
+            .from('"TASKS DATABASE"')
             .select('*');
 
         if (error) {
