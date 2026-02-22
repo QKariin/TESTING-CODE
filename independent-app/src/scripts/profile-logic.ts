@@ -212,11 +212,20 @@ export async function getRandomTask(isSilentInit = false) {
 
         // Show active task area and buttons
         if (mainArea) mainArea.style.display = 'none';
-        if (activeArea) activeArea.classList.remove('hidden');
-        if (uploadCont) uploadCont.classList.remove('hidden');
+        if (activeArea) {
+            activeArea.classList.remove('hidden');
+            activeArea.style.display = 'flex';
+        }
+        if (uploadCont) {
+            uploadCont.classList.remove('hidden');
+            uploadCont.style.display = 'flex';
+        }
 
         if (qmIdle) qmIdle.classList.add('hidden');
-        if (qmActive) qmActive.classList.remove('hidden');
+        if (qmActive) {
+            qmActive.classList.remove('hidden');
+            qmActive.style.display = 'block';
+        }
 
         // Update UI with the task text
         const taskMsg = data.task.TaskText || data.task.tasktext || 'Perform the assigned duty.';

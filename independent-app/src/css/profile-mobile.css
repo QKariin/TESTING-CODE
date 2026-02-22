@@ -434,4 +434,33 @@
         letter-spacing: 2px;
         text-transform: uppercase;
     }
+
+    /* Task Action Buttons */
+    .btn-upload-sm {
+        background: #c5a059 !important;
+        color: #000 !important;
+        border: none !important;
+        border-radius: 4px;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 10px 0;
+        width: 100%;
+        cursor: pointer;
+        text-transform: uppercase;
+        box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
+    }
+
+    .btn-skip-sm {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #888 !important;
+        border: 1px solid #444 !important;
+        border-radius: 4px;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.7rem;
+        padding: 10px 0;
+        width: 100%;
+        cursor: pointer;
+        text-transform: uppercase;
+    }
 }

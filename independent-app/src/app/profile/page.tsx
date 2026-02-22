@@ -115,6 +115,7 @@ export default function ProfilePage() {
                         renderProfileSidebar(profileData);
                         updateKneelingUI();
                         attachKneelListeners();
+                        switchTab('serve'); // Show dashboard by default
                         getRandomTask(true); // Restore active task if exists
                     }, 150);
                 } else {
@@ -132,6 +133,7 @@ export default function ProfilePage() {
                             renderProfileSidebar(byId);
                             updateKneelingUI();
                             attachKneelListeners();
+                            switchTab('serve'); // Show dashboard by default
                             getRandomTask(true); // Restore active task if exists
                         }, 150);
                     }
@@ -741,7 +743,7 @@ export default function ProfilePage() {
                                     </div>
                                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                                         <button id="mobBtnUpload" className="btn-upload-sm" style={{ flex: 1 }} onClick={() => document.getElementById('evidenceInputMob')?.click()}>UPLOAD</button>
-                                        <button className="btn-skip-sm" style={{ flex: 1 }} onClick={() => (window as any).mobileSkipTask()}>SKIP (-300)</button>
+                                        <button id="mobBtnSkip" className="btn-skip-sm" style={{ flex: 1 }} onClick={() => (window as any).mobileSkipTask()}>SKIP (-300)</button>
                                     </div>
                                 </div>
                             </div>
