@@ -5,8 +5,42 @@ import { getState, setState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
 
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
-let holdStarted = false; // guard against ghost touchend events
+let holdStarted = false;
 const REQUIRED_HOLD_TIME = 2000;
+
+// ─── ATTACH LISTENERS (called from page useEffect, NOT React props) ───────────
+export function attachKneelListeners() {
+    const desktopBtn = document.getElementById('heroKneelBtn');
+    const mobileBtn = document.getElementById('mobKneelBar');
+
+    [desktopBtn, mobileBtn].forEach(btn => {
+        if (!btn) return;
+        // Remove any previous listeners by cloning the node
+        // (safe: the button has no React-managed children that need reconciliation)
+        btn.addEventListener('mousedown', handleHoldStart, { passive: false });
+        btn.addEventListener('touchstart', handleHoldStart, { passive: false });
+        btn.addEventListener('mouseup', handleHoldEnd, { passive: false });
+        btn.addEventListener('mouseleave', handleHoldEnd, { passive: false });
+        btn.addEventListener('touchend', handleHoldEnd, { passive: false });
+        btn.addEventListener('touchcancel', cancelHold, { passive: false });
+    });
+}
+
+function cancelHold() {
+    holdStarted = false;
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    // Reset visuals
+    const fill = document.getElementById('heroKneelFill');
+    const txtMain = document.getElementById('heroKneelText');
+    if (fill) { fill.style.transition = 'width 0.3s ease'; fill.style.width = '0%'; }
+    if (txtMain) txtMain.innerText = 'HOLD TO KNEEL';
+    const mobFill = document.getElementById('mob_kneelFill');
+    const mobText = document.querySelector('.kneel-label') as HTMLElement | null;
+    const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement | null;
+    if (mobFill) { mobFill.style.transition = 'width 0.3s ease'; mobFill.style.width = '0%'; }
+    if (mobText) mobText.innerText = 'HOLD TO KNEEL';
+    if (mobBar) mobBar.style.borderColor = '#c5a059';
+}
 
 // ─── 1. HOLD START ────────────────────────────────────────────────────────────
 export function handleHoldStart(e: any) {

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 import { getState, setState, initProfileState } from '@/scripts/profile-state';
-import { handleHoldStart, handleHoldEnd, updateKneelingUI } from '@/scripts/kneeling';
+import { handleHoldStart, handleHoldEnd, updateKneelingUI, attachKneelListeners } from '@/scripts/kneeling';
 import { createClient } from '@/utils/supabase/client';
 import {
     claimKneelReward,
@@ -114,7 +114,8 @@ export default function ProfilePage() {
                     setTimeout(() => {
                         renderProfileSidebar(profileData);
                         updateKneelingUI();
-                    }, 100);
+                        attachKneelListeners();
+                    }, 150);
                 } else {
                     // Fallback: try by UUID
                     const { data: byId } = await supabase
@@ -129,7 +130,8 @@ export default function ProfilePage() {
                         setTimeout(() => {
                             renderProfileSidebar(byId);
                             updateKneelingUI();
-                        }, 100);
+                            attachKneelListeners();
+                        }, 150);
                     }
                 }
             } catch (err) {
@@ -332,7 +334,7 @@ export default function ProfilePage() {
                         <div style={{ position: 'relative', zIndex: 10, padding: 10, boxSizing: 'border-box' }}>
                             <p style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'Cinzel', fontSize: '0.8rem', letterSpacing: 2, margin: 0, textTransform: 'uppercase' }}>Welcome back,</p>
                             <h2 id="heroUserName" style={{ fontFamily: 'Orbitron', fontSize: '2rem', margin: '5px 0', color: 'white', letterSpacing: 2, fontWeight: 700 }}>{profile?.name || "LOYAL SUBJECT"}</h2>
-                            <button id="heroKneelBtn" className="mob-kneel-bar" style={{ height: 48, width: 220, cursor: 'pointer', borderRadius: 4, overflow: 'hidden', position: 'relative', background: 'rgba(0,0,0,0.5)', border: '1px solid #c5a059', margin: '20px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, outline: 'none', transition: '0.3s' }} onMouseDown={handleHoldStart} onMouseUp={() => handleHoldEnd()} onMouseLeave={() => handleHoldEnd()} onTouchStart={handleHoldStart} onTouchEnd={() => handleHoldEnd()}>
+                            <button id="heroKneelBtn" className="mob-kneel-bar" style={{ height: 48, width: 220, cursor: 'pointer', borderRadius: 4, overflow: 'hidden', position: 'relative', background: 'rgba(0,0,0,0.5)', border: '1px solid #c5a059', margin: '20px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, outline: 'none', transition: '0.3s' }}>
                                 <div id="heroKneelFill" className="mob-bar-fill" style={{ width: '0%', background: 'linear-gradient(90deg, #4b0000 0%, #000000 100%)', height: '100%', position: 'absolute', left: 0, top: 0, transition: 'width 0.3s ease', pointerEvents: 'none' }}></div>
                                 <div className="mob-bar-content" style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', pointerEvents: 'none' }}>
                                     <span id="heroKneelText" style={{ fontFamily: 'Orbitron', fontSize: '0.8rem', color: 'white', textShadow: '0 1px 3px black', letterSpacing: 2 }}>HOLD TO KNEEL</span>
@@ -669,7 +671,7 @@ export default function ProfilePage() {
                             </div>
 
                             <div className="halo-stack" style={{ padding: '0 20px', width: '100%', marginTop: '15px', marginBottom: '30px' }}>
-                                <div className="mob-kneel-bar mob-kneel-zone" onMouseDown={() => (window as any).handleHoldStart()} onMouseUp={() => (window as any).handleHoldEnd()} onTouchStart={() => (window as any).handleHoldStart()} onTouchEnd={() => (window as any).handleHoldEnd()}>
+                                <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone">
                                     <div id="mob_kneelFill" className="mob-bar-fill"></div>
                                     <div className="mob-bar-content">
                                         <span className="kneel-icon-sm">◈</span>
