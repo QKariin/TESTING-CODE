@@ -16,7 +16,11 @@ export function attachKneelListeners() {
     const mobileBtn = document.getElementById('mobKneelBar');
     [desktopBtn, mobileBtn].forEach(btn => {
         if (!btn) return;
-        // Mark with touch-action:none so browser never steals the gesture
+        // Guard: only attach once
+        if ((btn as any).__kneelAttached) return;
+        (btn as any).__kneelAttached = true;
+
+        // Prevent browser from stealing gesture for scroll/zoom
         btn.style.touchAction = 'none';
         btn.style.userSelect = 'none';
         (btn.style as any).webkitUserSelect = 'none';
@@ -24,33 +28,47 @@ export function attachKneelListeners() {
         btn.addEventListener('pointerdown', onDown, { passive: false });
         btn.addEventListener('pointerup', onUp, { passive: false });
         btn.addEventListener('pointerleave', onUp, { passive: false });
-        btn.addEventListener('pointercancel', onUp, { passive: false });
+        btn.addEventListener('pointercancel', onCancel, { passive: false });
+        console.log('[kneel] listeners attached to', btn.id);
     });
 }
 
-function onDown(e: Event) {
+function onDown(e: PointerEvent) {
     e.preventDefault();
     const { isLocked } = getState();
+    console.log('[kneel] pointerdown', { isLocked, isPointerDown, hasTimer: !!holdTimer });
     if (isLocked || isPointerDown || holdTimer) return;
+
+    // Capture pointer so further events go to this element even if finger moves off
+    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { }
 
     isPointerDown = true;
     setFill(true);  // Start animation
 
     holdTimer = setTimeout(() => {
+        console.log('[kneel] 2s elapsed → completing');
         holdTimer = null;
         isPointerDown = false;
         completeKneel();
     }, REQUIRED_HOLD_MS);
 }
 
-function onUp() {
+function onUp(e: Event) {
+    console.log('[kneel] pointerup/leave', { isPointerDown, hasTimer: !!holdTimer });
     if (!isPointerDown) return;
     isPointerDown = false;
     if (holdTimer) {
         clearTimeout(holdTimer);
         holdTimer = null;
-        setFill(false); // Reset — not held long enough
+        setFill(false); // Not held long enough
     }
+}
+
+function onCancel(e: Event) {
+    console.log('[kneel] pointercancel - resetting');
+    isPointerDown = false;
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    setFill(false);
 }
 
 // ─── Fill bar animation helpers ───────────────────────────────────────────────
