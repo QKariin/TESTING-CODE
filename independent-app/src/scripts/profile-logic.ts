@@ -126,10 +126,58 @@ export async function getRandomTask() {
     if (!pid) return;
 
     try {
-        console.log("Requesting task for:", pid);
-        // Implementation for task generation...
+        console.log("Requesting task from TASKS DATABASE...");
+
+        // Hide request button and show loading text
+        const mainArea = document.getElementById('mainButtonsArea');
+        const activeArea = document.getElementById('activeTaskContent');
+        const readyText = document.getElementById('readyText');
+
+        if (mainArea) mainArea.style.display = 'none';
+        if (activeArea) activeArea.classList.remove('hidden');
+        if (readyText) readyText.innerText = 'Connecting to the Void...';
+
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+
+        // Fetch all tasks from the new database table
+        const { data: tasks, error } = await supabase
+            .from('TASKS DATABASE')
+            .select('*');
+
+        if (error) {
+            console.error("Supabase Error fetching tasks:", error);
+            if (readyText) readyText.innerText = 'Failed to retrieve task. See console.';
+            return;
+        }
+
+        if (!tasks || tasks.length === 0) {
+            if (readyText) readyText.innerText = 'No tasks found in database.';
+            return;
+        }
+
+        // Pick a random task
+        const randomIndex = Math.floor(Math.random() * tasks.length);
+        const randomTask = tasks[randomIndex];
+
+        // Update UI with the task text
+        // Note: TaskText is from the CSV header
+        if (readyText) {
+            readyText.innerText = randomTask.TaskText || randomTask.tasktext || 'Perform the assigned duty.';
+        }
+
+        // Setup timer UI to look active (mocking a 1h countdown for now to mimic old UI state)
+        const hrs = document.getElementById('timerH');
+        const mins = document.getElementById('timerM');
+        const secs = document.getElementById('timerS');
+        if (hrs) hrs.innerText = '01';
+        if (mins) mins.innerText = '00';
+        if (secs) secs.innerText = '00';
+
     } catch (err) {
         console.error("Error getting task", err);
+        const readyText = document.getElementById('readyText');
+        if (readyText) readyText.innerText = 'An error occurred fetching the task.';
     }
 }
 
