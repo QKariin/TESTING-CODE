@@ -98,15 +98,33 @@ export default function ProfilePage() {
                     return;
                 }
 
-                const memberId = user.email || user.id;
-                const res = await fetch(`/api/dashboard-data?memberId=${memberId}`);
-                const data = await res.json();
+                // Query Supabase directly — no API needed
+                // RLS policy allows: auth.uid()=id OR email=member_id
+                const { data: profileData, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('member_id', user.email)
+                    .maybeSingle();
 
-                if (data.profile) {
-                    setProfile(data.profile);
-                    initProfileState(data.profile);
-                    // Defer sidebar render slightly to ensure DOM is ready
-                    setTimeout(() => renderProfileSidebar(data.profile), 100);
+                if (error) console.error('Profile fetch error:', error);
+
+                if (profileData) {
+                    setProfile(profileData);
+                    initProfileState(profileData);
+                    setTimeout(() => renderProfileSidebar(profileData), 100);
+                } else {
+                    // Fallback: try by UUID
+                    const { data: byId } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', user.id)
+                        .maybeSingle();
+
+                    if (byId) {
+                        setProfile(byId);
+                        initProfileState(byId);
+                        setTimeout(() => renderProfileSidebar(byId), 100);
+                    }
                 }
             } catch (err) {
                 console.error("Failed to load profile", err);
