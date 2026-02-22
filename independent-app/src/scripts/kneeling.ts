@@ -26,6 +26,8 @@ export function attachKneelListeners() {
         btn.addEventListener('touchstart', handleHoldStart as EventListener, { passive: false });
         btn.addEventListener('mouseup', handleHoldEnd as EventListener, { passive: false });
         btn.addEventListener('touchend', handleHoldEnd as EventListener, { passive: false });
+        btn.addEventListener('mouseleave', handleHoldEnd as EventListener, { passive: false });
+        btn.addEventListener('touchcancel', handleHoldEnd as EventListener, { passive: false });
         console.log('[kneel] attached to', btn.id || btn.className);
     });
 }
@@ -125,53 +127,18 @@ async function completeKneelAction() {
 
 // ─── 4. REWARD SCREEN ─────────────────────────────────────────────────────────
 function showRewardScreen() {
-    document.getElementById('_kneelReward')?.remove();
-    const overlay = document.createElement('div');
-    overlay.id = '_kneelReward';
-    overlay.style.cssText = `
-        position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;
-        display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;
-        font-family:'Cinzel',serif;
-    `;
-    overlay.innerHTML = `
-        <div style="font-family:'Orbitron',sans-serif;color:#c5a059;font-size:1.4rem;letter-spacing:4px;text-align:center;">◈ SUBMISSION ACCEPTED ◈</div>
-        <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;letter-spacing:2px;">Choose your reward</div>
-        <div style="display:flex;gap:16px;margin-top:10px;">
-            <button id="_rewardMerit" style="padding:14px 28px;background:rgba(197,160,89,0.1);border:1px solid #c5a059;color:#c5a059;font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:2px;cursor:pointer;border-radius:4px;">+50 MERIT</button>
-            <button id="_rewardCoins" style="padding:14px 28px;background:rgba(0,150,255,0.08);border:1px solid #4af;color:#4af;font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:2px;cursor:pointer;border-radius:4px;">+10 COINS</button>
-        </div>
-        <div style="color:rgba(255,255,255,0.2);font-size:0.6rem;margin-top:6px;">Next kneel available in 60 minutes</div>
-    `;
-    document.body.appendChild(overlay);
+    // Show desktop hero card overlay
+    const deskOverlay = document.getElementById('kneelRewardOverlay');
+    if (deskOverlay) {
+        deskOverlay.style.display = 'flex';
+        deskOverlay.classList.remove('hidden');
+    }
 
-    document.getElementById('_rewardMerit')!.addEventListener('click', () => {
-        overlay.remove();
-        claimReward('merit');
-    });
-    document.getElementById('_rewardCoins')!.addEventListener('click', () => {
-        overlay.remove();
-        claimReward('coins');
-    });
-}
-
-async function claimReward(type: 'merit' | 'coins') {
-    try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.email) return;
-        const field = type === 'merit' ? 'score' : 'wallet';
-        const delta = type === 'merit' ? 50 : 10;
-        const { data: p } = await supabase.from('profiles').select('score,wallet').eq('member_id', user.email).maybeSingle();
-        if (p) {
-            const current = type === 'merit' ? (p.score || 0) : (p.wallet || 0);
-            await fetch('/api/profile-update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberEmail: user.email, field, value: current + delta, cost: 0 }),
-            });
-        }
-    } catch (err) {
-        console.warn('[kneel-reward] failed:', err);
+    // Show mobile overlay
+    const mobOverlay = document.getElementById('mobKneelReward');
+    if (mobOverlay) {
+        mobOverlay.style.display = 'flex';
+        mobOverlay.classList.remove('hidden');
     }
 }
 
