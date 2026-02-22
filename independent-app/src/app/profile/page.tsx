@@ -96,38 +96,54 @@ export default function ProfilePage() {
                     return;
                 }
 
-                const { data: profileData, error } = await supabase
+                // 1. Fetch Identity (Profiles Table)
+                const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('member_id', user.email)
                     .maybeSingle();
 
-                if (error) console.error('Profile fetch error:', error);
+                if (profileError) console.error('Profile fetch error:', profileError);
 
-                // Use profile data or fallback
-                const finalProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
+                // Fallback: try by UUID if email failed
+                let finalProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
                 if (finalProfile) {
-                    setProfile(finalProfile);
-                    initProfileState(finalProfile);
+                    // 2. Fetch Stats (Tasks Table) - THIS IS THE MISSING LINK
+                    // We look for a record where MemberID matches the user's email
+                    const { data: taskData, error: taskError } = await supabase
+                        .from('tasks')
+                        .select('*')
+                        .eq('MemberID', finalProfile.member_id) // Note: Case sensitive column name in your screenshot
+                        .maybeSingle();
+
+                    if (taskError) console.error('Tasks fetch error:', taskError);
+
+                    // 3. Merge Data
+                    // We combine them so 'kneelCount' and 'name' live in the same object
+                    const mergedData = { 
+                        ...finalProfile, 
+                        ...(taskData || {}) // If taskData is null, just use empty object
+                    };
+
+                    // 4. Initialize State & UI
+                    setProfile(mergedData);
+                    initProfileState(mergedData);
                     
-                    // Initialize UI logic that doesn't depend on DOM elements yet
                     setTimeout(() => {
-                        renderProfileSidebar(finalProfile);
+                        renderProfileSidebar(mergedData);
+                        updateKneelingUI();
+                        attachKneelListeners();
                         switchTab('serve'); 
                         getRandomTask(true);
-                    }, 100);
+                    }, 150);
                 }
             } catch (err) {
                 console.error("Failed to load profile", err);
             } finally {
-                // 👇 This triggers the re-render that shows the buttons
-                setLoading(false); 
+                setLoading(false);
             }
         }
-
-        loadProfile();
-    }, []);
 
     // ─── 2. ATTACH KNEEL LISTENERS (THE FIX) ─────────────────────────────
     // This runs ONLY after 'loading' becomes false and the buttons exist
