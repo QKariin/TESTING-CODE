@@ -1,11 +1,15 @@
-/** v1.0.1 - Force build Google OAuth integration */
+/** v1.0.2 - Fixed Auth Client Import */
 "use client";
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+// 👇 CHANGE THIS LINE: Use the client that supports Cookies/SSR
+import { createClient } from '@/utils/supabase/client'; 
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+    // 👇 Initialize the client inside the component
+    const supabase = createClient(); 
+    
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -25,7 +29,12 @@ export default function LoginPage() {
         if (error) {
             setError(error.message);
         } else {
-            router.push('/dashboard');
+            // Check routing logic
+            if (email.toLowerCase() === 'ceo@qkarin.com') {
+                router.push('/dashboard');
+            } else {
+                router.push('/profile');
+            }
         }
         setLoading(false);
     };
@@ -33,20 +42,30 @@ export default function LoginPage() {
     const handleGoogleLogin = async () => {
         setLoading(true);
         setError(null);
+        
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
+                // Ensure this matches your callback route
                 redirectTo: `${window.location.origin}/auth/callback`,
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                },
             }
         });
+        
         if (error) {
             setError(error.message);
             setLoading(false);
         }
     };
 
+    // ... (Keep the rest of your JSX/CSS exactly the same) ...
+    // Just make sure to COPY existing JSX below this line
     return (
         <div className="login-container">
+            {/* ... Paste your existing JSX/CSS here ... */}
             {/* Cinematic Procedural Background */}
             <div className="vignette"></div>
             <div className="particle-layer"></div>
