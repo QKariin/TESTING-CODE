@@ -27,7 +27,7 @@ export function attachKneelListeners() {
 
         btn.addEventListener('pointerdown', onDown, { passive: false });
         btn.addEventListener('pointerup', onUp, { passive: false });
-        btn.addEventListener('pointerleave', onUp, { passive: false });
+        // NOTE: NOT adding pointerleave — tiny finger shifts on mobile would cancel the hold
         btn.addEventListener('pointercancel', onCancel, { passive: false });
         console.log('[kneel] listeners attached to', btn.id);
     });
