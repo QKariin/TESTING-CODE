@@ -43,6 +43,13 @@ export function resetState() {
 }
 
 export function initProfileState(data: any) {
+    // Parse lastKneelDate from DB so lock/cooldown is restored on page load
+    let lastWorshipTime = 0;
+    if (data.lastKneelDate) {
+        const parsed = new Date(data.lastKneelDate).getTime();
+        if (!isNaN(parsed)) lastWorshipTime = parsed;
+    }
+
     setState({
         memberId: data.member_id,
         id: data.id,
@@ -51,6 +58,9 @@ export function initProfileState(data: any) {
         userName: data.name || "SLAVE",
         rank: data.hierarchy || "Hall Boy",
         revealMap: data.parameters?.reveal_map || [],
-        libraryProgress: data.parameters?.library_progress || 1
+        libraryProgress: data.parameters?.library_progress || 1,
+        lastWorshipTime,
+        cooldownMinutes: 60, // 1 hour cooldown (matches old Velo COOLDOWN_MINUTES)
     });
 }
+

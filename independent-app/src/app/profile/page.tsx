@@ -111,7 +111,10 @@ export default function ProfilePage() {
                 if (profileData) {
                     setProfile(profileData);
                     initProfileState(profileData);
-                    setTimeout(() => renderProfileSidebar(profileData), 100);
+                    setTimeout(() => {
+                        renderProfileSidebar(profileData);
+                        updateKneelingUI();
+                    }, 100);
                 } else {
                     // Fallback: try by UUID
                     const { data: byId } = await supabase
@@ -123,7 +126,10 @@ export default function ProfilePage() {
                     if (byId) {
                         setProfile(byId);
                         initProfileState(byId);
-                        setTimeout(() => renderProfileSidebar(byId), 100);
+                        setTimeout(() => {
+                            renderProfileSidebar(byId);
+                            updateKneelingUI();
+                        }, 100);
                     }
                 }
             } catch (err) {

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         }
 
         // Whitelist of allowed fields
-        const ALLOWED_FIELDS = ['avatar_url', 'limits', 'kinks', 'routine', 'name'];
+        const ALLOWED_FIELDS = ['avatar_url', 'limits', 'kinks', 'routine', 'name', 'lastKneelDate'];
         if (!ALLOWED_FIELDS.includes(field)) {
             return NextResponse.json({ error: 'Field not allowed' }, { status: 403 });
         }
