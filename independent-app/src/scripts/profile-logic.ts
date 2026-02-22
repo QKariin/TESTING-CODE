@@ -9,35 +9,68 @@ export async function handleLogout() {
 }
 
 export async function claimKneelReward(type: 'coins' | 'points') {
-    const { id, memberId } = getState();
+    // 1. Get Current State
+    const currentState = getState();
+    const { id, memberId, wallet, score } = currentState;
     const pid = id || memberId;
+    
     if (!pid) return;
 
+    // 2. Define Correct Amounts
+    const amount = type === 'coins' ? 10 : 50;
+
+    // 3. OPTIMISTIC UPDATE (Update UI Immediately)
+    console.log(`[REWARD] Claiming ${amount} ${type}...`);
+
+    // Update Local State
+    if (type === 'coins') {
+        setState({ wallet: (wallet || 0) + amount });
+        triggerCoinShower();
+    } else {
+        setState({ score: (score || 0) + amount });
+    }
+
+    // Hide Overlays Instantly (Handle both class and inline styles)
+    const deskOverlay = document.getElementById('kneelRewardOverlay');
+    if (deskOverlay) {
+        deskOverlay.classList.add('hidden');
+        deskOverlay.style.display = 'none';
+    }
+
+    const mobOverlay = document.getElementById('mobKneelReward');
+    if (mobOverlay) {
+        mobOverlay.classList.add('hidden');
+        mobOverlay.style.display = 'none';
+    }
+
+    // Play Sound
+    const snd = document.getElementById('coinSound') as HTMLAudioElement;
+    if (snd) {
+        snd.currentTime = 0; // Reset sound so it plays fresh
+        snd.play().catch(e => console.log("Audio blocked", e));
+    }
+
+    // Re-render Sidebar Numbers
+    renderProfileSidebar(getState());
+
+    // 4. BACKGROUND SAVE (Don't wait for this)
     try {
-        const amount = type === 'coins' ? 100 : 500;
-        const res = await fetch('/api/profile-action', {
+        fetch('/api/profile-action', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 type: 'CLAIM_KNEEL_REWARD',
                 memberId: pid,
                 payload: { type, amount }
             })
-        });
-        const data = await res.json();
-        if (data.success) {
-            const currentState = getState();
-            if (type === 'coins') setState({ wallet: currentState.wallet + amount });
-            else setState({ score: currentState.score + amount });
-
-            document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
-            document.getElementById('mobKneelReward')?.classList.add('hidden');
-            triggerCoinShower();
-
-            // Re-render sidebar if desktop
-            renderProfileSidebar(getState());
-        }
+        }).then(res => res.json())
+          .then(data => {
+              if (!data.success) console.warn('[REWARD] Server sync warning:', data.error);
+          });
     } catch (err) {
-        console.error("Error claiming reward", err);
+        console.error("[REWARD] Background save failed", err);
+        // Note: We don't rollback state here to keep the game feeling smooth.
+        // The next page load will sync with the true DB value anyway.
     }
 }
 
