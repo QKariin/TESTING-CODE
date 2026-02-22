@@ -44,7 +44,11 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 export function switchTab(tab: string) {
     const views = ['viewServingTopDesktop', 'historySection', 'viewNews', 'viewBuy'];
     views.forEach(v => {
-        document.getElementById(v)?.classList.add('hidden');
+        const el = document.getElementById(v);
+        if (el) {
+            el.classList.add('hidden');
+            el.style.display = 'none'; // Force hide to override legacy CSS
+        }
     });
 
     const target = {
@@ -56,7 +60,11 @@ export function switchTab(tab: string) {
 
     if (target) {
         const el = document.getElementById(target);
-        if (el) el.classList.remove('hidden');
+        if (el) {
+            el.classList.remove('hidden');
+            // Desktop serve view is a grid, others are flex columns
+            el.style.display = target === 'viewServingTopDesktop' ? 'grid' : 'flex';
+        }
     }
 
     const btns = document.querySelectorAll('.nav-btn');
