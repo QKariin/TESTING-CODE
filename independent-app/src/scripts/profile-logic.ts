@@ -280,7 +280,7 @@ export function selectRoutineItem(el: HTMLElement, type: string) {
 async function _doProfileUpload() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user?.email) return;
 
     const input = document.createElement('input');
     input.type = 'file';
@@ -289,38 +289,41 @@ async function _doProfileUpload() {
         const file = input.files?.[0];
         if (!file) return;
 
-        const ext = file.name.split('.').pop();
-        const fileName = `avatars/${user.id}.${ext}`;
-
-        const { error: uploadError } = await supabase.storage
-            .from('avatars')
-            .upload(fileName, file, { upsert: true });
-
-        if (uploadError) {
-            console.error('Upload failed:', uploadError);
-            return;
-        }
-
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-        const publicUrl = urlData.publicUrl;
-
-        await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('member_id', user.email);
-
-        // Live update the photo on page
+        // Show uploading indicator on the avatar
         const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
-        if (elProfilePic) elProfilePic.src = publicUrl;
-        const elMobPic = document.getElementById('hudUserPic') as HTMLImageElement;
-        if (elMobPic) elMobPic.src = publicUrl;
+        if (elProfilePic) elProfilePic.style.opacity = '0.5';
 
-        // Re-fetch and re-render
-        const { data: updated } = await supabase.from('profiles').select('*').eq('member_id', user.email).maybeSingle();
-        if (updated) renderProfileSidebar(updated);
+        // Read file as base64 data URL (no storage bucket needed)
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const dataUrl = e.target?.result as string;
+
+            const res = await fetch('/api/profile-update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberEmail: user.email, field: 'avatar_url', value: dataUrl })
+            });
+            const data = await res.json();
+
+            if (elProfilePic) elProfilePic.style.opacity = '1';
+
+            if (data.success && data.profile) {
+                // Live update photos
+                if (elProfilePic) elProfilePic.src = dataUrl;
+                const elMobPic = document.getElementById('hudUserPic') as HTMLImageElement;
+                if (elMobPic) elMobPic.src = dataUrl;
+                renderProfileSidebar(data.profile);
+            } else {
+                console.error('Photo save failed:', data.error);
+                alert('Photo upload failed: ' + (data.error || 'Unknown error'));
+            }
+        };
+        reader.readAsDataURL(file);
     };
     input.click();
 }
 
 export function openTextFieldModal(fieldId: string, label: string) {
-    // Remove existing modal if any
     document.getElementById('_reqModal')?.remove();
 
     const overlay = document.createElement('div');
@@ -330,8 +333,10 @@ export function openTextFieldModal(fieldId: string, label: string) {
     const box = document.createElement('div');
     box.style.cssText = `background:#0a0a0f;border:1px solid #c5a059;border-radius:12px;padding:28px;width:90%;max-width:440px;font-family:'Orbitron';`;
     box.innerHTML = `
-        <div style="color:#c5a059;font-size:0.7rem;letter-spacing:2px;margin-bottom:12px;">${label.toUpperCase()}</div>
+        <div style="color:#c5a059;font-size:0.7rem;letter-spacing:2px;margin-bottom:6px;">${label.toUpperCase()}</div>
+        <div style="color:rgba(255,255,255,0.4);font-size:0.55rem;margin-bottom:12px;">This will be stored in your profile and used to determine your rank.</div>
         <textarea id="_reqInput" placeholder="Enter your ${label.toLowerCase()}..." style="width:100%;min-height:100px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;padding:10px;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;resize:vertical;"></textarea>
+        <div id="_reqError" style="color:#ff4444;font-size:0.55rem;margin-top:6px;display:none;"></div>
         <div style="display:flex;gap:10px;margin-top:14px;">
             <button id="_reqSave" style="flex:1;padding:10px;background:#c5a059;color:#000;border:none;border-radius:6px;font-family:'Orbitron';font-weight:bold;cursor:pointer;letter-spacing:1px;">SAVE</button>
             <button id="_reqCancel" style="flex:1;padding:10px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:6px;font-family:'Orbitron';cursor:pointer;">CANCEL</button>
@@ -347,23 +352,29 @@ export function openTextFieldModal(fieldId: string, label: string) {
 async function saveTextField(fieldId: string, label: string, overlay: HTMLElement) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user?.email) return;
 
     const value = (document.getElementById('_reqInput') as HTMLTextAreaElement)?.value?.trim();
     if (!value) return;
 
-    const { error } = await supabase
-        .from('profiles')
-        .update({ [fieldId]: value })
-        .eq('member_id', user.email);
+    const saveBtn = document.getElementById('_reqSave') as HTMLButtonElement;
+    const errEl = document.getElementById('_reqError') as HTMLElement;
+    if (saveBtn) { saveBtn.textContent = 'SAVING...'; saveBtn.disabled = true; }
 
-    if (error) { console.error(`Failed to save ${label}:`, error); return; }
+    const res = await fetch('/api/profile-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberEmail: user.email, field: fieldId, value })
+    });
+    const data = await res.json();
 
-    overlay.remove();
-
-    // Re-fetch and re-render
-    const { data: updated } = await supabase.from('profiles').select('*').eq('member_id', user.email).maybeSingle();
-    if (updated) renderProfileSidebar(updated);
+    if (data.success && data.profile) {
+        overlay.remove();
+        renderProfileSidebar(data.profile);
+    } else {
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Save failed: ' + (data.error || 'Unknown error'); }
+        if (saveBtn) { saveBtn.textContent = 'SAVE'; saveBtn.disabled = false; }
+    }
 }
 
 export function renderProfileSidebar(u: any) {
