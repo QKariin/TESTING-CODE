@@ -1,7 +1,7 @@
 // src/app/api/profile-update/route.ts
-// Server-side profile update — uses getSupabaseAdmin() to bypass RLS
+// Server-side profile update — uses supabaseAdmin to bypass RLS
 import { NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
         // If there's a coin cost, check and deduct wallet first
         if (cost && cost > 0) {
-            const { data: profile } = await getSupabaseAdmin()
+            const { data: profile } = await supabaseAdmin
                 .from('profiles')
                 .select('wallet')
                 .eq('member_id', memberEmail)
@@ -34,13 +34,13 @@ export async function POST(req: Request) {
             }
 
             // Deduct wallet
-            await getSupabaseAdmin()
+            await supabaseAdmin
                 .from('profiles')
                 .update({ wallet: (profile.wallet || 0) - cost })
                 .eq('member_id', memberEmail);
         }
 
-        const { data, error } = await getSupabaseAdmin()
+        const { data, error } = await supabaseAdmin
             .from('profiles')
             .update({ [field]: value })
             .eq('member_id', memberEmail)
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ success: true, profile: data });
-    } catch (err) {
+    } catch (err: any) {
         console.error('[profile-update] unexpected error:', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }

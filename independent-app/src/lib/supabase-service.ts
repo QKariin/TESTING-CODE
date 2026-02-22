@@ -1,12 +1,12 @@
 // src/lib/supabase-service.ts
-import { getSupabaseAdmin as supabase } from './supabase';
+import { supabaseAdmin as supabase } from './supabase';
 
 export const DbService = {
     // --- PROFILES ---
     async getProfile(memberId: string) {
         // Try by member_id (email) first — use .eq() not .or() to avoid
         // parser issues with email special chars (@ and .)
-        const { data: byEmail } = await supabase()
+        const { data: byEmail } = await supabase
             .from('profiles')
             .select('*')
             .eq('member_id', memberId)
@@ -15,7 +15,7 @@ export const DbService = {
         if (byEmail) return byEmail;
 
         // Try by UUID id (for admin lookups)
-        const { data: byId } = await supabase()
+        const { data: byId } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', memberId)
@@ -24,7 +24,7 @@ export const DbService = {
         if (byId) return byId;
 
         // Fallback: Check 'tasks' table for legacy data — return REAL values
-        const { data: taskData } = await supabase()
+        const { data: taskData } = await supabase
             .from('tasks')
             .select('*')
             .ilike('MemberID', memberId)
@@ -51,7 +51,7 @@ export const DbService = {
     },
 
     async updateProfile(id: string, updates: any) {
-        const { data, error } = await supabase()
+        const { data, error } = await supabase
             .from('profiles')
             .update(updates)
             .eq('id', id)
@@ -62,7 +62,7 @@ export const DbService = {
     },
 
     async getAllProfiles() {
-        const { data, error } = await supabase()
+        const { data, error } = await supabase
             .from('profiles')
             .select('*')
             .order('last_active', { ascending: false });
@@ -144,7 +144,7 @@ export const DbService = {
         const profile = await this.getProfile(memberId);
         const mid = profile?.member_id || memberId;
 
-        const { data, error } = await supabase()
+        const { data, error } = await supabase
             .from('messages')
             .insert({
                 member_id: mid,
@@ -160,7 +160,7 @@ export const DbService = {
     },
 
     async getMessages(memberId: string, limit = 50) {
-        const { data, error } = await supabase()
+        const { data, error } = await supabase
             .from('messages')
             .select('*')
             .eq('member_id', memberId)
@@ -172,7 +172,7 @@ export const DbService = {
 
     // --- TASKS ---
     async getReviewQueue() {
-        const { data, error } = await supabase()
+        const { data, error } = await supabase
             .from('tasks')
             .select('*, profiles(name, avatar_url)')
             .eq('status', 'pending');
@@ -181,7 +181,7 @@ export const DbService = {
     },
 
     async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
-        const { error: taskError } = await supabase()
+        const { error: taskError } = await supabase
             .from('tasks')
             .update({ status: 'approve', reviewer_comment: comment, sticker_url: sticker })
             .eq('id', taskId);
@@ -201,9 +201,35 @@ export const DbService = {
         await this.updateProfile(profile.id, updates);
     },
 
+    async assignTask(memberId: string, task: any) {
+        const profile = await this.getProfile(memberId);
+        if (!profile || !profile.id) throw new Error("Profile not linked");
+
+        const updates = {
+            parameters: {
+                ...(profile.parameters || {}),
+                active_task: {
+                    ...task,
+                    assigned_at: new Date().toISOString()
+                }
+            }
+        };
+        return this.updateProfile(profile.id, updates);
+    },
+
+    async clearTask(memberId: string) {
+        const profile = await this.getProfile(memberId);
+        if (!profile || !profile.id) throw new Error("Profile not linked");
+
+        const params = { ...(profile.parameters || {}) };
+        delete params.active_task;
+
+        return this.updateProfile(profile.id, { parameters: params });
+    },
+
     // --- TRIBUTES ---
     async getRecentTributes(limit = 10) {
-        const { data, error } = await supabase()
+        const { data, error } = await supabase
             .from('tributes')
             .select('*')
             .order('created_at', { ascending: false })

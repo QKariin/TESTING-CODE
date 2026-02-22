@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getSupabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { CONFIG } from '@/scripts/config';
 
@@ -14,7 +14,6 @@ export default function InitiatePage() {
 
     useEffect(() => {
         const checkUser = async () => {
-            const supabase = getSupabase();
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 router.push('/login');
@@ -23,10 +22,10 @@ export default function InitiatePage() {
 
                 // Check if profile already exists
                 const { data: profile } = await supabase
-                    .from('Tasks') // Check if your table is named 'Tasks'
+                    .from('profiles')
                     .select('*')
-                    .eq('memberId', user.email)
-                    .single();
+                    .eq('member_id', user.email)
+                    .maybeSingle();
 
                 if (profile) {
                     router.push('/profile');
@@ -51,18 +50,16 @@ export default function InitiatePage() {
         if (!userEmail) return;
 
         // Create New Profile in Supabase
-        const supabase = getSupabase();
         const { error: insertError } = await supabase
-            .from('Tasks')
+            .from('profiles')
             .insert([
                 {
-                    memberId: userEmail,
-                    title_fld: 'New Initiate',
-                    hierarchy: 'HallBoy',
+                    member_id: userEmail,
+                    name: userEmail.split('@')[0],
+                    rank: 'HallBoy',
                     wallet: 500,
                     score: 0,
-                    devotion: 100,
-                    lastWorship: new Date().toISOString()
+                    joined: new Date().toISOString()
                 }
             ]);
 
@@ -130,7 +127,7 @@ export default function InitiatePage() {
                 .gate-card {
                     background: rgba(10, 0, 0, 0.7);
                     border: 1px solid rgba(255, 0, 0, 0.3);
-                    padding: 60px 50px;
+                    padding: 60px 40px;
                     border-radius: 2px;
                     box-shadow: 
                         0 0 100px rgba(0,0,0,1),

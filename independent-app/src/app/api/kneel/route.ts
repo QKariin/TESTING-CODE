@@ -1,7 +1,7 @@
 // src/app/api/kneel/route.ts
 // Handles kneeling submission - updates tasks table (lastWorship, kneelCount, "today kneeling")
 import { NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
 
         // Fetch current record from tasks table (MemberID = email, case-insensitive)
-        const { data: task } = await getSupabaseAdmin()
+        const { data: task } = await supabaseAdmin
             .from('tasks')
             .select('lastWorship, kneelCount, "today kneeling"')
             .ilike('"MemberID"', memberEmail)
@@ -32,7 +32,6 @@ export async function POST(req: Request) {
         }
 
         // Calculate today kneeling (reset if different local day using UTC midnight)
-        // We use UTC date for simplicity; client sends timezone offset if needed
         const todayStr = now.toISOString().split('T')[0]; // e.g. "2026-02-22"
         const lastWorshipStr = task?.lastWorship
             ? new Date(task.lastWorship).toISOString().split('T')[0]
@@ -44,7 +43,7 @@ export async function POST(req: Request) {
         const newKneelCount = parseInt(task?.kneelCount || '0', 10) + 1;
 
         // Update tasks table
-        const { error } = await getSupabaseAdmin()
+        const { error } = await supabaseAdmin
             .from('tasks')
             .update({
                 lastWorship: now.toISOString(),
@@ -63,7 +62,7 @@ export async function POST(req: Request) {
             kneelCount: newKneelCount,
             todayKneeling: newTodayKneeling,
         });
-    } catch (err) {
+    } catch (err: any) {
         console.error('[kneel] unexpected error:', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }

@@ -5,7 +5,7 @@
 // so without the guard the second call overwrites holdTimer and touchend clears it instantly.
 
 import { getState, setState } from './profile-state';
-import { getSupabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
 const REQUIRED_HOLD_TIME = 2000;
@@ -134,9 +134,7 @@ async function completeKneelAction() {
     const snd = document.getElementById('msgSound') as HTMLAudioElement | null;
     if (snd) snd.play().catch(() => null);
 
-    // Save to DB
     try {
-        const supabase = getSupabase();
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email) {
             await fetch('/api/kneel', {

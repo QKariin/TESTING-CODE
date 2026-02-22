@@ -1,7 +1,20 @@
+
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase Admin (Service Role)
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    }
+);
 
 // Force dynamic (serverless function)
 export const dynamic = 'force-dynamic';
@@ -38,7 +51,7 @@ export async function POST(req: Request) {
                 console.log(`📜 Initializing Account for: ${userEmail}`);
 
                 // Create the profile from scratch
-                await getSupabaseAdmin()
+                await supabaseAdmin
                     .from('profiles')
                     .insert({
                         id: userId,
@@ -59,7 +72,7 @@ export async function POST(req: Request) {
                 console.log(`💰 Processing Coins: ${coins} for ${userEmail || userId}`);
 
                 // Find Profile
-                let query = getSupabaseAdmin().from('profiles').select('*');
+                let query = supabaseAdmin.from('profiles').select('*');
                 if (userId) {
                     query = query.eq('member_id', userId); // OR 'id' if you used UUID
                 } else if (userEmail) {
@@ -73,7 +86,7 @@ export async function POST(req: Request) {
                     const currentWallet = profiles.wallet || 0;
                     const newBalance = currentWallet + coins;
 
-                    await getSupabaseAdmin()
+                    await supabaseAdmin
                         .from('profiles')
                         .update({ wallet: newBalance })
                         .eq('id', profiles.id);
@@ -98,7 +111,7 @@ export async function POST(req: Request) {
                 // we assume member_id might match email OR we search parameters->email if we stored it?
                 // The schema says member_id TEXT UNIQUE.
 
-                const { data: profile } = await getSupabaseAdmin()
+                const { data: profile } = await supabaseAdmin
                     .from('profiles')
                     .select('*')
                     .eq('member_id', subEmail)
@@ -119,7 +132,7 @@ export async function POST(req: Request) {
                         params.roles.push("subscriber_55");
                     }
 
-                    await getSupabaseAdmin()
+                    await supabaseAdmin
                         .from('profiles')
                         .update({ parameters: params })
                         .eq('id', profile.id);
@@ -129,7 +142,7 @@ export async function POST(req: Request) {
                     // User does not exist in Profiles?
                     // We should probably create a "Shadow" profile or just log.
                     // Velo code inserted into 'Tasks'. We can create a profile.
-                    await getSupabaseAdmin().from('profiles').insert({
+                    await supabaseAdmin.from('profiles').insert({
                         member_id: subEmail,
                         name: "New Subscriber",
                         wallet: 0,

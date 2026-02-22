@@ -1,11 +1,9 @@
 import { getState, setState } from './profile-state';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '../utils/supabase/client';
 import { getHierarchyReport } from './hierarchy-rules';
 
-let taskTimerInterval: any = null;
-
 export async function handleLogout() {
-    const supabase = getSupabase();
+    const supabase = createClient();
     await supabase.auth.signOut();
     window.location.href = '/login';
 }
@@ -122,169 +120,127 @@ export function closeLobby() {
     document.getElementById('lobbyOverlay')?.classList.add('hidden');
 }
 
-export async function getRandomTask() {
+let taskInterval: any = null;
+
+export function startTaskTimer(ms: number) {
+    if (taskInterval) clearInterval(taskInterval);
+
+    const updateUI = (totalMs: number) => {
+        const hrs = document.getElementById('timerH');
+        const mins = document.getElementById('timerM');
+        const secs = document.getElementById('timerS');
+
+        const h = Math.floor(totalMs / (1000 * 60 * 60));
+        const m = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((totalMs % (1000 * 60)) / 1000);
+
+        if (hrs) hrs.innerText = String(h).padStart(2, '0');
+        if (mins) mins.innerText = String(m).padStart(2, '0');
+        if (secs) secs.innerText = String(s).padStart(2, '0');
+    };
+
+    let remaining = ms;
+    updateUI(remaining);
+
+    taskInterval = setInterval(() => {
+        remaining -= 1000;
+        if (remaining <= 0) {
+            clearInterval(taskInterval);
+            remaining = 0;
+            const mainArea = document.getElementById('mainButtonsArea');
+            const activeArea = document.getElementById('activeTaskContent');
+            if (mainArea) mainArea.style.display = 'flex';
+            if (activeArea) activeArea.classList.add('hidden');
+        }
+        updateUI(remaining);
+    }, 1000);
+}
+
+export async function getRandomTask(isSilentInit = false) {
     const { id, memberId } = getState();
     const pid = id || memberId;
     if (!pid) return;
 
     try {
-        console.log("Requesting task assignment API...");
+        console.log("Requesting task from tasks_database API...");
 
         const mainArea = document.getElementById('mainButtonsArea');
         const activeArea = document.getElementById('activeTaskContent');
-        const uploadArea = document.getElementById('uploadBtnContainer');
         const readyText = document.getElementById('readyText');
 
-        if (mainArea) mainArea.style.display = 'none';
-        if (activeArea) activeArea.classList.remove('hidden');
-        if (uploadArea) uploadArea.classList.remove('hidden');
-        if (readyText) readyText.innerText = 'Connecting to the Void...';
+        if (!isSilentInit) {
+            if (mainArea) mainArea.style.display = 'none';
+            if (activeArea) activeArea.classList.remove('hidden');
+            if (readyText) readyText.innerText = 'Connecting to the Void...';
+        }
 
-        const res = await fetch('/api/tasks/active', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: memberId })
-        });
+        const res = await fetch(`/api/tasks/random?memberEmail=${encodeURIComponent(pid)}`);
         const data = await res.json();
 
-        if (!res.ok || !data.activeTask) {
-            console.error("Task API Error:", data.error);
+        if (!data.success) {
+            if (isSilentInit) return; // Ignore on background load
+            console.error("Supabase API Error:", data.error);
             if (readyText) readyText.innerText = 'Failed to retrieve task. See console.';
             return;
         }
 
-        if (readyText) {
-            readyText.innerText = data.activeTask.taskText;
+        // If we did a silent init and there is NO active task yet, don't show anything
+        if (isSilentInit && !data.task.assigned_at) {
+            return;
         }
 
-        startTaskTimer(data.activeTask.expiresAt);
+        // Show active task area
+        if (mainArea) mainArea.style.display = 'none';
+        if (activeArea) activeArea.classList.remove('hidden');
+
+        // Update UI with the task text
+        if (readyText) {
+            readyText.innerText = data.task.TaskText || data.task.tasktext || 'Perform the assigned duty.';
+        }
+
+        // Handle Timer
+        const timeLeftMs = data.timeLeftMs || (24 * 60 * 60 * 1000);
+        startTaskTimer(timeLeftMs);
 
     } catch (err) {
         console.error("Error getting task", err);
         const readyText = document.getElementById('readyText');
-        if (readyText) readyText.innerText = 'An error occurred fetching the task.';
+        if (!isSilentInit && readyText) readyText.innerText = 'An error occurred fetching the task.';
     }
 }
 
-export function startTaskTimer(expiresAtIso: string) {
-    if (taskTimerInterval) clearInterval(taskTimerInterval);
+export async function skipTask() {
+    const { id, memberId, wallet } = getState();
+    const pid = id || memberId;
+    if (!pid) return;
 
-    const hrs = document.getElementById('timerH');
-    const mins = document.getElementById('timerM');
-    const secs = document.getElementById('timerS');
-
-    const updateTimer = () => {
-        const now = new Date().getTime();
-        const expires = new Date(expiresAtIso).getTime();
-        const diff = expires - now;
-
-        if (diff <= 0) {
-            clearInterval(taskTimerInterval);
-            if (hrs) hrs.innerText = '00';
-            if (mins) mins.innerText = '00';
-            if (secs) secs.innerText = '00';
-
-            // Auto close task UI when expired
-            const mainArea = document.getElementById('mainButtonsArea');
-            const activeArea = document.getElementById('activeTaskContent');
-            if (mainArea) mainArea.style.display = 'flex'; // It uses flex layout
-            if (activeArea) activeArea.classList.add('hidden');
-            return;
-        }
-
-        const h = Math.floor(diff / (1000 * 60 * 60));
-        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-        if (hrs) hrs.innerText = h.toString().padStart(2, '0');
-        if (mins) mins.innerText = m.toString().padStart(2, '0');
-        if (secs) secs.innerText = s.toString().padStart(2, '0');
-    };
-
-    updateTimer();
-    taskTimerInterval = setInterval(updateTimer, 1000);
-}
-
-export async function checkActiveTaskOnLoad(email: string) {
-    try {
-        const res = await fetch(`/api/tasks/active?email=${encodeURIComponent(email)}`);
-        const data = await res.json();
-
-        if (data.activeTask) {
-            const mainArea = document.getElementById('mainButtonsArea');
-            const activeArea = document.getElementById('activeTaskContent');
-            const uploadArea = document.getElementById('uploadBtnContainer');
-            const readyText = document.getElementById('readyText');
-
-            if (mainArea) mainArea.style.display = 'none';
-            if (activeArea) activeArea.classList.remove('hidden');
-            if (uploadArea) uploadArea.classList.remove('hidden');
-            if (readyText) readyText.innerText = data.activeTask.taskText;
-
-            startTaskTimer(data.activeTask.expiresAt);
-        }
-    } catch (err) {
-        console.error("Failed to check active tasks on load", err);
-    }
-}
-
-export async function skipActiveTask() {
-    const { memberId } = getState();
-    if (!memberId) return;
-
-    if (!confirm("Skipping this task will cost 300 coins. Are you sure?")) {
+    if (wallet < 300) {
+        alert("Insufficient Capital. 300 coins required to skip duties.");
         return;
     }
+
+    if (!confirm("Are you sure you wish to skip this duty for 300 coins?")) return;
 
     try {
         const res = await fetch('/api/tasks/skip', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: memberId })
+            body: JSON.stringify({ memberEmail: pid })
         });
         const data = await res.json();
 
         if (data.success) {
-            // Stop timer and switch UI
-            if (taskTimerInterval) clearInterval(taskTimerInterval);
+            setState({ wallet: data.newWallet });
+            renderProfileSidebar(getState());
+
+            // Reset UI
+            if (taskInterval) clearInterval(taskInterval);
             const mainArea = document.getElementById('mainButtonsArea');
             const activeArea = document.getElementById('activeTaskContent');
-
-            if (mainArea) mainArea.style.display = 'flex'; // restore flex 
+            if (mainArea) mainArea.style.display = 'flex';
             if (activeArea) activeArea.classList.add('hidden');
-
-            alert("Task skipped. 300 coins deducted.");
-
-            // Quick update to sidebar wallet
-            const uCoins = document.getElementById('uCoins');
-            if (uCoins && data.newWallet !== undefined) {
-                uCoins.innerText = data.newWallet.toLocaleString();
-            }
         } else {
             alert(data.error || "Failed to skip task.");
         }
-    } catch (err) {
-        console.error("Skip error", err);
-        alert("An error occurred while skipping the task.");
-    }
-}
-
-export async function cancelPendingTask() {
-    const { id, memberId, wallet } = getState();
-    const pid = id || memberId;
-    if (!pid || wallet < 300) return;
-
-    try {
-        await fetch('/api/profile-action', {
-            method: 'POST',
-            body: JSON.stringify({
-                type: 'TRANSACTION',
-                memberId: pid,
-                payload: { amount: -300, category: 'TASK_SKIP' }
-            })
-        });
-        setState({ wallet: wallet - 300 });
-        renderProfileSidebar(getState());
     } catch (err) {
         console.error("Error skipping task", err);
     }
@@ -318,7 +274,7 @@ export function toggleMobileChat(show: boolean) {
 }
 
 export function mobileRequestTask() { getRandomTask(); }
-export function mobileSkipTask() { cancelPendingTask(); }
+export function mobileSkipTask() { skipTask(); }
 export function mobileUploadEvidence(input: HTMLInputElement) { console.log("Upload evidence", input.files); }
 
 export function handleRoutineUpload(input: HTMLInputElement) { console.log("Routine upload", input.files); }
@@ -422,7 +378,7 @@ export function selectRoutineItem(el: HTMLElement, type: string) {
 // ─── ADD HANDLERS FOR MISSING REQUIREMENTS ────────────────────────────────────
 
 async function _doProfileUpload() {
-    const supabase = getSupabase();
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return;
 
@@ -577,7 +533,7 @@ async function saveModalData(
     fieldId: string, label: string, overlay: HTMLElement, box: HTMLElement,
     isChip: boolean, isRoutine: boolean, costPerItem: number
 ) {
-    const supabase = getSupabase();
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return;
 
