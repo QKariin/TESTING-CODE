@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
-import { getState, setState, initProfileState } from '@/scripts/profile-state';
-import { handleHoldStart, handleHoldEnd, updateKneelingUI, attachKneelListeners } from '@/scripts/kneeling';
+import { initProfileState } from '@/scripts/profile-state';
+// 👇 Import the new robust kneeling logic
+import { updateKneelingUI, attachKneelListeners } from '@/scripts/kneeling';
 import { createClient } from '@/utils/supabase/client';
 import {
+    // ... keep your imports ...
     claimKneelReward,
     switchTab,
     toggleTributeHunt,
@@ -16,9 +18,6 @@ import {
     closeQueenMenu,
     toggleMobileStats,
     toggleMobileChat,
-    mobileRequestTask,
-    mobileSkipTask,
-    mobileUploadEvidence,
     handleRoutineUpload,
     handleProfileUpload,
     handleAdminUpload,
@@ -49,12 +48,11 @@ export default function ProfilePage() {
     const [profile, setProfile] = useState<any>(null);
     const supabase = createClient();
 
+    // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
-        // Inject scripts into window for legacy compatibility (DOM onclick handlers)
+        // Legacy Window Assignments (Only keep the ones NOT handled by kneeling.ts)
         if (typeof window !== 'undefined') {
-            (window as any).handleHoldStart = handleHoldStart;
-            (window as any).handleHoldEnd = handleHoldEnd;
-            (window as any).claimKneelReward = claimKneelReward;
+            (window as any).claimKneelReward = claimKneelReward; // Needed for inline onclick in JSX
             (window as any).switchTab = switchTab;
             (window as any).toggleTributeHunt = toggleTributeHunt;
             (window as any).openLobby = openLobby;
@@ -98,8 +96,6 @@ export default function ProfilePage() {
                     return;
                 }
 
-                // Query Supabase directly — no API needed
-                // RLS policy allows: auth.uid()=id OR email=member_id
                 const { data: profileData, error } = await supabase
                     .from('profiles')
                     .select('*')
@@ -108,53 +104,51 @@ export default function ProfilePage() {
 
                 if (error) console.error('Profile fetch error:', error);
 
-                if (profileData) {
-                    setProfile(profileData);
-                    initProfileState(profileData);
-                    setTimeout(() => {
-                        renderProfileSidebar(profileData);
-                        updateKneelingUI();
-                        attachKneelListeners();
-                        switchTab('serve'); // Show dashboard by default
-                        getRandomTask(true); // Restore active task if exists
-                    }, 150);
-                } else {
-                    // Fallback: try by UUID
-                    const { data: byId } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', user.id)
-                        .maybeSingle();
+                // Use profile data or fallback
+                const finalProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
-                    if (byId) {
-                        setProfile(byId);
-                        initProfileState(byId);
-                        setTimeout(() => {
-                            renderProfileSidebar(byId);
-                            updateKneelingUI();
-                            attachKneelListeners();
-                            switchTab('serve'); // Show dashboard by default
-                            getRandomTask(true); // Restore active task if exists
-                        }, 150);
-                    }
+                if (finalProfile) {
+                    setProfile(finalProfile);
+                    initProfileState(finalProfile);
+                    
+                    // Initialize UI logic that doesn't depend on DOM elements yet
+                    setTimeout(() => {
+                        renderProfileSidebar(finalProfile);
+                        switchTab('serve'); 
+                        getRandomTask(true);
+                    }, 100);
                 }
             } catch (err) {
                 console.error("Failed to load profile", err);
             } finally {
-                setLoading(false);
+                // 👇 This triggers the re-render that shows the buttons
+                setLoading(false); 
             }
         }
 
         loadProfile();
-
-        const timer = setInterval(() => {
-            updateKneelingUI();
-        }, 1000);
-
-        return () => clearInterval(timer);
     }, []);
 
-    // ─── Kneel button listeners ── handled by kneeling.ts completely ───
+    // ─── 2. ATTACH KNEEL LISTENERS (THE FIX) ─────────────────────────────
+    // This runs ONLY after 'loading' becomes false and the buttons exist
+    useEffect(() => {
+        if (!loading) {
+            console.log("DOM Loaded. Attaching Kneel Listeners...");
+            // Small timeout to ensure the browser has painted the <div>s
+            const timer = setTimeout(() => {
+                attachKneelListeners();
+                updateKneelingUI();
+            }, 300);
+
+            // Start the UI update loop
+            const interval = setInterval(updateKneelingUI, 1000);
+
+            return () => {
+                clearTimeout(timer);
+                clearInterval(interval);
+            };
+        }
+    }, [loading]); // <--- Dependent on loading state
 
     if (loading) return (
         <div id="loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: 'var(--gold)', fontFamily: 'Cinzel' }}>
@@ -172,6 +166,9 @@ export default function ProfilePage() {
             width: '100vw',
             overflowX: 'hidden'
         }}>
+           {/* ... REST OF YOUR JSX IS PERFECT, DO NOT CHANGE IT ... */}
+           {/* Just verify your mobile button has id="mobKneelBar" */}
+           
             {/* SOUNDS & INPUTS */}
             <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
             <audio id="coinSound" src="/audio/2019-preview1.mp3"></audio>
@@ -402,6 +399,8 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 </div>
+            
+       
 
                 {/* OTHER VIEWS */}
                 <div id="historySection" className="view-wrapper" style={{ perspective: 1000, padding: 0, minHeight: '80vh' }}>
@@ -457,7 +456,7 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            {/* 🟢 MOBILE UNIVERSE (FULL CODE - REORDERED) */}
+           {/* 🟢 MOBILE UNIVERSE */}
             <div id="MOBILE_APP" style={{ display: 'none' }}>
                 <div id="viewMobileHome" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', maxWidth: '100vw', height: '100dvh', overflowY: 'auto', overflowX: 'hidden', display: 'block', padding: 0, zIndex: 1, background: 'transparent' }}>
                     <div className="mob-hud-row">
@@ -676,6 +675,7 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
+                            {/* MOBILE KNEELING BUTTON (CONNECTED TO kneeling.ts) */}
                             <div className="halo-stack" style={{ padding: '0 20px', width: '100%', marginTop: '15px', marginBottom: '30px' }}>
                                 <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone">
                                     <div id="mob_kneelFill" className="mob-bar-fill"></div>
