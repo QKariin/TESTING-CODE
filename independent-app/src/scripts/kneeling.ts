@@ -20,27 +20,32 @@ export function attachKneelListeners() {
         if ((btn as any).__kneelAttached) return;
         (btn as any).__kneelAttached = true;
 
-        // Force Drag/Select disabled via JS as a backup to CSS
+        // Force Drag/Select disabled
         btn.ondragstart = () => false;
         
-        // MOUSE
+        // ─── MOUSE EVENTS (The Fix) ───
         btn.addEventListener('mousedown', (e) => {
-            // Stop browser from starting a "text selection" or "drag"
+            // Stop text selection
             if (e.cancelable) e.preventDefault();
+            
+            // Start kneeling
             handleHoldStart(e);
-        });
-        btn.addEventListener('mouseup', handleHoldEnd);
-        btn.addEventListener('mouseleave', handleHoldEnd);
 
-        // TOUCH
+            // Listen for release ANYWHERE on the screen
+            // This ignores "mouseleave" bugs completely
+            window.addEventListener('mouseup', handleGlobalEnd);
+        });
+
+        // ─── TOUCH EVENTS ───
         btn.addEventListener('touchstart', (e) => {
             if (e.cancelable) e.preventDefault();
             handleHoldStart(e);
         }, { passive: false });
+        
         btn.addEventListener('touchend', handleHoldEnd);
         btn.addEventListener('touchcancel', handleHoldEnd);
 
-        // CONTEXT MENU (Right Click)
+        // Disable Context Menu
         btn.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             return false;
@@ -52,12 +57,16 @@ export function attachKneelListeners() {
     checkLockStatus();
 }
 
+// Helper to clean up the global listener
+function handleGlobalEnd(e: Event) {
+    handleHoldEnd(e);
+    window.removeEventListener('mouseup', handleGlobalEnd);
+}
+
 // ─── 2. START ───
 export function handleHoldStart(e: Event) {
     if (isLocked) return;
-    
-    // If timer is already running, ignore this event (prevents double-firing)
-    if (holdTimer) return;
+    if (holdTimer) return; // Don't double-fire
 
     // DESKTOP UI
     const fill = document.getElementById('heroKneelFill');
@@ -68,7 +77,7 @@ export function handleHoldStart(e: Event) {
     const mobText = document.querySelector('.kneel-label') as HTMLElement;
     const mobBar = document.querySelector('.mob-kneel-zone') as HTMLElement;
 
-    // ANIMATE
+    // ANIMATE (2 Seconds)
     if (fill) {
         fill.style.transition = `width ${REQUIRED_HOLD_TIME}ms linear`;
         fill.style.width = "100%";
@@ -85,6 +94,8 @@ export function handleHoldStart(e: Event) {
     // START TIMER
     holdTimer = setTimeout(() => {
         completeKneelAction();
+        // Remove the global listener since we finished
+        window.removeEventListener('mouseup', handleGlobalEnd);
     }, REQUIRED_HOLD_TIME);
 }
 
@@ -93,7 +104,7 @@ export function handleHoldEnd(e: Event) {
     if (isLocked) return;
 
     if (holdTimer) {
-        // User let go too early
+        // Aborted early
         clearTimeout(holdTimer);
         holdTimer = null;
 
@@ -158,7 +169,6 @@ async function completeKneelAction() {
 
 // ─── 5. UI SYNC ───
 export function checkLockStatus() {
-    // If needed, check DB time here. For now, we trust local session.
     if (isLocked) updateKneelingUI();
 }
 
