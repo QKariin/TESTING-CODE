@@ -3703,3 +3703,22 @@
 .hidden {
     display: none !important;
 }
+
+
+/* --- KNEELING BUTTON FIX --- */
+#heroKneelBtn, 
+#mobKneelBar {
+    /* Stop the user from selecting text inside */
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    /* Stop the browser from showing a menu on mobile */
+    -webkit-touch-callout: none !important;
+    touch-action: none !important;
+}
+
+/* Make all children (text, fill bar) invisible to the mouse */
+/* This ensures the mouse ALWAYS clicks the Button, never the moving Bar */
+#heroKneelBtn *, 
+#mobKneelBar * {
+    pointer-events: none !important;
+}
