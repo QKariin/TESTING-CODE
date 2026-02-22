@@ -3,6 +3,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 const COOLDOWN_MS = 60 * 60 * 1000; // 60 minutes
 
 export async function POST(req: Request) {

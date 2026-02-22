@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/profile-action/route.ts
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/profile-update/route.ts
 // Server-side profile update — uses supabaseAdmin to bypass RLS
 import { NextResponse } from 'next/server';

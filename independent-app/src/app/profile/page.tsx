@@ -39,7 +39,6 @@ import {
     backToLobbyMenu,
     selectRoutineItem,
     getRandomTask,
-    submitNewTask,
     cancelPendingTask,
     renderProfileSidebar,
     handleLogout
@@ -350,16 +349,9 @@ export default function ProfilePage() {
                     <div id="gridTask" className="v-card serve-grid-item" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 10, minHeight: 'unset' }}>
                         <div className="ribbon-label">CURRENT ORDERS</div>
                         <div className="task-interface-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                            <div id="mainButtonsArea" style={{ width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 15 }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'rgba(255,255,255,0.03)', padding: 15, borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ fontSize: '0.65rem', color: '#c5a059', letterSpacing: 1, textAlign: 'left', fontFamily: 'Orbitron' }}>SUBMIT TO THE VOID</div>
-                                    <div style={{ display: 'flex', gap: 8 }}>
-                                        <input id="newTaskInput" type="text" placeholder="Suggest a new task..." style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 15px', color: 'white', fontSize: '0.85rem', outline: 'none' }} />
-                                        <button id="submitNewTaskBtn" onClick={() => submitNewTask()} className="action-btn" style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '0 15px', fontSize: '1rem', fontWeight: 'bold' }}>+</button>
-                                    </div>
-                                </div>
+                            <div id="mainButtonsArea" style={{ width: '100%', textAlign: 'center' }}>
                                 <button id="newTaskBtn" onClick={() => getRandomTask()} className="action-btn" style={{ width: '100%', borderRadius: 12, background: '#0075ff', color: 'white', padding: 15, fontWeight: 'bold', letterSpacing: 2 }}>REQUEST TASK</button>
-                                <div id="idleMessage" style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: 0 }}>Awaiting direct orders from the Void...</div>
+                                <div id="idleMessage" style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: 10 }}>Awaiting direct orders from the Void...</div>
                             </div>
                             <div id="activeTaskContent" className="hidden" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 <h2 id="readyText" style={{ fontFamily: 'Cinzel', fontSize: '1.1rem', textAlign: 'center', margin: 0, lineHeight: 1.4, color: 'white' }}>-</h2>

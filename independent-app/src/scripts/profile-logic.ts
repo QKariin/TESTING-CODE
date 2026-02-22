@@ -126,9 +126,8 @@ export async function getRandomTask() {
     if (!pid) return;
 
     try {
-        console.log("Requesting task from TASKS DATABASE...");
+        console.log("Requesting task from tasks_database API...");
 
-        // Hide request button and show loading text
         const mainArea = document.getElementById('mainButtonsArea');
         const activeArea = document.getElementById('activeTaskContent');
         const readyText = document.getElementById('readyText');
@@ -137,36 +136,21 @@ export async function getRandomTask() {
         if (activeArea) activeArea.classList.remove('hidden');
         if (readyText) readyText.innerText = 'Connecting to the Void...';
 
-        const { createClient } = await import('@/utils/supabase/client');
-        const supabase = createClient();
+        const res = await fetch('/api/tasks/random');
+        const data = await res.json();
 
-        // Fetch all tasks from the new database table
-        const { data: tasks, error } = await supabase
-            .from('tasks_database')
-            .select('*');
-
-        if (error) {
-            console.error("Supabase Error fetching tasks:", error);
+        if (!data.success) {
+            console.error("Supabase API Error:", data.error);
             if (readyText) readyText.innerText = 'Failed to retrieve task. See console.';
             return;
         }
 
-        if (!tasks || tasks.length === 0) {
-            if (readyText) readyText.innerText = 'No tasks found in database.';
-            return;
-        }
-
-        // Pick a random task
-        const randomIndex = Math.floor(Math.random() * tasks.length);
-        const randomTask = tasks[randomIndex];
-
         // Update UI with the task text
-        // Note: TaskText is from the CSV header
         if (readyText) {
-            readyText.innerText = randomTask.TaskText || randomTask.tasktext || 'Perform the assigned duty.';
+            readyText.innerText = data.task.TaskText || data.task.tasktext || 'Perform the assigned duty.';
         }
 
-        // Setup timer UI to look active (mocking a 1h countdown for now to mimic old UI state)
+        // Setup timer UI to look active
         const hrs = document.getElementById('timerH');
         const mins = document.getElementById('timerM');
         const secs = document.getElementById('timerS');
@@ -671,50 +655,4 @@ export function renderProfileSidebar(u: any) {
         const elCoins = document.getElementById('coins');
         if (elCoins) elCoins.innerText = (u.wallet || 0).toLocaleString();
     }
-}
-
-export async function submitNewTask() {
-    const input = document.getElementById('newTaskInput') as HTMLInputElement;
-    const btn = document.getElementById('submitNewTaskBtn') as HTMLButtonElement;
-    if (!input || !btn) return;
-
-    const text = input.value.trim();
-    if (text.length < 10) {
-        alert("Task description must be at least 10 characters long.");
-        return;
-    }
-
-    const originalText = btn.innerText;
-    btn.innerText = "...";
-    btn.disabled = true;
-
-    try {
-        const { createClient } = await import('@/utils/supabase/client');
-        const supabase = createClient();
-
-        const { error } = await supabase
-            .from('tasks_database')
-            .insert([{ TaskText: text, Category: '[]', Difficulty: 'normal' }]);
-
-        if (error) {
-            console.error("Submission error:", error);
-            alert("Failed to submit task. Please try again later.");
-        } else {
-            input.value = "";
-            btn.innerText = "✓";
-            btn.style.background = "#28a745";
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.style.background = "rgba(255,255,255,0.05)";
-                btn.disabled = false;
-            }, 3000);
-            return;
-        }
-    } catch (e) {
-        console.error("Unexpected error submitting task:", e);
-        alert("An unexpected error occurred.");
-    }
-
-    btn.innerText = originalText;
-    btn.disabled = false;
 }
