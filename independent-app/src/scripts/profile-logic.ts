@@ -672,3 +672,49 @@ export function renderProfileSidebar(u: any) {
         if (elCoins) elCoins.innerText = (u.wallet || 0).toLocaleString();
     }
 }
+
+export async function submitNewTask() {
+    const input = document.getElementById('newTaskInput') as HTMLInputElement;
+    const btn = document.getElementById('submitNewTaskBtn') as HTMLButtonElement;
+    if (!input || !btn) return;
+
+    const text = input.value.trim();
+    if (text.length < 10) {
+        alert("Task description must be at least 10 characters long.");
+        return;
+    }
+
+    const originalText = btn.innerText;
+    btn.innerText = "...";
+    btn.disabled = true;
+
+    try {
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+
+        const { error } = await supabase
+            .from('"TASKS DATABASE"')
+            .insert([{ TaskText: text, Category: '[]', Difficulty: 'normal' }]);
+
+        if (error) {
+            console.error("Submission error:", error);
+            alert("Failed to submit task. Please try again later.");
+        } else {
+            input.value = "";
+            btn.innerText = "✓";
+            btn.style.background = "#28a745";
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.background = "rgba(255,255,255,0.05)";
+                btn.disabled = false;
+            }, 3000);
+            return;
+        }
+    } catch (e) {
+        console.error("Unexpected error submitting task:", e);
+        alert("An unexpected error occurred.");
+    }
+
+    btn.innerText = originalText;
+    btn.disabled = false;
+}
