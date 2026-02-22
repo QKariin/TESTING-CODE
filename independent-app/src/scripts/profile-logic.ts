@@ -453,14 +453,9 @@ export function renderProfileSidebar(u: any) {
         const buildCheck = (label: string, status: string, fieldId?: string) => {
             const done = status === 'VERIFIED';
             const color = done ? '#00ff00' : '#ff4444';
-            let addBtn = '';
-            if (!done && fieldId) {
-                if (fieldId === 'avatar_url') {
-                    addBtn = `<button onclick="window.__profileHandlers?.uploadPhoto()" style="padding:3px 10px;background:#c5a059;color:#000;border:none;border-radius:4px;font-family:'Orbitron';font-size:0.5rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>`;
-                } else {
-                    addBtn = `<button onclick="window.__profileHandlers?.openField('${fieldId}','${label}')" style="padding:3px 10px;background:#c5a059;color:#000;border:none;border-radius:4px;font-family:'Orbitron';font-size:0.5rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>`;
-                }
-            }
+            const addBtn = (!done && fieldId)
+                ? `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" style="padding:3px 10px;background:#c5a059;color:#000;border:none;border-radius:4px;font-family:'Orbitron';font-size:0.5rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>`
+                : '';
             return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.6rem;font-family:'Orbitron';letter-spacing:1px;">
                 <span style="color:rgba(255,255,255,0.5);">${label}</span>
                 <div style="display:flex;align-items:center;gap:8px;">
@@ -486,11 +481,19 @@ export function renderProfileSidebar(u: any) {
 
         container.innerHTML = html;
 
-        // Register handlers on window so inline onclick can call them
-        (window as any).__profileHandlers = {
-            uploadPhoto: handleProfileUpload,
-            openField: openTextFieldModal,
-        };
+        // Attach click listeners to ADD buttons using data attributes (no fragile global/inline JS)
+        container.querySelectorAll<HTMLButtonElement>('[data-prof-action]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.getAttribute('data-prof-action');
+                const field = btn.getAttribute('data-prof-field') || '';
+                const label = btn.getAttribute('data-prof-label') || '';
+                if (action === 'photo') {
+                    handleProfileUpload();
+                } else if (action === 'field') {
+                    openTextFieldModal(field, label);
+                }
+            });
+        });
 
         // Simple stat counters
         const elPoints = document.getElementById('points');
