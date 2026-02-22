@@ -2,20 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 export default function TributePage() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const [status, setStatus] = useState<string | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
+    
+    // Initialize the cookie-aware client
+    const supabase = createClient();
 
     useEffect(() => {
         const fetchUserAndCheck = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user?.email) {
                 setUserEmail(user.email);
-                // Auto-trigger refresh to catch legacy matches immediately
                 handleRefresh();
             }
         };
@@ -44,6 +46,7 @@ export default function TributePage() {
     };
 
     const handleLogout = async () => {
+        // This now uses the correct client to clear the cookie
         await supabase.auth.signOut();
         window.location.href = '/login';
     };
