@@ -178,7 +178,7 @@ export function mobileSkipTask() { cancelPendingTask(); }
 export function mobileUploadEvidence(input: HTMLInputElement) { console.log("Upload evidence", input.files); }
 
 export function handleRoutineUpload(input: HTMLInputElement) { console.log("Routine upload", input.files); }
-export function handleProfileUpload(input: HTMLInputElement) { console.log("Profile upload", input.files); }
+export function handleProfileUpload(input?: HTMLInputElement) { _doProfileUpload(); }
 export function handleAdminUpload(input: HTMLInputElement) { console.log("Admin upload", input.files); }
 
 export function handleMediaPlus() {
@@ -275,6 +275,97 @@ export function selectRoutineItem(el: HTMLElement, type: string) {
     el.classList.add('active');
 }
 
+// ─── ADD HANDLERS FOR MISSING REQUIREMENTS ────────────────────────────────────
+
+async function _doProfileUpload() {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+
+        const ext = file.name.split('.').pop();
+        const fileName = `avatars/${user.id}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, file, { upsert: true });
+
+        if (uploadError) {
+            console.error('Upload failed:', uploadError);
+            return;
+        }
+
+        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+        const publicUrl = urlData.publicUrl;
+
+        await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('member_id', user.email);
+
+        // Live update the photo on page
+        const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
+        if (elProfilePic) elProfilePic.src = publicUrl;
+        const elMobPic = document.getElementById('hudUserPic') as HTMLImageElement;
+        if (elMobPic) elMobPic.src = publicUrl;
+
+        // Re-fetch and re-render
+        const { data: updated } = await supabase.from('profiles').select('*').eq('member_id', user.email).maybeSingle();
+        if (updated) renderProfileSidebar(updated);
+    };
+    input.click();
+}
+
+export function openTextFieldModal(fieldId: string, label: string) {
+    // Remove existing modal if any
+    document.getElementById('_reqModal')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_reqModal';
+    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;`;
+
+    const box = document.createElement('div');
+    box.style.cssText = `background:#0a0a0f;border:1px solid #c5a059;border-radius:12px;padding:28px;width:90%;max-width:440px;font-family:'Orbitron';`;
+    box.innerHTML = `
+        <div style="color:#c5a059;font-size:0.7rem;letter-spacing:2px;margin-bottom:12px;">${label.toUpperCase()}</div>
+        <textarea id="_reqInput" placeholder="Enter your ${label.toLowerCase()}..." style="width:100%;min-height:100px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;padding:10px;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;resize:vertical;"></textarea>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+            <button id="_reqSave" style="flex:1;padding:10px;background:#c5a059;color:#000;border:none;border-radius:6px;font-family:'Orbitron';font-weight:bold;cursor:pointer;letter-spacing:1px;">SAVE</button>
+            <button id="_reqCancel" style="flex:1;padding:10px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:6px;font-family:'Orbitron';cursor:pointer;">CANCEL</button>
+        </div>`;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    document.getElementById('_reqCancel')!.onclick = () => overlay.remove();
+    document.getElementById('_reqSave')!.onclick = () => saveTextField(fieldId, label, overlay);
+}
+
+async function saveTextField(fieldId: string, label: string, overlay: HTMLElement) {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const value = (document.getElementById('_reqInput') as HTMLTextAreaElement)?.value?.trim();
+    if (!value) return;
+
+    const { error } = await supabase
+        .from('profiles')
+        .update({ [fieldId]: value })
+        .eq('member_id', user.email);
+
+    if (error) { console.error(`Failed to save ${label}:`, error); return; }
+
+    overlay.remove();
+
+    // Re-fetch and re-render
+    const { data: updated } = await supabase.from('profiles').select('*').eq('member_id', user.email).maybeSingle();
+    if (updated) renderProfileSidebar(updated);
+}
+
 export function renderProfileSidebar(u: any) {
     if (!u || typeof document === 'undefined') return;
 
@@ -342,24 +433,47 @@ export function renderProfileSidebar(u: any) {
                 </div></div>`;
         };
 
-        const buildCheck = (label: string, status: string) => {
+        const buildCheck = (label: string, status: string, fieldId?: string) => {
             const done = status === 'VERIFIED';
             const color = done ? '#00ff00' : '#ff4444';
+            let addBtn = '';
+            if (!done && fieldId) {
+                if (fieldId === 'avatar_url') {
+                    addBtn = `<button onclick="window.__profileHandlers?.uploadPhoto()" style="padding:3px 10px;background:#c5a059;color:#000;border:none;border-radius:4px;font-family:'Orbitron';font-size:0.5rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>`;
+                } else {
+                    addBtn = `<button onclick="window.__profileHandlers?.openField('${fieldId}','${label}')" style="padding:3px 10px;background:#c5a059;color:#000;border:none;border-radius:4px;font-family:'Orbitron';font-size:0.5rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>`;
+                }
+            }
             return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.6rem;font-family:'Orbitron';letter-spacing:1px;">
                 <span style="color:rgba(255,255,255,0.5);">${label}</span>
-                <span style="color:${color};font-weight:bold;">${done ? '✓ VERIFIED' : '✗ MISSING'}</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="color:${color};font-weight:bold;">${done ? '✓ VERIFIED' : '✗ MISSING'}</span>
+                    ${addBtn}
+                </div>
             </div>`;
         };
 
         const iconMap: Record<string, string> = { LABOR: '🛠️', ENDURANCE: '🧎', MERIT: '✨', SACRIFICE: '💰', CONSISTENCY: '📅' };
 
+        // Map field IDs for ADD buttons
+        const fieldIdMap: Record<string, string> = {
+            IDENTITY: 'name', PHOTO: 'avatar_url',
+            LIMITS: 'limits', KINKS: 'kinks', ROUTINE: 'routine'
+        };
+
         let html = '';
         requirements.forEach(r => {
             if (r.type === 'bar') html += buildBar(r.label, iconMap[r.label] || '•', r.current, r.target);
-            else html += buildCheck(r.label, r.status);
+            else html += buildCheck(r.label, r.status, fieldIdMap[r.label]);
         });
 
         container.innerHTML = html;
+
+        // Register handlers on window so inline onclick can call them
+        (window as any).__profileHandlers = {
+            uploadPhoto: handleProfileUpload,
+            openField: openTextFieldModal,
+        };
 
         // Simple stat counters
         const elPoints = document.getElementById('points');
