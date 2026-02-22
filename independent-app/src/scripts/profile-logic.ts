@@ -149,8 +149,13 @@ export function startTaskTimer(ms: number) {
             remaining = 0;
             const mainArea = document.getElementById('mainButtonsArea');
             const activeArea = document.getElementById('activeTaskContent');
-            if (mainArea) mainArea.style.display = 'flex';
+            const qmIdle = document.getElementById('qm_TaskIdle');
+            const qmActive = document.getElementById('qm_TaskActive');
+
+            if (mainArea) mainArea.style.display = 'block';
             if (activeArea) activeArea.classList.add('hidden');
+            if (qmIdle) qmIdle.classList.remove('hidden');
+            if (qmActive) qmActive.classList.add('hidden');
         }
         updateUI(remaining);
     }, 1000);
@@ -256,8 +261,13 @@ export async function skipTask() {
             if (taskInterval) clearInterval(taskInterval);
             const mainArea = document.getElementById('mainButtonsArea');
             const activeArea = document.getElementById('activeTaskContent');
-            if (mainArea) mainArea.style.display = 'flex';
+            const qmIdle = document.getElementById('qm_TaskIdle');
+            const qmActive = document.getElementById('qm_TaskActive');
+
+            if (mainArea) mainArea.style.display = 'block';
             if (activeArea) activeArea.classList.add('hidden');
+            if (qmIdle) qmIdle.classList.remove('hidden');
+            if (qmActive) qmActive.classList.add('hidden');
         } else {
             alert(data.error || "Failed to skip task.");
         }

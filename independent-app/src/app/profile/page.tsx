@@ -364,9 +364,9 @@ export default function ProfilePage() {
                                     <div className="t-sep">:</div>
                                     <div id="timerS" className="card-t-box">00</div>
                                 </div>
-                                <div id="uploadBtnContainer" className="hidden" style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 10, alignItems: 'center' }}>
+                                <div id="uploadBtnContainer" style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 10, alignItems: 'center' }}>
                                     <button id="uploadBtn" className="action-btn" style={{ width: 180, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: '#c5a059', fontWeight: 'bold', border: '1px solid #c5a059', boxShadow: '0 0 15px rgba(197,160,89,0.2)' }} onClick={() => (document.getElementById('routineUploadInput') as any)?.click()}>UPDATE TASK</button>
-                                    <button id="btnSkip" onClick={() => skipTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 180 }}>SKIP TASK (-300 🪙)</button>
+                                    <button id="btnSkip" onClick={() => (window as any).skipTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 180 }}>SKIP TASK (-300 🪙)</button>
                                 </div>
                             </div>
                         </div>
