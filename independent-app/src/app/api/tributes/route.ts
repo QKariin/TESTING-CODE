@@ -23,6 +23,11 @@ export async function GET() {
             }
         }
 
+        console.log(`[API/Tributes] Successfully pulled ${tributes?.length || 0} rows from Supabase.`);
+        if (tributes && tributes.length > 0) {
+            console.log(`[API/Tributes] Sample Row 0 Structure:`, JSON.stringify(tributes[0], null, 2));
+        }
+
         // Format Image urls if they use the wix format
         const formattedTributes = (tributes || []).map((tribute: any) => {
             let imageUrl = tribute.Image || tribute.image_url || "";

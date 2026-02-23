@@ -150,25 +150,11 @@ export async function loadTributes() {
             globalTributes = data.tributes;
             renderTributes();
         } else {
-            console.warn("DB returned empty or failed, loading Hardcoded Fallback Tributes.");
-            loadFallbackTributes();
+            console.error("[Tributes API] Returned empty or failed. Reason:", data.error || "No items in DB.");
         }
     } catch (err) {
         console.error("Failed to load tributes:", err);
-        loadFallbackTributes();
     }
-}
-
-function loadFallbackTributes() {
-    globalTributes = [
-        { id: "fallback_1", title: "Coffee", price: 100, image: "https://static.wixstatic.com/media/ce3e5b_fc21c33f2c5d4fbba210b37cdbf6c8b9~mv2.jpg" },
-        { id: "fallback_2", title: "Lunch", price: 500, image: "https://static.wixstatic.com/media/ce3e5b_0493aeec02b74075af347ddbac9101f3~mv2.jpg" },
-        { id: "fallback_3", title: "Nails", price: 1500, image: "https://static.wixstatic.com/media/ce3e5b_40d4fbb1cbed40fbaa1cc9af15b54203~mv2.jpg" },
-        { id: "fallback_4", title: "Hair", price: 3000, image: "https://static.wixstatic.com/media/ce3e5b_f49b14068bd34a50ba836bfa57161836~mv2.jpg" },
-        { id: "fallback_5", title: "Shopping", price: 5000, image: "https://static.wixstatic.com/media/ce3e5b_38407cd294714dbfbdbcd917fc9fe1ce~mv2.jpg" },
-        { id: "fallback_6", title: "Dinner", price: 8000, image: "https://static.wixstatic.com/media/ce3e5b_e92ab4d314054a7c88acc10695027581~mv2.jpg" }
-    ];
-    renderTributes();
 }
 
 function renderTributes() {
