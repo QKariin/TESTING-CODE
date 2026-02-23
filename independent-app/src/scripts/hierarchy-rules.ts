@@ -68,11 +68,11 @@ function buildStatsFromProfile(profile: any) {
     const tasks = getNum(profile.Taskdom_CompletedTasks) || getNum(params.taskdom_completed_tasks);
     const kneels = getNum(profile.kneelCount) || getNum(params.kneel_count);
     const streak = getNum(profile.Taskdom_Streak) || getNum(params.routine_streak);
-    
+
     // Score/Wallet come from PROFILES table (Integers)
     const points = profile.score || 0;
     // Spent usually isn't tracked in a simple column, defaulting to 0 or params
-    const spent = getNum(params.total_coins_spent); 
+    const spent = getNum(params.total_coins_spent);
 
     // 2. Resolve Identity
     const img = profile.avatar_url || '';
@@ -105,13 +105,13 @@ function buildStatsFromProfile(profile: any) {
 
 export function getHierarchyReport(profile: any) {
     if (!profile) return null;
-    
+
     const stats = buildStatsFromProfile(profile);
     const currentRankName = profile.hierarchy || 'Hall Boy';
 
     // Find Current Rank Index
     let rankIndex = HIERARCHY_RULES.findIndex(r => r.name.toLowerCase() === currentRankName.toLowerCase());
-    if (rankIndex === -1) rankIndex = 6; 
+    if (rankIndex === -1) rankIndex = 6;
 
     const currentRankObj = HIERARCHY_RULES[rankIndex];
     const isMax = rankIndex === 0;
@@ -123,21 +123,23 @@ export function getHierarchyReport(profile: any) {
 
     // Build Requirements List
     const requirements: any[] = [];
-    
+
     if (!isMax) {
         if (req.name) requirements.push({ label: 'IDENTITY', status: stats.hasName ? 'VERIFIED' : 'MISSING', type: 'check', field: 'name' });
         if (req.photo) requirements.push({ label: 'PHOTO', status: stats.hasPhoto ? 'VERIFIED' : 'MISSING', type: 'check', field: 'avatar_url' });
-        
+
         if ((req.tasks || 0) > 0) requirements.push({ label: 'LABOR', icon: '🛠️', current: stats.tasks, target: req.tasks, type: 'bar' });
         if ((req.kneels || 0) > 0) requirements.push({ label: 'ENDURANCE', icon: '🧎', current: stats.kneels, target: req.kneels, type: 'bar' });
         if ((req.points || 0) > 0) requirements.push({ label: 'MERIT', icon: '✨', current: stats.points, target: req.points, type: 'bar' });
-        
+        if ((req.spent || 0) > 0) requirements.push({ label: 'SACRIFICE', icon: '💰', current: stats.spent, target: req.spent, type: 'bar' });
+        if ((req.streak || 0) > 0) requirements.push({ label: 'CONSISTENCY', icon: '📅', current: stats.streak, target: req.streak, type: 'bar' });
+
         if (req.limits) requirements.push({ label: 'LIMITS', status: stats.hasLimits ? 'VERIFIED' : 'MISSING', type: 'check', field: 'limits' });
         if (req.kinks) requirements.push({ label: 'KINKS', status: stats.hasKinks ? 'VERIFIED' : 'MISSING', type: 'check', field: 'kinks' });
         if (req.routine) requirements.push({ label: 'ROUTINE', status: stats.hasRoutine ? 'VERIFIED' : 'MISSING', type: 'check', field: 'routine' });
     }
 
-    const canPromote = !isMax && requirements.every(r => 
+    const canPromote = !isMax && requirements.every(r =>
         r.type === 'check' ? r.status === 'VERIFIED' : r.current >= r.target
     );
 
