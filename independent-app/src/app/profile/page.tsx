@@ -88,7 +88,7 @@ export default function ProfilePage() {
             (window as any).handleLogout = handleLogout;
         }
 
-        async function loadProfile() {
+       async function loadProfile() {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
@@ -96,38 +96,56 @@ export default function ProfilePage() {
                     return;
                 }
 
-                const { data: profileData, error } = await supabase
+                // 1. Fetch Identity (PROFILES)
+                const { data: profileData } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('member_id', user.email)
                     .maybeSingle();
 
-                if (error) console.error('Profile fetch error:', error);
+                let baseProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
-                // Use profile data or fallback
-                const finalProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
+                if (baseProfile) {
+                    // 2. Fetch Stats (TASKS) - THIS WAS MISSING
+                    // We check the 'tasks' table using the correct Case Sensitive ID
+                    const { data: taskData } = await supabase
+                        .from('tasks')
+                        .select('*')
+                        .eq('"MemberID"', baseProfile.member_id) 
+                        .maybeSingle();
 
-                if (finalProfile) {
-                    setProfile(finalProfile);
-                    initProfileState(finalProfile);
+                    // 3. NORMALIZE & MERGE
+                    // We combine them into one object and force lowercase keys so the rest of the app 
+                    // doesn't have to guess between 'lastWorship' and 'LastWorship'
+                    const unifiedData: any = { ...baseProfile };
                     
-                    // Initialize UI logic that doesn't depend on DOM elements yet
+                    if (taskData) {
+                        Object.keys(taskData).forEach(key => {
+                            unifiedData[key.toLowerCase()] = taskData[key];
+                        });
+                    }
+
+                    console.log("[ONE SOURCE] Loaded Data:", unifiedData);
+
+                    // 4. Initialize State
+                    setProfile(unifiedData);
+                    initProfileState(unifiedData);
+                    
                     setTimeout(() => {
-                        renderProfileSidebar(finalProfile);
+                        // Pass the UNIFIED data to the sidebar so it sees the stats
+                        renderProfileSidebar(unifiedData);
+                        updateKneelingUI(); 
+                        attachKneelListeners();
                         switchTab('serve'); 
                         getRandomTask(true);
-                    }, 100);
+                    }, 150);
                 }
             } catch (err) {
-                console.error("Failed to load profile", err);
+                console.error("Critical Load Error:", err);
             } finally {
-                // 👇 This triggers the re-render that shows the buttons
-                setLoading(false); 
+                setLoading(false);
             }
         }
-
-        loadProfile();
-    }, []);
 
     // ─── 2. ATTACH KNEEL LISTENERS (THE FIX) ─────────────────────────────
     // This runs ONLY after 'loading' becomes false and the buttons exist
