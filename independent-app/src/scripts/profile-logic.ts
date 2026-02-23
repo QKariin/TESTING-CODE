@@ -799,13 +799,44 @@ export function renderProfileSidebar(u: any) {
             // Generate valid HTML attribute safely escaping quotes
             const safeVal = existingValue ? existingValue.replace(/"/g, '&quot;') : '';
 
-            // The ADD button for missing fields, OR the EDIT button for verified fields
-            const actionBtn = fieldId ? `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="padding:4px 12px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:4px;font-family:'Orbitron';font-size:0.55rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">${done ? 'EDIT' : 'ADD'}</button>` : '';
+            // Calculate count for display
+            let countStr = '';
+            if (done && fieldId && existingValue) {
+                if (fieldId === 'kinks' || fieldId === 'limits' || fieldId === 'routine') {
+                    // Try to parse as array if it's JSON, otherwise split by comma if it's a string, else fallback to 1
+                    try {
+                        const parsed = JSON.parse(existingValue);
+                        countStr = Array.isArray(parsed) ? `[${parsed.length}] ` : '[1] ';
+                    } catch (e) {
+                        // It's a standard string. Split by commas if it looks like a list.
+                        if (existingValue.includes(',')) {
+                            countStr = `[${existingValue.split(',').length}] `;
+                        } else {
+                            countStr = '[1] ';
+                        }
+                    }
+                }
+            }
 
-            return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.6rem;font-family:'Orbitron';letter-spacing:1px;"><span style="color:rgba(255,255,255,0.5);">${label}</span><div style="display:flex;align-items:center;gap:12px;">${actionBtn}</div></div>`;
+            // The ADD button for missing fields, OR the EDIT button with Golden Pen for verified fields
+            let actionBtn = '';
+            if (fieldId && !done) {
+                actionBtn = `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="padding:4px 12px;background:transparent;color:#ff4444;border:1px solid #ff4444;border-radius:4px;font-family:'Orbitron';font-size:0.55rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>`;
+            } else if (fieldId && done) {
+                // Golden Pen SVG + Count
+                actionBtn = `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="padding:2px 8px;background:transparent;color:#c5a059;border:none;border-radius:4px;font-family:'Orbitron';font-size:0.6rem;font-weight:bold;cursor:pointer;letter-spacing:1px;display:flex;align-items:center;gap:6px;">
+                    ${countStr}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#c5a059;">
+                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                    </svg>
+                </button>`;
+            }
+
+            // Remove the VERIFIED / MISSING text entirely, just show the action button aligned logically
+            return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.6rem;font-family:'Orbitron';letter-spacing:1px;"><span style="color:rgba(255,255,255,0.5);">${label}</span><div style="display:flex;align-items:center;">${actionBtn}</div></div>`;
         };
 
-        const iconMap: Record<string, string> = { LABOR: '🛠️', ENDURANCE: '🧎', MERIT: '✨', SACRIFICE: '💰', CONSISTENCY: '📅' };
+        const iconMap: Record<string, string> = { LABOR: '', ENDURANCE: '', MERIT: '', SACRIFICE: '', CONSISTENCY: '' };
         const fieldIdMap: Record<string, string> = { IDENTITY: 'name', PHOTO: 'avatar_url', LIMITS: 'limits', KINKS: 'kinks', ROUTINE: 'routine' };
 
         let html = '';
