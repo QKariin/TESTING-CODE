@@ -10,43 +10,46 @@ export async function handleLogout() {
 
 export async function claimKneelReward(type: 'coins' | 'points') {
     const currentState = getState();
-    const { id, memberId, wallet, score, raw } = currentState;
+    // Grab the raw data that we know works
+    const { raw, id, memberId, wallet, score } = currentState;
     const pid = id || memberId;
+    
     if (!pid) return;
 
     const amount = type === 'coins' ? 10 : 50;
 
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
 
-    // 1. Calculate new values
+    // 1. Calculate New Values
     const newWallet = type === 'coins' ? (wallet || 0) + amount : (wallet || 0);
     const newScore = type === 'points' ? (score || 0) + amount : (score || 0);
 
-    // 2. Update State AND the Raw Backup
-    // We must update 'raw' because renderProfileSidebar uses it to calculate rank/stats
-    // If we don't update 'raw', the sidebar might see the old wallet value or lose task stats
-    const updatedRaw = { ...raw, wallet: newWallet, score: newScore };
+    // 2. Update the RAW backup manually
+    // This ensures 'kneelCount' and 'Taskdom_CompletedTasks' are still there
+    // while we update the money.
+    const updatedRaw = { ...raw };
+    if (type === 'coins') updatedRaw.wallet = newWallet;
+    else updatedRaw.score = newScore;
 
+    // 3. Save State (UI numbers update)
     setState({ 
         wallet: newWallet, 
-        score: newScore,
+        score: newScore, 
         raw: updatedRaw 
     });
 
     if (type === 'coins') triggerCoinShower();
 
-    // 3. Hide Overlays
     document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
     document.getElementById('mobKneelReward')?.classList.add('hidden');
 
-    // 4. Play Sound
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
     if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
-    // 5. RENDER SIDEBAR using the UPDATED raw data
+    // 4. RENDER SIDEBAR WITH THE FULL DATA (Fixes the reset)
     renderProfileSidebar(updatedRaw);
 
-    // 6. Background Save
+    // 5. Save to DB
     try {
         fetch('/api/claim-reward', { 
             method: 'POST',
