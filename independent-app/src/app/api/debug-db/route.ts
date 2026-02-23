@@ -24,10 +24,19 @@ export async function GET() {
         results.tasks = { count: tCount, error: tError?.message || "none" };
 
         // 3. Try to fetch ONE legacy email for proof
-        const { data: sample } = await admin.from('tasks').select('MemberID').limit(1).maybeSingle();
-        results.sampleLegacyEmail = sample?.MemberID || "NO_RECORDS_FOUND";
+        const { data: sample, error: sampleErr } = await admin.from('tasks').select('*').limit(1).maybeSingle();
+        results.sampleData = sample || { error: sampleErr?.message };
 
-        return NextResponse.json(results);
+        if (sample && sample.member_id) {
+            // 4. Test an explicitly targeted update to see if it throws a constraint/type error
+            const { error: updateErr } = await admin.from('tasks')
+                .update({ lastWorship: new Date().toISOString() })
+                .eq('member_id', sample.member_id);
+
+            results.testUpdate = { success: !updateErr, error: updateErr?.message || null };
+        }
+
+        return NextResponse.json(results, { status: 200, headers: { 'Cache-Control': 'no-store' } });
     } catch (err: any) {
         return NextResponse.json({ connected: false, error: err.message }, { status: 500 });
     }
