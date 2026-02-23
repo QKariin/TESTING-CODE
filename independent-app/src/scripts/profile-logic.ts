@@ -747,7 +747,9 @@ export function renderProfileSidebar(u: any) {
     }
 
     const elCurBen = document.getElementById('desk_CurrentBenefits');
-    if (elCurBen) elCurBen.innerText = currentBenefits[0] || '';
+    if (elCurBen) {
+        elCurBen.innerHTML = currentBenefits.map(b => `<li>${b}</li>`).join('');
+    }
 
     const elNextBen = document.getElementById('desk_NextBenefits');
     if (elNextBen) {

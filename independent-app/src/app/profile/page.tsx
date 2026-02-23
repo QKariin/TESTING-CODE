@@ -46,6 +46,7 @@ import {
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
+    const [benefitsOpen, setBenefitsOpen] = useState(false);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -244,9 +245,24 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* MOVED: CURRENT BENEFITS */}
+                        {/* MOVED: CURRENT BENEFITS (NOW A DRAWER) */}
                         <div style={{ marginTop: 20, paddingTop: 15, borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                            <div id="desk_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', padding: '0 5px', lineHeight: 1.4 }}></div>
+                            <button
+                                onClick={() => setBenefitsOpen(!benefitsOpen)}
+                                style={{ background: 'none', border: 'none', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.65rem', cursor: 'pointer', letterSpacing: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', gap: 10 }}
+                            >
+                                <span>CURRENT PRIVILEGES</span>
+                                <i className={`fas fa-chevron-${benefitsOpen ? 'up' : 'down'}`} style={{ transition: 'transform 0.3s' }}></i>
+                            </button>
+                            <div style={{
+                                maxHeight: benefitsOpen ? '300px' : '0px',
+                                overflow: 'hidden',
+                                transition: 'all 0.4s ease-in-out',
+                                opacity: benefitsOpen ? 1 : 0,
+                                marginTop: benefitsOpen ? 10 : 0
+                            }}>
+                                <ul id="desk_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)', padding: '5px 15px', lineHeight: 1.6, margin: 0, textAlign: 'left', paddingLeft: 30 }}></ul>
+                            </div>
                         </div>
                     </div>
 
