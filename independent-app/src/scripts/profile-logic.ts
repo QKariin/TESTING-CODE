@@ -255,10 +255,24 @@ export function toggleTributeHunt() {
     const isMobile = window.innerWidth <= 768; // basic mobile check
     if (isMobile) {
         const overlayMob = document.getElementById('mob_TributeOverlay');
-        overlayMob?.classList.toggle('hidden');
+        if (overlayMob) {
+            if (overlayMob.style.display === 'none' || overlayMob.classList.contains('hidden')) {
+                overlayMob.style.display = 'flex';
+                overlayMob.classList.remove('hidden');
+            } else {
+                overlayMob.style.display = 'none';
+            }
+        }
     } else {
         const overlayDesk = document.getElementById('tributeHuntOverlay');
-        overlayDesk?.classList.toggle('hidden');
+        if (overlayDesk) {
+            if (overlayDesk.style.display === 'none' || overlayDesk.classList.contains('hidden')) {
+                overlayDesk.style.display = 'flex';
+                overlayDesk.classList.remove('hidden');
+            } else {
+                overlayDesk.style.display = 'none';
+            }
+        }
     }
 }
 
