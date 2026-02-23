@@ -421,13 +421,16 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* OVERLAY TRIBUTE MODAL - Position Absolute constraints it to gridRightSection instead of Fixed/entire screen */}
-                    <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.98)', zIndex: 10000, display: 'none', flexDirection: 'column', padding: '30px', backdropFilter: 'blur(20px)', borderLeft: '1px solid var(--gold)' }}>
-                        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
-                            <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '1.5rem', letterSpacing: '4px', fontWeight: 700 }}>TRIBUTE STORE</span>
-                            <button onClick={() => toggleTributeHunt()} style={{ color: '#666', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '2rem', transition: '0.3s' }}>×</button>
+                    {/* OVERLAY TRIBUTE MODAL - Position Absolute constraints it to the main content area */}
+                    <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, background: 'rgba(2, 5, 18, 0.75)', zIndex: 10000, display: 'none', flexDirection: 'column', padding: '40px', backdropFilter: 'blur(25px)', borderRadius: '20px', border: '1px solid rgba(197, 160, 89, 0.2)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+                        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(197, 160, 89, 0.3)', paddingBottom: '20px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '1.8rem', letterSpacing: '4px', fontWeight: 700, textShadow: '0 0 15px rgba(197, 160, 89, 0.4)' }}>TRIBUTE STORE</span>
+                                <span style={{ fontFamily: 'Orbitron', color: '#888', fontSize: '0.7rem', letterSpacing: '2px', marginTop: '5px' }}>SELECT AN OFFERING TO PROVE YOUR DEVOTION</span>
+                            </div>
+                            <button onClick={() => toggleTributeHunt()} style={{ color: '#fff', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,0,0,0.2)'; e.currentTarget.style.borderColor = 'red'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}>×</button>
                         </div>
-                        <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px', padding: '10px' }}></div>
+                        <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px', padding: '10px 5px', paddingBottom: '30px' }}></div>
                     </div>
 
                     <div id="gridRightSection" className="serve-grid-item" style={{ display: 'flex', flexDirection: 'row', gap: 25, overflow: 'hidden' }}>

@@ -184,12 +184,15 @@ function renderTributes() {
     if (quickBox && globalTributes.length >= 2) {
         const quickItems = globalTributes.slice(0, 2);
         quickBox.innerHTML = quickItems.map(t => `
-            <div class="quick-tribute-item" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:10px 15px; border-radius:8px; cursor:pointer; border:1px solid transparent; transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)', this.style.background='rgba(197,160,89,0.1)'" onmouseout="this.style.borderColor='transparent', this.style.background='rgba(255,255,255,0.03)'">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:30px; height:30px; border-radius:4px; background:url('${t.image}') center/cover; border:1px solid rgba(255,255,255,0.1);"></div>
-                    <span style="font-family:'Cinzel'; font-size:0.8rem; color:#fff;">${t.title}</span>
+            <div class="quick-tribute-item" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})" style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(90deg, rgba(20,20,20,0.8), rgba(0,0,0,0.4)); padding:12px 18px; border-radius:8px; cursor:pointer; border:1px solid rgba(197, 160, 89, 0.2); transition:all 0.3s ease; box-shadow:0 4px 15px rgba(0,0,0,0.3);" onmouseover="this.style.borderColor='rgba(197,160,89,0.8)'; this.style.background='linear-gradient(90deg, rgba(30,30,30,0.9), rgba(10,10,10,0.6))'; this.style.transform='translateX(5px)'; this.style.boxShadow='0 6px 20px rgba(197,160,89,0.15)';" onmouseout="this.style.borderColor='rgba(197, 160, 89, 0.2)'; this.style.background='linear-gradient(90deg, rgba(20,20,20,0.8), rgba(0,0,0,0.4))'; this.style.transform='translateX(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)';">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:36px; height:36px; border-radius:6px; background:url('${t.image}') center/cover; border:1px solid rgba(255,255,255,0.1); box-shadow:0 2px 8px rgba(0,0,0,0.5);"></div>
+                    <span style="font-family:'Cinzel'; font-size:0.85rem; color:#fff; font-weight:700; letter-spacing:1px;">${t.title}</span>
                 </div>
-                <div style="font-family:'Orbitron'; font-size:0.75rem; color:'var(--gold)'; font-weight:bold;">${t.price.toLocaleString()} 🪙</div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:0.75rem; color:#888;">🪙</span>
+                    <div style="font-family:'Orbitron'; font-size:0.85rem; color:'#c5a059'; font-weight:800; letter-spacing:1px;">${t.price.toLocaleString()}</div>
+                </div>
             </div>
         `).join('');
     }
@@ -199,11 +202,15 @@ function renderTributes() {
     const renderGrid = (gridEl: HTMLElement) => {
         if (!gridEl) return;
         gridEl.innerHTML = globalTributes.map(t => `
-            <div class="store-item v-card" style="padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:space-between; cursor:pointer; transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)', this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.05)', this.style.transform='translateY(0)'" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})">
-                <div style="width:100%; height:120px; border-radius:8px; margin-bottom:15px; background:url('${t.image}') center/cover; border:1px solid rgba(255,255,255,0.1);"></div>
-                <div style="font-family:'Cinzel'; font-size:0.9rem; color:#fff; text-align:center; min-height:40px; display:flex; align-items:center; justify-content:center;">${t.title}</div>
-                <div style="font-family:'Orbitron'; font-size:1.1rem; font-weight:bold; color:'var(--gold)'; margin:10px 0;">${t.price.toLocaleString()} 🪙</div>
-                <button class="action-btn" style="width:100%; border:none; background:'var(--gold)'; color:'#000'; font-size:0.8rem; padding:8px; pointer-events:none;">SEND</button>
+            <div class="store-item v-card" style="padding:0; margin:0; display:flex; flex-direction:column; align-items:center; justify-content:space-between; cursor:pointer; transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); background:linear-gradient(180deg, rgba(20,20,20,0.9), rgba(5,5,5,1)); border:1px solid rgba(197, 160, 89, 0.15); border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5);" onmouseover="this.style.borderColor='rgba(197,160,89,0.8)'; this.style.transform='translateY(-5px) scale(1.02)'; this.style.boxShadow='0 15px 40px rgba(197,160,89,0.15)'; this.querySelector('.action-btn').style.background='#fff'; this.querySelector('.action-btn').style.color='#000';" onmouseout="this.style.borderColor='rgba(197, 160, 89, 0.15)'; this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.5)'; this.querySelector('.action-btn').style.background='var(--gold)'; this.querySelector('.action-btn').style.color='#000';" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})">
+                <div style="width:100%; height:140px; background:url('${t.image}') center/cover; position:relative;">
+                    <div style="position:absolute; inset:0; background:linear-gradient(0deg, #050505 0%, transparent 50%); content:'';"></div>
+                </div>
+                <div style="width:100%; padding:15px; display:flex; flex-direction:column; align-items:center;">
+                    <div style="font-family:'Cinzel'; font-size:1rem; color:#fff; text-align:center; min-height:45px; display:flex; align-items:center; justify-content:center; font-weight:700; letter-spacing:1px;">${t.title}</div>
+                    <div style="font-family:'Orbitron'; font-size:1.2rem; font-weight:800; color:'#c5a059'; margin:10px 0; display:flex; align-items:center; gap:5px;"><span style="font-size:0.8rem; color:#888;">🪙</span> ${t.price.toLocaleString()}</div>
+                    <button class="action-btn" style="width:100%; border:none; background:'var(--gold)'; color:'#000'; font-size:0.75rem; padding:12px; margin-top:5px; border-radius:6px; letter-spacing:2px; font-weight:bold; transition:all 0.3s ease; pointer-events:none;">OFFER</button>
+                </div>
             </div>
         `).join('');
     };
