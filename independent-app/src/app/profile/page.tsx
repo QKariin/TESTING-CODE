@@ -1,11 +1,10 @@
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
-import { getState, setState, initProfileState } from '@/scripts/profile-state';
-import { handleHoldStart, handleHoldEnd, updateKneelingUI, attachKneelListeners } from '@/scripts/kneeling';
+import { initProfileState } from '@/scripts/profile-state';
+import { updateKneelingUI, attachKneelListeners } from '@/scripts/kneeling';
 import { createClient } from '@/utils/supabase/client';
 import {
     claimKneelReward,
@@ -17,9 +16,6 @@ import {
     closeQueenMenu,
     toggleMobileStats,
     toggleMobileChat,
-    mobileRequestTask,
-    mobileSkipTask,
-    mobileUploadEvidence,
     handleRoutineUpload,
     handleProfileUpload,
     handleAdminUpload,
@@ -50,11 +46,10 @@ export default function ProfilePage() {
     const [profile, setProfile] = useState<any>(null);
     const supabase = createClient();
 
+    // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
-        // Inject scripts into window for legacy compatibility (DOM onclick handlers)
+        // Legacy Window Assignments
         if (typeof window !== 'undefined') {
-            (window as any).handleHoldStart = handleHoldStart;
-            (window as any).handleHoldEnd = handleHoldEnd;
             (window as any).claimKneelReward = claimKneelReward;
             (window as any).switchTab = switchTab;
             (window as any).toggleTributeHunt = toggleTributeHunt;
@@ -99,63 +94,69 @@ export default function ProfilePage() {
                     return;
                 }
 
-                // Query Supabase directly — no API needed
-                // RLS policy allows: auth.uid()=id OR email=member_id
-                const { data: profileData, error } = await supabase
+                // 1. Fetch Identity (PROFILES)
+                const { data: profileData } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('member_id', user.email)
                     .maybeSingle();
 
-                if (error) console.error('Profile fetch error:', error);
+                let baseProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
-                if (profileData) {
-                    setProfile(profileData);
-                    initProfileState(profileData);
-                    setTimeout(() => {
-                        renderProfileSidebar(profileData);
-                        updateKneelingUI();
-                        attachKneelListeners();
-                        switchTab('serve'); // Show dashboard by default
-                        getRandomTask(true); // Restore active task if exists
-                    }, 150);
-                } else {
-                    // Fallback: try by UUID
-                    const { data: byId } = await supabase
-                        .from('profiles')
+                if (baseProfile) {
+                    // 2. Fetch Stats (TASKS) - Correct Case Sensitive Check
+                    const { data: taskData } = await supabase
+                        .from('tasks')
                         .select('*')
-                        .eq('id', user.id)
+                        .eq('"MemberID"', baseProfile.member_id) 
                         .maybeSingle();
 
-                    if (byId) {
-                        setProfile(byId);
-                        initProfileState(byId);
-                        setTimeout(() => {
-                            renderProfileSidebar(byId);
-                            updateKneelingUI();
-                            attachKneelListeners();
-                            switchTab('serve'); // Show dashboard by default
-                            getRandomTask(true); // Restore active task if exists
-                        }, 150);
-                    }
+                    // 3. MERGE (Without renaming keys!)
+                    const unifiedData = { 
+                        ...baseProfile, 
+                        ...(taskData || {}) 
+                    };
+
+                    console.log("[ONE SOURCE] Loaded Data:", unifiedData);
+
+                    // 4. Initialize State & UI
+                    setProfile(unifiedData);
+                    initProfileState(unifiedData);
+                    
+                    setTimeout(() => {
+                        renderProfileSidebar(unifiedData);
+                        updateKneelingUI(); 
+                        attachKneelListeners();
+                        switchTab('serve'); 
+                        getRandomTask(true);
+                    }, 150);
                 }
             } catch (err) {
-                console.error("Failed to load profile", err);
+                console.error("Critical Load Error:", err);
             } finally {
                 setLoading(false);
             }
         }
 
         loadProfile();
-
-        const timer = setInterval(() => {
-            updateKneelingUI();
-        }, 1000);
-
-        return () => clearInterval(timer);
     }, []);
 
-    // ─── Kneel button listeners ── handled by kneeling.ts completely ───
+    // ─── 2. ATTACH KNEEL LISTENERS ────────────────────────────────────────
+    useEffect(() => {
+        if (!loading) {
+            const timer = setTimeout(() => {
+                attachKneelListeners();
+                updateKneelingUI();
+            }, 300);
+
+            const interval = setInterval(updateKneelingUI, 1000);
+
+            return () => {
+                clearTimeout(timer);
+                clearInterval(interval);
+            };
+        }
+    }, [loading]);
 
     if (loading) return (
         <div id="loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: 'var(--gold)', fontFamily: 'Cinzel' }}>
@@ -194,7 +195,6 @@ export default function ProfilePage() {
 
             {/* UNIVERSAL DESKTOP APP */}
             <div id="DESKTOP_APP">
-                {/* TRIBUTE STORE OVERLAY */}
                 <div id="tributeHuntOverlay" className="hidden" style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.98)', zIndex: 10000, display: 'none', flexDirection: 'column', padding: '60px', backdropFilter: 'blur(20px)' }}>
                     <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
                         <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '2rem', letterSpacing: '6px', fontWeight: 700 }}>TRIBUTE STORE</span>
@@ -203,7 +203,7 @@ export default function ProfilePage() {
                     <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '25px', padding: '10px' }}></div>
                 </div>
 
-                {/* SIDEBAR: SLAVE PROFILE STYLE */}
+                {/* SIDEBAR */}
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div className="v-card" style={{ marginBottom: 20, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()}>
@@ -235,32 +235,25 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* DESKTOP SIDEBAR SCROLLABLE AREA */}
                     <div className="sidebar-scrollable-area" style={{ flex: 1, overflowY: 'auto', width: '100%', display: 'flex', flexDirection: 'column', padding: '0 15px 0 15px', boxSizing: 'border-box', paddingRight: 30 }}>
-
-                        {/* 1. WHO YOU ARE (Current) */}
                         <div id="deskStatsContent" style={{ width: '100%', textAlign: 'center', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 12, flexShrink: 0 }}>
                             <div style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>CURRENT CLASSIFICATION</div>
                             <div id="desk_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.1rem', color: '#fff', margin: '4px 0', textTransform: 'uppercase' }}>{profile?.rank || "LOADING..."}</div>
                             <div id="desk_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', padding: '0 5px', lineHeight: 1.4 }}></div>
                         </div>
 
-                        {/* 2. THE TARGET (Next Rank - WORKING ON) */}
                         <div id="desk_WorkingOnSection" style={{ width: '100%', textAlign: 'center', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 15, flexShrink: 0 }}>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: 2, marginBottom: 2 }}>WORKING ON</div>
                             <div id="desk_WorkingOnRank" style={{ fontFamily: 'Orbitron', fontSize: '0.9rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold' }}>...</div>
                         </div>
 
-                        {/* 3. THE MATH (Progress Bars) */}
                         <div id="desk_ProgressContainer" style={{ width: '100%', marginBottom: 15, flexShrink: 0 }}></div>
 
-                        {/* 4. THE PRIZE (Next Benefits) */}
                         <div style={{ width: '100%', textAlign: 'left', padding: '0 2px', marginBottom: 25, flexShrink: 0 }}>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', marginBottom: 6 }}>PRIVILEGES GRANTED</div>
                             <ul id="desk_NextBenefits" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, margin: 0 }}></ul>
                         </div>
 
-                        {/* 5. NAVIGATION MENU (Inside scrollable flow) */}
                         <div className="nav-menu" style={{ width: '100%', padding: '15px 0', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 20 }}>
                             <button className="nav-btn" onClick={() => switchTab('serve')}>
                                 <span style={{ fontSize: '1.2rem', marginRight: 10 }}>🏠</span> DASHBOARD
@@ -458,7 +451,7 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            {/* 🟢 MOBILE UNIVERSE (FULL CODE - REORDERED) */}
+            {/* MOBILE APP */}
             <div id="MOBILE_APP" style={{ display: 'none' }}>
                 <div id="viewMobileHome" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', maxWidth: '100vw', height: '100dvh', overflowY: 'auto', overflowX: 'hidden', display: 'block', padding: 0, zIndex: 1, background: 'transparent' }}>
                     <div className="mob-hud-row">
@@ -677,6 +670,7 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
+                            {/* MOBILE KNEELING BUTTON (CONNECTED TO kneeling.ts) */}
                             <div className="halo-stack" style={{ padding: '0 20px', width: '100%', marginTop: '15px', marginBottom: '30px' }}>
                                 <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone">
                                     <div id="mob_kneelFill" className="mob-bar-fill"></div>
