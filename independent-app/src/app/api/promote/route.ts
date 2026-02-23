@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getHierarchyReport } from '@/lib/hierarchyRules';
+import { getHierarchyReport } from '@/scripts/hierarchy-rules';
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +26,10 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         // 3. Merge for logic check (simulating exactly what the frontend does)
+        const profileParams = profile.parameters || {};
         const unifiedData = {
             ...profile,
+            ...profileParams,
             ...(taskData || {})
         };
 
