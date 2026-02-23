@@ -116,13 +116,13 @@ export async function POST(req: Request) {
                 console.log(`- Strategy C: No other user found with email ${userEmail} in auth.users`);
             }
         }
-        // Strategy D: Match by MemberID in 'tasks' table
+        // Strategy D: Match by member_id in 'tasks' table
         if (!legacy) {
-            console.log(`- Strategy D: Searching 'tasks' table for \"MemberID\": ${userEmail}`);
+            console.log(`- Strategy D: Searching 'tasks' table for "member_id": ${userEmail}`);
             const { data: taskMatch, error: dError } = await supabaseAdmin
                 .from('tasks')
-                .select('"MemberID"')
-                .ilike('"MemberID"', userEmail)
+                .select('member_id')
+                .ilike('member_id', userEmail)
                 .limit(1)
                 .maybeSingle();
 

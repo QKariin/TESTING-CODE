@@ -27,13 +27,13 @@ export const DbService = {
         const { data: taskData } = await supabase
             .from('tasks')
             .select('*')
-            .ilike('MemberID', memberId)
+            .ilike('member_id', memberId)
             .maybeSingle();
 
         if (taskData) {
             return {
                 id: null,
-                member_id: taskData.MemberID,
+                member_id: taskData.member_id,
                 name: taskData.Name || 'Slave',
                 wallet: taskData.Wallet || 0,
                 score: taskData.Score || 0,
@@ -265,7 +265,7 @@ export const DbService = {
             .from('tasks')
             .insert({
                 id: taskId,
-                MemberID: memberId,
+                member_id: memberId,
                 Name: profile.name,
                 TaskText: taskText,
                 proofUrl: proofUrl,

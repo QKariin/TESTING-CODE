@@ -12,11 +12,11 @@ export async function POST(req: Request) {
         const { memberEmail } = await req.json();
         if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
 
-        // Fetch current record from tasks table (MemberID = email, case-insensitive)
+        // Fetch current record from tasks table (member_id = email, case-insensitive)
         const { data: task } = await supabaseAdmin
             .from('tasks')
             .select('lastWorship, kneelCount, "today kneeling"')
-            .ilike('"MemberID"', memberEmail)
+            .ilike('member_id', memberEmail)
             .maybeSingle();
 
         const now = new Date();
@@ -42,15 +42,14 @@ export async function POST(req: Request) {
         const newTodayKneeling = isSameDay ? prevToday + 1 : 1;
         const newKneelCount = parseInt(task?.kneelCount || '0', 10) + 1;
 
-        // Update tasks table
         const { error } = await supabaseAdmin
             .from('tasks')
-            .update({
+            .upsert({
+                member_id: memberEmail, // Keep this here since upsert might create a new row
                 lastWorship: now.toISOString(),
                 kneelCount: String(newKneelCount),
                 'today kneeling': String(newTodayKneeling),
-            })
-            .eq('"MemberID"', memberEmail);
+            }, { onConflict: 'member_id' });
 
         if (error) {
             console.error('[kneel] update error:', error);

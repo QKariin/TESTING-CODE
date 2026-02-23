@@ -111,7 +111,7 @@ export default function ProfilePage() {
                     const { data: taskData } = await supabase
                         .from('tasks')
                         .select('*')
-                        .eq('"MemberID"', baseProfile.member_id)
+                        .eq('member_id', baseProfile.member_id)
                         .maybeSingle();
                     // 3. MERGE (Without renaming keys!)
                     const unifiedData = {
