@@ -38,13 +38,14 @@ import {
     getRandomTask,
     skipTask,
     renderProfileSidebar,
-    handleLogout
+    handleLogout,
+    debugBytescale,
+    mobileUploadEvidence
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
-    const supabase = createClient();
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -61,7 +62,7 @@ export default function ProfilePage() {
             (window as any).toggleMobileChat = toggleMobileChat;
             (window as any).mobileRequestTask = () => { getRandomTask(); };
             (window as any).mobileSkipTask = () => { skipTask(); };
-            (window as any).mobileUploadEvidence = (input: HTMLInputElement) => { console.log("Upload evidence", input.files); };
+            (window as any).mobileUploadEvidence = mobileUploadEvidence;
             (window as any).handleRoutineUpload = handleRoutineUpload;
             (window as any).handleProfileUpload = handleProfileUpload;
             (window as any).handleAdminUpload = handleAdminUpload;
@@ -84,10 +85,12 @@ export default function ProfilePage() {
             (window as any).getRandomTask = getRandomTask;
             (window as any).skipTask = skipTask;
             (window as any).handleLogout = handleLogout;
+            (window as any).debugBytescale = debugBytescale;
         }
 
         async function loadProfile() {
             try {
+                const supabase = createClient();
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
                     window.location.href = '/login';
@@ -108,13 +111,12 @@ export default function ProfilePage() {
                     const { data: taskData } = await supabase
                         .from('tasks')
                         .select('*')
-                        .eq('"MemberID"', baseProfile.member_id) 
+                        .eq('"MemberID"', baseProfile.member_id)
                         .maybeSingle();
-
                     // 3. MERGE (Without renaming keys!)
-                    const unifiedData = { 
-                        ...baseProfile, 
-                        ...(taskData || {}) 
+                    const unifiedData = {
+                        ...baseProfile,
+                        ...(taskData || {})
                     };
 
                     console.log("[ONE SOURCE] Loaded Data:", unifiedData);
@@ -122,18 +124,19 @@ export default function ProfilePage() {
                     // 4. Initialize State & UI
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
-                    
+
                     setTimeout(() => {
                         renderProfileSidebar(unifiedData);
-                        updateKneelingUI(); 
+                        updateKneelingUI();
                         attachKneelListeners();
-                        switchTab('serve'); 
+                        switchTab('serve');
                         getRandomTask(true);
                     }, 150);
                 }
             } catch (err) {
                 console.error("Critical Load Error:", err);
             } finally {
+
                 setLoading(false);
             }
         }
@@ -174,14 +177,15 @@ export default function ProfilePage() {
             width: '100vw',
             overflowX: 'hidden'
         }}>
+
             {/* SOUNDS & INPUTS */}
             <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
             <audio id="coinSound" src="/audio/2019-preview1.mp3"></audio>
             <audio id="skipSound" src="https://static.wixstatic.com/mp3/ce3e5b_3b5b34d4083847e2b123b6fd9a8551fd.mp3"></audio>
 
             <input type="file" id="profileUploadInput" accept="image/*" className="hidden" />
-            <input type="file" id="routineUploadInput" accept="image/*" className="hidden" />
-            <input type="file" id="evidenceInputMob" accept="image/*" className="hidden" />
+            <input type="file" id="routineUploadInput" accept="image/*" className="hidden" onChange={(e: any) => handleRoutineUpload(e.target)} />
+            <input type="file" id="evidenceInputMob" accept="image/*" className="hidden" onChange={(e: any) => mobileUploadEvidence(e.target)} />
             <input type="file" id="chatMediaInput" accept="image/*,video/*" className="hidden" />
 
             {/* CELEBRATION OVERLAY */}
@@ -397,6 +401,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
+
                 {/* OTHER VIEWS */}
                 <div id="historySection" className="view-wrapper" style={{ perspective: 1000, padding: 0, minHeight: '80vh' }}>
                     <div className="record-landing">
@@ -526,7 +531,7 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             </div>
-                            <div style={{ width: '100%' }}>
+                            <div style={{ width: '100%', marginBottom: '25px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
                                 <div className="duty-label">LABOR COMPLETED</div>
                                 <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '15px' }}>
                                     <div style={{ textAlign: 'center' }}>
@@ -538,6 +543,10 @@ export default function ProfilePage() {
                                         <div id="mobTotal" style={{ fontSize: '1.8rem', color: '#c5a059', fontFamily: 'Orbitron' }}>0</div>
                                     </div>
                                 </div>
+                            </div>
+                            <div style={{ width: '100%', borderTop: '1px solid #333', paddingTop: '20px', marginTop: '10px', textAlign: 'center' }}>
+                                <div className="duty-label">SYSTEM DIAGNOSTICS</div>
+                                <button className="action-btn" onClick={() => (window as any).debugBytescale()} style={{ marginTop: '10px', background: '#333', fontSize: '0.7rem', opacity: 0.6 }}>TEST BYTESCALE</button>
                             </div>
                         </div>
                     </div>

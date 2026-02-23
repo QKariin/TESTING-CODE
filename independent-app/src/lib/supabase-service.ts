@@ -97,12 +97,19 @@ export const DbService = {
         const newWallet = (profile.wallet || 0) + amount;
         if (newWallet < 0) throw new Error("Insufficient Capital");
 
-        // Safely handle total_coins_spent if column exists
+        // Safely execute the update
         const updates: any = { wallet: newWallet };
-        if ('total_coins_spent' in profile) {
-            updates.total_coins_spent = amount < 0
-                ? (profile.total_coins_spent || 0) + Math.abs(amount)
-                : (profile.total_coins_spent || 0);
+
+        // Increment total_coins_spent in JSONB parameters
+        if (amount < 0) {
+            const params = { ...(profile.parameters || {}) };
+            params.total_coins_spent = (params.total_coins_spent || 0) + Math.abs(amount);
+            updates.parameters = params;
+
+            // Also update legacy column if it exists in the row
+            if (profile.hasOwnProperty('total_coins_spent')) {
+                updates.total_coins_spent = (profile.total_coins_spent || 0) + Math.abs(amount);
+            }
         }
 
         return this.updateProfile(profile.id, updates);
@@ -184,6 +191,7 @@ export const DbService = {
     },
 
     async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
+        // 1. Update tasks table
         const { error: taskError } = await supabase
             .from('tasks')
             .update({ status: 'approve', reviewer_comment: comment, sticker_url: sticker })
@@ -193,15 +201,103 @@ export const DbService = {
         const profile = await this.getProfile(profileId);
         if (!profile || !profile.id) return;
 
-        const updates = {
+        // 2. Sync profile JSONB columns (task_queue and routine_history)
+        let queue = profile.task_queue || [];
+        queue = queue.filter((t: any) => t.id !== taskId);
+
+        let history = profile.routine_history || [];
+        const histIdx = history.findIndex((t: any) => t.id === taskId);
+        if (histIdx > -1) {
+            history[histIdx].status = 'approve';
+            history[histIdx].completed = true;
+        }
+
+        const updates: any = {
             wallet: (profile.wallet || 0) + bonus,
             score: (profile.score || 0) + bonus,
+            task_queue: queue,
+            routine_history: history,
             parameters: {
                 ...(profile.parameters || {}),
                 taskdom_completed_tasks: (profile.parameters?.taskdom_completed_tasks || 0) + 1
             }
         };
         await this.updateProfile(profile.id, updates);
+    },
+
+    async rejectTask(taskId: string, profileId: string) {
+        // 1. Update tasks table
+        const { error: taskError } = await supabase
+            .from('tasks')
+            .update({ status: 'reject' })
+            .eq('id', taskId);
+        if (taskError) throw taskError;
+
+        const profile = await this.getProfile(profileId);
+        if (!profile || !profile.id) return;
+
+        // 2. Sync profile JSONB
+        let queue = profile.task_queue || [];
+        queue = queue.filter((t: any) => t.id !== taskId);
+
+        let history = profile.routine_history || [];
+        const histIdx = history.findIndex((t: any) => t.id === taskId);
+        if (histIdx > -1) {
+            history[histIdx].status = 'reject';
+            history[histIdx].completed = false;
+        }
+
+        await this.updateProfile(profile.id, {
+            task_queue: queue,
+            routine_history: history
+        });
+    },
+
+    async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string) {
+        const profile = await this.getProfile(memberId);
+        if (!profile || !profile.id) throw new Error("Profile not linked");
+
+        const taskId = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        // 1. Create entry in tasks table for Dashboard visibility
+        const { error: taskError } = await supabase
+            .from('tasks')
+            .insert({
+                id: taskId,
+                MemberID: memberId,
+                Name: profile.name,
+                TaskText: taskText,
+                proofUrl: proofUrl,
+                proofType: proofType,
+                status: 'pending',
+                timestamp: now
+            });
+        if (taskError) throw taskError;
+
+        // 2. Update profiles task_queue for dashboard sync and routine_history for user display
+        const queue = profile.task_queue || [];
+        const taskEntry = {
+            id: taskId,
+            text: taskText,
+            proofUrl: proofUrl,
+            proofType: proofType,
+            timestamp: now,
+            status: 'pending'
+        };
+        queue.push(taskEntry);
+
+        const history = profile.routine_history || [];
+        history.unshift(taskEntry);
+
+        const params = { ...(profile.parameters || {}) };
+        delete params.active_task; // Clear the active task assignment
+
+        return this.updateProfile(profile.id, {
+            task_queue: queue,
+            routine_history: history,
+            parameters: params
+        });
     },
 
     async assignTask(memberId: string, task: any) {
@@ -222,7 +318,10 @@ export const DbService = {
 
     async clearTask(memberId: string) {
         const profile = await this.getProfile(memberId);
-        if (!profile || !profile.id) throw new Error("Profile not linked");
+        if (!profile || !profile.id) {
+            console.warn("Attempted to clear task for missing profile:", memberId);
+            return { success: false, error: "Profile not found" };
+        }
 
         const params = { ...(profile.parameters || {}) };
         delete params.active_task;

@@ -74,12 +74,15 @@ export function reviewTask(decision: 'approve' | 'reject') {
     if (decision === 'approve') {
         openRewardProtocol();
     } else {
-        // Handle rejection (API call would replace postMessage)
         console.log("Task rejected:", currTask.id);
-        const u = users.find(x => x.memberId === currTask.memberId);
-        if (u) u.reviewQueue = u.reviewQueue.filter((x: any) => x.id !== currTask.id);
-        import('./dashboard-main').then(m => m.renderMainDashboard());
-        closeModal();
+        DbService.rejectTask(currTask.id!, currTask.memberId!)
+            .then(() => {
+                const u = users.find(x => x.memberId === currTask.memberId);
+                if (u) u.reviewQueue = u.reviewQueue.filter((x: any) => x.id !== currTask.id);
+                import('./dashboard-main').then(m => m.renderMainDashboard());
+                closeModal();
+            })
+            .catch(err => console.error("Rejection error:", err));
     }
 }
 

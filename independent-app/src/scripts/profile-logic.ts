@@ -1,6 +1,7 @@
 import { getState, setState } from './profile-state';
 import { createClient } from '../utils/supabase/client';
 import { getHierarchyReport } from './hierarchy-rules';
+import { uploadToBytescale } from './mediaBytescale';
 
 // ─── LOGOUT ───
 export async function handleLogout() {
@@ -14,7 +15,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     const currentState = getState();
     const { raw, id, memberId, wallet, score } = currentState;
     const pid = id || memberId;
-    
+
     if (!pid) return;
 
     const amount = type === 'coins' ? 10 : 50;
@@ -26,17 +27,17 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     const newScore = type === 'points' ? (score || 0) + amount : (score || 0);
 
     // 2. Update Raw Backup (Critical for Rank)
-    const updatedRaw = { 
-        ...(raw || {}), 
-        wallet: newWallet, 
-        score: newScore 
+    const updatedRaw = {
+        ...(raw || {}),
+        wallet: newWallet,
+        score: newScore
     };
 
     // 3. Save State
-    setState({ 
-        wallet: newWallet, 
-        score: newScore, 
-        raw: updatedRaw 
+    setState({
+        wallet: newWallet,
+        score: newScore,
+        raw: updatedRaw
     });
 
     if (type === 'coins') triggerCoinShower();
@@ -53,12 +54,12 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 
     // 6. Save to DB
     try {
-        fetch('/api/claim-reward', { 
+        fetch('/api/claim-reward', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                choice: type, 
-                memberEmail: pid 
+            body: JSON.stringify({
+                choice: type,
+                memberEmail: pid
             })
         });
     } catch (err) {
@@ -73,7 +74,7 @@ export function switchTab(tab: string) {
         const el = document.getElementById(v);
         if (el) {
             el.classList.add('hidden');
-            el.style.display = 'none'; 
+            el.style.display = 'none';
         }
     });
 
@@ -133,7 +134,7 @@ export function triggerCoinShower() {
     for (let i = 0; i < 20; i++) {
         const coin = document.createElement('div');
         coin.className = 'coin-particle';
-        coin.style.cssText = `position:fixed;width:20px;height:20px;background:radial-gradient(circle,#ffd700 0%,#b8860b 100%);border-radius:50%;left:${Math.random()*100}vw;top:-50px;z-index:9999;transition:top 2s ease-in, opacity 2s ease-in;box-shadow:0 0 10px #ffd700;pointer-events:none;`;
+        coin.style.cssText = `position:fixed;width:20px;height:20px;background:radial-gradient(circle,#ffd700 0%,#b8860b 100%);border-radius:50%;left:${Math.random() * 100}vw;top:-50px;z-index:9999;transition:top 2s ease-in, opacity 2s ease-in;box-shadow:0 0 10px #ffd700;pointer-events:none;`;
         document.body.appendChild(coin);
         setTimeout(() => { coin.style.top = '110vh'; coin.style.opacity = '0'; }, 50);
         setTimeout(() => coin.remove(), 2100);
@@ -198,6 +199,25 @@ export function startTaskTimer(ms: number) {
     }, 1000);
 }
 
+export function resetTaskUI() {
+    if (taskInterval) clearInterval(taskInterval);
+    taskInterval = null;
+
+    const mainArea = document.getElementById('mainButtonsArea');
+    const activeArea = document.getElementById('activeTaskContent');
+    const readyText = document.getElementById('readyText');
+    const qmIdle = document.getElementById('qm_TaskIdle');
+    const qmActive = document.getElementById('qm_TaskActive');
+    const mobTaskText = document.getElementById('mobTaskText');
+
+    if (mainArea) mainArea.style.display = 'flex';
+    if (activeArea) activeArea.classList.add('hidden');
+    if (readyText) readyText.innerText = '-';
+    if (qmIdle) qmIdle.classList.remove('hidden');
+    if (qmActive) qmActive.classList.add('hidden');
+    if (mobTaskText) mobTaskText.innerText = '-';
+}
+
 export async function getRandomTask(isSilentInit = false) {
     const { id, memberId } = getState();
     const pid = id || memberId;
@@ -235,10 +255,7 @@ export async function getRandomTask(isSilentInit = false) {
         }
 
         if (!data.task) {
-            if (mainArea) mainArea.style.display = 'block';
-            if (activeArea) activeArea.classList.add('hidden');
-            if (qmIdle) qmIdle.classList.remove('hidden');
-            if (qmActive) qmActive.classList.add('hidden');
+            resetTaskUI();
             return;
         }
 
@@ -323,9 +340,90 @@ export function toggleMobileChat(show: boolean) {
 
 export function mobileRequestTask() { getRandomTask(); }
 export function mobileSkipTask() { skipTask(); }
-export function mobileUploadEvidence(input: HTMLInputElement) { console.log("Upload evidence", input.files); }
+export function mobileUploadEvidence(input: HTMLInputElement) {
+    if (input.files && input.files[0]) submitTaskEvidence(input.files[0]);
+}
 
-export function handleRoutineUpload(input: HTMLInputElement) { console.log("Routine upload", input.files); }
+export function handleRoutineUpload(input: HTMLInputElement) {
+    if (input.files && input.files[0]) submitTaskEvidence(input.files[0]);
+}
+
+async function submitTaskEvidence(file: File) {
+    const { id, memberId, userName } = getState();
+    const pid = memberId || id;
+    console.log("Starting task submission for:", pid, "File:", file.name, "Size:", file.size);
+
+    if (!pid) {
+        console.error("No memberId found in state during submission.");
+        alert("Verification failed. Please refresh the page.");
+        return;
+    }
+
+    // Capture task text from UI
+    const taskText = document.getElementById('readyText')?.innerText || "Mandatory Task";
+    console.log("Task Text for submission:", taskText);
+
+    // UI Feedback - Handle all possible Desktop and Mobile buttons
+    const uploadBtn = document.getElementById('uploadBtn');        // Desktop Task
+    const mobTaskBtn = document.getElementById('mobBtnUpload');    // Mobile Task
+    const mobRoutineBtn = document.getElementById('btnRoutineUpload'); // Mobile Routine
+
+    const originalText = uploadBtn?.innerText;
+    const originalMobTaskText = mobTaskBtn?.innerText;
+    const originalMobRoutineText = mobRoutineBtn?.innerText;
+
+    if (uploadBtn) uploadBtn.innerText = "UPLOADING...";
+    if (mobTaskBtn) mobTaskBtn.innerText = "SENDING...";
+    if (mobRoutineBtn) mobRoutineBtn.innerText = "SENDING...";
+
+    try {
+        // 1. Upload to Bytescale - Match Legacy parameters
+        console.log("Uploading to Bytescale...");
+        const folder = (userName || "slave").replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
+        const bytescaleUrl = await uploadToBytescale("evidence", file, folder);
+        console.log("Bytescale Upload Result:", bytescaleUrl);
+
+        if (bytescaleUrl === "failed") {
+            console.error("Bytescale upload failed returned 'failed'");
+            alert("Transmission failed. Bytescale connection error.");
+            return;
+        }
+
+        // 2. Submit link to Supabase
+        console.log("Submitting URL to backend API...");
+        const res = await fetch('/api/profile-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'SUBMIT_TASK',
+                memberId: pid,
+                payload: {
+                    proofUrl: bytescaleUrl,
+                    proofType: file.type,
+                    taskText: taskText
+                }
+            })
+        });
+        const data = await res.json();
+        console.log("Backend submission response:", data);
+
+        if (data.success) {
+            console.log("Submission successful!");
+            alert("Evidence submitted. Awaiting Void validation.");
+            resetTaskUI();
+        } else {
+            console.error("Backend submission error:", data.error);
+            alert("Submission failed: " + (data.error || "Unknown error"));
+        }
+    } catch (err) {
+        console.error("Critical submission error", err);
+        alert("Connection error during transmission.");
+    } finally {
+        if (uploadBtn && originalText) uploadBtn.innerText = originalText;
+        if (mobTaskBtn && originalMobTaskText) mobTaskBtn.innerText = originalMobTaskText;
+        if (mobRoutineBtn && originalMobRoutineText) mobRoutineBtn.innerText = originalMobRoutineText;
+    }
+}
 export function handleProfileUpload(input?: HTMLInputElement) { _doProfileUpload(); }
 export function handleAdminUpload(input: HTMLInputElement) { console.log("Admin upload", input.files); }
 
@@ -672,5 +770,34 @@ export function renderProfileSidebar(u: any) {
         if (elPoints) elPoints.innerText = (u.score || 0).toLocaleString();
         const elCoins = document.getElementById('coins');
         if (elCoins) elCoins.innerText = (u.wallet || 0).toLocaleString();
+    }
+}
+// --- DEBUG HELPERS ---
+
+export async function debugBytescale() {
+    console.log("[DEBUG] Starting Bytescale Connection Test...");
+    const { memberId } = getState();
+    if (!memberId) {
+        alert("Debug Error: No member session found.");
+        return;
+    }
+
+    // Create a tiny text file as a blob
+    const debugText = `Bytescale Connection Test\nTimestamp: ${new Date().toISOString()}\nMember: ${memberId}`;
+    const blob = new Blob([debugText], { type: 'text/plain' });
+    const file = new File([blob], "debug_test.txt", { type: 'text/plain' });
+
+    try {
+        const res = await uploadToBytescale("admin", file, "debug_tests");
+        if (res === "failed") {
+            alert("❌ BYTESCALE TEST FAILED\nCheck browser console for detailed status code.");
+            console.error("[DEBUG] Bytescale test upload failed.");
+        } else {
+            alert(`✅ BYTESCALE TEST SUCCESS!\nFile URL: ${res}`);
+            console.log("[DEBUG] Bytescale test success:", res);
+        }
+    } catch (err: any) {
+        alert(`❌ BYTESCALE CONNECTION ERROR\n${err.message}`);
+        console.error("[DEBUG] Bytescale error:", err);
     }
 }

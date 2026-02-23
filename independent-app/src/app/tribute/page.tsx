@@ -9,12 +9,12 @@ export default function TributePage() {
     const router = useRouter();
     const [status, setStatus] = useState<string | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
-    
-    // Initialize the cookie-aware client
-    const supabase = createClient();
+
+    // Supabase client instance will be created lazily to prevent prerender crashes
 
     useEffect(() => {
         const fetchUserAndCheck = async () => {
+            const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
             if (user?.email) {
                 setUserEmail(user.email);
@@ -47,6 +47,7 @@ export default function TributePage() {
 
     const handleLogout = async () => {
         // This now uses the correct client to clear the cookie
+        const supabase = createClient();
         await supabase.auth.signOut();
         window.location.href = '/login';
     };

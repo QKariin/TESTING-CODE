@@ -9,14 +9,33 @@ import { BYTESCALE_CONFIG } from "../lib/config";
 
 function generateFilename(originalFile: File): string {
     const ext = originalFile.name.split(".").pop();
-    return `${crypto.randomUUID()}.${ext}`;
+    let uuid;
+    try {
+        if (typeof crypto?.randomUUID === 'function') {
+            uuid = crypto.randomUUID();
+        } else {
+            uuid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+    } catch (e) {
+        uuid = Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
+    }
+    return `${uuid}.${ext}`;
 }
 
 export async function uploadToBytescale(subject: string, file: File, customFolder?: string): Promise<string> {
     const account = BYTESCALE_CONFIG[subject] || BYTESCALE_CONFIG["admin"];
-    if (!account) throw new Error("Unknown Bytescale account");
+
+    if (!account) {
+        console.error("[Bytescale] Configuration missing for subject:", subject);
+        throw new Error(`Unknown Bytescale account for subject: ${subject}`);
+    }
 
     const { ACCOUNT_ID, PUBLIC_KEY } = account;
+
+    if (!ACCOUNT_ID || !PUBLIC_KEY) {
+        console.error("[Bytescale] Missing required config fields:", { ACCOUNT_ID: !!ACCOUNT_ID, PUBLIC_KEY: !!PUBLIC_KEY });
+        return "failed";
+    }
 
     const filename = generateFilename(file);
 
@@ -30,14 +49,24 @@ export async function uploadToBytescale(subject: string, file: File, customFolde
         `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?filePath=${encodeURIComponent(path)}`,
         {
             method: "POST",
-            headers: { Authorization: `Bearer ${PUBLIC_KEY}` },
+            headers: {
+                "Authorization": `Bearer ${PUBLIC_KEY}`,
+                // Do NOT set Content-Type, let browser set boundary
+            },
             body: fd
         }
     );
 
-    if (!res.ok) return "failed";
+    console.log(`[Bytescale] Uploading to ${path} - Status:`, res.status);
+
+    if (!res.ok) {
+        const errorText = await res.text();
+        console.error("[Bytescale] Upload failed:", res.status, errorText);
+        return "failed";
+    }
 
     const data = await res.json();
+    console.log("[Bytescale] Upload Success:", data);
     return data.files?.[0]?.fileUrl || "failed";
 }
 

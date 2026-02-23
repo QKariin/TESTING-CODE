@@ -3,13 +3,12 @@
 
 import { useState } from 'react';
 // 👇 CHANGE THIS LINE: Use the client that supports Cookies/SSR
-import { createClient } from '@/utils/supabase/client'; 
+import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-    // 👇 Initialize the client inside the component
-    const supabase = createClient(); 
-    
+    // Initialize the client inside the login handlers to prevent build-time evaluation 
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -21,6 +20,7 @@ export default function LoginPage() {
         setLoading(true);
         setError(null);
 
+        const supabase = createClient();
         const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -42,7 +42,8 @@ export default function LoginPage() {
     const handleGoogleLogin = async () => {
         setLoading(true);
         setError(null);
-        
+
+        const supabase = createClient();
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
@@ -54,7 +55,7 @@ export default function LoginPage() {
                 },
             }
         });
-        
+
         if (error) {
             setError(error.message);
             setLoading(false);

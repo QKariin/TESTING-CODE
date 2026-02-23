@@ -35,6 +35,10 @@ export async function POST(req: Request) {
                 result = await DbService.sendMessage(memberId, payload.text, payload.sender || 'slave', payload.mediaUrl);
                 break;
 
+            case 'SUBMIT_TASK':
+                result = await DbService.submitTask(memberId, payload.proofUrl, payload.proofType, payload.taskText);
+                break;
+
             default:
                 throw new Error("Invalid Action Type");
         }

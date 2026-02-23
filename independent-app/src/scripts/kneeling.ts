@@ -4,12 +4,10 @@ import { getState, setState } from '@/scripts/profile-state';
 
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
 const REQUIRED_HOLD_TIME = 2000;
-const supabase = createClient();
-
 // ─── 1. INITIALIZATION ───
 export function attachKneelListeners() {
     const desktopBtn = document.getElementById('heroKneelBtn');
-    const mobileBtn = document.getElementById('mobKneelBar'); 
+    const mobileBtn = document.getElementById('mobKneelBar');
 
     const buttons = [desktopBtn, mobileBtn];
 
@@ -44,7 +42,7 @@ export function attachKneelListeners() {
             (btn as HTMLElement).releasePointerCapture(e.pointerId);
             handleHoldEnd(e, 'pointerup');
         });
-        
+
         btn.addEventListener('pointercancel', (e) => {
             (btn as HTMLElement).releasePointerCapture(e.pointerId);
             handleHoldEnd(e, 'pointercancel');
@@ -74,7 +72,7 @@ export function handleHoldStart(e: Event) {
         console.log('[KNEEL] Locked. Ignoring click.');
         return;
     }
-    
+
     if (holdTimer) return; // Already running
 
     console.log('[KNEEL] Started...');
@@ -82,7 +80,7 @@ export function handleHoldStart(e: Event) {
     // DESKTOP UI
     const fill = document.getElementById('heroKneelFill');
     const txtMain = document.getElementById('heroKneelText');
-    
+
     // MOBILE UI
     const mobFill = document.getElementById('mob_kneelFill');
     const mobText = document.querySelector('.kneel-label') as HTMLElement;
@@ -100,7 +98,7 @@ export function handleHoldStart(e: Event) {
         mobFill.style.width = "100%";
     }
     if (mobText) mobText.innerText = "SUBMITTING...";
-    if (mobBar) mobBar.style.borderColor = "#ffffff"; 
+    if (mobBar) mobBar.style.borderColor = "#ffffff";
 
     // START TIMER
     holdTimer = setTimeout(() => {
@@ -146,11 +144,11 @@ function resetUI() {
 async function completeKneelAction() {
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     console.log('[KNEEL] SUCCESS!');
-    
+
     // 👇 UPDATE GLOBAL STATE
-    setState({ 
-        isLocked: true, 
-        lastWorshipTime: Date.now() 
+    setState({
+        isLocked: true,
+        lastWorshipTime: Date.now()
     });
 
     // Sound
@@ -165,6 +163,7 @@ async function completeKneelAction() {
 
     // Database
     try {
+        const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email) {
             await fetch('/api/kneel', {
