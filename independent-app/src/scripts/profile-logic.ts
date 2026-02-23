@@ -682,6 +682,8 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
 }
 
 // ─── RENDER SIDEBAR ───
+let isPromoting = false;
+
 export function renderProfileSidebar(u: any) {
     if (!u || typeof document === 'undefined') return;
 
@@ -690,6 +692,32 @@ export function renderProfileSidebar(u: any) {
     // 👇 ADDED SAFETY CHECK for getHierarchyReport
     const report = getHierarchyReport(u);
     if (!report) return;
+
+    // ─── AUTO PROMOTION TRIGGER ───
+    if (report.canPromote && !isPromoting && u.member_id) {
+        isPromoting = true;
+        fetch('/api/promote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberEmail: u.member_id })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.promoted) {
+                    // Slight delay so the user can enjoy seeing the bars hit 100% before the reload
+                    setTimeout(() => {
+                        alert(`✨ PROMOTION UNLOCKED ✨\nYou have been elevated to ${data.newRank.toUpperCase()}.`);
+                        window.location.reload();
+                    }, 800);
+                } else {
+                    isPromoting = false;
+                }
+            })
+            .catch(err => {
+                console.error("Auto-promote check failed", err);
+                isPromoting = false;
+            });
+    }
 
     const { currentRank, nextRank, isMax, currentBenefits, nextBenefits, requirements } = report;
 
