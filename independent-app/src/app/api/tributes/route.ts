@@ -5,14 +5,14 @@ export async function GET() {
     try {
 
         let { data: tributes, error } = await supabase
-            .from('wishlist')
+            .from('wishlist4')
             .select('*')
             .order('price', { ascending: true }); // standard postgres lowercase
 
         if (error) {
-            console.log("[API/Tributes] lowercase wishlist failing, trying Velo fallback Wishlist");
+            console.log("[API/Tributes] lowercase wishlist4 failing, trying Velo fallback Wishlist4");
             const fallback = await supabase
-                .from('Wishlist')
+                .from('Wishlist4')
                 .select('*')
                 .order('Price', { ascending: true });
 
