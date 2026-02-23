@@ -10,7 +10,7 @@ export async function handleLogout() {
 
 export async function claimKneelReward(type: 'coins' | 'points') {
     const currentState = getState();
-    // Use the RAW backup so we have all the task stats
+    // 1. Grab the raw data backup (This holds the kneels/tasks/rank info)
     const { raw, id, memberId, wallet, score } = currentState;
     const pid = id || memberId;
     
@@ -20,34 +20,42 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
 
-    // 1. Calculate new balance
+    // 2. Calculate New Balance
     const newWallet = type === 'coins' ? (wallet || 0) + amount : (wallet || 0);
     const newScore = type === 'points' ? (score || 0) + amount : (score || 0);
 
-    // 2. Update the RAW backup
-    // This is the magic step. We update the money inside the Full Database Object
-    const updatedRaw = { ...raw, wallet: newWallet, score: newScore };
+    // 3. CRITICAL FIX: Update the Raw Backup
+    // We create a new object that keeps all the old stats (Tasks, Kneels)
+    // but overwrites the Wallet/Score with the new values.
+    const updatedRaw = { 
+        ...(raw || {}), // Keep existing DB data
+        wallet: newWallet, 
+        score: newScore 
+    };
 
-    // 3. Save State
+    // 4. Save to State
     setState({ 
         wallet: newWallet, 
         score: newScore, 
-        raw: updatedRaw 
+        raw: updatedRaw // Save the backup so future renders work too
     });
 
     if (type === 'coins') triggerCoinShower();
 
+    // 5. Hide Overlays
     document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
     document.getElementById('mobKneelReward')?.classList.add('hidden');
 
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
     if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
-    // 4. Render Sidebar using the FULL DATA (No more Hall Boy reset)
+    // 6. RENDER SIDEBAR using the UPDATED RAW DATA
+    // This ensures it sees "kneelCount" and keeps you as "Footman"
     renderProfileSidebar(updatedRaw);
 
-    // 5. Save to DB
+    // 7. Save to DB (Using the NEW, SAFE Route)
     try {
+        // 👇 CHANGED FROM '/api/profile-action' TO '/api/claim-reward'
         fetch('/api/claim-reward', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
