@@ -16,7 +16,6 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 
     const amount = type === 'coins' ? 10 : 50;
 
-    // 1. OPTIMISTIC UPDATE (Instant Feedback)
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
 
     if (type === 'coins') {
@@ -26,19 +25,19 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         setState({ score: (score || 0) + amount });
     }
 
-    // Hide overlays
     document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
     document.getElementById('mobKneelReward')?.classList.add('hidden');
 
-    // Play Sound
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
     if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
-    renderProfileSidebar(getState());
+    // 👇👇👇 THE FIX IS HERE 👇👇👇
+    // Pass 'currentState.raw' instead of 'currentState'.
+    // This ensures the sidebar gets the full DB object with all the stats.
+    renderProfileSidebar(getState().raw);
+    // 👆👆👆 END FIX 👆👆👆
 
-    // 2. BACKGROUND SAVE (Use the dedicated route)
     try {
-        // 👇 CHANGED: Use specific route instead of generic 'profile-action'
         fetch('/api/claim-reward', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
