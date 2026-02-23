@@ -88,7 +88,7 @@ export default function ProfilePage() {
             (window as any).handleLogout = handleLogout;
         }
 
-       async function loadProfile() {
+        async function loadProfile() {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
@@ -96,59 +96,38 @@ export default function ProfilePage() {
                     return;
                 }
 
-                // 1. Fetch Identity (Profiles)
-                const { data: profileData } = await supabase
+                const { data: profileData, error } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('member_id', user.email)
                     .maybeSingle();
 
-                let finalProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
+                if (error) console.error('Profile fetch error:', error);
+
+                // Use profile data or fallback
+                const finalProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
                 if (finalProfile) {
-                    // 2. Fetch Stats (Tasks)
-                    // We use ilike to ignore case differences in the email
-                    const { data: taskData, error: taskError } = await supabase
-                        .from('tasks')
-                        .select('*')
-                        .ilike('"MemberID"', finalProfile.member_id) 
-                        .maybeSingle();
-
-                    // 3. NORMALIZE KEYS (The Fix for "It didn't work")
-                    // This converts "lastWorship", "LastWorship", "MemberID" all to lowercase keys
-                    // So we can access them reliably as .lastworship
-                    const normalizedTask: any = {};
-                    if (taskData) {
-                        Object.keys(taskData).forEach(key => {
-                            normalizedTask[key.toLowerCase()] = (taskData as any)[key];
-                        });
-                        console.log("[PROFILE] Normalized Task Data:", normalizedTask);
-                    }
-
-                    // 4. Merge Data (Profile + Normalized Stats)
-                    const mergedData = { 
-                        ...finalProfile, 
-                        ...normalizedTask // usage: data.lastworship, data.kneelcount
-                    };
-
-                    // 5. Initialize State
-                    setProfile(mergedData);
-                    initProfileState(mergedData);
+                    setProfile(finalProfile);
+                    initProfileState(finalProfile);
                     
+                    // Initialize UI logic that doesn't depend on DOM elements yet
                     setTimeout(() => {
-                        renderProfileSidebar(mergedData);
-                        updateKneelingUI(); 
-                        attachKneelListeners();
+                        renderProfileSidebar(finalProfile);
                         switchTab('serve'); 
                         getRandomTask(true);
-                    }, 150);
+                    }, 100);
                 }
             } catch (err) {
                 console.error("Failed to load profile", err);
             } finally {
-                setLoading(false);
+                // 👇 This triggers the re-render that shows the buttons
+                setLoading(false); 
             }
         }
+
+        loadProfile();
+    }, []);
 
     // ─── 2. ATTACH KNEEL LISTENERS (THE FIX) ─────────────────────────────
     // This runs ONLY after 'loading' becomes false and the buttons exist
