@@ -10,7 +10,7 @@ export async function handleLogout() {
 
 export async function claimKneelReward(type: 'coins' | 'points') {
     const currentState = getState();
-    // Grab the raw data that we know works
+    // Use the RAW backup so we have all the task stats
     const { raw, id, memberId, wallet, score } = currentState;
     const pid = id || memberId;
     
@@ -20,18 +20,15 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
 
-    // 1. Calculate New Values
+    // 1. Calculate new balance
     const newWallet = type === 'coins' ? (wallet || 0) + amount : (wallet || 0);
     const newScore = type === 'points' ? (score || 0) + amount : (score || 0);
 
-    // 2. Update the RAW backup manually
-    // This ensures 'kneelCount' and 'Taskdom_CompletedTasks' are still there
-    // while we update the money.
-    const updatedRaw = { ...raw };
-    if (type === 'coins') updatedRaw.wallet = newWallet;
-    else updatedRaw.score = newScore;
+    // 2. Update the RAW backup
+    // This is the magic step. We update the money inside the Full Database Object
+    const updatedRaw = { ...raw, wallet: newWallet, score: newScore };
 
-    // 3. Save State (UI numbers update)
+    // 3. Save State
     setState({ 
         wallet: newWallet, 
         score: newScore, 
@@ -46,7 +43,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
     if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
-    // 4. RENDER SIDEBAR WITH THE FULL DATA (Fixes the reset)
+    // 4. Render Sidebar using the FULL DATA (No more Hall Boy reset)
     renderProfileSidebar(updatedRaw);
 
     // 5. Save to DB
