@@ -421,16 +421,19 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* OVERLAY TRIBUTE MODAL - Position Absolute constraints it to the main content area */}
-                    <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, background: 'rgba(2, 5, 18, 0.75)', zIndex: 10000, display: 'none', flexDirection: 'column', padding: '40px', backdropFilter: 'blur(25px)', borderRadius: '20px', border: '1px solid rgba(197, 160, 89, 0.2)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-                        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(197, 160, 89, 0.3)', paddingBottom: '20px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '1.8rem', letterSpacing: '4px', fontWeight: 700, textShadow: '0 0 15px rgba(197, 160, 89, 0.4)' }}>TRIBUTE STORE</span>
-                                <span style={{ fontFamily: 'Orbitron', color: '#888', fontSize: '0.7rem', letterSpacing: '2px', marginTop: '5px' }}>SELECT AN OFFERING TO PROVE YOUR DEVOTION</span>
+                    {/* OVERLAY TRIBUTE MODAL - SCRAPBOOK NOTEBOOK THEME */}
+                    <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: '#fcfaf2', backgroundImage: 'repeating-linear-gradient(transparent, transparent 39px, #d2e4f0 40px)', backgroundSize: '100% 40px', zIndex: 10000, display: 'none', flexDirection: 'column', padding: '40px 40px 40px 80px', borderRadius: '12px', boxShadow: '0 15px 35px rgba(0,0,0,0.6), inset 50px 0 0 -48px rgba(255, 105, 180, 0.6)', overflow: 'hidden' }}>
+                        {/* Red Margin Line */}
+                        <div style={{ position: 'absolute', left: '60px', top: 0, bottom: 0, width: '2px', background: 'rgba(255, 105, 180, 0.6)', zIndex: 0 }}></div>
+
+                        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', zIndex: 10, position: 'relative' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                                <span style={{ fontFamily: "'Patrick Hand', cursive", color: '#111', fontSize: '2.5rem', letterSpacing: '2px', fontWeight: 700, transform: 'rotate(-2deg)' }}>My Wishlist ♥</span>
+                                <span style={{ fontFamily: "'Caveat', cursive", color: '#ff4b72', fontSize: '2.5rem', fontWeight: 700, position: 'absolute', top: '-15px', right: '-120px', transform: 'rotate(5deg)', textShadow: '1px 1px 0px rgba(0,0,0,0.1)' }}>NEED SO BAD!!</span>
                             </div>
-                            <button onClick={() => toggleTributeHunt()} style={{ color: '#fff', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,0,0,0.2)'; e.currentTarget.style.borderColor = 'red'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}>×</button>
+                            <button onClick={() => toggleTributeHunt()} style={{ color: '#111', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Patrick Hand', cursive", fontSize: '2rem', transition: 'all 0.2s', padding: 0, fontWeight: 'bold' }} onMouseOver={(e) => { e.currentTarget.style.color = '#ff4b72'; e.currentTarget.style.transform = 'scale(1.2) rotate(10deg)'; }} onMouseOut={(e) => { e.currentTarget.style.color = '#111'; e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; }}>X</button>
                         </div>
-                        <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px', padding: '10px 5px', paddingBottom: '30px' }}></div>
+                        <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '30px', padding: '20px 10px', paddingBottom: '30px', zIndex: 10, position: 'relative' }}></div>
                     </div>
 
                     <div id="gridRightSection" className="serve-grid-item" style={{ display: 'flex', flexDirection: 'row', gap: 25, overflow: 'hidden' }}>

@@ -183,36 +183,47 @@ function renderTributes() {
     // 1. Desktop Quick Connect (Taking the First 2 items e.g Coffee/Dinner)
     if (quickBox && globalTributes.length >= 2) {
         const quickItems = globalTributes.slice(0, 2);
-        quickBox.innerHTML = quickItems.map(t => `
-            <div class="quick-tribute-item" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})" style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(90deg, rgba(20,20,20,0.8), rgba(0,0,0,0.4)); padding:12px 18px; border-radius:8px; cursor:pointer; border:1px solid rgba(197, 160, 89, 0.2); transition:all 0.3s ease; box-shadow:0 4px 15px rgba(0,0,0,0.3);" onmouseover="this.style.borderColor='rgba(197,160,89,0.8)'; this.style.background='linear-gradient(90deg, rgba(30,30,30,0.9), rgba(10,10,10,0.6))'; this.style.transform='translateX(5px)'; this.style.boxShadow='0 6px 20px rgba(197,160,89,0.15)';" onmouseout="this.style.borderColor='rgba(197, 160, 89, 0.2)'; this.style.background='linear-gradient(90deg, rgba(20,20,20,0.8), rgba(0,0,0,0.4))'; this.style.transform='translateX(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)';">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div style="width:36px; height:36px; border-radius:6px; background:url('${t.image}') center/cover; border:1px solid rgba(255,255,255,0.1); box-shadow:0 2px 8px rgba(0,0,0,0.5);"></div>
-                    <span style="font-family:'Cinzel'; font-size:0.85rem; color:#fff; font-weight:700; letter-spacing:1px;">${t.title}</span>
+        quickBox.innerHTML = quickItems.map((t, index) => {
+            const rotation = (index % 2 === 0 ? 1 : -1) * (Math.random() * 2 + 1);
+            return \`
+            <div class="quick-tribute-item" onclick="window.buyTribute('\${t.id}', '\${t.title}', \${t.price})" style="display:flex; justify-content:space-between; align-items:center; background:#fff9c4; padding:12px 18px; border-radius:2px 15px 5px 15px; cursor:pointer; box-shadow:3px 4px 10px rgba(0,0,0,0.1), inset 0 0 10px rgba(255,255,255,0.8); transform:rotate(\${rotation}deg); transition:all 0.3s ease; position:relative;" onmouseover="this.style.transform='translateY(-3px) rotate(0deg) scale(1.05)'; this.style.boxShadow='5px 8px 15px rgba(0,0,0,0.15), inset 0 0 10px rgba(255,255,255,0.8)';" onmouseout="this.style.transform='rotate(\${rotation}deg)'; this.style.boxShadow='3px 4px 10px rgba(0,0,0,0.1), inset 0 0 10px rgba(255,255,255,0.8)';">
+                <!-- Cute Pin -->
+                <div style="position:absolute; top:4px; left:50%; width:8px; height:8px; background:#ff4b72; border-radius:50%; box-shadow:1px 1px 2px rgba(0,0,0,0.3); transform:translateX(-50%);"></div>
+                
+                <div style="display:flex; align-items:center; gap:12px; margin-top:5px;">
+                    <div style="width:40px; height:40px; border-radius:50%; background:url('\${t.image}') center/cover; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.1);"></div>
+                    <span style="font-family:'Patrick Hand', cursive; font-size:1.4rem; color:#333; font-weight:700; letter-spacing:1px;">\${t.title}</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:0.75rem; color:#888;">🪙</span>
-                    <div style="font-family:'Orbitron'; font-size:0.85rem; color:'#c5a059'; font-weight:800; letter-spacing:1px;">${t.price.toLocaleString()}</div>
+                <div style="display:flex; align-items:center; gap:6px; margin-top:5px;">
+                    <span style="color:#ff69b4; font-size:1.2rem;">♥</span>
+                    <div style="font-family:'Caveat', cursive; font-size:1.6rem; color:'#ff4b72'; font-weight:700;">\${t.price.toLocaleString()}</div>
                 </div>
             </div>
-        `).join('');
+            \`;
+        }).join('');
     }
 
     // 2. Desktop Modal Overview AND Mobile Grid Overlay
 
     const renderGrid = (gridEl: HTMLElement) => {
         if (!gridEl) return;
-        gridEl.innerHTML = globalTributes.map(t => `
-            <div class="store-item v-card" style="padding:0; margin:0; display:flex; flex-direction:column; align-items:center; justify-content:space-between; cursor:pointer; transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); background:linear-gradient(180deg, rgba(20,20,20,0.9), rgba(5,5,5,1)); border:1px solid rgba(197, 160, 89, 0.15); border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5);" onmouseover="this.style.borderColor='rgba(197,160,89,0.8)'; this.style.transform='translateY(-5px) scale(1.02)'; this.style.boxShadow='0 15px 40px rgba(197,160,89,0.15)'; this.querySelector('.action-btn').style.background='#fff'; this.querySelector('.action-btn').style.color='#000';" onmouseout="this.style.borderColor='rgba(197, 160, 89, 0.15)'; this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.5)'; this.querySelector('.action-btn').style.background='var(--gold)'; this.querySelector('.action-btn').style.color='#000';" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})">
-                <div style="width:100%; height:140px; background:url('${t.image}') center/cover; position:relative;">
-                    <div style="position:absolute; inset:0; background:linear-gradient(0deg, #050505 0%, transparent 50%); content:'';"></div>
-                </div>
-                <div style="width:100%; padding:15px; display:flex; flex-direction:column; align-items:center;">
-                    <div style="font-family:'Cinzel'; font-size:1rem; color:#fff; text-align:center; min-height:45px; display:flex; align-items:center; justify-content:center; font-weight:700; letter-spacing:1px;">${t.title}</div>
-                    <div style="font-family:'Orbitron'; font-size:1.2rem; font-weight:800; color:'#c5a059'; margin:10px 0; display:flex; align-items:center; gap:5px;"><span style="font-size:0.8rem; color:#888;">🪙</span> ${t.price.toLocaleString()}</div>
-                    <button class="action-btn" style="width:100%; border:none; background:'var(--gold)'; color:'#000'; font-size:0.75rem; padding:12px; margin-top:5px; border-radius:6px; letter-spacing:2px; font-weight:bold; transition:all 0.3s ease; pointer-events:none;">OFFER</button>
+        gridEl.innerHTML = globalTributes.map((t, index) => {
+            // Give each frame a slight random tilt between -3 and 3 degrees for an authentic scrapbook look
+            const rotation = (index % 2 === 0 ? 1 : -1) * (Math.random() * 3 + 1);
+            return \`
+            <div class="store-item polaroid-card" style="position:relative; background:#fff; padding:10px 10px 20px 10px; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow:0 6px 15px rgba(0,0,0,0.15); transform:rotate(\${rotation}deg);" onmouseover="this.style.transform='translateY(-10px) rotate(0deg) scale(1.05)'; this.style.boxShadow='0 15px 30px rgba(0,0,0,0.2)'; this.style.zIndex='20'" onmouseout="this.style.transform='rotate(\${rotation}deg)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.15)'; this.style.zIndex='1'" onclick="window.buyTribute('\${t.id}', '\${t.title}', \${t.price})">
+                <!-- Washi Tape Effect -->
+                <div style="position:absolute; top:-12px; left:50%; width:80px; height:25px; background:rgba(255, 182, 193, 0.6); transform:translateX(-50%) rotate(\${-rotation * 2}deg); z-index:5; box-shadow:0 1px 3px rgba(0,0,0,0.1); border-left:2px dotted rgba(255,255,255,0.5); border-right:2px dotted rgba(255,255,255,0.5);"></div>
+                
+                <div style="width:100%; height:160px; background:url('\${t.image}') center/cover; border:1px solid rgba(0,0,0,0.05);"></div>
+                
+                <div style="width:100%; display:flex; flex-direction:column; align-items:center; margin-top:15px;">
+                    <div style="font-family:'Caveat', cursive; font-size:1.8rem; color:#111; text-align:center; line-height:1.2; font-weight:700;">\${t.title}</div>
+                    <div style="font-family:'Patrick Hand', cursive; font-size:1.2rem; color:'#ff4b72'; display:flex; align-items:center; gap:5px; margin-top:5px;"><span style="color:#ff69b4;">♥</span> \${t.price.toLocaleString()}</div>
                 </div>
             </div>
-        `).join('');
+        \`;
+        }).join('');
     };
 
     if (gridDesk) renderGrid(gridDesk);
@@ -225,11 +236,11 @@ export async function buyTribute(id: string, title: string, cost: number) {
 
     if (wallet < cost) {
         document.getElementById('povertyOverlay')?.classList.remove('hidden');
-        document.getElementById('povertyInsult')!.innerText = `You lack the capital to offer "${title}". Know your place.`;
+        document.getElementById('povertyInsult')!.innerText = `You lack the capital to offer "${title}".Know your place.`;
         return;
     }
 
-    if (!confirm(`Are you sure you wish to offer ${title} for ${cost.toLocaleString()} coins? \n(This will also earn you merit)`)) return;
+    if (!confirm(`Are you sure you wish to offer ${ title } for ${ cost.toLocaleString() } coins ?\n(This will also earn you merit)`)) return;
 
     try {
         const res = await fetch('/api/tributes/purchase', {
@@ -253,7 +264,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
             // Notify chat slightly hackish but thematic
             const chatInput = document.getElementById('chatMsgInput') as HTMLInputElement;
             if (chatInput) {
-                chatInput.value = `/tribute ${title}`;
+                chatInput.value = `/ tribute ${ title } `;
                 sendChatMessage();
             }
 
@@ -402,7 +413,7 @@ export async function getRandomTask(isSilentInit = false) {
         }
 
         const forceNew = !isSilentInit;
-        const res = await fetch(`/ api / tasks / random ? memberEmail = ${encodeURIComponent(pid)}& forceNew=${forceNew} `);
+        const res = await fetch(`/ api / tasks / random ? memberEmail = ${ encodeURIComponent(pid) }& forceNew=${ forceNew } `);
         const data = await res.json();
 
         if (!data.success) {
@@ -725,416 +736,416 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     const isRoutine = fieldId === 'routine';
     const costPerItem = fieldId === 'kinks' ? 100 : fieldId === 'limits' ? 200 : 0;
 
-    let inner = `< div style = "color:#c5a059;font-size:0.75rem;letter-spacing:3px;margin-bottom:6px;" > ${label.toUpperCase()} </div>`;
+    let inner = `< div style = "color:#c5a059;font-size:0.75rem;letter-spacing:3px;margin-bottom:6px;" > ${ label.toUpperCase() } </div>`;
 
-    // Process existing values for chips
-    const existingChips = isChip && existingValue ? existingValue.split(',').map(s => s.trim()) : [];
+            // Process existing values for chips
+            const existingChips = isChip && existingValue ? existingValue.split(',').map(s => s.trim()) : [];
 
-    if (isChip) {
-        inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">SELECT AT LEAST 3 · ${costPerItem} COINS EACH</div>`;
-        inner += `<div id="_chipGrid" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;margin-bottom:14px;padding-right:4px;">`;
-        CHIP_LIST.forEach(item => {
-            const isSelected = existingChips.includes(item);
-            const extraClass = isSelected ? ' _selected' : '';
-            const borderCol = isSelected ? '#c5a059' : '#2a2a2a';
-            const textCol = isSelected ? '#c5a059' : '#888';
-            const bgCol = isSelected ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
+            if (isChip) {
+                inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">SELECT AT LEAST 3 · ${costPerItem} COINS EACH</div>`;
+                inner += `<div id="_chipGrid" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;margin-bottom:14px;padding-right:4px;">`;
+                CHIP_LIST.forEach(item => {
+                    const isSelected = existingChips.includes(item);
+                    const extraClass = isSelected ? ' _selected' : '';
+                    const borderCol = isSelected ? '#c5a059' : '#2a2a2a';
+                    const textCol = isSelected ? '#c5a059' : '#888';
+                    const bgCol = isSelected ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
 
-            inner += `<div class="_reqChip${extraClass}" data-value="${item}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid ${borderCol};background:${bgCol};color:${textCol};font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${costPerItem}</span></div>`;
-        });
-        inner += `</div><div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">TOTAL COST: 0 COINS</div>`;
-    } else if (isRoutine) {
-        inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">PRESET: 1,000 COINS · CUSTOM: 2,000 COINS</div>`;
-        inner += `<div id="_chipGrid" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">`;
-        ROUTINE_OPTIONS.forEach(item => {
-            const cost = item === 'Custom Order' ? 2000 : 1000;
-            const isSelected = existingValue && existingValue !== '' && (existingValue === item || (item === 'Custom Order' && !ROUTINE_OPTIONS.includes(existingValue)));
-            const extraClass = isSelected ? ' _selected' : '';
-            const borderCol = isSelected ? '#c5a059' : '#2a2a2a';
-            const textCol = isSelected ? '#c5a059' : '#888';
-            const bgCol = isSelected ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
+                    inner += `<div class="_reqChip${extraClass}" data-value="${item}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid ${borderCol};background:${bgCol};color:${textCol};font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${costPerItem}</span></div>`;
+                });
+                inner += `</div><div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">TOTAL COST: 0 COINS</div>`;
+            } else if (isRoutine) {
+                inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">PRESET: 1,000 COINS · CUSTOM: 2,000 COINS</div>`;
+                inner += `<div id="_chipGrid" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">`;
+                ROUTINE_OPTIONS.forEach(item => {
+                    const cost = item === 'Custom Order' ? 2000 : 1000;
+                    const isSelected = existingValue && existingValue !== '' && (existingValue === item || (item === 'Custom Order' && !ROUTINE_OPTIONS.includes(existingValue)));
+                    const extraClass = isSelected ? ' _selected' : '';
+                    const borderCol = isSelected ? '#c5a059' : '#2a2a2a';
+                    const textCol = isSelected ? '#c5a059' : '#888';
+                    const bgCol = isSelected ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
 
-            inner += `<div class="_reqChip _routineChip${extraClass}" data-value="${item}" data-cost="${cost}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid ${borderCol};background:${bgCol};color:${textCol};font-family:'Cinzel',serif;font-size:0.85rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${cost.toLocaleString()}</span></div>`;
-        });
-        const isCustom = existingValue && !ROUTINE_OPTIONS.includes(existingValue);
-        const customDisplay = isCustom ? 'block' : 'none';
-        const customVal = isCustom ? existingValue : '';
-        inner += `</div><div id="_customRoutineWrap" style="display:${customDisplay};margin-bottom:12px;"><input id="_customRoutineInput" value="${customVal}" placeholder="Describe your custom routine..." style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;" /></div><div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">SELECT A PROTOCOL</div>`;
-    } else {
-        inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:12px;">STORED IN YOUR PROFILE · FREE</div>`;
-        inner += `<textarea id="_reqInput" placeholder="Enter your ${label.toLowerCase()}..." style="width:100%;min-height:90px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;padding:10px;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;resize:vertical;">${existingValue || ''}</textarea>`;
-    }
+                    inner += `<div class="_reqChip _routineChip${extraClass}" data-value="${item}" data-cost="${cost}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid ${borderCol};background:${bgCol};color:${textCol};font-family:'Cinzel',serif;font-size:0.85rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${cost.toLocaleString()}</span></div>`;
+                });
+                const isCustom = existingValue && !ROUTINE_OPTIONS.includes(existingValue);
+                const customDisplay = isCustom ? 'block' : 'none';
+                const customVal = isCustom ? existingValue : '';
+                inner += `</div><div id="_customRoutineWrap" style="display:${customDisplay};margin-bottom:12px;"><input id="_customRoutineInput" value="${customVal}" placeholder="Describe your custom routine..." style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;" /></div><div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">SELECT A PROTOCOL</div>`;
+            } else {
+                inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:12px;">STORED IN YOUR PROFILE · FREE</div>`;
+                inner += `<textarea id="_reqInput" placeholder="Enter your ${label.toLowerCase()}..." style="width:100%;min-height:90px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;padding:10px;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;resize:vertical;">${existingValue || ''}</textarea>`;
+            }
 
-    inner += `<div id="_reqError" style="color:#ff4444;font-size:0.55rem;margin-top:6px;display:none;margin-bottom:8px;"></div>`;
-    inner += `<div style="display:flex;gap:10px;margin-top:10px;"><button id="_reqSave" style="flex:1;padding:10px;background:#c5a059;color:#000;border:none;border-radius:6px;font-family:'Orbitron';font-weight:bold;cursor:pointer;letter-spacing:1px;">SAVE</button><button id="_reqCancel" style="flex:1;padding:10px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:6px;font-family:'Orbitron';cursor:pointer;">CANCEL</button></div>`;
+            inner += `<div id="_reqError" style="color:#ff4444;font-size:0.55rem;margin-top:6px;display:none;margin-bottom:8px;"></div>`;
+            inner += `<div style="display:flex;gap:10px;margin-top:10px;"><button id="_reqSave" style="flex:1;padding:10px;background:#c5a059;color:#000;border:none;border-radius:6px;font-family:'Orbitron';font-weight:bold;cursor:pointer;letter-spacing:1px;">SAVE</button><button id="_reqCancel" style="flex:1;padding:10px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:6px;font-family:'Orbitron';cursor:pointer;">CANCEL</button></div>`;
 
-    box.innerHTML = inner;
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
+            box.innerHTML = inner;
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
 
-    if (isChip) {
-        const updateInitialCost = () => {
-            const count = box.querySelectorAll('._selected').length;
-            const costDisplay = box.querySelector('#_reqCostDisplay') as HTMLElement;
-            if (costDisplay) costDisplay.innerText = `TOTAL COST: ${count * costPerItem} COINS`;
-        };
-        updateInitialCost(); // run once on open
+            if (isChip) {
+                const updateInitialCost = () => {
+                    const count = box.querySelectorAll('._selected').length;
+                    const costDisplay = box.querySelector('#_reqCostDisplay') as HTMLElement;
+                    if (costDisplay) costDisplay.innerText = `TOTAL COST: ${count * costPerItem} COINS`;
+                };
+                updateInitialCost(); // run once on open
 
-        box.querySelectorAll<HTMLElement>('._reqChip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                chip.classList.toggle('_selected');
-                const isOn = chip.classList.contains('_selected');
-                chip.style.borderColor = isOn ? '#c5a059' : '#2a2a2a';
-                chip.style.color = isOn ? '#c5a059' : '#888';
-                chip.style.background = isOn ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
-                const count = box.querySelectorAll('._selected').length;
-                const costDisplay = document.getElementById('_reqCostDisplay')!;
-                if (costDisplay) costDisplay.textContent = `TOTAL COST: ${(count * costPerItem).toLocaleString()} COINS`;
-            });
-        });
-    }
+                box.querySelectorAll<HTMLElement>('._reqChip').forEach(chip => {
+                    chip.addEventListener('click', () => {
+                        chip.classList.toggle('_selected');
+                        const isOn = chip.classList.contains('_selected');
+                        chip.style.borderColor = isOn ? '#c5a059' : '#2a2a2a';
+                        chip.style.color = isOn ? '#c5a059' : '#888';
+                        chip.style.background = isOn ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
+                        const count = box.querySelectorAll('._selected').length;
+                        const costDisplay = document.getElementById('_reqCostDisplay')!;
+                        if (costDisplay) costDisplay.textContent = `TOTAL COST: ${(count * costPerItem).toLocaleString()} COINS`;
+                    });
+                });
+            }
 
-    if (isRoutine) {
-        box.querySelectorAll<HTMLElement>('._routineChip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                box.querySelectorAll<HTMLElement>('._routineChip').forEach(c => { c.classList.remove('_selected'); c.style.borderColor = '#2a2a2a'; c.style.color = '#888'; c.style.background = 'rgba(0,0,0,0.5)'; });
-                chip.classList.add('_selected');
-                chip.style.borderColor = '#c5a059'; chip.style.color = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.1)';
-                const cost = parseInt(chip.getAttribute('data-cost') || '1000');
-                const costDisplay = document.getElementById('_reqCostDisplay')!;
-                if (costDisplay) costDisplay.textContent = `COST: ${cost.toLocaleString()} COINS`;
-                const customWrap = document.getElementById('_customRoutineWrap')!;
-                if (customWrap) customWrap.style.display = chip.getAttribute('data-value') === 'Custom Order' ? 'block' : 'none';
-            });
-        });
-    }
+            if (isRoutine) {
+                box.querySelectorAll<HTMLElement>('._routineChip').forEach(chip => {
+                    chip.addEventListener('click', () => {
+                        box.querySelectorAll<HTMLElement>('._routineChip').forEach(c => { c.classList.remove('_selected'); c.style.borderColor = '#2a2a2a'; c.style.color = '#888'; c.style.background = 'rgba(0,0,0,0.5)'; });
+                        chip.classList.add('_selected');
+                        chip.style.borderColor = '#c5a059'; chip.style.color = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.1)';
+                        const cost = parseInt(chip.getAttribute('data-cost') || '1000');
+                        const costDisplay = document.getElementById('_reqCostDisplay')!;
+                        if (costDisplay) costDisplay.textContent = `COST: ${cost.toLocaleString()} COINS`;
+                        const customWrap = document.getElementById('_customRoutineWrap')!;
+                        if (customWrap) customWrap.style.display = chip.getAttribute('data-value') === 'Custom Order' ? 'block' : 'none';
+                    });
+                });
+            }
 
-    document.getElementById('_reqCancel')!.addEventListener('click', () => overlay.remove());
-    document.getElementById('_reqSave')!.addEventListener('click', () => saveModalData(fieldId, label, overlay, box, isChip, isRoutine, costPerItem));
-}
+            document.getElementById('_reqCancel')!.addEventListener('click', () => overlay.remove());
+            document.getElementById('_reqSave')!.addEventListener('click', () => saveModalData(fieldId, label, overlay, box, isChip, isRoutine, costPerItem));
+        }
 
 async function saveModalData(fieldId: string, label: string, overlay: HTMLElement, box: HTMLElement, isChip: boolean, isRoutine: boolean, costPerItem: number) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.email) return;
+                const supabase = createClient();
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user?.email) return;
 
-    const saveBtn = document.getElementById('_reqSave') as HTMLButtonElement;
-    const errEl = document.getElementById('_reqError') as HTMLElement;
-    const showErr = (msg: string) => { if (errEl) { errEl.style.display = 'block'; errEl.textContent = msg; } if (saveBtn) { saveBtn.textContent = 'SAVE'; saveBtn.disabled = false; } };
+                const saveBtn = document.getElementById('_reqSave') as HTMLButtonElement;
+                const errEl = document.getElementById('_reqError') as HTMLElement;
+                const showErr = (msg: string) => { if (errEl) { errEl.style.display = 'block'; errEl.textContent = msg; } if (saveBtn) { saveBtn.textContent = 'SAVE'; saveBtn.disabled = false; } };
 
-    if (saveBtn) { saveBtn.textContent = 'SAVING...'; saveBtn.disabled = true; }
+                if (saveBtn) { saveBtn.textContent = 'SAVING...'; saveBtn.disabled = true; }
 
-    let value: string;
-    let cost = 0;
+                let value: string;
+                let cost = 0;
 
-    if (isChip) {
-        const selected = Array.from(box.querySelectorAll<HTMLElement>('._selected')).map(el => el.getAttribute('data-value') || '').filter(Boolean);
-        if (selected.length < 3) { showErr('Select at least 3 items.'); return; }
-        value = selected.join(', ');
-        cost = selected.length * costPerItem;
-    } else if (isRoutine) {
-        const selectedChip = box.querySelector<HTMLElement>('._routineChip._selected');
-        if (!selectedChip) { showErr('Please select a protocol.'); return; }
-        const picked = selectedChip.getAttribute('data-value') || '';
-        cost = parseInt(selectedChip.getAttribute('data-cost') || '1000');
-        if (picked === 'Custom Order') {
-            const custom = (document.getElementById('_customRoutineInput') as HTMLInputElement)?.value?.trim();
-            if (!custom) { showErr('Please describe your custom routine.'); return; }
-            value = custom;
-        } else { value = picked; }
-    } else {
-        value = (document.getElementById('_reqInput') as HTMLTextAreaElement)?.value?.trim() || '';
-        if (!value) { showErr('Cannot be empty.'); return; }
-    }
+                if (isChip) {
+                    const selected = Array.from(box.querySelectorAll<HTMLElement>('._selected')).map(el => el.getAttribute('data-value') || '').filter(Boolean);
+                    if (selected.length < 3) { showErr('Select at least 3 items.'); return; }
+                    value = selected.join(', ');
+                    cost = selected.length * costPerItem;
+                } else if (isRoutine) {
+                    const selectedChip = box.querySelector<HTMLElement>('._routineChip._selected');
+                    if (!selectedChip) { showErr('Please select a protocol.'); return; }
+                    const picked = selectedChip.getAttribute('data-value') || '';
+                    cost = parseInt(selectedChip.getAttribute('data-cost') || '1000');
+                    if (picked === 'Custom Order') {
+                        const custom = (document.getElementById('_customRoutineInput') as HTMLInputElement)?.value?.trim();
+                        if (!custom) { showErr('Please describe your custom routine.'); return; }
+                        value = custom;
+                    } else { value = picked; }
+                } else {
+                    value = (document.getElementById('_reqInput') as HTMLTextAreaElement)?.value?.trim() || '';
+                    if (!value) { showErr('Cannot be empty.'); return; }
+                }
 
-    const res = await fetch('/api/profile-update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberEmail: user.email, field: fieldId, value, cost })
-    });
-    const data = await res.json();
+                const res = await fetch('/api/profile-update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberEmail: user.email, field: fieldId, value, cost })
+                });
+                const data = await res.json();
 
-    if (data.error === 'INSUFFICIENT_FUNDS') {
-        showErr(`Insufficient coins. You need ${cost} coins but have ${data.wallet || 0}.`);
-    } else if (data.success && data.profile) {
-        overlay.remove();
-        renderProfileSidebar(data.profile);
-    } else {
-        showErr('Save failed: ' + (data.error || 'Unknown error'));
-    }
-}
+                if (data.error === 'INSUFFICIENT_FUNDS') {
+                    showErr(`Insufficient coins. You need ${cost} coins but have ${data.wallet || 0}.`);
+                } else if (data.success && data.profile) {
+                    overlay.remove();
+                    renderProfileSidebar(data.profile);
+                } else {
+                    showErr('Save failed: ' + (data.error || 'Unknown error'));
+                }
+            }
 
 // ─── PROFILE MANAGEMENT MODAL ───
 export function openManageProfileModal(u: any) {
-    document.getElementById('_manageModal')?.remove();
-    const overlay = document.createElement('div');
-    overlay.id = '_manageModal';
-    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;`;
+            document.getElementById('_manageModal')?.remove();
+            const overlay = document.createElement('div');
+            overlay.id = '_manageModal';
+            overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;`;
 
-    const box = document.createElement('div');
-    box.style.cssText = `background:#07080f;border:1px solid #c5a059;border-radius:12px;padding:24px;width:100%;max-width:320px;font-family:'Orbitron';`;
+            const box = document.createElement('div');
+            box.style.cssText = `background:#07080f;border:1px solid #c5a059;border-radius:12px;padding:24px;width:100%;max-width:320px;font-family:'Orbitron';`;
 
-    const getRaw = (key: string) => {
-        return u[key] ? (typeof u[key] === 'string' ? u[key] : JSON.stringify(u[key])) : '';
-    };
+            const getRaw = (key: string) => {
+                return u[key] ? (typeof u[key] === 'string' ? u[key] : JSON.stringify(u[key])) : '';
+            };
 
-    let inner = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            let inner = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <div style="color:#c5a059;font-size:0.85rem;letter-spacing:3px;">MANAGE PROFILE</div>
         <button id="_closeManage" style="background:none;border:none;color:#ff4444;font-size:1.2rem;cursor:pointer;">&times;</button>
     </div>`;
 
-    const btnStyle = `width:100%;padding:12px;margin-bottom:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;`;
+            const btnStyle = `width:100%;padding:12px;margin-bottom:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;`;
 
-    inner += `<button class="_manageBtn" data-action="photo" style="${btnStyle}"><span>UPDATE PHOTO</span> <span>&#9998;</span></button>`;
-    inner += `<button class="_manageBtn" data-action="field" data-field="name" data-label="IDENTITY" data-val="${getRaw('name').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT IDENTITY</span> <span>&#9998;</span></button>`;
-    inner += `<button class="_manageBtn" data-action="field" data-field="limits" data-label="LIMITS" data-val="${getRaw('limits').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT LIMITS</span> <span>&#9998;</span></button>`;
-    inner += `<button class="_manageBtn" data-action="field" data-field="kinks" data-label="KINKS" data-val="${getRaw('kinks').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT KINKS</span> <span>&#9998;</span></button>`;
-    inner += `<button class="_manageBtn" data-action="field" data-field="routine" data-label="ROUTINE" data-val="${getRaw('routine').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT ROUTINE</span> <span>&#9998;</span></button>`;
+            inner += `<button class="_manageBtn" data-action="photo" style="${btnStyle}"><span>UPDATE PHOTO</span> <span>&#9998;</span></button>`;
+            inner += `<button class="_manageBtn" data-action="field" data-field="name" data-label="IDENTITY" data-val="${getRaw('name').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT IDENTITY</span> <span>&#9998;</span></button>`;
+            inner += `<button class="_manageBtn" data-action="field" data-field="limits" data-label="LIMITS" data-val="${getRaw('limits').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT LIMITS</span> <span>&#9998;</span></button>`;
+            inner += `<button class="_manageBtn" data-action="field" data-field="kinks" data-label="KINKS" data-val="${getRaw('kinks').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT KINKS</span> <span>&#9998;</span></button>`;
+            inner += `<button class="_manageBtn" data-action="field" data-field="routine" data-label="ROUTINE" data-val="${getRaw('routine').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT ROUTINE</span> <span>&#9998;</span></button>`;
 
-    box.innerHTML = inner;
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
+            box.innerHTML = inner;
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
 
-    overlay.querySelector('#_closeManage')?.addEventListener('click', () => overlay.remove());
+            overlay.querySelector('#_closeManage')?.addEventListener('click', () => overlay.remove());
 
-    overlay.querySelectorAll<HTMLButtonElement>('._manageBtn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            overlay.remove();
-            const action = btn.getAttribute('data-action');
-            if (action === 'photo') {
-                handleProfileUpload();
-            } else {
-                openTextFieldModal(
-                    btn.getAttribute('data-field') || '',
-                    btn.getAttribute('data-label') || '',
-                    btn.getAttribute('data-val') || ''
-                );
-            }
-        });
-    });
-}
-
-// ─── RENDER SIDEBAR ───
-let isPromoting = false;
-
-export function renderProfileSidebar(u: any) {
-    if (!u || typeof document === 'undefined') return;
-
-    (window as any).openManageProfileModal = () => openManageProfileModal(u);
-
-    (window as any).__profileHandlers = { uploadPhoto: handleProfileUpload, openField: openTextFieldModal };
-
-    // 👇 ADDED SAFETY CHECK for getHierarchyReport
-    const report = getHierarchyReport(u);
-    if (!report) return;
-
-    // Trigger loading tributes exactly once when profile data lands and sidebar renders
-    if (globalTributes.length === 0) loadTributes();
-
-    // ─── AUTO PROMOTION TRIGGER ───
-    if (report.canPromote && !isPromoting && u.member_id) {
-        isPromoting = true;
-        fetch('/api/promote', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberEmail: u.member_id })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && data.promoted) {
-                    // Slight delay so the user can enjoy seeing the bars hit 100% before the reload
-                    setTimeout(() => {
-                        alert(`✨ PROMOTION UNLOCKED ✨\nYou have been elevated to ${data.newRank.toUpperCase()}.`);
-                        window.location.reload();
-                    }, 800);
-                } else {
-                    isPromoting = false;
-                }
-            })
-            .catch(err => {
-                console.error("Auto-promote check failed", err);
-                isPromoting = false;
-            });
-    }
-
-    const { currentRank, nextRank, isMax, currentBenefits, nextBenefits, requirements } = report;
-
-    const elCurRank = document.getElementById('desk_CurrentRank');
-    if (elCurRank) elCurRank.innerText = currentRank.toUpperCase();
-
-    const elWorkingOnRank = document.getElementById('desk_WorkingOnRank');
-    if (elWorkingOnRank) elWorkingOnRank.innerText = isMax ? 'MAXIMUM RANK' : nextRank.toUpperCase();
-
-    const elDashRank = document.getElementById('desk_DashboardRank');
-    if (elDashRank) elDashRank.innerText = currentRank.toUpperCase();
-
-    const elSubName = document.getElementById('subName');
-    if (elSubName) elSubName.innerText = u.name || 'SLAVE';
-
-    const elCurEmail = document.getElementById('subEmail');
-    if (elCurEmail) elCurEmail.innerText = u.member_id || '';
-    const elMobEmail = document.getElementById('mob_slaveEmail');
-    if (elMobEmail) elMobEmail.innerText = u.member_id || '';
-
-    const photoSrc = u.avatar_url || u.profile_picture_url || '';
-    if (photoSrc) {
-        const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
-        if (elProfilePic) elProfilePic.src = photoSrc;
-        const elMobUserPic = document.getElementById('hudUserPic') as HTMLImageElement;
-        if (elMobUserPic) elMobUserPic.src = photoSrc;
-    }
-
-    const elCurBen = document.getElementById('desk_CurrentBenefits');
-    if (elCurBen) {
-        elCurBen.innerHTML = currentBenefits.map(b => `<li>${b}</li>`).join('');
-    }
-
-    const elNextBen = document.getElementById('desk_NextBenefits');
-    if (elNextBen) {
-        elNextBen.innerHTML = isMax ? '<li>You have reached the apex of servitude.</li>' : nextBenefits.map(b => `<li>${b}</li>`).join('');
-    }
-
-    const container = document.getElementById('desk_ProgressContainer');
-    if (container) {
-        const buildBar = (label: string, icon: string, current: number, target: number) => {
-            const t = isMax ? current : (target || 1);
-            const pct = Math.min((current / t) * 100, 100);
-            const done = current >= t;
-            const color = done ? '#00ff00' : '#c5a059';
-            const lc = done ? '#fff' : 'rgba(255,255,255,0.4)';
-            const vc = done ? '#00ff00' : '#fff';
-            return `<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:0.6rem;font-family:'Orbitron';margin-bottom:4px;color:${lc};letter-spacing:1px;"><span>${icon} ${label}</span><span style="color:${vc}">${current.toLocaleString()} / ${t.toLocaleString()}</span></div><div style="width:100%;height:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${color};box-shadow:0 0 10px ${color}40;transition:width 0.5s ease;"></div></div></div>`;
-        };
-
-        const buildCheck = (label: string, status: string, fieldId?: string, existingValue?: string) => {
-            const done = status === 'VERIFIED';
-            const safeVal = existingValue ? existingValue.replace(/"/g, '&quot;') : '';
-
-            const labelColor = done ? '#00ff00' : '#c5a059';
-
-            // Map specific SVGs, coloring them dynamically based on status (green if done, gold if missing)
-            let baseIcon = '';
-            if (label === 'LIMITS') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="${labelColor}" stroke="${labelColor}" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
-            else if (label === 'KINKS') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${labelColor}" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
-            else if (label === 'ROUTINE') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="${labelColor}" stroke="${labelColor}" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-            else if (label === 'IDENTITY') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${labelColor}" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
-            else if (label === 'PHOTO') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${labelColor}" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
-
-            const iconHtml = baseIcon;
-
-            // Calculate count for display conditionally
-            let countStr = '';
-            if (done && fieldId && existingValue) {
-                if (fieldId === 'kinks' || fieldId === 'limits' || fieldId === 'routine') {
-                    try {
-                        const parsed = JSON.parse(existingValue);
-                        countStr = Array.isArray(parsed) ? `${parsed.length}` : '1';
-                    } catch (e) {
-                        if (existingValue.includes(',')) countStr = `${existingValue.split(',').length}`;
-                        else countStr = '1';
+            overlay.querySelectorAll<HTMLButtonElement>('._manageBtn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    overlay.remove();
+                    const action = btn.getAttribute('data-action');
+                    if (action === 'photo') {
+                        handleProfileUpload();
+                    } else {
+                        openTextFieldModal(
+                            btn.getAttribute('data-field') || '',
+                            btn.getAttribute('data-label') || '',
+                            btn.getAttribute('data-val') || ''
+                        );
                     }
-                }
+                });
+            });
+        }
+
+        // ─── RENDER SIDEBAR ───
+        let isPromoting = false;
+
+        export function renderProfileSidebar(u: any) {
+            if (!u || typeof document === 'undefined') return;
+
+            (window as any).openManageProfileModal = () => openManageProfileModal(u);
+
+            (window as any).__profileHandlers = { uploadPhoto: handleProfileUpload, openField: openTextFieldModal };
+
+            // 👇 ADDED SAFETY CHECK for getHierarchyReport
+            const report = getHierarchyReport(u);
+            if (!report) return;
+
+            // Trigger loading tributes exactly once when profile data lands and sidebar renders
+            if (globalTributes.length === 0) loadTributes();
+
+            // ─── AUTO PROMOTION TRIGGER ───
+            if (report.canPromote && !isPromoting && u.member_id) {
+                isPromoting = true;
+                fetch('/api/promote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberEmail: u.member_id })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.promoted) {
+                            // Slight delay so the user can enjoy seeing the bars hit 100% before the reload
+                            setTimeout(() => {
+                                alert(`✨ PROMOTION UNLOCKED ✨\nYou have been elevated to ${data.newRank.toUpperCase()}.`);
+                                window.location.reload();
+                            }, 800);
+                        } else {
+                            isPromoting = false;
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Auto-promote check failed", err);
+                        isPromoting = false;
+                    });
             }
 
-            // The inner content of the button / row
-            let rightSide = '';
-            if (done) {
-                // Green Pen SVG + Count
-                const penSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00ff00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>`;
-                const dispCount = countStr ? `[${countStr}] ` : '';
-                rightSide = `<span style="color:#00ff00;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;display:flex;align-items:center;gap:4px;">${dispCount}${penSvg}</span>`;
-            } else {
-                rightSide = `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="padding:2px 8px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:4px;font-family:'Orbitron';font-size:0.55rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>`;
+            const { currentRank, nextRank, isMax, currentBenefits, nextBenefits, requirements } = report;
+
+            const elCurRank = document.getElementById('desk_CurrentRank');
+            if (elCurRank) elCurRank.innerText = currentRank.toUpperCase();
+
+            const elWorkingOnRank = document.getElementById('desk_WorkingOnRank');
+            if (elWorkingOnRank) elWorkingOnRank.innerText = isMax ? 'MAXIMUM RANK' : nextRank.toUpperCase();
+
+            const elDashRank = document.getElementById('desk_DashboardRank');
+            if (elDashRank) elDashRank.innerText = currentRank.toUpperCase();
+
+            const elSubName = document.getElementById('subName');
+            if (elSubName) elSubName.innerText = u.name || 'SLAVE';
+
+            const elCurEmail = document.getElementById('subEmail');
+            if (elCurEmail) elCurEmail.innerText = u.member_id || '';
+            const elMobEmail = document.getElementById('mob_slaveEmail');
+            if (elMobEmail) elMobEmail.innerText = u.member_id || '';
+
+            const photoSrc = u.avatar_url || u.profile_picture_url || '';
+            if (photoSrc) {
+                const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
+                if (elProfilePic) elProfilePic.src = photoSrc;
+                const elMobUserPic = document.getElementById('hudUserPic') as HTMLImageElement;
+                if (elMobUserPic) elMobUserPic.src = photoSrc;
             }
 
-            const wrapperStyle = `display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;`;
+            const elCurBen = document.getElementById('desk_CurrentBenefits');
+            if (elCurBen) {
+                elCurBen.innerHTML = currentBenefits.map(b => `<li>${b}</li>`).join('');
+            }
 
-            if (done && fieldId) {
-                return `<div style="${wrapperStyle}">
+            const elNextBen = document.getElementById('desk_NextBenefits');
+            if (elNextBen) {
+                elNextBen.innerHTML = isMax ? '<li>You have reached the apex of servitude.</li>' : nextBenefits.map(b => `<li>${b}</li>`).join('');
+            }
+
+            const container = document.getElementById('desk_ProgressContainer');
+            if (container) {
+                const buildBar = (label: string, icon: string, current: number, target: number) => {
+                    const t = isMax ? current : (target || 1);
+                    const pct = Math.min((current / t) * 100, 100);
+                    const done = current >= t;
+                    const color = done ? '#00ff00' : '#c5a059';
+                    const lc = done ? '#fff' : 'rgba(255,255,255,0.4)';
+                    const vc = done ? '#00ff00' : '#fff';
+                    return `<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:0.6rem;font-family:'Orbitron';margin-bottom:4px;color:${lc};letter-spacing:1px;"><span>${icon} ${label}</span><span style="color:${vc}">${current.toLocaleString()} / ${t.toLocaleString()}</span></div><div style="width:100%;height:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${color};box-shadow:0 0 10px ${color}40;transition:width 0.5s ease;"></div></div></div>`;
+                };
+
+                const buildCheck = (label: string, status: string, fieldId?: string, existingValue?: string) => {
+                    const done = status === 'VERIFIED';
+                    const safeVal = existingValue ? existingValue.replace(/"/g, '&quot;') : '';
+
+                    const labelColor = done ? '#00ff00' : '#c5a059';
+
+                    // Map specific SVGs, coloring them dynamically based on status (green if done, gold if missing)
+                    let baseIcon = '';
+                    if (label === 'LIMITS') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="${labelColor}" stroke="${labelColor}" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+                    else if (label === 'KINKS') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${labelColor}" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+                    else if (label === 'ROUTINE') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="${labelColor}" stroke="${labelColor}" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+                    else if (label === 'IDENTITY') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${labelColor}" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+                    else if (label === 'PHOTO') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${labelColor}" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+
+                    const iconHtml = baseIcon;
+
+                    // Calculate count for display conditionally
+                    let countStr = '';
+                    if (done && fieldId && existingValue) {
+                        if (fieldId === 'kinks' || fieldId === 'limits' || fieldId === 'routine') {
+                            try {
+                                const parsed = JSON.parse(existingValue);
+                                countStr = Array.isArray(parsed) ? `${parsed.length}` : '1';
+                            } catch (e) {
+                                if (existingValue.includes(',')) countStr = `${existingValue.split(',').length}`;
+                                else countStr = '1';
+                            }
+                        }
+                    }
+
+                    // The inner content of the button / row
+                    let rightSide = '';
+                    if (done) {
+                        // Green Pen SVG + Count
+                        const penSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00ff00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>`;
+                        const dispCount = countStr ? `[${countStr}] ` : '';
+                        rightSide = `<span style="color:#00ff00;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;display:flex;align-items:center;gap:4px;">${dispCount}${penSvg}</span>`;
+                    } else {
+                        rightSide = `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="padding:2px 8px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:4px;font-family:'Orbitron';font-size:0.55rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>`;
+                    }
+
+                    const wrapperStyle = `display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;`;
+
+                    if (done && fieldId) {
+                        return `<div style="${wrapperStyle}">
                             <button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="background:none;border:none;padding:0;margin:0;cursor:pointer;display:flex;align-items:center;gap:12px;width:100%;justify-content:space-between;">
                                 <span style="color:${labelColor};display:flex;align-items:center;gap:8px;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;text-transform:uppercase;">${iconHtml} ${label}</span>
                                 <span style="color:rgba(255,255,255,0.1);font-size:0.8rem;">|</span>
                                 ${rightSide}
                             </button>
                         </div>`;
-            } else if (done) {
-                return `<div style="${wrapperStyle}">
+                    } else if (done) {
+                        return `<div style="${wrapperStyle}">
                             <div style="display:flex;align-items:center;gap:12px;width:100%;justify-content:space-between;">
                                 <span style="color:${labelColor};display:flex;align-items:center;gap:8px;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;text-transform:uppercase;">${iconHtml} ${label}</span>
                                 <span style="color:rgba(255,255,255,0.1);font-size:0.8rem;">|</span>
                                 ${rightSide}
                             </div>
                         </div>`;
-            } else {
-                // Not done row
-                return `<div style="${wrapperStyle}">
+                    } else {
+                        // Not done row
+                        return `<div style="${wrapperStyle}">
                             <span style="color:${labelColor};display:flex;align-items:center;gap:8px;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;text-transform:uppercase;">${iconHtml} ${label}</span>
                             <div style="display:flex;align-items:center;">${rightSide}</div>
                         </div>`;
+                    }
+                };
+
+                const iconMap: Record<string, string> = { LABOR: '', ENDURANCE: '', MERIT: '', SACRIFICE: '', CONSISTENCY: '' };
+                const fieldIdMap: Record<string, string> = { IDENTITY: 'name', PHOTO: 'avatar_url', LIMITS: 'limits', KINKS: 'kinks', ROUTINE: 'routine' };
+
+                let html = '';
+                requirements.forEach(r => {
+                    if (r.type === 'bar') {
+                        html += buildBar(r.label, iconMap[r.label] || '•', r.current, r.target);
+                    } else {
+                        const fieldKey = fieldIdMap[r.label];
+                        // Safely grab the actual string value from the profile for the modal
+                        const rawValue = fieldKey && u[fieldKey] ? (typeof u[fieldKey] === 'string' ? u[fieldKey] : JSON.stringify(u[fieldKey])) : '';
+                        html += buildCheck(r.label, r.status, fieldKey, rawValue);
+                    }
+                });
+
+                container.innerHTML = html;
+
+                container.querySelectorAll<HTMLButtonElement>('[data-prof-action]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const action = btn.getAttribute('data-prof-action');
+                        const field = btn.getAttribute('data-prof-field') || '';
+                        const label = btn.getAttribute('data-prof-label') || '';
+                        const val = btn.getAttribute('data-prof-value') || '';
+
+                        if (action === 'photo') handleProfileUpload();
+                        else if (action === 'field') openTextFieldModal(field, label, val);
+                    });
+                });
+
+                const elPoints = document.getElementById('points');
+                if (elPoints) elPoints.innerText = (u.score || 0).toLocaleString();
+                const elCoins = document.getElementById('coins');
+                if (elCoins) elCoins.innerText = (u.wallet || 0).toLocaleString();
             }
-        };
-
-        const iconMap: Record<string, string> = { LABOR: '', ENDURANCE: '', MERIT: '', SACRIFICE: '', CONSISTENCY: '' };
-        const fieldIdMap: Record<string, string> = { IDENTITY: 'name', PHOTO: 'avatar_url', LIMITS: 'limits', KINKS: 'kinks', ROUTINE: 'routine' };
-
-        let html = '';
-        requirements.forEach(r => {
-            if (r.type === 'bar') {
-                html += buildBar(r.label, iconMap[r.label] || '•', r.current, r.target);
-            } else {
-                const fieldKey = fieldIdMap[r.label];
-                // Safely grab the actual string value from the profile for the modal
-                const rawValue = fieldKey && u[fieldKey] ? (typeof u[fieldKey] === 'string' ? u[fieldKey] : JSON.stringify(u[fieldKey])) : '';
-                html += buildCheck(r.label, r.status, fieldKey, rawValue);
-            }
-        });
-
-        container.innerHTML = html;
-
-        container.querySelectorAll<HTMLButtonElement>('[data-prof-action]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const action = btn.getAttribute('data-prof-action');
-                const field = btn.getAttribute('data-prof-field') || '';
-                const label = btn.getAttribute('data-prof-label') || '';
-                const val = btn.getAttribute('data-prof-value') || '';
-
-                if (action === 'photo') handleProfileUpload();
-                else if (action === 'field') openTextFieldModal(field, label, val);
-            });
-        });
-
-        const elPoints = document.getElementById('points');
-        if (elPoints) elPoints.innerText = (u.score || 0).toLocaleString();
-        const elCoins = document.getElementById('coins');
-        if (elCoins) elCoins.innerText = (u.wallet || 0).toLocaleString();
-    }
-}
-// --- DEBUG HELPERS ---
-
-export async function debugBytescale() {
-    console.log("[DEBUG] Starting Bytescale Connection Test...");
-    const { memberId } = getState();
-    if (!memberId) {
-        alert("Debug Error: No member session found.");
-        return;
-    }
-
-    // Create a tiny text file as a blob
-    const debugText = `Bytescale Connection Test\nTimestamp: ${new Date().toISOString()}\nMember: ${memberId}`;
-    const blob = new Blob([debugText], { type: 'text/plain' });
-    const file = new File([blob], "debug_test.txt", { type: 'text/plain' });
-
-    try {
-        const res = await uploadToBytescale("admin", file, "debug_tests");
-        if (res === "failed") {
-            alert("❌ BYTESCALE TEST FAILED\nCheck browser console for detailed status code.");
-            console.error("[DEBUG] Bytescale test upload failed.");
-        } else {
-            alert(`✅ BYTESCALE TEST SUCCESS!\nFile URL: ${res}`);
-            console.log("[DEBUG] Bytescale test success:", res);
         }
-    } catch (err: any) {
-        alert(`❌ BYTESCALE CONNECTION ERROR\n${err.message}`);
-        console.error("[DEBUG] Bytescale error:", err);
-    }
-}
+        // --- DEBUG HELPERS ---
+
+        export async function debugBytescale() {
+            console.log("[DEBUG] Starting Bytescale Connection Test...");
+            const { memberId } = getState();
+            if (!memberId) {
+                alert("Debug Error: No member session found.");
+                return;
+            }
+
+            // Create a tiny text file as a blob
+            const debugText = `Bytescale Connection Test\nTimestamp: ${new Date().toISOString()}\nMember: ${memberId}`;
+            const blob = new Blob([debugText], { type: 'text/plain' });
+            const file = new File([blob], "debug_test.txt", { type: 'text/plain' });
+
+            try {
+                const res = await uploadToBytescale("admin", file, "debug_tests");
+                if (res === "failed") {
+                    alert("❌ BYTESCALE TEST FAILED\nCheck browser console for detailed status code.");
+                    console.error("[DEBUG] Bytescale test upload failed.");
+                } else {
+                    alert(`✅ BYTESCALE TEST SUCCESS!\nFile URL: ${res}`);
+                    console.log("[DEBUG] Bytescale test success:", res);
+                }
+            } catch (err: any) {
+                alert(`❌ BYTESCALE CONNECTION ERROR\n${err.message}`);
+                console.error("[DEBUG] Bytescale error:", err);
+            }
+        }
