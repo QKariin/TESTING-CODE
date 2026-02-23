@@ -42,18 +42,34 @@ export async function POST(req: Request) {
         const newTodayKneeling = isSameDay ? prevToday + 1 : 1;
         const newKneelCount = parseInt(task?.kneelCount || '0', 10) + 1;
 
-        const { error } = await supabaseAdmin
-            .from('tasks')
-            .upsert({
-                member_id: memberEmail, // Keep this here since upsert might create a new row
-                lastWorship: now.toISOString(),
-                kneelCount: String(newKneelCount),
-                'today kneeling': String(newTodayKneeling),
-            }, { onConflict: 'member_id' });
+        let dbError;
+        if (task) {
+            // If row exists, update it (using ilike for case insensitivity so we don't miss it)
+            const { error } = await supabaseAdmin
+                .from('tasks')
+                .update({
+                    lastWorship: now.toISOString(),
+                    kneelCount: String(newKneelCount),
+                    'today kneeling': String(newTodayKneeling),
+                })
+                .ilike('member_id', memberEmail);
+            dbError = error;
+        } else {
+            // If row does not exist, insert a new one
+            const { error } = await supabaseAdmin
+                .from('tasks')
+                .insert({
+                    member_id: memberEmail,
+                    lastWorship: now.toISOString(),
+                    kneelCount: String(newKneelCount),
+                    'today kneeling': String(newTodayKneeling),
+                });
+            dbError = error;
+        }
 
-        if (error) {
-            console.error('[kneel] update error:', error);
-            return NextResponse.json({ error: error.message }, { status: 500 });
+        if (dbError) {
+            console.error('[kneel] db error:', dbError);
+            return NextResponse.json({ error: dbError.message }, { status: 500 });
         }
 
         return NextResponse.json({
