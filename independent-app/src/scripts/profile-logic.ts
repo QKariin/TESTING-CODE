@@ -849,40 +849,68 @@ export function renderProfileSidebar(u: any) {
             const done = status === 'VERIFIED';
             const safeVal = existingValue ? existingValue.replace(/"/g, '&quot;') : '';
 
-            // Map specific SVGs just like the original design
+            const labelColor = done ? '#00ff00' : '#c5a059';
+
+            // Map specific SVGs, coloring them dynamically based on status (green if done, gold if missing)
             let baseIcon = '';
-            if (label === 'LIMITS') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="#00ff00" stroke="#00ff00" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
-            else if (label === 'KINKS') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#00ff00" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
-            else if (label === 'ROUTINE') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="#00ff00" stroke="#00ff00" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-            else if (label === 'IDENTITY') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#00ff00" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
-            else if (label === 'PHOTO') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#00ff00" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+            if (label === 'LIMITS') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="${labelColor}" stroke="${labelColor}" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+            else if (label === 'KINKS') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${labelColor}" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+            else if (label === 'ROUTINE') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="${labelColor}" stroke="${labelColor}" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+            else if (label === 'IDENTITY') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${labelColor}" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+            else if (label === 'PHOTO') baseIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${labelColor}" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
 
-            const labelColor = done ? '#00ff00' : 'rgba(255,255,255,0.5)';
-            const iconHtml = done ? baseIcon : '';
+            const iconHtml = baseIcon;
 
-            // The ADD button for missing fields
-            if (!done && fieldId) {
-                const addBtn = `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="padding:4px 12px;background:transparent;color:#ff4444;border:1px solid #ff4444;border-radius:4px;font-family:'Orbitron';font-size:0.55rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>`;
-                return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">
-                            <span style="color:${labelColor};display:flex;align-items:center;gap:6px;">${iconHtml} ${label}</span>
-                            <div style="display:flex;align-items:center;">${addBtn}</div>
-                        </div>`;
+            // Calculate count for display conditionally
+            let countStr = '';
+            if (done && fieldId && existingValue) {
+                if (fieldId === 'kinks' || fieldId === 'limits' || fieldId === 'routine') {
+                    try {
+                        const parsed = JSON.parse(existingValue);
+                        countStr = Array.isArray(parsed) ? `${parsed.length}` : '1';
+                    } catch (e) {
+                        if (existingValue.includes(',')) countStr = `${existingValue.split(',').length}`;
+                        else countStr = '1';
+                    }
+                }
             }
 
-            // The EXACT REPLICA of verified state, wrapped in a button so it acts as EDIT
-            const verifiedBtn = fieldId
-                ? `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="background:none;border:none;padding:0;margin:0;cursor:pointer;display:flex;align-items:center;gap:12px;width:100%;justify-content:space-between;">
-                    <span style="color:#00ff00;display:flex;align-items:center;gap:8px;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;text-transform:uppercase;">${iconHtml} ${label}</span>
-                    <span style="color:rgba(255,255,255,0.1);font-size:0.8rem;">|</span>
-                    <span style="color:#00ff00;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;">VERIFIED</span>
-                  </button>`
-                : `<div style="display:flex;align-items:center;gap:12px;width:100%;justify-content:space-between;">
-                    <span style="color:#00ff00;display:flex;align-items:center;gap:8px;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;text-transform:uppercase;">${iconHtml} ${label}</span>
-                    <span style="color:rgba(255,255,255,0.1);font-size:0.8rem;">|</span>
-                    <span style="color:#00ff00;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;">VERIFIED</span>
-                  </div>`;
+            // The inner content of the button / row
+            let rightSide = '';
+            if (done) {
+                // Green Pen SVG + Count
+                const penSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00ff00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>`;
+                const dispCount = countStr ? `[${countStr}] ` : '';
+                rightSide = `<span style="color:#00ff00;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;display:flex;align-items:center;gap:4px;">${dispCount}${penSvg}</span>`;
+            } else {
+                rightSide = `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="padding:2px 8px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:4px;font-family:'Orbitron';font-size:0.55rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>`;
+            }
 
-            return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">${verifiedBtn}</div>`;
+            const wrapperStyle = `display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;`;
+
+            if (done && fieldId) {
+                return `<div style="${wrapperStyle}">
+                            <button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="background:none;border:none;padding:0;margin:0;cursor:pointer;display:flex;align-items:center;gap:12px;width:100%;justify-content:space-between;">
+                                <span style="color:${labelColor};display:flex;align-items:center;gap:8px;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;text-transform:uppercase;">${iconHtml} ${label}</span>
+                                <span style="color:rgba(255,255,255,0.1);font-size:0.8rem;">|</span>
+                                ${rightSide}
+                            </button>
+                        </div>`;
+            } else if (done) {
+                return `<div style="${wrapperStyle}">
+                            <div style="display:flex;align-items:center;gap:12px;width:100%;justify-content:space-between;">
+                                <span style="color:${labelColor};display:flex;align-items:center;gap:8px;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;text-transform:uppercase;">${iconHtml} ${label}</span>
+                                <span style="color:rgba(255,255,255,0.1);font-size:0.8rem;">|</span>
+                                ${rightSide}
+                            </div>
+                        </div>`;
+            } else {
+                // Not done row
+                return `<div style="${wrapperStyle}">
+                            <span style="color:${labelColor};display:flex;align-items:center;gap:8px;font-weight:bold;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;text-transform:uppercase;">${iconHtml} ${label}</span>
+                            <div style="display:flex;align-items:center;">${rightSide}</div>
+                        </div>`;
+            }
         };
 
         const iconMap: Record<string, string> = { LABOR: '', ENDURANCE: '', MERIT: '', SACRIFICE: '', CONSISTENCY: '' };
