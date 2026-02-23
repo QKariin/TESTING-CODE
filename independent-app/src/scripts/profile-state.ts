@@ -12,7 +12,7 @@ export interface ProfileState {
     rank: string;
     revealMap: number[];
     libraryProgress: number;
-    raw: any; // <--- NEW: Backup of the full DB object
+    raw: any; // <--- The Backup
 }
 
 const DEFAULT_STATE: ProfileState = {
@@ -27,21 +27,15 @@ const DEFAULT_STATE: ProfileState = {
     rank: "INITIATE",
     revealMap: [],
     libraryProgress: 1,
-    raw: {} // Default empty
+    raw: {} 
 };
 
 let state: ProfileState = { ...DEFAULT_STATE };
 
-export function getState(): ProfileState {
-    return state;
-}
+export function getState(): ProfileState { return state; }
 
 export function setState(updates: Partial<ProfileState>) {
     state = { ...state, ...updates };
-    
-    // Sync the raw backup if we updated wallet/score so the sidebar sees it
-    if (updates.wallet !== undefined) state.raw.wallet = updates.wallet;
-    if (updates.score !== undefined) state.raw.score = updates.score;
 }
 
 export function resetState() {
@@ -51,16 +45,13 @@ export function resetState() {
 export function initProfileState(data: any) {
     let lastWorshipTime = 0;
 
-    // 1. Look for lowercase 'lastworship' (from our normalization)
-    // We also check lastWorship just in case, and lastKneelDate as legacy fallback
-    const rawTime = data.lastworship || data.lastWorship || data.lastKneelDate;
+    // 1. Grab the timestamp from the merged data (Task DB)
+    // We check lastWorship (exact from DB) or lastKneelDate (legacy)
+    const rawTime = data.lastWorship || data.lastKneelDate;
 
     if (rawTime) {
         const parsed = new Date(rawTime).getTime();
-        if (!isNaN(parsed)) {
-            lastWorshipTime = parsed;
-            console.log("[STATE] Lock Active. Time:", new Date(lastWorshipTime).toLocaleTimeString());
-        }
+        if (!isNaN(parsed)) lastWorshipTime = parsed;
     }
 
     setState({
@@ -76,7 +67,7 @@ export function initProfileState(data: any) {
         lastWorshipTime: lastWorshipTime,
         cooldownMinutes: 60,
         
-        // IMPORTANT: Save the full merged data object for the sidebar
+        // 👇 SAVE THE WORKING DATA OBJECT
         raw: data 
     });
 }
