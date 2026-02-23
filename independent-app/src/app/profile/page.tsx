@@ -88,7 +88,7 @@ export default function ProfilePage() {
             (window as any).handleLogout = handleLogout;
         }
 
-       async function loadProfile() {
+      async function loadProfile() {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
@@ -96,7 +96,7 @@ export default function ProfilePage() {
                     return;
                 }
 
-                // 1. Fetch Identity (PROFILES)
+                // 1. Fetch Identity
                 const { data: profileData } = await supabase
                     .from('profiles')
                     .select('*')
@@ -106,33 +106,27 @@ export default function ProfilePage() {
                 let baseProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
                 if (baseProfile) {
-                    // 2. Fetch Stats (TASKS) - THIS WAS MISSING
-                    // We check the 'tasks' table using the correct Case Sensitive ID
+                    // 2. Fetch Stats
                     const { data: taskData } = await supabase
                         .from('tasks')
                         .select('*')
-                        .eq('"MemberID"', baseProfile.member_id) 
+                        .eq('"MemberID"', baseProfile.member_id) // Case sensitive ID
                         .maybeSingle();
 
-                    // 3. NORMALIZE & MERGE
-                    // We combine them into one object and force lowercase keys so the rest of the app 
-                    // doesn't have to guess between 'lastWorship' and 'LastWorship'
-                    const unifiedData: any = { ...baseProfile };
-                    
-                    if (taskData) {
-                        Object.keys(taskData).forEach(key => {
-                            unifiedData[key.toLowerCase()] = taskData[key];
-                        });
-                    }
+                    // 3. MERGE DATA (WITHOUT RENAMING KEYS)
+                    // We keep the exact column names from Postgres ("lastWorship", "kneelCount", etc.)
+                    const unifiedData = { 
+                        ...baseProfile, 
+                        ...(taskData || {}) 
+                    };
 
-                    console.log("[ONE SOURCE] Loaded Data:", unifiedData);
+                    console.log("[ONE SOURCE] Unified Data:", unifiedData);
 
                     // 4. Initialize State
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
                     
                     setTimeout(() => {
-                        // Pass the UNIFIED data to the sidebar so it sees the stats
                         renderProfileSidebar(unifiedData);
                         updateKneelingUI(); 
                         attachKneelListeners();
