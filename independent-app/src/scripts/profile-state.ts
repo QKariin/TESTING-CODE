@@ -1,5 +1,3 @@
-// src/scripts/profile-state.ts
-
 export interface ProfileState {
     isLocked: boolean;
     lastWorshipTime: number;
@@ -12,7 +10,7 @@ export interface ProfileState {
     rank: string;
     revealMap: number[];
     libraryProgress: number;
-    raw: any; // <--- The Backup
+    raw: any; // <--- The Backup storage
 }
 
 const DEFAULT_STATE: ProfileState = {
@@ -45,9 +43,9 @@ export function resetState() {
 export function initProfileState(data: any) {
     let lastWorshipTime = 0;
 
-    // 1. Grab the timestamp from the merged data (Task DB)
-    // We check lastWorship (exact from DB) or lastKneelDate (legacy)
-    const rawTime = data.lastWorship || data.lastKneelDate;
+    // 👇 FIX 1: Look for the REAL database column "lastWorship"
+    // We check multiple casings just to be safe
+    const rawTime = data.lastWorship || data.LastWorship || data.lastKneelDate;
 
     if (rawTime) {
         const parsed = new Date(rawTime).getTime();
@@ -64,10 +62,10 @@ export function initProfileState(data: any) {
         revealMap: data.parameters?.reveal_map || [],
         libraryProgress: data.parameters?.library_progress || 1,
         
-        lastWorshipTime: lastWorshipTime,
+        lastWorshipTime: lastWorshipTime, // Sets the lock
         cooldownMinutes: 60,
         
-        // 👇 SAVE THE WORKING DATA OBJECT
+        // 👇 FIX 2: Save the full data object so we don't lose stats later
         raw: data 
     });
 }
