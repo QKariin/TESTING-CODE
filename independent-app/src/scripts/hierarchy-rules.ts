@@ -125,8 +125,12 @@ export function getHierarchyReport(profile: any) {
     const requirements: any[] = [];
 
     if (!isMax) {
-        if (req.name) requirements.push({ label: 'IDENTITY', status: stats.hasName ? 'VERIFIED' : 'MISSING', type: 'check', field: 'name' });
-        if (req.photo) requirements.push({ label: 'PHOTO', status: stats.hasPhoto ? 'VERIFIED' : 'MISSING', type: 'check', field: 'avatar_url' });
+        // Only show boolean requirements if they are newly introduced for the NEXT rank 
+        // (i.e., the current rank DOES NOT require them)
+        const curReq = currentRankObj.req;
+
+        if (req.name && !curReq.name) requirements.push({ label: 'IDENTITY', status: stats.hasName ? 'VERIFIED' : 'MISSING', type: 'check', field: 'name' });
+        if (req.photo && !curReq.photo) requirements.push({ label: 'PHOTO', status: stats.hasPhoto ? 'VERIFIED' : 'MISSING', type: 'check', field: 'avatar_url' });
 
         if ((req.tasks || 0) > 0) requirements.push({ label: 'LABOR', icon: '🛠️', current: stats.tasks, target: req.tasks, type: 'bar' });
         if ((req.kneels || 0) > 0) requirements.push({ label: 'ENDURANCE', icon: '🧎', current: stats.kneels, target: req.kneels, type: 'bar' });
@@ -134,14 +138,22 @@ export function getHierarchyReport(profile: any) {
         if ((req.spent || 0) > 0) requirements.push({ label: 'SACRIFICE', icon: '💰', current: stats.spent, target: req.spent, type: 'bar' });
         if ((req.streak || 0) > 0) requirements.push({ label: 'CONSISTENCY', icon: '📅', current: stats.streak, target: req.streak, type: 'bar' });
 
-        if (req.limits) requirements.push({ label: 'LIMITS', status: stats.hasLimits ? 'VERIFIED' : 'MISSING', type: 'check', field: 'limits' });
-        if (req.kinks) requirements.push({ label: 'KINKS', status: stats.hasKinks ? 'VERIFIED' : 'MISSING', type: 'check', field: 'kinks' });
-        if (req.routine) requirements.push({ label: 'ROUTINE', status: stats.hasRoutine ? 'VERIFIED' : 'MISSING', type: 'check', field: 'routine' });
+        if (req.limits && !curReq.limits) requirements.push({ label: 'LIMITS', status: stats.hasLimits ? 'VERIFIED' : 'MISSING', type: 'check', field: 'limits' });
+        if (req.kinks && !curReq.kinks) requirements.push({ label: 'KINKS', status: stats.hasKinks ? 'VERIFIED' : 'MISSING', type: 'check', field: 'kinks' });
+        if (req.routine && !curReq.routine) requirements.push({ label: 'ROUTINE', status: stats.hasRoutine ? 'VERIFIED' : 'MISSING', type: 'check', field: 'routine' });
     }
 
-    const canPromote = !isMax && requirements.every(r =>
-        r.type === 'check' ? r.status === 'VERIFIED' : r.current >= r.target
+    // A user can only promote if they meet ALL cumulative requirements defined on the rank object itself.
+    // We must evaluate against `req.kinks` directly, not the filtered visual `requirements` array.
+    const allChecksPass = (
+        (!req.name || stats.hasName) &&
+        (!req.photo || stats.hasPhoto) &&
+        (!req.limits || stats.hasLimits) &&
+        (!req.kinks || stats.hasKinks) &&
+        (!req.routine || stats.hasRoutine)
     );
+
+    const canPromote = !isMax && allChecksPass && requirements.filter(r => r.type === 'bar').every(r => r.current >= r.target);
 
     return {
         currentRank: currentRankObj.name,

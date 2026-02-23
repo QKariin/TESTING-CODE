@@ -706,11 +706,63 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
     }
 }
 
+// ─── PROFILE MANAGEMENT MODAL ───
+export function openManageProfileModal(u: any) {
+    document.getElementById('_manageModal')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = '_manageModal';
+    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;`;
+
+    const box = document.createElement('div');
+    box.style.cssText = `background:#07080f;border:1px solid #c5a059;border-radius:12px;padding:24px;width:100%;max-width:320px;font-family:'Orbitron';`;
+
+    const getRaw = (key: string) => {
+        return u[key] ? (typeof u[key] === 'string' ? u[key] : JSON.stringify(u[key])) : '';
+    };
+
+    let inner = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div style="color:#c5a059;font-size:0.85rem;letter-spacing:3px;">MANAGE PROFILE</div>
+        <button id="_closeManage" style="background:none;border:none;color:#ff4444;font-size:1.2rem;cursor:pointer;">&times;</button>
+    </div>`;
+
+    const btnStyle = `width:100%;padding:12px;margin-bottom:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;`;
+
+    inner += `<button class="_manageBtn" data-action="photo" style="${btnStyle}"><span>UPDATE PHOTO</span> <span>&#9998;</span></button>`;
+    inner += `<button class="_manageBtn" data-action="field" data-field="name" data-label="IDENTITY" data-val="${getRaw('name').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT IDENTITY</span> <span>&#9998;</span></button>`;
+    inner += `<button class="_manageBtn" data-action="field" data-field="limits" data-label="LIMITS" data-val="${getRaw('limits').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT LIMITS</span> <span>&#9998;</span></button>`;
+    inner += `<button class="_manageBtn" data-action="field" data-field="kinks" data-label="KINKS" data-val="${getRaw('kinks').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT KINKS</span> <span>&#9998;</span></button>`;
+    inner += `<button class="_manageBtn" data-action="field" data-field="routine" data-label="ROUTINE" data-val="${getRaw('routine').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT ROUTINE</span> <span>&#9998;</span></button>`;
+
+    box.innerHTML = inner;
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#_closeManage')?.addEventListener('click', () => overlay.remove());
+
+    overlay.querySelectorAll<HTMLButtonElement>('._manageBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            overlay.remove();
+            const action = btn.getAttribute('data-action');
+            if (action === 'photo') {
+                handleProfileUpload();
+            } else {
+                openTextFieldModal(
+                    btn.getAttribute('data-field') || '',
+                    btn.getAttribute('data-label') || '',
+                    btn.getAttribute('data-val') || ''
+                );
+            }
+        });
+    });
+}
+
 // ─── RENDER SIDEBAR ───
 let isPromoting = false;
 
 export function renderProfileSidebar(u: any) {
     if (!u || typeof document === 'undefined') return;
+
+    (window as any).openManageProfileModal = () => openManageProfileModal(u);
 
     (window as any).__profileHandlers = { uploadPhoto: handleProfileUpload, openField: openTextFieldModal };
 

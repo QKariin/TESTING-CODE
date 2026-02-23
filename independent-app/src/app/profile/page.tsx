@@ -214,8 +214,28 @@ export default function ProfilePage() {
                         <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()}>
                             <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" />
                         </div>
-                        <div id="subName" className="identity-name" style={{ fontSize: '1.2rem', letterSpacing: 4, marginBottom: 5, fontWeight: 'bold' }}>
-                            {profile?.name || "SLAVE"}
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 5 }}>
+                            <div id="subName" className="identity-name" style={{ fontSize: '1.2rem', letterSpacing: 4, fontWeight: 'bold', margin: 0 }}>
+                                {profile?.name || "SLAVE"}
+                            </div>
+                            <button
+                                onClick={() => (window as any).openManageProfileModal?.()}
+                                style={{ background: 'none', border: 'none', color: '#c5a059', cursor: 'pointer', padding: 0, display: 'flex' }}
+                                title="Manage Profile Options"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"></path>
+                                    <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path>
+                                    <path d="M12 2v2"></path>
+                                    <path d="M12 20v2"></path>
+                                    <path d="m4.93 4.93 1.41 1.41"></path>
+                                    <path d="m17.66 17.66 1.41 1.41"></path>
+                                    <path d="M2 12h2"></path>
+                                    <path d="M20 12h2"></path>
+                                    <path d="m6.34 17.66-1.41 1.41"></path>
+                                    <path d="m19.07 4.93-1.41 1.41"></path>
+                                </svg>
+                            </button>
                         </div>
                         <div id="subEmail" style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', marginBottom: 15, letterSpacing: 1 }}>
                             {profile?.member_id || ""}
