@@ -142,24 +142,45 @@ export function triggerCoinShower() {
 }
 
 // ─── TRIBUTE SYSTEM LOGIC ───
+export let globalTributesError: string | null = null;
+
 export async function loadTributes() {
     try {
         const res = await fetch('/api/tributes');
         const data = await res.json();
         if (data.success && data.tributes && data.tributes.length > 0) {
             globalTributes = data.tributes;
+            globalTributesError = null;
+            renderTributes();
+        } else if (data.success && data.tributes && data.tributes.length === 0) {
+            globalTributesError = "Table 'wishlist' exists, but it has 0 items inside it! You need to add items to your Supabase table.";
             renderTributes();
         } else {
-            console.error("[Tributes API] Returned empty or failed. Reason:", data.error || "No items in DB.");
+            globalTributesError = data.error || "Unknown server error.";
+            console.error("[Tributes API]", globalTributesError);
+            renderTributes();
         }
-    } catch (err) {
+    } catch (err: any) {
+        globalTributesError = err.message || "Failed to load tributes.";
         console.error("Failed to load tributes:", err);
+        renderTributes();
     }
 }
 
 function renderTributes() {
-    // 1. Desktop Quick Connect (Taking the First 2 items e.g Coffee/Dinner)
     const quickBox = document.getElementById('desk_QuickTribute');
+    const gridDesk = document.getElementById('huntStoreGridDesk');
+    const gridMob = document.getElementById('mob_huntStoreGrid');
+
+    if (globalTributesError) {
+        const errHtml = `<div style="color:red; padding:15px; font-family:'Orbitron'; font-size:0.8rem; border:1px solid red; background:rgba(255,0,0,0.1); border-radius:8px;"><b>DATABASE ERROR:</b><br/>${globalTributesError}</div>`;
+        if (quickBox) quickBox.innerHTML = errHtml;
+        if (gridDesk) gridDesk.innerHTML = errHtml;
+        if (gridMob) gridMob.innerHTML = errHtml;
+        return;
+    }
+
+    // 1. Desktop Quick Connect (Taking the First 2 items e.g Coffee/Dinner)
     if (quickBox && globalTributes.length >= 2) {
         const quickItems = globalTributes.slice(0, 2);
         quickBox.innerHTML = quickItems.map(t => `
@@ -174,8 +195,6 @@ function renderTributes() {
     }
 
     // 2. Desktop Modal Overview AND Mobile Grid Overlay
-    const gridDesk = document.getElementById('huntStoreGridDesk');
-    const gridMob = document.getElementById('mob_huntStoreGrid');
 
     const renderGrid = (gridEl: HTMLElement) => {
         if (!gridEl) return;
