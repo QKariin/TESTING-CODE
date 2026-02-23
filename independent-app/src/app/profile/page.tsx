@@ -88,7 +88,7 @@ export default function ProfilePage() {
             (window as any).handleLogout = handleLogout;
         }
 
-        async function loadProfile() {
+       async function loadProfile() {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
@@ -106,36 +106,38 @@ export default function ProfilePage() {
                 let finalProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
                 if (finalProfile) {
-                    // 2. Fetch Stats (Tasks) - FORCE FETCH
-                    // We log this so we can see it in the console next time
-                    console.log("[PROFILE] Loading stats for:", finalProfile.member_id);
-                    
+                    // 2. Fetch Stats (Tasks)
+                    // We use ilike to ignore case differences in the email
                     const { data: taskData, error: taskError } = await supabase
                         .from('tasks')
                         .select('*')
-                        // 👇 CRITICAL: Quotes required for Case Sensitive "MemberID"
-                        .eq('"MemberID"', finalProfile.member_id) 
+                        .ilike('"MemberID"', finalProfile.member_id) 
                         .maybeSingle();
 
+                    // 3. NORMALIZE KEYS (The Fix for "It didn't work")
+                    // This converts "lastWorship", "LastWorship", "MemberID" all to lowercase keys
+                    // So we can access them reliably as .lastworship
+                    const normalizedTask: any = {};
                     if (taskData) {
-                        console.log("[PROFILE] Stats found. Last Worship:", taskData.lastWorship);
-                    } else {
-                        console.warn("[PROFILE] No stats found (Check 'MemberID' casing in DB). Error:", taskError);
+                        Object.keys(taskData).forEach(key => {
+                            normalizedTask[key.toLowerCase()] = (taskData as any)[key];
+                        });
+                        console.log("[PROFILE] Normalized Task Data:", normalizedTask);
                     }
 
-                    // 3. Merge Data
+                    // 4. Merge Data (Profile + Normalized Stats)
                     const mergedData = { 
                         ...finalProfile, 
-                        ...(taskData || {}) 
+                        ...normalizedTask // usage: data.lastworship, data.kneelcount
                     };
 
-                    // 4. Initialize State
+                    // 5. Initialize State
                     setProfile(mergedData);
                     initProfileState(mergedData);
                     
                     setTimeout(() => {
                         renderProfileSidebar(mergedData);
-                        updateKneelingUI(); // Update button lock immediately
+                        updateKneelingUI(); 
                         attachKneelListeners();
                         switchTab('serve'); 
                         getRandomTask(true);
