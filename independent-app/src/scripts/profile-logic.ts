@@ -208,27 +208,107 @@ function renderTributes() {
     const renderGrid = (gridEl: HTMLElement) => {
         if (!gridEl) return;
         gridEl.innerHTML = globalTributes.map((t, index) => {
-            // Give each frame a slight random tilt between -3 and 3 degrees for an authentic scrapbook look
-            const rotation = (index % 2 === 0 ? 1 : -1) * (Math.random() * 3 + 1);
-            return `
-            <div class="store-item polaroid-card" style="position:relative; background:#fff; padding:10px 10px 20px 10px; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow:0 6px 15px rgba(0,0,0,0.15); transform:rotate(${rotation}deg);" onmouseover="this.style.transform='translateY(-10px) rotate(0deg) scale(1.05)'; this.style.boxShadow='0 15px 30px rgba(0,0,0,0.2)'; this.style.zIndex='20'" onmouseout="this.style.transform='rotate(${rotation}deg)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.15)'; this.style.zIndex='1'" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})">
-                <!-- Washi Tape Effect -->
-                <div style="position:absolute; top:-12px; left:50%; width:80px; height:25px; background:rgba(255, 182, 193, 0.6); transform:translateX(-50%) rotate(${-rotation * 2}deg); z-index:5; box-shadow:0 1px 3px rgba(0,0,0,0.1); border-left:2px dotted rgba(255,255,255,0.5); border-right:2px dotted rgba(255,255,255,0.5);"></div>
-                
-                <div style="width:100%; height:160px; background:url('${t.image}') center/cover; border:1px solid rgba(0,0,0,0.05);"></div>
-                
-                <div style="width:100%; display:flex; flex-direction:column; align-items:center; margin-top:15px;">
-                    <div style="font-family:'Caveat', cursive; font-size:1.8rem; color:#111; text-align:center; line-height:1.2; font-weight:700;">${t.title}</div>
-                    <div style="font-family:'Patrick Hand', cursive; font-size:1.2rem; color:'#ff4b72'; display:flex; align-items:center; gap:5px; margin-top:5px;"><span style="color:#ff69b4;">♥</span> ${t.price.toLocaleString()}</div>
+            if (t.is_crowdfund) {
+                const goal = t.goal_amount || 1;
+                const raised = t.raised_amount || 0;
+                const progressPercent = Math.min(100, Math.round((raised / goal) * 100));
+
+                return `
+                <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:rgba(255,255,255,0.7); backdrop-filter:blur(10px); padding:20px; border-radius:15px; display:flex; gap:20px; align-items:center; box-shadow:0 8px 25px rgba(0,0,0,0.1), inset 0 0 20px rgba(255,255,255,0.8); border:1px solid rgba(255,255,255,0.5);">
+                    <div style="width:140px; height:140px; border-radius:12px; background:url('${t.image}') center/cover; border:2px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,0.15); flex-shrink:0;"></div>
+                    
+                    <div style="flex:1; display:flex; flexDirection:column; gap:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                            <div style="font-family:'Caveat', cursive; font-size:2.4rem; color:#111; line-height:1; font-weight:700;">${t.title}</div>
+                            <div style="font-family:'Orbitron', sans-serif; font-size:0.9rem; color:#ff4b72; font-weight:700;">${raised.toLocaleString()} / ${goal.toLocaleString()} <span style="color:#ff69b4;">♥</span></div>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div style="width:100%; height:12px; background:rgba(0,0,0,0.05); border-radius:6px; overflow:hidden; border:1px solid rgba(0,0,0,0.1); position:relative;">
+                            <div style="position:absolute; top:0; left:0; height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); transition:width 0.5s ease-in-out;"></div>
+                        </div>
+                        
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                            <div style="font-family:'Patrick Hand', cursive; font-size:1.1rem; color:#666;">Be part of this dream!</div>
+                            
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <input type="number" id="crowdfund_input_${t.id}" placeholder="Amount..." style="width:100px; padding:8px 12px; border:2px solid #ffe4e1; border-radius:8px; outline:none; font-family:'Patrick Hand', cursive; font-size:1.1rem; color:#333;" />
+                                <button onclick="window.contributeCrowdfund('${t.id}', '${t.title}')" style="background:#ff4b72; color:white; border:none; padding:8px 20px; border-radius:8px; font-family:'Patrick Hand', cursive; font-size:1.2rem; cursor:pointer; font-weight:bold; box-shadow:0 4px 10px rgba(255,75,114,0.3); transition:all 0.2s;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='#ff335f';" onmouseout="this.style.transform='scale(1)'; this.style.background='#ff4b72';">CONTRIBUTE</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        `;
+                `;
+            } else {
+                // Give each frame a slight random tilt between -3 and 3 degrees for an authentic scrapbook look
+                const rotation = (index % 2 === 0 ? 1 : -1) * (Math.random() * 3 + 1);
+                return `
+                <div class="store-item polaroid-card" style="position:relative; background:#fff; padding:10px 10px 20px 10px; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow:0 6px 15px rgba(0,0,0,0.15); transform:rotate(${rotation}deg);" onmouseover="this.style.transform='translateY(-10px) rotate(0deg) scale(1.05)'; this.style.boxShadow='0 15px 30px rgba(0,0,0,0.2)'; this.style.zIndex='20'" onmouseout="this.style.transform='rotate(${rotation}deg)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.15)'; this.style.zIndex='1'" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})">
+                    <!-- Washi Tape Effect -->
+                    <div style="position:absolute; top:-12px; left:50%; width:80px; height:25px; background:rgba(255, 182, 193, 0.6); transform:translateX(-50%) rotate(${-rotation * 2}deg); z-index:5; box-shadow:0 1px 3px rgba(0,0,0,0.1); border-left:2px dotted rgba(255,255,255,0.5); border-right:2px dotted rgba(255,255,255,0.5);"></div>
+                    
+                    <div style="width:100%; height:160px; background:url('${t.image}') center/cover; border:1px solid rgba(0,0,0,0.05);"></div>
+                    
+                    <div style="width:100%; display:flex; flex-direction:column; align-items:center; margin-top:15px;">
+                        <div style="font-family:'Caveat', cursive; font-size:1.8rem; color:#111; text-align:center; line-height:1.2; font-weight:700;">${t.title}</div>
+                        <div style="font-family:'Patrick Hand', cursive; font-size:1.2rem; color:'#ff4b72'; display:flex; align-items:center; gap:5px; margin-top:5px;"><span style="color:#ff69b4;">♥</span> ${t.price.toLocaleString()}</div>
+                    </div>
+                </div>
+            `;
+            }
         }).join('');
     };
 
     if (gridDesk) renderGrid(gridDesk);
     if (gridMob) renderGrid(gridMob);
 }
+
+// Attach the crowdfund function to the global window object so the onclick handlers can find it
+(window as any).contributeCrowdfund = async function (id: string, title: string) {
+    const inputEl = document.getElementById(`crowdfund_input_${id}`) as HTMLInputElement;
+    if (!inputEl) return;
+
+    const amount = parseInt(inputEl.value);
+    if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid amount greater than 0.");
+        return;
+    }
+
+    const { memberId, wallet } = getState();
+    if (!memberId) return;
+
+    if (wallet < amount) {
+        document.getElementById('povertyOverlay')?.classList.remove('hidden');
+        document.getElementById('povertyInsult')!.innerText = `You lack the capital to offer ${amount.toLocaleString()} coins to "${title}". Know your place.`;
+        return;
+    }
+
+    if (!confirm(`Are you sure you wish to contribute ${amount.toLocaleString()} coins to ${title}?\n(This will also earn you merit)`)) return;
+
+    try {
+        const res = await fetch('/api/tributes/contribute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberEmail: memberId, tributeId: id, tributeTitle: title, contributionAmount: amount })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            setState({ wallet: data.newWallet, score: data.newScore });
+            alert(`Succesfully contributed ${amount.toLocaleString()} coins to ${title}! You received ${data.meritGained} merit.`);
+            inputEl.value = ''; // clear input
+
+            // Re-fetch tributes to instantly update the progress bar visually
+            loadTributes();
+        } else {
+            alert(`Failed: ${data.error}`);
+        }
+    } catch (err) {
+        console.error("Contribution error:", err);
+        alert("An error occurred. Please try again.");
+    }
+};
 
 export async function buyTribute(id: string, title: string, cost: number) {
     const { memberId, wallet } = getState();

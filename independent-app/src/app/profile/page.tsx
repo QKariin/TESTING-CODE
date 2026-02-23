@@ -421,10 +421,15 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* OVERLAY TRIBUTE MODAL - SCRAPBOOK NOTEBOOK THEME */}
-                    <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: '#fcfaf2', backgroundImage: 'repeating-linear-gradient(transparent, transparent 39px, #d2e4f0 40px)', backgroundSize: '100% 40px', zIndex: 10000, display: 'none', flexDirection: 'column', padding: '40px 40px 40px 80px', borderRadius: '12px', boxShadow: '0 15px 35px rgba(0,0,0,0.6), inset 50px 0 0 -48px rgba(255, 105, 180, 0.6)', overflow: 'hidden' }}>
-                        {/* Red Margin Line */}
-                        <div style={{ position: 'absolute', left: '60px', top: 0, bottom: 0, width: '2px', background: 'rgba(255, 105, 180, 0.6)', zIndex: 0 }}></div>
+                    {/* OVERLAY TRIBUTE MODAL - SCRAPBOOK NOTEBOOK THEME + CROWDFUND FROSTED GLASS */}
+                    <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10000, display: 'none', flexDirection: 'column', padding: '40px 40px 40px 80px', borderRadius: '12px', overflow: 'hidden' }}>
+                        {/* Dynamic Background Image */}
+                        <div style={{ position: 'absolute', inset: 0, background: `url(${profile?.image || "https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png"}) center/cover`, zIndex: -2 }}></div>
+                        {/* Frosted Glass Effect */}
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(15px)', zIndex: -1, border: '1px solid rgba(255,255,255,0.4)', borderRadius: '12px' }}></div>
+
+                        {/* Pink Accent Line */}
+                        <div style={{ position: 'absolute', left: '60px', top: 0, bottom: 0, width: '2px', background: 'rgba(255, 105, 180, 0.4)', zIndex: 0 }}></div>
 
                         <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', zIndex: 10, position: 'relative' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
@@ -433,7 +438,7 @@ export default function ProfilePage() {
                             </div>
                             <button onClick={() => toggleTributeHunt()} style={{ color: '#111', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Patrick Hand', cursive", fontSize: '2rem', transition: 'all 0.2s', padding: 0, fontWeight: 'bold' }} onMouseOver={(e) => { e.currentTarget.style.color = '#ff4b72'; e.currentTarget.style.transform = 'scale(1.2) rotate(10deg)'; }} onMouseOut={(e) => { e.currentTarget.style.color = '#111'; e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; }}>X</button>
                         </div>
-                        <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '30px', padding: '20px 10px', paddingBottom: '30px', zIndex: 10, position: 'relative' }}></div>
+                        <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '30px', padding: '20px 10px', paddingBottom: '30px', zIndex: 10, position: 'relative' }}></div>
                     </div>
 
                     <div id="gridRightSection" className="serve-grid-item" style={{ display: 'flex', flexDirection: 'row', gap: 25, overflow: 'hidden' }}>

@@ -42,7 +42,10 @@ export async function GET() {
                 title: tribute.Title || tribute.title,
                 price: parseInt(tribute.Price || tribute.price) || 0,
                 image: imageUrl,
-                category: tribute.Category || tribute.category
+                category: tribute.Category || tribute.category,
+                is_crowdfund: tribute.is_crowdfund || false,
+                goal_amount: tribute.goal_amount || 0,
+                raised_amount: tribute.raised_amount || 0
             };
         });
 
