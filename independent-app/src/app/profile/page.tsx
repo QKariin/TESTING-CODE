@@ -220,7 +220,13 @@ export default function ProfilePage() {
                             {profile?.member_id || ""}
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
+                        {/* MOVED: CURRENT CLASSIFICATION */}
+                        <div style={{ width: '100%', textAlign: 'center', paddingBottom: 15, borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 15 }}>
+                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>CURRENT CLASSIFICATION</div>
+                            <div id="desk_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.3rem', color: '#fff', margin: '4px 0', textTransform: 'uppercase', textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>{profile?.rank || "LOADING..."}</div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: 10 }}>
                             <div className="sidebar-stat-block">
                                 <div className="sidebar-stat-value-row">
                                     <span style={{ color: '#fff', opacity: 0.8 }}><i className="fas fa-award"></i></span>
@@ -237,15 +243,14 @@ export default function ProfilePage() {
                                 <div className="sidebar-stat-label">CAPITAL</div>
                             </div>
                         </div>
+
+                        {/* MOVED: CURRENT BENEFITS */}
+                        <div style={{ marginTop: 20, paddingTop: 15, borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                            <div id="desk_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', padding: '0 5px', lineHeight: 1.4 }}></div>
+                        </div>
                     </div>
 
                     <div className="sidebar-scrollable-area" style={{ flex: 1, overflowY: 'auto', width: '100%', display: 'flex', flexDirection: 'column', padding: '0 15px 0 15px', boxSizing: 'border-box', paddingRight: 30 }}>
-                        <div id="deskStatsContent" style={{ width: '100%', textAlign: 'center', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 12, flexShrink: 0 }}>
-                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>CURRENT CLASSIFICATION</div>
-                            <div id="desk_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.1rem', color: '#fff', margin: '4px 0', textTransform: 'uppercase' }}>{profile?.rank || "LOADING..."}</div>
-                            <div id="desk_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', padding: '0 5px', lineHeight: 1.4 }}></div>
-                        </div>
-
                         <div id="desk_WorkingOnSection" style={{ width: '100%', textAlign: 'center', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 15, flexShrink: 0 }}>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: 2, marginBottom: 2 }}>WORKING ON</div>
                             <div id="desk_WorkingOnRank" style={{ fontFamily: 'Orbitron', fontSize: '0.9rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold' }}>...</div>
