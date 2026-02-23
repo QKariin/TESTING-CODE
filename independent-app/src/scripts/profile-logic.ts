@@ -9,20 +9,16 @@ export async function handleLogout() {
 }
 
 export async function claimKneelReward(type: 'coins' | 'points') {
-    // 1. Get Current State
     const currentState = getState();
     const { id, memberId, wallet, score } = currentState;
     const pid = id || memberId;
-    
     if (!pid) return;
 
-    // 2. Define Correct Amounts
     const amount = type === 'coins' ? 10 : 50;
 
-    // 3. OPTIMISTIC UPDATE (Update UI Immediately)
+    // 1. OPTIMISTIC UPDATE (Instant Feedback)
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
 
-    // Update Local State
     if (type === 'coins') {
         setState({ wallet: (wallet || 0) + amount });
         triggerCoinShower();
@@ -30,47 +26,29 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         setState({ score: (score || 0) + amount });
     }
 
-    // Hide Overlays Instantly (Handle both class and inline styles)
-    const deskOverlay = document.getElementById('kneelRewardOverlay');
-    if (deskOverlay) {
-        deskOverlay.classList.add('hidden');
-        deskOverlay.style.display = 'none';
-    }
-
-    const mobOverlay = document.getElementById('mobKneelReward');
-    if (mobOverlay) {
-        mobOverlay.classList.add('hidden');
-        mobOverlay.style.display = 'none';
-    }
+    // Hide overlays
+    document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
+    document.getElementById('mobKneelReward')?.classList.add('hidden');
 
     // Play Sound
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
-    if (snd) {
-        snd.currentTime = 0; // Reset sound so it plays fresh
-        snd.play().catch(e => console.log("Audio blocked", e));
-    }
+    if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
-    // Re-render Sidebar Numbers
     renderProfileSidebar(getState());
 
-    // 4. BACKGROUND SAVE (Don't wait for this)
+    // 2. BACKGROUND SAVE (Use the dedicated route)
     try {
-        fetch('/api/profile-action', {
+        // 👇 CHANGED: Use specific route instead of generic 'profile-action'
+        fetch('/api/claim-reward', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                type: 'CLAIM_KNEEL_REWARD',
-                memberId: pid,
-                payload: { type, amount }
+            body: JSON.stringify({ 
+                choice: type, 
+                memberEmail: pid 
             })
-        }).then(res => res.json())
-          .then(data => {
-              if (!data.success) console.warn('[REWARD] Server sync warning:', data.error);
-          });
+        });
     } catch (err) {
-        console.error("[REWARD] Background save failed", err);
-        // Note: We don't rollback state here to keep the game feeling smooth.
-        // The next page load will sync with the true DB value anyway.
+        console.error("[REWARD] Save failed", err);
     }
 }
 
