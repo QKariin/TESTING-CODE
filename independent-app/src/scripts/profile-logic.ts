@@ -555,7 +555,7 @@ async function _doProfileUpload() {
 const CHIP_LIST = ["JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership", "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation", "Task submission", "CBT", "Training", "Power exchange", "Verbal domination", "Protocol", "Obedience", "Psychological domination"];
 const ROUTINE_OPTIONS = ["Morning Kneel", "Chastity Check", "Cleanliness Check", "Custom Order"];
 
-export function openTextFieldModal(fieldId: string, label: string) {
+export function openTextFieldModal(fieldId: string, label: string, existingValue: string = '') {
     document.getElementById('_reqModal')?.remove();
     const overlay = document.createElement('div');
     overlay.id = '_reqModal';
@@ -569,11 +569,20 @@ export function openTextFieldModal(fieldId: string, label: string) {
 
     let inner = `<div style="color:#c5a059;font-size:0.75rem;letter-spacing:3px;margin-bottom:6px;">${label.toUpperCase()}</div>`;
 
+    // Process existing values for chips
+    const existingChips = isChip && existingValue ? existingValue.split(',').map(s => s.trim()) : [];
+
     if (isChip) {
         inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">SELECT AT LEAST 3 · ${costPerItem} COINS EACH</div>`;
         inner += `<div id="_chipGrid" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;margin-bottom:14px;padding-right:4px;">`;
         CHIP_LIST.forEach(item => {
-            inner += `<div class="_reqChip" data-value="${item}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #2a2a2a;background:rgba(0,0,0,0.5);color:#888;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${costPerItem}</span></div>`;
+            const isSelected = existingChips.includes(item);
+            const extraClass = isSelected ? ' _selected' : '';
+            const borderCol = isSelected ? '#c5a059' : '#2a2a2a';
+            const textCol = isSelected ? '#c5a059' : '#888';
+            const bgCol = isSelected ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
+
+            inner += `<div class="_reqChip${extraClass}" data-value="${item}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid ${borderCol};background:${bgCol};color:${textCol};font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${costPerItem}</span></div>`;
         });
         inner += `</div><div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">TOTAL COST: 0 COINS</div>`;
     } else if (isRoutine) {
@@ -581,12 +590,21 @@ export function openTextFieldModal(fieldId: string, label: string) {
         inner += `<div id="_chipGrid" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">`;
         ROUTINE_OPTIONS.forEach(item => {
             const cost = item === 'Custom Order' ? 2000 : 1000;
-            inner += `<div class="_reqChip _routineChip" data-value="${item}" data-cost="${cost}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid #2a2a2a;background:rgba(0,0,0,0.5);color:#888;font-family:'Cinzel',serif;font-size:0.85rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${cost.toLocaleString()}</span></div>`;
+            const isSelected = existingValue && existingValue !== '' && (existingValue === item || (item === 'Custom Order' && !ROUTINE_OPTIONS.includes(existingValue)));
+            const extraClass = isSelected ? ' _selected' : '';
+            const borderCol = isSelected ? '#c5a059' : '#2a2a2a';
+            const textCol = isSelected ? '#c5a059' : '#888';
+            const bgCol = isSelected ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
+
+            inner += `<div class="_reqChip _routineChip${extraClass}" data-value="${item}" data-cost="${cost}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid ${borderCol};background:${bgCol};color:${textCol};font-family:'Cinzel',serif;font-size:0.85rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${cost.toLocaleString()}</span></div>`;
         });
-        inner += `</div><div id="_customRoutineWrap" style="display:none;margin-bottom:12px;"><input id="_customRoutineInput" placeholder="Describe your custom routine..." style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;" /></div><div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">SELECT A PROTOCOL</div>`;
+        const isCustom = existingValue && !ROUTINE_OPTIONS.includes(existingValue);
+        const customDisplay = isCustom ? 'block' : 'none';
+        const customVal = isCustom ? existingValue : '';
+        inner += `</div><div id="_customRoutineWrap" style="display:${customDisplay};margin-bottom:12px;"><input id="_customRoutineInput" value="${customVal}" placeholder="Describe your custom routine..." style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;" /></div><div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">SELECT A PROTOCOL</div>`;
     } else {
         inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:12px;">STORED IN YOUR PROFILE · FREE</div>`;
-        inner += `<textarea id="_reqInput" placeholder="Enter your ${label.toLowerCase()}..." style="width:100%;min-height:90px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;padding:10px;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;resize:vertical;"></textarea>`;
+        inner += `<textarea id="_reqInput" placeholder="Enter your ${label.toLowerCase()}..." style="width:100%;min-height:90px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;padding:10px;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;resize:vertical;">${existingValue || ''}</textarea>`;
     }
 
     inner += `<div id="_reqError" style="color:#ff4444;font-size:0.55rem;margin-top:6px;display:none;margin-bottom:8px;"></div>`;
@@ -597,6 +615,13 @@ export function openTextFieldModal(fieldId: string, label: string) {
     document.body.appendChild(overlay);
 
     if (isChip) {
+        const updateInitialCost = () => {
+            const count = box.querySelectorAll('._selected').length;
+            const costDisplay = box.querySelector('#_reqCostDisplay') as HTMLElement;
+            if (costDisplay) costDisplay.innerText = `TOTAL COST: ${count * costPerItem} COINS`;
+        };
+        updateInitialCost(); // run once on open
+
         box.querySelectorAll<HTMLElement>('._reqChip').forEach(chip => {
             chip.addEventListener('click', () => {
                 chip.classList.toggle('_selected');
@@ -768,11 +793,16 @@ export function renderProfileSidebar(u: any) {
             return `<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:0.6rem;font-family:'Orbitron';margin-bottom:4px;color:${lc};letter-spacing:1px;"><span>${icon} ${label}</span><span style="color:${vc}">${current.toLocaleString()} / ${t.toLocaleString()}</span></div><div style="width:100%;height:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${color};box-shadow:0 0 10px ${color}40;transition:width 0.5s ease;"></div></div></div>`;
         };
 
-        const buildCheck = (label: string, status: string, fieldId?: string) => {
+        const buildCheck = (label: string, status: string, fieldId?: string, existingValue?: string) => {
             const done = status === 'VERIFIED';
-            const color = done ? '#00ff00' : '#ff4444';
-            const addBtn = (!done && fieldId) ? `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" style="padding:3px 10px;background:#c5a059;color:#000;border:none;border-radius:4px;font-family:'Orbitron';font-size:0.5rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">ADD</button>` : '';
-            return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.6rem;font-family:'Orbitron';letter-spacing:1px;"><span style="color:rgba(255,255,255,0.5);">${label}</span><div style="display:flex;align-items:center;gap:8px;"><span style="color:${color};font-weight:bold;">${done ? '✓ VERIFIED' : '✗ MISSING'}</span>${addBtn}</div></div>`;
+
+            // Generate valid HTML attribute safely escaping quotes
+            const safeVal = existingValue ? existingValue.replace(/"/g, '&quot;') : '';
+
+            // The ADD button for missing fields, OR the EDIT button for verified fields
+            const actionBtn = fieldId ? `<button data-prof-action="${fieldId === 'avatar_url' ? 'photo' : 'field'}" data-prof-field="${fieldId}" data-prof-label="${label}" data-prof-value="${safeVal}" style="padding:4px 12px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:4px;font-family:'Orbitron';font-size:0.55rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">${done ? 'EDIT' : 'ADD'}</button>` : '';
+
+            return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.6rem;font-family:'Orbitron';letter-spacing:1px;"><span style="color:rgba(255,255,255,0.5);">${label}</span><div style="display:flex;align-items:center;gap:12px;">${actionBtn}</div></div>`;
         };
 
         const iconMap: Record<string, string> = { LABOR: '🛠️', ENDURANCE: '🧎', MERIT: '✨', SACRIFICE: '💰', CONSISTENCY: '📅' };
@@ -780,8 +810,14 @@ export function renderProfileSidebar(u: any) {
 
         let html = '';
         requirements.forEach(r => {
-            if (r.type === 'bar') html += buildBar(r.label, iconMap[r.label] || '•', r.current, r.target);
-            else html += buildCheck(r.label, r.status, fieldIdMap[r.label]);
+            if (r.type === 'bar') {
+                html += buildBar(r.label, iconMap[r.label] || '•', r.current, r.target);
+            } else {
+                const fieldKey = fieldIdMap[r.label];
+                // Safely grab the actual string value from the profile for the modal
+                const rawValue = fieldKey && u[fieldKey] ? (typeof u[fieldKey] === 'string' ? u[fieldKey] : JSON.stringify(u[fieldKey])) : '';
+                html += buildCheck(r.label, r.status, fieldKey, rawValue);
+            }
         });
 
         container.innerHTML = html;
@@ -791,8 +827,10 @@ export function renderProfileSidebar(u: any) {
                 const action = btn.getAttribute('data-prof-action');
                 const field = btn.getAttribute('data-prof-field') || '';
                 const label = btn.getAttribute('data-prof-label') || '';
+                const val = btn.getAttribute('data-prof-value') || '';
+
                 if (action === 'photo') handleProfileUpload();
-                else if (action === 'field') openTextFieldModal(field, label);
+                else if (action === 'field') openTextFieldModal(field, label, val);
             });
         });
 
