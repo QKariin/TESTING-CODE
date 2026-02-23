@@ -12,12 +12,13 @@ export interface ProfileState {
     rank: string;
     revealMap: number[];
     libraryProgress: number;
+    raw: any; // <--- NEW: Backup of the full DB object
 }
 
 const DEFAULT_STATE: ProfileState = {
     isLocked: false,
     lastWorshipTime: 0,
-    cooldownMinutes: 1, 
+    cooldownMinutes: 60,
     wallet: 0,
     score: 0,
     memberId: null,
@@ -25,7 +26,8 @@ const DEFAULT_STATE: ProfileState = {
     userName: "SLAVE",
     rank: "INITIATE",
     revealMap: [],
-    libraryProgress: 1
+    libraryProgress: 1,
+    raw: {} // Default empty
 };
 
 let state: ProfileState = { ...DEFAULT_STATE };
@@ -36,6 +38,10 @@ export function getState(): ProfileState {
 
 export function setState(updates: Partial<ProfileState>) {
     state = { ...state, ...updates };
+    
+    // Sync the raw backup if we updated wallet/score so the sidebar sees it
+    if (updates.wallet !== undefined) state.raw.wallet = updates.wallet;
+    if (updates.score !== undefined) state.raw.score = updates.score;
 }
 
 export function resetState() {
@@ -43,17 +49,23 @@ export function resetState() {
 }
 
 export function initProfileState(data: any) {
+    console.log("[STATE] Initializing with Data:", data);
+
     let lastWorshipTime = 0;
 
-    // 👇 THE FIX: Look for 'lastWorship' (from tasks table), fall back to 'lastKneelDate'
-    const rawTime = data.lastWorship || data.lastKneelDate;
+    // 1. Try to find the timestamp in various possible locations
+    // Note: data.lastWorship comes from the merged 'tasks' table
+    const rawTime = data.lastWorship || data.lastKneelDate || data.LastWorship;
 
     if (rawTime) {
         const parsed = new Date(rawTime).getTime();
-        if (!isNaN(parsed)) lastWorshipTime = parsed;
+        if (!isNaN(parsed)) {
+            lastWorshipTime = parsed;
+            console.log("[STATE] Found Last Worship:", new Date(lastWorshipTime).toLocaleTimeString());
+        }
+    } else {
+        console.warn("[STATE] No Last Worship Time found in data.");
     }
-
-    console.log("[STATE] Initialized. Last Worship:", lastWorshipTime);
 
     setState({
         memberId: data.member_id,
@@ -65,10 +77,10 @@ export function initProfileState(data: any) {
         revealMap: data.parameters?.reveal_map || [],
         libraryProgress: data.parameters?.library_progress || 1,
         
-        // Pass the parsed time into the state
         lastWorshipTime: lastWorshipTime,
+        cooldownMinutes: 60,
         
-        // Ensure cooldown matches your game rules (60 mins)
-        cooldownMinutes: 60, 
+        // SAVE THE BACKUP!
+        raw: data 
     });
 }
