@@ -49,22 +49,18 @@ export function resetState() {
 }
 
 export function initProfileState(data: any) {
-    console.log("[STATE] Initializing with Data:", data);
-
     let lastWorshipTime = 0;
 
-    // 1. Try to find the timestamp in various possible locations
-    // Note: data.lastWorship comes from the merged 'tasks' table
-    const rawTime = data.lastWorship || data.lastKneelDate || data.LastWorship;
+    // 1. Look for lowercase 'lastworship' (from our normalization)
+    // We also check lastWorship just in case, and lastKneelDate as legacy fallback
+    const rawTime = data.lastworship || data.lastWorship || data.lastKneelDate;
 
     if (rawTime) {
         const parsed = new Date(rawTime).getTime();
         if (!isNaN(parsed)) {
             lastWorshipTime = parsed;
-            console.log("[STATE] Found Last Worship:", new Date(lastWorshipTime).toLocaleTimeString());
+            console.log("[STATE] Lock Active. Time:", new Date(lastWorshipTime).toLocaleTimeString());
         }
-    } else {
-        console.warn("[STATE] No Last Worship Time found in data.");
     }
 
     setState({
@@ -80,7 +76,7 @@ export function initProfileState(data: any) {
         lastWorshipTime: lastWorshipTime,
         cooldownMinutes: 60,
         
-        // SAVE THE BACKUP!
+        // IMPORTANT: Save the full merged data object for the sidebar
         raw: data 
     });
 }
