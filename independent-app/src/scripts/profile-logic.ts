@@ -149,7 +149,12 @@ export async function loadTributes() {
         const res = await fetch('/api/tributes');
         const data = await res.json();
         if (data.success && data.tributes && data.tributes.length > 0) {
-            globalTributes = data.tributes;
+            // Sort crowdfunds to the top
+            globalTributes = data.tributes.sort((a: any, b: any) => {
+                if (a.is_crowdfund && !b.is_crowdfund) return -1;
+                if (!a.is_crowdfund && b.is_crowdfund) return 1;
+                return 0;
+            });
             globalTributesError = null;
             renderTributes();
         } else if (data.success && data.tributes && data.tributes.length === 0) {
@@ -228,12 +233,15 @@ function renderTributes() {
                             <div style="position:absolute; top:0; left:0; height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); transition:width 0.5s ease-in-out;"></div>
                         </div>
                         
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                            <div style="font-family:'Patrick Hand', cursive; font-size:1.1rem; color:#666;">Be part of this dream!</div>
+                        <div style="display:flex; flex-direction:column; width:100%; margin-top:10px; gap:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div style="font-family:'Patrick Hand', cursive; font-size:1.1rem; color:#666;">Choose your contribution:</div>
+                                <div style="font-family:'Caveat', cursive; font-size:1.8rem; color:#ff4b72; font-weight:bold; min-width:80px; text-align:right;" id="crowdfund_display_${t.id}">100 ♥</div>
+                            </div>
                             
-                            <div style="display:flex; gap:10px; align-items:center;">
-                                <input type="number" id="crowdfund_input_${t.id}" placeholder="Amount..." style="width:100px; padding:8px 12px; border:2px solid #ffe4e1; border-radius:8px; outline:none; font-family:'Patrick Hand', cursive; font-size:1.1rem; color:#333;" />
-                                <button onclick="window.contributeCrowdfund('${t.id}', '${t.title}')" style="background:#ff4b72; color:white; border:none; padding:8px 20px; border-radius:8px; font-family:'Patrick Hand', cursive; font-size:1.2rem; cursor:pointer; font-weight:bold; box-shadow:0 4px 10px rgba(255,75,114,0.3); transition:all 0.2s;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='#ff335f';" onmouseout="this.style.transform='scale(1)'; this.style.background='#ff4b72';">CONTRIBUTE</button>
+                            <div style="display:flex; gap:15px; align-items:center; width:100%;">
+                                <input type="range" id="crowdfund_input_${t.id}" min="100" max="${Math.max(100, goal - raised)}" step="100" value="100" oninput="document.getElementById('crowdfund_display_${t.id}').innerText = Number(this.value).toLocaleString() + ' ♥'" style="flex:1; height:8px; border-radius:4px; appearance:none; outline:none; background:#ffe4e1; cursor:pointer;" />
+                                <button onclick="window.contributeCrowdfund('${t.id}', '${t.title}')" style="background:#ff4b72; color:white; border:none; padding:8px 25px; border-radius:8px; font-family:'Patrick Hand', cursive; font-size:1.2rem; cursor:pointer; font-weight:bold; box-shadow:0 4px 10px rgba(255,75,114,0.3); transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='#ff335f';" onmouseout="this.style.transform='scale(1)'; this.style.background='#ff4b72';">GIVE STIPEND</button>
                             </div>
                         </div>
                     </div>
