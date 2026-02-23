@@ -97,29 +97,31 @@ export default function ProfilePage() {
                 }
 
                 // 1. Fetch Identity (Profiles)
-                const { data: profileData, error: profileError } = await supabase
+                const { data: profileData } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('member_id', user.email)
                     .maybeSingle();
 
-                if (profileError) console.error('Profile fetch error:', profileError);
-
                 let finalProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
                 if (finalProfile) {
-                    // 2. Fetch Stats (Tasks) - FIXED COLUMN NAME
-                    console.log("[PROFILE DEBUG] Fetching tasks for:", finalProfile.member_id);
+                    // 2. Fetch Stats (Tasks) - FORCE FETCH
+                    // We log this so we can see it in the console next time
+                    console.log("[PROFILE] Loading stats for:", finalProfile.member_id);
                     
                     const { data: taskData, error: taskError } = await supabase
                         .from('tasks')
                         .select('*')
-                        // 👇 QUOTES ARE REQUIRED for Case-Sensitive columns in Postgres
+                        // 👇 CRITICAL: Quotes required for Case Sensitive "MemberID"
                         .eq('"MemberID"', finalProfile.member_id) 
                         .maybeSingle();
 
-                    if (taskError) console.error('[PROFILE DEBUG] Task fetch error:', taskError);
-                    console.log("[PROFILE DEBUG] Task Data Found:", taskData);
+                    if (taskData) {
+                        console.log("[PROFILE] Stats found. Last Worship:", taskData.lastWorship);
+                    } else {
+                        console.warn("[PROFILE] No stats found (Check 'MemberID' casing in DB). Error:", taskError);
+                    }
 
                     // 3. Merge Data
                     const mergedData = { 
@@ -133,8 +135,7 @@ export default function ProfilePage() {
                     
                     setTimeout(() => {
                         renderProfileSidebar(mergedData);
-                        // Force a UI update immediately with the data we just loaded
-                        updateKneelingUI(); 
+                        updateKneelingUI(); // Update button lock immediately
                         attachKneelListeners();
                         switchTab('serve'); 
                         getRandomTask(true);
