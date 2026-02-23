@@ -312,7 +312,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* MAIN CONTENT STAGE */}
-                <div id="viewServingTopDesktop" className="view-wrapper hidden">
+                <div id="viewServingTopDesktop" className="view-wrapper hidden" style={{ position: 'relative' }}>
                     <div id="gridStat1" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
                         <div className="ribbon-label" style={{ textAlign: 'center' }}>KNEELING HOURS</div>
                         <div className="prog-bg" style={{ height: 25, borderRadius: 12, position: 'relative', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
