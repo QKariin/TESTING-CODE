@@ -96,7 +96,7 @@ export default function ProfilePage() {
                     return;
                 }
 
-                // 1. Fetch Identity (Profiles Table)
+                // 1. Fetch Identity (Profiles)
                 const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
                     .select('*')
@@ -105,34 +105,36 @@ export default function ProfilePage() {
 
                 if (profileError) console.error('Profile fetch error:', profileError);
 
-                // Fallback: try by UUID if email failed
                 let finalProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
                 if (finalProfile) {
-                    // 2. Fetch Stats (Tasks Table) - THIS IS THE MISSING LINK
-                    // We look for a record where MemberID matches the user's email
+                    // 2. Fetch Stats (Tasks) - FIXED COLUMN NAME
+                    console.log("[PROFILE DEBUG] Fetching tasks for:", finalProfile.member_id);
+                    
                     const { data: taskData, error: taskError } = await supabase
                         .from('tasks')
                         .select('*')
-                        .eq('MemberID', finalProfile.member_id) // Note: Case sensitive column name in your screenshot
+                        // 👇 QUOTES ARE REQUIRED for Case-Sensitive columns in Postgres
+                        .eq('"MemberID"', finalProfile.member_id) 
                         .maybeSingle();
 
-                    if (taskError) console.error('Tasks fetch error:', taskError);
+                    if (taskError) console.error('[PROFILE DEBUG] Task fetch error:', taskError);
+                    console.log("[PROFILE DEBUG] Task Data Found:", taskData);
 
                     // 3. Merge Data
-                    // We combine them so 'kneelCount' and 'name' live in the same object
                     const mergedData = { 
                         ...finalProfile, 
-                        ...(taskData || {}) // If taskData is null, just use empty object
+                        ...(taskData || {}) 
                     };
 
-                    // 4. Initialize State & UI
+                    // 4. Initialize State
                     setProfile(mergedData);
                     initProfileState(mergedData);
                     
                     setTimeout(() => {
                         renderProfileSidebar(mergedData);
-                        updateKneelingUI();
+                        // Force a UI update immediately with the data we just loaded
+                        updateKneelingUI(); 
                         attachKneelListeners();
                         switchTab('serve'); 
                         getRandomTask(true);
