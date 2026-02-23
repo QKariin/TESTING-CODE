@@ -200,14 +200,6 @@ export default function ProfilePage() {
 
             {/* UNIVERSAL DESKTOP APP */}
             <div id="DESKTOP_APP">
-                <div id="tributeHuntOverlay" className="hidden" style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.98)', zIndex: 10000, display: 'none', flexDirection: 'column', padding: '60px', backdropFilter: 'blur(20px)' }}>
-                    <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
-                        <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '2rem', letterSpacing: '6px', fontWeight: 700 }}>TRIBUTE STORE</span>
-                        <button onClick={() => toggleTributeHunt()} style={{ color: '#666', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '2.5rem', transition: '0.3s' }}>×</button>
-                    </div>
-                    <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '25px', padding: '10px' }}></div>
-                </div>
-
                 {/* SIDEBAR */}
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div className="v-card" style={{ marginBottom: 20, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
@@ -427,6 +419,15 @@ export default function ProfilePage() {
                                 <button className="chat-btn-send" onClick={() => sendChatMessage()} style={{ background: '#c5a059', borderRadius: 15, width: 45, height: 45, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{'>'}</button>
                             </div>
                         </div>
+                    </div>
+
+                    {/* OVERLAY TRIBUTE MODAL - Position Absolute constraints it to gridRightSection instead of Fixed/entire screen */}
+                    <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.98)', zIndex: 10000, display: 'none', flexDirection: 'column', padding: '30px', backdropFilter: 'blur(20px)', borderLeft: '1px solid var(--gold)' }}>
+                        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
+                            <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '1.5rem', letterSpacing: '4px', fontWeight: 700 }}>TRIBUTE STORE</span>
+                            <button onClick={() => toggleTributeHunt()} style={{ color: '#666', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '2rem', transition: '0.3s' }}>×</button>
+                        </div>
+                        <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px', padding: '10px' }}></div>
                     </div>
 
                     <div id="gridRightSection" className="serve-grid-item" style={{ display: 'flex', flexDirection: 'row', gap: 25, overflow: 'hidden' }}>
@@ -764,7 +765,13 @@ export default function ProfilePage() {
                                         <button className="chat-btn-plus" onClick={() => (window as any).handleMediaPlus()}>+</button>
                                         <input type="text" id="mob_chatMsgInput" className="chat-input" placeholder="Transmit..." onKeyPress={(e: any) => (window as any).handleChatKey(e)} />
                                     </div>
-                                    <button className="chat-btn-tribute" onClick={() => (window as any).toggleTributeHunt()}>🎁</button>
+                                    <button className="chat-btn-tribute" onClick={() => (window as any).toggleTributeHunt()} style={{ background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ color: '#c5a059' }}>
+                                            <rect x="3" y="8" width="18" height="12" rx="1"></rect>
+                                            <path d="M12 8v12"></path>
+                                            <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
+                                        </svg>
+                                    </button>
                                     <button className="chat-btn-send" onClick={() => (window as any).sendChatMessage()}>{' > '}</button>
                                 </div>
                             </div>

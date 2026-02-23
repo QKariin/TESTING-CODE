@@ -3,7 +3,7 @@ import { createClient } from '../utils/supabase/client';
 import { getHierarchyReport } from './hierarchy-rules';
 import { uploadToBytescale } from './mediaBytescale';
 
-// ─── LOGOUT ───
+let globalTributes: any[] = [];
 export async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -141,6 +141,116 @@ export function triggerCoinShower() {
     }
 }
 
+// ─── TRIBUTE SYSTEM LOGIC ───
+export async function loadTributes() {
+    try {
+        const res = await fetch('/api/tributes');
+        const data = await res.json();
+        if (data.success) {
+            globalTributes = data.tributes;
+            renderTributes();
+        }
+    } catch (err) {
+        console.error("Failed to load tributes:", err);
+    }
+}
+
+function renderTributes() {
+    // 1. Desktop Quick Connect (Taking the First 2 items e.g Coffee/Dinner)
+    const quickBox = document.getElementById('desk_QuickTribute');
+    if (quickBox && globalTributes.length >= 2) {
+        const quickItems = globalTributes.slice(0, 2);
+        quickBox.innerHTML = quickItems.map(t => `
+            <div class="quick-tribute-item" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:10px 15px; border-radius:8px; cursor:pointer; border:1px solid transparent; transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)', this.style.background='rgba(197,160,89,0.1)'" onmouseout="this.style.borderColor='transparent', this.style.background='rgba(255,255,255,0.03)'">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:30px; height:30px; border-radius:4px; background:url('${t.image}') center/cover; border:1px solid rgba(255,255,255,0.1);"></div>
+                    <span style="font-family:'Cinzel'; font-size:0.8rem; color:#fff;">${t.title}</span>
+                </div>
+                <div style="font-family:'Orbitron'; font-size:0.75rem; color:'var(--gold)'; font-weight:bold;">${t.price.toLocaleString()} 🪙</div>
+            </div>
+        `).join('');
+    }
+
+    // 2. Desktop Modal Overview AND Mobile Grid Overlay
+    const gridDesk = document.getElementById('huntStoreGridDesk');
+    const gridMob = document.getElementById('huntStoreGrid');
+
+    const renderGrid = (gridEl: HTMLElement) => {
+        if (!gridEl) return;
+        gridEl.innerHTML = globalTributes.map(t => `
+            <div class="store-item v-card" style="padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:space-between; cursor:pointer; transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)', this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.05)', this.style.transform='translateY(0)'" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})">
+                <div style="width:100%; height:120px; border-radius:8px; margin-bottom:15px; background:url('${t.image}') center/cover; border:1px solid rgba(255,255,255,0.1);"></div>
+                <div style="font-family:'Cinzel'; font-size:0.9rem; color:#fff; text-align:center; min-height:40px; display:flex; align-items:center; justify-content:center;">${t.title}</div>
+                <div style="font-family:'Orbitron'; font-size:1.1rem; font-weight:bold; color:'var(--gold)'; margin:10px 0;">${t.price.toLocaleString()} 🪙</div>
+                <button class="action-btn" style="width:100%; border:none; background:'var(--gold)'; color:'#000'; font-size:0.8rem; padding:8px; pointer-events:none;">SEND</button>
+            </div>
+        `).join('');
+    };
+
+    if (gridDesk) renderGrid(gridDesk);
+    if (gridMob) renderGrid(gridMob);
+}
+
+export async function buyTribute(id: string, title: string, cost: number) {
+    const { memberId, wallet } = getState();
+    if (!memberId) return;
+
+    if (wallet < cost) {
+        document.getElementById('povertyOverlay')?.classList.remove('hidden');
+        document.getElementById('povertyInsult')!.innerText = `You lack the capital to offer "${title}". Know your place.`;
+        return;
+    }
+
+    if (!confirm(`Are you sure you wish to offer ${title} for ${cost.toLocaleString()} coins? \n(This will also earn you merit)`)) return;
+
+    try {
+        const res = await fetch('/api/tributes/purchase', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberEmail: memberId, tributeId: id, tributeTitle: title, tributeCost: cost })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            // Update local state directly with new DB values
+            setState({ wallet: data.newWallet, score: data.newScore });
+
+            // Visual feedback
+            triggerCoinShower();
+
+            // Re-render UI
+            renderProfileSidebar(getState().raw || getState());
+
+            // Notify chat slightly hackish but thematic
+            const chatInput = document.getElementById('chatMsgInput') as HTMLInputElement;
+            if (chatInput) {
+                chatInput.value = `/tribute ${title}`;
+                sendChatMessage();
+            }
+
+            // Close modal if open
+            document.getElementById('tributeHuntOverlay')?.classList.add('hidden');
+        } else {
+            console.error("Purchase rejected:", data.error);
+            if (data.error === 'INSUFFICIENT_FUNDS') {
+                document.getElementById('povertyOverlay')?.classList.remove('hidden');
+            } else {
+                alert("Transaction failed: " + data.error);
+            }
+        }
+
+    } catch (err) {
+        console.error("Critical error purchasing tribute", err);
+    }
+}
+
+// Ensure function is available globally for inline onclick handlers inside generated innerHTML
+if (typeof window !== 'undefined') {
+    (window as any).buyTribute = buyTribute;
+}
+
+
 export function toggleTributeHunt() {
     const overlay = document.getElementById('tributeHuntOverlay');
     overlay?.classList.toggle('hidden');
@@ -244,7 +354,7 @@ export async function getRandomTask(isSilentInit = false) {
         }
 
         const forceNew = !isSilentInit;
-        const res = await fetch(`/api/tasks/random?memberEmail=${encodeURIComponent(pid)}&forceNew=${forceNew}`);
+        const res = await fetch(`/ api / tasks / random ? memberEmail = ${encodeURIComponent(pid)}& forceNew=${forceNew} `);
         const data = await res.json();
 
         if (!data.success) {
@@ -559,15 +669,15 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     document.getElementById('_reqModal')?.remove();
     const overlay = document.createElement('div');
     overlay.id = '_reqModal';
-    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;`;
+    overlay.style.cssText = `position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); z - index: 9999; display: flex; align - items: center; justify - content: center; padding: 16px; `;
     const box = document.createElement('div');
-    box.style.cssText = `background:#07080f;border:1px solid #c5a059;border-radius:12px;padding:24px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;font-family:'Orbitron';`;
+    box.style.cssText = `background:#07080f; border: 1px solid #c5a059; border - radius: 12px; padding: 24px; width: 100 %; max - width: 460px; max - height: 90vh; overflow - y: auto; font - family: 'Orbitron'; `;
 
     const isChip = fieldId === 'kinks' || fieldId === 'limits';
     const isRoutine = fieldId === 'routine';
     const costPerItem = fieldId === 'kinks' ? 100 : fieldId === 'limits' ? 200 : 0;
 
-    let inner = `<div style="color:#c5a059;font-size:0.75rem;letter-spacing:3px;margin-bottom:6px;">${label.toUpperCase()}</div>`;
+    let inner = `< div style = "color:#c5a059;font-size:0.75rem;letter-spacing:3px;margin-bottom:6px;" > ${label.toUpperCase()} </div>`;
 
     // Process existing values for chips
     const existingChips = isChip && existingValue ? existingValue.split(',').map(s => s.trim()) : [];
@@ -769,6 +879,9 @@ export function renderProfileSidebar(u: any) {
     // 👇 ADDED SAFETY CHECK for getHierarchyReport
     const report = getHierarchyReport(u);
     if (!report) return;
+
+    // Trigger loading tributes exactly once when profile data lands and sidebar renders
+    if (globalTributes.length === 0) loadTributes();
 
     // ─── AUTO PROMOTION TRIGGER ───
     if (report.canPromote && !isPromoting && u.member_id) {
