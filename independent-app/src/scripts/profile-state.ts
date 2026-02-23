@@ -17,7 +17,7 @@ export interface ProfileState {
 const DEFAULT_STATE: ProfileState = {
     isLocked: false,
     lastWorshipTime: 0,
-    cooldownMinutes: 1, // Default to 1 minute for testing, or sync with config
+    cooldownMinutes: 1, 
     wallet: 0,
     score: 0,
     memberId: null,
@@ -43,12 +43,17 @@ export function resetState() {
 }
 
 export function initProfileState(data: any) {
-    // Parse lastKneelDate from DB so lock/cooldown is restored on page load
     let lastWorshipTime = 0;
-    if (data.lastKneelDate) {
-        const parsed = new Date(data.lastKneelDate).getTime();
+
+    // 👇 THE FIX: Look for 'lastWorship' (from tasks table), fall back to 'lastKneelDate'
+    const rawTime = data.lastWorship || data.lastKneelDate;
+
+    if (rawTime) {
+        const parsed = new Date(rawTime).getTime();
         if (!isNaN(parsed)) lastWorshipTime = parsed;
     }
+
+    console.log("[STATE] Initialized. Last Worship:", lastWorshipTime);
 
     setState({
         memberId: data.member_id,
@@ -59,8 +64,11 @@ export function initProfileState(data: any) {
         rank: data.hierarchy || "Hall Boy",
         revealMap: data.parameters?.reveal_map || [],
         libraryProgress: data.parameters?.library_progress || 1,
-        lastWorshipTime,
-        cooldownMinutes: 60, // 1 hour cooldown (matches old Velo COOLDOWN_MINUTES)
+        
+        // Pass the parsed time into the state
+        lastWorshipTime: lastWorshipTime,
+        
+        // Ensure cooldown matches your game rules (60 mins)
+        cooldownMinutes: 60, 
     });
 }
-
