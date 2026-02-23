@@ -750,12 +750,12 @@ export default function ProfilePage() {
 
                             <div id="inlineChatPanel" className="hidden" style={{ width: '100%', height: '450px', background: '#050505', display: 'flex', flexDirection: 'column', position: 'relative' }}>
                                 <div id="mob_chatBox" className="chat-body-frame" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', paddingBottom: 70, overflowY: 'auto' }}>
-                                    <div id="tributeHuntOverlay" className="hidden overlay-center" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 50, flexDirection: 'column', padding: '20px' }}>
+                                    <div id="mob_TributeOverlay" className="hidden overlay-center" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 9999, flexDirection: 'column', padding: '20px' }}>
                                         <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
                                             <span style={{ fontFamily: 'Cinzel', color: '#c5a059' }}>TRIBUTE STORE</span>
                                             <button onClick={() => (window as any).toggleTributeHunt()} style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem' }}>X</button>
                                         </div>
-                                        <div id="huntStoreGrid" className="store-grid" style={{ width: '100%', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '5px' }}></div>
+                                        <div id="mob_huntStoreGrid" className="store-grid" style={{ width: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '5px', paddingBottom: '30px' }}></div>
                                     </div>
                                     <div id="mob_chatContent" className="chat-area"></div>
                                 </div>

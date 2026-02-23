@@ -173,7 +173,7 @@ function renderTributes() {
 
     // 2. Desktop Modal Overview AND Mobile Grid Overlay
     const gridDesk = document.getElementById('huntStoreGridDesk');
-    const gridMob = document.getElementById('huntStoreGrid');
+    const gridMob = document.getElementById('mob_huntStoreGrid');
 
     const renderGrid = (gridEl: HTMLElement) => {
         if (!gridEl) return;
@@ -252,8 +252,14 @@ if (typeof window !== 'undefined') {
 
 
 export function toggleTributeHunt() {
-    const overlay = document.getElementById('tributeHuntOverlay');
-    overlay?.classList.toggle('hidden');
+    const isMobile = window.innerWidth <= 768; // basic mobile check
+    if (isMobile) {
+        const overlayMob = document.getElementById('mob_TributeOverlay');
+        overlayMob?.classList.toggle('hidden');
+    } else {
+        const overlayDesk = document.getElementById('tributeHuntOverlay');
+        overlayDesk?.classList.toggle('hidden');
+    }
 }
 
 export function openLobby() {
