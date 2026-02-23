@@ -264,51 +264,53 @@ function renderTributes() {
 }
 
 // Attach the crowdfund function to the global window object so the onclick handlers can find it
-(window as any).contributeCrowdfund = async function (id: string, title: string) {
-    const inputEl = document.getElementById(`crowdfund_input_${id}`) as HTMLInputElement;
-    if (!inputEl) return;
+if (typeof window !== 'undefined') {
+    (window as any).contributeCrowdfund = async function (id: string, title: string) {
+        const inputEl = document.getElementById(`crowdfund_input_${id}`) as HTMLInputElement;
+        if (!inputEl) return;
 
-    const amount = parseInt(inputEl.value);
-    if (isNaN(amount) || amount <= 0) {
-        alert("Please enter a valid amount greater than 0.");
-        return;
-    }
-
-    const { memberId, wallet } = getState();
-    if (!memberId) return;
-
-    if (wallet < amount) {
-        document.getElementById('povertyOverlay')?.classList.remove('hidden');
-        document.getElementById('povertyInsult')!.innerText = `You lack the capital to offer ${amount.toLocaleString()} coins to "${title}". Know your place.`;
-        return;
-    }
-
-    if (!confirm(`Are you sure you wish to contribute ${amount.toLocaleString()} coins to ${title}?\n(This will also earn you merit)`)) return;
-
-    try {
-        const res = await fetch('/api/tributes/contribute', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberEmail: memberId, tributeId: id, tributeTitle: title, contributionAmount: amount })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-            setState({ wallet: data.newWallet, score: data.newScore });
-            alert(`Succesfully contributed ${amount.toLocaleString()} coins to ${title}! You received ${data.meritGained} merit.`);
-            inputEl.value = ''; // clear input
-
-            // Re-fetch tributes to instantly update the progress bar visually
-            loadTributes();
-        } else {
-            alert(`Failed: ${data.error}`);
+        const amount = parseInt(inputEl.value);
+        if (isNaN(amount) || amount <= 0) {
+            alert("Please enter a valid amount greater than 0.");
+            return;
         }
-    } catch (err) {
-        console.error("Contribution error:", err);
-        alert("An error occurred. Please try again.");
-    }
-};
+
+        const { memberId, wallet } = getState();
+        if (!memberId) return;
+
+        if (wallet < amount) {
+            document.getElementById('povertyOverlay')?.classList.remove('hidden');
+            document.getElementById('povertyInsult')!.innerText = `You lack the capital to offer ${amount.toLocaleString()} coins to "${title}". Know your place.`;
+            return;
+        }
+
+        if (!confirm(`Are you sure you wish to contribute ${amount.toLocaleString()} coins to ${title}?\n(This will also earn you merit)`)) return;
+
+        try {
+            const res = await fetch('/api/tributes/contribute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberEmail: memberId, tributeId: id, tributeTitle: title, contributionAmount: amount })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                setState({ wallet: data.newWallet, score: data.newScore });
+                alert(`Succesfully contributed ${amount.toLocaleString()} coins to ${title}! You received ${data.meritGained} merit.`);
+                inputEl.value = ''; // clear input
+
+                // Re-fetch tributes to instantly update the progress bar visually
+                loadTributes();
+            } else {
+                alert(`Failed: ${data.error}`);
+            }
+        } catch (err) {
+            console.error("Contribution error:", err);
+            alert("An error occurred. Please try again.");
+        }
+    };
+}
 
 export async function buyTribute(id: string, title: string, cost: number) {
     const { memberId, wallet } = getState();
