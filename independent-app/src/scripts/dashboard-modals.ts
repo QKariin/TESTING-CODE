@@ -10,7 +10,7 @@ import {
     armoryTarget, setArmoryTarget
 } from './dashboard-state';
 import { clean, raw, getOptimizedUrl } from './utils';
-import { mediaType as mediaTypeFunction } from './media';
+import { mediaType as mediaTypeFunction, getSignedUrl } from './media';
 import { DbService } from '@/lib/supabase-service';
 
 let pendingDirectiveText = "";
@@ -62,11 +62,22 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     modal.classList.add('active');
 }
 
-export function openModById(taskId: string, memberId: string, isHistory: boolean, fullSigned?: string) {
+export async function openModById(taskId: string, memberId: string, isHistory: boolean, fullSigned?: string) {
     const u = users.find(x => x.memberId === memberId);
     if (!u) return;
     let t = isHistory ? u.history?.find((x: any) => x.id === taskId) : u.reviewQueue?.find((x: any) => x.id === taskId);
-    if (t) openModal(taskId, memberId, fullSigned || t.proofUrl, t.proofType, t.text, isHistory, t.status);
+    if (t) {
+        let finalUrl = fullSigned || t.proofUrl;
+        if (finalUrl && finalUrl.includes('upcdn.io') && !finalUrl.includes('&sig=')) {
+            try {
+                finalUrl = await getSignedUrl(getOptimizedUrl(finalUrl, 1000));
+            } catch (e) {
+                console.error("Failed to sign modal media:", e);
+                finalUrl = getOptimizedUrl(finalUrl, 1000);
+            }
+        }
+        openModal(taskId, memberId, finalUrl, t.proofType, t.text, isHistory, t.status);
+    }
 }
 
 export function reviewTask(decision: 'approve' | 'reject') {

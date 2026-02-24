@@ -2,6 +2,7 @@ import { getState, setState } from './profile-state';
 import { createClient } from '../utils/supabase/client';
 import { getHierarchyReport } from './hierarchy-rules';
 import { uploadToBytescale } from './mediaBytescale';
+import { getOptimizedUrl } from './media';
 
 let globalTributes: any[] = [];
 export async function handleLogout() {
@@ -196,7 +197,7 @@ function renderTributes() {
                 <div style="position:absolute; top:4px; left:50%; width:8px; height:8px; background:#ff4b72; border-radius:50%; box-shadow:1px 1px 2px rgba(0,0,0,0.3); transform:translateX(-50%);"></div>
                 
                 <div style="display:flex; align-items:center; gap:12px; margin-top:5px;">
-                    <div style="width:40px; height:40px; border-radius:50%; background:url('${t.image}') center/cover; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.1);"></div>
+                    <div style="width:40px; height:40px; border-radius:50%; background:url('${getOptimizedUrl(t.image, 40)}') center/cover; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.1);"></div>
                     <span style="font-family:'Patrick Hand', cursive; font-size:1.4rem; color:#333; font-weight:700; letter-spacing:1px;">${t.title}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px; margin-top:5px;">
@@ -222,7 +223,7 @@ function renderTributes() {
                 <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:rgba(255,255,255,0.75); backdrop-filter:blur(15px); padding:30px; border-radius:20px; display:flex; gap:35px; align-items:flex-start; box-shadow:0 12px 35px rgba(0,0,0,0.15), inset 0 0 25px rgba(255,255,255,0.9); border:1px solid rgba(255,255,255,0.6);">
                     
                     <!-- Bigger Hero Image -->
-                    <div style="width:220px; height:220px; border-radius:15px; background:url('${t.image}') center/cover; border:4px solid #fff; box-shadow:0 8px 20px rgba(0,0,0,0.15); flex-shrink:0; transform:rotate(-2deg);">
+                    <div style="width:220px; height:220px; border-radius:15px; background:url('${getOptimizedUrl(t.image, 400)}') center/cover; border:4px solid #fff; box-shadow:0 8px 20px rgba(0,0,0,0.15); flex-shrink:0; transform:rotate(-2deg);">
                         <!-- "Hero" Washi Tape -->
                         <div style="position:absolute; top:-15px; left:50%; width:100px; height:30px; background:rgba(255, 182, 193, 0.7); transform:translateX(-50%) rotate(3deg); z-index:5; box-shadow:0 2px 5px rgba(0,0,0,0.1); border-left:2px dotted rgba(255,255,255,0.6); border-right:2px dotted rgba(255,255,255,0.6);"></div>
                     </div>
@@ -275,7 +276,7 @@ function renderTributes() {
                     <!-- Washi Tape Effect -->
                     <div style="position:absolute; top:-12px; left:50%; width:80px; height:25px; background:rgba(255, 182, 193, 0.6); transform:translateX(-50%) rotate(${-rotation * 2}deg); z-index:5; box-shadow:0 1px 3px rgba(0,0,0,0.1); border-left:2px dotted rgba(255,255,255,0.5); border-right:2px dotted rgba(255,255,255,0.5);"></div>
                     
-                    <div style="width:100%; height:160px; background:url('${t.image}') center/cover; border:1px solid rgba(0,0,0,0.05);"></div>
+                    <div style="width:100%; height:160px; background:url('${getOptimizedUrl(t.image, 300)}') center/cover; border:1px solid rgba(0,0,0,0.05);"></div>
                     
                     <div style="width:100%; display:flex; flex-direction:column; align-items:center; margin-top:15px;">
                         <div style="font-family:'Caveat', cursive; font-size:1.8rem; color:#111; text-align:center; line-height:1.2; font-weight:700;">${t.title}</div>

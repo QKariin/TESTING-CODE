@@ -3,6 +3,7 @@
 
 import { users, globalQueue, globalTributes } from './dashboard-state';
 import { clean, formatTimer } from './utils';
+import { getOptimizedUrl } from './media';
 
 export function renderOperationsMonitor() {
     renderOperationsGrid();
@@ -50,7 +51,7 @@ function renderOperationsGrid() {
             timer = formatTimer(timeLeft);
         }
 
-        const finalPic = u.avatar || u.profilePicture || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png';
+        const finalPic = getOptimizedUrl(u.avatar || u.profilePicture || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png', 100);
 
         html += `
             <div class="mon-card ${cardClass}" onclick="window.selectUserFromOps('${u.memberId}')">
@@ -121,7 +122,7 @@ function renderFeedLog() {
 function renderTributeFeedCard(tribute: any) {
     const timeStr = new Date(tribute.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const u = users.find(x => x.memberId === tribute.memberId);
-    const finalPic = tribute.memberAvatar || tribute.avatar || tribute.profilePicture || u?.avatar || u?.profilePicture || '';
+    const finalPic = getOptimizedUrl(tribute.memberAvatar || tribute.avatar || tribute.profilePicture || u?.avatar || u?.profilePicture || '', 80);
 
     return `
         <div class="feed-trib-card">
@@ -141,7 +142,7 @@ function renderTributeFeedCard(tribute: any) {
 function renderCompletionFeedCard(completion: any) {
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const u = users.find(x => x.memberId === completion.memberId);
-    const finalPic = completion.avatar || completion.profilePicture || u?.avatar || u?.profilePicture || '';
+    const finalPic = getOptimizedUrl(completion.avatar || completion.profilePicture || u?.avatar || u?.profilePicture || '', 80);
 
     return `
         <div class="feed-buy-card">

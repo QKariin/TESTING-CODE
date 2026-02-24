@@ -15,6 +15,7 @@ import { updateDetail } from './dashboard-users';
 import { toggleMobStats } from './dashboard-utils';
 import { Bridge } from './bridge';
 import { unlockAudio } from './utils';
+import { getOptimizedUrl } from './media';
 import { processCoinTransaction, secureUpdateTaskAction } from '@/actions/velo-actions';
 
 export function initDashboard() {
@@ -110,7 +111,7 @@ function updateStatsDeck() {
         const bsVal = document.getElementById('bestSubValue');
 
         if (best && bsAv && bsName && bsVal) {
-            bsAv.src = best.avatar || 'https://via.placeholder.com/100';
+            bsAv.src = getOptimizedUrl(best.avatar || 'https://via.placeholder.com/100', 100);
             bsName.innerText = (best.name || "UNNAMED").toUpperCase();
             bsVal.innerText = `${(best.points || 0).toLocaleString()} PTS`;
         }

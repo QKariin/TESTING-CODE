@@ -16,6 +16,7 @@ import { closeChatPreview } from '@/scripts/chat';
 // State & Actions
 import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes } from '@/scripts/dashboard-state';
 import { getAdminDashboardData } from '@/actions/velo-actions';
+import { getOptimizedUrl } from '@/scripts/media';
 
 export default function DashboardPage() {
     useEffect(() => {
@@ -72,7 +73,7 @@ export default function DashboardPage() {
                 const mappedUsers = data.users.map((u: any) => ({
                     ...u,
                     memberId: u.member_id,
-                    avatar: u.avatar_url || u.profile_picture_url || 'https://via.placeholder.com/150',
+                    avatar: getOptimizedUrl(u.avatar_url || u.profile_picture_url || 'https://via.placeholder.com/150', 100),
                     points: u.score || 0,
                     // Parse JSON params if needed
                     activeTask: u.parameters?.taskdom_active_task || null,

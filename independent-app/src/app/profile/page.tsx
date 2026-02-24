@@ -6,6 +6,7 @@ import '../../css/profile-mobile.css';
 import { initProfileState } from '@/scripts/profile-state';
 import { updateKneelingUI, attachKneelListeners } from '@/scripts/kneeling';
 import { createClient } from '@/utils/supabase/client';
+import { getOptimizedUrl } from '@/scripts/media';
 import {
     claimKneelReward,
     switchTab,
@@ -204,7 +205,9 @@ export default function ProfilePage() {
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div className="v-card" style={{ marginBottom: 20, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()}>
-                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" />
+                            <div className="profile-img-con">
+                                <img id="profilePic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png", 200)} alt="Avatar" className="profile-img" />
+                            </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 5 }}>
                             <div id="subName" className="identity-name" style={{ fontSize: '1.2rem', letterSpacing: 4, fontWeight: 'bold', margin: 0 }}>
@@ -424,7 +427,7 @@ export default function ProfilePage() {
                     {/* OVERLAY TRIBUTE MODAL - SCRAPBOOK NOTEBOOK THEME + CROWDFUND FROSTED GLASS */}
                     <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10000, display: 'none', flexDirection: 'column', padding: '40px 40px 40px 80px', borderRadius: '12px', overflow: 'hidden' }}>
                         {/* Dynamic Background Image */}
-                        <div style={{ position: 'absolute', inset: 0, background: `url(${profile?.image || "https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png"}) center/cover`, zIndex: -2 }}></div>
+                        <div style={{ position: 'absolute', inset: 0, background: `url(${getOptimizedUrl(profile?.image || "https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png", 1000)}) center/cover`, zIndex: -2 }}></div>
                         {/* Frosted Glass Effect */}
                         <div style={{ position: 'absolute', inset: 0, background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(15px)', zIndex: -1, border: '1px solid rgba(255,255,255,0.4)', borderRadius: '12px' }}></div>
 
@@ -514,7 +517,9 @@ export default function ProfilePage() {
                 <div id="viewMobileHome" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', maxWidth: '100vw', height: '100dvh', overflowY: 'auto', overflowX: 'hidden', display: 'block', padding: 0, zIndex: 1, background: 'transparent' }}>
                     <div className="mob-hud-row">
                         <div className="hud-circle slave" onClick={() => (window as any).openLobby()}>
-                            <img id="hudUserPic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png"} alt="Your Avatar" />
+                            <div className="hud-avatar">
+                                <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png", 100)} alt="Your Avatar" />
+                            </div>
                             <div className="hud-gear">⚙</div>
                         </div>
                         <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>

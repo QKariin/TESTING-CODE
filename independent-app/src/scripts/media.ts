@@ -59,9 +59,17 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     // 2. BYTESCALE
     if (url.includes("upcdn.io")) {
         if (url.includes("&sig=")) return url;
-        let clean = url.replace("/raw/", "/image/").replace("/thumbnail/", "/image/");
-        clean = clean.split('?')[0];
-        return `${clean}?w=${width}&h=${width}&fit=cover&q=80&f=jpg`;
+        const type = mediaType(url);
+        let baseUrl = url.split('?')[0];
+
+        if (type === "video") {
+            // Serve optimized video stream from Bytescale
+            return baseUrl.replace("/raw/", "/video/");
+        } else {
+            // Standardize image transformation: force format=webp for quota savings
+            let clean = baseUrl.replace("/raw/", "/image/").replace("/thumbnail/", "/image/");
+            return `${clean}?w=${width}&h=${width}&fit=cover&q=80&f=webp`;
+        }
     }
 
     // 3. WIX VECTORS

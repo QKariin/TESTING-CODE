@@ -107,9 +107,9 @@ export async function renderChat(messages: any[]) {
 
                     let cardImgUrl = item.img || item.image || item.itemImage || "";
                     if (cardImgUrl && cardImgUrl.includes('upcdn.io')) {
-                        let clean = cardImgUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
-                        try { cardImgUrl = await getSignedUrl(clean); }
-                        catch (e) { cardImgUrl = clean; }
+                        const opt = getOptimizedUrl(cardImgUrl, 300);
+                        try { cardImgUrl = await getSignedUrl(opt); }
+                        catch (e) { cardImgUrl = opt; }
                     }
 
                     contentHtml = `
@@ -137,8 +137,8 @@ export async function renderChat(messages: any[]) {
                 let srcUrl = rawUrl;
 
                 if (rawUrl.includes('upcdn.io')) {
-                    let clean = rawUrl.replace('/image/', '/raw/').replace('/thumbnail/', '/raw/').split('?')[0];
-                    try { srcUrl = await getSignedUrl(clean); } catch (e) { srcUrl = clean; }
+                    const opt = getOptimizedUrl(rawUrl, 600);
+                    try { srcUrl = await getSignedUrl(opt); } catch (e) { srcUrl = opt; }
                 }
                 else if (rawUrl.includes('wix:image')) {
                     const parts = rawUrl.split('/');

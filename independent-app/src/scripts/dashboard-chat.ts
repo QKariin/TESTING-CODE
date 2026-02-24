@@ -83,7 +83,7 @@ export async function renderChat(msgs: any[]) {
                     const previewUrl = m.mediaUrl || m.message;
                     contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><img src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
                 } else if (isVideo) {
-                    const srcUrl = m.mediaUrl || m.message;
+                    const srcUrl = m.mediaUrl || getOptimizedUrl(m.message, 400);
                     const previewUrl = m.mediaUrl || m.message;
                     contentHtml = `<div class="msg ${isMe ? 'm-out' : 'm-in'}"><video src="${srcUrl}" onclick="openChatPreview('${encodeURIComponent(previewUrl)}', true)" muted style="max-width:200px; max-height:200px; display:block;"></video></div>`;
                 } else if (m.message.startsWith('💝 TRIBUTE:')) {
