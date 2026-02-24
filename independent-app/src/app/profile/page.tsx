@@ -433,8 +433,8 @@ export default function ProfilePage() {
 
                         <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', zIndex: 10, position: 'relative' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                                <span style={{ fontFamily: "'Patrick Hand', cursive", color: '#111', fontSize: '2.5rem', letterSpacing: '2px', fontWeight: 700, transform: 'rotate(-2deg)' }}>My Wishlist ♥</span>
-                                <span style={{ fontFamily: "'Caveat', cursive", color: '#ff4b72', fontSize: '2.5rem', fontWeight: 700, position: 'absolute', top: '-15px', right: '-120px', transform: 'rotate(5deg)', textShadow: '1px 1px 0px rgba(0,0,0,0.1)' }}>NEED SO BAD!!</span>
+                                <span style={{ fontFamily: "'Patrick Hand', cursive", color: '#111', fontSize: '2.5rem', letterSpacing: '2px', fontWeight: 700, transform: 'rotate(-2deg)' }}>Wishlist ♥</span>
+                                <span style={{ fontFamily: "'Caveat', cursive", color: '#ff4b72', fontSize: '2.5rem', fontWeight: 700, position: 'absolute', top: '-10px', right: '-150px', transform: 'rotate(5deg)', textShadow: '1px 1px 0px rgba(0,0,0,0.1)' }}>NEED SO BAD!!</span>
                             </div>
                             <button onClick={() => toggleTributeHunt()} style={{ color: '#111', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Patrick Hand', cursive", fontSize: '2rem', transition: 'all 0.2s', padding: 0, fontWeight: 'bold' }} onMouseOver={(e) => { e.currentTarget.style.color = '#ff4b72'; e.currentTarget.style.transform = 'scale(1.2) rotate(10deg)'; }} onMouseOut={(e) => { e.currentTarget.style.color = '#111'; e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; }}>X</button>
                         </div>

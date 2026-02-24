@@ -219,29 +219,49 @@ function renderTributes() {
                 const progressPercent = Math.min(100, Math.round((raised / goal) * 100));
 
                 return `
-                <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:rgba(255,255,255,0.7); backdrop-filter:blur(10px); padding:20px; border-radius:15px; display:flex; gap:20px; align-items:center; box-shadow:0 8px 25px rgba(0,0,0,0.1), inset 0 0 20px rgba(255,255,255,0.8); border:1px solid rgba(255,255,255,0.5);">
-                    <div style="width:140px; height:140px; border-radius:12px; background:url('${t.image}') center/cover; border:2px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,0.15); flex-shrink:0;"></div>
+                <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:rgba(255,255,255,0.75); backdrop-filter:blur(15px); padding:30px; border-radius:20px; display:flex; gap:35px; align-items:flex-start; box-shadow:0 12px 35px rgba(0,0,0,0.15), inset 0 0 25px rgba(255,255,255,0.9); border:1px solid rgba(255,255,255,0.6);">
                     
-                    <div style="flex:1; display:flex; flexDirection:column; gap:10px;">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                            <div style="font-family:'Caveat', cursive; font-size:2.4rem; color:#111; line-height:1; font-weight:700;">${t.title}</div>
-                            <div style="font-family:'Orbitron', sans-serif; font-size:0.9rem; color:#ff4b72; font-weight:700;">${raised.toLocaleString()} / ${goal.toLocaleString()} <span style="color:#ff69b4;">♥</span></div>
+                    <!-- Bigger Hero Image -->
+                    <div style="width:220px; height:220px; border-radius:15px; background:url('${t.image}') center/cover; border:4px solid #fff; box-shadow:0 8px 20px rgba(0,0,0,0.15); flex-shrink:0; transform:rotate(-2deg);">
+                        <!-- "Hero" Washi Tape -->
+                        <div style="position:absolute; top:-15px; left:50%; width:100px; height:30px; background:rgba(255, 182, 193, 0.7); transform:translateX(-50%) rotate(3deg); z-index:5; box-shadow:0 2px 5px rgba(0,0,0,0.1); border-left:2px dotted rgba(255,255,255,0.6); border-right:2px dotted rgba(255,255,255,0.6);"></div>
+                    </div>
+                    
+                    <!-- Content Right Side - Fixed flex-direction -->
+                    <div style="flex:1; display:flex; flex-direction:column; gap:15px; padding-top:10px;">
+                        
+                        <!-- Header and Top Contributor -->
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div style="font-family:'Caveat', cursive; font-size:3rem; color:#111; line-height:1; font-weight:700;">${t.title}</div>
+                            
+                            ${t.top_contributor ? `
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; background:rgba(255,255,255,0.8); padding:8px 15px; border-radius:12px; border:1px dashed #ff9a9e; box-shadow:0 4px 10px rgba(0,0,0,0.05); transform:rotate(1deg);">
+                                <span style="font-family:'Patrick Hand', cursive; font-size:0.9rem; color:#888; text-transform:uppercase; letter-spacing:1px;">Top Contributor</span>
+                                <span style="font-family:'Caveat', cursive; font-size:1.6rem; color:#ff4b72; font-weight:bold;">${t.top_contributor}</span>
+                            </div>
+                            ` : ''}
                         </div>
                         
-                        <!-- Progress Bar -->
-                        <div style="width:100%; height:12px; background:rgba(0,0,0,0.05); border-radius:6px; overflow:hidden; border:1px solid rgba(0,0,0,0.1); position:relative;">
-                            <div style="position:absolute; top:0; left:0; height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); transition:width 0.5s ease-in-out;"></div>
+                        <!-- Raised Stats -->
+                        <div style="display:flex; justify-content:flex-end; margin-bottom:-10px;">
+                            <div style="font-family:'Orbitron', sans-serif; font-size:1.1rem; color:#ff4b72; font-weight:700;">${raised.toLocaleString()} / ${goal.toLocaleString()} <span style="color:#ff69b4;">♥</span></div>
                         </div>
                         
-                        <div style="display:flex; flex-direction:column; width:100%; margin-top:10px; gap:8px;">
+                        <!-- Progress Bar (Thicker) -->
+                        <div style="width:100%; height:18px; background:rgba(0,0,0,0.08); border-radius:9px; overflow:hidden; border:1px solid rgba(0,0,0,0.1); position:relative; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">
+                            <div style="position:absolute; top:0; left:0; height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #ff9a9e 0%, #ff6a88 100%); transition:width 0.5s ease-in-out; border-radius:9px; box-shadow:0 0 10px rgba(255,106,136,0.5);"></div>
+                        </div>
+                        
+                        <!-- Slider Input -->
+                        <div style="display:flex; flex-direction:column; width:100%; margin-top:15px; gap:12px; background:rgba(255,255,255,0.6); padding:15px; border-radius:15px; border:1px solid rgba(255,255,255,0.8);">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div style="font-family:'Patrick Hand', cursive; font-size:1.1rem; color:#666;">Choose your contribution:</div>
-                                <div style="font-family:'Caveat', cursive; font-size:1.8rem; color:#ff4b72; font-weight:bold; min-width:80px; text-align:right;" id="crowdfund_display_${t.id}">100 ♥</div>
+                                <div style="font-family:'Patrick Hand', cursive; font-size:1.2rem; color:#555;">Choose your contribution:</div>
+                                <div style="font-family:'Caveat', cursive; font-size:2.2rem; color:#ff4b72; font-weight:bold; min-width:80px; text-align:right;" id="crowdfund_display_${t.id}">100 ♥</div>
                             </div>
                             
-                            <div style="display:flex; gap:15px; align-items:center; width:100%;">
-                                <input type="range" id="crowdfund_input_${t.id}" min="100" max="${Math.max(100, goal - raised)}" step="100" value="100" oninput="document.getElementById('crowdfund_display_${t.id}').innerText = Number(this.value).toLocaleString() + ' ♥'" style="flex:1; height:8px; border-radius:4px; appearance:none; outline:none; background:#ffe4e1; cursor:pointer;" />
-                                <button onclick="window.contributeCrowdfund('${t.id}', '${t.title}')" style="background:#ff4b72; color:white; border:none; padding:8px 25px; border-radius:8px; font-family:'Patrick Hand', cursive; font-size:1.2rem; cursor:pointer; font-weight:bold; box-shadow:0 4px 10px rgba(255,75,114,0.3); transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='#ff335f';" onmouseout="this.style.transform='scale(1)'; this.style.background='#ff4b72';">GIVE STIPEND</button>
+                            <div style="display:flex; gap:20px; align-items:center; width:100%;">
+                                <input type="range" id="crowdfund_input_${t.id}" min="100" max="${Math.max(100, goal - raised)}" step="100" value="100" oninput="document.getElementById('crowdfund_display_${t.id}').innerText = Number(this.value).toLocaleString() + ' ♥'" style="flex:1; height:12px; border-radius:6px; appearance:none; outline:none; background:#ffe4e1; cursor:pointer;" />
+                                <button onclick="window.contributeCrowdfund('${t.id}', '${t.title}')" style="background:#ff4b72; color:white; border:none; padding:12px 30px; border-radius:10px; font-family:'Patrick Hand', cursive; font-size:1.3rem; cursor:pointer; font-weight:bold; box-shadow:0 6px 15px rgba(255,75,114,0.3); transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='#ff335f';" onmouseout="this.style.transform='scale(1)'; this.style.background='#ff4b72';">GIVE STIPEND</button>
                             </div>
                         </div>
                     </div>

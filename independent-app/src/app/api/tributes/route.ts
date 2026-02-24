@@ -29,7 +29,7 @@ export async function GET() {
         }
 
         // Format Image urls if they use the wix format
-        const formattedTributes = (tributes || []).map((tribute: any) => {
+        const formattedTributes = await Promise.all((tributes || []).map(async (tribute: any) => {
             let imageUrl = tribute.Image || tribute.image_url || "";
             if (imageUrl.startsWith('wix:image://v1/')) {
                 // Extracts the media ID
@@ -37,17 +37,43 @@ export async function GET() {
                 imageUrl = `https://static.wixstatic.com/media/${wixId}`;
             }
 
+            let topContributorName = null;
+            const tributeId = tribute.id || tribute._id || tribute.Title;
+
+            if (tribute.is_crowdfund) {
+                // 1. Find member with max amount_given for this tribute
+                const { data: topContrData } = await supabase
+                    .from('crowdfund_contributions')
+                    .select('member_id, amount_given')
+                    .eq('tribute_id', tributeId.toString())
+                    .order('amount_given', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (topContrData && topContrData.member_id) {
+                    // 2. Fetch their username
+                    const { data: profileData } = await supabase
+                        .from('profiles')
+                        .select('username')
+                        .eq('member_id', topContrData.member_id)
+                        .single();
+
+                    topContributorName = profileData?.username || topContrData.member_id.split('@')[0];
+                }
+            }
+
             return {
-                id: tribute.id || tribute._id || tribute.Title, // Fallback if no specific ID column exists
+                id: tributeId, // Fallback if no specific ID column exists
                 title: tribute.Title || tribute.title,
                 price: parseInt(tribute.Price || tribute.price) || 0,
                 image: imageUrl,
                 category: tribute.Category || tribute.category,
                 is_crowdfund: tribute.is_crowdfund || false,
                 goal_amount: tribute.goal_amount || 0,
-                raised_amount: tribute.raised_amount || 0
+                raised_amount: tribute.raised_amount || 0,
+                top_contributor: topContributorName
             };
-        });
+        }));
 
         return NextResponse.json({ success: true, tributes: formattedTributes });
 
