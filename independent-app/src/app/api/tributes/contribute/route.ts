@@ -45,23 +45,43 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
         }
 
-        // 4. Update the Crowdfund raised_amount in the wishlist Table
-        // Need to fetch current raised amount first
-        const { data: tributeData, error: tributeErr } = await supabase
-            .from('wishlist')
+        // 4. Update the Crowdfund raised_amount
+        let targetTable = 'wishlist';
+        let { data: tributeData, error: tributeErr } = await supabase
+            .from(targetTable)
             .select('raised_amount')
-            .eq('id', tributeId) // Assuming 'id' is the primary key and corresponds to tributeId.
-            .single();
+            .eq('id', tributeId)
+            .maybeSingle();
 
         if (tributeErr || !tributeData) {
-            // Fallback: If "id" missing, maybe they use Title or _id, but id is safest.
-            console.warn("Could not find tribute to increment raised amount. Check column names.", tributeErr);
-        } else {
-            const newRaisedAmount = (tributeData.raised_amount || 0) + contributionAmount;
+            console.log("[API/Contribute] lowercase wishlist lookup failed, trying Wishlist fallback");
+            targetTable = 'Wishlist';
+            const fallback = await supabase
+                .from(targetTable)
+                .select('raised_amount, Raised_Amount, Price')
+                .or(`id.eq.${tributeId},_id.eq.${tributeId},Title.eq.${tributeId}`)
+                .maybeSingle();
+
+            tributeData = fallback.data;
+            if (fallback.error || !tributeData) {
+                console.error("Could not find tribute to increment raised amount:", fallback.error);
+            }
+        }
+
+        if (tributeData) {
+            // Wix-style might use Raised_Amount or raised_amount
+            const currentRaised = tributeData.raised_amount ?? tributeData.Raised_Amount ?? 0;
+            const newRaisedAmount = Number(currentRaised) + contributionAmount;
+
+            // Try to update using the correct field name
+            const updateField = tributeData.raised_amount !== undefined ? 'raised_amount' : 'Raised_Amount';
+
             await supabase
-                .from('wishlist')
-                .update({ raised_amount: newRaisedAmount })
-                .eq('id', tributeId);
+                .from(targetTable)
+                .update({ [updateField]: newRaisedAmount })
+                .or(`id.eq.${tributeId},_id.eq.${tributeId},Title.eq.${tributeId}`);
+
+            console.log(`[API/Contribute] Updated ${targetTable} raised amount to ${newRaisedAmount}`);
         }
 
         // 5. Insert receipt into crowdfund_contributions table

@@ -54,11 +54,11 @@ export async function GET() {
                     // 2. Fetch their username
                     const { data: profileData } = await supabase
                         .from('profiles')
-                        .select('username')
+                        .select('name')
                         .eq('member_id', topContrData.member_id)
                         .single();
 
-                    topContributorName = profileData?.username || topContrData.member_id.split('@')[0];
+                    topContributorName = profileData?.name || topContrData.member_id.split('@')[0];
                 }
             }
 
@@ -68,9 +68,9 @@ export async function GET() {
                 price: parseInt(tribute.Price || tribute.price) || 0,
                 image: imageUrl,
                 category: tribute.Category || tribute.category,
-                is_crowdfund: tribute.is_crowdfund || false,
-                goal_amount: tribute.goal_amount || 0,
-                raised_amount: tribute.raised_amount || 0,
+                is_crowdfund: tribute.is_crowdfund || tribute.Is_Crowdfund || false,
+                goal_amount: parseInt(tribute.goal_amount || tribute.Goal_Amount || 0),
+                raised_amount: parseInt(tribute.raised_amount || tribute.Raised_Amount || 0),
                 top_contributor: topContributorName
             };
         }));

@@ -434,12 +434,11 @@ export default function ProfilePage() {
                         {/* Pink Accent Line */}
                         <div style={{ position: 'absolute', left: '60px', top: 0, bottom: 0, width: '2px', background: 'rgba(255, 105, 180, 0.4)', zIndex: 0 }}></div>
 
-                        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', zIndex: 10, position: 'relative' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                                <span style={{ fontFamily: "'Patrick Hand', cursive", color: '#111', fontSize: '2.5rem', letterSpacing: '2px', fontWeight: 700, transform: 'rotate(-2deg)' }}>Wishlist ♥</span>
-                                <span style={{ fontFamily: "'Caveat', cursive", color: '#ff4b72', fontSize: '2.5rem', fontWeight: 700, position: 'absolute', top: '-10px', right: '-150px', transform: 'rotate(5deg)', textShadow: '1px 1px 0px rgba(0,0,0,0.1)' }}>NEED SO BAD!!</span>
+                        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '30px', zIndex: 10, position: 'relative' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <span style={{ fontFamily: "'Patrick Hand', cursive", color: '#111', fontSize: '3rem', letterSpacing: '4px', fontWeight: 700 }}>Wishlist ♥</span>
                             </div>
-                            <button onClick={() => toggleTributeHunt()} style={{ color: '#111', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Patrick Hand', cursive", fontSize: '2rem', transition: 'all 0.2s', padding: 0, fontWeight: 'bold' }} onMouseOver={(e) => { e.currentTarget.style.color = '#ff4b72'; e.currentTarget.style.transform = 'scale(1.2) rotate(10deg)'; }} onMouseOut={(e) => { e.currentTarget.style.color = '#111'; e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; }}>X</button>
+                            <button onClick={() => toggleTributeHunt()} style={{ position: 'absolute', right: 0, top: 0, color: '#111', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Patrick Hand', cursive", fontSize: '2rem', transition: 'all 0.2s', padding: 0, fontWeight: 'bold' }} onMouseOver={(e) => { e.currentTarget.style.color = '#ff4b72'; e.currentTarget.style.transform = 'scale(1.2) rotate(10deg)'; }} onMouseOut={(e) => { e.currentTarget.style.color = '#111'; e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; }}>X</button>
                         </div>
                         <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '30px', padding: '20px 10px', paddingBottom: '30px', zIndex: 10, position: 'relative' }}></div>
                     </div>
