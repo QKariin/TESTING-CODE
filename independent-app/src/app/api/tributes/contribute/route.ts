@@ -69,25 +69,28 @@ export async function POST(request: Request) {
         }
 
         if (tributeData) {
-            // Wix-style might use Raised_Amount or raised_amount
             const currentRaised = tributeData.raised_amount ?? tributeData.Raised_Amount ?? 0;
             const newRaisedAmount = Number(currentRaised) + contributionAmount;
 
             console.log(`[API/Contribute] Incrementing raised amount for ${tributeId}: ${currentRaised} -> ${newRaisedAmount}`);
 
-            // Try to update using the correct field name
+            // Use the correct field name detected during select
             const updateField = (tributeData.raised_amount !== undefined && tributeData.raised_amount !== null) ? 'raised_amount' : 'Raised_Amount';
 
-            // Explicit eq filter is safer than or() if we know which one worked in select
+            // Find the identifying column that worked
+            let idColumn = 'id';
+            if (tributeData._id) idColumn = '_id';
+            else if (tributeData.Title) idColumn = 'Title';
+
             const { error: updateErr } = await supabase
                 .from(targetTable)
                 .update({ [updateField]: newRaisedAmount })
-                .or(`id.eq.${tributeId},_id.eq.${tributeId},Title.eq.${tributeId}`);
+                .eq(idColumn, tributeId);
 
             if (updateErr) {
                 console.error(`[API/Contribute] Failed to update ${targetTable}:`, updateErr);
             } else {
-                console.log(`[API/Contribute] Successfully updated ${targetTable} raised amount to ${newRaisedAmount}`);
+                console.log(`[API/Contribute] Successfully updated ${targetTable} ${updateField} to ${newRaisedAmount}`);
             }
         }
 

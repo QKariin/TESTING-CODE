@@ -252,6 +252,17 @@ export default function ProfilePage() {
                                 <div className="sidebar-stat-label">CAPITAL</div>
                             </div>
                         </div>
+
+                        <div style={{ marginTop: 25, width: '100%', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: 2, marginBottom: 5 }}>CURRENT CLASSIFICATION</div>
+                            <div id="desk_DashboardRank" style={{ fontFamily: 'Cinzel', fontSize: '1.4rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: 20 }}>...</div>
+
+                            <button id="desk_BenefitsToggle" style={{ background: 'none', border: 'none', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: 1 }}>CURRENT PRIVILEGES</span>
+                                <span style={{ fontSize: '0.6rem', color: '#c5a059' }}>▼</span>
+                            </button>
+                            <ul id="desk_CurrentBenefits" className="hidden" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, marginTop: 10, textAlign: 'left' }}></ul>
+                        </div>
                     </div>
 
                     <div className="sidebar-scrollable-area" style={{ flex: 1, overflowY: 'auto', width: '100%', display: 'flex', flexDirection: 'column', padding: '0 15px 0 15px', boxSizing: 'border-box', paddingRight: 30 }}>

@@ -1117,6 +1117,17 @@ export function renderProfileSidebar(u: any) {
         elNextBen.innerHTML = isMax ? '<li>You have reached the apex of servitude.</li>' : nextBenefits.map(b => `<li>${b}</li>`).join('');
     }
 
+    const toggle = document.getElementById('desk_BenefitsToggle');
+    if (toggle) {
+        toggle.onclick = () => {
+            const list = document.getElementById('desk_CurrentBenefits');
+            if (list) {
+                const isHidden = list.classList.toggle('hidden');
+                toggle.querySelector('span:last-child')!.textContent = isHidden ? '▼' : '▲';
+            }
+        };
+    }
+
     const container = document.getElementById('desk_ProgressContainer');
     if (container) {
         const buildBar = (label: string, icon: string, current: number, target: number) => {
