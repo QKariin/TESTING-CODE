@@ -840,7 +840,7 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     document.getElementById('_reqModal')?.remove();
     const overlay = document.createElement('div');
     overlay.id = '_reqModal';
-    overlay.style.cssText = `position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 16px; `;
+    overlay.style.cssText = `position: fixed; top:0; right:0; bottom:0; left:300px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 16px; `;
     const box = document.createElement('div');
     box.style.cssText = `background:#07080f; border: 1px solid #c5a059; border-radius: 12px; padding: 24px; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; font-family: 'Orbitron'; `;
 
@@ -848,7 +848,7 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     const isRoutine = fieldId === 'routine';
     const costPerItem = fieldId === 'kinks' ? 100 : fieldId === 'limits' ? 200 : 0;
 
-    let inner = `<div style="color:#c5a059;font-size:0.75rem;letter-spacing:3px;margin-bottom:12px;text-align:center;">${label.toUpperCase()}</div>`;
+    let inner = `<div style="color:#c5a059;font-size:0.9rem;letter-spacing:4px;margin-bottom:15px;text-align:center;font-family:'Orbitron';">${label.toUpperCase()}</div>`;
 
     // Process existing values for chips
     const existingChips = isChip && existingValue ? existingValue.split(',').map(s => s.trim()) : [];

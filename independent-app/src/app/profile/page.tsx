@@ -204,12 +204,12 @@ export default function ProfilePage() {
                 {/* SIDEBAR */}
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
-                        <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)' }}>
+                        <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
                             <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} />
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '8px 15px', borderRadius: '8px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto' }}>
-                            <div id="subName" className="identity-name" style={{ fontSize: '1.4rem', letterSpacing: 4, margin: '0', fontWeight: 'bold', color: '#c5a059' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)' }}>
+                            <div id="subName" className="identity-name" style={{ fontSize: '1.5rem', letterSpacing: 5, margin: '0', fontWeight: 'bold', color: '#c5a059' }}>
                                 {profile?.name || "SLAVE"}
                             </div>
                             <button
