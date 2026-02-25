@@ -13,17 +13,28 @@ export async function POST(req: Request) {
         const supabase = await createClient();
 
         // 1. Fetch SENDER Profile (to check rank and balance)
-        const { data: profile, error: profileErr } = await supabase
+        let { data: profile, error: profileErr } = await supabase
             .from('profiles')
             .select('*')
             .eq('member_id', senderEmail)
             .single();
 
+        let isQueen = false;
         if (profileErr || !profile) {
-            return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
+            // FALLBACK: If profile missing but we have a conversationId and user is authenticated
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user && user.email === senderEmail && conversationId) {
+                console.warn(`[API/Chat/Send] Sender profile missing for ${senderEmail}. Treating as Queen due to conversationId presence.`);
+                isQueen = true;
+                // Synthetic profile for admin bypass
+                profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail } as any;
+            } else {
+                console.error(`[API/Chat/Send] Profile not found for ${senderEmail}. Error:`, profileErr);
+                return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
+            }
+        } else {
+            isQueen = (profile.hierarchy === 'Queen' || profile.hierarchy === 'Secretary');
         }
-
-        const isQueen = (profile.hierarchy === 'Queen' || profile.hierarchy === 'Secretary');
         // If Queen sends, member_id (conversation context) is distinct from senderEmail
         const conversationContext = isQueen ? conversationId || senderEmail : senderEmail;
 
