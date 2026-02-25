@@ -69,8 +69,8 @@ export async function GET() {
                 image: imageUrl,
                 category: tribute.Category || tribute.category,
                 is_crowdfund: tribute.is_crowdfund || tribute.Is_Crowdfund || false,
-                goal_amount: parseInt(tribute.goal_amount || tribute.Goal_Amount || 0),
-                raised_amount: parseInt(tribute.raised_amount || tribute.Raised_Amount || 0),
+                goal_amount: parseInt(tribute.goal_amount ?? tribute.Goal_Amount ?? 0),
+                raised_amount: parseInt(tribute.raised_amount ?? tribute.Raised_Amount ?? 0),
                 top_contributor: topContributorName
             };
         }));

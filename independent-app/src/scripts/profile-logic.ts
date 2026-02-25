@@ -174,6 +174,7 @@ export async function loadTributes() {
 }
 
 function renderTributes() {
+    console.log("[ProfileLogic] Rendering tributes:", globalTributes);
     const quickBox = document.getElementById('desk_QuickTribute');
     const gridDesk = document.getElementById('huntStoreGridDesk');
     const gridMob = document.getElementById('mob_huntStoreGrid');
@@ -524,7 +525,7 @@ export async function getRandomTask(isSilentInit = false) {
         }
 
         const forceNew = !isSilentInit;
-        const res = await fetch(`/ api / tasks / random ? memberEmail = ${encodeURIComponent(pid)}& forceNew=${forceNew} `);
+        const res = await fetch(`/api/tasks/random?memberEmail=${encodeURIComponent(pid)}&forceNew=${forceNew}`);
         const data = await res.json();
 
         if (!data.success) {
@@ -839,15 +840,15 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     document.getElementById('_reqModal')?.remove();
     const overlay = document.createElement('div');
     overlay.id = '_reqModal';
-    overlay.style.cssText = `position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); z - index: 9999; display: flex; align - items: center; justify - content: center; padding: 16px; `;
+    overlay.style.cssText = `position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 16px; `;
     const box = document.createElement('div');
-    box.style.cssText = `background:#07080f; border: 1px solid #c5a059; border - radius: 12px; padding: 24px; width: 100 %; max - width: 460px; max - height: 90vh; overflow - y: auto; font - family: 'Orbitron'; `;
+    box.style.cssText = `background:#07080f; border: 1px solid #c5a059; border-radius: 12px; padding: 24px; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; font-family: 'Orbitron'; `;
 
     const isChip = fieldId === 'kinks' || fieldId === 'limits';
     const isRoutine = fieldId === 'routine';
     const costPerItem = fieldId === 'kinks' ? 100 : fieldId === 'limits' ? 200 : 0;
 
-    let inner = `< div style = "color:#c5a059;font-size:0.75rem;letter-spacing:3px;margin-bottom:6px;" > ${label.toUpperCase()} </div>`;
+    let inner = `<div style="color:#c5a059;font-size:0.75rem;letter-spacing:3px;margin-bottom:12px;text-align:center;">${label.toUpperCase()}</div>`;
 
     // Process existing values for chips
     const existingChips = isChip && existingValue ? existingValue.split(',').map(s => s.trim()) : [];
@@ -991,7 +992,7 @@ export function openManageProfileModal(u: any) {
     document.getElementById('_manageModal')?.remove();
     const overlay = document.createElement('div');
     overlay.id = '_manageModal';
-    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;`;
+    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;`;
 
     const box = document.createElement('div');
     box.style.cssText = `background:#07080f;border:1px solid #c5a059;border-radius:12px;padding:24px;width:100%;max-width:320px;font-family:'Orbitron';`;

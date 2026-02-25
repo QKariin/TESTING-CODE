@@ -203,14 +203,13 @@ export default function ProfilePage() {
             <div id="DESKTOP_APP">
                 {/* SIDEBAR */}
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
-                    <div className="v-card" style={{ marginBottom: 20, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
-                        <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()}>
-                            <div className="profile-img-con">
-                                <img id="profilePic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png", 200)} alt="Avatar" className="profile-img" />
-                            </div>
+                    <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
+                        <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)' }}>
+                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} />
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 5 }}>
-                            <div id="subName" className="identity-name" style={{ fontSize: '1.2rem', letterSpacing: 4, fontWeight: 'bold', margin: 0 }}>
+
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '8px 15px', borderRadius: '8px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto' }}>
+                            <div id="subName" className="identity-name" style={{ fontSize: '1.4rem', letterSpacing: 4, margin: '0', fontWeight: 'bold', color: '#c5a059' }}>
                                 {profile?.name || "SLAVE"}
                             </div>
                             <button
@@ -218,7 +217,7 @@ export default function ProfilePage() {
                                 style={{ background: 'none', border: 'none', color: '#c5a059', cursor: 'pointer', padding: 0, display: 'flex' }}
                                 title="Manage Profile Options"
                             >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"></path>
                                     <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path>
                                     <path d="M12 2v2"></path>
@@ -236,13 +235,7 @@ export default function ProfilePage() {
                             {profile?.member_id || ""}
                         </div>
 
-                        {/* MOVED: CURRENT CLASSIFICATION */}
-                        <div style={{ width: '100%', textAlign: 'center', paddingBottom: 15, borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 15 }}>
-                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>CURRENT CLASSIFICATION</div>
-                            <div id="desk_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.3rem', color: '#fff', margin: '4px 0', textTransform: 'uppercase', textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>{profile?.rank || "LOADING..."}</div>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: 10 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
                             <div className="sidebar-stat-block">
                                 <div className="sidebar-stat-value-row">
                                     <span style={{ color: '#fff', opacity: 0.8 }}><i className="fas fa-award"></i></span>
@@ -257,26 +250,6 @@ export default function ProfilePage() {
                                     <div id="coins">{profile?.wallet || 0}</div>
                                 </div>
                                 <div className="sidebar-stat-label">CAPITAL</div>
-                            </div>
-                        </div>
-
-                        {/* MOVED: CURRENT BENEFITS (NOW A DRAWER) */}
-                        <div style={{ marginTop: 20, paddingTop: 15, borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                            <button
-                                onClick={() => setBenefitsOpen(!benefitsOpen)}
-                                style={{ background: 'none', border: 'none', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.65rem', cursor: 'pointer', letterSpacing: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', gap: 10 }}
-                            >
-                                <span>CURRENT PRIVILEGES</span>
-                                <i className={`fas fa-chevron-${benefitsOpen ? 'up' : 'down'}`} style={{ transition: 'transform 0.3s' }}></i>
-                            </button>
-                            <div style={{
-                                maxHeight: benefitsOpen ? '300px' : '0px',
-                                overflow: 'hidden',
-                                transition: 'all 0.4s ease-in-out',
-                                opacity: benefitsOpen ? 1 : 0,
-                                marginTop: benefitsOpen ? 10 : 0
-                            }}>
-                                <ul id="desk_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)', padding: '5px 15px', lineHeight: 1.6, margin: 0, textAlign: 'left', paddingLeft: 30 }}></ul>
                             </div>
                         </div>
                     </div>

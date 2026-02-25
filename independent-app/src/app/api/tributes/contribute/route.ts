@@ -73,15 +73,22 @@ export async function POST(request: Request) {
             const currentRaised = tributeData.raised_amount ?? tributeData.Raised_Amount ?? 0;
             const newRaisedAmount = Number(currentRaised) + contributionAmount;
 
-            // Try to update using the correct field name
-            const updateField = tributeData.raised_amount !== undefined ? 'raised_amount' : 'Raised_Amount';
+            console.log(`[API/Contribute] Incrementing raised amount for ${tributeId}: ${currentRaised} -> ${newRaisedAmount}`);
 
-            await supabase
+            // Try to update using the correct field name
+            const updateField = (tributeData.raised_amount !== undefined && tributeData.raised_amount !== null) ? 'raised_amount' : 'Raised_Amount';
+
+            // Explicit eq filter is safer than or() if we know which one worked in select
+            const { error: updateErr } = await supabase
                 .from(targetTable)
                 .update({ [updateField]: newRaisedAmount })
                 .or(`id.eq.${tributeId},_id.eq.${tributeId},Title.eq.${tributeId}`);
 
-            console.log(`[API/Contribute] Updated ${targetTable} raised amount to ${newRaisedAmount}`);
+            if (updateErr) {
+                console.error(`[API/Contribute] Failed to update ${targetTable}:`, updateErr);
+            } else {
+                console.log(`[API/Contribute] Successfully updated ${targetTable} raised amount to ${newRaisedAmount}`);
+            }
         }
 
         // 5. Insert receipt into crowdfund_contributions table
