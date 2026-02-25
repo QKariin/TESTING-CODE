@@ -41,7 +41,8 @@ import {
     renderProfileSidebar,
     handleLogout,
     debugBytescale,
-    mobileUploadEvidence
+    mobileUploadEvidence,
+    initChatSystem
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -138,6 +139,9 @@ export default function ProfilePage() {
             } catch (err) {
                 console.error("Critical Load Error:", err);
             } finally {
+
+                // 3. Initialize Chat
+                initChatSystem();
 
                 setLoading(false);
             }

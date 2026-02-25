@@ -1,5 +1,5 @@
 import { getState, setState } from './profile-state';
-import { createClient } from '../utils/supabase/client';
+import { createClient } from '@/utils/supabase/client';
 import { getHierarchyReport } from './hierarchy-rules';
 import { uploadToBytescale } from './mediaBytescale';
 import { getOptimizedUrl } from './media';
@@ -328,7 +328,23 @@ if (typeof window !== 'undefined') {
             if (data.success) {
                 setState({ wallet: data.newWallet, score: data.newScore });
                 alert(`Succesfully contributed ${amount.toLocaleString()} coins to ${title}! You received ${data.meritGained} merit.`);
-                inputEl.value = ''; // clear input
+                // 4. Send Chat message
+                const tributeObj = globalTributes.find(t => t.id === id);
+                if (tributeObj) {
+                    await fetch('/api/chat/send', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            senderEmail: memberId,
+                            content: `Contributed ${amount.toLocaleString()} to ${title}`,
+                            type: 'wishlist',
+                            metadata: {
+                                title: title,
+                                price: amount,
+                                image: tributeObj.display_url || tributeObj.image || "https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png"
+                            }
+                        })
+                    });
+                }
 
                 // Re-fetch tributes to instantly update the progress bar visually
                 loadTributes();
@@ -373,11 +389,22 @@ export async function buyTribute(id: string, title: string, cost: number) {
             // Re-render UI
             renderProfileSidebar(getState().raw || getState());
 
-            // Notify chat slightly hackish but thematic
-            const chatInput = document.getElementById('chatMsgInput') as HTMLInputElement;
-            if (chatInput) {
-                chatInput.value = `/ tribute ${title} `;
-                sendChatMessage();
+            // Notify chat with rich card
+            const tributeObj = globalTributes.find(t => t.id === id);
+            if (tributeObj) {
+                await fetch('/api/chat/send', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        senderEmail: memberId,
+                        content: `Purchased "${title}"`,
+                        type: 'wishlist',
+                        metadata: {
+                            title: title,
+                            price: cost,
+                            image: tributeObj.display_url || tributeObj.image || "https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png"
+                        }
+                    })
+                });
             }
 
             // Close modal if open
@@ -717,23 +744,125 @@ export function handleChatKey(e: React.KeyboardEvent) {
     if (e.key === 'Enter') sendChatMessage();
 }
 
-export async function sendChatMessage() {
-    const { id, memberId } = getState();
-    const pid = id || memberId;
-    const input = document.getElementById('chatMsgInput') as HTMLInputElement;
-    const msg = input?.value;
+// ---------------------------------------------------------
+// NEW SUPABASE CHAT LOGIC
+// ---------------------------------------------------------
 
-    if (msg && pid) {
-        try {
-            await fetch('/api/profile-action', {
-                method: 'POST',
-                body: JSON.stringify({ type: 'MESSAGE', memberId: pid, payload: { text: msg } })
+let chatSubscribed = false;
+
+export function initChatSystem() {
+    if (chatSubscribed) return;
+    const { memberId } = getState();
+    if (!memberId) return;
+
+    loadChatHistory(memberId);
+    subscribeToChat(memberId);
+    chatSubscribed = true;
+}
+
+export async function loadChatHistory(email: string) {
+    try {
+        const res = await fetch(`/api/chat/history?email=${encodeURIComponent(email)}`);
+        const data = await res.json();
+        if (data.success) {
+            const html = data.messages.map((m: any) => renderChatMessage(m)).join('');
+            const containers = ['chatContent', 'mob_chatContent'];
+
+            containers.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = html;
+                    el.scrollTop = el.scrollHeight;
+                }
             });
-            console.log("Message sent:", msg);
-            input.value = '';
-        } catch (err) {
-            console.error("Failed to send message", err);
         }
+    } catch (err) {
+        console.error("Failed to load chat history:", err);
+    }
+}
+
+function subscribeToChat(email: string) {
+    const supabase = createClient();
+    supabase
+        .channel('chats')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chats',
+            filter: `sender_email=eq.${email}`
+        }, (payload) => {
+            const html = renderChatMessage(payload.new);
+            const containers = ['chatContent', 'mob_chatContent'];
+
+            containers.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.insertAdjacentHTML('beforeend', html);
+                    el.scrollTop = el.scrollHeight;
+                }
+            });
+        })
+        .subscribe();
+}
+
+function renderChatMessage(msg: any) {
+    const isQueen = msg.sender_role === 'Queen'; // We'll add sender_role to the table/API later if needed, or infer
+    const themeClass = isQueen ? 'chat-msg-queen' : 'chat-msg-slave';
+    const fontClass = isQueen ? 'font-cinzel' : 'font-orbitron';
+
+    let content = msg.content;
+    if (msg.type === 'wishlist') {
+        const meta = msg.metadata || {};
+        content = `
+            <div class="chat-card-wishlist">
+                <img src="${meta.image}" alt="${meta.title}" />
+                <div class="chat-card-info">
+                    <div class="chat-card-title">${meta.title}</div>
+                    <div class="chat-card-price">${meta.price.toLocaleString()} Coins</div>
+                </div>
+            </div>
+        `;
+    } else if (msg.type === 'photo') {
+        content = `<img src="${msg.content}" class="chat-img-attachment" />`;
+    }
+
+    return `
+        <div class="chat-bubble ${themeClass} ${fontClass}">
+            <div class="chat-bubble-content">${content}</div>
+            <div class="chat-bubble-time">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+    `;
+}
+
+export async function sendChatMessage() {
+    const { memberId, wallet } = getState();
+    const inputDesk = document.getElementById('chatMsgInput') as HTMLInputElement;
+    const inputMob = document.getElementById('mob_chatMsgInput') as HTMLInputElement;
+    const msg = (inputDesk?.value || inputMob?.value || '').trim();
+
+    if (!msg || !memberId) return;
+
+    try {
+        const res = await fetch('/api/chat/send', {
+            method: 'POST',
+            body: JSON.stringify({ senderEmail: memberId, content: msg, type: 'text' })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            if (inputDesk) inputDesk.value = '';
+            if (inputMob) inputMob.value = '';
+
+            // Update local wallet in state
+            if (data.newWallet !== undefined) {
+                const { setState } = await import('./profile-state');
+                setState({ wallet: data.newWallet });
+            }
+        } else {
+            alert(data.error || "Failed to send message.");
+        }
+    } catch (err) {
+        console.error("Failed to send message", err);
     }
 }
 

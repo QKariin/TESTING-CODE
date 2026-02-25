@@ -3722,3 +3722,95 @@
 #mobKneelBar * {
     pointer-events: none !important;
 }
+
+/* =========================================
+   NEW CHAT SYSTEM STYLES
+   ========================================= */
+
+.chat-area {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 12px 18px;
+    border-radius: 15px;
+    position: relative;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.chat-msg-queen {
+    align-self: flex-start;
+    background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+    border: 1px solid #c5a059;
+    color: #fff;
+    border-bottom-left-radius: 2px;
+    box-shadow: 0 4px 15px rgba(197, 160, 89, 0.1);
+}
+
+.chat-msg-slave {
+    align-self: flex-end;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ccc;
+    border-bottom-right-radius: 2px;
+}
+
+.chat-bubble-time {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.3);
+    align-self: flex-end;
+}
+
+/* FONT HIERARCHY */
+.font-cinzel { font-family: 'Cinzel', serif; letter-spacing: 1px; }
+.font-orbitron { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; font-size: 0.8rem; }
+
+/* GRAPHICAL WISHLIST CARD */
+.chat-card-wishlist {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 5px 0;
+}
+
+.chat-card-wishlist img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #c5a059;
+}
+
+.chat-card-title {
+    font-family: 'Cinzel', serif;
+    font-weight: bold;
+    color: #c5a059;
+    font-size: 0.85rem;
+}
+
+.chat-card-price {
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.chat-img-attachment {
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
