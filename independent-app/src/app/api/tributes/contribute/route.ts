@@ -45,52 +45,40 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
         }
 
-        // 4. Update the Crowdfund raised_amount
-        let targetTable = 'wishlist';
-        let { data: tributeData, error: tributeErr } = await supabase
+        // 4. Update the Crowdfund raised_amount in the confirmed 'Wishlist' table
+        const targetTable = 'Wishlist';
+
+        // Try various ID columns to find the record (id, _id, Title)
+        const { data: tributeData, error: tributeErr } = await supabase
             .from(targetTable)
-            .select('raised_amount')
-            .eq('id', tributeId)
+            .select('id, _id, Title, raised_amount')
+            .or(`id.eq.${tributeId},_id.eq.${tributeId},Title.eq.${tributeId}`)
             .maybeSingle();
 
-        if (tributeErr || !tributeData) {
-            console.log("[API/Contribute] lowercase wishlist lookup failed, trying Wishlist fallback");
-            targetTable = 'Wishlist';
-            const fallback = await supabase
-                .from(targetTable)
-                .select('raised_amount, Raised_Amount, Price')
-                .or(`id.eq.${tributeId},_id.eq.${tributeId},Title.eq.${tributeId}`)
-                .maybeSingle();
+        if (tributeErr) {
+            console.error(`[API/Contribute] Error fetching tribute from ${targetTable}:`, tributeErr);
+        } else if (!tributeData) {
+            console.error(`[API/Contribute] Could not find tribute ${tributeId} in ${targetTable}. Check if the ID matches id, _id, or Title.`);
+        } else {
+            const currentRaised = Number(tributeData.raised_amount || 0);
+            const newRaisedAmount = currentRaised + contributionAmount;
 
-            tributeData = fallback.data;
-            if (fallback.error || !tributeData) {
-                console.error("Could not find tribute to increment raised amount:", fallback.error);
-            }
-        }
+            console.log(`[API/Contribute] Updating ${tributeId} in ${targetTable}: ${currentRaised} -> ${newRaisedAmount}`);
 
-        if (tributeData) {
-            const currentRaised = tributeData.raised_amount ?? tributeData.Raised_Amount ?? 0;
-            const newRaisedAmount = Number(currentRaised) + contributionAmount;
-
-            console.log(`[API/Contribute] Incrementing raised amount for ${tributeId}: ${currentRaised} -> ${newRaisedAmount}`);
-
-            // Use the correct field name detected during select
-            const updateField = (tributeData.raised_amount !== undefined && tributeData.raised_amount !== null) ? 'raised_amount' : 'Raised_Amount';
-
-            // Find the identifying column that worked
-            let idColumn = 'id';
-            if (tributeData._id) idColumn = '_id';
-            else if (tributeData.Title) idColumn = 'Title';
+            // Use the column that matched for the update filter
+            let matchCol = 'id';
+            if (tributeData._id == tributeId) matchCol = '_id';
+            else if (tributeData.Title == tributeId) matchCol = 'Title';
 
             const { error: updateErr } = await supabase
                 .from(targetTable)
-                .update({ [updateField]: newRaisedAmount })
-                .eq(idColumn, tributeId);
+                .update({ raised_amount: newRaisedAmount })
+                .eq(matchCol, tributeId);
 
             if (updateErr) {
-                console.error(`[API/Contribute] Failed to update ${targetTable}:`, updateErr);
+                console.error(`[API/Contribute] Failed to update raised_amount in ${targetTable}:`, updateErr);
             } else {
-                console.log(`[API/Contribute] Successfully updated ${targetTable} ${updateField} to ${newRaisedAmount}`);
+                console.log(`[API/Contribute] Successfully updated ${targetTable} raised_amount to ${newRaisedAmount}`);
             }
         }
 
