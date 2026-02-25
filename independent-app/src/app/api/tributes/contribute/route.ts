@@ -70,13 +70,18 @@ export async function POST(request: Request) {
             else if (String(tributeData.Title) === String(tributeId)) matchCol = 'Title';
 
             if (matchCol) {
+                // IMPORTANT: Use the value directly from the fetched DB object to ensure type match
+                const filterValue = tributeData[matchCol];
+
                 const { error: updateErr } = await supabase
                     .from(targetTable)
                     .update({ raised_amount: newRaisedAmount })
-                    .eq(matchCol, tributeId);
+                    .eq(matchCol, filterValue);
 
                 if (updateErr) {
                     console.error(`[API/Contribute] Update Error:`, updateErr);
+                } else {
+                    console.log(`[API/Contribute] SUCCESS: Updated ${targetTable}.${matchCol}=${filterValue} raised_amount to ${newRaisedAmount}`);
                 }
             } else {
                 console.error(`[API/Contribute] Match failed after fetch. Data:`, tributeData);

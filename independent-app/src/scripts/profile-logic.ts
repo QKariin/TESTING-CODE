@@ -147,7 +147,7 @@ export let globalTributesError: string | null = null;
 
 export async function loadTributes() {
     try {
-        const res = await fetch('/api/tributes');
+        const res = await fetch('/api/tributes', { cache: 'no-store' });
         const data = await res.json();
         if (data.success && data.tributes && data.tributes.length > 0) {
             // Sort crowdfunds to the top
@@ -774,7 +774,6 @@ export async function buyRewardFragment(cost: number) {
 export function closeModal() { document.getElementById('glassModal')!.style.display = 'none'; }
 export function closePoverty() { document.getElementById('povertyOverlay')?.classList.add('hidden'); }
 export function goToExchequer() { switchTab('buy'); closePoverty(); }
-export function closeRewardCard() { document.getElementById('rewardCardOverlay')?.classList.add('hidden'); }
 export function closeExchequer() { document.getElementById('mobExchequer')?.classList.add('hidden'); }
 
 export function showLobbyAction(type: string) {
@@ -938,7 +937,7 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
 
 async function saveModalData(fieldId: string, label: string, overlay: HTMLElement, box: HTMLElement, isChip: boolean, isRoutine: boolean, costPerItem: number) {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } = {} } = await supabase.auth.getUser(); // Added default empty object for data
     if (!user?.email) return;
 
     const saveBtn = document.getElementById('_reqSave') as HTMLButtonElement;

@@ -75,7 +75,10 @@ export async function GET() {
             };
         }));
 
-        return NextResponse.json({ success: true, tributes: formattedTributes });
+        return NextResponse.json(
+            { success: true, tributes: formattedTributes },
+            { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+        );
 
     } catch (err: any) {
         console.error("Tributes API threw an error:", err);
