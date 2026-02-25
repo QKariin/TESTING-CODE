@@ -69,7 +69,8 @@ export async function POST(req: Request) {
         if (msgErr) {
             // Rollback wallet (optional but recommended)
             await supabase.from('profiles').update({ wallet: currentWallet }).eq('member_id', senderEmail);
-            return NextResponse.json({ success: false, error: "Failed to store message." }, { status: 500 });
+            console.error("[API/Chat/Send] Insert Error:", msgErr);
+            return NextResponse.json({ success: false, error: `Failed to store message: ${msgErr.message}` }, { status: 500 });
         }
 
         return NextResponse.json({
