@@ -200,10 +200,14 @@ export function selUser(id: string) {
 
     renderSidebar();
 
-    // Trigger update for user detail
-    import('./dashboard-users').then(({ updateDetail }) => {
+    // Trigger update for user detail and chat
+    Promise.all([
+        import('./dashboard-users'),
+        import('./dashboard-chat')
+    ]).then(([{ updateDetail }, { initDashboardChat }]) => {
         const u = users.find(x => x.memberId === id);
         if (u) updateDetail(u);
+        initDashboardChat(id);
     });
 }
 

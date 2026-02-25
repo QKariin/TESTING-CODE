@@ -10,7 +10,6 @@ import {
 
 import { renderSidebar } from './dashboard-sidebar';
 import { renderOperationsMonitor } from './dashboard-operations';
-import { renderChat } from './dashboard-chat';
 import { updateDetail } from './dashboard-users';
 import { toggleMobStats } from './dashboard-utils';
 import { Bridge } from './bridge';

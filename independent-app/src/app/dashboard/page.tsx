@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 import '../../css/dashboard.css';
 import '../../css/dashboard-modals.css';
 import '../../css/dashboard-mobile.css';
@@ -19,7 +21,23 @@ import { getAdminDashboardData } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
 
 export default function DashboardPage() {
+    const [userEmail, setUserEmail] = useState<string | null>(null);
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        router.push('/'); // Redirect to home/login
+    };
     useEffect(() => {
+        // Fetch current user email
+        const getCurrUser = async () => {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.email) setUserEmail(user.email);
+        };
+        getCurrUser();
+
         // Inject scripts into window for legacy compatibility (DOM onclick handlers)
         if (typeof window !== 'undefined') {
             (window as any).showHome = showHome;
@@ -58,6 +76,7 @@ export default function DashboardPage() {
 
             // Additional Bindings from scripts
             (window as any).initDashboard = initDashboard;
+            (window as any).handleLogout = handleLogout;
         }
 
         // 1. Initialize System (UI Listeners)
@@ -183,7 +202,16 @@ export default function DashboardPage() {
                             style={{ backgroundImage: `linear-gradient(rgba(6, 11, 40, 0.8), rgba(6, 11, 40, 0.8)), url('/hero-bg.png')` }}>
                             <div className="vh-content">
                                 <div className="vh-title">Welcome back,<br />Queen Karin</div>
-                                <div className="vh-sub">System dominance is at 98%.<br />Manage your subjects below.</div>
+                                <div className="vh-sub" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                    <div>System dominance is at 98%. <br />Manage your subjects below.</div>
+                                    <div style={{ color: '#aaa', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+                                        <span>Logged in as: <b>{userEmail || '...'}</b></span>
+                                        <button
+                                            onClick={handleLogout}
+                                            style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff4444', fontSize: '0.6rem', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'Orbitron' }}
+                                        >LOGOUT</button>
+                                    </div>
+                                </div>
                             </div>
                             <div className="vh-footer">Tap to record →</div>
                         </div>

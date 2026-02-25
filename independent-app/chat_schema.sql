@@ -1,7 +1,7 @@
--- 1. Create the chats table
 CREATE TABLE IF NOT EXISTS public.chats (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    member_id TEXT NOT NULL REFERENCES public.profiles(member_id) ON DELETE CASCADE,
+    member_id TEXT NOT NULL REFERENCES public.profiles(member_id) ON DELETE CASCADE, -- The Slave's ID (Conversation Context)
+    sender_email TEXT NOT NULL, -- Who actually sent the message
     content TEXT NOT NULL,
     type TEXT NOT NULL DEFAULT 'text', -- 'text', 'photo', 'video', 'wishlist'
     metadata JSONB DEFAULT '{}'::jsonb,
@@ -11,35 +11,50 @@ CREATE TABLE IF NOT EXISTS public.chats (
 -- 2. Enable Row Level Security
 ALTER TABLE public.chats ENABLE ROW LEVEL SECURITY;
 
--- 3. Create RLS Policies
+-- 3. DROP OLD POLICIES (To avoid "already exists" errors)
+DROP POLICY IF EXISTS "Queen can read all chats" ON public.chats;
+DROP POLICY IF EXISTS "Slaves can read their own messages" ON public.chats;
+DROP POLICY IF EXISTS "Authenticated users can send messages" ON public.chats;
 
--- Policy: Queen can read all messages
+-- 4. Create New FIXED RLS Policies
+-- Queen/Secretary can read all chats
 CREATE POLICY "Queen can read all chats" 
-ON public.chats 
-FOR SELECT 
+ON public.chats FOR SELECT 
 USING (
     EXISTS (
         SELECT 1 FROM public.profiles 
-        WHERE member_id = auth.email() AND (hierarchy = 'Queen' OR hierarchy = 'Secretary')
+        WHERE member_id = (auth.jwt() ->> 'email') 
+        AND (hierarchy = 'Queen' OR hierarchy = 'Secretary')
     )
 );
 
--- Policy: Slaves can read their own messages
+-- Slaves can read messages in their own conversation
 CREATE POLICY "Slaves can read their own messages" 
-ON public.chats 
-FOR SELECT 
+ON public.chats FOR SELECT 
 USING (
-    member_id = (SELECT email FROM auth.users WHERE id = auth.uid())
+    member_id = (auth.jwt() ->> 'email')
 );
 
--- Policy: Insert permission
-CREATE POLICY "Authenticated users can send messages" 
-ON public.chats 
-FOR INSERT 
-WITH CHECK (auth.role() = 'authenticated');
+-- Insert permission
+-- Both Slave (to themselves) and Queen (to anyone) can insert
+CREATE POLICY "Users can send messages" 
+ON public.chats FOR INSERT 
+WITH CHECK (
+    (auth.role() = 'authenticated') AND 
+    (
+        -- Is the Slave sending to themselves?
+        (member_id = (auth.jwt() ->> 'email') AND sender_email = (auth.jwt() ->> 'email'))
+        OR
+        -- Is the Queen sending to a Slave?
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE member_id = (auth.jwt() ->> 'email') 
+            AND (hierarchy = 'Queen' OR hierarchy = 'Secretary')
+        )
+    )
+);
 
--- 4. Enable Realtime
--- Use ON CONFLICT or check if already exists to avoid errors on re-run
+-- 5. Enable Realtime
 DO $$
 BEGIN
     IF NOT EXISTS (

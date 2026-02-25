@@ -4,7 +4,7 @@ import { HIERARCHY_RULES } from '@/scripts/hierarchy-rules';
 
 export async function POST(req: Request) {
     try {
-        const { senderEmail, content, type = 'text', metadata = {} } = await req.json();
+        const { senderEmail, content, type = 'text', metadata = {}, conversationId } = await req.json();
 
         if (!senderEmail || !content) {
             return NextResponse.json({ success: false, error: "Missing required fields." }, { status: 400 });
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
         const supabase = await createClient();
 
-        // 1. Fetch User Profile
+        // 1. Fetch SENDER Profile (to check rank and balance)
         const { data: profile, error: profileErr } = await supabase
             .from('profiles')
             .select('*')
@@ -20,8 +20,12 @@ export async function POST(req: Request) {
             .single();
 
         if (profileErr || !profile) {
-            return NextResponse.json({ success: false, error: "User profile not found." }, { status: 404 });
+            return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
         }
+
+        const isQueen = (profile.hierarchy === 'Queen' || profile.hierarchy === 'Secretary');
+        // If Queen sends, member_id (conversation context) is distinct from senderEmail
+        const conversationContext = isQueen ? conversationId || senderEmail : senderEmail;
 
         // 2. Identify Rank and Rules
         const userRank = profile.hierarchy || 'Hall Boy';
@@ -35,40 +39,46 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: `Rank "${userRank}" does not have video permissions.` }, { status: 403 });
         }
 
-        // 4. Cost Logic
-        const cost = rankRule.speakCost || 0;
-        const currentWallet = Number(profile.wallet || 0);
+        // 4. Cost Logic (Only for non-admin)
+        let newWallet = profile.wallet;
+        if (!isQueen) {
+            const cost = rankRule.speakCost || 0;
+            const currentWallet = Number(profile.wallet || 0);
 
-        if (currentWallet < cost) {
-            return NextResponse.json({ success: false, error: "Insufficient coins to send message." }, { status: 402 });
-        }
+            if (currentWallet < cost) {
+                return NextResponse.json({ success: false, error: "Insufficient coins to send message." }, { status: 402 });
+            }
 
-        // 5. Deduct Coins
-        const newWallet = currentWallet - cost;
-        const { error: updateErr } = await supabase
-            .from('profiles')
-            .update({ wallet: newWallet })
-            .eq('member_id', senderEmail);
+            // 5. Deduct Coins
+            newWallet = currentWallet - cost;
+            const { error: updateErr } = await supabase
+                .from('profiles')
+                .update({ wallet: newWallet })
+                .eq('member_id', senderEmail);
 
-        if (updateErr) {
-            return NextResponse.json({ success: false, error: "Failed to deduct coins." }, { status: 500 });
+            if (updateErr) {
+                return NextResponse.json({ success: false, error: "Failed to deduct coins." }, { status: 500 });
+            }
         }
 
         // 6. Insert Message
         const { data: msgData, error: msgErr } = await supabase
             .from('chats')
             .insert({
-                member_id: senderEmail,
+                member_id: isQueen ? conversationId : senderEmail,
+                sender_email: senderEmail,
                 content,
                 type,
-                metadata
+                metadata: { ...metadata, isQueen }
             })
             .select()
             .single();
 
         if (msgErr) {
-            // Rollback wallet (optional but recommended)
-            await supabase.from('profiles').update({ wallet: currentWallet }).eq('member_id', senderEmail);
+            // Rollback wallet (only if we actually deducted)
+            if (!isQueen) {
+                await supabase.from('profiles').update({ wallet: profile.wallet }).eq('member_id', senderEmail);
+            }
             console.error("[API/Chat/Send] Insert Error:", msgErr);
             return NextResponse.json({ success: false, error: `Failed to store message: ${msgErr.message}` }, { status: 500 });
         }
