@@ -63,22 +63,23 @@ export async function POST(request: Request) {
             const currentRaised = Number(tributeData.raised_amount || 0);
             const newRaisedAmount = currentRaised + contributionAmount;
 
-            console.log(`[API/Contribute] Updating ${tributeId} in ${targetTable}: ${currentRaised} -> ${newRaisedAmount}`);
+            // Improved matching logic: Check id, _id, and Title explicitly
+            let matchCol = '';
+            if (String(tributeData.id) === String(tributeId)) matchCol = 'id';
+            else if (String(tributeData._id) === String(tributeId)) matchCol = '_id';
+            else if (String(tributeData.Title) === String(tributeId)) matchCol = 'Title';
 
-            // Use the column that matched for the update filter
-            let matchCol = 'id';
-            if (tributeData._id == tributeId) matchCol = '_id';
-            else if (tributeData.Title == tributeId) matchCol = 'Title';
+            if (matchCol) {
+                const { error: updateErr } = await supabase
+                    .from(targetTable)
+                    .update({ raised_amount: newRaisedAmount })
+                    .eq(matchCol, tributeId);
 
-            const { error: updateErr } = await supabase
-                .from(targetTable)
-                .update({ raised_amount: newRaisedAmount })
-                .eq(matchCol, tributeId);
-
-            if (updateErr) {
-                console.error(`[API/Contribute] Failed to update raised_amount in ${targetTable}:`, updateErr);
+                if (updateErr) {
+                    console.error(`[API/Contribute] Update Error:`, updateErr);
+                }
             } else {
-                console.log(`[API/Contribute] Successfully updated ${targetTable} raised_amount to ${newRaisedAmount}`);
+                console.error(`[API/Contribute] Match failed after fetch. Data:`, tributeData);
             }
         }
 
@@ -101,7 +102,8 @@ export async function POST(request: Request) {
             newWallet,
             newScore,
             meritGained: meritGain,
-            message: `Contribution to "${tributeTitle}" logged successfully.`
+            tributeUpdate: !!tributeData,
+            message: tributeData ? `Contribution to "${tributeTitle}" logged.` : `Warning: Tribute "${tributeTitle}" not found in DB, but wallet deducted.`
         });
 
     } catch (err: any) {

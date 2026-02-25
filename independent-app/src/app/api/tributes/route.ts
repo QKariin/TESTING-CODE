@@ -37,7 +37,8 @@ export async function GET() {
             }
 
             let topContributorName = null;
-            const tributeId = tribute.id || tribute._id || tribute.Title;
+            // Explicitly prefer id -> _id -> Title in that exact order
+            const tributeId = tribute.id ?? tribute._id ?? tribute.Title;
 
             if (tribute.is_crowdfund) {
                 // 1. Find member with max amount_given for this tribute
