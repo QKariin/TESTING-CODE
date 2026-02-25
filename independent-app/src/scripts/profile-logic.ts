@@ -789,7 +789,7 @@ function subscribeToChat(email: string) {
             event: 'INSERT',
             schema: 'public',
             table: 'chats',
-            filter: `sender_email=eq.${email}`
+            filter: `member_id=eq.${email}`
         }, (payload) => {
             const html = renderChatMessage(payload.new);
             const containers = ['chatContent', 'mob_chatContent'];

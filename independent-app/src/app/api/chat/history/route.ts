@@ -17,7 +17,7 @@ export async function GET(req: Request) {
         const { data, error } = await supabase
             .from('chats')
             .select('*')
-            .eq('sender_email', email)
+            .eq('member_id', email)
             .order('created_at', { ascending: true });
 
         if (error) {

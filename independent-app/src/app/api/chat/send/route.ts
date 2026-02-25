@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         const { data: profile, error: profileErr } = await supabase
             .from('profiles')
             .select('*')
-            .eq('email', senderEmail)
+            .eq('member_id', senderEmail)
             .single();
 
         if (profileErr || !profile) {
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
         const { error: updateErr } = await supabase
             .from('profiles')
             .update({ wallet: newWallet })
-            .eq('email', senderEmail);
+            .eq('member_id', senderEmail);
 
         if (updateErr) {
             return NextResponse.json({ success: false, error: "Failed to deduct coins." }, { status: 500 });
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
         const { data: msgData, error: msgErr } = await supabase
             .from('chats')
             .insert({
-                sender_email: senderEmail,
+                member_id: senderEmail,
                 content,
                 type,
                 metadata
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
 
         if (msgErr) {
             // Rollback wallet (optional but recommended)
-            await supabase.from('profiles').update({ wallet: currentWallet }).eq('email', senderEmail);
+            await supabase.from('profiles').update({ wallet: currentWallet }).eq('member_id', senderEmail);
             return NextResponse.json({ success: false, error: "Failed to store message." }, { status: 500 });
         }
 
