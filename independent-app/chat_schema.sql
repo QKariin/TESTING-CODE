@@ -1,12 +1,24 @@
+-- 1. Create table if it doesn't exist
 CREATE TABLE IF NOT EXISTS public.chats (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    member_id TEXT NOT NULL REFERENCES public.profiles(member_id) ON DELETE CASCADE, -- The Slave's ID (Conversation Context)
+    member_id TEXT NOT NULL, -- The Slave's ID (Conversation Context)
     sender_email TEXT NOT NULL, -- Who actually sent the message
     content TEXT NOT NULL,
     type TEXT NOT NULL DEFAULT 'text', -- 'text', 'photo', 'video', 'wishlist'
     metadata JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
+
+-- 1b. Fix for existing tables: Ensure sender_email column exists
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='chats' AND column_name='sender_email') THEN
+        ALTER TABLE public.chats ADD COLUMN sender_email TEXT;
+        -- Default existing messages to be from the member_id if we want
+        UPDATE public.chats SET sender_email = member_id WHERE sender_email IS NULL;
+        ALTER TABLE public.chats ALTER COLUMN sender_email SET NOT NULL;
+    END IF;
+END $$;
 
 -- 2. Enable Row Level Security
 ALTER TABLE public.chats ENABLE ROW LEVEL SECURITY;

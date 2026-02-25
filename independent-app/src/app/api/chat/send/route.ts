@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { HIERARCHY_RULES } from '@/scripts/hierarchy-rules';
 
 export async function POST(req: Request) {
@@ -24,10 +25,26 @@ export async function POST(req: Request) {
             // FALLBACK: If profile missing but we have a conversationId and user is authenticated
             const { data: { user } } = await supabase.auth.getUser();
             if (user && user.email === senderEmail && conversationId) {
-                console.warn(`[API/Chat/Send] Sender profile missing for ${senderEmail}. Treating as Queen due to conversationId presence.`);
+                console.warn(`[API/Chat/Send] Sender profile missing for ${senderEmail}. Treating as Queen for bootstrapping.`);
                 isQueen = true;
-                // Synthetic profile for admin bypass
+                // Synthetic profile for logic bypass
                 profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail } as any;
+
+                // ASYNC: Auto-provision Queen profile so RLS works in the future
+                try {
+                    const bootstrapAdmin = createAdminClient(
+                        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                        process.env.SUPABASE_SERVICE_ROLE_KEY!
+                    );
+                    await bootstrapAdmin.from('profiles').upsert({
+                        member_id: senderEmail,
+                        id: user.id,
+                        name: "Queen Karin",
+                        hierarchy: 'Queen'
+                    });
+                } catch (e) {
+                    console.error("Bootstrap profile failed", e);
+                }
             } else {
                 console.error(`[API/Chat/Send] Profile not found for ${senderEmail}. Error:`, profileErr);
                 return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
@@ -73,7 +90,13 @@ export async function POST(req: Request) {
         }
 
         // 6. Insert Message
-        const { data: msgData, error: msgErr } = await supabase
+        // If Queen, use service role client to bypass RLS "chicken-and-egg" profile issue
+        const insertClient = isQueen ? createAdminClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        ) : supabase;
+
+        const { data: msgData, error: msgErr } = await insertClient
             .from('chats')
             .insert({
                 member_id: isQueen ? conversationId : senderEmail,
