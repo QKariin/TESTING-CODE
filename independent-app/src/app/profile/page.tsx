@@ -341,7 +341,7 @@ export default function ProfilePage() {
                         <div id="desk_DashboardRank" style={{ fontFamily: 'Orbitron', fontSize: '1.1rem', color: '#fff', marginTop: 5, textTransform: 'uppercase', fontWeight: 'bold', textShadow: '0 0 10px rgba(197, 160, 89, 0.4)' }}>LOADING...</div>
                     </div>
 
-                    <div id="gridHero" className="v-card serve-grid-item" style={{ background: 'var(--bg-panel)', minHeight: 'unset', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                    <div id="gridHero" className="v-card serve-grid-item" style={{ background: "url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png')", backgroundSize: 'cover', backgroundPosition: 'center', minHeight: 'unset', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(2,5,18,0.9) 0%, rgba(2,5,18,0.4) 100%)' }}></div>
 
                         <div id="kneelRewardOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 5000, backdropFilter: 'blur(20px)', display: 'none', alignItems: 'center', justifyContent: 'center' }}>
