@@ -266,8 +266,8 @@ export const DbService = {
             .insert({
                 id: taskId,
                 member_id: memberId,
-                Name: profile.name,
-                TaskText: taskText,
+                userName: profile.name,
+                text: taskText,
                 proofUrl: proofUrl,
                 proofType: proofType,
                 status: 'pending',
