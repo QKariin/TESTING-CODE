@@ -2,35 +2,26 @@
    1. VARIABLES & RESET
    ========================================= */
 :root {
+    --bg-void: #050505;
     --gold: #c5a059;
-    --silver: #888;
-    --blue-accent: #0075ff;
-    --red: #ff003c;
-    --green: #00ff00;
-    --bg-card: rgba(0, 0, 0, 0.4);
+    --gold-dim: rgba(197, 160, 89, 0.2);
+    --silver: #888888;
+    --silver-dim: rgba(136, 136, 136, 0.2);
+    --text-white: #e0e0e0;
     --glass: rgba(15, 15, 15, 0.7);
-    --glass-blur: blur(25px);
+    --glass-blur: blur(20px);
+    --neon-green: #00ff00;
+    --neon-red: #ff003c;
+    --blue-accent: #0075ff;
+    --bg-deep: #020512;
+    --bg-card: rgba(15, 21, 56, 0.6);
 }
 
 .hidden {
     display: none !important;
 }
 
-/* HIERARCHY STAMP */
-.hierarchy-top {
-    font-family: 'Cinzel', serif;
-    font-size: 0.75rem;
-    color: #fff;
-    border: 1px solid #c5a059;
-    padding: 4px 12px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    background: rgba(0, 0, 0, 0.6);
-    box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
-    font-weight: 700;
-    position: relative;
-    z-index: 5;
-}
+
 
 
 /* =========================================
