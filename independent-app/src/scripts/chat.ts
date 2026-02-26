@@ -26,20 +26,20 @@ export async function renderChat(messages: any[]) {
 
     // 1. SORT
     const sortedMessages = [...messages].sort(
-        (a, b) => new Date(a._createdDate).getTime() - new Date(b._createdDate).getTime()
+        (a, b) => new Date(a.created_at || a._createdDate).getTime() - new Date(b.created_at || b._createdDate).getTime()
     );
 
     // 2. FILTER STREAMS
     const systemMessages = sortedMessages.filter(m => {
-        const s = (m.sender || "").toLowerCase();
-        const txt = (m.message || "");
+        const s = (m.sender_email || m.sender || "").toLowerCase();
+        const txt = (m.content || m.message || "");
         if (txt.startsWith('WISHLIST::')) return false;
         return s === 'system' || txt.includes("Task Verified") || txt.includes("Task Rejected");
     });
 
     const conversationMessages = sortedMessages.filter(m => {
-        const s = (m.sender || "").toLowerCase();
-        const txt = (m.message || "");
+        const s = (m.sender_email || m.sender || "").toLowerCase();
+        const txt = (m.content || m.message || "");
         if (txt.startsWith('WISHLIST::')) return true;
         return s !== 'system' && !txt.includes("Task Verified") && !txt.includes("Task Rejected");
     });
@@ -47,7 +47,7 @@ export async function renderChat(messages: any[]) {
     // 3. TICKER
     if (systemMessages.length > 0) {
         const latest = systemMessages[systemMessages.length - 1];
-        const txt = DOMPurify.sanitize(latest.message);
+        const txt = DOMPurify.sanitize(latest.content || latest.message);
         if (txt !== lastTickerText) {
             lastTickerText = txt;
             const tickerHtml = `<span style="color:#fff;">◈</span> ${txt}`;
@@ -73,9 +73,10 @@ export async function renderChat(messages: any[]) {
 
     if (!isInitialLoad && conversationMessages.length > 0) {
         const lastMsg = conversationMessages[conversationMessages.length - 1];
-        if (lastMsg._id !== lastNotifiedMessageId) {
+        const lastId = lastMsg.id || lastMsg._id;
+        if (lastId !== lastNotifiedMessageId) {
             triggerSound('msgSound');
-            setLastNotifiedMessageId(lastMsg._id);
+            setLastNotifiedMessageId(lastId);
         }
     }
 
@@ -87,22 +88,24 @@ export async function renderChat(messages: any[]) {
     const visibleMessages = conversationMessages.slice(-activeLimit);
 
     const messagesHtmlArray = await Promise.all(visibleMessages.map(async (m) => {
-        let txt = DOMPurify.sanitize(m.message);
-        const senderLower = (m.sender || "").toLowerCase();
+        const originalMsg = m.content || m.message || "";
+        let txt = DOMPurify.sanitize(originalMsg);
+        const senderLower = (m.sender_email || m.sender || "").toLowerCase();
         const isMe = senderLower === 'user' || senderLower === 'slave';
+        const isQueen = m.metadata?.isQueen || (!isMe && senderLower !== 'system');
 
         txt = txt.replace(/\n/g, "<br>");
-        const timeStr = new Date(m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const timeStr = new Date(m.created_at || m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const msgClass = isMe ? 'm-slave' : 'm-queen';
         let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
 
         // --- MEDIA HANDLER ---
-        if (m.message) {
+        if (originalMsg) {
 
             // A. WISHLIST CARD
-            if (m.message.startsWith('WISHLIST::')) {
+            if (originalMsg.startsWith('WISHLIST::')) {
                 try {
-                    const jsonStr = m.message.replace('WISHLIST::', '');
+                    const jsonStr = originalMsg.replace('WISHLIST::', '');
                     const item = JSON.parse(jsonStr);
 
                     let cardImgUrl = item.img || item.image || item.itemImage || "";
@@ -132,8 +135,8 @@ export async function renderChat(messages: any[]) {
             }
 
             // B. STANDARD MEDIA
-            else if (m.message.startsWith('http') || m.mediaUrl || m.message.includes('wix:') || m.message.includes('upcdn')) {
-                const rawUrl = m.mediaUrl || m.message;
+            else if (originalMsg.startsWith('http') || m.mediaUrl || originalMsg.includes('wix:') || originalMsg.includes('upcdn')) {
+                const rawUrl = m.mediaUrl || originalMsg;
                 let srcUrl = rawUrl;
 
                 if (rawUrl.includes('upcdn.io')) {
@@ -174,12 +177,12 @@ export async function renderChat(messages: any[]) {
             }
         }
 
-        if (m.message && m.message.startsWith('WISHLIST::')) {
+        if (originalMsg && originalMsg.startsWith('WISHLIST::')) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
         const avatarUrl = "https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png";
-        if (!isMe && !m.message.startsWith('WISHLIST::') && !m.message.startsWith('http')) {
+        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('http')) {
             contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
                 <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
                 <span>${txt}</span>

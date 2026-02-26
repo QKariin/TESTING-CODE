@@ -14,7 +14,8 @@ let chatChannel: any = null;
  * Called when a user is selected in the sidebar.
  */
 export async function initDashboardChat(slaveEmail: string) {
-    console.log(`[DASHBOARD-CHAT] Initializing for ${slaveEmail}...`);
+    const cleanEmail = slaveEmail.toLowerCase();
+    console.log(`[DASHBOARD-CHAT] Initializing for ${cleanEmail}...`);
     // 1. Clean up existing subscription
     if (chatChannel) {
         console.log(`[DASHBOARD-CHAT] Cleaning up existing subscription.`);
@@ -26,18 +27,18 @@ export async function initDashboardChat(slaveEmail: string) {
     if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
 
     // 2. Load History
-    await loadDashboardChatHistory(slaveEmail);
+    await loadDashboardChatHistory(cleanEmail);
 
     // 3. Subscribe Realtime
     const supabase = createClient();
-    console.log(`[DASHBOARD-CHAT] Subscribing to Realtime for ${slaveEmail}...`);
+    console.log(`[DASHBOARD-CHAT] Subscribing to Realtime for ${cleanEmail}...`);
     chatChannel = supabase
         .channel('chats') // Use the same global channel as profile
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
             table: 'chats',
-            filter: `member_id=eq.${slaveEmail}`
+            filter: `member_id=eq.${cleanEmail}`
         }, (payload) => {
             console.log(`[DASHBOARD-CHAT] New message received:`, payload.new);
             appendChatMessage(payload.new);
@@ -79,12 +80,14 @@ function appendChatMessage(msg: any) {
 }
 
 function renderToHtml(m: any) {
-    const isMe = m.metadata?.isQueen === true || m.sender_email.includes('queen') || m.sender_email.includes('admin'); // Fallback check
+    const isMe = m.metadata?.isQueen === true || m.sender_role === 'Queen';
     const timeStr = new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     let contentHtml = '';
     const msgClass = isMe ? 'm-out' : 'm-in';
     const rowClass = isMe ? 'mr-out' : 'mr-in';
+
+    const content = m.content || m.message || "";
 
     if (m.type === 'wishlist') {
         const item = m.metadata || {};
@@ -106,9 +109,9 @@ function renderToHtml(m: any) {
     }
 
     if (m.type === 'photo') {
-        contentHtml = `<div class="msg ${msgClass}"><img src="${m.content}" onclick="openChatPreview('${encodeURIComponent(m.content)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
+        contentHtml = `<div class="msg ${msgClass}"><img src="${content}" onclick="openChatPreview('${encodeURIComponent(content)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
     } else {
-        let safeHtml = DOMPurify.sanitize(m.content);
+        let safeHtml = DOMPurify.sanitize(content);
         safeHtml = safeHtml.replace(/\n/g, "<br>");
         contentHtml = `<div class="msg ${msgClass}">${safeHtml}</div>`;
     }

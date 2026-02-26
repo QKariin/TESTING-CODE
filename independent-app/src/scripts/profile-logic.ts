@@ -765,7 +765,19 @@ export async function loadChatHistory(email: string) {
         const res = await fetch(`/api/chat/history?email=${encodeURIComponent(email)}`);
         const data = await res.json();
         if (data.success) {
-            const html = data.messages.map((m: any) => renderChatMessage(m)).join('');
+            const messages = data.messages || [];
+
+            // 1. Separate System vs Chat
+            const systemMessages = messages.filter((m: any) => isSystemMessage(m));
+            const chatMessages = messages.filter((m: any) => !isSystemMessage(m));
+
+            // 2. Update Ticker
+            if (systemMessages.length > 0) {
+                updateSystemTicker(systemMessages[systemMessages.length - 1]);
+            }
+
+            // 3. Render Chat
+            const html = chatMessages.map((m: any) => renderChatMessage(m)).join('');
             const containers = ['chatContent', 'mob_chatContent'];
 
             containers.forEach(id => {
@@ -783,15 +795,26 @@ export async function loadChatHistory(email: string) {
 
 function subscribeToChat(email: string) {
     const supabase = createClient();
+    const cleanEmail = email.toLowerCase();
     supabase
         .channel('chats')
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
             table: 'chats',
-            filter: `member_id=eq.${email}`
+            filter: `member_id=eq.${cleanEmail}`
         }, (payload) => {
-            const html = renderChatMessage(payload.new);
+            const msg = payload.new;
+            const sender = (msg.sender_email || msg.sender || '').toLowerCase();
+
+            // 1. Handle System Messages
+            if (isSystemMessage(msg)) {
+                updateSystemTicker(msg);
+                return;
+            }
+
+            // 2. Handle Chat Messages
+            const html = renderChatMessage(msg);
             const containers = ['chatContent', 'mob_chatContent'];
 
             containers.forEach(id => {
@@ -805,12 +828,63 @@ function subscribeToChat(email: string) {
         .subscribe();
 }
 
+function isSystemMessage(msg: any) {
+    if (!msg) return false;
+    const sender = (msg.sender_email || msg.sender || '').toLowerCase();
+    const content = (msg.content || msg.message || '').toUpperCase();
+
+    return sender === 'system' ||
+        content.includes('COINS RECEIVED') ||
+        content.includes('TASK APPROVED') ||
+        content.includes('POINTS RECEIVED') ||
+        content.includes('TASK REJECTED') ||
+        content.includes('TASK VERIFIED');
+}
+
+function updateSystemTicker(msg: any) {
+    if (!msg) return;
+    const content = msg.content || msg.message || "";
+    const tickerHtml = `<span style="color:#fff;">◈</span> ${content}`;
+    ['systemTicker', 'mob_systemTicker'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = tickerHtml;
+            el.classList.remove('ticker-flash');
+            // Trigger reflow for animation
+            void (el as HTMLElement).offsetWidth;
+            el.classList.add('ticker-flash');
+        }
+    });
+}
+
 function renderChatMessage(msg: any) {
-    const isQueen = msg.sender_role === 'Queen'; // We'll add sender_role to the table/API later if needed, or infer
-    const themeClass = isQueen ? 'chat-msg-queen' : 'chat-msg-slave';
+    const senderEmail = (msg.sender_email || msg.sender || '').toLowerCase();
+    const isSys = isSystemMessage(msg);
+
+    // 1. Identify "Me" (Slave) and "Queen"
+    const myEmail = getState().memberId?.toLowerCase();
+    const isMe = !isSys && (senderEmail === 'user' || senderEmail === 'slave' || senderEmail === myEmail);
+    const isQueen = msg.metadata?.isQueen || (!isMe && !isSys);
+
+    // 2. Identify Alignment Classes (Mirroring Dashboard)
+    // - Dashboard: Outbound = Queen (mirrored for Slave view), Inbound = Slave
+    // - Profile View: Outbound = Me (Slave), Inbound = Queen
+    // So for Slave view:
+    // Row: .mr-out (Me/Slave) vs .mr-in (Queen)
+    // Box: .m-out (Me/Slave) vs .m-in (Queen)
+    const rowClass = isMe ? 'mr-out' : 'mr-in';
+    const msgClass = isMe ? 'chat-msg-slave' : 'chat-msg-queen';
     const fontClass = isQueen ? 'font-cinzel' : 'font-orbitron';
 
-    let content = msg.content;
+    // 3. Avatars (Mirroring Dashboard logic)
+    const queenAv = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
+    const slaveAv = getState().raw?.avatar_url || getState().raw?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+
+    const avatarUrl = isQueen ? queenAv : slaveAv;
+    const avatarHtml = `<img src="${avatarUrl}" class="chat-av">`;
+
+    // 4. Content Processing
+    let content = msg.content || msg.message || "";
     if (msg.type === 'wishlist') {
         const meta = msg.metadata || {};
         content = `
@@ -818,18 +892,28 @@ function renderChatMessage(msg: any) {
                 <img src="${meta.image}" alt="${meta.title}" />
                 <div class="chat-card-info">
                     <div class="chat-card-title">${meta.title}</div>
-                    <div class="chat-card-price">${meta.price.toLocaleString()} Coins</div>
+                    <div class="chat-card-price">${meta.price?.toLocaleString()} Coins</div>
                 </div>
             </div>
         `;
     } else if (msg.type === 'photo') {
-        content = `<img src="${msg.content}" class="chat-img-attachment" />`;
+        content = `<img src="${content}" class="chat-img-attachment" />`;
     }
 
+    const timeStr = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // 5. Assemble HTML (Row-based structure)
+    // If isMe (Slave), avatar is on the right. If isQueen, avatar is on the left.
+    // Dashboard logic: return `<div class="msg-row ${rowClass}">${!isMe ? avatarHtml : ''}${contentHtml}${isMe ? avatarHtml : ''}<div class="msg-meta ${isMe ? 'mm-out' : 'mm-in'}">${timeStr}</div></div>`;
+
     return `
-        <div class="chat-bubble ${themeClass} ${fontClass}">
-            <div class="chat-bubble-content">${content}</div>
-            <div class="chat-bubble-time">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        <div class="msg-row ${rowClass}">
+            ${!isMe ? avatarHtml : ''}
+            <div class="chat-bubble ${msgClass} ${fontClass}">
+                <div class="chat-bubble-content">${content}</div>
+                <div class="chat-bubble-time">${timeStr}</div>
+            </div>
+            ${isMe ? avatarHtml : ''}
         </div>
     `;
 }

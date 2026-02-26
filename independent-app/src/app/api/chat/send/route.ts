@@ -5,7 +5,9 @@ import { HIERARCHY_RULES } from '@/scripts/hierarchy-rules';
 
 export async function POST(req: Request) {
     try {
-        const { senderEmail, content, type = 'text', metadata = {}, conversationId } = await req.json();
+        const { senderEmail: rawSenderEmail, content, type = 'text', metadata = {}, conversationId: rawConversationId } = await req.json();
+        const senderEmail = rawSenderEmail?.toLowerCase();
+        const conversationId = rawConversationId?.toLowerCase();
 
         if (!senderEmail || !content) {
             return NextResponse.json({ success: false, error: "Missing required fields." }, { status: 400 });

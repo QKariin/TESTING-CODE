@@ -3706,7 +3706,7 @@
 
 
 /* --- KNEELING BUTTON FIX --- */
-#heroKneelBtn, 
+#heroKneelBtn,
 #mobKneelBar {
     /* Stop the user from selecting text inside */
     -webkit-user-select: none !important;
@@ -3718,51 +3718,98 @@
 
 /* Make all children (text, fill bar) invisible to the mouse */
 /* This ensures the mouse ALWAYS clicks the Button, never the moving Bar */
-#heroKneelBtn *, 
+#heroKneelBtn *,
 #mobKneelBar * {
     pointer-events: none !important;
 }
 
 /* =========================================
-   NEW CHAT SYSTEM STYLES
+   NEW UNIFIED CHAT SYSTEM STYLES
+   (Mirrored from Dashboard for consistency)
    ========================================= */
 
 .chat-area {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     padding: 20px;
     overflow-y: auto;
+    background: transparent;
+}
+
+.msg-row {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin-bottom: 12px;
+    max-width: 100%;
+    align-items: flex-end;
+}
+
+/* Queen/System (Inbound for Slave) -> Align Left */
+.mr-in {
+    flex-direction: row;
+}
+
+/* Slave/Me (Outbound for Slave) -> Align Right */
+.mr-out {
+    flex-direction: row-reverse;
+}
+
+.chat-av {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid rgba(197, 160, 89, 0.4);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .chat-bubble {
     max-width: 80%;
-    padding: 12px 18px;
-    border-radius: 15px;
+    padding: 10px 16px;
+    border-radius: 12px;
     position: relative;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     line-height: 1.4;
     word-wrap: break-word;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* Queen Styles -> Left */
 .chat-msg-queen {
     align-self: flex-start;
     background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
     border: 1px solid #c5a059;
     color: #fff;
     border-bottom-left-radius: 2px;
-    box-shadow: 0 4px 15px rgba(197, 160, 89, 0.1);
 }
 
+/* Slave Styles -> Right */
 .chat-msg-slave {
     align-self: flex-end;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #ccc;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #eee;
     border-bottom-right-radius: 2px;
+}
+
+.chat-bubble-time {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.3);
+    margin-top: 2px;
+}
+
+.mr-out .chat-bubble-time {
+    align-self: flex-end;
+}
+
+.mr-in .chat-bubble-time {
+    align-self: flex-start;
 }
 
 .chat-bubble-time {
@@ -3772,8 +3819,16 @@
 }
 
 /* FONT HIERARCHY */
-.font-cinzel { font-family: 'Cinzel', serif; letter-spacing: 1px; }
-.font-orbitron { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; font-size: 0.8rem; }
+.font-cinzel {
+    font-family: 'Cinzel', serif;
+    letter-spacing: 1px;
+}
+
+.font-orbitron {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+    font-size: 0.8rem;
+}
 
 /* GRAPHICAL WISHLIST CARD */
 .chat-card-wishlist {
