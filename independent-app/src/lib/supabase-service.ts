@@ -187,7 +187,8 @@ export const DbService = {
             .select('*, profiles(name, avatar_url)')
             .eq('status', 'pending');
         if (error) throw error;
-        return data;
+        // Map member_id to id for dashboard compatibility
+        return (data || []).map((t: any) => ({ ...t, id: t.member_id }));
     },
 
     async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
@@ -195,7 +196,7 @@ export const DbService = {
         const { error: taskError } = await supabase
             .from('tasks')
             .update({ status: 'approve', reviewer_comment: comment, sticker_url: sticker })
-            .eq('id', taskId);
+            .eq('member_id', profileId);
         if (taskError) throw taskError;
 
         const profile = await this.getProfile(profileId);
@@ -230,7 +231,7 @@ export const DbService = {
         const { error: taskError } = await supabase
             .from('tasks')
             .update({ status: 'reject' })
-            .eq('id', taskId);
+            .eq('member_id', profileId);
         if (taskError) throw taskError;
 
         const profile = await this.getProfile(profileId);
@@ -260,19 +261,18 @@ export const DbService = {
         const taskId = crypto.randomUUID();
         const now = new Date().toISOString();
 
-        // 1. Create entry in tasks table for Dashboard visibility
+        // 1. Update entry in tasks table for Dashboard visibility (Cabinet style)
         const { error: taskError } = await supabase
             .from('tasks')
-            .insert({
-                id: taskId,
+            .upsert({
                 member_id: memberId,
-                userName: profile.name,
+                Name: profile.name,
                 text: taskText,
                 proofUrl: proofUrl,
                 proofType: proofType,
                 status: 'pending',
                 timestamp: now
-            });
+            }, { onConflict: 'member_id' });
         if (taskError) throw taskError;
 
         // 2. Update profiles task_queue for dashboard sync and routine_history for user display
