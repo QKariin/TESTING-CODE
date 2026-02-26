@@ -887,12 +887,17 @@ function renderChatMessage(msg: any) {
     let content = msg.content || msg.message || "";
     if (msg.type === 'wishlist') {
         const meta = msg.metadata || {};
+        const rotation = (Math.random() * 4 - 2); // Slight random tilt for authenticity
         content = `
-            <div class="chat-card-wishlist">
-                <img src="${meta.image}" alt="${meta.title}" />
-                <div class="chat-card-info">
-                    <div class="chat-card-title">${meta.title}</div>
-                    <div class="chat-card-price">${meta.price?.toLocaleString()} Coins</div>
+            <div class="chat-card-polaroid" style="position:relative; background:#fff; padding:10px 10px 20px 10px; display:flex; flex-direction:column; align-items:center; box-shadow:0 6px 15px rgba(0,0,0,0.15); transform:rotate(${rotation}deg); margin: 15px auto; width: 220px;">
+                <!-- Washi Tape Effect -->
+                <div style="position:absolute; top:-12px; left:50%; width:80px; height:25px; background:rgba(255, 182, 193, 0.6); transform:translateX(-50%) rotate(${-rotation * 2}deg); z-index:5; box-shadow:0 1px 3px rgba(0,0,0,0.1); border-left:2px dotted rgba(255,255,255,0.5); border-right:2px dotted rgba(255,255,255,0.5);"></div>
+                
+                <div style="width:100%; height:160px; background:url('${meta.image}') center/cover; border:1px solid rgba(0,0,0,0.05);"></div>
+                
+                <div style="width:100%; display:flex; flex-direction:column; align-items:center; margin-top:15px;">
+                    <div style="font-family:'Caveat', cursive; font-size:1.8rem; color:#111; text-align:center; line-height:1.2; font-weight:700;">${meta.title}</div>
+                    <div style="font-family:'Patrick Hand', cursive; font-size:1.2rem; color:'#ff4b72'; display:flex; align-items:center; gap:5px; margin-top:5px;"><span style="color:#ff69b4;">♥</span> ${meta.price?.toLocaleString()}</div>
                 </div>
             </div>
         `;

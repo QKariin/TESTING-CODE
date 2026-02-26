@@ -3822,49 +3822,7 @@
 }
 
 /* GRAPHICAL WISHLIST CARD - ENSURE ELEGANCE */
-.chat-card-wishlist {
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 10px;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    /* Stack for a better card feel */
-    align-items: center;
-    gap: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    margin: 10px auto;
-    /* Center it */
-    width: 280px;
-    /* Widther */
-    max-width: 100%;
-}
 
-.chat-card-wishlist img {
-    width: 100%;
-    /* Full width image in card */
-    max-width: 240px;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #c5a059;
-}
-
-.chat-card-title {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-    font-weight: bold;
-    color: #c5a059;
-    font-size: 1rem;
-    /* Slightly larger */
-    text-align: center;
-}
-
-.chat-card-price {
-    font-family: 'Rajdhani', sans-serif;
-    color: #fff;
-    font-size: 0.85rem;
-    opacity: 0.8;
-    text-align: center;
-}
 
 .chat-img-attachment {
     max-width: 100%;
