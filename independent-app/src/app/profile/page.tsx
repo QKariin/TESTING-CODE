@@ -175,10 +175,7 @@ export default function ProfilePage() {
 
     return (
         <div id="PROFILE_CONTAINER" style={{
-            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed',
+            background: '#020512',
             minHeight: '100vh',
             width: '100vw',
             overflowX: 'hidden'
@@ -206,7 +203,7 @@ export default function ProfilePage() {
             {/* UNIVERSAL DESKTOP APP */}
             <div id="DESKTOP_APP">
                 {/* SIDEBAR */}
-                <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
+                <div className="v-sidebar" style={{ backgroundColor: 'rgba(6, 11, 40, 0.9)', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
                             <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} />
@@ -344,7 +341,7 @@ export default function ProfilePage() {
                         <div id="desk_DashboardRank" style={{ fontFamily: 'Orbitron', fontSize: '1.1rem', color: '#fff', marginTop: 5, textTransform: 'uppercase', fontWeight: 'bold', textShadow: '0 0 10px rgba(197, 160, 89, 0.4)' }}>LOADING...</div>
                     </div>
 
-                    <div id="gridHero" className="v-card serve-grid-item" style={{ background: "url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png')", backgroundSize: 'cover', backgroundPosition: 'center', minHeight: 'unset', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                    <div id="gridHero" className="v-card serve-grid-item" style={{ background: 'var(--bg-panel)', minHeight: 'unset', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(2,5,18,0.9) 0%, rgba(2,5,18,0.4) 100%)' }}></div>
 
                         <div id="kneelRewardOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 5000, backdropFilter: 'blur(20px)', display: 'none', alignItems: 'center', justifyContent: 'center' }}>
@@ -415,7 +412,7 @@ export default function ProfilePage() {
                     {/* OVERLAY TRIBUTE MODAL - SCRAPBOOK NOTEBOOK THEME + CROWDFUND FROSTED GLASS */}
                     <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10000, display: 'none', flexDirection: 'column', padding: '40px 40px 40px 80px', borderRadius: '12px', overflow: 'hidden' }}>
                         {/* Dynamic Background Image */}
-                        <div style={{ position: 'absolute', inset: 0, background: `url(${getOptimizedUrl(profile?.image || "https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png", 1000)}) center/cover`, zIndex: -2 }}></div>
+                        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg-deep)', zIndex: -2 }}></div>
                         {/* Frosted Glass Effect */}
                         <div style={{ position: 'absolute', inset: 0, background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(15px)', zIndex: -1, border: '1px solid rgba(255,255,255,0.4)', borderRadius: '12px' }}></div>
 
