@@ -203,7 +203,7 @@ export default function ProfilePage() {
             {/* UNIVERSAL DESKTOP APP */}
             <div id="DESKTOP_APP">
                 {/* SIDEBAR */}
-                <div className="v-sidebar" style={{ backgroundColor: 'rgba(6, 11, 40, 0.9)', backdropFilter: 'blur(25px)' }}>
+                <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
                             <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} />

@@ -2,19 +2,14 @@
    1. VARIABLES & RESET
    ========================================= */
 :root {
-    --bg-deep: #020512;
-    --bg-panel: rgba(6, 11, 40, 0.7);
-    --bg-card: rgba(15, 21, 56, 0.6);
-    --border: rgba(255, 255, 255, 0.1);
+    --gold: #c5a059;
+    --silver: #888;
     --blue-accent: #0075ff;
-    --blue-glow: #00f3ff;
-    --pink: #ff00de;
-    --green: #01b574;
-    --red: #e31a1a;
-    --gold: #C5A059;
-    --text-main: #ffffff;
-    --text-dim: #a0aec0;
-    --glass: blur(20px);
+    --red: #ff003c;
+    --green: #00ff00;
+    --bg-card: rgba(0, 0, 0, 0.4);
+    --glass: rgba(15, 15, 15, 0.7);
+    --glass-blur: blur(25px);
 }
 
 .hidden {
@@ -23,7 +18,7 @@
 
 /* HIERARCHY STAMP */
 .hierarchy-top {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 0.75rem;
     color: #fff;
     border: 1px solid #c5a059;
@@ -53,7 +48,7 @@
     body {
         background: transparent;
         color: var(--text-white);
-        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        font-family: 'Cinzel', serif;
         /* GLOBAL FONT CHANGE */
         min-height: 100vh;
         width: 100vw;
@@ -76,9 +71,9 @@
     /* --- VISION UI UTILITIES --- */
     .v-card {
         background: var(--bg-card);
-        backdrop-filter: var(--glass);
-        -webkit-backdrop-filter: var(--glass);
-        border: 1px solid var(--border);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 20px;
         padding: 20px;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
@@ -219,7 +214,7 @@
         background: #080808;
         border-bottom: 1px solid #222;
         color: #c5a059;
-        font-family: 'Rajdhani', sans-serif;
+        font-family: 'Orbitron', sans-serif;
         font-size: 0.65rem;
         text-align: center;
         letter-spacing: 2px;
@@ -483,7 +478,7 @@
 }
 
 .identity-name {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 1.6rem;
     color: #fff;
     letter-spacing: 6px;
@@ -521,7 +516,7 @@
 }
 
 .stat-lbl {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 0.7rem;
     color: #666;
     letter-spacing: 2px;
@@ -529,7 +524,7 @@
 }
 
 .stat-val {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 1.4rem;
     color: #ccc;
     font-weight: 700;
@@ -569,7 +564,7 @@
 .graphic-text {
     position: relative;
     z-index: 2;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     color: var(--gold);
     letter-spacing: 4px;
     font-size: 0.9rem;
@@ -582,7 +577,7 @@
     background: transparent;
     border: none;
     color: #666;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-weight: 700;
     font-size: 0.7rem;
     letter-spacing: 2px;
@@ -603,7 +598,7 @@
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid #222;
     margin-bottom: 20px;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 0.85rem;
     color: #888;
 }
@@ -641,7 +636,7 @@
     margin-bottom: 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding-bottom: 4px;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
 }
 
 /* Slave Since Footer (Centered) */
@@ -763,7 +758,7 @@
 /* --- TYPOGRAPHY (REVERTED TO LUXURY) --- */
 
 .ribbon-label {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 0.65rem;
     color: #555;
     letter-spacing: 3px;
@@ -773,7 +768,7 @@
 
 /* Status Text - Back to Cinzel/Orbitron blend for stability */
 .status-text-lg {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-weight: 700;
     font-size: 1.1rem;
     letter-spacing: 2px;
@@ -787,13 +782,13 @@
 .status-working {
     color: var(--neon-green);
     text-shadow: 0 0 10px rgba(0, 255, 0, 0.4);
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     /* Tech font for active state */
 }
 
 /* Idle Message */
 .ribbon-status {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-weight: 600;
     font-size: 0.8rem;
     color: #666;
@@ -827,7 +822,7 @@
 
     /* Text Styling */
     color: white;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-weight: 700;
     font-size: 1.8rem;
     line-height: 50px;
@@ -841,7 +836,7 @@
 
 /* THE SEPARATOR (:) */
 .t-sep {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 1.5rem;
     color: #666;
     margin-top: -3px;
@@ -856,7 +851,7 @@
 
 /* Toggle Link */
 .see-task-link {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     /* Restored Luxury Font for link */
     font-weight: 700;
     font-size: 0.65rem;
@@ -912,7 +907,7 @@
 
 .drawer-task-text,
 #readyText {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     /* Restored Luxury Font */
     font-weight: 600;
     font-size: 1.4rem;
@@ -937,7 +932,7 @@
     background: transparent;
     border: none;
     color: #666;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 0.8rem;
     cursor: pointer;
     letter-spacing: 2px;
@@ -995,7 +990,7 @@
     background: transparent;
     border: 1px solid rgba(197, 160, 89, 0.4);
     color: var(--gold);
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-weight: 700;
     font-size: 0.7rem;
     padding: 12px 5px;
@@ -1073,7 +1068,7 @@
     position: absolute;
     top: 10px;
     left: 20px;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.8rem;
     letter-spacing: 2px;
     z-index: 10;
@@ -2085,7 +2080,7 @@
 
 /* 1. TOP: TITLE & POINTS */
 .modal-merit-title {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 0.8rem;
     color: #888;
     letter-spacing: 3px;
@@ -2094,7 +2089,7 @@
 }
 
 .modal-merit-value {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 3rem;
     color: var(--gold);
     font-weight: 700;
@@ -2111,7 +2106,7 @@
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(0, 0, 0, 0.3);
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 1rem;
     line-height: 1.5;
     color: #eee;
@@ -2131,7 +2126,7 @@
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: #ccc;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 0.8rem;
     padding: 12px;
     cursor: pointer;
@@ -2188,7 +2183,7 @@
 
 #kneelRewardOverlay h2 {
     color: white !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     z-index: 100000;
 }
 
@@ -2249,7 +2244,7 @@
 
 /* "ALL" Button Text */
 .filter-all-text {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 0.6rem;
     font-weight: 700;
     color: #666;
@@ -2266,7 +2261,7 @@
     right: 0;
     background: rgba(0, 0, 0, 0.85);
     color: var(--gold);
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-weight: 700;
     font-size: 0.9rem;
     padding: 2px 8px;
@@ -2346,7 +2341,7 @@
 }
 
 .dossier-label {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.6rem;
     color: var(--gold);
     letter-spacing: 2px;
@@ -2385,7 +2380,7 @@
 /* The Text Styles */
 .angry-title {
     color: #ff003c !important;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-weight: 900;
     letter-spacing: 4px;
     text-shadow: 0 0 15px rgba(255, 0, 60, 0.8);
@@ -2396,7 +2391,7 @@
 
 .angry-text {
     color: #fff !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 0.85rem;
     border-top: 1px solid #ff003c;
     padding-top: 10px;
@@ -2520,7 +2515,7 @@
 }
 
 .bento-label {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     color: var(--gold);
     font-size: 0.55rem;
     letter-spacing: 3px;
@@ -2529,7 +2524,7 @@
 }
 
 .bento-title {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     color: #fff;
     font-size: 1.1rem;
     line-height: 1.3;
@@ -2711,7 +2706,7 @@
 }
 
 .rh-name {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 1rem;
     color: #fff;
     letter-spacing: 2px;
@@ -2719,7 +2714,7 @@
 }
 
 .rh-status-text {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.6rem;
     color: #c5a059;
     /* Gold text */
@@ -2744,7 +2739,7 @@
     border-bottom: 1px solid rgba(197, 160, 89, 0.3);
     /* Gold Line */
     color: #c5a059;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.65rem;
     text-align: center;
     letter-spacing: 3px;
@@ -2860,7 +2855,7 @@
 /* OTHER BUTTONS */
 .chat-btn-send {
     color: #c5a059;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
     background: none;
@@ -2981,7 +2976,7 @@
 }
 
 .msg-time {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.65rem;
     font-weight: 700;
     color: #333333;
@@ -3002,7 +2997,7 @@
     border: 1px solid #1a1a1a;
     padding: 10px 0;
     text-align: center;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.65rem;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -3219,8 +3214,8 @@
     }
 
     .store-item.selected {
-        border: 1px solid var(--border);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        border: 1px solid #c5a059;
+        box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
         transform: scale(0.98);
     }
 
@@ -3240,14 +3235,14 @@
     }
 
     .store-name {
-        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        font-family: 'Cinzel', serif;
         font-size: 0.65rem;
         color: #ccc;
         line-height: 1.2;
     }
 
     .store-price {
-        font-family: 'Rajdhani', sans-serif;
+        font-family: 'Orbitron', sans-serif;
         font-size: 0.8rem;
         color: #c5a059;
         font-weight: bold;
@@ -3611,7 +3606,7 @@
 /* Base style for all buttons in the block */
 .reveal-market-row .dr-enforce-btn {
     background: rgba(0, 0, 0, 0.6) !important;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.55rem !important;
     /* Micro font */
     padding: 6px 20px !important;
@@ -3823,7 +3818,7 @@
     align-self: flex-end;
 }
 
-/* FONT HIERARCHY */
+/* FONT HIERARCHY - ENSURE CHAT REMAINS ELEGANT */
 .font-cinzel {
     font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
     letter-spacing: 1px;
@@ -3835,7 +3830,7 @@
     font-size: 0.8rem;
 }
 
-/* GRAPHICAL WISHLIST CARD */
+/* GRAPHICAL WISHLIST CARD - ENSURE ELEGANCE */
 .chat-card-wishlist {
     background: rgba(0, 0, 0, 0.4);
     border-radius: 10px;
