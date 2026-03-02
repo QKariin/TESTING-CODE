@@ -656,6 +656,11 @@ export function handleRoutineUpload(input: HTMLInputElement) {
     if (input.files && input.files[0]) submitTaskEvidence(input.files[0]);
 }
 
+// Separate handler for TASK evidence (image or video) — distinct from routine
+export function handleTaskEvidenceUpload(input: HTMLInputElement) {
+    if (input.files && input.files[0]) submitTaskEvidence(input.files[0]);
+}
+
 async function submitTaskEvidence(file: File) {
     const { id, memberId, userName } = getState();
     const pid = memberId || id;
@@ -1870,8 +1875,8 @@ export function renderHistoryAndAltar(profileData: any) {
     if (!raw.length) return;
 
     const approved = raw.filter((t: any) => t.status === 'approve' && t.proofUrl && t.proofUrl !== 'SKIPPED');
-    const failed   = raw.filter((t: any) => t.status === 'fail' || t.status === 'reject');
-    const pending  = raw.filter((t: any) => t.status === 'pending');
+    const failed = raw.filter((t: any) => t.status === 'fail' || t.status === 'reject');
+    const pending = raw.filter((t: any) => t.status === 'pending');
 
     // ── 1. SOVEREIGN ALTAR hero cards ────────────────────────────────────────
     _renderAltarHero(approved);
@@ -1881,7 +1886,7 @@ export function renderHistoryAndAltar(profileData: any) {
 
     // ── 3. Mini-grids inside sub-cards ───────────────────────────────────────
     _renderMiniGrid('gridAltarRoutine', approved.slice(0, 6));
-    _renderMiniGrid('gridAltarFailed',  failed.slice(0, 6));
+    _renderMiniGrid('gridAltarFailed', failed.slice(0, 6));
 }
 
 function _isVideo(url: string): boolean {
@@ -1890,9 +1895,9 @@ function _isVideo(url: string): boolean {
 
 function _renderAltarHero(approved: any[]) {
     // altarMain = newest approved
-    const altarMain  = document.getElementById('altarMain');
-    const imgMain    = document.getElementById('imgAltarMain') as HTMLImageElement | null;
-    const titleMain  = document.getElementById('titleAltarMain');
+    const altarMain = document.getElementById('altarMain');
+    const imgMain = document.getElementById('imgAltarMain') as HTMLImageElement | null;
+    const titleMain = document.getElementById('titleAltarMain');
 
     if (approved[0] && altarMain && imgMain) {
         const p0 = approved[0];
@@ -1910,7 +1915,7 @@ function _renderAltarHero(approved: any[]) {
             vid.setAttribute('playsinline', '');
             vid.setAttribute('loop', '');
             imgMain.replaceWith(vid);
-            vid.play().catch(() => {});
+            vid.play().catch(() => { });
         }
         if (titleMain) titleMain.textContent = p0.text?.replace(/<[^>]+>/g, '').slice(0, 60) || '...';
         altarMain.style.display = 'block';
@@ -1968,7 +1973,7 @@ function _renderMosaicGrid(approved: any[], pending: any[]) {
         card.className = 'mosaic-card';
         card.style.cssText = 'position:relative;overflow:hidden;border-radius:6px;border:1px solid #1a1a1a;background:#060606;display:flex;flex-direction:column;cursor:pointer;transition:border-color 0.3s,transform 0.3s;';
         card.onmouseover = () => { card.style.borderColor = 'rgba(197,160,89,0.4)'; card.style.transform = 'translateY(-3px)'; };
-        card.onmouseout  = () => { card.style.borderColor = '#1a1a1a'; card.style.transform = 'translateY(0)'; };
+        card.onmouseout = () => { card.style.borderColor = '#1a1a1a'; card.style.transform = 'translateY(0)'; };
         card.onclick = () => _openHistoryModal(approved, i);
 
         const dateStr = new Date(t.timestamp || t.created_at || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }).toUpperCase();

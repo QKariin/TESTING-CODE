@@ -173,8 +173,105 @@ export async function adjustWallet(action: 'add' | 'sub') {
 }
 
 export function manageAltar(slot: number) {
-    console.log("Managing altar slot:", slot);
-    // TODO: Implement Altar backend logic
+    const img = document.getElementById(`adminAltarImg${slot}`) as HTMLImageElement | null;
+    if (img && img.src) {
+        const overlay = document.getElementById('chatMediaOverlay');
+        const content = document.getElementById('chatMediaOverlayContent');
+        if (overlay && content) {
+            content.innerHTML = `<img src="${img.src}" style="max-width:100%;max-height:90vh;border-radius:8px;" />`;
+            overlay.classList.remove('hidden');
+        }
+    }
+}
+
+// Updates the 3 Sovereign Altar slots in the dashboard user view
+export function updateDashboardAltar(historyArr: any[]) {
+    const approved = historyArr.filter((t: any) => t.status === 'approve' && t.proofUrl && t.proofUrl !== 'SKIPPED');
+    [1, 2, 3].forEach((num, i) => {
+        const slot = document.getElementById(`adminAltarSlot${num}`);
+        const img = document.getElementById(`adminAltarImg${num}`) as HTMLImageElement | null;
+        if (!slot || !img) return;
+        const entry = approved[i];
+        if (entry && entry.proofUrl) {
+            img.src = entry.proofUrl;
+            img.classList.remove('hidden');
+        } else {
+            img.src = '';
+            img.classList.add('hidden');
+        }
+    });
+    // Update counts
+    const accepted = historyArr.filter((t: any) => t.status === 'approve').length;
+    const pending = historyArr.filter((t: any) => t.status === 'pending').length;
+    const denied = historyArr.filter((t: any) => t.status === 'reject' || t.status === 'fail').length;
+    const el = (id: string) => document.getElementById(id);
+    if (el('adminAcceptedCount')) el('adminAcceptedCount')!.innerText = accepted.toString();
+    if (el('adminPendingCount')) el('adminPendingCount')!.innerText = pending.toString();
+    if (el('adminDeniedCount')) el('adminDeniedCount')!.innerText = denied.toString();
+}
+
+// Renders the expandable category panel in the dashboard Record tab
+export function expandAdminCategory(category: 'accepted' | 'pending' | 'routine' | 'denied') {
+    const u = users.find(x => x.memberId === currId);
+    if (!u) return;
+
+    let histArr: any[] = [];
+    try {
+        const raw = u['Taskdom_History'];
+        histArr = typeof raw === 'string' ? JSON.parse(raw || '[]') : (raw || []);
+    } catch { histArr = []; }
+
+    const filtered = histArr.filter((t: any) => {
+        if (category === 'accepted') return t.status === 'approve';
+        if (category === 'pending') return t.status === 'pending';
+        if (category === 'denied') return t.status === 'reject' || t.status === 'fail';
+        if (category === 'routine') return t.isRoutine === true || t.category === 'Routine';
+        return false;
+    });
+
+    // Reuse the task gallery modal from dashboard-modals if available
+    if ((window as any).openTaskGallery) {
+        (window as any).openTaskGallery(filtered, category.toUpperCase(), currId);
+    } else {
+        // Fallback: simple lightbox
+        const old = document.getElementById('__adminCatOverlay');
+        if (old) old.remove();
+        const overlay = document.createElement('div');
+        overlay.id = '__adminCatOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;overflow-y:auto;padding:40px 20px;';
+        overlay.innerHTML = `
+            <div style="max-width:900px;margin:0 auto;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+                    <div style="font-family:Orbitron;font-size:0.7rem;color:#c5a059;letter-spacing:3px;">${category.toUpperCase()} — ${filtered.length} ENTRIES</div>
+                    <button onclick="document.getElementById('__adminCatOverlay').remove()" style="background:none;border:1px solid #333;color:#888;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;">CLOSE</button>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+                ${filtered.map((t: any) => {
+            const isVid = /\.(mp4|mov|webm)/i.test(t.proofUrl || '');
+            const media = t.proofUrl && t.proofUrl !== 'SKIPPED'
+                ? (isVid
+                    ? `<video src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;" muted playsinline loop></video>`
+                    : `<img src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;" />`)
+                : `<div style="aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:2rem;background:#0a0a0a;">🚫</div>`;
+            const date = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+            const statusColor = t.status === 'approve' ? '#c5a059' : t.status === 'pending' ? '#888' : '#8b0000';
+            const isPending = t.status === 'pending';
+            return `<div style="background:#060606;border:1px solid #1a1a1a;border-radius:6px;overflow:hidden;cursor:pointer;" onclick="this.querySelector('video,img')?.click()">
+                        ${media}
+                        <div style="padding:8px 10px;">
+                            <div style="font-family:Orbitron;font-size:0.4rem;color:${statusColor};letter-spacing:1px;">${date} · ${(t.status || '').toUpperCase()}</div>
+                            <div style="font-family:Rajdhani;font-size:0.7rem;color:#666;margin-top:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
+                            ${isPending ? `<div style="display:flex;gap:6px;margin-top:8px;">
+                                <button onclick="event.stopPropagation();(window.reviewTask||window.approveFromGallery)('${t.id}','${u.memberId}')" style="flex:1;background:#c5a059;color:#000;border:none;font-family:Orbitron;font-size:0.4rem;padding:6px;cursor:pointer;border-radius:3px;">APPROVE</button>
+                                <button onclick="event.stopPropagation();(window.rejectFromGallery||function(){})('${t.id}','${u.memberId}')" style="flex:1;background:#8b0000;color:#fff;border:none;font-family:Orbitron;font-size:0.4rem;padding:6px;cursor:pointer;border-radius:3px;">REJECT</button>
+                            </div>` : ''}
+                        </div>
+                    </div>`;
+        }).join('')}
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+    }
 }
 
 export async function adminTaskAction(id: string | null, action: 'skip' | 'send') {
@@ -337,6 +434,80 @@ export async function deleteQueenPost(id: string) {
     }
 }
 
+// ─── TASK REVIEW ACTIONS (CEO) ───────────────────────────────────────────────
+
+export async function reviewTask(submissionId: string, memberId: string) {
+    if (!confirm('APPROVE this task submission? This will award 500 coins.')) return;
+
+    try {
+        const res = await fetch('/api/tasks/review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ submissionId, memberId, action: 'approve', bonus: 500 })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            // Update local user state
+            const u = users.find(x => x.memberId === memberId);
+            if (u) {
+                try {
+                    const history = typeof u['Taskdom_History'] === 'string'
+                        ? JSON.parse(u['Taskdom_History'] || '[]')
+                        : (u['Taskdom_History'] || []);
+                    const idx = history.findIndex((t: any) => t.id === submissionId);
+                    if (idx > -1) { history[idx].status = 'approve'; history[idx].completed = true; }
+                    u['Taskdom_History'] = JSON.stringify(history);
+                } catch (_) { }
+            }
+
+            // Close overlay and refresh
+            document.getElementById('__adminCatOverlay')?.remove();
+            alert(`✓ APPROVED — ${data.pointsAwarded} coins awarded.`);
+        } else {
+            alert('Failed to approve: ' + data.error);
+        }
+    } catch (err) {
+        alert('Network error during approval.');
+    }
+}
+
+export async function rejectFromGallery(submissionId: string, memberId: string) {
+    if (!confirm('REJECT this task submission? This will deduct 300 coins from the slave.')) return;
+
+    try {
+        const res = await fetch('/api/tasks/review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ submissionId, memberId, action: 'reject' })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            // Update local user state
+            const u = users.find(x => x.memberId === memberId);
+            if (u) {
+                try {
+                    const history = typeof u['Taskdom_History'] === 'string'
+                        ? JSON.parse(u['Taskdom_History'] || '[]')
+                        : (u['Taskdom_History'] || []);
+                    const idx = history.findIndex((t: any) => t.id === submissionId);
+                    if (idx > -1) { history[idx].status = 'reject'; history[idx].completed = false; }
+                    u['Taskdom_History'] = JSON.stringify(history);
+                } catch (_) { }
+            }
+
+            // Close overlay and refresh
+            document.getElementById('__adminCatOverlay')?.remove();
+            alert(`✗ REJECTED — 300 coin penalty applied.`);
+        } else {
+            alert('Failed to reject: ' + data.error);
+        }
+    } catch (err) {
+        alert('Network error during rejection.');
+    }
+}
+
 // Global Exports for legacy window compatibility
 if (typeof window !== 'undefined') {
     (window as any).showHome = showHome;
@@ -351,4 +522,8 @@ if (typeof window !== 'undefined') {
     (window as any).submitQueenPost = submitQueenPost;
     (window as any).deleteQueenPost = deleteQueenPost;
     (window as any).loadQueenPostsDashboard = loadQueenPostsDashboard;
+    (window as any).reviewTask = reviewTask;
+    (window as any).approveFromGallery = reviewTask; // alias for backward compat
+    (window as any).rejectFromGallery = rejectFromGallery;
 }
+

@@ -12,7 +12,7 @@ import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboar
 import { closeModal, reviewTask, cancelReward, confirmReward, toggleRewardRecord, handleRewardFileUpload, selectSticker, openTaskGallery, closeTaskGallery, filterTaskGallery, addQueueTask, deleteQueueItem, openModById } from '@/scripts/dashboard-modals';
 import { toggleProtocol, toggleNewbieImmunity, closeExclusionModal, sendBroadcast, saveBroadcastPreset, togglePresets, closeBroadcastModal, handleBroadcastFile, openBroadcastModal, openExclusionModal } from '@/scripts/dashboard-protocol';
 import { showProfile, switchProfileTab, openProfileUpload } from '@/scripts/dashboard-navigation';
-import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQueue, showPosts, submitQueenPost, deleteQueenPost, loadQueenPostsDashboard } from '@/scripts/dashboard-main';
+import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQueue, expandAdminCategory, updateDashboardAltar, showPosts, submitQueenPost, deleteQueenPost, loadQueenPostsDashboard } from '@/scripts/dashboard-main';
 import { closeChatPreview } from '@/scripts/chat';
 
 // State & Actions
@@ -64,6 +64,8 @@ export default function DashboardPage() {
             (window as any).manageAltar = manageAltar;
             (window as any).adminTaskAction = adminTaskAction;
             (window as any).toggleTaskQueue = toggleTaskQueue;
+            (window as any).expandAdminCategory = expandAdminCategory;
+            (window as any).updateDashboardAltar = updateDashboardAltar;
             (window as any).openTaskGallery = openTaskGallery;
             (window as any).closeTaskGallery = closeTaskGallery;
             (window as any).filterTaskGallery = filterTaskGallery;
@@ -109,10 +111,15 @@ export default function DashboardPage() {
                 setUsers(mappedUsers);
                 setAvailableDailyTasks(data.dailyTasks || []);
 
-                // Aggregate Global Queue from all users
-                const allQueues = mappedUsers.flatMap((u: any) => {
-                    const q = u.task_queue || [];
-                    return q.map((task: any) => ({ ...task, ownerId: u.memberId, ownerName: u.name }));
+                // Build Global Queue from Taskdom_History in each user's tasks data
+                const allQueues: any[] = [];
+                mappedUsers.forEach((u: any) => {
+                    const hist = u['Taskdom_History'];
+                    let histArr: any[] = [];
+                    try { histArr = typeof hist === 'string' ? JSON.parse(hist || '[]') : (hist || []); } catch { }
+                    histArr.filter((t: any) => t.status === 'pending').forEach((t: any) => {
+                        allQueues.push({ ...t, ownerId: u.memberId, ownerName: u.name, ownerAvatar: u.avatar });
+                    });
                 });
                 setGlobalQueue(allQueues);
 

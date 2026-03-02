@@ -18,6 +18,7 @@ import {
     toggleMobileStats,
     toggleMobileChat,
     handleRoutineUpload,
+    handleTaskEvidenceUpload,
     handleProfileUpload,
     handleAdminUpload,
     handleMediaPlus,
@@ -69,6 +70,7 @@ export default function ProfilePage() {
             (window as any).mobileSkipTask = () => { skipTask(); };
             (window as any).mobileUploadEvidence = mobileUploadEvidence;
             (window as any).handleRoutineUpload = handleRoutineUpload;
+            (window as any).handleTaskEvidenceUpload = handleTaskEvidenceUpload;
             (window as any).handleProfileUpload = handleProfileUpload;
             (window as any).handleAdminUpload = handleAdminUpload;
             (window as any).handleMediaPlus = handleMediaPlus;
@@ -194,7 +196,8 @@ export default function ProfilePage() {
 
             <input type="file" id="profileUploadInput" accept="image/*" className="hidden" />
             <input type="file" id="routineUploadInput" accept="image/*" className="hidden" onChange={(e: any) => handleRoutineUpload(e.target)} />
-            <input type="file" id="evidenceInputMob" accept="image/*" className="hidden" onChange={(e: any) => mobileUploadEvidence(e.target)} />
+            <input type="file" id="taskEvidenceInput" accept="image/*,video/*" className="hidden" onChange={(e: any) => handleTaskEvidenceUpload(e.target)} />
+            <input type="file" id="evidenceInputMob" accept="image/*,video/*" className="hidden" onChange={(e: any) => mobileUploadEvidence(e.target)} />
             <input type="file" id="chatMediaInput" accept="image/*,video/*" className="hidden" />
 
             {/* CELEBRATION OVERLAY */}
@@ -392,7 +395,7 @@ export default function ProfilePage() {
                                     <div id="timerS" className="card-t-box">00</div>
                                 </div>
                                 <div id="uploadBtnContainer" style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 10, alignItems: 'center' }}>
-                                    <button id="uploadBtn" className="action-btn" style={{ width: 240, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: '#c5a059', fontWeight: 'bold', border: '1px solid #c5a059', boxShadow: '0 0 15px rgba(197,160,89,0.2)' }} onClick={() => (document.getElementById('routineUploadInput') as any)?.click()}>UPDATE TASK</button>
+                                    <button id="uploadBtn" className="action-btn" style={{ width: 240, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: '#c5a059', fontWeight: 'bold', border: '1px solid #c5a059', boxShadow: '0 0 15px rgba(197,160,89,0.2)' }} onClick={() => (document.getElementById('taskEvidenceInput') as any)?.click()}>UPDATE TASK</button>
                                     <button id="btnSkip" onClick={() => (window as any).skipTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 240 }}>SKIP TASK (-300 🪙)</button>
                                 </div>
                             </div>

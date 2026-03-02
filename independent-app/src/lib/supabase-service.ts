@@ -248,6 +248,11 @@ export const DbService = {
                 taskdom_completed_tasks: (profile.parameters?.taskdom_completed_tasks || 0) + 1
             }
         });
+
+        // 3. Send system chat message
+        try {
+            await this.sendMessage(profileId, `TASK APPROVED — ${bonus} 🪙 AWARDED`, 'system');
+        } catch (_) { }
     },
 
     async rejectTask(taskId: string, profileId: string) {
@@ -263,6 +268,20 @@ export const DbService = {
             .from('tasks')
             .update({ 'Taskdom_History': JSON.stringify(history), 'Status': 'reject' })
             .eq('member_id', profileId);
+
+        // 2. Deduct 300 coin penalty from profiles wallet
+        try {
+            const profile = await this.getProfile(profileId);
+            if (profile?.id) {
+                const newWallet = Math.max(0, (profile.wallet || 0) - 300);
+                await this.updateProfile(profile.id, { wallet: newWallet });
+            }
+        } catch (_) { }
+
+        // 3. Send system chat message
+        try {
+            await this.sendMessage(profileId, `TASK REJECTED — 300 🪙 PENALTY APPLIED`, 'system');
+        } catch (_) { }
     },
 
     async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string) {
@@ -273,31 +292,49 @@ export const DbService = {
         const row = await this._getTaskRow(memberId);
         const history: any[] = this._parseHistory(row);
 
-        // 2. Build new entry (matches Entire-ecosystem format exactly)
+        // 2. Build new entry
         const newEntry: any = {
             id: taskId,
             text: taskText,
             proofUrl: proofUrl,
-            proofType: proofType.startsWith('video') ? 'video' : 'image',
+            proofType: (proofType || '').startsWith('video') ? 'video' : 'image',
             timestamp: now,
             status: 'pending',
             completed: false
         };
-        history.unshift(newEntry); // newest first
+        history.unshift(newEntry);
 
-        // 3. Upsert tasks row — write only real columns
         const profile = await this.getProfile(memberId);
-        const { error } = await supabase
-            .from('tasks')
-            .upsert({
-                member_id: memberId,
-                Name: profile?.name || 'Slave',
-                Status: 'pending',
-                'Taskdom_History': JSON.stringify(history)
-            }, { onConflict: 'member_id' });
-        if (error) throw error;
+        const newHistory = JSON.stringify(history);
 
-        return { success: true };
+        // 3. Safe write: update if row exists, insert if not
+        if (row) {
+            const { error } = await supabase
+                .from('tasks')
+                .update({
+                    Status: 'pending',
+                    'Taskdom_History': newHistory
+                })
+                .eq('member_id', memberId);
+            if (error) throw error;
+        } else {
+            const { error } = await supabase
+                .from('tasks')
+                .insert({
+                    member_id: memberId,
+                    Name: profile?.name || 'Slave',
+                    Status: 'pending',
+                    'Taskdom_History': newHistory
+                });
+            if (error) throw error;
+        }
+
+        // 4. Send system chat message
+        try {
+            await this.sendMessage(memberId, `TASK SUBMITTED — AWAITING REVIEW`, 'system');
+        } catch (_) { }
+
+        return { success: true, taskId };
     },
 
     async assignTask(memberId: string, task: any) {
