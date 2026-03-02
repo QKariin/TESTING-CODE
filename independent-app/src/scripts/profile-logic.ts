@@ -595,9 +595,17 @@ function showTaskFeedback(message: string, color: string) {
 }
 
 export async function getRandomTask(isSilentInit = false) {
-    const { id, memberId } = getState();
+    const { id, memberId, wallet } = getState();
     const pid = memberId || id;
     if (!pid) return;
+
+    if (!isSilentInit && (wallet || 0) < 300) {
+        const insult = document.getElementById('povertyInsult');
+        if (insult) insult.innerText = "You lack the 300 🪙 collateral required to request my orders.";
+        const pov = document.getElementById('povertyOverlay');
+        if (pov) { pov.classList.remove('hidden'); pov.style.display = 'flex'; }
+        return;
+    }
 
     try {
         console.log("Requesting task...");
@@ -665,10 +673,11 @@ export async function skipTask() {
     const readyText = document.getElementById('readyText');
     const mobTaskText = document.getElementById('mobTaskText');
 
-    if (wallet < 300) {
-        if (readyText) { readyText.innerText = "Insufficient Capital. 300 coins required."; readyText.style.color = "var(--red)"; }
-        if (mobTaskText) { mobTaskText.innerText = "Insufficient Capital. 300 coins required."; mobTaskText.style.color = "var(--red)"; }
-        setTimeout(() => { cancelSkipTask() }, 3000);
+    if ((wallet || 0) < 300) {
+        const insult = document.getElementById('povertyInsult');
+        if (insult) insult.innerText = "You cannot afford to skip this duty. Complete it, or buy more time at the Exchequer.";
+        const pov = document.getElementById('povertyOverlay');
+        if (pov) { pov.classList.remove('hidden'); pov.style.display = 'flex'; }
         return;
     }
 
