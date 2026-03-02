@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
         // 2. Calculate New Balances (Deduct Coins, Add Merit: 1 to 2 ratio)
         const newWallet = currentWallet - contributionAmount;
-        const meritGain = Math.floor(contributionAmount / 2); // 1:2 ratio meaning they get half of spend in merit points
+        const meritGain = Math.floor(contributionAmount / 2);
         const newScore = currentScore + meritGain;
 
         // 3. Update Database Profiles Table
@@ -46,46 +46,32 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
         }
 
-        // 4. Update the Crowdfund raised_amount in the confirmed 'Wishlist' table
-        const targetTable = 'Wishlist';
-
-        // Try various ID columns to find the record (id, _id, Title)
+        // 4. Update the Crowdfund raised_amount in the Wishlist table
+        // The tributeId passed from the client is the Title value (the Wishlist table has no lowercase 'id' column)
+        // So we match directly by Title, which is reliable
         const { data: tributeData, error: tributeErr } = await supabase
-            .from(targetTable)
-            .select('id, _id, Title, raised_amount')
-            .or(`id.eq.${tributeId},_id.eq.${tributeId},Title.eq.${tributeId}`)
+            .from('Wishlist')
+            .select('"ID", "Title", raised_amount')
+            .eq('Title', tributeTitle)
             .maybeSingle();
 
         if (tributeErr) {
-            console.error(`[API/Contribute] Error fetching tribute from ${targetTable}:`, tributeErr);
+            console.error(`[API/Contribute] Error fetching tribute:`, tributeErr);
         } else if (!tributeData) {
-            console.error(`[API/Contribute] Could not find tribute ${tributeId} in ${targetTable}. Check if the ID matches id, _id, or Title.`);
+            console.error(`[API/Contribute] Could not find tribute with Title="${tributeTitle}" in Wishlist table`);
         } else {
             const currentRaised = Number(tributeData.raised_amount || 0);
             const newRaisedAmount = currentRaised + contributionAmount;
 
-            // Improved matching logic: Check id, _id, and Title explicitly
-            let matchCol = '';
-            if (String(tributeData.id) === String(tributeId)) matchCol = 'id';
-            else if (String(tributeData._id) === String(tributeId)) matchCol = '_id';
-            else if (String(tributeData.Title) === String(tributeId)) matchCol = 'Title';
+            const { error: updateErr } = await supabase
+                .from('Wishlist')
+                .update({ raised_amount: newRaisedAmount })
+                .eq('Title', tributeTitle);
 
-            if (matchCol) {
-                // IMPORTANT: Use the value directly from the fetched DB object to ensure type match
-                const filterValue = tributeData[matchCol];
-
-                const { error: updateErr } = await supabase
-                    .from(targetTable)
-                    .update({ raised_amount: newRaisedAmount })
-                    .eq(matchCol, filterValue);
-
-                if (updateErr) {
-                    console.error(`[API/Contribute] Update Error:`, updateErr);
-                } else {
-                    console.log(`[API/Contribute] SUCCESS: Updated ${targetTable}.${matchCol}=${filterValue} raised_amount to ${newRaisedAmount}`);
-                }
+            if (updateErr) {
+                console.error(`[API/Contribute] Failed to update raised_amount:`, updateErr);
             } else {
-                console.error(`[API/Contribute] Match failed after fetch. Data:`, tributeData);
+                console.log(`[API/Contribute] SUCCESS: Wishlist Title="${tributeTitle}" raised_amount updated to ${newRaisedAmount}`);
             }
         }
 
@@ -96,7 +82,6 @@ export async function POST(request: Request) {
                 member_id: memberEmail,
                 tribute_id: tributeId.toString(),
                 amount_given: contributionAmount,
-                // timestamp is auto-generated based on the DB column default
             });
 
         if (insertErr) {

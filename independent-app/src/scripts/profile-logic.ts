@@ -323,7 +323,6 @@ if (typeof window !== 'undefined') {
             return;
         }
 
-        if (!confirm(`Are you sure you wish to contribute ${amount.toLocaleString()} coins to ${title}?\n(This will also earn you merit)`)) return;
 
         try {
             const res = await fetch('/api/tributes/contribute', {
