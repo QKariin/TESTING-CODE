@@ -392,6 +392,7 @@ export default function ProfilePage() {
                             <div id="mainButtonsArea" style={{ width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <button id="newTaskBtn" onClick={() => getRandomTask()} className="action-btn" style={{ width: '100%', borderRadius: 12, background: '#0075ff', color: 'white', padding: 15, fontWeight: 'bold', letterSpacing: 2 }}>REQUEST TASK</button>
                                 <div id="idleMessage" style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: 10 }}>Awaiting direct orders from Queen Karin...</div>
+                                <div id="requestWarningBox" style={{ display: 'none', color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.8rem', textAlign: 'center', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(255,0,0,0.1)', padding: '10px', borderRadius: '8px', marginTop: '15px', width: '100%' }}>INSUFFICIENT CAPITAL</div>
                             </div>
                             <div id="activeTaskContent" className="hidden" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 <h2 id="readyText" style={{ fontFamily: 'Cinzel', fontSize: '1.1rem', textAlign: 'center', margin: 0, lineHeight: 1.4, color: 'white' }}>-</h2>
@@ -402,6 +403,7 @@ export default function ProfilePage() {
                                     <div className="t-sep">:</div>
                                     <div id="timerS" className="card-t-box">00</div>
                                 </div>
+                                <div id="skipWarningBox" style={{ display: 'none', color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.85rem', textAlign: 'center', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(255,0,0,0.1)', padding: '12px', borderRadius: '8px', marginTop: '10px', width: '100%', lineHeight: '1.4' }}>INSUFFICIENT CAPITAL</div>
                                 <div id="uploadBtnContainer" style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 10, alignItems: 'center' }}>
                                     <button id="uploadBtn" className="action-btn" style={{ width: 240, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: '#c5a059', fontWeight: 'bold', border: '1px solid #c5a059', boxShadow: '0 0 15px rgba(197,160,89,0.2)' }} onClick={() => (document.getElementById('taskEvidenceInput') as any)?.click()}>UPDATE TASK</button>
                                     <button id="btnSkip" onClick={() => (window as any).skipTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 240 }}>SKIP TASK (-300 🪙)</button>
@@ -829,6 +831,7 @@ export default function ProfilePage() {
                                 <div id="qm_TaskIdle" className="hidden" style={{ textAlign: 'center' }}>
                                     <div className="txt-status-red" style={{ marginBottom: '10px' }}>UNPRODUCTIVE</div>
                                     <button className="lobby-btn" style={{ width: '100%', borderColor: '#c5a059', color: '#c5a059' }} onClick={() => (window as any).mobileRequestTask()}>REQUEST TASK</button>
+                                    <div id="mobRequestWarningBox" style={{ display: 'none', color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.75rem', textAlign: 'center', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(255,0,0,0.1)', padding: '10px', borderRadius: '8px', marginTop: '10px' }}>INSUFFICIENT CAPITAL</div>
                                 </div>
                                 <div id="qm_TaskActive" className="hidden" style={{ textAlign: 'center' }}>
                                     <div className="txt-status-green" style={{ marginBottom: '5px' }}>WORKING</div>
@@ -838,6 +841,7 @@ export default function ProfilePage() {
                                         <div id="qm_timerM" className="card-t-box">00</div>:
                                         <div id="qm_timerS" className="card-t-box">00</div>
                                     </div>
+                                    <div id="mobSkipWarningBox" style={{ display: 'none', color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.75rem', textAlign: 'center', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(255,0,0,0.1)', padding: '10px', borderRadius: '8px', marginTop: '10px', marginBottom: '10px', lineHeight: '1.4' }}>INSUFFICIENT CAPITAL</div>
                                     <div id="mobUploadBtnContainer" style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                                         <button id="mobBtnUpload" className="btn-upload-sm" style={{ flex: 1 }} onClick={() => document.getElementById('evidenceInputMob')?.click()}>UPLOAD</button>
                                         <button id="mobBtnSkip" className="btn-skip-sm" style={{ flex: 1 }} onClick={() => (window as any).mobileSkipTask()}>SKIP (-300)</button>

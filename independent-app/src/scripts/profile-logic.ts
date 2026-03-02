@@ -536,6 +536,15 @@ export function resetTaskUI() {
     if (mobDismissTaskCont) mobDismissTaskCont.style.display = 'none';
     if (activeTimerRow) { activeTimerRow.style.display = 'flex'; activeTimerRow.style.opacity = '1'; }
 
+    const rb = document.getElementById('requestWarningBox');
+    const mrb = document.getElementById('mobRequestWarningBox');
+    const sBox = document.getElementById('skipWarningBox');
+    const msBox = document.getElementById('mobSkipWarningBox');
+    if (rb) rb.style.display = 'none';
+    if (mrb) mrb.style.display = 'none';
+    if (sBox) sBox.style.display = 'none';
+    if (msBox) msBox.style.display = 'none';
+
     if (mainArea) mainArea.style.display = 'flex';
     if (activeArea) {
         activeArea.classList.add('hidden');
@@ -600,15 +609,19 @@ export async function getRandomTask(isSilentInit = false) {
     if (!pid) return;
 
     if (!isSilentInit && (wallet || 0) < 300) {
-        const insult = document.getElementById('povertyInsult');
-        if (insult) insult.innerText = "You lack the 300 🪙 collateral required to request my orders.";
-        const pov = document.getElementById('povertyOverlay');
-        if (pov) { pov.classList.remove('hidden'); pov.style.display = 'flex'; }
+        const rBox = document.getElementById('requestWarningBox');
+        const mrBox = document.getElementById('mobRequestWarningBox');
+        if (rBox) { rBox.innerText = "INSUFFICIENT CAPITAL: 300 🪙 REQUIRED"; rBox.style.display = 'block'; }
+        if (mrBox) { mrBox.innerText = "INSUFFICIENT CAPITAL: 300 🪙 REQUIRED"; mrBox.style.display = 'block'; }
         return;
     }
 
     try {
         console.log("Requesting task...");
+        const rb = document.getElementById('requestWarningBox');
+        const mrb = document.getElementById('mobRequestWarningBox');
+        if (rb) rb.style.display = 'none';
+        if (mrb) mrb.style.display = 'none';
 
         const mainArea = document.getElementById('mainButtonsArea');
         const activeArea = document.getElementById('activeTaskContent');
@@ -674,10 +687,11 @@ export async function skipTask() {
     const mobTaskText = document.getElementById('mobTaskText');
 
     if ((wallet || 0) < 300) {
-        const insult = document.getElementById('povertyInsult');
-        if (insult) insult.innerText = "You cannot afford to skip this duty. Complete it, or buy more time at the Exchequer.";
-        const pov = document.getElementById('povertyOverlay');
-        if (pov) { pov.classList.remove('hidden'); pov.style.display = 'flex'; }
+        const sBox = document.getElementById('skipWarningBox');
+        const msBox = document.getElementById('mobSkipWarningBox');
+        const msg = "INSUFFICIENT CAPITAL<br/><span style='font-size:0.6rem;color:#ccc;'>VISIT THE EXCHEQUER OR SERVE</span>";
+        if (sBox) { sBox.innerHTML = msg; sBox.style.display = 'block'; }
+        if (msBox) { msBox.innerHTML = msg; msBox.style.display = 'block'; }
         return;
     }
 
@@ -720,6 +734,11 @@ export function cancelSkipTask() {
     if (skipConfirmCont) skipConfirmCont.style.display = 'none';
     if (mobSkipConfirmCont) mobSkipConfirmCont.style.display = 'none';
 
+    const sBox = document.getElementById('skipWarningBox');
+    const msBox = document.getElementById('mobSkipWarningBox');
+    if (sBox) sBox.style.display = 'none';
+    if (msBox) msBox.style.display = 'none';
+
     if (readyText) { readyText.innerHTML = taskMsg; readyText.style.color = 'white'; readyText.style.opacity = '1'; }
     if (mobTaskText) { mobTaskText.innerHTML = taskMsg; mobTaskText.style.color = 'white'; mobTaskText.style.opacity = '1'; }
 }
@@ -731,10 +750,11 @@ export async function executeSkipTask() {
 
     if ((wallet || 0) < 300) {
         cancelSkipTask();
-        const insult = document.getElementById('povertyInsult');
-        if (insult) insult.innerText = "You cannot afford to skip this duty. Complete it, or buy more time at the Exchequer.";
-        const pov = document.getElementById('povertyOverlay');
-        if (pov) { pov.classList.remove('hidden'); pov.style.display = 'flex'; }
+        const sBox = document.getElementById('skipWarningBox');
+        const msBox = document.getElementById('mobSkipWarningBox');
+        const msg = "INSUFFICIENT CAPITAL<br/><span style='font-size:0.6rem;color:#ccc;'>VISIT THE EXCHEQUER OR SERVE</span>";
+        if (sBox) { sBox.innerHTML = msg; sBox.style.display = 'block'; }
+        if (msBox) { msBox.innerHTML = msg; msBox.style.display = 'block'; }
         return;
     }
 
@@ -793,10 +813,11 @@ export async function executeSkipTask() {
             loadChatHistory(pid);
         } else {
             cancelSkipTask();
-            const insult = document.getElementById('povertyInsult');
-            if (insult) insult.innerText = data.error || "You cannot afford to skip this duty. Complete it, or buy more time at the Exchequer.";
-            const pov = document.getElementById('povertyOverlay');
-            if (pov) { pov.classList.remove('hidden'); pov.style.display = 'flex'; }
+            const sBox = document.getElementById('skipWarningBox');
+            const msBox = document.getElementById('mobSkipWarningBox');
+            const msg = "INSUFFICIENT CAPITAL<br/><span style='font-size:0.6rem;color:#ccc;'>VISIT THE EXCHEQUER OR SERVE</span>";
+            if (sBox) { sBox.innerHTML = msg; sBox.style.display = 'block'; }
+            if (msBox) { msBox.innerHTML = msg; msBox.style.display = 'block'; }
         }
     } catch (err) {
         console.error("Error skipping task", err);
