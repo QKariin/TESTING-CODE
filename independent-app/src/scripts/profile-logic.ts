@@ -725,9 +725,18 @@ export function cancelSkipTask() {
 }
 
 export async function executeSkipTask() {
-    const { id, memberId } = getState();
+    const { id, memberId, wallet } = getState();
     const pid = memberId || id;
     if (!pid) return;
+
+    if ((wallet || 0) < 300) {
+        cancelSkipTask();
+        const insult = document.getElementById('povertyInsult');
+        if (insult) insult.innerText = "You cannot afford to skip this duty. Complete it, or buy more time at the Exchequer.";
+        const pov = document.getElementById('povertyOverlay');
+        if (pov) { pov.classList.remove('hidden'); pov.style.display = 'flex'; }
+        return;
+    }
 
     const skipConfirmCont = document.getElementById('skipConfirmContainer');
     const mobSkipConfirmCont = document.getElementById('mobSkipConfirmContainer');
