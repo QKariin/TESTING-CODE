@@ -1181,12 +1181,12 @@ function getSystemLogHtml(msg: any) {
 }
 
 export function renderSystemLogs(messages: any[]) {
-    const sysLogHtml = messages.map(m => getSystemLogHtml(m)).join('');
+    const sysLogHtml = [...messages].reverse().map(m => getSystemLogHtml(m)).join('');
     ['systemLogContent', 'mob_systemLogContent'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.innerHTML = sysLogHtml;
-            el.scrollTop = el.scrollHeight;
+            el.scrollTop = 0;
         }
     });
 }
@@ -1196,8 +1196,8 @@ function appendSystemLog(msg: any) {
     ['systemLogContent', 'mob_systemLogContent'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            el.insertAdjacentHTML('beforeend', html);
-            el.scrollTop = el.scrollHeight;
+            el.insertAdjacentHTML('afterbegin', html);
+            el.scrollTop = 0;
         }
     });
 }
