@@ -715,10 +715,29 @@ export async function executeSkipTask() {
     const pid = id || memberId;
     if (!pid) return;
 
+    const skipConfirmCont = document.getElementById('skipConfirmContainer');
+    const mobSkipConfirmCont = document.getElementById('mobSkipConfirmContainer');
+    if (skipConfirmCont) skipConfirmCont.style.display = 'none';
+    if (mobSkipConfirmCont) mobSkipConfirmCont.style.display = 'none';
+
+    if (taskInterval) { clearInterval(taskInterval); taskInterval = null; }
+    const activeTimerRow = document.getElementById('activeTimerRow');
+    const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
+    if (activeTimerRow) activeTimerRow.style.display = 'none';
+    if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'none';
+
     const readyText = document.getElementById('readyText');
     const mobTaskText = document.getElementById('mobTaskText');
-    if (readyText) { readyText.innerText = "SKIPPING..."; readyText.style.color = "white"; }
-    if (mobTaskText) { mobTaskText.innerText = "SKIPPING..."; mobTaskText.style.color = "white"; }
+    if (readyText) {
+        readyText.innerHTML = '<div style="margin-bottom: 10px;">SUBMITTING REQUEST...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
+        readyText.style.color = '#c5a059';
+        readyText.style.opacity = '1';
+    }
+    if (mobTaskText) {
+        mobTaskText.innerHTML = '<div style="margin-bottom: 10px;">SUBMITTING REQUEST...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
+        mobTaskText.style.color = '#c5a059';
+        mobTaskText.style.opacity = '1';
+    }
 
     try {
         const res = await fetch('/api/tasks/skip', {

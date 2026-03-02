@@ -37,35 +37,34 @@ export async function POST(req: NextRequest) {
 
         const { supabaseAdmin } = require('@/lib/supabase');
 
-        // Fire both DB updates in parallel
-        const pUserProfile = supabaseAdmin.from('profiles').update({
+        const profileDbUpdate = await supabaseAdmin.from('profiles').update({
             wallet: wallet - 300,
             parameters: params
         }).eq('id', profile.id);
 
-        const pTaskHistory = (async () => {
-            const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History').eq('member_id', memberEmail).maybeSingle();
-            let history: any[] = [];
-            try { history = typeof row?.Taskdom_History === 'string' ? JSON.parse(row.Taskdom_History) : (row?.Taskdom_History || []); } catch { }
+        let taskDbUpdate;
+        const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History').eq('member_id', memberEmail).maybeSingle();
+        let history: any[] = [];
+        try { history = typeof row?.Taskdom_History === 'string' ? JSON.parse(row.Taskdom_History) : (row?.Taskdom_History || []); } catch { }
 
-            history.unshift({
-                id: skippedId,
-                text: skippedText,
-                proofUrl: 'SKIPPED',
-                proofType: 'image',
-                timestamp: new Date().toISOString(),
-                status: 'fail',
-                completed: false
-            });
+        history.unshift({
+            id: skippedId,
+            text: skippedText,
+            proofUrl: 'SKIPPED',
+            proofType: 'image',
+            timestamp: new Date().toISOString(),
+            status: 'fail',
+            completed: false
+        });
 
-            if (row) {
-                return supabaseAdmin.from('tasks').update({ Status: 'fail', 'Taskdom_History': JSON.stringify(history) }).eq('member_id', memberEmail);
-            } else {
-                return supabaseAdmin.from('tasks').insert({ member_id: memberEmail, Name: profile.name || 'Slave', Status: 'fail', 'Taskdom_History': JSON.stringify(history) });
-            }
-        })();
+        if (row) {
+            taskDbUpdate = await supabaseAdmin.from('tasks').update({ Status: 'fail', 'Taskdom_History': JSON.stringify(history) }).eq('member_id', memberEmail);
+        } else {
+            taskDbUpdate = await supabaseAdmin.from('tasks').insert({ member_id: memberEmail, Name: profile.name || 'Slave', Status: 'fail', 'Taskdom_History': JSON.stringify(history) });
+        }
 
-        await Promise.all([pUserProfile, pTaskHistory]);
+        console.log("Profile update:", profileDbUpdate.error ? profileDbUpdate.error : "SUCCESS");
+        console.log("Task update:", taskDbUpdate.error ? taskDbUpdate.error : "SUCCESS");
 
         try { await DbService.sendMessage(profile.id, `TASK SKIPPED — 300 🪙 DEDUCTED`, 'system'); } catch (_) { }
 
