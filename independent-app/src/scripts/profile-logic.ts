@@ -641,8 +641,8 @@ export async function getRandomTask(isSilentInit = false) {
         if (qmActive) { qmActive.classList.remove('hidden'); qmActive.style.display = 'block'; }
 
         const taskMsg = data.task.TaskText || data.task.tasktext || 'Perform the assigned duty.';
-        if (readyText) readyText.innerText = taskMsg;
-        if (mobTaskText) mobTaskText.innerText = taskMsg;
+        if (readyText) readyText.innerHTML = taskMsg;
+        if (mobTaskText) mobTaskText.innerHTML = taskMsg;
 
         const timeLeftMs = data.timeLeftMs || (24 * 60 * 60 * 1000);
         startTaskTimer(timeLeftMs);
@@ -706,8 +706,8 @@ export function cancelSkipTask() {
     if (skipConfirmCont) skipConfirmCont.style.display = 'none';
     if (mobSkipConfirmCont) mobSkipConfirmCont.style.display = 'none';
 
-    if (readyText) { readyText.innerText = taskMsg; readyText.style.color = 'white'; readyText.style.opacity = '1'; }
-    if (mobTaskText) { mobTaskText.innerText = taskMsg; mobTaskText.style.color = 'white'; mobTaskText.style.opacity = '1'; }
+    if (readyText) { readyText.innerHTML = taskMsg; readyText.style.color = 'white'; readyText.style.opacity = '1'; }
+    if (mobTaskText) { mobTaskText.innerHTML = taskMsg; mobTaskText.style.color = 'white'; mobTaskText.style.opacity = '1'; }
 }
 
 export async function executeSkipTask() {
@@ -830,7 +830,7 @@ async function submitTaskEvidence(file: File) {
     }
 
     // Capture task text from UI
-    const taskText = document.getElementById('readyText')?.innerText || "Mandatory Task";
+    const taskText = document.getElementById('readyText')?.innerHTML || "Mandatory Task";
     console.log("Task Text for submission:", taskText);
 
     // UI Feedback - Handle all possible Desktop and Mobile buttons
