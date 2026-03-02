@@ -150,17 +150,19 @@ export const DbService = {
     },
 
     // --- MESSAGING ---
-    async sendMessage(memberId: string, text: string, sender: string = 'slave', mediaUrl: string | null = null) {
+    async sendMessage(memberId: string, text: string, sender: string = 'system', mediaUrl: string | null = null) {
         const profile = await this.getProfile(memberId);
         const mid = profile?.member_id || memberId;
 
         const { data, error } = await supabase
-            .from('messages')
+            .from('chats')
             .insert({
                 member_id: mid,
-                sender,
-                message: text,
-                media_url: mediaUrl
+                sender_email: sender,
+                content: text,
+                type: 'system',
+                mediaUrl: mediaUrl,
+                metadata: { isQueen: sender === 'system' ? false : true }
             })
             .select()
             .single();

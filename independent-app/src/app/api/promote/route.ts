@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getHierarchyReport } from '@/scripts/hierarchy-rules';
+import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,8 @@ export async function POST(req: Request) {
                 console.error('[promote] Update error:', updateError);
                 return NextResponse.json({ error: 'Failed to update database' }, { status: 500 });
             }
+
+            try { await DbService.sendMessage(memberEmail, `RANK PROMOTED: ${report.nextRank.toUpperCase()}`, 'system'); } catch (_) { }
 
             return NextResponse.json({
                 success: true,

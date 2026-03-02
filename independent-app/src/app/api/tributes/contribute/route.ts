@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { DbService } from '@/lib/supabase-service';
 
 export async function POST(request: Request) {
     try {
@@ -101,6 +102,8 @@ export async function POST(request: Request) {
         if (insertErr) {
             console.error("Receipt logging error (Non-Fatal):", insertErr);
         }
+
+        try { await DbService.sendMessage(memberEmail, `CONTRIBUTED TO '${tributeTitle}' (-${contributionAmount} 🪙)`, 'system'); } catch (_) { }
 
         return NextResponse.json({
             success: true,

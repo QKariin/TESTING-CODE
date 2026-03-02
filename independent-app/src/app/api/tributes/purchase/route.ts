@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { DbService } from '@/lib/supabase-service';
 
 export async function POST(request: Request) {
     try {
@@ -46,6 +47,8 @@ export async function POST(request: Request) {
             console.error("Profile update error:", updateErr);
             return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
         }
+
+        try { await DbService.sendMessage(memberEmail, `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} 🪙)`, 'system'); } catch (_) { }
 
         return NextResponse.json({
             success: true,

@@ -427,7 +427,7 @@ export default function ProfilePage() {
                             </div>
 
                             {/* NEW SYSTEM LOG CONTAINER */}
-                            <div id="systemLogContainer" className="hidden" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 'calc(100% - 75px)', background: 'linear-gradient(to bottom, #000, #050505)', zIndex: 10, display: 'none', flexDirection: 'column' }}>
+                            <div id="systemLogContainer" className="hidden" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 'calc(100% - 75px)', background: 'linear-gradient(to bottom, #000, #050505)', zIndex: 50, display: 'none', flexDirection: 'column' }}>
                                 <div style={{ width: '100%', padding: '15px 20px', background: 'rgba(197,160,89,0.1)', borderBottom: '1px solid rgba(197,160,89,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontWeight: 'bold' }}>SYSTEM LOGS</span>
                                     <button onClick={() => (window as any).toggleSystemLog()} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem' }}>×</button>

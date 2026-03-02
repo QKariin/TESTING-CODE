@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase'; // Use Admin to bypass RLS for increments
+import { supabaseAdmin } from '@/lib/supabase';
+import { DbService } from '@/lib/supabase-service'; // Use Admin to bypass RLS for increments
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
     try {
         const { choice, memberEmail } = await req.json();
-        
+
         if (!memberEmail) return NextResponse.json({ error: 'No email' }, { status: 400 });
 
         // Define Rewards
@@ -41,6 +42,9 @@ export async function POST(req: Request) {
             .eq('member_id', memberEmail);
 
         if (error) throw error;
+
+        const logMsg = choice === 'coins' ? `REWARD CLAIMED (+${COIN_REWARD} 🪙)` : `REWARD CLAIMED (+${POINT_REWARD} MERIT)`;
+        try { await DbService.sendMessage(memberEmail, logMsg, 'system'); } catch (_) { }
 
         return NextResponse.json({ success: true, ...updateData });
 
