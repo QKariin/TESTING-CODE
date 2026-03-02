@@ -767,6 +767,7 @@ export async function executeSkipTask() {
             ];
             const msg = mockeries[Math.floor(Math.random() * mockeries.length)];
             showTaskFeedback(msg, 'var(--red)');
+            loadChatHistory(pid);
         } else {
             if (readyText) readyText.innerText = data.error || "Failed to skip task.";
             if (mobTaskText) mobTaskText.innerText = data.error || "Failed to skip task.";
