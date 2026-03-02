@@ -35,23 +35,24 @@ export async function POST(request: Request) {
         const meritGain = Math.floor(tributeCost / 2); // 1:2 ratio meaning they get half of spend in merit points
         const newScore = currentScore + meritGain;
 
-        // 3. Update Database Profiles Table (also record last tribute)
-        const { error: updateErr, data: updatedProfile } = await supabase
+        // 3. Update wallet + score (critical — must succeed)
+        const { error: updateErr } = await supabase
             .from('profiles')
-            .update({
-                wallet: newWallet,
-                score: newScore,
-                last_tribute_at: new Date().toISOString(),
-                last_tribute_title: tributeTitle,
-            })
-            .eq('member_id', memberEmail)
-            .select()
-            .single();
+            .update({ wallet: newWallet, score: newScore })
+            .eq('member_id', memberEmail);
 
         if (updateErr) {
             console.error("Profile update error:", updateErr);
             return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
         }
+
+        // 4. Non-blocking: record last tribute timestamp (fails silently if columns don't exist yet)
+        supabase.from('profiles').update({
+            last_tribute_at: new Date().toISOString(),
+            last_tribute_title: tributeTitle,
+        }).eq('member_id', memberEmail).then(({ error: tsErr }: { error: any }) => {
+            if (tsErr) console.warn('[Purchase] last_tribute columns not yet in DB — safe to ignore:', tsErr.message);
+        });
 
         try { await DbService.sendMessage(memberEmail, `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} 🪙)`, 'system'); } catch (_) { }
 

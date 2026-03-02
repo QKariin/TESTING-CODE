@@ -445,11 +445,14 @@ if (typeof window !== 'undefined') {
                 // Re-fetch tributes to instantly update the progress bar visually
                 loadTributes();
             } else {
-                alert(`Failed: ${data.error}`);
+                if (data.error === 'INSUFFICIENT_FUNDS') {
+                    showPovertyModal(title);
+                } else {
+                    console.error('Contribution failed:', data.error);
+                }
             }
         } catch (err) {
             console.error("Contribution error:", err);
-            alert("An error occurred. Please try again.");
         }
     };
 }
@@ -473,11 +476,13 @@ export async function buyTribute(id: string, title: string, cost: number) {
         const data = await res.json();
 
         if (data.success) {
-            // Update local state directly with new DB values
             setState({ wallet: data.newWallet, score: data.newScore });
 
-            // Visual feedback
-            triggerCoinShower();
+            // Close wishlist overlay first, then show toast
+            document.getElementById('tributeHuntOverlay')?.classList.add('hidden');
+
+            // Show gift toast with coin shower
+            showGiftToast(title, cost, data.meritGained);
 
             // Re-render UI
             renderProfileSidebar(getState().raw || getState());
