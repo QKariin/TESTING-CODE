@@ -1497,7 +1497,14 @@ export async function loadQueenPosts() {
     const heroCard = document.getElementById('desk_LatestKarinPhoto');
 
     if (newsGrid) {
-        newsGrid.innerHTML = '<div style="color:#444;font-family:Orbitron;font-size:0.7rem;letter-spacing:2px;text-align:center;padding:40px;">LOADING TRANSMISSIONS...</div>';
+        newsGrid.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;height:300px;gap:15px;">
+                <div style="width:4px;height:40px;background:#c5a059;animation:pulse 1s ease-in-out infinite alternate;"></div>
+                <div style="width:4px;height:60px;background:#c5a059;animation:pulse 1s ease-in-out 0.2s infinite alternate;"></div>
+                <div style="width:4px;height:40px;background:#c5a059;animation:pulse 1s ease-in-out 0.4s infinite alternate;"></div>
+                <style>@keyframes pulse{from{opacity:0.2;transform:scaleY(0.6)}to{opacity:1;transform:scaleY(1)}}</style>
+            </div>
+        `;
     }
 
     try {
@@ -1505,78 +1512,356 @@ export async function loadQueenPosts() {
         const data = await res.json();
 
         if (!data.success || !data.posts || data.posts.length === 0) {
-            if (newsGrid) newsGrid.innerHTML = '<div style="color:#333;font-family:Cinzel;font-size:0.9rem;text-align:center;padding:60px;letter-spacing:2px;">NO TRANSMISSIONS YET</div>';
+            if (newsGrid) newsGrid.innerHTML = `
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:400px;gap:15px;">
+                    <div style="font-size:3rem;opacity:0.3;">👑</div>
+                    <div style="font-family:Cinzel;font-size:0.8rem;color:#333;letter-spacing:3px;">NO TRANSMISSIONS YET</div>
+                </div>`;
             return;
         }
 
         const posts = data.posts;
-
-        // ── Latest post: update the Queen Karin hero card (next to Tribute) ──
         const latest = posts[0];
+
+        // ── Hero card (Queen Karin card next to Tribute) ──────────────────
         if (heroCard) {
-            heroCard.style.position = 'relative';
-            heroCard.style.overflow = 'hidden';
+            heroCard.style.cssText = `
+                position: relative;
+                overflow: hidden;
+                cursor: pointer;
+                transition: transform 0.4s;
+            `;
+            heroCard.onclick = () => {
+                const switchTabFn = (window as any).switchTab;
+                if (switchTabFn) { switchTabFn('news'); (window as any).loadQueenPosts?.(); }
+            };
             if (latest.media_url) {
-                heroCard.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.85)), url('${latest.media_url}')`;
+                heroCard.style.backgroundImage = `url('${latest.media_url}')`;
                 heroCard.style.backgroundSize = 'cover';
-                heroCard.style.backgroundPosition = 'center';
+                heroCard.style.backgroundPosition = 'center top';
+            } else {
+                heroCard.style.background = 'linear-gradient(135deg,#0a0005 0%,#1a0a00 100%)';
             }
             heroCard.innerHTML = `
-                <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:20px;z-index:2;">
-                    <div style="font-family:Orbitron;font-size:0.5rem;color:#c5a059;letter-spacing:3px;margin-bottom:6px;">LATEST DISPATCH</div>
-                    ${latest.title ? `<div style="font-family:Cinzel;font-size:0.95rem;color:#fff;line-height:1.3;margin-bottom:4px;">${latest.title}</div>` : ''}
-                    ${latest.content ? `<div style="font-family:Rajdhani;font-size:0.78rem;color:#bbb;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${latest.content}</div>` : ''}
+                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.95) 0%,rgba(0,0,0,0.3) 50%,rgba(0,0,0,0.1) 100%);z-index:1;"></div>
+                <div style="position:absolute;bottom:0;left:0;right:0;padding:18px;z-index:2;">
+                    <div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:3px;margin-bottom:5px;opacity:0.8;">QUEEN'S DISPATCH</div>
+                    ${latest.title ? `<div style="font-family:Cinzel;font-size:0.9rem;color:#fff;line-height:1.3;margin-bottom:3px;text-shadow:0 2px 10px rgba(0,0,0,0.8);">${latest.title}</div>` : ''}
+                    ${latest.content ? `<div style="font-family:Rajdhani;font-size:0.75rem;color:rgba(255,255,255,0.6);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.4;">${latest.content}</div>` : ''}
                 </div>
+                <div style="position:absolute;top:12px;right:12px;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.4);backdrop-filter:blur(10px);padding:4px 10px;border-radius:2px;font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:2px;z-index:2;">VIEW ALL</div>
             `;
         }
 
-        // ── Queen Karin tab: magazine-style grid ──
+        // ── Build the full-page editorial layout ──────────────────────────
         if (!newsGrid) return;
-        newsGrid.style.display = 'grid';
-        newsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
-        newsGrid.style.gap = '20px';
-        newsGrid.style.padding = '20px';
-        newsGrid.style.width = '100%';
-        newsGrid.style.alignContent = 'start';
 
-        newsGrid.innerHTML = posts.map((p: any, i: number) => {
-            const isFeatured = i === 0;
-            const dateStr = new Date(p.created_at).toLocaleDateString('en-GB', {
-                day: 'numeric', month: 'long', year: 'numeric'
-            }).toUpperCase();
-
-            return `
-            <div style="
-                ${isFeatured ? 'grid-column: 1 / -1;' : ''}
-                background: #090909;
-                border: 1px solid ${isFeatured ? 'rgba(197,160,89,0.3)' : '#1a1a1a'};
-                border-radius: 10px;
+        const CSS = `
+            <style>
+            .qk-feed-wrap {
+                width: 100%;
+                max-width: 1100px;
+                margin: 0 auto;
+                padding: 30px 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 30px;
+            }
+            .qk-header {
+                display: flex;
+                align-items: flex-end;
+                gap: 15px;
+                border-bottom: 1px solid rgba(197,160,89,0.2);
+                padding-bottom: 20px;
+            }
+            .qk-header-title {
+                font-family: Cinzel;
+                font-size: 2rem;
+                color: #c5a059;
+                letter-spacing: 6px;
+                line-height: 1;
+            }
+            .qk-header-sub {
+                font-family: Orbitron;
+                font-size: 0.5rem;
+                color: #444;
+                letter-spacing: 3px;
+                margin-bottom: 4px;
+            }
+            /* HERO — tall portrait image left, text right */
+            .qk-hero {
+                display: grid;
+                grid-template-columns: 1fr 1.1fr;
+                gap: 0;
+                height: 540px;
+                border: 1px solid rgba(197,160,89,0.2);
+                border-radius: 6px;
+                overflow: hidden;
+                background: #060606;
+                transition: border-color 0.4s;
+            }
+            .qk-hero:hover { border-color: rgba(197,160,89,0.5); }
+            .qk-hero-img {
+                position: relative;
+                overflow: hidden;
+                background: #111;
+            }
+            .qk-hero-img img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center top;
+                display: block;
+                transition: transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94);
+            }
+            .qk-hero:hover .qk-hero-img img { transform: scale(1.04); }
+            .qk-hero-img-placeholder {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 5rem;
+                background: linear-gradient(135deg,#0a0005,#1a0800);
+            }
+            .qk-feat-badge {
+                position: absolute;
+                top: 18px;
+                left: 18px;
+                background: #c5a059;
+                color: #000;
+                font-family: Orbitron;
+                font-size: 0.5rem;
+                padding: 5px 12px;
+                letter-spacing: 3px;
+                border-radius: 2px;
+                z-index: 2;
+            }
+            .qk-hero-body {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 35px 40px;
+                background: #060606;
+            }
+            .qk-hero-date {
+                font-family: Orbitron;
+                font-size: 0.5rem;
+                color: #3a3a3a;
+                letter-spacing: 3px;
+            }
+            .qk-hero-title {
+                font-family: Cinzel;
+                font-size: 1.8rem;
+                color: #fff;
+                line-height: 1.3;
+                letter-spacing: 2px;
+                margin: 20px 0 15px 0;
+            }
+            .qk-hero-content {
+                font-family: Rajdhani;
+                font-size: 1rem;
+                color: #888;
+                line-height: 1.8;
+                flex: 1;
+                overflow: hidden;
+            }
+            .qk-hero-footer {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border-top: 1px solid #111;
+                padding-top: 20px;
+                margin-top: 20px;
+            }
+            .qk-queen-sig {
+                width: 32px;
+                height: 32px;
+                background: radial-gradient(circle,rgba(197,160,89,0.3),rgba(197,160,89,0.05));
+                border: 1px solid rgba(197,160,89,0.4);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.9rem;
+            }
+            .qk-queen-name {
+                font-family: Cinzel;
+                font-size: 0.7rem;
+                color: #c5a059;
+                letter-spacing: 2px;
+            }
+            /* PORTRAIT GRID */
+            .qk-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 18px;
+            }
+            .qk-card {
+                background: #060606;
+                border: 1px solid #161616;
+                border-radius: 6px;
                 overflow: hidden;
                 display: flex;
-                flex-direction: ${isFeatured && p.media_url ? 'row' : 'column'};
-                min-height: ${isFeatured ? '300px' : '180px'};
-                transition: border-color 0.3s, transform 0.3s;
-            "
-            onmouseover="this.style.borderColor='rgba(197,160,89,0.5)';this.style.transform='translateY(-2px)'"
-            onmouseout="this.style.borderColor='${isFeatured ? 'rgba(197,160,89,0.3)' : '#1a1a1a'}';this.style.transform='translateY(0)'"
-            >
-                ${p.media_url ? `
-                <div style="
-                    ${isFeatured ? 'width:40%;flex-shrink:0;' : 'height:180px;'}
-                    background: url('${p.media_url}') center/cover;
-                    position:relative;
-                ">
-                    ${isFeatured ? `<div style="position:absolute;top:12px;left:12px;background:#c5a059;color:#000;font-family:Orbitron;font-size:0.5rem;padding:4px 10px;letter-spacing:2px;border-radius:2px;">FEATURED</div>` : ''}
-                </div>` : (isFeatured ? `<div style="width:35%;background:linear-gradient(135deg,rgba(197,160,89,0.06),rgba(0,0,0,0.5));display:flex;align-items:center;justify-content:center;font-size:2.5rem;">👑</div>` : '')}
+                flex-direction: column;
+                transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+                cursor: default;
+            }
+            .qk-card:hover {
+                border-color: rgba(197,160,89,0.35);
+                transform: translateY(-4px);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            }
+            .qk-card-img {
+                aspect-ratio: 3/4;
+                overflow: hidden;
+                background: #0d0d0d;
+                position: relative;
+                flex-shrink: 0;
+            }
+            .qk-card-img img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center top;
+                display: block;
+                transition: transform 0.6s;
+            }
+            .qk-card:hover .qk-card-img img { transform: scale(1.06); }
+            .qk-card-img-placeholder {
+                width: 100%;
+                aspect-ratio: 3/4;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 3rem;
+                background: linear-gradient(135deg,#080808,#111);
+                flex-shrink: 0;
+            }
+            .qk-card-body {
+                padding: 16px 18px 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                flex: 1;
+            }
+            .qk-card-date {
+                font-family: Orbitron;
+                font-size: 0.45rem;
+                color: #333;
+                letter-spacing: 2px;
+            }
+            .qk-card-title {
+                font-family: Cinzel;
+                font-size: 0.85rem;
+                color: #ddd;
+                line-height: 1.4;
+            }
+            .qk-card-content {
+                font-family: Rajdhani;
+                font-size: 0.82rem;
+                color: #666;
+                line-height: 1.6;
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+            }
+            .qk-divider {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                color: #222;
+                font-family: Orbitron;
+                font-size: 0.5rem;
+                letter-spacing: 3px;
+            }
+            .qk-divider::before, .qk-divider::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: linear-gradient(90deg,transparent,#1a1a1a,transparent);
+            }
+            @media (max-width: 700px) {
+                .qk-hero { grid-template-columns: 1fr; height: auto; }
+                .qk-hero-img { height: 300px; }
+                .qk-grid { grid-template-columns: repeat(2, 1fr); }
+            }
+            </style>
+        `;
 
-                <div style="padding:18px;display:flex;flex-direction:column;gap:8px;flex:1;">
-                    <div style="font-family:Orbitron;font-size:0.5rem;color:#555;letter-spacing:2px;">${dateStr}</div>
-                    ${p.title ? `<div style="font-family:Cinzel;font-size:${isFeatured ? '1.2rem' : '0.95rem'};color:#c5a059;line-height:1.3;">${p.title}</div>` : ''}
-                    ${p.content ? `<div style="font-family:Rajdhani;font-size:0.88rem;color:#999;line-height:1.6;flex:1;">${p.content}</div>` : ''}
+        const heroPost = posts[0];
+        const restPosts = posts.slice(1);
+
+        const heroDate = new Date(heroPost.created_at).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        }).toUpperCase();
+
+        const heroHTML = `
+        <div class="qk-hero">
+            <div class="qk-hero-img">
+                <div class="qk-feat-badge">FEATURED</div>
+                ${heroPost.media_url
+                    ? `<img src="${heroPost.media_url}" alt="${heroPost.title || 'Queen Karin'}" />`
+                    : `<div class="qk-hero-img-placeholder">👑</div>`
+                }
+            </div>
+            <div class="qk-hero-body">
+                <div>
+                    <div class="qk-hero-date">${heroDate}</div>
+                    <div class="qk-hero-title">${heroPost.title || 'Queen\'s Dispatch'}</div>
+                    <div class="qk-hero-content">${heroPost.content || ''}</div>
+                </div>
+                <div class="qk-hero-footer">
+                    <div class="qk-queen-sig">👑</div>
+                    <div>
+                        <div class="qk-queen-name">QUEEN KARIN</div>
+                    </div>
                 </div>
             </div>
-            `;
-        }).join('');
+        </div>
+        `;
+
+        const gridHTML = restPosts.length > 0 ? `
+            <div class="qk-divider">ARCHIVES</div>
+            <div class="qk-grid">
+                ${restPosts.map((p: any) => {
+                    const d = new Date(p.created_at).toLocaleDateString('en-GB', {
+                        day: 'numeric', month: 'short', year: 'numeric'
+                    }).toUpperCase();
+                    return `
+                    <div class="qk-card">
+                        ${p.media_url
+                            ? `<div class="qk-card-img"><img src="${p.media_url}" alt="${p.title || ''}" /></div>`
+                            : `<div class="qk-card-img-placeholder">👑</div>`
+                        }
+                        <div class="qk-card-body">
+                            <div class="qk-card-date">${d}</div>
+                            ${p.title ? `<div class="qk-card-title">${p.title}</div>` : ''}
+                            ${p.content ? `<div class="qk-card-content">${p.content}</div>` : ''}
+                        </div>
+                    </div>
+                    `;
+                }).join('')}
+            </div>
+        ` : '';
+
+        newsGrid.style.display = 'flex';
+        newsGrid.style.flexDirection = 'column';
+        newsGrid.style.padding = '0';
+        newsGrid.style.gap = '0';
+        newsGrid.innerHTML = CSS + `
+            <div class="qk-feed-wrap">
+                <div class="qk-header">
+                    <div>
+                        <div class="qk-header-sub">TRANSMISSIONS FROM THE SOVEREIGN</div>
+                        <div class="qk-header-title">QUEEN KARIN</div>
+                    </div>
+                </div>
+                ${heroHTML}
+                ${gridHTML}
+            </div>
+        `;
 
     } catch (err) {
         if (newsGrid) newsGrid.innerHTML = '<div style="color:#ff4444;font-family:Orbitron;font-size:0.7rem;text-align:center;padding:40px;">ERROR LOADING POSTS</div>';
