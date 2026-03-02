@@ -150,19 +150,16 @@ export const DbService = {
     },
 
     // --- MESSAGING ---
-    async sendMessage(memberId: string, text: string, sender: string = 'system', mediaUrl: string | null = null) {
-        const profile = await this.getProfile(memberId);
-        const mid = profile?.member_id || memberId;
-
+    async sendMessage(memberEmail: string, text: string, sender: string = 'system', mediaUrl: string | null = null) {
+        // Prevent UUID leakage; chat histories use the email string
         const { data, error } = await supabase
             .from('chats')
             .insert({
-                member_id: mid,
+                member_id: memberEmail,
                 sender_email: sender,
                 content: text,
                 type: 'system',
-                mediaUrl: mediaUrl,
-                metadata: { isQueen: sender === 'system' ? false : true }
+                metadata: { isQueen: sender === 'system' ? false : true, mediaUrl }
             })
             .select()
             .single();
