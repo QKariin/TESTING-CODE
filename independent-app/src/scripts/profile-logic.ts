@@ -749,6 +749,13 @@ export async function executeSkipTask() {
         if (data.success) {
             setState({ wallet: data.newWallet });
             renderProfileSidebar(getState().raw || getState());
+
+            // Force active UI updates immediately
+            const w1 = document.getElementById('wallet-amount');
+            const w2 = document.getElementById('mob-wallet-amount');
+            if (w1) w1.innerText = (data.newWallet || 0).toLocaleString();
+            if (w2) w2.innerText = (data.newWallet || 0).toLocaleString();
+
             if (taskInterval) clearInterval(taskInterval);
 
             const mockeries = [
