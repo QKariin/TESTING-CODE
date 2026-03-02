@@ -217,11 +217,21 @@ function renderTributes() {
 
         let lastTributeHtml = '';
         if (lastTributeAt) {
+            // Format name: take email prefix, replace dots/underscores with spaces, title-case
+            const rawName = (st?.raw?.parameters?.last_tribute_sender_name)
+                || (st?.raw?.parameters?.last_tribute_sender)
+                || (st?.memberId ? st.memberId.split('@')[0] : '');
+            const formattedName = rawName
+                .replace(/[._\-]+/g, ' ')
+                .split(' ')
+                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                .join(' ');
+
             lastTributeHtml = `
-            <div style="background:rgba(197,160,89,0.06); border:1px solid rgba(197,160,89,0.18); border-radius:10px; padding:10px 14px; margin-bottom:10px;">
-                <div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(197,160,89,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">Last Tribute</div>
-                <div style="font-family:'Cinzel', serif; font-size:0.8rem; color:#fff; font-weight:700;">${lastTributeSender}</div>
-                ${lastTributeTitle ? `<div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:rgba(255,255,255,0.5); margin-top:2px; letter-spacing:1px;">${lastTributeTitle}</div>` : ''}
+            <div style="text-align:center; padding:6px 0 10px; opacity:0.85;">
+                <div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(197,160,89,0.5); letter-spacing:3px; text-transform:uppercase; margin-bottom:6px;">Last Tribute</div>
+                <div style="font-family:'Cinzel', serif; font-size:0.85rem; color:#fff; font-weight:700;">${formattedName}</div>
+                ${lastTributeTitle ? `<div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:rgba(255,255,255,0.4); margin-top:3px; letter-spacing:1px;">${lastTributeTitle}</div>` : ''}
                 <div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(197,160,89,0.4); margin-top:5px; letter-spacing:1px;">${relativeTime(lastTributeAt)}</div>
             </div>`;
         }

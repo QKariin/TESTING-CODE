@@ -480,7 +480,7 @@ export default function ProfilePage() {
 
                     <div id="gridRightSection" className="serve-grid-item" style={{ display: 'flex', flexDirection: 'row', gap: 25, overflow: 'hidden' }}>
                         <div className="v-card" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                            <div className="ribbon-label" style={{ marginBottom: 15 }}>TRIBUTE</div>
+
                             <div id="desk_QuickTribute" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'space-around' }}></div>
                             <button className="action-btn" onClick={() => toggleTributeHunt()} style={{ width: '100%', fontSize: '0.6rem', padding: 6, borderRadius: 8, marginTop: 10, background: 'rgba(255,255,255,0.05)', color: '#888' }}>SPOIL ME ♥</button>
                         </div>
