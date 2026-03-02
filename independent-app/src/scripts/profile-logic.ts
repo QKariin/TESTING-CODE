@@ -1494,7 +1494,6 @@ export async function debugBytescale() {
 // ─── QUEEN KARIN POSTS ───────────────────────────────────────────────────────
 export async function loadQueenPosts() {
     const newsGrid = document.getElementById('newsGrid');
-    const heroCard = document.getElementById('desk_LatestKarinPhoto');
 
     if (newsGrid) {
         newsGrid.innerHTML = `
@@ -1521,37 +1520,6 @@ export async function loadQueenPosts() {
         }
 
         const posts = data.posts;
-        const latest = posts[0];
-
-        // ── Hero card (Queen Karin card next to Tribute) ──────────────────
-        if (heroCard) {
-            heroCard.style.cssText = `
-                position: relative;
-                overflow: hidden;
-                cursor: pointer;
-                transition: transform 0.4s;
-            `;
-            heroCard.onclick = () => {
-                const switchTabFn = (window as any).switchTab;
-                if (switchTabFn) { switchTabFn('news'); (window as any).loadQueenPosts?.(); }
-            };
-            if (latest.media_url) {
-                heroCard.style.backgroundImage = `url('${latest.media_url}')`;
-                heroCard.style.backgroundSize = 'cover';
-                heroCard.style.backgroundPosition = 'center top';
-            } else {
-                heroCard.style.background = 'linear-gradient(135deg,#0a0005 0%,#1a0a00 100%)';
-            }
-            heroCard.innerHTML = `
-                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.95) 0%,rgba(0,0,0,0.3) 50%,rgba(0,0,0,0.1) 100%);z-index:1;"></div>
-                <div style="position:absolute;bottom:0;left:0;right:0;padding:18px;z-index:2;">
-                    <div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:3px;margin-bottom:5px;opacity:0.8;">QUEEN'S DISPATCH</div>
-                    ${latest.title ? `<div style="font-family:Cinzel;font-size:0.9rem;color:#fff;line-height:1.3;margin-bottom:3px;text-shadow:0 2px 10px rgba(0,0,0,0.8);">${latest.title}</div>` : ''}
-                    ${latest.content ? `<div style="font-family:Rajdhani;font-size:0.75rem;color:rgba(255,255,255,0.6);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.4;">${latest.content}</div>` : ''}
-                </div>
-                <div style="position:absolute;top:12px;right:12px;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.4);backdrop-filter:blur(10px);padding:4px 10px;border-radius:2px;font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:2px;z-index:2;">VIEW ALL</div>
-            `;
-        }
 
         // ── Build the full-page editorial layout ──────────────────────────
         if (!newsGrid) return;
@@ -1802,9 +1770,9 @@ export async function loadQueenPosts() {
             <div class="qk-hero-img">
                 <div class="qk-feat-badge">FEATURED</div>
                 ${heroPost.media_url
-                    ? `<img src="${heroPost.media_url}" alt="${heroPost.title || 'Queen Karin'}" />`
-                    : `<div class="qk-hero-img-placeholder">👑</div>`
-                }
+                ? `<img src="${heroPost.media_url}" alt="${heroPost.title || 'Queen Karin'}" />`
+                : `<div class="qk-hero-img-placeholder">👑</div>`
+            }
             </div>
             <div class="qk-hero-body">
                 <div>
@@ -1826,15 +1794,15 @@ export async function loadQueenPosts() {
             <div class="qk-divider">ARCHIVES</div>
             <div class="qk-grid">
                 ${restPosts.map((p: any) => {
-                    const d = new Date(p.created_at).toLocaleDateString('en-GB', {
-                        day: 'numeric', month: 'short', year: 'numeric'
-                    }).toUpperCase();
-                    return `
+            const d = new Date(p.created_at).toLocaleDateString('en-GB', {
+                day: 'numeric', month: 'short', year: 'numeric'
+            }).toUpperCase();
+            return `
                     <div class="qk-card">
                         ${p.media_url
-                            ? `<div class="qk-card-img"><img src="${p.media_url}" alt="${p.title || ''}" /></div>`
-                            : `<div class="qk-card-img-placeholder">👑</div>`
-                        }
+                    ? `<div class="qk-card-img"><img src="${p.media_url}" alt="${p.title || ''}" /></div>`
+                    : `<div class="qk-card-img-placeholder">👑</div>`
+                }
                         <div class="qk-card-body">
                             <div class="qk-card-date">${d}</div>
                             ${p.title ? `<div class="qk-card-title">${p.title}</div>` : ''}
@@ -1842,7 +1810,7 @@ export async function loadQueenPosts() {
                         </div>
                     </div>
                     `;
-                }).join('')}
+        }).join('')}
             </div>
         ` : '';
 
