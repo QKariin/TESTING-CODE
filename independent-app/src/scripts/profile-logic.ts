@@ -287,26 +287,26 @@ function renderTributes() {
                 `;
             } else {
                 return `
-                <div class="store-item" style="position:relative; border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; min-height:240px;"
-                    onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 35px rgba(197,160,89,0.12)'; this.style.borderColor='rgba(197,160,89,0.5)';"
-                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 25px rgba(0,0,0,0.5)'; this.style.borderColor='rgba(197,160,89,0.2)';">
+                <div class="store-item" style="position:relative; border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; height:240px;"
+                    onmouseover="this.style.boxShadow='0 12px 35px rgba(197,160,89,0.12)'; this.style.borderColor='rgba(197,160,89,0.5)'; this.style.transform='translateY(-4px)';"
+                    onmouseout="this.style.boxShadow='0 4px 25px rgba(0,0,0,0.5)'; this.style.borderColor='rgba(197,160,89,0.2)'; this.style.transform='translateY(0)';">
 
-                    <!-- Product image -->
-                    <div style="width:100%; height:150px; background:url('${getOptimizedUrl(t.image, 400)}') center/cover; background-color:#050510; flex-shrink:0;"></div>
+                    <!-- Product image (fixed height) -->
+                    <div style="width:100%; height:120px; background:url('${getOptimizedUrl(t.image, 400)}') center/cover; background-color:#050510; flex-shrink:0;"></div>
 
                     <!-- Price badge -->
-                    <div style="position:absolute; top:10px; right:10px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:4px 10px; display:flex; align-items:center; gap:5px; backdrop-filter:blur(6px);">
-                        <i class="fas fa-coins" style="color:#c5a059; font-size:0.65rem;"></i>
-                        <span style="font-family:'Orbitron', sans-serif; font-size:0.7rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${t.price.toLocaleString()}</span>
+                    <div style="position:absolute; top:8px; right:8px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:3px 9px; display:flex; align-items:center; gap:4px; backdrop-filter:blur(6px);">
+                        <i class="fas fa-coins" style="color:#c5a059; font-size:0.6rem;"></i>
+                        <span style="font-family:'Orbitron', sans-serif; font-size:0.65rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${t.price.toLocaleString()}</span>
                     </div>
 
-                    <!-- Title + send button -->
-                    <div style="padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; flex:1;">
-                        <div style="font-family:'Cinzel', serif; font-size:0.9rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
+                    <!-- Title + send button (fills remaining space) -->
+                    <div style="padding:12px 14px 14px; display:flex; flex-direction:column; flex:1; min-height:0;">
+                        <div style="font-family:'Cinzel', serif; font-size:0.8rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3; flex:1;">${t.title}</div>
                         <button onclick="event.stopPropagation(); window.buyTribute('${t.id}', '${t.title}', ${t.price})"
-                            style="width:100%; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:9px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.6rem; font-weight:700; letter-spacing:2px; cursor:pointer; transition:all 0.2s; margin-top:auto;"
-                            onmouseover="this.style.opacity='0.85'; this.style.transform='scale(1.02)';"
-                            onmouseout="this.style.opacity='1'; this.style.transform='scale(1)';">SEND GIFT</button>
+                            style="width:100%; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:8px 0; border-radius:7px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:2px; cursor:pointer; transition:all 0.2s; flex-shrink:0;"
+                            onmouseover="this.style.opacity='0.85';"
+                            onmouseout="this.style.opacity='1';">SEND GIFT</button>
                     </div>
                 </div>
                 `;
@@ -318,35 +318,77 @@ function renderTributes() {
     if (gridMob) renderGrid(gridMob);
 }
 
-// ─── Gift Toast: warm personal confirmation ───────────────────────────────
+// ─── Gift Toast: warm personal confirmation ────────────────────────────────
 function showGiftToast(title: string, amount: number, merit: number) {
     const existing = document.getElementById('giftToast');
     if (existing) existing.remove();
 
+    // Trigger coin shower
+    triggerCoinShower();
+
     const toast = document.createElement('div');
     toast.id = 'giftToast';
     toast.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:8px;">
-            <div style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#c5a059; letter-spacing:3px; text-transform:uppercase;">Gift Sent ♥</div>
-            <div style="font-family:'Cinzel', serif; font-size:1rem; color:#fff; font-weight:700;">You just gifted Queen Karin<br><span style="color:#c5a059;">${amount.toLocaleString()} coins</span> for <em>${title}</em></div>
-            <div style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:rgba(255,255,255,0.5); line-height:1.5;">She sees your devotion. Thank you — truly. 🤍<br>+${merit} merit earned</div>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+                <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:#c5a059; letter-spacing:3px; text-transform:uppercase; margin-bottom:8px;">✦ Gift Sent</div>
+                <div style="font-family:'Cinzel', serif; font-size:1.25rem; color:#fff; font-weight:700; line-height:1.3;">You just gifted<br><span style="color:#c5a059;">${amount.toLocaleString()} coins</span> to Queen Karin</div>
+                <div style="font-family:'Cinzel', serif; font-size:0.85rem; color:rgba(255,255,255,0.5); margin-top:4px;">for <em>${title}</em></div>
+            </div>
+            <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.4); line-height:1.8; border-top:1px solid rgba(197,160,89,0.15); padding-top:12px;">She sees your devotion. Thank you — truly. 🤍<br>+${merit} merit points earned</div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="document.getElementById('giftToast').remove()" style="flex:1; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">CLOSE</button>
+                <button onclick="document.getElementById('giftToast').remove(); document.getElementById('tributeHuntOverlay')?.classList.remove('hidden');" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">SEND MORE ♥</button>
+            </div>
         </div>
     `;
     Object.assign(toast.style, {
         position: 'fixed', bottom: '30px', right: '30px', zIndex: '99999',
         background: 'linear-gradient(135deg, #0d0d1f 0%, #1a0a2e 100%)',
-        border: '1px solid rgba(197,160,89,0.5)',
-        borderRadius: '16px', padding: '20px 24px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(197,160,89,0.1)',
-        maxWidth: '320px', opacity: '0', transform: 'translateY(20px)',
+        border: '1px solid rgba(197,160,89,0.4)',
+        borderRadius: '18px', padding: '24px 28px',
+        boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.08)',
+        width: '460px', maxWidth: 'calc(100vw - 40px)',
+        opacity: '0', transform: 'translateY(20px)',
         transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
     });
     document.body.appendChild(toast);
     requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; });
-    setTimeout(() => {
-        toast.style.opacity = '0'; toast.style.transform = 'translateY(20px)';
-        setTimeout(() => toast.remove(), 400);
-    }, 5000);
+}
+
+// ─── Poverty Modal: not enough coins ────────────────────────────────────────
+function showPovertyModal(itemTitle: string) {
+    const existing = document.getElementById('povertyModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'povertyModal';
+    modal.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+                <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,80,80,0.7); letter-spacing:3px; text-transform:uppercase; margin-bottom:8px;">⚠ Insufficient Coins</div>
+                <div style="font-family:'Cinzel', serif; font-size:1.1rem; color:#fff; font-weight:700; line-height:1.4;">You don't have enough coins<br>to spoil Queen Karin right now.</div>
+                ${itemTitle ? `<div style="font-family:'Cinzel', serif; font-size:0.85rem; color:rgba(255,255,255,0.4); margin-top:4px;"><em>${itemTitle}</em></div>` : ''}
+            </div>
+            <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.35); line-height:1.8; border-top:1px solid rgba(255,80,80,0.15); padding-top:12px;">She deserves the best. Earn more coins &amp; come back worthy of her attention.</div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="document.getElementById('povertyModal').remove()" style="flex:1; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">CLOSE</button>
+                <button onclick="document.getElementById('povertyModal').remove(); window.location.href='/dashboard?tab=exchequer';" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">ADD MORE COINS</button>
+            </div>
+        </div>
+    `;
+    Object.assign(modal.style, {
+        position: 'fixed', bottom: '30px', right: '30px', zIndex: '99999',
+        background: 'linear-gradient(135deg, #1a0a0a 0%, #0d0d1f 100%)',
+        border: '1px solid rgba(255,80,80,0.3)',
+        borderRadius: '18px', padding: '24px 28px',
+        boxShadow: '0 30px 80px rgba(0,0,0,0.7)',
+        width: '460px', maxWidth: 'calc(100vw - 40px)',
+        opacity: '0', transform: 'translateY(20px)',
+        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+    });
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => { modal.style.opacity = '1'; modal.style.transform = 'translateY(0)'; });
 }
 
 // Attach the crowdfund function to the global window object so the onclick handlers can find it
@@ -365,8 +407,7 @@ if (typeof window !== 'undefined') {
         if (!memberId) return;
 
         if (wallet < amount) {
-            document.getElementById('povertyOverlay')?.classList.remove('hidden');
-            document.getElementById('povertyInsult')!.innerText = `You lack the capital to offer ${amount.toLocaleString()} coins to "${title}". Know your place.`;
+            showPovertyModal(title);
             return;
         }
 
@@ -418,12 +459,9 @@ export async function buyTribute(id: string, title: string, cost: number) {
     if (!memberId) return;
 
     if (wallet < cost) {
-        document.getElementById('povertyOverlay')?.classList.remove('hidden');
-        document.getElementById('povertyInsult')!.innerText = `You lack the capital to offer "${title}".Know your place.`;
+        showPovertyModal(title);
         return;
     }
-
-    if (!confirm(`Are you sure you wish to offer ${title} for ${cost.toLocaleString()} coins ?\n(This will also earn you merit)`)) return;
 
     try {
         const res = await fetch('/api/tributes/purchase', {
@@ -467,7 +505,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
         } else {
             console.error("Purchase rejected:", data.error);
             if (data.error === 'INSUFFICIENT_FUNDS') {
-                document.getElementById('povertyOverlay')?.classList.remove('hidden');
+                showPovertyModal(title);
             } else {
                 alert("Transaction failed: " + data.error);
             }
