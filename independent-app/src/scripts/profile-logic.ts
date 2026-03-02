@@ -981,9 +981,10 @@ export async function loadChatHistory(email: string) {
             const systemMessages = messages.filter((m: any) => isSystemMessage(m));
             const chatMessages = messages.filter((m: any) => !isSystemMessage(m));
 
-            // 2. Update Ticker
+            // 2. Update Ticker and System Log Window
             if (systemMessages.length > 0) {
                 updateSystemTicker(systemMessages[systemMessages.length - 1]);
+                renderSystemLogs(systemMessages);
             }
 
             // 3. Render Chat
@@ -1020,6 +1021,7 @@ function subscribeToChat(email: string) {
             // 1. Handle System Messages
             if (isSystemMessage(msg)) {
                 updateSystemTicker(msg);
+                appendSystemLog(msg);
                 return;
             }
 
@@ -1063,6 +1065,38 @@ function updateSystemTicker(msg: any) {
             // Trigger reflow for animation
             void (el as HTMLElement).offsetWidth;
             el.classList.add('ticker-flash');
+        }
+    });
+}
+
+function getSystemLogHtml(msg: any) {
+    const timeStr = new Date(msg.created_at || msg._createdDate || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const content = msg.content || msg.message || "";
+    return `
+    <div style="display:flex; flex-direction:column; background:rgba(255,255,255,0.02); border-left:2px solid #c5a059; padding:10px 15px; margin-bottom:10px;">
+        <span style="font-family:'Cinzel'; color:#c5a059; font-size:0.85rem;">${content}</span>
+        <span style="font-family:'Orbitron'; color:rgba(255,255,255,0.3); font-size:0.6rem; margin-top:5px;">${timeStr}</span>
+    </div>`;
+}
+
+export function renderSystemLogs(messages: any[]) {
+    const sysLogHtml = messages.map(m => getSystemLogHtml(m)).join('');
+    ['systemLogContent', 'mob_systemLogContent'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = sysLogHtml;
+            el.scrollTop = el.scrollHeight;
+        }
+    });
+}
+
+function appendSystemLog(msg: any) {
+    const html = getSystemLogHtml(msg);
+    ['systemLogContent', 'mob_systemLogContent'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.insertAdjacentHTML('beforeend', html);
+            el.scrollTop = el.scrollHeight;
         }
     });
 }
