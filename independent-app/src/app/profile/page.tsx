@@ -471,7 +471,7 @@ export default function ProfilePage() {
 
                         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '30px', zIndex: 10, position: 'relative' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <span style={{ fontFamily: "'Patrick Hand', cursive", color: '#111', fontSize: '3rem', letterSpacing: '4px', fontWeight: 700 }}>Wishlist ♥</span>
+                                <span style={{ fontFamily: "'Cinzel', serif", color: '#fff', fontSize: '1.6rem', letterSpacing: '6px', fontWeight: 700, textTransform: 'uppercase', textShadow: '0 0 30px rgba(197,160,89,0.3)' }}>QUEEN<span style={{ color: '#c5a059', margin: '0 8px' }}>✦</span>WISHLIST</span>
                             </div>
                             <button onClick={() => toggleTributeHunt()} style={{ position: 'absolute', right: 0, top: 0, color: '#111', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Patrick Hand', cursive", fontSize: '2rem', transition: 'all 0.2s', padding: 0, fontWeight: 'bold' }} onMouseOver={(e) => { e.currentTarget.style.color = '#ff4b72'; e.currentTarget.style.transform = 'scale(1.2) rotate(10deg)'; }} onMouseOut={(e) => { e.currentTarget.style.color = '#111'; e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; }}>X</button>
                         </div>

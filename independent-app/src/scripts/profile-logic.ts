@@ -279,27 +279,67 @@ function renderTributes() {
                 </div>
                 `;
             } else {
-                // Give each frame a slight random tilt between -3 and 3 degrees for an authentic scrapbook look
-                const rotation = (index % 2 === 0 ? 1 : -1) * (Math.random() * 3 + 1);
                 return `
-                <div class="store-item polaroid-card" style="position:relative; background:#fff; padding:10px 10px 20px 10px; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow:0 6px 15px rgba(0,0,0,0.15); transform:rotate(${rotation}deg);" onmouseover="this.style.transform='translateY(-10px) rotate(0deg) scale(1.05)'; this.style.boxShadow='0 15px 30px rgba(0,0,0,0.2)'; this.style.zIndex='20'" onmouseout="this.style.transform='rotate(${rotation}deg)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.15)'; this.style.zIndex='1'" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})">
-                    <!-- Washi Tape Effect -->
-                    <div style="position:absolute; top:-12px; left:50%; width:80px; height:25px; background:rgba(255, 182, 193, 0.6); transform:translateX(-50%) rotate(${-rotation * 2}deg); z-index:5; box-shadow:0 1px 3px rgba(0,0,0,0.1); border-left:2px dotted rgba(255,255,255,0.5); border-right:2px dotted rgba(255,255,255,0.5);"></div>
-                    
-                    <div style="width:100%; height:160px; background:url('${getOptimizedUrl(t.image, 300)}') center/cover; border:1px solid rgba(0,0,0,0.05);"></div>
-                    
-                    <div style="width:100%; display:flex; flex-direction:column; align-items:center; margin-top:15px;">
-                        <div style="font-family:'Caveat', cursive; font-size:1.8rem; color:#111; text-align:center; line-height:1.2; font-weight:700;">${t.title}</div>
-                        <div style="font-family:'Patrick Hand', cursive; font-size:1.2rem; color:'#ff4b72'; display:flex; align-items:center; gap:5px; margin-top:5px;"><span style="color:#ff69b4;">♥</span> ${t.price.toLocaleString()}</div>
+                <div class="store-item" style="position:relative; border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column;"
+                    onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 35px rgba(197,160,89,0.12)'; this.style.borderColor='rgba(197,160,89,0.5)';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 25px rgba(0,0,0,0.5)'; this.style.borderColor='rgba(197,160,89,0.2)';">
+
+                    <!-- Product image -->
+                    <div style="width:100%; height:150px; background:url('${getOptimizedUrl(t.image, 400)}') center/cover; background-color:#050510; flex-shrink:0;"></div>
+
+                    <!-- Price badge -->
+                    <div style="position:absolute; top:10px; right:10px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:4px 10px; display:flex; align-items:center; gap:5px; backdrop-filter:blur(6px);">
+                        <i class="fas fa-coins" style="color:#c5a059; font-size:0.65rem;"></i>
+                        <span style="font-family:'Orbitron', sans-serif; font-size:0.7rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${t.price.toLocaleString()}</span>
+                    </div>
+
+                    <!-- Title + send button -->
+                    <div style="padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; flex:1;">
+                        <div style="font-family:'Cinzel', serif; font-size:0.9rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
+                        <button onclick="event.stopPropagation(); window.buyTribute('${t.id}', '${t.title}', ${t.price})"
+                            style="width:100%; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:9px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.6rem; font-weight:700; letter-spacing:2px; cursor:pointer; transition:all 0.2s; margin-top:auto;"
+                            onmouseover="this.style.opacity='0.85'; this.style.transform='scale(1.02)';"
+                            onmouseout="this.style.opacity='1'; this.style.transform='scale(1)';">SEND GIFT</button>
                     </div>
                 </div>
-            `;
+                `;
             }
         }).join('');
     };
 
     if (gridDesk) renderGrid(gridDesk);
     if (gridMob) renderGrid(gridMob);
+}
+
+// ─── Gift Toast: warm personal confirmation ───────────────────────────────
+function showGiftToast(title: string, amount: number, merit: number) {
+    const existing = document.getElementById('giftToast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'giftToast';
+    toast.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#c5a059; letter-spacing:3px; text-transform:uppercase;">Gift Sent ♥</div>
+            <div style="font-family:'Cinzel', serif; font-size:1rem; color:#fff; font-weight:700;">You just gifted Queen Karin<br><span style="color:#c5a059;">${amount.toLocaleString()} coins</span> for <em>${title}</em></div>
+            <div style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:rgba(255,255,255,0.5); line-height:1.5;">She sees your devotion. Thank you — truly. 🤍<br>+${merit} merit earned</div>
+        </div>
+    `;
+    Object.assign(toast.style, {
+        position: 'fixed', bottom: '30px', right: '30px', zIndex: '99999',
+        background: 'linear-gradient(135deg, #0d0d1f 0%, #1a0a2e 100%)',
+        border: '1px solid rgba(197,160,89,0.5)',
+        borderRadius: '16px', padding: '20px 24px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(197,160,89,0.1)',
+        maxWidth: '320px', opacity: '0', transform: 'translateY(20px)',
+        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+    });
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; });
+    setTimeout(() => {
+        toast.style.opacity = '0'; toast.style.transform = 'translateY(20px)';
+        setTimeout(() => toast.remove(), 400);
+    }, 5000);
 }
 
 // Attach the crowdfund function to the global window object so the onclick handlers can find it
@@ -335,7 +375,7 @@ if (typeof window !== 'undefined') {
 
             if (data.success) {
                 setState({ wallet: data.newWallet, score: data.newScore });
-                alert(`Succesfully contributed ${amount.toLocaleString()} coins to ${title}! You received ${data.meritGained} merit.`);
+                showGiftToast(title, amount, data.meritGained);
                 // 4. Send Chat message
                 const tributeObj = globalTributes.find(t => t.id === id);
                 if (tributeObj) {
