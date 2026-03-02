@@ -43,24 +43,31 @@ export async function GET(req: NextRequest) {
         }
 
         // 3. Otherwise (expired or forced), pick a new random task
-        const { data: tasks, error } = await supabaseAdmin
+        const { count, error } = await supabaseAdmin
             .from('tasks_database')
-            .select('*');
+            .select('*', { count: 'exact', head: true });
 
         if (error) {
             console.error("Supabase Error fetching tasks:", error);
             return NextResponse.json({ success: false, error: error.message }, { status: 500 });
         }
 
-        if (!tasks || tasks.length === 0) {
+        if (!count || count === 0) {
             return NextResponse.json({ success: false, error: 'No tasks found' }, { status: 404 });
         }
 
-        const randomIndex = Math.floor(Math.random() * tasks.length);
-        const randomTask = tasks[randomIndex];
+        const randomIndex = Math.floor(Math.random() * count);
+        const { data: tasks } = await supabaseAdmin
+            .from('tasks_database')
+            .select('*')
+            .range(randomIndex, randomIndex);
 
-        // 4. Assign it in the database
-        await DbService.assignTask(memberEmail, randomTask);
+        const randomTask = tasks?.[0];
+
+        // 4. Assign it efficiently reusing our profile fetch
+        const params = { ...(profile.parameters || {}) };
+        params.taskdom_active_task = { ...randomTask, assigned_at: new Date().toISOString() };
+        await supabaseAdmin.from('profiles').update({ parameters: params }).eq('id', profile.id);
 
         return NextResponse.json({
             success: true,

@@ -648,16 +648,21 @@ export function toggleMobileChat(show: boolean) {
 export function mobileRequestTask() { getRandomTask(); }
 export function mobileSkipTask() { skipTask(); }
 export function mobileUploadEvidence(input: HTMLInputElement) {
-    if (input.files && input.files[0]) submitTaskEvidence(input.files[0]);
+    if (input.files && input.files[0]) {
+        submitTaskEvidence(input.files[0]);
+        input.value = '';
+    }
 }
 
 export function handleRoutineUpload(input: HTMLInputElement) {
     if (input.files && input.files[0]) submitTaskEvidence(input.files[0]);
 }
 
-// Separate handler for TASK evidence (image or video) — distinct from routine
 export function handleTaskEvidenceUpload(input: HTMLInputElement) {
-    if (input.files && input.files[0]) submitTaskEvidence(input.files[0]);
+    if (input.files && input.files[0]) {
+        submitTaskEvidence(input.files[0]);
+        input.value = '';
+    }
 }
 
 async function submitTaskEvidence(file: File) {

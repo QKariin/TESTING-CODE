@@ -591,7 +591,7 @@ export default function DashboardPage() {
             </div>
 
             {/* SHARED MODALS */}
-            <div id="reviewModal" className="modal" style={{ display: 'none' }}>
+            <div id="reviewModal" className="modal">
                 <div className="m-content" style={{ position: 'relative' }}>
                     <span onClick={() => (window as any).closeModal()} style={{ position: 'absolute', top: '15px', right: '20px', fontSize: '2.5rem', color: '#666', cursor: 'pointer', zIndex: 1100, lineHeight: 1 }}>&times;</span>
                     <div id="mMediaBox" className="m-media-box"></div>
