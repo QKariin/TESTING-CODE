@@ -609,8 +609,7 @@ export async function skipTask() {
             renderProfileSidebar(getState().raw || getState());
 
             if (taskInterval) clearInterval(taskInterval);
-            // Reset UI Logic here... (Simplified for brevity as exact logic is in main block)
-            getRandomTask(true); // Just refresh state
+            resetTaskUI();
         } else {
             alert(data.error || "Failed to skip task.");
         }
@@ -724,9 +723,6 @@ async function submitTaskEvidence(file: File) {
             console.log("Submission successful!");
             alert("Evidence submitted. Awaiting Void validation.");
             resetTaskUI();
-            setTimeout(() => {
-                window.location.reload();
-            }, 500);
         } else {
             console.error("Backend submission error:", data.error);
             alert("Submission failed: " + (data.error || "Unknown error"));

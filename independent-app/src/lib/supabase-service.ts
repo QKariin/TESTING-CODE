@@ -367,7 +367,8 @@ export const DbService = {
             return { success: false, error: 'Profile not found' };
         }
         const params = { ...(profile.parameters || {}) };
-        delete params.active_task;
+        delete params.taskdom_active_task;
+        delete params.taskdom_end_time;
         return this.updateProfile(profile.id, { parameters: params });
     },
 
