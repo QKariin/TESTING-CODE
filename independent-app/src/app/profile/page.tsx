@@ -422,13 +422,13 @@ export default function ProfilePage() {
                     <div id="viewServingTop" className="v-card serve-grid-item" style={{ display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: 20 }}>
                         <div id="chatCard" className="chat-container" style={{ flex: 1, minHeight: 0, background: 'transparent', margin: 0, border: 'none', borderRadius: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
                             <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 !important' }}>
-                                <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
-                                <div id="chatContent" className="chat-area" style={{ padding: 20 }}></div>
+                                <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer', margin: '0 20px 10px 20px', borderRadius: '0 0 12px 12px', borderLeft: '1px solid rgba(197,160,89,0.2)', borderRight: '1px solid rgba(197,160,89,0.2)', borderBottom: '1px solid rgba(197,160,89,0.2)', width: 'auto' }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
+                                <div id="chatContent" className="chat-area" style={{ padding: '0 20px 20px 20px' }}></div>
                             </div>
 
                             {/* NEW SYSTEM LOG CONTAINER */}
-                            <div id="systemLogContainer" className="hidden" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 'calc(100% - 75px)', background: 'linear-gradient(to bottom, #000, #050505)', zIndex: 50, display: 'none', flexDirection: 'column' }}>
-                                <div style={{ width: '100%', padding: '15px 20px', background: 'rgba(197,160,89,0.1)', borderBottom: '1px solid rgba(197,160,89,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div id="systemLogContainer" className="hidden" style={{ position: 'absolute', top: 15, left: 15, right: 15, bottom: 90, background: 'rgba(5,5,5,0.95)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, boxShadow: '0 15px 35px rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 50, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                                <div style={{ width: '100%', padding: '15px 20px', background: 'rgba(197,160,89,0.05)', borderBottom: '1px solid rgba(197,160,89,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontWeight: 'bold' }}>SYSTEM LOGS</span>
                                     <button onClick={() => (window as any).toggleSystemLog()} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem' }}>×</button>
                                 </div>
@@ -781,13 +781,13 @@ export default function ProfilePage() {
                                     <div id="mobChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#888' }}>ONLINE</div>
                                 </div>
                             </div>
-                            <div id="mob_systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).toggleSystemLog(true)}>SYSTEM ONLINE</div>
+                            <div id="mob_systemTicker" className="system-ticker" style={{ cursor: 'pointer', margin: '0 15px 10px 15px', borderRadius: '0 0 12px 12px', borderLeft: '1px solid rgba(197,160,89,0.2)', borderRight: '1px solid rgba(197,160,89,0.2)', borderBottom: '1px solid rgba(197,160,89,0.2)', width: 'auto' }} onClick={() => (window as any).toggleSystemLog(true)}>SYSTEM ONLINE</div>
                             <div id="btnEnterChatPanel" onClick={() => (window as any).toggleMobileChat(true)} style={{ width: '100%', padding: 12, textAlign: 'center', background: '#000', color: '#666', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 3, cursor: 'pointer', transition: '0.2s' }}>▼ ENTER CHAT</div>
 
                             {/* MOBILE SYSTEM LOG OVERLAY */}
-                            <div id="mobSystemLogContainer" className="hidden" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: '#050505', zIndex: 100000, display: 'none', flexDirection: 'column' }}>
-                                <div style={{ width: '100%', padding: '20px', background: 'rgba(197,160,89,0.1)', borderBottom: '1px solid rgba(197,160,89,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontWeight: 'bold' }}>SYSTEM LOGS</span>
+                            <div id="mobSystemLogContainer" className="hidden" style={{ position: 'absolute', top: 15, left: 15, right: 15, bottom: 80, background: 'rgba(5,5,5,0.95)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, boxShadow: '0 15px 35px rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 100000, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                                <div style={{ width: '100%', padding: '15px 20px', background: 'rgba(197,160,89,0.05)', borderBottom: '1px solid rgba(197,160,89,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontWeight: 'bold', fontSize: '1.1rem' }}>SYSTEM LOGS</span>
                                     <button onClick={() => (window as any).toggleSystemLog(true)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.5rem' }}>×</button>
                                 </div>
                                 <div id="mob_systemLogContent" className="chat-area" style={{ flex: 1, overflowY: 'auto', padding: 20 }}></div>
