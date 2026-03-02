@@ -269,7 +269,6 @@ export const DbService = {
                 Name: profile.name,
                 text: taskText,
                 proofUrl: proofUrl,
-                proofType: proofType,
                 status: 'pending',
                 timestamp: now
             }, { onConflict: 'member_id' });
