@@ -188,30 +188,47 @@ function renderTributes() {
         return;
     }
 
-    // 1. Desktop Quick Connect (Taking the First 2 items e.g Coffee/Dinner)
-    if (quickBox && globalTributes.length >= 2) {
-        const quickItems = globalTributes.slice(0, 2);
-        quickBox.innerHTML = quickItems.map((t, index) => {
-            const rotation = (index % 2 === 0 ? 1 : -1) * (Math.random() * 2 + 1);
-            return `
-            <div class="quick-tribute-item" onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})" style="display:flex; justify-content:space-between; align-items:center; background:#fff9c4; padding:12px 18px; border-radius:2px 15px 5px 15px; cursor:pointer; box-shadow:3px 4px 10px rgba(0,0,0,0.1), inset 0 0 10px rgba(255,255,255,0.8); transform:rotate(${rotation}deg); transition:all 0.3s ease; position:relative;" onmouseover="this.style.transform='translateY(-3px) rotate(0deg) scale(1.05)'; this.style.boxShadow='5px 8px 15px rgba(0,0,0,0.15), inset 0 0 10px rgba(255,255,255,0.8)';" onmouseout="this.style.transform='rotate(${rotation}deg)'; this.style.boxShadow='3px 4px 10px rgba(0,0,0,0.1), inset 0 0 10px rgba(255,255,255,0.8)';">
-                <!-- Cute Pin -->
-                <div style="position:absolute; top:4px; left:50%; width:8px; height:8px; background:#ff4b72; border-radius:50%; box-shadow:1px 1px 2px rgba(0,0,0,0.3); transform:translateX(-50%);"></div>
-                
-                <div style="display:flex; align-items:center; gap:12px; margin-top:5px;">
-                    <div style="width:40px; height:40px; border-radius:50%; background:url('${getOptimizedUrl(t.image, 40)}') center/cover; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.1);"></div>
-                    <span style="font-family:'Patrick Hand', cursive; font-size:1.4rem; color:#333; font-weight:700; letter-spacing:1px;">${t.title}</span>
+    // 1. Desktop Quick Connect - Pin Coffee & Lunch (or fallback to first 2)
+    if (globalTributes.length >= 1) {
+        const pinned = ['coffee', 'lunch'];
+        const pinnedItems = pinned
+            .map(keyword => globalTributes.find(t => t.title?.toLowerCase().includes(keyword)))
+            .filter(Boolean) as typeof globalTributes;
+        const quickItems = pinnedItems.length >= 2 ? pinnedItems : globalTributes.slice(0, 2);
+
+        // Last tribute timestamp
+        const st = getState();
+        const lastTributeAt = st?.raw?.parameters?.last_tribute_at;
+        const lastTributeTitle = st?.raw?.parameters?.last_tribute_title;
+        let lastTributeHtml = '';
+        if (lastTributeAt) {
+            const d = new Date(lastTributeAt);
+            const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+            const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            lastTributeHtml = `<div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(197,160,89,0.6); letter-spacing:1px; text-align:center; margin-bottom:12px; text-transform:uppercase;">Last tribute${lastTributeTitle ? ` · ${lastTributeTitle}` : ''} · ${dateStr} ${timeStr}</div>`;
+        }
+
+        const quickItemsHtml = lastTributeHtml + quickItems.map((t) => `
+            <div onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})" style="position:relative; border-radius:12px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.25s ease; box-shadow:0 4px 20px rgba(0,0,0,0.4);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 30px rgba(197,160,89,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.4)';">
+                <div style="width:100%; height:120px; background:url('${getOptimizedUrl(t.image, 400)}') center/cover; background-color:#050510;"></div>
+                <div style="position:absolute; top:10px; right:10px; background:rgba(5,5,20,0.85); border:1px solid rgba(197,160,89,0.5); border-radius:20px; padding:4px 10px; display:flex; align-items:center; gap:5px; backdrop-filter:blur(5px);">
+                    <i class="fas fa-coins" style="color:#c5a059; font-size:0.7rem;"></i>
+                    <span style="font-family:'Orbitron', sans-serif; font-size:0.75rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${t.price.toLocaleString()}</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:6px; margin-top:5px;">
-                    <span style="color:#ff69b4; font-size:1.2rem;">♥</span>
-                    <div style="font-family:'Caveat', cursive; font-size:1.6rem; color:'#ff4b72'; font-weight:700;">${t.price.toLocaleString()}</div>
+                <div style="padding:12px 15px 15px;">
+                    <div style="font-family:'Cinzel', serif; font-size:0.9rem; color:#fff; font-weight:700; letter-spacing:1px; margin-bottom:10px; text-transform:uppercase;">${t.title}</div>
+                    <div style="width:100%; text-align:center; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; font-family:'Orbitron', sans-serif; font-size:0.65rem; font-weight:700; letter-spacing:2px; padding:8px 0; border-radius:6px;">QUICK SEND</div>
                 </div>
             </div>
-            `;
-        }).join('');
+        `).join('');
+
+        if (quickBox) quickBox.innerHTML = quickItemsHtml;
     }
 
     // 2. Desktop Modal Overview AND Mobile Grid Overlay
+
+    // Expose wallet balance for crowdfund slider
+    const walletForSlider = getState()?.wallet || 0;
 
     const renderGrid = (gridEl: HTMLElement) => {
         if (!gridEl) return;
@@ -222,51 +239,42 @@ function renderTributes() {
                 const progressPercent = Math.min(100, Math.round((raised / goal) * 100));
 
                 return `
-                <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:rgba(255,255,255,0.75); backdrop-filter:blur(15px); padding:30px; border-radius:20px; display:flex; gap:35px; align-items:flex-start; box-shadow:0 12px 35px rgba(0,0,0,0.15), inset 0 0 25px rgba(255,255,255,0.9); border:1px solid rgba(255,255,255,0.6);">
-                    
-                    <!-- Bigger Hero Image -->
-                    <div style="width:220px; height:220px; border-radius:15px; background:url('${getOptimizedUrl(t.image, 400)}') center/cover; border:4px solid #fff; box-shadow:0 8px 20px rgba(0,0,0,0.15); flex-shrink:0; transform:rotate(-2deg);">
-                        <!-- "Hero" Washi Tape -->
-                        <div style="position:absolute; top:-15px; left:50%; width:100px; height:30px; background:rgba(255, 182, 193, 0.7); transform:translateX(-50%) rotate(3deg); z-index:5; box-shadow:0 2px 5px rgba(0,0,0,0.1); border-left:2px dotted rgba(255,255,255,0.6); border-right:2px dotted rgba(255,255,255,0.6);"></div>
-                    </div>
-                    
-                    <!-- Content Right Side - Fixed flex-direction -->
-                    <div style="flex:1; display:flex; flex-direction:column; gap:15px; padding-top:10px;">
-                        
-                        <!-- Header and Top Contributor -->
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:rgba(255,255,255,0.75); backdrop-filter:blur(15px); border-radius:20px; display:flex; flex-direction:row; overflow:hidden; box-shadow:0 12px 35px rgba(0,0,0,0.15), inset 0 0 25px rgba(255,255,255,0.9); border:1px solid rgba(255,255,255,0.6); min-height:300px; align-items:stretch;">
+
+                    <!-- LEFT: Info -->
+                    <div style="flex:1; display:flex; flex-direction:column; gap:14px; padding:28px; min-width:0;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
                             <div style="font-family:'Caveat', cursive; font-size:3rem; color:#111; line-height:1; font-weight:700;">${t.title}</div>
-                            
                             ${t.top_contributor ? `
-                            <div style="display:flex; flex-direction:column; align-items:flex-end; background:rgba(255,255,255,0.8); padding:8px 15px; border-radius:12px; border:1px dashed #ff9a9e; box-shadow:0 4px 10px rgba(0,0,0,0.05); transform:rotate(1deg);">
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; background:rgba(255,255,255,0.8); padding:8px 15px; border-radius:12px; border:1px dashed #ff9a9e; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
                                 <span style="font-family:'Patrick Hand', cursive; font-size:0.9rem; color:#888; text-transform:uppercase; letter-spacing:1px;">Top Contributor</span>
                                 <span style="font-family:'Caveat', cursive; font-size:1.6rem; color:#ff4b72; font-weight:bold;">${t.top_contributor}</span>
-                            </div>
-                            ` : ''}
+                            </div>` : ''}
                         </div>
-                        
-                        <!-- Raised Stats -->
-                        <div style="display:flex; justify-content:flex-end; margin-bottom:-10px;">
-                            <div style="font-family:'Orbitron', sans-serif; font-size:1.1rem; color:#ff4b72; font-weight:700;">${raised.toLocaleString()} / ${goal.toLocaleString()} <span style="color:#ff69b4;">♥</span></div>
+                        <div style="font-family:'Orbitron', sans-serif; font-size:1rem; color:#ff4b72; font-weight:700;">${raised.toLocaleString()} / ${goal.toLocaleString()} <span style="color:#ff69b4;">♥</span></div>
+                        <div style="width:100%; height:14px; background:rgba(0,0,0,0.08); border-radius:7px; overflow:hidden;">
+                            <div style="height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #ff9a9e, #ff6a88); border-radius:7px; transition:width 0.5s ease;"></div>
                         </div>
-                        
-                        <!-- Progress Bar (Thicker) -->
-                        <div style="width:100%; height:18px; background:rgba(0,0,0,0.08); border-radius:9px; overflow:hidden; border:1px solid rgba(0,0,0,0.1); position:relative; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">
-                            <div style="position:absolute; top:0; left:0; height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #ff9a9e 0%, #ff6a88 100%); transition:width 0.5s ease-in-out; border-radius:9px; box-shadow:0 0 10px rgba(255,106,136,0.5);"></div>
-                        </div>
-                        
-                        <!-- Slider Input -->
-                        <div style="display:flex; flex-direction:column; width:100%; margin-top:15px; gap:12px; background:rgba(255,255,255,0.6); padding:15px; border-radius:15px; border:1px solid rgba(255,255,255,0.8);">
+                        <div style="display:flex; flex-direction:column; gap:10px; background:rgba(255,255,255,0.6); padding:15px; border-radius:15px; border:1px solid rgba(255,255,255,0.8); margin-top:auto;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div style="font-family:'Patrick Hand', cursive; font-size:1.2rem; color:#555;">Choose your contribution:</div>
-                                <div style="font-family:'Caveat', cursive; font-size:2.2rem; color:#ff4b72; font-weight:bold; min-width:80px; text-align:right;" id="crowdfund_display_${t.id}">100 ♥</div>
+                                <div style="font-family:'Patrick Hand', cursive; font-size:1.1rem; color:#555;">Your contribution:</div>
+                                <div style="font-family:'Caveat', cursive; font-size:2rem; color:#ff4b72; font-weight:bold;" id="crowdfund_display_${t.id}">100 ♥</div>
                             </div>
-                            
-                            <div style="display:flex; gap:20px; align-items:center; width:100%;">
-                                <input type="range" id="crowdfund_input_${t.id}" min="100" max="${Math.max(100, goal - raised)}" step="100" value="100" oninput="document.getElementById('crowdfund_display_${t.id}').innerText = Number(this.value).toLocaleString() + ' ♥'" style="flex:1; height:12px; border-radius:6px; appearance:none; outline:none; background:#ffe4e1; cursor:pointer;" />
-                                <button onclick="window.contributeCrowdfund('${t.id}', '${t.title}')" style="background:#ff4b72; color:white; border:none; padding:12px 30px; border-radius:10px; font-family:'Patrick Hand', cursive; font-size:1.3rem; cursor:pointer; font-weight:bold; box-shadow:0 6px 15px rgba(255,75,114,0.3); transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='#ff335f';" onmouseout="this.style.transform='scale(1)'; this.style.background='#ff4b72';">GIVE STIPEND</button>
+                            <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
+                                <input type="range" id="crowdfund_input_${t.id}" min="100" max="${Math.max(100, walletForSlider)}" step="100" value="100"
+                                    oninput="var v=Number(this.value); document.getElementById('crowdfund_display_${t.id}').innerText=v.toLocaleString()+' ♥'; document.getElementById('crowdfund_btn_${t.id}').innerText='SEND '+v.toLocaleString()+' COINS';"
+                                    style="flex:1; min-width:100px; height:10px; border-radius:5px; appearance:none; outline:none; background:#ffe4e1; cursor:pointer;" />
+                                <button id="crowdfund_btn_${t.id}" onclick="window.contributeCrowdfund('${t.id}', '${t.title}')"
+                                    style="background:#ff4b72; color:white; border:none; padding:11px 20px; border-radius:10px; font-family:'Patrick Hand', cursive; font-size:1.1rem; cursor:pointer; font-weight:bold; box-shadow:0 6px 15px rgba(255,75,114,0.3); transition:all 0.2s; white-space:nowrap;"
+                                    onmouseover="this.style.transform='scale(1.05)'; this.style.background='#ff335f';"
+                                    onmouseout="this.style.transform='scale(1)'; this.style.background='#ff4b72';">SEND 100 COINS</button>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- RIGHT: Big image -->
+                    <div style="width:260px; flex-shrink:0; background-color:#111; background-image:url('${getOptimizedUrl(t.image, 600)}'); background-size:cover; background-position:center; position:relative;">
+                        <div style="position:absolute; inset:0; background:linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 30%);"></div>
                     </div>
                 </div>
                 `;

@@ -35,10 +35,15 @@ export async function POST(request: Request) {
         const meritGain = Math.floor(tributeCost / 2); // 1:2 ratio meaning they get half of spend in merit points
         const newScore = currentScore + meritGain;
 
-        // 3. Update Database Profiles Table
+        // 3. Update Database Profiles Table (also record last tribute)
         const { error: updateErr, data: updatedProfile } = await supabase
             .from('profiles')
-            .update({ wallet: newWallet, score: newScore })
+            .update({
+                wallet: newWallet,
+                score: newScore,
+                last_tribute_at: new Date().toISOString(),
+                last_tribute_title: tributeTitle,
+            })
             .eq('member_id', memberEmail)
             .select()
             .single();
