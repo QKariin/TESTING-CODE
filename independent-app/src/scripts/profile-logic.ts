@@ -652,11 +652,16 @@ export async function getRandomTask(isSilentInit = false) {
                 activeArea.classList.remove('hidden');
                 activeArea.style.display = 'flex';
             }
-            if (readyText) readyText.innerText = 'CONNECTING TO QUEEN KARIN...';
+            if (readyText) readyText.innerHTML = '<div style="margin-bottom: 10px;">CONNECTING TO QUEEN KARIN...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
             if (qmIdle) qmIdle.classList.add('hidden');
             if (qmActive) { qmActive.classList.remove('hidden'); qmActive.style.display = 'block'; }
-            if (mobTaskText) mobTaskText.innerText = 'TRANSMITTING ORDERS...';
+            if (mobTaskText) mobTaskText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING ORDERS...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
             if (uploadCont) uploadCont.style.display = 'none';
+
+            const activeTimerRow = document.getElementById('activeTimerRow');
+            const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
+            if (activeTimerRow) activeTimerRow.style.display = 'none';
+            if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'none';
         }
 
         const forceNew = !isSilentInit;
@@ -684,6 +689,11 @@ export async function getRandomTask(isSilentInit = false) {
         const taskMsg = data.task.TaskText || data.task.tasktext || 'Perform the assigned duty.';
         if (readyText) readyText.innerHTML = taskMsg;
         if (mobTaskText) mobTaskText.innerHTML = taskMsg;
+
+        const activeTimerRow = document.getElementById('activeTimerRow');
+        const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
+        if (activeTimerRow) activeTimerRow.style.display = 'flex';
+        if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'flex';
 
         const timeLeftMs = data.timeLeftMs || (24 * 60 * 60 * 1000);
         startTaskTimer(timeLeftMs);
@@ -734,18 +744,12 @@ export async function skipTask() {
 }
 
 export function cancelSkipTask() {
-    const state = getState();
-    let taskMsg = 'Perform the assigned duty.';
-    if (state?.raw?.parameters?.taskdom_active_task) {
-        taskMsg = state.raw.parameters.taskdom_active_task.TaskText || state.raw.parameters.taskdom_active_task.tasktext || taskMsg;
-    }
-
     const uploadCont = document.getElementById('uploadBtnContainer');
     const mobUploadCont = document.getElementById('mobUploadBtnContainer');
     const skipConfirmCont = document.getElementById('skipConfirmContainer');
     const mobSkipConfirmCont = document.getElementById('mobSkipConfirmContainer');
-    const readyText = document.getElementById('readyText');
-    const mobTaskText = document.getElementById('mobTaskText');
+    const readyText = document.getElementById('readyText') as HTMLElement;
+    const mobTaskText = document.getElementById('mobTaskText') as HTMLElement;
 
     if (uploadCont) uploadCont.style.display = 'flex';
     if (mobUploadCont) mobUploadCont.style.display = 'flex';
@@ -757,8 +761,9 @@ export function cancelSkipTask() {
     if (sBox) sBox.style.display = 'none';
     if (msBox) msBox.style.display = 'none';
 
-    if (readyText) { readyText.innerHTML = taskMsg; readyText.style.color = 'white'; readyText.style.opacity = '1'; }
-    if (mobTaskText) { mobTaskText.innerHTML = taskMsg; mobTaskText.style.color = 'white'; mobTaskText.style.opacity = '1'; }
+    // Restore opacity only — task text is still in the element from when it was displayed
+    if (readyText) { readyText.style.color = 'white'; readyText.style.opacity = '1'; }
+    if (mobTaskText) { mobTaskText.style.color = 'white'; mobTaskText.style.opacity = '1'; }
 }
 
 export function cancelSkipWarning() {

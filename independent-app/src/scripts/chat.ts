@@ -53,7 +53,7 @@ export async function renderChat(messages: any[]) {
     if (systemMessages.length > 0) {
         // Ticker Logic
         // Full Log HTML construction - Always render this so the list is repopulated on load
-        const sysLogArray = systemMessages.map(m => {
+        const sysLogArray = [...systemMessages].reverse().map(m => {
             const timeStr = new Date(m.created_at || m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return `
             <div style="display:flex; flex-direction:column; background:rgba(255,255,255,0.02); border-left:2px solid #c5a059; padding:10px 15px; margin-bottom:10px;">
