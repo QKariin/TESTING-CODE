@@ -218,6 +218,125 @@ export function toggleTaskQueue() {
     if (container) container.classList.toggle('hidden');
 }
 
+// ─── QUEEN KARIN POSTS ───────────────────────────────────────────────────────
+
+// Switch to Posts view
+export function showPosts() {
+    const views = ['viewHome', 'viewProfile', 'viewUser', 'viewPosts'];
+    views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.display = 'none'; el.classList.remove('active'); }
+    });
+    const vPosts = document.getElementById('viewPosts');
+    if (vPosts) { vPosts.style.display = 'flex'; vPosts.classList.add('active'); }
+    loadQueenPostsDashboard();
+}
+
+// Load posts into the dashboard list
+export async function loadQueenPostsDashboard() {
+    const container = document.getElementById('postsListContainer');
+    if (!container) return;
+    container.innerHTML = '<div style="color:#666;font-family:Orbitron;font-size:0.7rem;letter-spacing:2px;padding:20px;text-align:center;">LOADING...</div>';
+
+    try {
+        const res = await fetch('/api/posts', { cache: 'no-store' });
+        const data = await res.json();
+
+        if (!data.success || data.posts.length === 0) {
+            container.innerHTML = '<div style="color:#444;font-family:Cinzel;font-size:0.8rem;padding:20px;text-align:center;">No posts yet. Be the first to speak.</div>';
+            return;
+        }
+
+        container.innerHTML = data.posts.map((p: any) => `
+            <div style="border:1px solid #222;border-radius:8px;padding:20px;background:#0a0a0a;display:flex;flex-direction:column;gap:10px;position:relative;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        ${p.title ? `<div style="font-family:Cinzel;font-size:1rem;color:#c5a059;letter-spacing:2px;margin-bottom:5px;">${p.title}</div>` : ''}
+                        ${p.content ? `<div style="font-family:Rajdhani;font-size:0.9rem;color:#ccc;line-height:1.6;">${p.content}</div>` : ''}
+                    </div>
+                    <button onclick="window.deleteQueenPost('${p.id}')" style="background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:Orbitron;font-size:0.6rem;flex-shrink:0;margin-left:15px;">DEL</button>
+                </div>
+                ${p.media_url ? `<div style="width:100%;max-height:300px;overflow:hidden;border-radius:6px;border:1px solid #222;"><img src="${p.media_url}" style="width:100%;object-fit:cover;max-height:300px;display:block;" /></div>` : ''}
+                <div style="font-family:Orbitron;font-size:0.55rem;color:#444;letter-spacing:1px;margin-top:5px;">${new Date(p.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).toUpperCase()}</div>
+            </div>
+        `).join('');
+    } catch (err) {
+        container.innerHTML = '<div style="color:#ff4444;font-family:Orbitron;font-size:0.7rem;padding:20px;">ERROR LOADING POSTS</div>';
+    }
+}
+
+// Submit a new post
+export async function submitQueenPost() {
+    const titleEl = document.getElementById('postTitleInput') as HTMLInputElement;
+    const bodyEl = document.getElementById('postBodyInput') as HTMLTextAreaElement;
+    const imageInput = document.getElementById('postImageInput') as HTMLInputElement;
+    const submitBtn = document.getElementById('postSubmitBtn') as HTMLButtonElement;
+
+    const title = titleEl?.value?.trim();
+    const content = bodyEl?.value?.trim();
+
+    if (!title && !content) {
+        alert('Please enter a title or content for the post.');
+        return;
+    }
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'PUBLISHING...'; }
+
+    try {
+        let media_url: string | null = null;
+
+        // Upload image if selected
+        if (imageInput?.files?.[0]) {
+            const { uploadToBytescale } = await import('./mediaBytescale');
+            const url = await uploadToBytescale('queen_post', imageInput.files[0], 'queen_posts');
+            if (url !== 'failed') media_url = url;
+        }
+
+        const res = await fetch('/api/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, content, media_url })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            // Reset form
+            if (titleEl) titleEl.value = '';
+            if (bodyEl) bodyEl.value = '';
+            if (imageInput) imageInput.value = '';
+            const preview = document.getElementById('postImagePreview') as HTMLImageElement;
+            if (preview) { preview.src = ''; preview.style.display = 'none'; }
+
+            loadQueenPostsDashboard();
+        } else {
+            alert('Failed to publish: ' + data.error);
+        }
+    } catch (err) {
+        alert('Network error publishing post.');
+    } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'PUBLISH'; }
+    }
+}
+
+// Delete a post
+export async function deleteQueenPost(id: string) {
+    if (!confirm('Delete this post permanently?')) return;
+
+    try {
+        const res = await fetch('/api/posts', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        const data = await res.json();
+        if (data.success) loadQueenPostsDashboard();
+        else alert('Delete failed: ' + data.error);
+    } catch (err) {
+        alert('Network error deleting post.');
+    }
+}
+
 // Global Exports for legacy window compatibility
 if (typeof window !== 'undefined') {
     (window as any).showHome = showHome;
@@ -228,4 +347,8 @@ if (typeof window !== 'undefined') {
     (window as any).manageAltar = manageAltar;
     (window as any).adminTaskAction = adminTaskAction;
     (window as any).toggleTaskQueue = toggleTaskQueue;
+    (window as any).showPosts = showPosts;
+    (window as any).submitQueenPost = submitQueenPost;
+    (window as any).deleteQueenPost = deleteQueenPost;
+    (window as any).loadQueenPostsDashboard = loadQueenPostsDashboard;
 }

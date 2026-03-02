@@ -1490,3 +1490,96 @@ export async function debugBytescale() {
         console.error("[DEBUG] Bytescale error:", err);
     }
 }
+
+// ─── QUEEN KARIN POSTS ───────────────────────────────────────────────────────
+export async function loadQueenPosts() {
+    const newsGrid = document.getElementById('newsGrid');
+    const heroCard = document.getElementById('desk_LatestKarinPhoto');
+
+    if (newsGrid) {
+        newsGrid.innerHTML = '<div style="color:#444;font-family:Orbitron;font-size:0.7rem;letter-spacing:2px;text-align:center;padding:40px;">LOADING TRANSMISSIONS...</div>';
+    }
+
+    try {
+        const res = await fetch('/api/posts', { cache: 'no-store' });
+        const data = await res.json();
+
+        if (!data.success || !data.posts || data.posts.length === 0) {
+            if (newsGrid) newsGrid.innerHTML = '<div style="color:#333;font-family:Cinzel;font-size:0.9rem;text-align:center;padding:60px;letter-spacing:2px;">NO TRANSMISSIONS YET</div>';
+            return;
+        }
+
+        const posts = data.posts;
+
+        // ── Latest post: update the Queen Karin hero card (next to Tribute) ──
+        const latest = posts[0];
+        if (heroCard) {
+            heroCard.style.position = 'relative';
+            heroCard.style.overflow = 'hidden';
+            if (latest.media_url) {
+                heroCard.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.85)), url('${latest.media_url}')`;
+                heroCard.style.backgroundSize = 'cover';
+                heroCard.style.backgroundPosition = 'center';
+            }
+            heroCard.innerHTML = `
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:20px;z-index:2;">
+                    <div style="font-family:Orbitron;font-size:0.5rem;color:#c5a059;letter-spacing:3px;margin-bottom:6px;">LATEST DISPATCH</div>
+                    ${latest.title ? `<div style="font-family:Cinzel;font-size:0.95rem;color:#fff;line-height:1.3;margin-bottom:4px;">${latest.title}</div>` : ''}
+                    ${latest.content ? `<div style="font-family:Rajdhani;font-size:0.78rem;color:#bbb;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${latest.content}</div>` : ''}
+                </div>
+            `;
+        }
+
+        // ── Queen Karin tab: magazine-style grid ──
+        if (!newsGrid) return;
+        newsGrid.style.display = 'grid';
+        newsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+        newsGrid.style.gap = '20px';
+        newsGrid.style.padding = '20px';
+        newsGrid.style.width = '100%';
+        newsGrid.style.alignContent = 'start';
+
+        newsGrid.innerHTML = posts.map((p: any, i: number) => {
+            const isFeatured = i === 0;
+            const dateStr = new Date(p.created_at).toLocaleDateString('en-GB', {
+                day: 'numeric', month: 'long', year: 'numeric'
+            }).toUpperCase();
+
+            return `
+            <div style="
+                ${isFeatured ? 'grid-column: 1 / -1;' : ''}
+                background: #090909;
+                border: 1px solid ${isFeatured ? 'rgba(197,160,89,0.3)' : '#1a1a1a'};
+                border-radius: 10px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: ${isFeatured && p.media_url ? 'row' : 'column'};
+                min-height: ${isFeatured ? '300px' : '180px'};
+                transition: border-color 0.3s, transform 0.3s;
+            "
+            onmouseover="this.style.borderColor='rgba(197,160,89,0.5)';this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.borderColor='${isFeatured ? 'rgba(197,160,89,0.3)' : '#1a1a1a'}';this.style.transform='translateY(0)'"
+            >
+                ${p.media_url ? `
+                <div style="
+                    ${isFeatured ? 'width:40%;flex-shrink:0;' : 'height:180px;'}
+                    background: url('${p.media_url}') center/cover;
+                    position:relative;
+                ">
+                    ${isFeatured ? `<div style="position:absolute;top:12px;left:12px;background:#c5a059;color:#000;font-family:Orbitron;font-size:0.5rem;padding:4px 10px;letter-spacing:2px;border-radius:2px;">FEATURED</div>` : ''}
+                </div>` : (isFeatured ? `<div style="width:35%;background:linear-gradient(135deg,rgba(197,160,89,0.06),rgba(0,0,0,0.5));display:flex;align-items:center;justify-content:center;font-size:2.5rem;">👑</div>` : '')}
+
+                <div style="padding:18px;display:flex;flex-direction:column;gap:8px;flex:1;">
+                    <div style="font-family:Orbitron;font-size:0.5rem;color:#555;letter-spacing:2px;">${dateStr}</div>
+                    ${p.title ? `<div style="font-family:Cinzel;font-size:${isFeatured ? '1.2rem' : '0.95rem'};color:#c5a059;line-height:1.3;">${p.title}</div>` : ''}
+                    ${p.content ? `<div style="font-family:Rajdhani;font-size:0.88rem;color:#999;line-height:1.6;flex:1;">${p.content}</div>` : ''}
+                </div>
+            </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        if (newsGrid) newsGrid.innerHTML = '<div style="color:#ff4444;font-family:Orbitron;font-size:0.7rem;text-align:center;padding:40px;">ERROR LOADING POSTS</div>';
+        console.error('[Queen Posts] load error', err);
+    }
+}

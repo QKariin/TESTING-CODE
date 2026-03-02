@@ -12,7 +12,7 @@ import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboar
 import { closeModal, reviewTask, cancelReward, confirmReward, toggleRewardRecord, handleRewardFileUpload, selectSticker, openTaskGallery, closeTaskGallery, filterTaskGallery, addQueueTask, deleteQueueItem, openModById } from '@/scripts/dashboard-modals';
 import { toggleProtocol, toggleNewbieImmunity, closeExclusionModal, sendBroadcast, saveBroadcastPreset, togglePresets, closeBroadcastModal, handleBroadcastFile, openBroadcastModal, openExclusionModal } from '@/scripts/dashboard-protocol';
 import { showProfile, switchProfileTab, openProfileUpload } from '@/scripts/dashboard-navigation';
-import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQueue } from '@/scripts/dashboard-main';
+import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQueue, showPosts, submitQueenPost, deleteQueenPost, loadQueenPostsDashboard } from '@/scripts/dashboard-main';
 import { closeChatPreview } from '@/scripts/chat';
 
 // State & Actions
@@ -72,6 +72,10 @@ export default function DashboardPage() {
             (window as any).openModById = openModById;
             (window as any).switchProfileTab = switchProfileTab;
             (window as any).openProfileUpload = openProfileUpload;
+            (window as any).showPosts = showPosts;
+            (window as any).submitQueenPost = submitQueenPost;
+            (window as any).deleteQueenPost = deleteQueenPost;
+            (window as any).loadQueenPostsDashboard = loadQueenPostsDashboard;
             (window as any).closeChatPreview = closeChatPreview;
 
             // Additional Bindings from scripts
@@ -145,6 +149,11 @@ export default function DashboardPage() {
             {/* SIDEBAR */}
             <div className="sidebar">
                 <div className="sb-dash-btn" onClick={() => (window as any).showHome()}>DASHBOARD</div>
+                <div
+                    className="sb-dash-btn"
+                    onClick={() => (window as any).showPosts()}
+                    style={{ backgroundImage: 'linear-gradient(135deg,rgba(197,160,89,0.08),transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
+                >✦ POSTS</div>
                 <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
                     <div id="adminDailyCode" style={{ color: 'var(--blue)', fontWeight: 900, fontFamily: 'Share Tech Mono', fontSize: '1.1rem' }}>----</div>
@@ -297,6 +306,55 @@ export default function DashboardPage() {
                             <div className="vf-header">Revenue & Intel Stream</div>
                             <div id="feedLog" className="vf-body feed-log"></div>
                         </div>
+                    </div>
+                </div>
+
+                {/* POSTS VIEW */}
+                <div id="viewPosts" style={{ display: 'none', flexDirection: 'column', gap: '25px', padding: '30px', overflowY: 'auto', height: '100%' }}>
+                    <div style={{ borderBottom: '1px solid #222', paddingBottom: '20px' }}>
+                        <div style={{ fontFamily: 'Cinzel', fontSize: '1.5rem', color: '#c5a059', letterSpacing: '4px', marginBottom: '5px' }}>QUEEN'S DISPATCH</div>
+                        <div style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: '#555', letterSpacing: '2px' }}>PUBLISH POSTS · VISIBLE TO ALL SUBJECTS</div>
+                    </div>
+
+                    {/* COMPOSE */}
+                    <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '8px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px', marginBottom: '5px' }}>NEW POST</div>
+                        <input
+                            id="postTitleInput"
+                            type="text"
+                            placeholder="TITLE (optional)"
+                            style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: 'Cinzel', fontSize: '0.85rem', padding: '12px 16px', outline: 'none', letterSpacing: '2px', borderRadius: '4px' }}
+                        />
+                        <textarea
+                            id="postBodyInput"
+                            placeholder="Write your decree..."
+                            rows={5}
+                            style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.9rem', padding: '12px 16px', outline: 'none', resize: 'vertical', borderRadius: '4px', lineHeight: 1.6 }}
+                        />
+                        {/* Image upload */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <label htmlFor="postImageInput" style={{ background: '#111', border: '1px solid #333', color: '#888', fontFamily: 'Orbitron', fontSize: '0.6rem', padding: '8px 16px', cursor: 'pointer', letterSpacing: '2px', borderRadius: '4px' }}>+ IMAGE</label>
+                            <input type="file" id="postImageInput" accept="image/*,video/*" style={{ display: 'none' }} onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                const preview = document.getElementById('postImagePreview') as HTMLImageElement;
+                                if (file && preview) {
+                                    preview.src = URL.createObjectURL(file);
+                                    preview.style.display = 'block';
+                                }
+                            }} />
+                            <span style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: '#555' }}>Optional — image or video attachment</span>
+                        </div>
+                        <img id="postImagePreview" src="" alt="preview" style={{ display: 'none', maxHeight: '180px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #333' }} />
+                        <button
+                            id="postSubmitBtn"
+                            onClick={() => (window as any).submitQueenPost()}
+                            style={{ background: '#c5a059', color: '#000', border: 'none', fontFamily: 'Cinzel', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '4px', padding: '14px', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.3s' }}
+                        >PUBLISH</button>
+                    </div>
+
+                    {/* POSTS LIST */}
+                    <div id="postsListContainer" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div style={{ color: '#444', fontFamily: 'Cinzel', fontSize: '0.8rem', padding: '20px', textAlign: 'center' }}>Click POSTS to load...</div>
                     </div>
                 </div>
 

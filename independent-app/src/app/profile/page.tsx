@@ -42,7 +42,8 @@ import {
     handleLogout,
     debugBytescale,
     mobileUploadEvidence,
-    initChatSystem
+    initChatSystem,
+    loadQueenPosts
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -89,6 +90,7 @@ export default function ProfilePage() {
             (window as any).skipTask = skipTask;
             (window as any).handleLogout = handleLogout;
             (window as any).debugBytescale = debugBytescale;
+            (window as any).loadQueenPosts = loadQueenPosts;
         }
 
         async function loadProfile() {
@@ -134,6 +136,7 @@ export default function ProfilePage() {
                         attachKneelListeners();
                         switchTab('serve');
                         getRandomTask(true);
+                        loadQueenPosts(); // Populate Queen Karin tab + hero card
                     }, 150);
                 }
             } catch (err) {
@@ -286,7 +289,7 @@ export default function ProfilePage() {
                             <button className="nav-btn active" onClick={() => switchTab('record')}>
                                 <span style={{ fontSize: '1.2rem', marginRight: 10 }}>📜</span> RECORDS
                             </button>
-                            <button className="nav-btn" onClick={() => switchTab('news')}>
+                            <button className="nav-btn" onClick={() => { switchTab('news'); loadQueenPosts(); }}>
                                 <span style={{ fontSize: '1.2rem', marginRight: 10 }}>👑</span> QUEEN KARIN
                             </button>
                             <button className="nav-btn" onClick={() => switchTab('buy')}>
