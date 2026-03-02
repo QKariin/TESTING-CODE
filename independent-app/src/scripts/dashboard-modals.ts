@@ -65,7 +65,18 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 export async function openModById(taskId: string, memberId: string, isHistory: boolean, fullSigned?: string) {
     const u = users.find(x => x.memberId === memberId);
     if (!u) return;
-    let t = isHistory ? u.history?.find((x: any) => x.id === taskId) : u.reviewQueue?.find((x: any) => x.id === taskId);
+
+    let history: any[] = [];
+    try {
+        const raw = u['Taskdom_History'];
+        history = typeof raw === 'string' ? JSON.parse(raw || '[]') : (raw || []);
+    } catch { }
+
+    let t = u.reviewQueue?.find((x: any) => x.id === taskId) || history.find((x: any) => x.id === taskId);
+    if (!t && isHistory && u.history) {
+        t = u.history.find((x: any) => x.id === taskId);
+    }
+
     if (t) {
         let finalUrl = fullSigned || t.proofUrl;
         if (finalUrl && finalUrl.includes('upcdn.io') && !finalUrl.includes('&sig=')) {

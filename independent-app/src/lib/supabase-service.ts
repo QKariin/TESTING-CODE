@@ -355,7 +355,7 @@ export const DbService = {
         return this.updateProfile(profile.id, {
             parameters: {
                 ...(profile.parameters || {}),
-                active_task: { ...task, assigned_at: new Date().toISOString() }
+                taskdom_active_task: { ...task, assigned_at: new Date().toISOString() }
             }
         });
     },

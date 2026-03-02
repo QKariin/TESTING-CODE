@@ -724,6 +724,9 @@ async function submitTaskEvidence(file: File) {
             console.log("Submission successful!");
             alert("Evidence submitted. Awaiting Void validation.");
             resetTaskUI();
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         } else {
             console.error("Backend submission error:", data.error);
             alert("Submission failed: " + (data.error || "Unknown error"));

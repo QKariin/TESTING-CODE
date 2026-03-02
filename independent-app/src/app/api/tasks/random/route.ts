@@ -16,8 +16,8 @@ export async function GET(req: NextRequest) {
 
         // 1. Check if user already has an active task
         const profile = await DbService.getProfile(memberEmail);
-        if (profile?.parameters?.active_task) {
-            const activeTask = profile.parameters.active_task;
+        if (profile?.parameters?.taskdom_active_task) {
+            const activeTask = profile.parameters.taskdom_active_task;
             const assignedAt = new Date(activeTask.assigned_at).getTime();
             const now = new Date().getTime();
             const hoursPassed = (now - assignedAt) / (1000 * 60 * 60);
