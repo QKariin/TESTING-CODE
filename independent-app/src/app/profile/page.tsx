@@ -43,7 +43,8 @@ import {
     debugBytescale,
     mobileUploadEvidence,
     initChatSystem,
-    loadQueenPosts
+    loadQueenPosts,
+    renderHistoryAndAltar
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -91,6 +92,7 @@ export default function ProfilePage() {
             (window as any).handleLogout = handleLogout;
             (window as any).debugBytescale = debugBytescale;
             (window as any).loadQueenPosts = loadQueenPosts;
+            (window as any).renderHistoryAndAltar = renderHistoryAndAltar;
         }
 
         async function loadProfile() {
@@ -136,7 +138,8 @@ export default function ProfilePage() {
                         attachKneelListeners();
                         switchTab('serve');
                         getRandomTask(true);
-                        loadQueenPosts(); // Populate Queen Karin tab + hero card
+                        loadQueenPosts();
+                        renderHistoryAndAltar(unifiedData); // Populate Records tab
                     }, 150);
                 }
             } catch (err) {

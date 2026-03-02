@@ -1855,3 +1855,183 @@ export async function loadQueenPosts() {
         console.error('[Queen Posts] load error', err);
     }
 }
+
+// ─── ALTAR & HISTORY GALLERY (RECORDS TAB) ───────────────────────────────────
+export function renderHistoryAndAltar(profileData: any) {
+    // routine_history is a JSONB array in profiles, each entry:
+    // { id, text, proofUrl, proofType, status, timestamp, completed, sticker?, adminComment? }
+    const raw: any[] = Array.isArray(profileData?.routine_history) ? profileData.routine_history : [];
+    if (!raw.length) return;
+
+    const approved = raw.filter((t: any) => t.status === 'approve' && t.proofUrl && t.proofUrl !== 'SKIPPED');
+    const failed   = raw.filter((t: any) => t.status === 'fail' || t.status === 'reject');
+    const pending  = raw.filter((t: any) => t.status === 'pending');
+
+    // ── 1. SOVEREIGN ALTAR hero cards ────────────────────────────────────────
+    _renderAltarHero(approved);
+
+    // ── 2. DEDICATED ENTRIES — full mosaic grid (approved) ───────────────────
+    _renderMosaicGrid(approved, pending);
+
+    // ── 3. Mini-grids inside sub-cards ───────────────────────────────────────
+    _renderMiniGrid('gridAltarRoutine', approved.slice(0, 6));
+    _renderMiniGrid('gridAltarFailed',  failed.slice(0, 6));
+}
+
+function _isVideo(url: string): boolean {
+    return /\.(mp4|mov|webm|ogg|avi)$/i.test(url) || url.includes('/video/');
+}
+
+function _renderAltarHero(approved: any[]) {
+    // altarMain = newest approved
+    const altarMain  = document.getElementById('altarMain');
+    const imgMain    = document.getElementById('imgAltarMain') as HTMLImageElement | null;
+    const titleMain  = document.getElementById('titleAltarMain');
+
+    if (approved[0] && altarMain && imgMain) {
+        const p0 = approved[0];
+        const isVid0 = _isVideo(p0.proofUrl);
+        if (!isVid0) {
+            imgMain.src = p0.proofUrl;
+            imgMain.style.display = 'block';
+        } else {
+            // Replace img with video element
+            const vid = document.createElement('video');
+            vid.src = p0.proofUrl;
+            vid.className = 'hero-img';
+            vid.style.objectFit = 'cover';
+            vid.setAttribute('muted', '');
+            vid.setAttribute('playsinline', '');
+            vid.setAttribute('loop', '');
+            imgMain.replaceWith(vid);
+            vid.play().catch(() => {});
+        }
+        if (titleMain) titleMain.textContent = p0.text?.replace(/<[^>]+>/g, '').slice(0, 60) || '...';
+        altarMain.style.display = 'block';
+        altarMain.onclick = () => _openHistoryModal(approved, 0);
+    }
+
+    // altarSub1 image = approved[1]
+    const altarSub1 = document.getElementById('altarSub1');
+    if (approved[1] && altarSub1) {
+        const p1 = approved[1];
+        if (!_isVideo(p1.proofUrl)) {
+            altarSub1.style.backgroundImage = `url('${p1.proofUrl}')`;
+            altarSub1.style.backgroundSize = 'cover';
+            altarSub1.style.backgroundPosition = 'center top';
+        }
+        altarSub1.onclick = () => _openHistoryModal(approved, 1);
+    }
+
+    const altarSub2 = document.getElementById('altarSub2');
+    if (approved[2] && altarSub2) {
+        const p2 = approved[2];
+        if (!_isVideo(p2.proofUrl)) {
+            altarSub2.style.backgroundImage = `url('${p2.proofUrl}')`;
+            altarSub2.style.backgroundSize = 'cover';
+            altarSub2.style.backgroundPosition = 'center top';
+        }
+        altarSub2.onclick = () => _openHistoryModal(approved, 2);
+    }
+}
+
+function _renderMosaicGrid(approved: any[], pending: any[]) {
+    const grid = document.getElementById('mosaicGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    // Show pending entries first (greyed out badge)
+    pending.forEach((t: any) => {
+        const card = document.createElement('div');
+        card.className = 'mosaic-card';
+        card.style.cssText = 'position:relative;overflow:hidden;border-radius:6px;border:1px solid #1a1a1a;background:#060606;display:flex;flex-direction:column;cursor:default;opacity:0.6;';
+        card.innerHTML = `
+            <div style="aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#0a0a0a;font-size:2rem;">⏳</div>
+            <div style="padding:10px 12px;">
+                <div style="font-family:Orbitron;font-size:0.45rem;color:#555;letter-spacing:2px;margin-bottom:4px;">AWAITING JUDGMENT</div>
+                <div style="font-family:Rajdhani;font-size:0.78rem;color:#555;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+
+    // Approved entries — full mosaic portrait cards
+    approved.forEach((t: any, i: number) => {
+        const card = document.createElement('div');
+        card.className = 'mosaic-card';
+        card.style.cssText = 'position:relative;overflow:hidden;border-radius:6px;border:1px solid #1a1a1a;background:#060606;display:flex;flex-direction:column;cursor:pointer;transition:border-color 0.3s,transform 0.3s;';
+        card.onmouseover = () => { card.style.borderColor = 'rgba(197,160,89,0.4)'; card.style.transform = 'translateY(-3px)'; };
+        card.onmouseout  = () => { card.style.borderColor = '#1a1a1a'; card.style.transform = 'translateY(0)'; };
+        card.onclick = () => _openHistoryModal(approved, i);
+
+        const dateStr = new Date(t.timestamp || t.created_at || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }).toUpperCase();
+        const isVid = _isVideo(t.proofUrl);
+        const mediaHTML = isVid
+            ? `<video src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" muted playsinline loop></video>`
+            : `<img src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`;
+
+        card.innerHTML = `
+            ${mediaHTML}
+            <div style="padding:10px 12px;">
+                <div style="font-family:Orbitron;font-size:0.45rem;color:#3a3a3a;letter-spacing:2px;margin-bottom:4px;">${dateStr}</div>
+                <div style="font-family:Rajdhani;font-size:0.78rem;color:#888;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
+                ${t.adminComment ? `<div style="font-family:Orbitron;font-size:0.42rem;color:#c5a059;margin-top:5px;font-style:italic;">"${t.adminComment}"</div>` : ''}
+            </div>
+            ${i < 3 ? '<div style="position:absolute;top:8px;left:8px;background:#c5a059;color:#000;font-family:Orbitron;font-size:0.4rem;padding:3px 8px;border-radius:2px;letter-spacing:1px;">APPROVED</div>' : ''}
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function _renderMiniGrid(containerId: string, items: any[]) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = items.map((t: any) => {
+        const isVid = _isVideo(t.proofUrl);
+        return isVid
+            ? `<video src="${t.proofUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" muted playsinline loop></video>`
+            : `<img src="${t.proofUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
+    }).join('');
+}
+
+// Simple lightbox modal for viewing a task at full-size
+const _modalStyle = `position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:24px;`;
+
+function _openHistoryModal(approved: any[], idx: number) {
+    const old = document.getElementById('__altarModal');
+    if (old) old.remove();
+
+    const t = approved[idx];
+    if (!t) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = '__altarModal';
+    overlay.style.cssText = _modalStyle;
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+    const isVid = _isVideo(t.proofUrl);
+    const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+
+    overlay.innerHTML = `
+        <div style="font-family:Orbitron;font-size:0.5rem;color:#555;letter-spacing:3px;">${dateStr}</div>
+        ${isVid
+            ? `<video src="${t.proofUrl}" controls autoplay style="max-height:65vh;max-width:90vw;border-radius:6px;"></video>`
+            : `<img src="${t.proofUrl}" style="max-height:65vh;max-width:90vw;object-fit:contain;border-radius:6px;" />`
+        }
+        <div style="max-width:600px;text-align:center;">
+            <div style="font-family:Rajdhani;font-size:0.9rem;color:#aaa;line-height:1.6;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
+            ${t.adminComment ? `<div style="font-family:Cinzel;font-size:0.75rem;color:#c5a059;margin-top:10px;font-style:italic;">"${t.adminComment}"</div>` : ''}
+        </div>
+        <div style="display:flex;gap:12px;">
+            ${idx > 0 ? `<button onclick="event.stopPropagation()" style="background:none;border:1px solid #333;color:#666;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;" id="__altarPrev">← PREV</button>` : ''}
+            <button onclick="document.getElementById('__altarModal').remove()" style="background:none;border:1px solid #c5a059;color:#c5a059;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;">CLOSE</button>
+            ${idx < approved.length - 1 ? `<button onclick="event.stopPropagation()" style="background:none;border:1px solid #333;color:#666;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;" id="__altarNext">NEXT →</button>` : ''}
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('__altarPrev')?.addEventListener('click', () => { overlay.remove(); _openHistoryModal(approved, idx - 1); });
+    document.getElementById('__altarNext')?.addEventListener('click', () => { overlay.remove(); _openHistoryModal(approved, idx + 1); });
+}
