@@ -7,6 +7,7 @@ import { initProfileState } from '@/scripts/profile-state';
 import { updateKneelingUI, attachKneelListeners } from '@/scripts/kneeling';
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
+import { toggleSystemLog } from '@/scripts/chat';
 import {
     claimKneelReward,
     switchTab,
@@ -101,6 +102,7 @@ export default function ProfilePage() {
             (window as any).debugBytescale = debugBytescale;
             (window as any).loadQueenPosts = loadQueenPosts;
             (window as any).renderHistoryAndAltar = renderHistoryAndAltar;
+            (window as any).toggleSystemLog = toggleSystemLog;
         }
 
         async function loadProfile() {
@@ -387,9 +389,9 @@ export default function ProfilePage() {
                     <div id="gridTask" className="v-card serve-grid-item" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 10, minHeight: 'unset' }}>
                         <div className="ribbon-label">CURRENT ORDERS</div>
                         <div className="task-interface-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                            <div id="mainButtonsArea" style={{ width: '100%', textAlign: 'center' }}>
+                            <div id="mainButtonsArea" style={{ width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <button id="newTaskBtn" onClick={() => getRandomTask()} className="action-btn" style={{ width: '100%', borderRadius: 12, background: '#0075ff', color: 'white', padding: 15, fontWeight: 'bold', letterSpacing: 2 }}>REQUEST TASK</button>
-                                <div id="idleMessage" style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: 10 }}>Awaiting direct orders from the Void...</div>
+                                <div id="idleMessage" style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: 10 }}>Awaiting direct orders from Queen Karin...</div>
                             </div>
                             <div id="activeTaskContent" className="hidden" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 <h2 id="readyText" style={{ fontFamily: 'Cinzel', fontSize: '1.1rem', textAlign: 'center', margin: 0, lineHeight: 1.4, color: 'white' }}>-</h2>
@@ -418,15 +420,25 @@ export default function ProfilePage() {
                     </div>
 
                     <div id="viewServingTop" className="v-card serve-grid-item" style={{ display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: 20 }}>
-                        <div id="chatCard" className="chat-container" style={{ flex: 1, minHeight: 0, background: 'transparent', margin: 0, border: 'none', borderRadius: 0, display: 'flex', flexDirection: 'column' }}>
+                        <div id="chatCard" className="chat-container" style={{ flex: 1, minHeight: 0, background: 'transparent', margin: 0, border: 'none', borderRadius: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
                             <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 !important' }}>
-                                <div id="systemTicker" className="system-ticker">SYSTEM ONLINE</div>
+                                <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
                                 <div id="chatContent" className="chat-area" style={{ padding: 20 }}></div>
                             </div>
-                            <div className="chat-footer" style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.1)', padding: 15, display: 'flex', alignItems: 'center', gap: 10 }}>
+
+                            {/* NEW SYSTEM LOG CONTAINER */}
+                            <div id="systemLogContainer" className="hidden" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 'calc(100% - 75px)', background: 'linear-gradient(to bottom, #000, #050505)', zIndex: 10, display: 'none', flexDirection: 'column' }}>
+                                <div style={{ width: '100%', padding: '15px 20px', background: 'rgba(197,160,89,0.1)', borderBottom: '1px solid rgba(197,160,89,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontWeight: 'bold' }}>SYSTEM LOGS</span>
+                                    <button onClick={() => (window as any).toggleSystemLog()} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem' }}>×</button>
+                                </div>
+                                <div id="systemLogContent" className="chat-area" style={{ flex: 1, overflowY: 'auto', padding: 20 }}></div>
+                            </div>
+
+                            <div className="chat-footer" style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.1)', padding: 15, display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 15 }}>
                                 <div className="chat-input-wrapper" style={{ flexGrow: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 15 }}>
                                     <button id="btnMediaPlus" className="chat-btn-plus" onClick={() => handleMediaPlus()}>+</button>
-                                    <input type="text" id="chatMsgInput" className="chat-input" placeholder="Communicate with the Void..." onKeyPress={handleChatKey} />
+                                    <input type="text" id="chatMsgInput" className="chat-input" placeholder="Communicate with Queen Karin..." onKeyPress={(e: any) => handleChatKey(e)} />
                                 </div>
                                 <button className="chat-btn-send" onClick={() => sendChatMessage()} style={{ background: '#c5a059', borderRadius: 15, width: 45, height: 45, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{'>'}</button>
                             </div>
@@ -769,8 +781,17 @@ export default function ProfilePage() {
                                     <div id="mobChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#888' }}>ONLINE</div>
                                 </div>
                             </div>
-                            <div id="mob_systemTicker" className="system-ticker">SYSTEM ONLINE</div>
+                            <div id="mob_systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).toggleSystemLog(true)}>SYSTEM ONLINE</div>
                             <div id="btnEnterChatPanel" onClick={() => (window as any).toggleMobileChat(true)} style={{ width: '100%', padding: 12, textAlign: 'center', background: '#000', color: '#666', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 3, cursor: 'pointer', transition: '0.2s' }}>▼ ENTER CHAT</div>
+
+                            {/* MOBILE SYSTEM LOG OVERLAY */}
+                            <div id="mobSystemLogContainer" className="hidden" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: '#050505', zIndex: 100000, display: 'none', flexDirection: 'column' }}>
+                                <div style={{ width: '100%', padding: '20px', background: 'rgba(197,160,89,0.1)', borderBottom: '1px solid rgba(197,160,89,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontWeight: 'bold' }}>SYSTEM LOGS</span>
+                                    <button onClick={() => (window as any).toggleSystemLog(true)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.5rem' }}>×</button>
+                                </div>
+                                <div id="mob_systemLogContent" className="chat-area" style={{ flex: 1, overflowY: 'auto', padding: 20 }}></div>
+                            </div>
 
                             <div id="inlineChatPanel" className="hidden" style={{ width: '100%', height: '450px', background: '#050505', display: 'flex', flexDirection: 'column', position: 'relative' }}>
                                 <div id="mob_chatBox" className="chat-body-frame" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', paddingBottom: 70, overflowY: 'auto' }}>

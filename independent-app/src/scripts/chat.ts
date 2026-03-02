@@ -44,8 +44,14 @@ export async function renderChat(messages: any[]) {
         return s !== 'system' && !txt.includes("Task Verified") && !txt.includes("Task Rejected");
     });
 
-    // 3. TICKER
+    // 3. TICKER & LOGS
+
+    // Render the System Log Interface
+    const deskSysLog = document.getElementById('systemLogContent');
+    const mobSysLog = document.getElementById('mob_systemLogContent');
+
     if (systemMessages.length > 0) {
+        // Ticker Logic
         const latest = systemMessages[systemMessages.length - 1];
         const txt = DOMPurify.sanitize(latest.content || latest.message);
         if (txt !== lastTickerText) {
@@ -61,6 +67,20 @@ export async function renderChat(messages: any[]) {
                 }
             });
         }
+
+        // Full Log HTML construction
+        const sysLogArray = systemMessages.map(m => {
+            const timeStr = new Date(m.created_at || m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `
+            <div style="display:flex; flex-direction:column; background:rgba(255,255,255,0.02); border-left:2px solid #c5a059; padding:10px 15px; margin-bottom:10px;">
+                <span style="font-family:'Cinzel'; color:#c5a059; font-size:0.85rem;">${DOMPurify.sanitize(m.content || m.message)}</span>
+                <span style="font-family:'Orbitron'; color:rgba(255,255,255,0.3); font-size:0.6rem; margin-top:5px;">${timeStr}</span>
+            </div>`;
+        });
+
+        const sysLogHtml = sysLogArray.join('');
+        if (deskSysLog) deskSysLog.innerHTML = sysLogHtml;
+        if (mobSysLog) mobSysLog.innerHTML = sysLogHtml;
     }
 
     // 4. CHECK UPDATES
@@ -265,9 +285,34 @@ export function closeChatPreview() {
 }
 
 // Global Exports
+export function toggleSystemLog(isMob = false) {
+    if (isMob) {
+        const d = document.getElementById('mobSystemLogContainer');
+        if (!d) return;
+        if (d.style.display === 'none' || d.classList.contains('hidden')) {
+            d.classList.remove('hidden');
+            d.style.display = 'flex';
+        } else {
+            d.classList.add('hidden');
+            d.style.display = 'none';
+        }
+    } else {
+        const d = document.getElementById('systemLogContainer');
+        if (!d) return;
+        if (d.style.display === 'none' || d.classList.contains('hidden')) {
+            d.classList.remove('hidden');
+            d.style.display = 'flex';
+        } else {
+            d.classList.add('hidden');
+            d.style.display = 'none';
+        }
+    }
+}
+
 if (typeof window !== 'undefined') {
     (window as any).loadMoreChat = loadMoreChat;
     (window as any).openChatPreview = openChatPreview;
     (window as any).closeChatPreview = closeChatPreview;
     (window as any).forceBottom = forceBottom;
+    (window as any).toggleSystemLog = toggleSystemLog;
 }
