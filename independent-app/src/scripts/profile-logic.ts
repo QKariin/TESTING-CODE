@@ -612,11 +612,15 @@ export async function getRandomTask(isSilentInit = false) {
 
         if (!isSilentInit) {
             if (mainArea) mainArea.style.display = 'none';
-            if (activeArea) activeArea.classList.remove('hidden');
-            if (readyText) readyText.innerText = 'Connecting to the Void...';
+            if (activeArea) {
+                activeArea.classList.remove('hidden');
+                activeArea.style.display = 'flex';
+            }
+            if (readyText) readyText.innerText = 'CONNECTING TO QUEEN KARIN...';
             if (qmIdle) qmIdle.classList.add('hidden');
-            if (qmActive) qmActive.classList.remove('hidden');
-            if (mobTaskText) mobTaskText.innerText = 'Transmitting orders...';
+            if (qmActive) { qmActive.classList.remove('hidden'); qmActive.style.display = 'block'; }
+            if (mobTaskText) mobTaskText.innerText = 'TRANSMITTING ORDERS...';
+            if (uploadCont) uploadCont.style.display = 'none';
         }
 
         const forceNew = !isSilentInit;
