@@ -188,7 +188,7 @@ function renderTributes() {
         return;
     }
 
-    // 1. Desktop Quick Connect - Pin Coffee & Lunch (or fallback to first 2)
+    // 1. Desktop Quick Connect — Last tribute info + 2 pinned gifts
     if (globalTributes.length >= 1) {
         const pinned = ['coffee', 'lunch'];
         const pinnedItems = pinned
@@ -196,16 +196,34 @@ function renderTributes() {
             .filter(Boolean) as typeof globalTributes;
         const quickItems = pinnedItems.length >= 2 ? pinnedItems : globalTributes.slice(0, 2);
 
-        // Last tribute timestamp
+        // Last tribute info
         const st = getState();
         const lastTributeAt = st?.raw?.parameters?.last_tribute_at;
         const lastTributeTitle = st?.raw?.parameters?.last_tribute_title;
+        const lastTributeSender = st?.raw?.parameters?.last_tribute_sender
+            || (st?.memberId ? st.memberId.split('@')[0] : '');
+
+        // Relative time helper
+        function relativeTime(iso: string): string {
+            const diff = Date.now() - new Date(iso).getTime();
+            const mins = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            if (mins < 60) return `${mins}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
         let lastTributeHtml = '';
         if (lastTributeAt) {
-            const d = new Date(lastTributeAt);
-            const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-            const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            lastTributeHtml = `<div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(197,160,89,0.6); letter-spacing:1px; text-align:center; margin-bottom:12px; text-transform:uppercase;">Last tribute${lastTributeTitle ? ` · ${lastTributeTitle}` : ''} · ${dateStr} ${timeStr}</div>`;
+            lastTributeHtml = `
+            <div style="background:rgba(197,160,89,0.06); border:1px solid rgba(197,160,89,0.18); border-radius:10px; padding:10px 14px; margin-bottom:10px;">
+                <div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(197,160,89,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">Last Tribute</div>
+                <div style="font-family:'Cinzel', serif; font-size:0.8rem; color:#fff; font-weight:700;">${lastTributeSender}</div>
+                ${lastTributeTitle ? `<div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:rgba(255,255,255,0.5); margin-top:2px; letter-spacing:1px;">${lastTributeTitle}</div>` : ''}
+                <div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(197,160,89,0.4); margin-top:5px; letter-spacing:1px;">${relativeTime(lastTributeAt)}</div>
+            </div>`;
         }
 
         const quickItemsHtml = lastTributeHtml + quickItems.map((t) => `
@@ -382,7 +400,7 @@ function showPovertyModal(itemTitle: string) {
             <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.35); line-height:1.8; border-top:1px solid rgba(255,80,80,0.15); padding-top:12px;">She deserves the best. Earn more coins &amp; come back worthy of her attention.</div>
             <div style="display:flex; gap:10px;">
                 <button onclick="document.getElementById('povertyModal').remove()" style="flex:1; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">CLOSE</button>
-                <button onclick="document.getElementById('povertyModal').remove(); window.location.href='/dashboard?tab=exchequer';" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">ADD MORE COINS</button>
+                <button onclick="document.getElementById('povertyModal').remove(); if(window.switchTab) window.switchTab('buy');" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">ADD MORE COINS</button>
             </div>
         </div>
     `;
