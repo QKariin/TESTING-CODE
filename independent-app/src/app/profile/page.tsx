@@ -43,6 +43,7 @@ import {
     executeSkipTask,
     cancelSkipTask,
     cancelSkipWarning,
+    cancelRequestWarning,
     resetTaskUI,
     renderProfileSidebar,
     handleLogout,
@@ -75,6 +76,8 @@ export default function ProfilePage() {
             (window as any).mobileSkipTask = () => { skipTask(); };
             (window as any).executeSkipTask = executeSkipTask;
             (window as any).cancelSkipTask = cancelSkipTask;
+            (window as any).cancelSkipWarning = cancelSkipWarning;
+            (window as any).cancelRequestWarning = cancelRequestWarning;
             (window as any).mobileUploadEvidence = mobileUploadEvidence;
             (window as any).handleRoutineUpload = handleRoutineUpload;
             (window as any).handleTaskEvidenceUpload = handleTaskEvidenceUpload;
@@ -393,7 +396,11 @@ export default function ProfilePage() {
                             <div id="mainButtonsArea" style={{ width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <button id="newTaskBtn" onClick={() => getRandomTask()} className="action-btn" style={{ width: '100%', borderRadius: 12, background: '#0075ff', color: 'white', padding: 15, fontWeight: 'bold', letterSpacing: 2 }}>REQUEST TASK</button>
                                 <div id="idleMessage" style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: 10 }}>Awaiting direct orders from Queen Karin...</div>
-                                <div id="requestWarningBox" style={{ display: 'none', color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.8rem', textAlign: 'center', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(255,0,0,0.1)', padding: '10px', borderRadius: '8px', marginTop: '15px', width: '100%' }}>INSUFFICIENT CAPITAL</div>
+                                <div id="requestWarningBox" style={{ display: 'none', flexDirection: 'column', gap: 10, marginTop: 15, alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(20,0,0,0.8)', padding: '15px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
+                                    <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
+                                    <button className="action-btn" onClick={() => (window as any).goToExchequer()} style={{ width: '100%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', boxShadow: '0 0 15px rgba(255,0,60,0.4)', borderRadius: '12px', padding: '15px', fontSize: '0.9rem', letterSpacing: '2px' }}>ADD COINS</button>
+                                    <button className="text-btn" onClick={() => (window as any).cancelRequestWarning()} style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: 1, background: 'none', border: 'none', padding: '10px', width: '100%' }}>RETURN TO SERVE</button>
+                                </div>
                             </div>
                             <div id="activeTaskContent" className="hidden" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 <h2 id="readyText" style={{ fontFamily: 'Cinzel', fontSize: '1.1rem', textAlign: 'center', margin: 0, lineHeight: 1.4, color: 'white' }}>-</h2>
@@ -835,8 +842,12 @@ export default function ProfilePage() {
                             <div className="luxury-card" style={{ padding: '15px 5px' }}>
                                 <div id="qm_TaskIdle" className="hidden" style={{ textAlign: 'center' }}>
                                     <div className="txt-status-red" style={{ marginBottom: '10px' }}>UNPRODUCTIVE</div>
-                                    <button className="lobby-btn" style={{ width: '100%', borderColor: '#c5a059', color: '#c5a059' }} onClick={() => (window as any).mobileRequestTask()}>REQUEST TASK</button>
-                                    <div id="mobRequestWarningBox" style={{ display: 'none', color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.75rem', textAlign: 'center', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(255,0,0,0.1)', padding: '10px', borderRadius: '8px', marginTop: '10px' }}>INSUFFICIENT CAPITAL</div>
+                                    <button id="mobNewTaskBtn" className="lobby-btn" style={{ width: '100%', borderColor: '#c5a059', color: '#c5a059' }} onClick={() => (window as any).mobileRequestTask()}>REQUEST TASK</button>
+                                    <div id="mobRequestWarningBox" style={{ display: 'none', flexDirection: 'column', gap: 12, marginTop: '10px', alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(20,0,0,0.8)', padding: '20px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
+                                        <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
+                                        <button className="action-btn" onClick={() => (window as any).goToExchequer()} style={{ width: '100%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', padding: '15px', borderRadius: '8px', fontSize: '0.8rem', letterSpacing: '2px' }}>ADD COINS</button>
+                                        <button className="text-btn" onClick={() => (window as any).cancelRequestWarning()} style={{ width: '100%', color: '#ccc', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: 1, background: 'none', border: 'none', padding: '10px' }}>RETURN TO SERVE</button>
+                                    </div>
                                 </div>
                                 <div id="qm_TaskActive" className="hidden" style={{ textAlign: 'center' }}>
                                     <div className="txt-status-green" style={{ marginBottom: '5px' }}>WORKING</div>

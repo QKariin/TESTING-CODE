@@ -545,6 +545,13 @@ export function resetTaskUI() {
     if (sBox) sBox.style.display = 'none';
     if (msBox) msBox.style.display = 'none';
 
+    const btn1 = document.getElementById('newTaskBtn');
+    const btn2 = document.getElementById('mobNewTaskBtn');
+    if (btn1) btn1.style.display = '';
+    if (btn2) btn2.style.display = '';
+    const idle = document.getElementById('idleMessage');
+    if (idle) idle.style.display = '';
+
     if (mainArea) mainArea.style.display = 'flex';
     if (activeArea) {
         activeArea.classList.add('hidden');
@@ -611,8 +618,16 @@ export async function getRandomTask(isSilentInit = false) {
     if (!isSilentInit && (wallet || 0) < 300) {
         const rBox = document.getElementById('requestWarningBox');
         const mrBox = document.getElementById('mobRequestWarningBox');
-        if (rBox) { rBox.innerText = "INSUFFICIENT CAPITAL: 300 🪙 REQUIRED"; rBox.style.display = 'block'; }
-        if (mrBox) { mrBox.innerText = "INSUFFICIENT CAPITAL: 300 🪙 REQUIRED"; mrBox.style.display = 'block'; }
+        if (rBox) rBox.style.display = 'flex';
+        if (mrBox) mrBox.style.display = 'flex';
+
+        const btn1 = document.getElementById('newTaskBtn');
+        const btn2 = document.getElementById('mobNewTaskBtn');
+        if (btn1) btn1.style.display = 'none';
+        if (btn2) btn2.style.display = 'none';
+
+        const idle = document.getElementById('idleMessage');
+        if (idle) idle.style.display = 'none';
         return;
     }
 
@@ -756,6 +771,21 @@ export function cancelSkipWarning() {
     const mobUploadCont = document.getElementById('mobUploadBtnContainer');
     if (uploadCont) uploadCont.style.display = 'flex';
     if (mobUploadCont) mobUploadCont.style.display = 'flex';
+}
+
+export function cancelRequestWarning() {
+    const rBox = document.getElementById('requestWarningBox');
+    const mrBox = document.getElementById('mobRequestWarningBox');
+    if (rBox) rBox.style.display = 'none';
+    if (mrBox) mrBox.style.display = 'none';
+
+    const btn1 = document.getElementById('newTaskBtn');
+    const btn2 = document.getElementById('mobNewTaskBtn');
+    if (btn1) btn1.style.display = '';
+    if (btn2) btn2.style.display = '';
+
+    const idle = document.getElementById('idleMessage');
+    if (idle) idle.style.display = '';
 }
 
 export async function executeSkipTask() {
