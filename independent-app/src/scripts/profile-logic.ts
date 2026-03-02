@@ -465,21 +465,18 @@ if (typeof window !== 'undefined') {
                 // 4. Send Chat message
                 const tributeObj = globalTributes.find(t => t.id === id);
                 if (tributeObj) {
-                    const wishlistPayload = JSON.stringify({
-                        name: title,
-                        title: title,
-                        price: amount,
-                        image: tributeObj.display_url || tributeObj.image || "",
-                        img: tributeObj.display_url || tributeObj.image || "",
-                        sender: memberId.split('@')[0]
-                    });
                     await fetch('/api/chat/send', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             senderEmail: memberId,
-                            content: `WISHLIST::${wishlistPayload}`,
-                            type: 'wishlist'
+                            content: `Contributed ${amount.toLocaleString()} to ${title}`,
+                            type: 'wishlist',
+                            metadata: {
+                                title: title,
+                                price: amount,
+                                image: tributeObj.display_url || tributeObj.image || ""
+                            }
                         })
                     });
                 }
@@ -533,21 +530,18 @@ export async function buyTribute(id: string, title: string, cost: number) {
             // Notify chat with rich card
             const tributeObj = globalTributes.find(t => t.id === id);
             if (tributeObj) {
-                const wishlistPayload = JSON.stringify({
-                    name: title,
-                    title: title,
-                    price: cost,
-                    image: tributeObj.display_url || tributeObj.image || "",
-                    img: tributeObj.display_url || tributeObj.image || "",
-                    sender: memberId.split('@')[0]
-                });
                 await fetch('/api/chat/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         senderEmail: memberId,
-                        content: `WISHLIST::${wishlistPayload}`,
-                        type: 'wishlist'
+                        content: `Purchased "${title}"`,
+                        type: 'wishlist',
+                        metadata: {
+                            title: title,
+                            price: cost,
+                            image: tributeObj.display_url || tributeObj.image || ""
+                        }
                     })
                 });
             }
@@ -1377,17 +1371,17 @@ function renderChatMessage(msg: any) {
     let content = msg.content || msg.message || "";
     if (msg.type === 'wishlist') {
         const meta = msg.metadata || {};
-        const rotation = (Math.random() * 4 - 2); // Slight random tilt for authenticity
         content = `
-            <div class="chat-card-polaroid" style="position:relative; background:#fff; padding:10px 10px 20px 10px; display:flex; flex-direction:column; align-items:center; box-shadow:0 6px 15px rgba(0,0,0,0.15); transform:rotate(${rotation}deg); margin: 15px auto; width: 220px;">
-                <!-- Washi Tape Effect -->
-                <div style="position:absolute; top:-12px; left:50%; width:80px; height:25px; background:rgba(255, 182, 193, 0.6); transform:translateX(-50%) rotate(${-rotation * 2}deg); z-index:5; box-shadow:0 1px 3px rgba(0,0,0,0.1); border-left:2px dotted rgba(255,255,255,0.5); border-right:2px dotted rgba(255,255,255,0.5);"></div>
-                
-                <div style="width:100%; height:160px; background:url('${meta.image}') center/cover; border:1px solid rgba(0,0,0,0.05);"></div>
-                
-                <div style="width:100%; display:flex; flex-direction:column; align-items:center; margin-top:15px;">
-                    <div style="font-family:'Caveat', cursive; font-size:1.8rem; color:#111; text-align:center; line-height:1.2; font-weight:700;">${meta.title}</div>
-                    <div style="font-family:'Patrick Hand', cursive; font-size:1.2rem; color:'#ff4b72'; display:flex; align-items:center; gap:5px; margin-top:5px;"><span style="color:#ff69b4;">♥</span> ${meta.price?.toLocaleString()}</div>
+            <div style="border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.3); margin:10px auto; width:220px; box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+                <div style="width:100%; height:130px; background:url('${meta.image}') center/cover; background-color:#050510; position:relative;">
+                    <div style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent 50%, rgba(10,10,20,0.8) 100%);"></div>
+                    <div style="position:absolute; top:8px; right:8px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:3px 9px; display:flex; align-items:center; gap:4px;">
+                        <span style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#c5a059; font-weight:700; letter-spacing:1px;">🪙 ${meta.price ? Number(meta.price).toLocaleString() : ''}</span>
+                    </div>
+                </div>
+                <div style="padding:10px 13px 13px;">
+                    <div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(197,160,89,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:5px;">✦ Gift Sent</div>
+                    <div style="font-family:'Cinzel', serif; font-size:0.8rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase;">${meta.title || ''}</div>
                 </div>
             </div>
         `;
