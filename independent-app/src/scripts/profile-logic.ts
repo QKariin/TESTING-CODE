@@ -689,9 +689,12 @@ export async function skipTask() {
     if ((wallet || 0) < 300) {
         const sBox = document.getElementById('skipWarningBox');
         const msBox = document.getElementById('mobSkipWarningBox');
-        const msg = "INSUFFICIENT CAPITAL<br/><span style='font-size:0.6rem;color:#ccc;'>VISIT THE EXCHEQUER OR SERVE</span>";
-        if (sBox) { sBox.innerHTML = msg; sBox.style.display = 'block'; }
-        if (msBox) { msBox.innerHTML = msg; msBox.style.display = 'block'; }
+        if (sBox) sBox.style.display = 'flex';
+        if (msBox) msBox.style.display = 'flex';
+        const uploadCont = document.getElementById('uploadBtnContainer');
+        const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+        if (uploadCont) uploadCont.style.display = 'none';
+        if (mobUploadCont) mobUploadCont.style.display = 'none';
         return;
     }
 
@@ -743,6 +746,18 @@ export function cancelSkipTask() {
     if (mobTaskText) { mobTaskText.innerHTML = taskMsg; mobTaskText.style.color = 'white'; mobTaskText.style.opacity = '1'; }
 }
 
+export function cancelSkipWarning() {
+    const sBox = document.getElementById('skipWarningBox');
+    const msBox = document.getElementById('mobSkipWarningBox');
+    if (sBox) sBox.style.display = 'none';
+    if (msBox) msBox.style.display = 'none';
+
+    const uploadCont = document.getElementById('uploadBtnContainer');
+    const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+    if (uploadCont) uploadCont.style.display = 'flex';
+    if (mobUploadCont) mobUploadCont.style.display = 'flex';
+}
+
 export async function executeSkipTask() {
     const { id, memberId, wallet } = getState();
     const pid = memberId || id;
@@ -752,9 +767,12 @@ export async function executeSkipTask() {
         cancelSkipTask();
         const sBox = document.getElementById('skipWarningBox');
         const msBox = document.getElementById('mobSkipWarningBox');
-        const msg = "INSUFFICIENT CAPITAL<br/><span style='font-size:0.6rem;color:#ccc;'>VISIT THE EXCHEQUER OR SERVE</span>";
-        if (sBox) { sBox.innerHTML = msg; sBox.style.display = 'block'; }
-        if (msBox) { msBox.innerHTML = msg; msBox.style.display = 'block'; }
+        if (sBox) sBox.style.display = 'flex';
+        if (msBox) msBox.style.display = 'flex';
+        const uploadCont = document.getElementById('uploadBtnContainer');
+        const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+        if (uploadCont) uploadCont.style.display = 'none';
+        if (mobUploadCont) mobUploadCont.style.display = 'none';
         return;
     }
 

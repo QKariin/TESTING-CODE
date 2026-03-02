@@ -42,6 +42,7 @@ import {
     skipTask,
     executeSkipTask,
     cancelSkipTask,
+    cancelSkipWarning,
     resetTaskUI,
     renderProfileSidebar,
     handleLogout,
@@ -403,7 +404,11 @@ export default function ProfilePage() {
                                     <div className="t-sep">:</div>
                                     <div id="timerS" className="card-t-box">00</div>
                                 </div>
-                                <div id="skipWarningBox" style={{ display: 'none', color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.85rem', textAlign: 'center', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(255,0,0,0.1)', padding: '12px', borderRadius: '8px', marginTop: '10px', width: '100%', lineHeight: '1.4' }}>INSUFFICIENT CAPITAL</div>
+                                <div id="skipWarningBox" style={{ display: 'none', flexDirection: 'column', gap: 10, marginTop: 10, alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(20,0,0,0.8)', padding: '15px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
+                                    <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
+                                    <button className="action-btn" onClick={() => (window as any).goToExchequer()} style={{ width: 240, background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', boxShadow: '0 0 15px rgba(255,0,60,0.4)', borderRadius: '8px', padding: '10px', fontSize: '0.8rem', letterSpacing: '2px' }}>ADD COINS</button>
+                                    <button className="text-btn" onClick={() => (window as any).cancelSkipWarning()} style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: '5px', width: 240 }}>RETURN TO SERVE</button>
+                                </div>
                                 <div id="uploadBtnContainer" style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 10, alignItems: 'center' }}>
                                     <button id="uploadBtn" className="action-btn" style={{ width: 240, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: '#c5a059', fontWeight: 'bold', border: '1px solid #c5a059', boxShadow: '0 0 15px rgba(197,160,89,0.2)' }} onClick={() => (document.getElementById('taskEvidenceInput') as any)?.click()}>UPDATE TASK</button>
                                     <button id="btnSkip" onClick={() => (window as any).skipTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 240 }}>SKIP TASK (-300 🪙)</button>
@@ -841,7 +846,11 @@ export default function ProfilePage() {
                                         <div id="qm_timerM" className="card-t-box">00</div>:
                                         <div id="qm_timerS" className="card-t-box">00</div>
                                     </div>
-                                    <div id="mobSkipWarningBox" style={{ display: 'none', color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.75rem', textAlign: 'center', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(255,0,0,0.1)', padding: '10px', borderRadius: '8px', marginTop: '10px', marginBottom: '10px', lineHeight: '1.4' }}>INSUFFICIENT CAPITAL</div>
+                                    <div id="mobSkipWarningBox" style={{ display: 'none', flexDirection: 'column', gap: 12, marginTop: '10px', marginBottom: '10px', alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(20,0,0,0.8)', padding: '20px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
+                                        <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
+                                        <button className="action-btn" onClick={() => (window as any).goToExchequer()} style={{ width: '100%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', padding: '12px', borderRadius: '8px', fontSize: '0.8rem', letterSpacing: '2px' }}>ADD COINS</button>
+                                        <button className="text-btn" onClick={() => (window as any).cancelSkipWarning()} style={{ width: '100%', color: '#ccc', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: 1, background: 'none', border: 'none', padding: '5px' }}>RETURN TO SERVE</button>
+                                    </div>
                                     <div id="mobUploadBtnContainer" style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                                         <button id="mobBtnUpload" className="btn-upload-sm" style={{ flex: 1 }} onClick={() => document.getElementById('evidenceInputMob')?.click()}>UPLOAD</button>
                                         <button id="mobBtnSkip" className="btn-skip-sm" style={{ flex: 1 }} onClick={() => (window as any).mobileSkipTask()}>SKIP (-300)</button>
