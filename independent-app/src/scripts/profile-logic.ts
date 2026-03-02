@@ -792,9 +792,11 @@ export async function executeSkipTask() {
             showTaskFeedback(msg, 'var(--red)');
             loadChatHistory(pid);
         } else {
-            if (readyText) readyText.innerText = data.error || "Failed to skip task.";
-            if (mobTaskText) mobTaskText.innerText = data.error || "Failed to skip task.";
-            setTimeout(() => { cancelSkipTask() }, 3000);
+            cancelSkipTask();
+            const insult = document.getElementById('povertyInsult');
+            if (insult) insult.innerText = data.error || "You cannot afford to skip this duty. Complete it, or buy more time at the Exchequer.";
+            const pov = document.getElementById('povertyOverlay');
+            if (pov) { pov.classList.remove('hidden'); pov.style.display = 'flex'; }
         }
     } catch (err) {
         console.error("Error skipping task", err);
