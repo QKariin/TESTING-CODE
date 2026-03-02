@@ -39,6 +39,8 @@ import {
     selectRoutineItem,
     getRandomTask,
     skipTask,
+    executeSkipTask,
+    cancelSkipTask,
     renderProfileSidebar,
     handleLogout,
     debugBytescale,
@@ -68,6 +70,8 @@ export default function ProfilePage() {
             (window as any).toggleMobileChat = toggleMobileChat;
             (window as any).mobileRequestTask = () => { getRandomTask(); };
             (window as any).mobileSkipTask = () => { skipTask(); };
+            (window as any).executeSkipTask = executeSkipTask;
+            (window as any).cancelSkipTask = cancelSkipTask;
             (window as any).mobileUploadEvidence = mobileUploadEvidence;
             (window as any).handleRoutineUpload = handleRoutineUpload;
             (window as any).handleTaskEvidenceUpload = handleTaskEvidenceUpload;
@@ -397,6 +401,15 @@ export default function ProfilePage() {
                                 <div id="uploadBtnContainer" style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 10, alignItems: 'center' }}>
                                     <button id="uploadBtn" className="action-btn" style={{ width: 240, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: '#c5a059', fontWeight: 'bold', border: '1px solid #c5a059', boxShadow: '0 0 15px rgba(197,160,89,0.2)' }} onClick={() => (document.getElementById('taskEvidenceInput') as any)?.click()}>UPDATE TASK</button>
                                     <button id="btnSkip" onClick={() => (window as any).skipTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 240 }}>SKIP TASK (-300 🪙)</button>
+                                </div>
+                                <div id="skipConfirmContainer" style={{ display: 'none', flexDirection: 'column', gap: 10, marginTop: 10, alignItems: 'center', background: 'rgba(255,0,0,0.1)', border: '1px solid var(--red)', padding: '15px', borderRadius: '8px' }}>
+                                    <div style={{ color: 'var(--red)', fontFamily: 'Cinzel', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold' }}>⚠️ PENALTY WARNING ⚠️</div>
+                                    <div style={{ color: '#fff', fontFamily: 'Orbitron', fontSize: '0.75rem', textAlign: 'center', marginBottom: 5 }}>Are you sure you want to skip?<br />This will cost you 300 Capital.</div>
+                                    <button id="btnConfirmSkip" onClick={() => (window as any).executeSkipTask()} className="action-btn" style={{ width: 240, background: 'var(--red)', color: 'white', fontWeight: 'bold', boxShadow: '0 0 10px rgba(255,0,0,0.4)', borderColor: 'var(--red)' }}>ACCEPT PENALTY (-300 🪙)</button>
+                                    <button id="btnCancelSkip" onClick={() => (window as any).cancelSkipTask()} className="text-btn" style={{ color: '#aaa', fontSize: '0.7rem', padding: 5, width: 240, background: 'none', border: 'none' }}>NEVERMIND, I WILL SERVE</button>
+                                </div>
+                                <div id="dismissTaskContainer" style={{ display: 'none', flexDirection: 'column', gap: 5, marginTop: 10, alignItems: 'center' }}>
+                                    <button id="btnDismissTask" onClick={() => (window as any).resetTaskUI()} className="action-btn" style={{ width: 240, background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 'bold', border: '1px solid white' }}>THANK YOU, QUEEN KARIN</button>
                                 </div>
                             </div>
                         </div>
@@ -802,9 +815,18 @@ export default function ProfilePage() {
                                         <div id="qm_timerM" className="card-t-box">00</div>:
                                         <div id="qm_timerS" className="card-t-box">00</div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
+                                    <div id="mobUploadBtnContainer" style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                                         <button id="mobBtnUpload" className="btn-upload-sm" style={{ flex: 1 }} onClick={() => document.getElementById('evidenceInputMob')?.click()}>UPLOAD</button>
                                         <button id="mobBtnSkip" className="btn-skip-sm" style={{ flex: 1 }} onClick={() => (window as any).mobileSkipTask()}>SKIP (-300)</button>
+                                    </div>
+                                    <div id="mobSkipConfirmContainer" style={{ display: 'none', flexDirection: 'column', gap: '8px', marginTop: '10px', background: 'rgba(255,0,0,0.1)', border: '1px solid var(--red)', padding: '12px', borderRadius: '8px' }}>
+                                        <div style={{ color: 'var(--red)', fontFamily: 'Cinzel', fontSize: '0.8rem', textAlign: 'center', fontWeight: 'bold' }}>⚠️ PENALTY WARNING</div>
+                                        <div style={{ color: '#fff', fontFamily: 'Orbitron', fontSize: '0.7rem', textAlign: 'center', marginBottom: 5 }}>Skip this duty for 300 Capital?</div>
+                                        <button id="mobBtnConfirmSkip" className="btn-skip-sm" style={{ background: 'var(--red)', color: 'white', borderColor: 'var(--red)', width: '100%', padding: '10px 0' }} onClick={() => (window as any).executeSkipTask()}>ACCEPT PENALTY (-300)</button>
+                                        <button id="mobBtnCancelSkip" className="text-btn" style={{ color: '#aaa', fontSize: '0.7rem', padding: '10px 0', background: 'none', border: 'none', width: '100%' }} onClick={() => (window as any).cancelSkipTask()}>I WILL SERVE</button>
+                                    </div>
+                                    <div id="mobDismissContainer" style={{ display: 'none', flexDirection: 'column', gap: '5px', marginTop: '10px' }}>
+                                        <button id="mobBtnDismissTask" className="btn-upload-sm" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white' }} onClick={() => (window as any).resetTaskUI()}>THANK YOU, QUEEN KARIN</button>
                                     </div>
                                 </div>
                             </div>

@@ -518,26 +518,61 @@ export function resetTaskUI() {
     const qmActive = document.getElementById('qm_TaskActive');
     const mobTaskText = document.getElementById('mobTaskText');
 
+    // Restore hidden stuff
+    const uploadCont = document.getElementById('uploadBtnContainer');
+    const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+    const skipConfirmCont = document.getElementById('skipConfirmContainer');
+    const mobSkipConfirmCont = document.getElementById('mobSkipConfirmContainer');
+    const dismissTaskCont = document.getElementById('dismissTaskContainer');
+    const mobDismissTaskCont = document.getElementById('mobDismissContainer');
+    const activeTimerRow = document.getElementById('activeTimerRow');
+
+    if (uploadCont) uploadCont.style.display = 'flex';
+    if (mobUploadCont) mobUploadCont.style.display = 'flex';
+    if (skipConfirmCont) skipConfirmCont.style.display = 'none';
+    if (mobSkipConfirmCont) mobSkipConfirmCont.style.display = 'none';
+    if (dismissTaskCont) dismissTaskCont.style.display = 'none';
+    if (mobDismissTaskCont) mobDismissTaskCont.style.display = 'none';
+    if (activeTimerRow) { activeTimerRow.style.display = 'flex'; activeTimerRow.style.opacity = '1'; }
+
     if (mainArea) mainArea.style.display = 'flex';
     if (activeArea) activeArea.classList.add('hidden');
-    if (readyText) readyText.innerText = '-';
+    if (readyText) {
+        readyText.innerText = '-';
+        readyText.style.color = 'white';
+    }
     if (qmIdle) qmIdle.classList.remove('hidden');
     if (qmActive) qmActive.classList.add('hidden');
-    if (mobTaskText) mobTaskText.innerText = '-';
+    if (mobTaskText) {
+        mobTaskText.innerText = '-';
+        mobTaskText.style.color = 'white';
+    }
 }
 
-function showTaskFeedback(message: string, color: string, durationMs: number = 4000) {
+function showTaskFeedback(message: string, color: string) {
+    if (taskInterval) clearInterval(taskInterval); // Stop timer immediately
+    taskInterval = null;
+
     const readyText = document.getElementById('readyText');
     const mobTaskText = document.getElementById('mobTaskText');
     const uploadCont = document.getElementById('uploadBtnContainer');
-    const btnSkip = document.getElementById('btnSkip');
-    const m1 = document.getElementById('mobBtnUpload');
-    const m2 = document.getElementById('mobBtnSkip');
+    const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+    const skipConfirmCont = document.getElementById('skipConfirmContainer');
+    const mobSkipConfirmCont = document.getElementById('mobSkipConfirmContainer');
+    const dismissTaskCont = document.getElementById('dismissTaskContainer');
+    const mobDismissTaskCont = document.getElementById('mobDismissContainer');
+    const activeTimerRow = document.getElementById('activeTimerRow');
+    const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
 
     if (uploadCont) uploadCont.style.display = 'none';
-    if (btnSkip) btnSkip.style.display = 'none';
-    if (m1) m1.style.display = 'none';
-    if (m2) m2.style.display = 'none';
+    if (mobUploadCont) mobUploadCont.style.display = 'none';
+    if (skipConfirmCont) skipConfirmCont.style.display = 'none';
+    if (mobSkipConfirmCont) mobSkipConfirmCont.style.display = 'none';
+    if (activeTimerRow) { activeTimerRow.style.opacity = '0'; activeTimerRow.style.pointerEvents = 'none'; }
+    if (mobActiveTimerRow) { mobActiveTimerRow.style.opacity = '0'; mobActiveTimerRow.style.pointerEvents = 'none'; }
+
+    if (dismissTaskCont) dismissTaskCont.style.display = 'flex';
+    if (mobDismissTaskCont) mobDismissTaskCont.style.display = 'flex';
 
     if (readyText) {
         readyText.innerText = message;
@@ -547,17 +582,6 @@ function showTaskFeedback(message: string, color: string, durationMs: number = 4
         mobTaskText.innerText = message;
         mobTaskText.style.color = color;
     }
-
-    setTimeout(() => {
-        resetTaskUI();
-        // Restore elements for next open
-        if (readyText) readyText.style.color = 'white';
-        if (mobTaskText) mobTaskText.style.color = 'white';
-        if (uploadCont) uploadCont.style.display = '';
-        if (btnSkip) btnSkip.style.display = '';
-        if (m1) m1.style.display = '';
-        if (m2) m2.style.display = '';
-    }, durationMs);
 }
 
 export async function getRandomTask(isSilentInit = false) {
@@ -624,12 +648,68 @@ export async function skipTask() {
     const pid = id || memberId;
     if (!pid) return;
 
+    const readyText = document.getElementById('readyText');
+    const mobTaskText = document.getElementById('mobTaskText');
+
     if (wallet < 300) {
-        alert("Insufficient Capital. 300 coins required to skip duties.");
+        if (readyText) { readyText.innerText = "Insufficient Capital. 300 coins required."; readyText.style.color = "var(--red)"; }
+        if (mobTaskText) { mobTaskText.innerText = "Insufficient Capital. 300 coins required."; mobTaskText.style.color = "var(--red)"; }
+        setTimeout(() => { cancelSkipTask() }, 3000);
         return;
     }
 
-    if (!confirm("Are you sure you wish to skip this duty for 300 coins?")) return;
+    const uploadCont = document.getElementById('uploadBtnContainer');
+    const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+    const skipConfirmCont = document.getElementById('skipConfirmContainer');
+    const mobSkipConfirmCont = document.getElementById('mobSkipConfirmContainer');
+
+    if (uploadCont) uploadCont.style.display = 'none';
+    if (mobUploadCont) mobUploadCont.style.display = 'none';
+    if (skipConfirmCont) skipConfirmCont.style.display = 'flex';
+    if (mobSkipConfirmCont) mobSkipConfirmCont.style.display = 'flex';
+
+    if (readyText) {
+        // readyText.innerText = "Are you sure you wish to skip this duty for 300 coins?"; 
+        readyText.style.opacity = '0.3';
+    }
+    if (mobTaskText) {
+        // mobTaskText.innerText = "Are you sure you wish to skip this duty for 300 coins?"; 
+        mobTaskText.style.opacity = '0.3';
+    }
+}
+
+export function cancelSkipTask() {
+    const state = getState();
+    let taskMsg = 'Perform the assigned duty.';
+    if (state?.raw?.parameters?.taskdom_active_task) {
+        taskMsg = state.raw.parameters.taskdom_active_task.TaskText || state.raw.parameters.taskdom_active_task.tasktext || taskMsg;
+    }
+
+    const uploadCont = document.getElementById('uploadBtnContainer');
+    const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+    const skipConfirmCont = document.getElementById('skipConfirmContainer');
+    const mobSkipConfirmCont = document.getElementById('mobSkipConfirmContainer');
+    const readyText = document.getElementById('readyText');
+    const mobTaskText = document.getElementById('mobTaskText');
+
+    if (uploadCont) uploadCont.style.display = 'flex';
+    if (mobUploadCont) mobUploadCont.style.display = 'flex';
+    if (skipConfirmCont) skipConfirmCont.style.display = 'none';
+    if (mobSkipConfirmCont) mobSkipConfirmCont.style.display = 'none';
+
+    if (readyText) { readyText.innerText = taskMsg; readyText.style.color = 'white'; readyText.style.opacity = '1'; }
+    if (mobTaskText) { mobTaskText.innerText = taskMsg; mobTaskText.style.color = 'white'; mobTaskText.style.opacity = '1'; }
+}
+
+export async function executeSkipTask() {
+    const { id, memberId } = getState();
+    const pid = id || memberId;
+    if (!pid) return;
+
+    const readyText = document.getElementById('readyText');
+    const mobTaskText = document.getElementById('mobTaskText');
+    if (readyText) { readyText.innerText = "SKIPPING..."; readyText.style.color = "white"; }
+    if (mobTaskText) { mobTaskText.innerText = "SKIPPING..."; mobTaskText.style.color = "white"; }
 
     try {
         const res = await fetch('/api/tasks/skip', {
@@ -651,12 +731,15 @@ export async function skipTask() {
                 "Skipping again? How utterly useless."
             ];
             const msg = mockeries[Math.floor(Math.random() * mockeries.length)];
-            showTaskFeedback(msg, 'var(--red)', 4000);
+            showTaskFeedback(msg, 'var(--red)');
         } else {
-            alert(data.error || "Failed to skip task.");
+            if (readyText) readyText.innerText = data.error || "Failed to skip task.";
+            if (mobTaskText) mobTaskText.innerText = data.error || "Failed to skip task.";
+            setTimeout(() => { cancelSkipTask() }, 3000);
         }
     } catch (err) {
         console.error("Error skipping task", err);
+        cancelSkipTask();
     }
 }
 
@@ -735,6 +818,30 @@ async function submitTaskEvidence(file: File) {
     if (mobTaskBtn) mobTaskBtn.innerText = "SENDING...";
     if (mobRoutineBtn) mobRoutineBtn.innerText = "SENDING...";
 
+    // ─── STOP TIMER AND SHOW UPLOADING UI IMMEDIATELY ───
+    if (taskInterval) { clearInterval(taskInterval); taskInterval = null; }
+
+    const activeTimerRow = document.getElementById('activeTimerRow');
+    const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
+    if (activeTimerRow) activeTimerRow.style.display = 'none';
+    if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'none';
+
+    const uploadCont = document.getElementById('uploadBtnContainer');
+    const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+    if (uploadCont) uploadCont.style.display = 'none';
+    if (mobUploadCont) mobUploadCont.style.display = 'none';
+
+    const readyText = document.getElementById('readyText');
+    const mobTaskText = document.getElementById('mobTaskText');
+    if (readyText) {
+        readyText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING EVIDENCE...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
+        readyText.style.color = '#c5a059';
+    }
+    if (mobTaskText) {
+        mobTaskText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING EVIDENCE...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
+        mobTaskText.style.color = '#c5a059';
+    }
+
     try {
         // 1. Upload to Bytescale - Match Legacy parameters
         console.log("Uploading to Bytescale...");
@@ -776,14 +883,23 @@ async function submitTaskEvidence(file: File) {
                 "Evidence sent. Awaiting validation of your so-called hard work."
             ];
             const msg = mockeries[Math.floor(Math.random() * mockeries.length)];
-            showTaskFeedback(msg, '#c5a059', 4000);
+            showTaskFeedback(msg, '#c5a059');
         } else {
             console.error("Backend submission error:", data.error);
-            alert("Submission failed: " + (data.error || "Unknown error"));
+            // Restore UI on failure
+            if (readyText) { readyText.innerText = "TRANSMISSION FAILED: " + (data.error || "Unknown error"); readyText.style.color = "var(--red)"; }
+            if (mobTaskText) { mobTaskText.innerText = "TRANSMISSION FAILED: " + (data.error || "Unknown error"); mobTaskText.style.color = "var(--red)"; }
+            if (uploadCont) uploadCont.style.display = 'flex';
+            if (mobUploadCont) mobUploadCont.style.display = 'flex';
         }
     } catch (err) {
         console.error("Critical submission error", err);
-        alert("Connection error during transmission.");
+        if (readyText) { readyText.innerText = "CONNECTION ERROR DURING TRANSMISSION"; readyText.style.color = "var(--red)"; }
+        if (mobTaskText) { mobTaskText.innerText = "CONNECTION ERROR DURING TRANSMISSION"; mobTaskText.style.color = "var(--red)"; }
+        const uploadCont = document.getElementById('uploadBtnContainer');
+        const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+        if (uploadCont) uploadCont.style.display = 'flex';
+        if (mobUploadCont) mobUploadCont.style.display = 'flex';
     } finally {
         if (uploadBtn && originalText) uploadBtn.innerText = originalText;
         if (mobTaskBtn && originalMobTaskText) mobTaskBtn.innerText = originalMobTaskText;
