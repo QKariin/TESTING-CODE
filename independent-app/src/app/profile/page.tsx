@@ -409,7 +409,7 @@ export default function ProfilePage() {
                                     <button id="btnCancelSkip" onClick={() => (window as any).cancelSkipTask()} className="text-btn" style={{ color: '#aaa', fontSize: '0.7rem', padding: 5, width: 240, background: 'none', border: 'none' }}>NEVERMIND, I WILL SERVE</button>
                                 </div>
                                 <div id="dismissTaskContainer" style={{ display: 'none', flexDirection: 'column', gap: 5, marginTop: 15, alignItems: 'center', width: '100%' }}>
-                                    <button id="btnDismissTask" onClick={() => (window as any).resetTaskUI()} className="action-btn" style={{ width: '100%', background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 'bold', border: '2px solid white', padding: '20px', fontSize: '1.1rem', letterSpacing: '1px', whiteSpace: 'nowrap' }}>THANK YOU, QUEEN KARIN</button>
+                                    <button id="btnDismissTask" onClick={() => (window as any).resetTaskUI()} className="action-btn" style={{ width: '100%', background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 'bold', border: '2px solid white', padding: '15px', fontSize: '0.75rem', letterSpacing: '1px', whiteSpace: 'nowrap' }}>THANK YOU, QUEEN KARIN</button>
                                 </div>
                             </div>
                         </div>
@@ -826,7 +826,7 @@ export default function ProfilePage() {
                                         <button id="mobBtnCancelSkip" className="text-btn" style={{ color: '#aaa', fontSize: '0.7rem', padding: '10px 0', background: 'none', border: 'none', width: '100%' }} onClick={() => (window as any).cancelSkipTask()}>I WILL SERVE</button>
                                     </div>
                                     <div id="mobDismissContainer" style={{ display: 'none', flexDirection: 'column', gap: '5px', marginTop: '15px' }}>
-                                        <button id="mobBtnDismissTask" className="btn-upload-sm" style={{ borderColor: 'rgba(255,255,255,0.4)', borderWidth: '2px', color: 'white', padding: '18px 0', fontSize: '1rem', whiteSpace: 'nowrap', width: '100%' }} onClick={() => (window as any).resetTaskUI()}>THANK YOU, QUEEN KARIN</button>
+                                        <button id="mobBtnDismissTask" className="btn-upload-sm" style={{ borderColor: 'rgba(255,255,255,0.4)', borderWidth: '2px', color: 'white', padding: '15px 0', fontSize: '0.75rem', whiteSpace: 'nowrap', width: '100%' }} onClick={() => (window as any).resetTaskUI()}>THANK YOU, QUEEN KARIN</button>
                                     </div>
                                 </div>
                             </div>

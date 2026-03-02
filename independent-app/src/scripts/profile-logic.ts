@@ -544,8 +544,14 @@ export function resetTaskUI() {
         readyText.innerText = '-';
         readyText.style.color = 'white';
     }
-    if (qmIdle) qmIdle.classList.remove('hidden');
-    if (qmActive) qmActive.classList.add('hidden');
+    if (qmIdle) {
+        qmIdle.classList.remove('hidden');
+        qmIdle.style.display = 'block';
+    }
+    if (qmActive) {
+        qmActive.classList.add('hidden');
+        qmActive.style.display = 'none';
+    }
     if (mobTaskText) {
         mobTaskText.innerText = '-';
         mobTaskText.style.color = 'white';
