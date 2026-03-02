@@ -239,48 +239,55 @@ function renderTributes() {
                 const progressPercent = Math.min(100, Math.round((raised / goal) * 100));
 
                 return `
-                <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:rgba(255,255,255,0.75); backdrop-filter:blur(15px); border-radius:20px; display:flex; flex-direction:row; box-shadow:0 12px 35px rgba(0,0,0,0.15), inset 0 0 25px rgba(255,255,255,0.9); border:1px solid rgba(255,255,255,0.6); align-items:stretch; overflow:visible;">
+                <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:#0a0a14; border-radius:20px; display:flex; flex-direction:row; box-shadow:0 12px 40px rgba(0,0,0,0.6); border:1px solid rgba(197,160,89,0.25); align-items:stretch;">
 
                     <!-- LEFT: Info -->
                     <div style="flex:1; display:flex; flex-direction:column; gap:14px; padding:28px; min-width:0;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
-                            <div style="font-family:'Caveat', cursive; font-size:3rem; color:#111; line-height:1; font-weight:700;">${t.title}</div>
+                            <div style="font-family:'Cinzel', serif; font-size:2rem; color:#fff; line-height:1.1; font-weight:700; letter-spacing:2px; text-transform:uppercase;">${t.title}</div>
                             ${t.top_contributor ? `
-                            <div style="display:flex; flex-direction:column; align-items:flex-end; background:rgba(255,255,255,0.8); padding:8px 15px; border-radius:12px; border:1px dashed #ff9a9e; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
-                                <span style="font-family:'Patrick Hand', cursive; font-size:0.9rem; color:#888; text-transform:uppercase; letter-spacing:1px;">Top Contributor</span>
-                                <span style="font-family:'Caveat', cursive; font-size:1.6rem; color:#ff4b72; font-weight:bold;">${t.top_contributor}</span>
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; background:rgba(197,160,89,0.08); padding:8px 15px; border-radius:12px; border:1px solid rgba(197,160,89,0.3);">
+                                <span style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:#c5a059; text-transform:uppercase; letter-spacing:2px;">Top Contributor</span>
+                                <span style="font-family:'Cinzel', serif; font-size:1.2rem; color:#fff; font-weight:bold;">${t.top_contributor}</span>
                             </div>` : ''}
                         </div>
-                        <div style="font-family:'Orbitron', sans-serif; font-size:1rem; color:#ff4b72; font-weight:700;">${raised.toLocaleString()} / ${goal.toLocaleString()} <span style="color:#ff69b4;">♥</span></div>
-                        <div style="width:100%; height:14px; background:rgba(0,0,0,0.08); border-radius:7px; overflow:hidden;">
-                            <div style="height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #ff9a9e, #ff6a88); border-radius:7px; transition:width 0.5s ease;"></div>
+
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="font-family:'Orbitron', sans-serif; font-size:0.85rem; color:#c5a059; font-weight:700;">${raised.toLocaleString()}</div>
+                            <div style="font-family:'Orbitron', sans-serif; font-size:0.7rem; color:rgba(255,255,255,0.3);">/ ${goal.toLocaleString()}</div>
+                            <i class="fas fa-coins" style="color:#c5a059; font-size:0.75rem; margin-left:2px;"></i>
                         </div>
-                        <div style="display:flex; flex-direction:column; gap:10px; background:rgba(255,255,255,0.6); padding:15px; border-radius:15px; border:1px solid rgba(255,255,255,0.8); margin-top:auto;">
+
+                        <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden;">
+                            <div style="height:100%; width:${progressPercent}%; background:linear-gradient(90deg, #c5a059, #f0d080); border-radius:3px; transition:width 0.5s ease;"></div>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:12px; background:rgba(255,255,255,0.04); padding:16px; border-radius:14px; border:1px solid rgba(197,160,89,0.15); margin-top:auto;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div style="font-family:'Patrick Hand', cursive; font-size:1.1rem; color:#555;">Your contribution:</div>
-                                <div style="font-family:'Caveat', cursive; font-size:2rem; color:#ff4b72; font-weight:bold;" id="crowdfund_display_${t.id}">100 ♥</div>
+                                <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.4); letter-spacing:2px; text-transform:uppercase;">Your contribution</div>
+                                <div style="font-family:'Cinzel', serif; font-size:1.6rem; color:#c5a059; font-weight:bold;" id="crowdfund_display_${t.id}">100 <i class='fas fa-coins' style='font-size:1rem;'></i></div>
                             </div>
-                            <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
+                            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                                 <input type="range" id="crowdfund_input_${t.id}" min="100" max="${Math.max(100, walletForSlider)}" step="100" value="100"
-                                    oninput="var v=Number(this.value); document.getElementById('crowdfund_display_${t.id}').innerText=v.toLocaleString()+' ♥'; document.getElementById('crowdfund_btn_${t.id}').innerText='SEND '+v.toLocaleString()+' COINS';"
-                                    style="flex:1; min-width:100px; height:10px; border-radius:5px; appearance:none; outline:none; background:#ffe4e1; cursor:pointer;" />
+                                    oninput="var v=Number(this.value); document.getElementById('crowdfund_display_${t.id}').innerHTML=v.toLocaleString()+' <i class=\'fas fa-coins\' style=\'font-size:0.9rem;\'></i>'; document.getElementById('crowdfund_btn_${t.id}').innerText='SEND '+v.toLocaleString()+' COINS';"
+                                    style="flex:1; min-width:100px; height:6px; border-radius:3px; appearance:none; outline:none; background:rgba(197,160,89,0.2); cursor:pointer; accent-color:#c5a059;" />
                                 <button id="crowdfund_btn_${t.id}" onclick="window.contributeCrowdfund('${t.id}', '${t.title}')"
-                                    style="background:#ff4b72; color:white; border:none; padding:11px 20px; border-radius:10px; font-family:'Patrick Hand', cursive; font-size:1.1rem; cursor:pointer; font-weight:bold; box-shadow:0 6px 15px rgba(255,75,114,0.3); transition:all 0.2s; white-space:nowrap;"
-                                    onmouseover="this.style.transform='scale(1.05)'; this.style.background='#ff335f';"
-                                    onmouseout="this.style.transform='scale(1)'; this.style.background='#ff4b72';">SEND 100 COINS</button>
+                                    style="background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:12px 22px; border-radius:10px; font-family:'Orbitron', sans-serif; font-size:0.65rem; cursor:pointer; font-weight:700; letter-spacing:1px; box-shadow:0 6px 20px rgba(197,160,89,0.3); transition:all 0.2s; white-space:nowrap;"
+                                    onmouseover="this.style.opacity='0.85'; this.style.transform='scale(1.03)';"
+                                    onmouseout="this.style.opacity='1'; this.style.transform='scale(1)';">SEND 100 COINS</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- RIGHT: Big image -->
-                    <div style="width:260px; flex-shrink:0; background-color:#111; background-image:url('${getOptimizedUrl(t.image, 600)}'); background-size:cover; background-position:center; position:relative; min-height:300px; border-radius:0 20px 20px 0;">
-                        <div style="position:absolute; inset:0; background:linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 30%); border-radius:0 20px 20px 0;"></div>
+                    <div style="width:260px; flex-shrink:0; background-color:#050510; background-image:url('${getOptimizedUrl(t.image, 600)}'); background-size:cover; background-position:center; position:relative; min-height:300px; border-radius:0 20px 20px 0;">
+                        <div style="position:absolute; inset:0; background:linear-gradient(to right, rgba(10,10,20,0.6) 0%, transparent 40%); border-radius:0 20px 20px 0;"></div>
                     </div>
                 </div>
                 `;
             } else {
                 return `
-                <div class="store-item" style="position:relative; border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column;"
+                <div class="store-item" style="position:relative; border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; min-height:240px;"
                     onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 35px rgba(197,160,89,0.12)'; this.style.borderColor='rgba(197,160,89,0.5)';"
                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 25px rgba(0,0,0,0.5)'; this.style.borderColor='rgba(197,160,89,0.2)';">
 
