@@ -455,17 +455,21 @@ if (typeof window !== 'undefined') {
                 // 4. Send Chat message
                 const tributeObj = globalTributes.find(t => t.id === id);
                 if (tributeObj) {
+                    const wishlistPayload = JSON.stringify({
+                        name: title,
+                        title: title,
+                        price: amount,
+                        image: tributeObj.display_url || tributeObj.image || "",
+                        img: tributeObj.display_url || tributeObj.image || "",
+                        sender: memberId.split('@')[0]
+                    });
                     await fetch('/api/chat/send', {
                         method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             senderEmail: memberId,
-                            content: `Contributed ${amount.toLocaleString()} to ${title}`,
-                            type: 'wishlist',
-                            metadata: {
-                                title: title,
-                                price: amount,
-                                image: tributeObj.display_url || tributeObj.image || "https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png"
-                            }
+                            content: `WISHLIST::${wishlistPayload}`,
+                            type: 'wishlist'
                         })
                     });
                 }
@@ -519,17 +523,21 @@ export async function buyTribute(id: string, title: string, cost: number) {
             // Notify chat with rich card
             const tributeObj = globalTributes.find(t => t.id === id);
             if (tributeObj) {
+                const wishlistPayload = JSON.stringify({
+                    name: title,
+                    title: title,
+                    price: cost,
+                    image: tributeObj.display_url || tributeObj.image || "",
+                    img: tributeObj.display_url || tributeObj.image || "",
+                    sender: memberId.split('@')[0]
+                });
                 await fetch('/api/chat/send', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         senderEmail: memberId,
-                        content: `Purchased "${title}"`,
-                        type: 'wishlist',
-                        metadata: {
-                            title: title,
-                            price: cost,
-                            image: tributeObj.display_url || tributeObj.image || "https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png"
-                        }
+                        content: `WISHLIST::${wishlistPayload}`,
+                        type: 'wishlist'
                     })
                 });
             }

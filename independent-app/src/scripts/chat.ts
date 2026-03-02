@@ -137,17 +137,18 @@ export async function renderChat(messages: any[]) {
                     }
 
                     contentHtml = `
-                    <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; width:60vw;">
-                        <div style="width:100%; height:120px; overflow:hidden; position:relative;">
+                    <div class="msg-wishlist-card" style="margin:0 auto; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.35); border-radius:14px; max-width:220px; width:60vw; box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+                        <div style="width:100%; height:130px; overflow:hidden; position:relative; background:#050510;">
                              <img src="${cardImgUrl}" onload="window.forceBottom()" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
-                             <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
-                                  TRIBUTE SENT
+                             <div style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent 50%, rgba(10,10,20,0.8) 100%);"></div>
+                             <div style="position:absolute; top:8px; right:8px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:3px 9px; display:flex; align-items:center; gap:4px; backdrop-filter:blur(6px);">
+                                 <span style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#c5a059; font-weight:700; letter-spacing:1px;">🪙 ${item.price ? Number(item.price).toLocaleString() : ''}</span>
                              </div>
                         </div>
-                        <div style="padding:8px; text-align:center;">
-                            <div style="color:#eee; font-family:'Cinzel'; font-size:0.6rem; margin-bottom:2px; opacity:0.8;">${item.sender} sent</div>
-                            <div style="color:#fff; font-family:'Cinzel'; font-size:0.7rem; margin-bottom:4px;">${item.name}</div>
-                            <div style="color:#c5a059; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold;">${item.price}</div>
+                        <div style="padding:10px 13px 13px;">
+                            <div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(197,160,89,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:5px;">✦ Gift Sent</div>
+                            <div style="font-family:'Cinzel', serif; font-size:0.75rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3;">${item.name || item.title || ''}</div>
+                            ${item.sender ? `<div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(255,255,255,0.35); margin-top:5px; letter-spacing:1px;">by ${item.sender}</div>` : ''}
                         </div>
                     </div>`;
                 } catch (e) {
