@@ -181,149 +181,144 @@ export const DbService = {
     },
 
     // --- TASKS ---
+    // Helper: get the raw tasks row for a member
+    async _getTaskRow(memberId: string) {
+        const { data } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('member_id', memberId)
+            .maybeSingle();
+        return data;
+    },
+
+    // Helper: parse Taskdom_History JSON text → array
+    _parseHistory(row: any): any[] {
+        if (!row) return [];
+        try { return JSON.parse(row['Taskdom_History'] || '[]'); } catch { return []; }
+    },
+
     async getReviewQueue() {
+        // Pull all tasks rows that have at least one 'pending' entry in Taskdom_History
         const { data, error } = await supabase
             .from('tasks')
-            .select('*, profiles(name, avatar_url)')
-            .eq('status', 'pending');
+            .select('member_id, "Name", "Status", "Taskdom_History", "Profile pic"');
         if (error) throw error;
-        // Map member_id to id for dashboard compatibility
-        return (data || []).map((t: any) => ({ ...t, id: t.member_id }));
+
+        const pending: any[] = [];
+        for (const row of (data || [])) {
+            const history: any[] = this._parseHistory(row);
+            const pendingEntries = history.filter((t: any) => t.status === 'pending');
+            for (const entry of pendingEntries) {
+                pending.push({
+                    ...entry,
+                    id: entry.id,
+                    member_id: row.member_id,
+                    memberName: row['Name'] || 'Slave',
+                    avatarUrl: row['Profile pic'] || null,
+                });
+            }
+        }
+        return pending;
     },
 
     async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
-        // 1. Update tasks table (non-fatal — legacy table may lack some columns)
-        const { error: taskError } = await supabase
+        // 1. Update Taskdom_History in tasks table
+        const row = await this._getTaskRow(profileId);
+        const history: any[] = this._parseHistory(row);
+        const idx = history.findIndex((t: any) => t.id === taskId);
+        if (idx > -1) {
+            history[idx].status = 'approve';
+            history[idx].completed = true;
+            if (sticker) history[idx].sticker = sticker;
+            if (comment) history[idx].adminComment = comment;
+        }
+        await supabase
             .from('tasks')
-            .update({ status: 'approve', reviewer_comment: comment, sticker_url: sticker })
+            .update({ 'Taskdom_History': JSON.stringify(history), 'Status': 'approve' })
             .eq('member_id', profileId);
-        if (taskError) console.warn('[tasks approve] Non-fatal error:', taskError.message);
 
+        // 2. Award points in profiles
         const profile = await this.getProfile(profileId);
         if (!profile || !profile.id) return;
-
-        // 2. Sync profile JSONB columns (task_queue and routine_history)
-        let queue = profile.task_queue || [];
-        queue = queue.filter((t: any) => t.id !== taskId);
-
-        let history = profile.routine_history || [];
-        const histIdx = history.findIndex((t: any) => t.id === taskId);
-        if (histIdx > -1) {
-            history[histIdx].status = 'approve';
-            history[histIdx].completed = true;
-        }
-
-        const updates: any = {
+        await this.updateProfile(profile.id, {
             wallet: (profile.wallet || 0) + bonus,
             score: (profile.score || 0) + bonus,
-            task_queue: queue,
-            routine_history: history,
             parameters: {
                 ...(profile.parameters || {}),
                 taskdom_completed_tasks: (profile.parameters?.taskdom_completed_tasks || 0) + 1
             }
-        };
-        await this.updateProfile(profile.id, updates);
+        });
     },
 
     async rejectTask(taskId: string, profileId: string) {
-        // 1. Update tasks table (non-fatal — legacy table)
-        const { error: taskError } = await supabase
-            .from('tasks')
-            .update({ status: 'reject' })
-            .eq('member_id', profileId);
-        if (taskError) console.warn('[tasks reject] Non-fatal error:', taskError.message);
-
-        const profile = await this.getProfile(profileId);
-        if (!profile || !profile.id) return;
-
-        // 2. Sync profile JSONB
-        let queue = profile.task_queue || [];
-        queue = queue.filter((t: any) => t.id !== taskId);
-
-        let history = profile.routine_history || [];
-        const histIdx = history.findIndex((t: any) => t.id === taskId);
-        if (histIdx > -1) {
-            history[histIdx].status = 'reject';
-            history[histIdx].completed = false;
+        // 1. Update Taskdom_History in tasks table
+        const row = await this._getTaskRow(profileId);
+        const history: any[] = this._parseHistory(row);
+        const idx = history.findIndex((t: any) => t.id === taskId);
+        if (idx > -1) {
+            history[idx].status = 'reject';
+            history[idx].completed = false;
         }
-
-        await this.updateProfile(profile.id, {
-            task_queue: queue,
-            routine_history: history
-        });
+        await supabase
+            .from('tasks')
+            .update({ 'Taskdom_History': JSON.stringify(history), 'Status': 'reject' })
+            .eq('member_id', profileId);
     },
 
     async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string) {
-        const profile = await this.getProfile(memberId);
-        if (!profile || !profile.id) throw new Error("Profile not linked");
-
-        const taskId = crypto.randomUUID();
         const now = new Date().toISOString();
+        const taskId = Date.now().toString();
 
-        // 1. Update entry in tasks table for Dashboard visibility (non-fatal — legacy table)
-        const { error: taskError } = await supabase
-            .from('tasks')
-            .upsert({
-                member_id: memberId,
-                Name: profile.name,
-                text: taskText,
-                status: 'pending',
-                timestamp: now
-            }, { onConflict: 'member_id' });
-        if (taskError) console.warn('[tasks upsert] Non-fatal error:', taskError.message);
+        // 1. Get current Taskdom_History from tasks table
+        const row = await this._getTaskRow(memberId);
+        const history: any[] = this._parseHistory(row);
 
-        // 2. Update profiles task_queue for dashboard sync and routine_history for user display
-        const queue = profile.task_queue || [];
-        const taskEntry = {
+        // 2. Build new entry (matches Entire-ecosystem format exactly)
+        const newEntry: any = {
             id: taskId,
             text: taskText,
             proofUrl: proofUrl,
-            proofType: proofType,
+            proofType: proofType.startsWith('video') ? 'video' : 'image',
             timestamp: now,
-            status: 'pending'
+            status: 'pending',
+            completed: false
         };
-        queue.push(taskEntry);
+        history.unshift(newEntry); // newest first
 
-        const history = profile.routine_history || [];
-        history.unshift(taskEntry);
+        // 3. Upsert tasks row — write only real columns
+        const profile = await this.getProfile(memberId);
+        const { error } = await supabase
+            .from('tasks')
+            .upsert({
+                member_id: memberId,
+                Name: profile?.name || 'Slave',
+                Status: 'pending',
+                'Taskdom_History': JSON.stringify(history)
+            }, { onConflict: 'member_id' });
+        if (error) throw error;
 
-        const params = { ...(profile.parameters || {}) };
-        delete params.active_task; // Clear the active task assignment
-
-        return this.updateProfile(profile.id, {
-            task_queue: queue,
-            routine_history: history,
-            parameters: params
-        });
+        return { success: true };
     },
 
     async assignTask(memberId: string, task: any) {
         const profile = await this.getProfile(memberId);
-        if (!profile || !profile.id) throw new Error("Profile not linked");
-
-        const updates = {
+        if (!profile || !profile.id) throw new Error('Profile not linked');
+        return this.updateProfile(profile.id, {
             parameters: {
                 ...(profile.parameters || {}),
-                active_task: {
-                    ...task,
-                    assigned_at: new Date().toISOString()
-                }
+                active_task: { ...task, assigned_at: new Date().toISOString() }
             }
-        };
-        return this.updateProfile(profile.id, updates);
+        });
     },
 
     async clearTask(memberId: string) {
         const profile = await this.getProfile(memberId);
         if (!profile || !profile.id) {
-            console.warn("Attempted to clear task for missing profile:", memberId);
-            return { success: false, error: "Profile not found" };
+            console.warn('Attempted to clear task for missing profile:', memberId);
+            return { success: false, error: 'Profile not found' };
         }
-
         const params = { ...(profile.parameters || {}) };
         delete params.active_task;
-
         return this.updateProfile(profile.id, { parameters: params });
     },
 

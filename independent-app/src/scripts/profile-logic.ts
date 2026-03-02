@@ -1858,9 +1858,15 @@ export async function loadQueenPosts() {
 
 // ─── ALTAR & HISTORY GALLERY (RECORDS TAB) ───────────────────────────────────
 export function renderHistoryAndAltar(profileData: any) {
-    // routine_history is a JSONB array in profiles, each entry:
-    // { id, text, proofUrl, proofType, status, timestamp, completed, sticker?, adminComment? }
-    const raw: any[] = Array.isArray(profileData?.routine_history) ? profileData.routine_history : [];
+    // Taskdom_History is a JSON text column in the tasks table.
+    // profileData is the merged (profiles + tasks) object from loadProfile.
+    let raw: any[] = [];
+    const hist = profileData?.['Taskdom_History'];
+    if (typeof hist === 'string' && hist) {
+        try { raw = JSON.parse(hist); } catch { raw = []; }
+    } else if (Array.isArray(hist)) {
+        raw = hist;
+    }
     if (!raw.length) return;
 
     const approved = raw.filter((t: any) => t.status === 'approve' && t.proofUrl && t.proofUrl !== 'SKIPPED');
