@@ -2,6 +2,7 @@
 // Server-side profile update — uses supabaseAdmin to bypass RLS
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,17 @@ export async function POST(req: Request) {
         if (error) {
             console.error('[profile-update] error:', error);
             return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        const logMap: Record<string, string> = {
+            avatar_url: 'PHOTO UPDATED',
+            limits: 'LIMITS UPDATED',
+            kinks: 'KINKS UPDATED',
+            routine: 'ROUTINE UPDATED',
+            name: 'NAME UPDATED',
+        };
+        if (logMap[field]) {
+            try { await DbService.sendMessage(memberEmail, logMap[field], 'system'); } catch (_) { }
         }
 
         return NextResponse.json({ success: true, profile: data });

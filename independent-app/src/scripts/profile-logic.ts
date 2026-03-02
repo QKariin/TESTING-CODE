@@ -55,7 +55,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 
     // 6. Save to DB
     try {
-        fetch('/api/claim-reward', {
+        await fetch('/api/claim-reward', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -63,6 +63,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
                 memberEmail: pid
             })
         });
+        loadChatHistory(pid);
     } catch (err) {
         console.error("[REWARD] Save failed", err);
     }
@@ -1070,12 +1071,14 @@ function updateSystemTicker(msg: any) {
 }
 
 function getSystemLogHtml(msg: any) {
-    const timeStr = new Date(msg.created_at || msg._createdDate || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const d = new Date(msg.created_at || msg._createdDate || Date.now());
+    const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const content = msg.content || msg.message || "";
     return `
     <div style="display:flex; flex-direction:column; background:rgba(255,255,255,0.02); border-left:2px solid #c5a059; padding:10px 15px; margin-bottom:10px;">
         <span style="font-family:'Cinzel'; color:#c5a059; font-size:0.85rem;">${content}</span>
-        <span style="font-family:'Orbitron'; color:rgba(255,255,255,0.3); font-size:0.6rem; margin-top:5px;">${timeStr}</span>
+        <span style="font-family:'Orbitron'; color:rgba(255,255,255,0.3); font-size:0.6rem; margin-top:5px;">${dateStr} - ${timeStr}</span>
     </div>`;
 }
 
@@ -1286,6 +1289,7 @@ async function _doProfileUpload() {
                 const elMobPic = document.getElementById('hudUserPic') as HTMLImageElement;
                 if (elMobPic) elMobPic.src = dataUrl;
                 renderProfileSidebar(data.profile);
+                loadChatHistory(user.email!);
             } else {
                 alert('Photo upload failed: ' + (data.error || 'Unknown error'));
             }
@@ -1444,6 +1448,7 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
     } else if (data.success && data.profile) {
         overlay.remove();
         renderProfileSidebar(data.profile);
+        loadChatHistory(user.email!);
     } else {
         showErr('Save failed: ' + (data.error || 'Unknown error'));
     }
