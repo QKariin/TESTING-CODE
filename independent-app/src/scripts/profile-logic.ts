@@ -15,7 +15,7 @@ export async function handleLogout() {
 export async function claimKneelReward(type: 'coins' | 'points') {
     const currentState = getState();
     const { raw, id, memberId, wallet, score } = currentState;
-    const pid = id || memberId;
+    const pid = memberId || id;
 
     if (!pid) return;
 
@@ -102,7 +102,7 @@ export function switchTab(tab: string) {
 // ─── FRAGMENT REVEAL ───
 export async function revealFragment() {
     const { id, memberId } = getState();
-    const pid = id || memberId;
+    const pid = memberId || id;
     if (!pid) return;
 
     try {
@@ -596,7 +596,7 @@ function showTaskFeedback(message: string, color: string) {
 
 export async function getRandomTask(isSilentInit = false) {
     const { id, memberId } = getState();
-    const pid = id || memberId;
+    const pid = memberId || id;
     if (!pid) return;
 
     try {
@@ -655,7 +655,7 @@ export async function getRandomTask(isSilentInit = false) {
 
 export async function skipTask() {
     const { id, memberId, wallet } = getState();
-    const pid = id || memberId;
+    const pid = memberId || id;
     if (!pid) return;
 
     const readyText = document.getElementById('readyText');
@@ -713,7 +713,7 @@ export function cancelSkipTask() {
 
 export async function executeSkipTask() {
     const { id, memberId } = getState();
-    const pid = id || memberId;
+    const pid = memberId || id;
     if (!pid) return;
 
     const skipConfirmCont = document.getElementById('skipConfirmContainer');
@@ -1213,7 +1213,7 @@ export function toggleRewardSubMenu(show: boolean) {
 
 export async function buyRewardFragment(cost: number) {
     const { id, memberId, wallet } = getState();
-    const pid = id || memberId;
+    const pid = memberId || id;
     if (!pid || wallet < cost) return;
 
     try {

@@ -2,6 +2,7 @@
 // Handles kneeling submission - updates tasks table (lastWorship, kneelCount, "today kneeling")
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,8 @@ export async function POST(req: Request) {
             console.error('[kneel] update error:', error);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
+
+        try { await DbService.sendMessage(memberEmail, 'KNEELING SESSION COMPLETED', 'system'); } catch (_) { }
 
         return NextResponse.json({
             success: true,
