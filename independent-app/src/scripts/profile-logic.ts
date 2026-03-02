@@ -526,6 +526,40 @@ export function resetTaskUI() {
     if (mobTaskText) mobTaskText.innerText = '-';
 }
 
+function showTaskFeedback(message: string, color: string, durationMs: number = 4000) {
+    const readyText = document.getElementById('readyText');
+    const mobTaskText = document.getElementById('mobTaskText');
+    const uploadCont = document.getElementById('uploadBtnContainer');
+    const btnSkip = document.getElementById('btnSkip');
+    const m1 = document.getElementById('mobBtnUpload');
+    const m2 = document.getElementById('mobBtnSkip');
+
+    if (uploadCont) uploadCont.style.display = 'none';
+    if (btnSkip) btnSkip.style.display = 'none';
+    if (m1) m1.style.display = 'none';
+    if (m2) m2.style.display = 'none';
+
+    if (readyText) {
+        readyText.innerText = message;
+        readyText.style.color = color;
+    }
+    if (mobTaskText) {
+        mobTaskText.innerText = message;
+        mobTaskText.style.color = color;
+    }
+
+    setTimeout(() => {
+        resetTaskUI();
+        // Restore elements for next open
+        if (readyText) readyText.style.color = 'white';
+        if (mobTaskText) mobTaskText.style.color = 'white';
+        if (uploadCont) uploadCont.style.display = '';
+        if (btnSkip) btnSkip.style.display = '';
+        if (m1) m1.style.display = '';
+        if (m2) m2.style.display = '';
+    }, durationMs);
+}
+
 export async function getRandomTask(isSilentInit = false) {
     const { id, memberId } = getState();
     const pid = id || memberId;
@@ -607,9 +641,17 @@ export async function skipTask() {
         if (data.success) {
             setState({ wallet: data.newWallet });
             renderProfileSidebar(getState().raw || getState());
-
             if (taskInterval) clearInterval(taskInterval);
-            resetTaskUI();
+
+            const mockeries = [
+                "Pathetic. 300 coins deducted for your cowardice.",
+                "Too weak? 300 coins gone.",
+                "Another failure. -300 coins.",
+                "Your incompetence is expensive.",
+                "Skipping again? How utterly useless."
+            ];
+            const msg = mockeries[Math.floor(Math.random() * mockeries.length)];
+            showTaskFeedback(msg, 'var(--red)', 4000);
         } else {
             alert(data.error || "Failed to skip task.");
         }
@@ -726,8 +768,15 @@ async function submitTaskEvidence(file: File) {
 
         if (data.success) {
             console.log("Submission successful!");
-            alert("Evidence submitted. Awaiting Void validation.");
-            resetTaskUI();
+            const mockeries = [
+                "Evidence submitted. We will see if it's as disappointing as usual.",
+                "Task uploaded. Hopefully less pathetic than your last attempt.",
+                "Transmission received. We'll judge your meager effort shortly.",
+                "Uploaded. Don't flatter yourself, it still needs approval.",
+                "Evidence sent. Awaiting validation of your so-called hard work."
+            ];
+            const msg = mockeries[Math.floor(Math.random() * mockeries.length)];
+            showTaskFeedback(msg, '#c5a059', 4000);
         } else {
             console.error("Backend submission error:", data.error);
             alert("Submission failed: " + (data.error || "Unknown error"));
