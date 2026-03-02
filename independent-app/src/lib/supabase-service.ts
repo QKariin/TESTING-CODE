@@ -192,12 +192,12 @@ export const DbService = {
     },
 
     async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
-        // 1. Update tasks table
+        // 1. Update tasks table (non-fatal — legacy table may lack some columns)
         const { error: taskError } = await supabase
             .from('tasks')
             .update({ status: 'approve', reviewer_comment: comment, sticker_url: sticker })
             .eq('member_id', profileId);
-        if (taskError) throw taskError;
+        if (taskError) console.warn('[tasks approve] Non-fatal error:', taskError.message);
 
         const profile = await this.getProfile(profileId);
         if (!profile || !profile.id) return;
@@ -227,12 +227,12 @@ export const DbService = {
     },
 
     async rejectTask(taskId: string, profileId: string) {
-        // 1. Update tasks table
+        // 1. Update tasks table (non-fatal — legacy table)
         const { error: taskError } = await supabase
             .from('tasks')
             .update({ status: 'reject' })
             .eq('member_id', profileId);
-        if (taskError) throw taskError;
+        if (taskError) console.warn('[tasks reject] Non-fatal error:', taskError.message);
 
         const profile = await this.getProfile(profileId);
         if (!profile || !profile.id) return;
@@ -261,18 +261,17 @@ export const DbService = {
         const taskId = crypto.randomUUID();
         const now = new Date().toISOString();
 
-        // 1. Update entry in tasks table for Dashboard visibility (Cabinet style)
+        // 1. Update entry in tasks table for Dashboard visibility (non-fatal — legacy table)
         const { error: taskError } = await supabase
             .from('tasks')
             .upsert({
                 member_id: memberId,
                 Name: profile.name,
                 text: taskText,
-                proofUrl: proofUrl,
                 status: 'pending',
                 timestamp: now
             }, { onConflict: 'member_id' });
-        if (taskError) throw taskError;
+        if (taskError) console.warn('[tasks upsert] Non-fatal error:', taskError.message);
 
         // 2. Update profiles task_queue for dashboard sync and routine_history for user display
         const queue = profile.task_queue || [];
