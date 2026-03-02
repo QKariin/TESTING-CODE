@@ -751,8 +751,8 @@ export async function executeSkipTask() {
             renderProfileSidebar(getState().raw || getState());
 
             // Force active UI updates immediately
-            const w1 = document.getElementById('wallet-amount');
-            const w2 = document.getElementById('mob-wallet-amount');
+            const w1 = document.getElementById('coins');
+            const w2 = document.getElementById('mob_coins');
             if (w1) w1.innerText = (data.newWallet || 0).toLocaleString();
             if (w2) w2.innerText = (data.newWallet || 0).toLocaleString();
 
