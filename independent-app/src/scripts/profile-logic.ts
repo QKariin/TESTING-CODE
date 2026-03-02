@@ -701,18 +701,6 @@ export async function skipTask() {
     const readyText = document.getElementById('readyText');
     const mobTaskText = document.getElementById('mobTaskText');
 
-    if ((wallet || 0) < 300) {
-        const sBox = document.getElementById('skipWarningBox');
-        const msBox = document.getElementById('mobSkipWarningBox');
-        if (sBox) sBox.style.display = 'flex';
-        if (msBox) msBox.style.display = 'flex';
-        const uploadCont = document.getElementById('uploadBtnContainer');
-        const mobUploadCont = document.getElementById('mobUploadBtnContainer');
-        if (uploadCont) uploadCont.style.display = 'none';
-        if (mobUploadCont) mobUploadCont.style.display = 'none';
-        return;
-    }
-
     const uploadCont = document.getElementById('uploadBtnContainer');
     const mobUploadCont = document.getElementById('mobUploadBtnContainer');
     const skipConfirmCont = document.getElementById('skipConfirmContainer');
