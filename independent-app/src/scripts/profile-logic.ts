@@ -536,7 +536,10 @@ export function resetTaskUI() {
     if (activeTimerRow) { activeTimerRow.style.display = 'flex'; activeTimerRow.style.opacity = '1'; }
 
     if (mainArea) mainArea.style.display = 'flex';
-    if (activeArea) activeArea.classList.add('hidden');
+    if (activeArea) {
+        activeArea.classList.add('hidden');
+        activeArea.style.display = 'none';
+    }
     if (readyText) {
         readyText.innerText = '-';
         readyText.style.color = 'white';
