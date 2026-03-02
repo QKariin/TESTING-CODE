@@ -239,7 +239,7 @@ function renderTributes() {
                 const progressPercent = Math.min(100, Math.round((raised / goal) * 100));
 
                 return `
-                <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:rgba(255,255,255,0.75); backdrop-filter:blur(15px); border-radius:20px; display:flex; flex-direction:row; overflow:hidden; box-shadow:0 12px 35px rgba(0,0,0,0.15), inset 0 0 25px rgba(255,255,255,0.9); border:1px solid rgba(255,255,255,0.6); min-height:300px; align-items:stretch;">
+                <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:rgba(255,255,255,0.75); backdrop-filter:blur(15px); border-radius:20px; display:flex; flex-direction:row; box-shadow:0 12px 35px rgba(0,0,0,0.15), inset 0 0 25px rgba(255,255,255,0.9); border:1px solid rgba(255,255,255,0.6); align-items:stretch; overflow:visible;">
 
                     <!-- LEFT: Info -->
                     <div style="flex:1; display:flex; flex-direction:column; gap:14px; padding:28px; min-width:0;">
@@ -273,8 +273,8 @@ function renderTributes() {
                     </div>
 
                     <!-- RIGHT: Big image -->
-                    <div style="width:260px; flex-shrink:0; background-color:#111; background-image:url('${getOptimizedUrl(t.image, 600)}'); background-size:cover; background-position:center; position:relative;">
-                        <div style="position:absolute; inset:0; background:linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 30%);"></div>
+                    <div style="width:260px; flex-shrink:0; background-color:#111; background-image:url('${getOptimizedUrl(t.image, 600)}'); background-size:cover; background-position:center; position:relative; min-height:300px; border-radius:0 20px 20px 0;">
+                        <div style="position:absolute; inset:0; background:linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 30%); border-radius:0 20px 20px 0;"></div>
                     </div>
                 </div>
                 `;
