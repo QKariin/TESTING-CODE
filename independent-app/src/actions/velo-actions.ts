@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { stripe } from '@/lib/stripe';
 import { HIERARCHY_RULES, determineRank, getHierarchyReport, HierarchyReport, SlaveRecord } from '@/lib/hierarchyRules';
 import { z } from 'zod';
+import { DbService } from '@/lib/supabase-service';
 
 // --- SUPABASE ADMIN CLIENT (Bypasses RLS) ---
 // Initialize with SERVICE_ROLE_KEY for backend operations
@@ -82,17 +83,33 @@ export async function getAdminDashboardData() {
             .from('system_rules')
             .select('*');
 
+        const { data: tasksData, error: taskErr } = await supabaseAdmin
+            .from('tasks')
+            .select('member_id, "Taskdom_History"');
+
+        const reviewQueue = await DbService.getReviewQueue();
+
         if (pError) throw pError;
+
+        // Map Taskdom_History from tasks to profiles so the dashboard Record tab works
+        const finalProfiles = (profiles || []).map(p => {
+            const t = (tasksData || []).find(x => x.member_id === p.member_id || x.member_id === p.id);
+            if (t && t['Taskdom_History']) {
+                return { ...p, 'Taskdom_History': t['Taskdom_History'] };
+            }
+            return p;
+        });
 
         return {
             success: true,
-            users: profiles || [],
+            users: finalProfiles,
             dailyTasks: dailyTasks || [],
-            customRules: globalSettings || []
+            customRules: globalSettings || [],
+            globalQueue: reviewQueue || []
         };
     } catch (e: any) {
         console.error("Dashboard Data Fetch Error", e);
-        return { success: false, users: [], dailyTasks: [] };
+        return { success: false, users: [], dailyTasks: [], globalQueue: [] };
     }
 }
 

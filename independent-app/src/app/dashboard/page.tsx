@@ -111,17 +111,14 @@ export default function DashboardPage() {
                 setUsers(mappedUsers);
                 setAvailableDailyTasks(data.dailyTasks || []);
 
-                // Build Global Queue from Taskdom_History in each user's tasks data
-                const allQueues: any[] = [];
-                mappedUsers.forEach((u: any) => {
-                    const hist = u['Taskdom_History'];
-                    let histArr: any[] = [];
-                    try { histArr = typeof hist === 'string' ? JSON.parse(hist || '[]') : (hist || []); } catch { }
-                    histArr.filter((t: any) => t.status === 'pending').forEach((t: any) => {
-                        allQueues.push({ ...t, ownerId: u.memberId, ownerName: u.name, ownerAvatar: u.avatar });
-                    });
-                });
+                // Populate Review Queue correctly mapped to each user
+                const allQueues = data.globalQueue || [];
                 setGlobalQueue(allQueues);
+
+                // Assign each user their specific review queue
+                mappedUsers.forEach((u: any) => {
+                    u.reviewQueue = allQueues.filter((t: any) => t.member_id === u.memberId || t.ownerId === u.memberId);
+                });
 
                 // Aggregate Global Tributes
                 const allTributes = mappedUsers.flatMap((u: any) => {

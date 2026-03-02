@@ -329,7 +329,19 @@ export const DbService = {
             if (error) throw error;
         }
 
-        // 4. Send system chat message
+        // 4. Clear active task from Profile Parameters
+        if (profile) {
+            try {
+                const params = profile.parameters || {};
+                params.taskdom_active_task = null;
+                params.taskdom_end_time = null;
+                await this.updateProfile(profile.id, { parameters: params });
+            } catch (err) {
+                console.error("Failed to clear active task on submit:", err);
+            }
+        }
+
+        // 5. Send system chat message
         try {
             await this.sendMessage(memberId, `TASK SUBMITTED — AWAITING REVIEW`, 'system');
         } catch (_) { }
