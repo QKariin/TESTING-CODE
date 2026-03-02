@@ -318,6 +318,15 @@ function renderTributes() {
     if (gridMob) renderGrid(gridMob);
 }
 
+// ─── Instantly update wallet/score DOM elements after any coin spend ────────
+function updateWalletDisplay() {
+    const { wallet, score } = getState();
+    const elCoins = document.getElementById('coins');
+    const elPoints = document.getElementById('points');
+    if (elCoins) elCoins.innerText = (wallet || 0).toLocaleString();
+    if (elPoints) elPoints.innerText = (score || 0).toLocaleString();
+}
+
 // ─── Gift Toast: warm personal confirmation ────────────────────────────────
 function showGiftToast(title: string, amount: number, merit: number) {
     const existing = document.getElementById('giftToast');
@@ -338,7 +347,7 @@ function showGiftToast(title: string, amount: number, merit: number) {
             <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.4); line-height:1.8; border-top:1px solid rgba(197,160,89,0.15); padding-top:12px;">She sees your devotion. Thank you — truly. 🤍<br>+${merit} merit points earned</div>
             <div style="display:flex; gap:10px;">
                 <button onclick="document.getElementById('giftToast').remove()" style="flex:1; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">CLOSE</button>
-                <button onclick="document.getElementById('giftToast').remove(); document.getElementById('tributeHuntOverlay')?.classList.remove('hidden');" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">SEND MORE ♥</button>
+                <button onclick="document.getElementById('giftToast').remove(); window.toggleTributeHuntGlobal && window.toggleTributeHuntGlobal();" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">SEND MORE ♥</button>
             </div>
         </div>
     `;
@@ -423,6 +432,7 @@ if (typeof window !== 'undefined') {
 
             if (data.success) {
                 setState({ wallet: data.newWallet, score: data.newScore });
+                updateWalletDisplay();
                 showGiftToast(title, amount, data.meritGained);
                 // 4. Send Chat message
                 const tributeObj = globalTributes.find(t => t.id === id);
@@ -477,6 +487,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
 
         if (data.success) {
             setState({ wallet: data.newWallet, score: data.newScore });
+            updateWalletDisplay();
 
             // Close wishlist overlay first, then show toast
             document.getElementById('tributeHuntOverlay')?.classList.add('hidden');
@@ -521,9 +532,10 @@ export async function buyTribute(id: string, title: string, cost: number) {
     }
 }
 
-// Ensure function is available globally for inline onclick handlers inside generated innerHTML
+// Ensure functions are available globally for inline onclick handlers
 if (typeof window !== 'undefined') {
     (window as any).buyTribute = buyTribute;
+    (window as any).toggleTributeHuntGlobal = () => toggleTributeHunt();
 }
 
 
