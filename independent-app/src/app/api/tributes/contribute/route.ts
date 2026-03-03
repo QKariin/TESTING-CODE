@@ -88,7 +88,7 @@ export async function POST(request: Request) {
             console.error("Receipt logging error (Non-Fatal):", insertErr);
         }
 
-        try { await DbService.sendMessage(memberEmail, `CONTRIBUTED TO '${tributeTitle}' (-${contributionAmount} <i class="fas fa-coins" style="color:#c5a059;"></i>)`, 'system'); } catch (_) { }
+        try { await DbService.sendMessage(memberEmail, `CONTRIBUTED TO '${tributeTitle}' ${contributionAmount} <i class="fas fa-coins" style="color:#c5a059;"></i>`, 'system'); } catch (_) { }
 
         return NextResponse.json({
             success: true,
