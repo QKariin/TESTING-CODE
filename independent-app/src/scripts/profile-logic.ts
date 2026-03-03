@@ -196,12 +196,23 @@ function renderTributes() {
             .filter(Boolean) as typeof globalTributes;
         const quickItems = pinnedItems.length >= 2 ? pinnedItems : globalTributes.slice(0, 2);
 
-        // Last tribute info
+        // Last tribute info — localStorage is the live source (updated on every send), DB columns are fallback
         const st = getState();
-        const lastTributeAt = st?.raw?.parameters?.last_tribute_at;
-        const lastTributeTitle = st?.raw?.parameters?.last_tribute_title;
-        const lastTributeSender = st?.raw?.parameters?.last_tribute_sender
-            || (st?.memberId ? st.memberId.split('@')[0] : '');
+        let lastTributeAt: string | null = null;
+        let lastTributeTitle: string | null = null;
+        try {
+            const stored = localStorage.getItem('lastTribute');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                lastTributeAt = parsed.at || null;
+                lastTributeTitle = parsed.title || null;
+            }
+        } catch (_) { }
+        // Fallback to DB columns if localStorage is empty
+        if (!lastTributeAt) {
+            lastTributeAt = st?.raw?.parameters?.last_tribute_at || st?.raw?.last_tribute_at || null;
+            lastTributeTitle = st?.raw?.parameters?.last_tribute_title || st?.raw?.last_tribute_title || null;
+        }
 
         // Relative time helper
         function relativeTime(iso: string): string {
@@ -457,6 +468,9 @@ if (typeof window !== 'undefined') {
                 setState({ wallet: data.newWallet, score: data.newScore });
                 updateWalletDisplay();
 
+                // Save last tribute to localStorage immediately
+                try { localStorage.setItem('lastTribute', JSON.stringify({ at: new Date().toISOString(), title: title, sender: memberId })); } catch (_) { }
+
                 // Close wishlist overlay
                 document.getElementById('tributeHuntOverlay')?.classList.add('hidden');
                 document.getElementById('mob_TributeOverlay')?.classList.add('hidden');
@@ -517,6 +531,9 @@ export async function buyTribute(id: string, title: string, cost: number) {
         if (data.success) {
             setState({ wallet: data.newWallet, score: data.newScore });
             updateWalletDisplay();
+
+            // Save last tribute to localStorage immediately
+            try { localStorage.setItem('lastTribute', JSON.stringify({ at: new Date().toISOString(), title: title, sender: memberId })); } catch (_) { }
 
             // Close wishlist overlay first, then show toast
             document.getElementById('tributeHuntOverlay')?.classList.add('hidden');
