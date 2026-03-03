@@ -541,6 +541,9 @@ export async function buyTribute(id: string, title: string, cost: number) {
             // Show gift toast with coin shower
             showGiftToast(title, cost, data.meritGained);
 
+            // Re-render quick tribute section to update Last Tribute info
+            loadTributes();
+
             // Notify chat with rich card
             const tributeObj = globalTributes.find(t => t.id === id);
             if (tributeObj) {
