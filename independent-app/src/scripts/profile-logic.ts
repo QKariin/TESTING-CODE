@@ -1545,7 +1545,6 @@ async function _doProfileUpload() {
                 loadChatHistory(user.email!);
                 const { getState } = await import('./profile-state');
                 const state = getState();
-                renderDashboardExchequerRank(state);
                 renderHistoryAndAltar(state);
                 renderExchequerHistory(state);
             } else {
@@ -1649,6 +1648,13 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     }
 
     document.getElementById('_reqCancel')!.addEventListener('click', () => overlay.remove());
+    document.getElementById('_reqSave')!.addEventListener('click', () => saveModalData(fieldId, label, overlay, box, isChip, isRoutine, costPerItem));
+}
+
+export function renderExchequerHistory(profile: any) {
+    const listEl = document.getElementById('exchequerHistoryList');
+    if (!listEl) return;
+
     if (!profile.tributeHistory || profile.tributeHistory.length === 0) {
         listEl.innerHTML = `<div style="color: #666; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; text-align: center; margin-top: 20px;">NO TRANSACTIONS RECORDED</div>`;
         return;
