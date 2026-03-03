@@ -258,8 +258,9 @@ function renderTributes() {
                 const goal = t.goal_amount || 1;
                 const raised = t.raised_amount || 0;
                 const progressPercent = Math.min(100, Math.round((raised / goal) * 100));
-                const sliderMax = Math.max(10, walletForSlider);
-                const sliderDefault = walletForSlider > 0 ? walletForSlider : 10;
+                const remaining = Math.max(10, goal - raised);
+                const sliderMax = Math.min(walletForSlider > 0 ? walletForSlider : remaining, remaining);
+                const sliderDefault = Math.min(200, sliderMax);
 
                 return `
                 <div class="store-item crowdfund-card" style="grid-column: span 4; position:relative; background:#0a0a14; border-radius:20px; display:flex; flex-direction:row; box-shadow:0 12px 40px rgba(0,0,0,0.6); border:1px solid rgba(197,160,89,0.25); align-items:stretch;">
@@ -288,11 +289,11 @@ function renderTributes() {
                         <div style="display:flex; flex-direction:column; gap:12px; background:rgba(255,255,255,0.04); padding:16px; border-radius:14px; border:1px solid rgba(197,160,89,0.15); margin-top:auto;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.4); letter-spacing:2px; text-transform:uppercase;">Your contribution</div>
-                                <div style="font-family:'Cinzel', serif; font-size:1.6rem; color:#c5a059; font-weight:bold;" id="crowdfund_display_${t.id}">${sliderDefault.toLocaleString()} <i class='fas fa-coins' style='font-size:1rem;'></i></div>
+                                <div style="font-family:'Cinzel', serif; font-size:1.6rem; color:#c5a059; font-weight:bold;" id="crowdfund_display_${t.id}">${sliderDefault.toLocaleString()} 🪙</div>
                             </div>
                             <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                                 <input type="range" id="crowdfund_input_${t.id}" min="10" max="${sliderMax}" step="10" value="${sliderDefault}"
-                                    oninput="var v=Number(this.value); document.getElementById('crowdfund_display_${t.id}').innerHTML=v.toLocaleString()+' <i class=\'fas fa-coins\' style=\'font-size:0.9rem;\'></i>'; document.getElementById('crowdfund_btn_${t.id}').innerText='SEND '+v.toLocaleString()+' COINS';"
+                                    oninput="window.updateCrowdfundSlider('${t.id}', this.value)"
                                     style="flex:1; min-width:100px; height:6px; border-radius:3px; appearance:none; outline:none; background:rgba(197,160,89,0.2); cursor:pointer; accent-color:#c5a059;" />
                                 <button id="crowdfund_btn_${t.id}" onclick="window.contributeCrowdfund('${t.id}', '${t.title}')"
                                     style="background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:12px 22px; border-radius:10px; font-family:'Orbitron', sans-serif; font-size:0.65rem; cursor:pointer; font-weight:700; letter-spacing:1px; box-shadow:0 6px 20px rgba(197,160,89,0.3); transition:all 0.2s; white-space:nowrap;"
@@ -572,6 +573,13 @@ export async function buyTribute(id: string, title: string, cost: number) {
 if (typeof window !== 'undefined') {
     (window as any).buyTribute = buyTribute;
     (window as any).toggleTributeHuntGlobal = () => toggleTributeHunt();
+    (window as any).updateCrowdfundSlider = (id: string, value: string) => {
+        const v = Number(value);
+        const display = document.getElementById(`crowdfund_display_${id}`);
+        const btn = document.getElementById(`crowdfund_btn_${id}`);
+        if (display) display.textContent = v.toLocaleString() + ' 🪙';
+        if (btn) btn.textContent = 'SEND ' + v.toLocaleString() + ' COINS';
+    };
 }
 
 
