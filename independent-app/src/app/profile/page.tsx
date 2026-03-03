@@ -495,7 +495,10 @@ export default function ProfilePage() {
                 {/* OTHER VIEWS */}
                 <div id="historySection" className="view-wrapper" style={{ perspective: 1000, padding: 0, minHeight: '80vh' }}>
                     <div className="record-landing">
-                        <header className="chronicle-header"><h1 className="chronicle-title">THE CHRONICLES</h1></header>
+                        <header className="chronicle-header" style={{ position: 'relative' }}>
+                            <button onClick={() => switchTab('serve')} style={{ position: 'absolute', right: 20, top: 20, background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff4444', padding: '5px 15px', borderRadius: 20, cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 2 }}>✕ CLOSE</button>
+                            <h1 className="chronicle-title">THE CHRONICLES</h1>
+                        </header>
                         <section className="chronicle-section">
                             <div className="chronicle-section-label">THE SOVEREIGN ALTAR</div>
                             <div className="chronicle-hero">
@@ -523,24 +526,85 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                <div id="viewNews" className="view-wrapper hidden alt-grid-view" style={{ padding: 0 }}>
-                    <div id="newsGrid" className="gallery-grid"></div>
+                <div id="viewNews" className="view-wrapper hidden alt-grid-view" style={{ padding: 0, position: 'relative' }}>
+                    <div style={{ padding: '20px', display: 'flex', justifyContent: 'flex-end', background: 'linear-gradient(180deg, rgba(0,0,0,0.8), transparent)', position: 'absolute', top: 0, right: 0, left: 0, zIndex: 10 }}>
+                        <button onClick={() => switchTab('serve')} style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff4444', padding: '5px 15px', borderRadius: 20, cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 2 }}>✕ CLOSE</button>
+                    </div>
+                    <div id="newsGrid" className="gallery-grid" style={{ marginTop: 50 }}></div>
                 </div>
 
-                <div id="viewBuy" className="view-wrapper hidden alt-grid-view">
-                    <div className="ribbon-label" style={{ alignSelf: 'flex-start' }}>EXCHEQUER</div>
-                    <div id="buyCoinsGrid" className="store-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
-                        <div className="v-card store-item" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                            <div style={{ fontSize: '1.2rem', marginBottom: 10 }}>1,000 🪙</div>
-                            <button className="action-btn" onClick={() => buyRealCoins(1000)} style={{ fontSize: '0.8rem', background: '#0075ff', color: 'white', border: 'none' }}>€10.00</button>
+                <div id="viewBuy" className="view-wrapper hidden alt-grid-view" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="ribbon-label" style={{ margin: 0 }}>EXCHEQUER</div>
+                        <button onClick={() => switchTab('serve')} style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff4444', padding: '5px 15px', borderRadius: 20, cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 2 }}>✕ CLOSE</button>
+                    </div>
+
+                    {/* TWO COLUMN LAYOUT */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 350px) 1fr', gap: 30, alignItems: 'start' }}>
+
+                        {/* LEFT COLUMN: HISTORY & SUBSCRIPTION */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                            {/* ACTIVE SUBSCRIPTION */}
+                            <div className="v-card" style={{ padding: 20, background: 'linear-gradient(135deg, rgba(197,160,89,0.1), rgba(0,0,0,0.8))', border: '1px solid rgba(197,160,89,0.3)' }}>
+                                <h3 style={{ fontFamily: 'Cinzel', color: '#c5a059', margin: '0 0 10px 0', fontSize: '1rem', letterSpacing: 2 }}>ACTIVE SUBSCRIPTION</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                                    <i className="fas fa-crown" style={{ fontSize: '2rem', color: '#c5a059', opacity: 0.8 }}></i>
+                                    <div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.9rem', color: '#fff', fontWeight: 'bold' }}>OFFICIAL TRIBUTE</div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#aaa', marginTop: 5 }}>$55.00 / month</div>
+                                    </div>
+                                </div>
+                                <button className="action-btn" onClick={() => window.open('https://buy.stripe.com/14k7swbX56xccgM5km', '_blank')} style={{ width: '100%', marginTop: 15, background: 'rgba(197,160,89,0.1)', color: '#c5a059', border: '1px solid #c5a059', fontSize: '0.75rem', letterSpacing: 1 }}>MANAGE SUBSCRIPTION</button>
+                            </div>
+
+                            {/* TRIBUTE HISTORY */}
+                            <div className="v-card" style={{ padding: 20, display: 'flex', flexDirection: 'column', height: '400px' }}>
+                                <h3 style={{ fontFamily: 'Cinzel', color: '#fff', margin: '0 0 15px 0', fontSize: '1rem', letterSpacing: 2 }}>TRANSACTION LOG</h3>
+                                <div id="exchequerHistoryList" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingRight: 10 }}>
+                                    <div style={{ color: '#666', fontFamily: 'Orbitron', fontSize: '0.8rem', textAlign: 'center', marginTop: 20 }}>LOADING LEDGER...</div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="v-card store-item" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                            <div style={{ fontSize: '1.2rem', marginBottom: 10 }}>5,500 🪙</div>
-                            <button className="action-btn" onClick={() => buyRealCoins(5500)} style={{ fontSize: '0.8rem', background: '#0075ff', color: 'white', border: 'none' }}>€50.00</button>
-                        </div>
-                        <div className="v-card store-item" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                            <div style={{ fontSize: '1.2rem', marginBottom: 10 }}>12,000 🪙</div>
-                            <button className="action-btn" onClick={() => buyRealCoins(12000)} style={{ fontSize: '0.8rem', background: '#0075ff', color: 'white', border: 'none' }}>€100.00</button>
+
+                        {/* RIGHT COLUMN: COIN SHOP GRID */}
+                        <div className="v-card" style={{ padding: 25 }}>
+                            <h2 style={{ fontFamily: 'Cinzel', color: '#fff', margin: '0 0 5px 0', fontSize: '1.4rem', letterSpacing: 2 }}>ACQUIRE CAPITAL</h2>
+                            <p style={{ fontFamily: 'Orbitron', color: '#888', fontSize: '0.75rem', marginBottom: 25 }}>Select a tribute package to bolster your serving capacity.</p>
+
+                            <div id="buyCoinsGrid" className="store-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+                                <div className="v-card store-item exchequer-tier" style={{ background: 'rgba(255,255,255,0.03)', position: 'relative', overflow: 'hidden' }}>
+                                    <div style={{ fontSize: '1.4rem', marginBottom: 5, color: '#c5a059', fontWeight: 'bold', fontFamily: 'Cinzel' }}>1,000 <i className="fas fa-coins" style={{ fontSize: '0.9em' }}></i></div>
+                                    <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: 15, fontFamily: 'Orbitron' }}>Bronze Tier</div>
+                                    <button className="action-btn" onClick={() => buyRealCoins(1000)} style={{ width: '100%', fontSize: '0.9rem', background: '#0075ff', color: 'white', border: 'none', padding: 12 }}>€10.00</button>
+                                </div>
+                                <div className="v-card store-item exchequer-tier" style={{ background: 'rgba(255,255,255,0.03)', position: 'relative', overflow: 'hidden' }}>
+                                    <div style={{ fontSize: '1.4rem', marginBottom: 5, color: '#c5a059', fontWeight: 'bold', fontFamily: 'Cinzel' }}>2,500 <i className="fas fa-coins" style={{ fontSize: '0.9em' }}></i></div>
+                                    <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: 15, fontFamily: 'Orbitron' }}>Silver Tier</div>
+                                    <button className="action-btn" onClick={() => buyRealCoins(2500)} style={{ width: '100%', fontSize: '0.9rem', background: '#0075ff', color: 'white', border: 'none', padding: 12 }}>€25.00</button>
+                                </div>
+                                <div className="v-card store-item exchequer-tier" style={{ background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.5)', position: 'relative', overflow: 'hidden', transform: 'scale(1.02)' }}>
+                                    <div style={{ position: 'absolute', top: 5, right: -25, background: '#c5a059', color: '#000', fontSize: '0.6rem', fontWeight: 'bold', padding: '3px 30px', transform: 'rotate(45deg)', fontFamily: 'Orbitron', letterSpacing: 1 }}>POPULAR</div>
+                                    <div style={{ fontSize: '1.6rem', marginBottom: 5, color: '#fff', fontWeight: 'bold', fontFamily: 'Cinzel', textShadow: '0 0 10px rgba(197,160,89,0.5)' }}>5,500 <i className="fas fa-coins" style={{ fontSize: '0.9em' }}></i></div>
+                                    <div style={{ fontSize: '0.8rem', color: '#c5a059', marginBottom: 15, fontFamily: 'Orbitron' }}>Gold Tier</div>
+                                    <button className="action-btn" onClick={() => buyRealCoins(5500)} style={{ width: '100%', fontSize: '0.9rem', background: 'linear-gradient(90deg, #c5a059, #e0c885)', color: '#000', border: 'none', padding: 12, fontWeight: 'bold' }}>€50.00</button>
+                                </div>
+                                <div className="v-card store-item exchequer-tier" style={{ background: 'rgba(255,255,255,0.03)', position: 'relative', overflow: 'hidden' }}>
+                                    <div style={{ fontSize: '1.4rem', marginBottom: 5, color: '#c5a059', fontWeight: 'bold', fontFamily: 'Cinzel' }}>12,000 <i className="fas fa-coins" style={{ fontSize: '0.9em' }}></i></div>
+                                    <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: 15, fontFamily: 'Orbitron' }}>Platinum Tier</div>
+                                    <button className="action-btn" onClick={() => buyRealCoins(12000)} style={{ width: '100%', fontSize: '0.9rem', background: '#0075ff', color: 'white', border: 'none', padding: 12 }}>€100.00</button>
+                                </div>
+                                <div className="v-card store-item exchequer-tier" style={{ background: 'rgba(255,255,255,0.03)', position: 'relative', overflow: 'hidden' }}>
+                                    <div style={{ fontSize: '1.4rem', marginBottom: 5, color: '#c5a059', fontWeight: 'bold', fontFamily: 'Cinzel' }}>25,000 <i className="fas fa-coins" style={{ fontSize: '0.9em' }}></i></div>
+                                    <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: 15, fontFamily: 'Orbitron' }}>Diamond Tier</div>
+                                    <button className="action-btn" onClick={() => buyRealCoins(25000)} style={{ width: '100%', fontSize: '0.9rem', background: '#0075ff', color: 'white', border: 'none', padding: 12 }}>€200.00</button>
+                                </div>
+                                <div className="v-card store-item exchequer-tier" style={{ background: 'linear-gradient(135deg, rgba(20,0,0,0.8), rgba(60,0,0,0.6))', border: '1px solid rgba(255,0,0,0.3)', position: 'relative', overflow: 'hidden' }}>
+                                    <div style={{ position: 'absolute', top: 5, right: -25, background: '#ff003c', color: '#fff', fontSize: '0.6rem', fontWeight: 'bold', padding: '3px 30px', transform: 'rotate(45deg)', fontFamily: 'Orbitron', letterSpacing: 1 }}>WHALE</div>
+                                    <div style={{ fontSize: '1.4rem', marginBottom: 5, color: '#ff4444', fontWeight: 'bold', fontFamily: 'Cinzel', textShadow: '0 0 10px rgba(255,0,0,0.4)' }}>50,000 <i className="fas fa-coins" style={{ fontSize: '0.9em' }}></i></div>
+                                    <div style={{ fontSize: '0.8rem', color: '#ff8888', marginBottom: 15, fontFamily: 'Orbitron' }}>Obsidian Tier</div>
+                                    <button className="action-btn" onClick={() => buyRealCoins(50000)} style={{ width: '100%', fontSize: '0.9rem', background: 'linear-gradient(90deg, #ff003c, #8b0000)', color: 'white', border: '1px solid #ff003c', padding: 12, fontWeight: 'bold' }}>€400.00</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

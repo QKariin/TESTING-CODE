@@ -1543,6 +1543,11 @@ async function _doProfileUpload() {
                 if (elMobPic) elMobPic.src = dataUrl;
                 renderProfileSidebar(data.profile);
                 loadChatHistory(user.email!);
+                const { getState } = await import('./profile-state');
+                const state = getState();
+                renderDashboardExchequerRank(state);
+                renderHistoryAndAltar(state);
+                renderExchequerHistory(state);
             } else {
                 alert('Photo upload failed: ' + (data.error || 'Unknown error'));
             }
@@ -1639,20 +1644,54 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     if (isRoutine) {
         box.querySelectorAll<HTMLElement>('._routineChip').forEach(chip => {
             chip.addEventListener('click', () => {
-                box.querySelectorAll<HTMLElement>('._routineChip').forEach(c => { c.classList.remove('_selected'); c.style.borderColor = '#2a2a2a'; c.style.color = '#888'; c.style.background = 'rgba(0,0,0,0.5)'; });
-                chip.classList.add('_selected');
-                chip.style.borderColor = '#c5a059'; chip.style.color = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.1)';
-                const cost = parseInt(chip.getAttribute('data-cost') || '1000');
-                const costDisplay = document.getElementById('_reqCostDisplay')!;
-                if (costDisplay) costDisplay.textContent = `COST: ${cost.toLocaleString()} COINS`;
-                const customWrap = document.getElementById('_customRoutineWrap')!;
-                if (customWrap) customWrap.style.display = chip.getAttribute('data-value') === 'Custom Order' ? 'block' : 'none';
             });
         });
     }
 
     document.getElementById('_reqCancel')!.addEventListener('click', () => overlay.remove());
-    document.getElementById('_reqSave')!.addEventListener('click', () => saveModalData(fieldId, label, overlay, box, isChip, isRoutine, costPerItem));
+    if (!profile.tributeHistory || profile.tributeHistory.length === 0) {
+        listEl.innerHTML = `<div style="color: #666; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; text-align: center; margin-top: 20px;">NO TRANSACTIONS RECORDED</div>`;
+        return;
+    }
+
+    try {
+        let historyArray = profile.tributeHistory;
+        if (typeof historyArray === 'string') {
+            historyArray = JSON.parse(historyArray);
+        }
+
+        if (!Array.isArray(historyArray) || historyArray.length === 0) {
+            listEl.innerHTML = `<div style="color: #666; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; text-align: center; margin-top: 20px;">NO TRANSACTIONS RECORDED</div>`;
+            return;
+        }
+
+        let html = '';
+        historyArray.slice(0, 30).forEach((t: any) => {
+            const isIncome = t.type === 'income' || t.amount > 0;
+            const sign = isIncome ? '+' : '';
+            const color = isIncome ? '#00ff00' : '#ff4444';
+            const icon = isIncome ? 'fa-arrow-left' : 'fa-arrow-right';
+            const timeStr = new Date(t.date || t.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px;">
+                    <div style="display:flex; flex-direction:column; gap:4px; overflow:hidden;">
+                        <span style="font-family:'Cinzel', serif; font-size:0.85rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.message || 'Transaction'}</span>
+                        <span style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#666;">${timeStr}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; font-family:'Orbitron', sans-serif; font-size:0.9rem; font-weight:bold; color:${color}; flex-shrink:0; margin-left:10px;">
+                        <span><i class="fas ${icon}" style="font-size:0.7rem; opacity:0.7;"></i></span>
+                        <span>${sign}${Math.abs(t.amount || 0).toLocaleString()} <i class="fas fa-coins" style="font-size:0.8rem; opacity:0.8;"></i></span>
+                    </div>
+                </div>
+            `;
+        });
+
+        listEl.innerHTML = html;
+    } catch (e) {
+        console.error("Error parsing exchequer tribute history:", e);
+        listEl.innerHTML = `<div style="color: #ff4444; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; text-align: center; margin-top: 20px;">ERROR LOADING LEDGER</div>`;
+    }
 }
 
 async function saveModalData(fieldId: string, label: string, overlay: HTMLElement, box: HTMLElement, isChip: boolean, isRoutine: boolean, costPerItem: number) {
