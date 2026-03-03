@@ -144,19 +144,20 @@ export function triggerCoinShower() {
 }
 
 // ─── TRIBUTE SYSTEM LOGIC ───
-export let globalTributesError: string | null = null;
+let globalTributesError: string | null = null;
+let globalLastTribute: { title: string; price: number; senderName: string; at: string } | null = null;
 
 export async function loadTributes() {
     try {
         const res = await fetch('/api/tributes', { cache: 'no-store' });
         const data = await res.json();
         if (data.success && data.tributes && data.tributes.length > 0) {
-            // Sort crowdfunds to the top
             globalTributes = data.tributes.sort((a: any, b: any) => {
                 if (a.is_crowdfund && !b.is_crowdfund) return -1;
                 if (!a.is_crowdfund && b.is_crowdfund) return 1;
                 return 0;
             });
+            globalLastTribute = data.lastTribute || null;
             globalTributesError = null;
             renderTributes();
         } else if (data.success && data.tributes && data.tributes.length === 0) {
@@ -196,23 +197,11 @@ function renderTributes() {
             .filter(Boolean) as typeof globalTributes;
         const quickItems = pinnedItems.length >= 2 ? pinnedItems : globalTributes.slice(0, 2);
 
-        // Last tribute info — localStorage is the live source (updated on every send), DB columns are fallback
+        // Last tribute info — read from API response (stored in globalLastTribute)
         const st = getState();
-        let lastTributeAt: string | null = null;
-        let lastTributeTitle: string | null = null;
-        try {
-            const stored = localStorage.getItem('lastTribute');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                lastTributeAt = parsed.at || null;
-                lastTributeTitle = parsed.title || null;
-            }
-        } catch (_) { }
-        // Fallback to DB columns if localStorage is empty
-        if (!lastTributeAt) {
-            lastTributeAt = st?.raw?.parameters?.last_tribute_at || st?.raw?.last_tribute_at || null;
-            lastTributeTitle = st?.raw?.parameters?.last_tribute_title || st?.raw?.last_tribute_title || null;
-        }
+        const lastTributeAt = globalLastTribute?.at || null;
+        const lastTributeTitle = globalLastTribute?.title || null;
+        const senderNameFromApi = globalLastTribute?.senderName || null;
 
         // Relative time helper
         function relativeTime(iso: string): string {
@@ -228,11 +217,9 @@ function renderTributes() {
 
         let lastTributeHtml = '';
         if (lastTributeAt) {
-            // Use profile name same as profile card (raw.name), fallback to formatted email prefix
-            const profileName = st?.raw?.name || st?.raw?.parameters?.last_tribute_sender_name;
-            const rawEmail = st?.raw?.parameters?.last_tribute_sender || st?.memberId || '';
-            const emailFormatted = rawEmail.split('@')[0].replace(/[._\-]+/g, ' ').split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-            const senderName = profileName || emailFormatted;
+            const senderName = senderNameFromApi
+                || st?.raw?.name
+                || (st?.memberId ? st.memberId.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : 'Unknown');
 
             lastTributeHtml = `
             <div style="text-align:center; padding:6px 0 10px;">
@@ -416,7 +403,7 @@ function showPovertyModal(itemTitle: string) {
             <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.35); line-height:1.8; border-top:1px solid rgba(255,80,80,0.15); padding-top:12px;">She deserves the best. Earn more coins &amp; come back worthy of her attention.</div>
             <div style="display:flex; gap:10px;">
                 <button onclick="document.getElementById('povertyModal').remove()" style="flex:1; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">CLOSE</button>
-                <button onclick="document.getElementById('povertyModal').remove(); if(window.switchTab) window.switchTab('buy');" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">ADD MORE COINS</button>
+                <button onclick="document.getElementById('povertyModal').remove(); if(window.switchTab){ window.switchTab('buy'); } else { window.location.href='/profile'; }" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">ADD MORE COINS</button>
             </div>
         </div>
     `;

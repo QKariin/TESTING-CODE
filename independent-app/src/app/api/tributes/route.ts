@@ -31,17 +31,14 @@ export async function GET() {
         const formattedTributes = await Promise.all((tributes || []).map(async (tribute: any) => {
             let imageUrl = tribute.Image || tribute.image_url || "";
             if (imageUrl.startsWith('wix:image://v1/')) {
-                // Extracts the media ID
                 const wixId = imageUrl.split('/')[3].split('~')[0];
                 imageUrl = `https://static.wixstatic.com/media/${wixId}`;
             }
 
             let topContributorName = null;
-            // Explicitly prefer id -> _id -> Title in that exact order
             const tributeId = tribute.id ?? tribute._id ?? tribute.Title;
 
             if (tribute.is_crowdfund) {
-                // 1. Find member with max amount_given for this tribute
                 const { data: topContrData } = await supabase
                     .from('crowdfund_contributions')
                     .select('member_id, amount_given')
@@ -51,7 +48,6 @@ export async function GET() {
                     .single();
 
                 if (topContrData && topContrData.member_id) {
-                    // 2. Fetch their username
                     const { data: profileData } = await supabase
                         .from('profiles')
                         .select('name')
@@ -63,7 +59,7 @@ export async function GET() {
             }
 
             return {
-                id: tributeId, // Fallback if no specific ID column exists
+                id: tributeId,
                 title: tribute.Title || tribute.title,
                 price: parseInt(tribute.Price || tribute.price) || 0,
                 image: imageUrl,
@@ -75,8 +71,42 @@ export async function GET() {
             };
         }));
 
+        // ── Last Tribute: most recent wishlist message from chats ──────────────
+        let lastTribute = null;
+        try {
+            const { data: lastMsg } = await supabase
+                .from('chats')
+                .select('member_id, metadata, created_at')
+                .eq('type', 'wishlist')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (lastMsg?.metadata) {
+                const meta = lastMsg.metadata as any;
+                const { data: senderProfile } = await supabase
+                    .from('profiles')
+                    .select('name')
+                    .eq('member_id', lastMsg.member_id)
+                    .single();
+
+                const senderName = (senderProfile as any)?.name
+                    || (lastMsg.member_id as string)?.split('@')[0]?.replace(/[._-]+/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
+                    || 'Unknown';
+
+                lastTribute = {
+                    title: meta.title || '',
+                    price: meta.price || 0,
+                    senderName,
+                    at: lastMsg.created_at
+                };
+            }
+        } catch (ltErr) {
+            console.warn('[API/Tributes] Could not fetch last tribute:', ltErr);
+        }
+
         return NextResponse.json(
-            { success: true, tributes: formattedTributes },
+            { success: true, tributes: formattedTributes, lastTribute },
             { headers: { 'Cache-Control': 'no-store, max-age=0' } }
         );
 
