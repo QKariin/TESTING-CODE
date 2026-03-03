@@ -221,10 +221,11 @@ function renderTributes() {
                 || st?.raw?.name
                 || (st?.memberId ? st.memberId.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : 'Unknown');
 
+            const tributePrice = globalLastTribute?.price ? `<span style="color:#c5a059;">(-${globalLastTribute.price} <i class="fas fa-coins" style="font-size:0.45rem;"></i>)</span>` : '';
             lastTributeHtml = `
             <div style="text-align:center; padding:6px 0 10px;">
                 <div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:rgba(197,160,89,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:5px;">LAST TRIBUTE &nbsp;·&nbsp; <span style="color:rgba(255,255,255,0.7);">${senderName}</span></div>
-                ${lastTributeTitle ? `<div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:rgba(255,255,255,0.3); letter-spacing:1px; margin-bottom:3px;">${lastTributeTitle}</div>` : ''}
+                ${lastTributeTitle ? `<div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:rgba(255,255,255,0.3); letter-spacing:1px; margin-bottom:3px;">${lastTributeTitle} ${tributePrice}</div>` : ''}
                 <div style="font-family:'Orbitron', sans-serif; font-size:0.42rem; color:rgba(197,160,89,0.35); letter-spacing:1px;">${relativeTime(lastTributeAt)}</div>
             </div>`;
         }
