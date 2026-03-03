@@ -132,7 +132,7 @@ function renderTributeFeedCard(tribute: any) {
                     <span>${clean(tribute.memberName || 'Unknown')}</span>
                     <span>${timeStr}</span>
                 </div>
-                <div class="ft-main">${tribute.amount || 0} 🪙</div>
+                <div class="ft-main">${tribute.amount || 0} <i class="fas fa-coins" style="font-size:0.85rem; color:#c5a059;"></i></div>
                 <div class="ft-sub">${clean(tribute.reason || 'Tribute sent')}</div>
             </div>
         </div>

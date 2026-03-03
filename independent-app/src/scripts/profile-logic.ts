@@ -290,7 +290,7 @@ function renderTributes() {
                         <div style="display:flex; flex-direction:column; gap:12px; background:rgba(255,255,255,0.04); padding:16px; border-radius:14px; border:1px solid rgba(197,160,89,0.15); margin-top:auto;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.4); letter-spacing:2px; text-transform:uppercase;">Your contribution</div>
-                                <div style="font-family:'Cinzel', serif; font-size:1.6rem; color:#c5a059; font-weight:bold;" id="crowdfund_display_${t.id}">${sliderDefault.toLocaleString()} 🪙</div>
+                                <div style="font-family:'Cinzel', serif; font-size:1.6rem; color:#c5a059; font-weight:bold;" id="crowdfund_display_${t.id}">${sliderDefault.toLocaleString()} <i class="fas fa-coins" style="font-size:1rem;"></i></div>
                             </div>
                             <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                                 <input type="range" id="crowdfund_input_${t.id}" min="10" max="${sliderMax}" step="10" value="${sliderDefault}"
@@ -578,7 +578,7 @@ if (typeof window !== 'undefined') {
         const v = Number(value);
         const display = document.getElementById(`crowdfund_display_${id}`);
         const btn = document.getElementById(`crowdfund_btn_${id}`);
-        if (display) display.textContent = v.toLocaleString() + ' 🪙';
+        if (display) display.innerHTML = v.toLocaleString() + ' <i class="fas fa-coins" style="font-size:1rem;"></i>';
         if (btn) btn.textContent = 'SEND ' + v.toLocaleString() + ' COINS';
     };
 }
@@ -1391,7 +1391,8 @@ function renderChatMessage(msg: any) {
                 <div style="width:100%; height:130px; background:url('${meta.image}') center/cover; background-color:#050510; position:relative;">
                     <div style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent 50%, rgba(10,10,20,0.8) 100%);"></div>
                     <div style="position:absolute; top:8px; right:8px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:3px 9px; display:flex; align-items:center; gap:4px;">
-                        <span style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#c5a059; font-weight:700; letter-spacing:1px;">🪙 ${meta.price ? Number(meta.price).toLocaleString() : ''}</span>
+                        <i class="fas fa-coins" style="color:#c5a059; font-size:0.55rem;"></i>
+                        <span style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${meta.price ? Number(meta.price).toLocaleString() : ''}</span>
                     </div>
                 </div>
                 <div style="padding:10px 13px 13px;">

@@ -250,7 +250,7 @@ export const DbService = {
 
         // 3. Send system chat message
         try {
-            await this.sendMessage(profileId, `TASK APPROVED — ${bonus} 🪙 AWARDED`, 'system');
+            await this.sendMessage(profileId, `TASK APPROVED — ${bonus} <i class="fas fa-coins" style="color:#c5a059;"></i> AWARDED`, 'system');
         } catch (_) { }
     },
 
@@ -279,7 +279,7 @@ export const DbService = {
 
         // 3. Send system chat message
         try {
-            await this.sendMessage(profileId, `TASK REJECTED — 300 🪙 PENALTY APPLIED`, 'system');
+            await this.sendMessage(profileId, `TASK REJECTED — 300 <i class="fas fa-coins" style="color:#c5a059;"></i> PENALTY APPLIED`, 'system');
         } catch (_) { }
     },
 

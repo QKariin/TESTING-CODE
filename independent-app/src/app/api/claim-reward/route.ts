@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
         if (error) throw error;
 
-        const logMsg = choice === 'coins' ? `REWARD CLAIMED (+${COIN_REWARD} 🪙)` : `REWARD CLAIMED (+${POINT_REWARD} MERIT)`;
+        const logMsg = choice === 'coins' ? `REWARD CLAIMED (+${COIN_REWARD} <i class="fas fa-coins" style="color:#c5a059;"></i>)` : `REWARD CLAIMED (+${POINT_REWARD} MERIT)`;
         try { await DbService.sendMessage(memberEmail, logMsg, 'system'); } catch (_) { }
 
         return NextResponse.json({ success: true, ...updateData });

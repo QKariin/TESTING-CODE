@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
         console.log("Profile update:", profileDbUpdate.error ? profileDbUpdate.error : "SUCCESS");
         console.log("Task update:", taskDbUpdate.error ? taskDbUpdate.error : "SUCCESS");
 
-        try { await DbService.sendMessage(memberEmail, `TASK SKIPPED — 300 🪙 DEDUCTED`, 'system'); } catch (_) { }
+        try { await DbService.sendMessage(memberEmail, `TASK SKIPPED — 300 <i class="fas fa-coins" style="color:#c5a059;"></i> DEDUCTED`, 'system'); } catch (_) { }
 
         return NextResponse.json({
             success: true,

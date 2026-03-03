@@ -54,7 +54,7 @@ export async function POST(request: Request) {
             if (tsErr) console.warn('[Purchase] last_tribute columns not yet in DB — safe to ignore:', tsErr.message);
         });
 
-        try { await DbService.sendMessage(memberEmail, `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} 🪙)`, 'system'); } catch (_) { }
+        try { await DbService.sendMessage(memberEmail, `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} <i class="fas fa-coins" style="color:#c5a059;"></i>)`, 'system'); } catch (_) { }
 
         return NextResponse.json({
             success: true,
