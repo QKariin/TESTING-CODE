@@ -141,8 +141,12 @@ export async function updateScoreAction(memberId: string, amount: number) {
 // --- 4. SECURE UPDATE TASK (The Brain) ---
 export async function secureUpdateTaskAction(memberId: string, updateData: any) {
     try {
+        console.log(`[secureUpdateTaskAction] Start for ${memberId}`, JSON.stringify(updateData));
         const profile = await getProfile(memberId);
-        if (!profile) return { success: false };
+        if (!profile) {
+            console.log(`[secureUpdateTaskAction] Profile not found for ${memberId}`);
+            return { success: false };
+        }
 
         // 1. Fetch from tasks table
         const { data: taskRow, error: taskFetchError } = await supabaseAdmin
@@ -150,6 +154,8 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             .select('*')
             .eq('member_id', profile.member_id || memberId)
             .maybeSingle();
+
+        console.log(`[secureUpdateTaskAction] Fetched taskRow for ${memberId}:`, !!taskRow, "Error:", taskFetchError?.message);
 
         let needsUpdate = false;
         let taskUpdates: any = {};
@@ -180,6 +186,7 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             taskUpdates.taskQueue = typeof updateData.taskQueue === 'string' ? updateData.taskQueue : JSON.stringify(updateData.taskQueue);
             needsUpdate = true;
             queue = updateData.taskQueue;
+            console.log(`[secureUpdateTaskAction] Detected taskQueue update. Length: ${queue.length}`);
         }
 
         // --- Consume Queue ---
@@ -258,20 +265,25 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
         }
 
         if (needsUpdate) {
+            console.log(`[secureUpdateTaskAction] Executing update/insert with payload:`, JSON.stringify(taskUpdates));
             const member_id = profile.member_id || memberId;
+            let result;
             if (taskRow) {
-                await supabaseAdmin.from('tasks').update(taskUpdates).eq('member_id', member_id);
+                result = await supabaseAdmin.from('tasks').update(taskUpdates).eq('member_id', member_id);
+                console.log(`[secureUpdateTaskAction] Update Result:`, result.error?.message || "Success");
             } else {
-                await supabaseAdmin.from('tasks').insert({
+                result = await supabaseAdmin.from('tasks').insert({
                     member_id: member_id,
                     Name: profile.name || 'Slave',
                     ...taskUpdates
                 });
+                console.log(`[secureUpdateTaskAction] Insert Result:`, result.error?.message || "Success");
             }
             // Return success without full report calculation for simple updates
-            return { success: true };
+            return { success: !result.error };
         }
 
+        console.log(`[secureUpdateTaskAction] No updates needed.`);
         return { success: false };
 
     } catch (error) {
