@@ -314,6 +314,7 @@ export async function deleteQueueItem(memberId: string, idx: number) {
 }
 
 export function updateTaskQueue(u: any) {
+    console.log("[updateTaskQueue] Triggered for", u.memberId, "| Queue Length:", (u.task_queue || u.taskQueue || u.queue || []).length);
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
 

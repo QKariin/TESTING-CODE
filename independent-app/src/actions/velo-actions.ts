@@ -21,13 +21,21 @@ const supabaseAdmin = createClient(
 
 // --- HELPER: GET PROFILE ---
 async function getProfile(memberId: string) {
-    const { data, error } = await supabaseAdmin
-        .from('profiles')
-        .select('*')
-        .or(`member_id.eq.${memberId},id.eq.${memberId}`)
-        .maybeSingle();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+    let query = supabaseAdmin.from('profiles').select('*');
 
-    if (error || !data) return null;
+    if (isUuid) {
+        query = query.or(`member_id.eq.${memberId},id.eq.${memberId}`);
+    } else {
+        query = query.eq('member_id', memberId);
+    }
+
+    const { data, error } = await query.maybeSingle();
+
+    if (error) {
+        console.error("[getProfile] Error lookup:", error.message);
+        return null;
+    }
     return data;
 }
 
@@ -85,17 +93,46 @@ export async function getAdminDashboardData() {
 
         const { data: tasksData, error: taskErr } = await supabaseAdmin
             .from('tasks')
-            .select('member_id, "Taskdom_History"');
+            .select('member_id, "Taskdom_History", taskQueue, taskdom_active_task, taskdom_pending_state');
 
         const reviewQueue = await DbService.getReviewQueue();
 
         if (pError) throw pError;
 
-        // Map Taskdom_History from tasks to profiles so the dashboard Record tab works
+        // Map tasks data to profiles so the dashboard works
         const finalProfiles = (profiles || []).map(p => {
             const t = (tasksData || []).find(x => x.member_id === p.member_id || x.member_id === p.id);
-            if (t && t['Taskdom_History']) {
-                return { ...p, 'Taskdom_History': t['Taskdom_History'] };
+            if (t) {
+                let pQueue = [];
+                try {
+                    pQueue = typeof t.taskQueue === 'string' ? JSON.parse(t.taskQueue) : (t.taskQueue || []);
+                } catch (e) { }
+
+                let activeTask = t.taskdom_active_task;
+                let endTime = null;
+                try {
+                    if (typeof activeTask === 'string') {
+                        const parsed = JSON.parse(activeTask);
+                        endTime = parsed.endTime || null;
+                        activeTask = parsed;
+                    } else if (activeTask && activeTask.endTime) {
+                        endTime = activeTask.endTime;
+                    }
+                } catch (e) { }
+
+                return {
+                    ...p,
+                    'Taskdom_History': t['Taskdom_History'],
+                    task_queue: pQueue,
+                    taskQueue: pQueue,
+                    queue: pQueue,
+                    parameters: {
+                        ...(p.parameters || {}),
+                        taskdom_active_task: activeTask,
+                        taskdom_end_time: endTime,
+                        status: t.taskdom_pending_state || p.hierarchy
+                    }
+                };
             }
             return p;
         });
@@ -141,12 +178,8 @@ export async function updateScoreAction(memberId: string, amount: number) {
 // --- 4. SECURE UPDATE TASK (The Brain) ---
 export async function secureUpdateTaskAction(memberId: string, updateData: any) {
     try {
-        console.log(`[secureUpdateTaskAction] Start for ${memberId}`, JSON.stringify(updateData));
         const profile = await getProfile(memberId);
-        if (!profile) {
-            console.log(`[secureUpdateTaskAction] Profile not found for ${memberId}`);
-            return { success: false };
-        }
+        if (!profile) return { success: false };
 
         // 1. Fetch from tasks table
         const { data: taskRow, error: taskFetchError } = await supabaseAdmin
@@ -154,8 +187,6 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             .select('*')
             .eq('member_id', profile.member_id || memberId)
             .maybeSingle();
-
-        console.log(`[secureUpdateTaskAction] Fetched taskRow for ${memberId}:`, !!taskRow, "Error:", taskFetchError?.message);
 
         let needsUpdate = false;
         let taskUpdates: any = {};
@@ -186,7 +217,6 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             taskUpdates.taskQueue = typeof updateData.taskQueue === 'string' ? updateData.taskQueue : JSON.stringify(updateData.taskQueue);
             needsUpdate = true;
             queue = updateData.taskQueue;
-            console.log(`[secureUpdateTaskAction] Detected taskQueue update. Length: ${queue.length}`);
         }
 
         // --- Consume Queue ---
@@ -264,26 +294,54 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             needsUpdate = true;
         }
 
+        // --- Force Active Task ---
+        if (updateData.forceActive) {
+            const endTime = Date.now() + (24 * 3600 * 1000); // 24 hours
+            taskUpdates.taskdom_active_task = JSON.stringify({
+                text: updateData.forceActive.text,
+                TaskText: updateData.forceActive.text,
+                tasktext: updateData.forceActive.text,
+                endTime: endTime,
+                assigned_at: new Date().toISOString(),
+                category: updateData.forceActive.category || "Directive"
+            });
+            taskUpdates.taskdom_pending_state = null; // Setting to null makes it ACTIVE, not pending review
+            needsUpdate = true;
+        }
+
         if (needsUpdate) {
-            console.log(`[secureUpdateTaskAction] Executing update/insert with payload:`, JSON.stringify(taskUpdates));
             const member_id = profile.member_id || memberId;
             let result;
             if (taskRow) {
                 result = await supabaseAdmin.from('tasks').update(taskUpdates).eq('member_id', member_id);
-                console.log(`[secureUpdateTaskAction] Update Result:`, result.error?.message || "Success");
             } else {
                 result = await supabaseAdmin.from('tasks').insert({
                     member_id: member_id,
                     Name: profile.name || 'Slave',
                     ...taskUpdates
                 });
-                console.log(`[secureUpdateTaskAction] Insert Result:`, result.error?.message || "Success");
+            }
+
+            // Sync with Realtime via Chat System Message if it was forced
+            if (updateData.forceActive) {
+                try {
+                    await supabaseAdmin.from('chats').insert({
+                        member_id: member_id,
+                        sender: 'system',
+                        sender_email: 'system',
+                        message: `NEW DIRECTIVE ASSIGNED`,
+                        content: `NEW DIRECTIVE ASSIGNED: ${updateData.forceActive.text}`,
+                        type: 'system',
+                        is_read: false
+                    });
+                } catch (e) {
+                    console.error("Failed to push realtime task sync message:", e);
+                }
             }
             // Return success without full report calculation for simple updates
             return { success: !result.error };
         }
 
-        console.log(`[secureUpdateTaskAction] No updates needed.`);
         return { success: false };
 
     } catch (error) {

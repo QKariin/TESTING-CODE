@@ -504,22 +504,23 @@ export async function forceActiveTask(taskText: string) {
         const u = users.find(x => x.memberId === currId);
         if (!u) return;
 
-        // Force Active logic: Set pending state and active task
+        // Force Active logic: Set active task directly via backend
         const { secureUpdateTaskAction } = await import('@/actions/velo-actions');
         await secureUpdateTaskAction(currId, {
-            pendingState: "PENDING",
-            addToQueue: {
-                id: Date.now().toString(),
+            forceActive: {
                 text: decoded,
-                proofUrl: "FORCED",
-                proofType: "text",
                 category: "Directive"
             }
         });
 
+        // Update local state instantly for UI
+        u.activeTask = { text: decoded, TaskText: decoded };
+        u.endTime = Date.now() + (24 * 3600 * 1000); // 24 hours
+        u.pendingState = null;
+
         // Trigger UI updates
-        import('./dashboard-users').then(m => m.updateDetail(currId!));
-        renderTaskGallery();
+        import('./dashboard-users').then(m => m.updateDetail(u));
+        import('./dashboard-modals').then(m => m.renderTaskGallery());
     } catch (err) {
         console.error("FORCE_ACTIVE_FAILED:", err);
     }

@@ -6,6 +6,7 @@ import { getThumbnail } from "./media";
 export function getOptimizedUrl(url: string | null | undefined, width: number): string {
     if (!url) return "";
     if (url.startsWith('data:')) return url;
+    if (url === "FORCED" || url === "SKIPPED") return "https://upcdn.io/kW2K8hR/raw/public/collar-192.png";
 
     if (url.includes("cloudinary")) return "https://upcdn.io/kW2K8hR/raw/uploads/2025/12/06/collar-512.png";
 

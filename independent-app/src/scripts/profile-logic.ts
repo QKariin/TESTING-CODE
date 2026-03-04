@@ -1275,6 +1275,11 @@ function subscribeToChat(email: string) {
             if (isSystemMessage(msg)) {
                 updateSystemTicker(msg);
                 appendSystemLog(msg);
+
+                // Auto-refresh Task if Admin Forced it
+                if (msg.content && msg.content.includes('DIRECTIVE ASSIGNED')) {
+                    getRandomTask(true);
+                }
                 return;
             }
 

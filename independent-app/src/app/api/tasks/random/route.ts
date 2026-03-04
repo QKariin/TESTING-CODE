@@ -14,10 +14,20 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'Missing memberEmail' }, { status: 400 });
         }
 
-        // 1. Check if user already has an active task
+        // 1. Check if user already has an active task in the tasks table
         const profile = await DbService.getProfile(memberEmail);
-        if (profile?.parameters?.taskdom_active_task) {
-            const activeTask = profile.parameters.taskdom_active_task;
+
+        const { data: taskRow } = await supabaseAdmin
+            .from('tasks')
+            .select('taskdom_active_task')
+            .eq('member_id', profile?.member_id || memberEmail)
+            .maybeSingle();
+
+        if (taskRow && taskRow.taskdom_active_task) {
+            const activeTask = typeof taskRow.taskdom_active_task === 'string'
+                ? JSON.parse(taskRow.taskdom_active_task)
+                : taskRow.taskdom_active_task;
+
             const assignedAt = new Date(activeTask.assigned_at).getTime();
             const now = new Date().getTime();
             const hoursPassed = (now - assignedAt) / (1000 * 60 * 60);
@@ -65,9 +75,11 @@ export async function GET(req: NextRequest) {
         const randomTask = tasks?.[0];
 
         // 4. Assign it efficiently reusing our profile fetch
-        const params = { ...(profile.parameters || {}) };
-        params.taskdom_active_task = { ...randomTask, assigned_at: new Date().toISOString() };
-        await supabaseAdmin.from('profiles').update({ parameters: params }).eq('id', profile.id);
+        const activeTaskPayload = { ...randomTask, assigned_at: new Date().toISOString() };
+
+        await supabaseAdmin.from('tasks').update({
+            taskdom_active_task: JSON.stringify(activeTaskPayload)
+        }).eq('member_id', profile.member_id || memberEmail);
 
         return NextResponse.json({
             success: true,
