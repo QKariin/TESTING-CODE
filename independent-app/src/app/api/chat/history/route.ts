@@ -14,7 +14,7 @@ export async function GET(req: Request) {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
-        const isHardcodedAdmin = user?.email && ["pr.finsko@gmail.com", "liviacechova@gmail.com"].includes(user.email.toLowerCase());
+        const isHardcodedAdmin = user?.email && ["ceo@qkarin.com", "liviacechova@gmail.com"].includes(user.email.toLowerCase());
 
         // Use service role if admin to bypass RLS, otherwise use regular client
         const queryClient = isHardcodedAdmin ? createAdminClient(
