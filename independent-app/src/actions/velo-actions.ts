@@ -259,7 +259,7 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
 
         if (needsUpdate) {
             const member_id = profile.member_id || memberId;
-            if (taskRow && taskRow.ID) { // assuming ID or member_id exists
+            if (taskRow) {
                 await supabaseAdmin.from('tasks').update(taskUpdates).eq('member_id', member_id);
             } else {
                 await supabaseAdmin.from('tasks').insert({

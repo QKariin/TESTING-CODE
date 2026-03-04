@@ -298,7 +298,7 @@ export async function deleteQueueItem(memberId: string, idx: number) {
     const u = users.find(x => x.memberId === memberId);
     if (!u) return;
 
-    let queue = u.task_queue || u.taskQueue || [];
+    let queue = u.task_queue || u.taskQueue || u.queue || [];
     queue.splice(idx, 1);
 
     try {
@@ -306,6 +306,7 @@ export async function deleteQueueItem(memberId: string, idx: number) {
         await secureUpdateTaskAction(memberId, { taskQueue: queue });
         u.task_queue = queue;
         u.taskQueue = queue;
+        u.queue = queue;
         updateTaskQueue(u);
     } catch (err) {
         console.error("Failed to delete queue item:", err);
@@ -316,7 +317,7 @@ export function updateTaskQueue(u: any) {
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
 
-    let personalTasks = u.task_queue || u.taskQueue || [];
+    let personalTasks = u.task_queue || u.taskQueue || u.queue || [];
 
     if (fillerUserId !== u.memberId || cachedFillers.length === 0) {
         cachedFillers = (availableDailyTasks || []).sort(() => 0.5 - Math.random()).slice(0, 10);

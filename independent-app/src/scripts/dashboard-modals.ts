@@ -278,7 +278,7 @@ export function renderTaskGallery(tasksToRender?: any[]) {
 
     // 3. RENDER COMMAND QUEUE (Left Side)
     // Get personal schedule or fillers
-    const schedule = (u?.task_queue || u?.taskQueue || []) as any[];
+    const schedule = (u?.task_queue || u?.taskQueue || u?.queue || []) as any[];
     const fillersNeeded = Math.max(0, 10 - schedule.length);
 
     // Pick random fillers from cachedTasks if needed
@@ -320,7 +320,7 @@ export async function enforceTask(taskText: string, pos?: number) {
         const u = users.find(x => x.memberId === currId);
         if (!u) return;
 
-        const queue = (u.task_queue || u.taskQueue || []) as any[];
+        const queue = (u.task_queue || u.taskQueue || u.queue || []) as any[];
         const newTask = { text: decoded, added_at: new Date().toISOString() };
 
         if (typeof pos === 'number' && pos >= 0 && pos < 10) {
@@ -338,6 +338,7 @@ export async function enforceTask(taskText: string, pos?: number) {
 
         u.task_queue = queue;
         u.taskQueue = queue;
+        u.queue = queue;
         renderTaskGallery();
 
         // Also update the dossier if visible
@@ -353,7 +354,7 @@ export async function removeScheduledTask(idx: number) {
         const u = users.find(x => x.memberId === currId);
         if (!u) return;
 
-        const queue = (u.task_queue || u.taskQueue || []) as any[];
+        const queue = (u.task_queue || u.taskQueue || u.queue || []) as any[];
         queue.splice(idx, 1);
 
         const { secureUpdateTaskAction } = await import('@/actions/velo-actions');
@@ -361,6 +362,7 @@ export async function removeScheduledTask(idx: number) {
 
         u.task_queue = queue;
         u.taskQueue = queue;
+        u.queue = queue;
         renderTaskGallery();
 
         // Also update the dossier if visible
