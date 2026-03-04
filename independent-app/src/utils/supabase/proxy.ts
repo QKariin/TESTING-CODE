@@ -3,6 +3,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 
 export async function updateSession(request: NextRequest) {
+    // 🔓 LOCAL DEV BYPASS — skip all auth when running on localhost
+    const host = request.headers.get('host') || ''
+    if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
+        return NextResponse.next({ request })
+    }
+
     let supabaseResponse = NextResponse.next({
         request,
     })

@@ -253,15 +253,29 @@ function updateActiveTask(u: any) {
     if (cooldownInterval) clearInterval(cooldownInterval);
     const activeText = document.getElementById('dActiveText');
     const activeTimer = document.getElementById('dActiveTimer');
+    const activeStatus = document.getElementById('dActiveStatus');
 
     if (!activeText || !activeTimer) return;
 
+    const isPending = u.pendingState === "PENDING" || (u.activeTask && u.activeTask.proofUrl === "FORCED");
+
     if (u.activeTask && u.endTime && u.endTime > Date.now()) {
-        activeText.innerText = clean(u.activeTask.text);
+        const rawText = u.activeTask.text || u.activeTask.TaskText || "";
+        activeText.innerHTML = rawText; // Support HTML directives
+
+        if (activeStatus) {
+            activeStatus.innerText = isPending ? "PENDING" : "ACTIVE";
+            activeStatus.style.color = isPending ? "var(--pink)" : "var(--gold)";
+        }
+
         const tick = () => {
             const diff = u.endTime - Date.now();
             if (diff <= 0) {
                 activeTimer.innerText = "00:00";
+                if (activeStatus && !isPending) {
+                    activeStatus.innerText = "OVERDUE";
+                    activeStatus.style.color = "var(--red)";
+                }
                 clearInterval(cooldownInterval);
                 return;
             }
@@ -273,14 +287,36 @@ function updateActiveTask(u: any) {
     } else {
         activeText.innerText = "None";
         activeTimer.innerText = "--:--";
+        if (activeStatus) {
+            activeStatus.innerText = "UNPRODUCTIVE";
+            activeStatus.style.color = "#666";
+        }
     }
 }
 
-function updateTaskQueue(u: any) {
+export async function deleteQueueItem(memberId: string, idx: number) {
+    const u = users.find(x => x.memberId === memberId);
+    if (!u) return;
+
+    let queue = u.task_queue || u.taskQueue || [];
+    queue.splice(idx, 1);
+
+    try {
+        const { secureUpdateTaskAction } = await import('@/actions/velo-actions');
+        await secureUpdateTaskAction(memberId, { taskQueue: queue });
+        u.task_queue = queue;
+        u.taskQueue = queue;
+        updateTaskQueue(u);
+    } catch (err) {
+        console.error("Failed to delete queue item:", err);
+    }
+}
+
+export function updateTaskQueue(u: any) {
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
 
-    let personalTasks = u.taskQueue || [];
+    let personalTasks = u.task_queue || u.taskQueue || [];
 
     if (fillerUserId !== u.memberId || cachedFillers.length === 0) {
         cachedFillers = (availableDailyTasks || []).sort(() => 0.5 - Math.random()).slice(0, 10);
@@ -291,14 +327,15 @@ function updateTaskQueue(u: any) {
 
     listContainer.innerHTML = displayTasks.map((t, idx) => {
         const isPersonal = idx < personalTasks.length;
-        const niceText = clean(t);
+        const taskText = typeof t === 'string' ? t : (t.text || t.TaskText || 'Unnamed Task');
+        const niceText = clean(taskText);
         return `
             <div class="mini-active" style="border:1px solid ${isPersonal ? '#333' : '#222'}; opacity:${isPersonal ? 1 : 0.5}; margin-bottom:5px;">
                 <div class="ma-status" style="color:${isPersonal ? 'var(--gold)' : '#555'}">${isPersonal ? 'CMD' : 'AUTO'}</div>
                 <div class="ma-mid">
                     <div class="ma-txt">${niceText}</div>
                 </div>
-                ${isPersonal ? `<button class="ma-btn" onclick="window.deleteQueueItem('${u.memberId}', ${idx})" style="color:red; background:none; border:none; cursor:pointer;">&times;</button>` : ''}
+                ${isPersonal ? `<button class="ma-btn" onclick="window.deleteQueueItem('${u.memberId}', ${idx})" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem; padding:0 5px;">&times;</button>` : ''}
             </div>`;
     }).join('');
 }
@@ -306,4 +343,5 @@ function updateTaskQueue(u: any) {
 // Global functions for window
 if (typeof window !== 'undefined') {
     (window as any).updateDetail = updateDetail;
+    (window as any).deleteQueueItem = deleteQueueItem;
 }

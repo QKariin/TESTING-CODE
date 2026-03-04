@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
+import { getMasterData } from '@/actions/velo-actions';
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +9,7 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const memberId = searchParams.get('memberId');
 
-        const users = await DbService.getAllProfiles();
+        const users = await getMasterData();
         const tributes = await DbService.getRecentTributes(50);
         const reviewQueue = await DbService.getReviewQueue();
 

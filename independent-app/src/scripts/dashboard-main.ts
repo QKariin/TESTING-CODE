@@ -178,7 +178,7 @@ export function manageAltar(slot: number) {
         const overlay = document.getElementById('chatMediaOverlay');
         const content = document.getElementById('chatMediaOverlayContent');
         if (overlay && content) {
-            content.innerHTML = `<img src="${img.src}" style="max-width:100%;max-height:90vh;border-radius:8px;" />`;
+            content.innerHTML = `<img src="${getOptimizedUrl(img.src, 800)}" style="max-width:100%;max-height:90vh;border-radius:8px;" />`;
             overlay.classList.remove('hidden');
         }
     }
@@ -251,7 +251,7 @@ export function expandAdminCategory(category: 'accepted' | 'pending' | 'routine'
             const media = t.proofUrl && t.proofUrl !== 'SKIPPED'
                 ? (isVid
                     ? `<video src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;" muted playsinline loop></video>`
-                    : `<img src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;" />`)
+                    : `<img src="${getOptimizedUrl(t.proofUrl, 300)}" style="width:100%;aspect-ratio:3/4;object-fit:cover;" />`)
                 : `<div style="aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:2rem;background:#0a0a0a;">🚫</div>`;
             const date = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
             const statusColor = t.status === 'approve' ? '#c5a059' : t.status === 'pending' ? '#888' : '#8b0000';
@@ -280,6 +280,12 @@ export async function adminTaskAction(id: string | null, action: 'skip' | 'send'
     if (!targetId) return;
 
     console.log("Admin task action:", action, "for ID:", targetId);
+
+    if (action === 'send') {
+        const { openTaskGallery } = await import('./dashboard-modals');
+        openTaskGallery();
+        return;
+    }
 
     if (action === 'skip') {
         const result = await secureUpdateTaskAction(targetId, {
@@ -353,7 +359,7 @@ export async function loadQueenPostsDashboard() {
                     </div>
                     <button onclick="window.deleteQueenPost('${p.id}')" style="background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:Orbitron;font-size:0.6rem;flex-shrink:0;margin-left:15px;">DEL</button>
                 </div>
-                ${p.media_url ? `<div style="width:100%;max-height:300px;overflow:hidden;border-radius:6px;border:1px solid #222;"><img src="${p.media_url}" style="width:100%;object-fit:cover;max-height:300px;display:block;" /></div>` : ''}
+                ${p.media_url ? `<div style="width:100%;max-height:300px;overflow:hidden;border-radius:6px;border:1px solid #222;"><img src="${getOptimizedUrl(p.media_url, 400)}" style="width:100%;object-fit:cover;max-height:300px;display:block;" /></div>` : ''}
                 <div style="font-family:Orbitron;font-size:0.55rem;color:#444;letter-spacing:1px;margin-top:5px;">${new Date(p.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).toUpperCase()}</div>
             </div>
         `).join('');

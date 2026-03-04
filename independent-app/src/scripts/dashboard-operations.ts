@@ -57,7 +57,7 @@ function renderOperationsGrid() {
             <div class="mon-card ${cardClass}" onclick="window.selectUserFromOps('${u.memberId}')">
                 <div class="mon-badge ${badgeClass}">${badgeText}</div>
                 <div class="mon-av-box">
-                    <img src="${finalPic}" class="mon-av">
+                    <img src="${getOptimizedUrl(finalPic, 100)}" class="mon-av">
                 </div>
                 <div class="mon-name">${clean(u.name)}</div>
                 <div class="mon-detail">${detail}</div>
@@ -126,7 +126,7 @@ function renderTributeFeedCard(tribute: any) {
 
     return `
         <div class="feed-trib-card">
-            <img src="${finalPic}" class="ft-avatar">
+            <img src="${getOptimizedUrl(finalPic, 100)}" class="ft-avatar">
             <div class="ft-content">
                 <div class="ft-top">
                     <span>${clean(tribute.memberName || 'Unknown')}</span>
@@ -146,7 +146,7 @@ function renderCompletionFeedCard(completion: any) {
 
     return `
         <div class="feed-buy-card">
-            <img src="${finalPic}" class="ft-avatar">
+            <img src="${getOptimizedUrl(finalPic, 100)}" class="ft-avatar">
             <div class="ft-content">
                 <div class="ft-top">
                     <span>${clean(completion.userName || 'User')}</span>

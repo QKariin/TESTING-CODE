@@ -1,12 +1,10 @@
 // src/lib/supabase-service.ts
-import { supabaseAdmin as supabase } from './supabase';
+import { supabase, supabaseAdmin } from './supabase';
 
 export const DbService = {
     // --- PROFILES ---
     async getProfile(memberId: string) {
-        // Try by member_id (email) first — use .eq() not .or() to avoid
-        // parser issues with email special chars (@ and .)
-        const { data: byEmail } = await supabase
+        const { data: byEmail } = await supabaseAdmin
             .from('profiles')
             .select('*')
             .eq('member_id', memberId)
@@ -15,7 +13,7 @@ export const DbService = {
         if (byEmail) return byEmail;
 
         // Try by UUID id (for admin lookups)
-        const { data: byId } = await supabase
+        const { data: byId } = await supabaseAdmin
             .from('profiles')
             .select('*')
             .eq('id', memberId)
@@ -24,7 +22,7 @@ export const DbService = {
         if (byId) return byId;
 
         // Fallback: Check 'tasks' table for legacy data — return REAL values
-        const { data: taskData } = await supabase
+        const { data: taskData } = await supabaseAdmin
             .from('tasks')
             .select('*')
             .ilike('member_id', memberId)
@@ -51,7 +49,7 @@ export const DbService = {
     },
 
     async updateProfile(id: string, updates: any) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('profiles')
             .update(updates)
             .eq('id', id)
@@ -62,7 +60,7 @@ export const DbService = {
     },
 
     async getAllProfiles() {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('profiles')
             .select('*')
             .order('last_active', { ascending: false });
@@ -152,7 +150,7 @@ export const DbService = {
     // --- MESSAGING ---
     async sendMessage(memberEmail: string, text: string, sender: string = 'system', mediaUrl: string | null = null) {
         // Prevent UUID leakage; chat histories use the email string
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('chats')
             .insert({
                 member_id: memberEmail,
@@ -169,7 +167,7 @@ export const DbService = {
     },
 
     async getMessages(memberId: string, limit = 50) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('messages')
             .select('*')
             .eq('member_id', memberId)
@@ -182,7 +180,7 @@ export const DbService = {
     // --- TASKS ---
     // Helper: get the raw tasks row for a member
     async _getTaskRow(memberId: string) {
-        const { data } = await supabase
+        const { data } = await supabaseAdmin
             .from('tasks')
             .select('*')
             .eq('member_id', memberId)
@@ -198,7 +196,7 @@ export const DbService = {
 
     async getReviewQueue() {
         // Pull all tasks rows that have at least one 'pending' entry in Taskdom_History
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('tasks')
             .select('member_id, "Name", "Status", "Taskdom_History", "Profile pic"');
         if (error) throw error;
@@ -228,10 +226,9 @@ export const DbService = {
         if (idx > -1) {
             history[idx].status = 'approve';
             history[idx].completed = true;
-            if (sticker) history[idx].sticker = sticker;
             if (comment) history[idx].adminComment = comment;
         }
-        await supabase
+        await supabaseAdmin
             .from('tasks')
             .update({ 'Taskdom_History': JSON.stringify(history), 'Status': 'approve' })
             .eq('member_id', profileId);
@@ -263,7 +260,7 @@ export const DbService = {
             history[idx].status = 'reject';
             history[idx].completed = false;
         }
-        await supabase
+        await supabaseAdmin
             .from('tasks')
             .update({ 'Taskdom_History': JSON.stringify(history), 'Status': 'reject' })
             .eq('member_id', profileId);
@@ -308,39 +305,31 @@ export const DbService = {
 
         // 3. Safe write: update if row exists, insert if not
         if (row) {
-            const { error } = await supabase
+            const { error } = await supabaseAdmin
                 .from('tasks')
                 .update({
                     Status: 'pending',
-                    'Taskdom_History': newHistory
+                    'Taskdom_History': newHistory,
+                    taskdom_active_task: null,
+                    taskdom_pending_state: null
                 })
                 .eq('member_id', memberId);
             if (error) throw error;
         } else {
-            const { error } = await supabase
+            const { error } = await supabaseAdmin
                 .from('tasks')
                 .insert({
                     member_id: memberId,
                     Name: profile?.name || 'Slave',
                     Status: 'pending',
-                    'Taskdom_History': newHistory
+                    'Taskdom_History': newHistory,
+                    taskdom_active_task: null,
+                    taskdom_pending_state: null
                 });
             if (error) throw error;
         }
 
-        // 4. Clear active task from Profile Parameters
-        if (profile) {
-            try {
-                const params = profile.parameters || {};
-                params.taskdom_active_task = null;
-                params.taskdom_end_time = null;
-                await this.updateProfile(profile.id, { parameters: params });
-            } catch (err) {
-                console.error("Failed to clear active task on submit:", err);
-            }
-        }
-
-        // 5. Send system chat message
+        // 4. Send system chat message
         try {
             await this.sendMessage(memberId, `TASK SUBMITTED — AWAITING REVIEW`, 'system');
         } catch (_) { }
@@ -351,12 +340,15 @@ export const DbService = {
     async assignTask(memberId: string, task: any) {
         const profile = await this.getProfile(memberId);
         if (!profile || !profile.id) throw new Error('Profile not linked');
-        return this.updateProfile(profile.id, {
-            parameters: {
-                ...(profile.parameters || {}),
-                taskdom_active_task: { ...task, assigned_at: new Date().toISOString() }
-            }
-        });
+
+        const activeTaskData = JSON.stringify({ ...task, assigned_at: new Date().toISOString() });
+        const { error } = await supabaseAdmin
+            .from('tasks')
+            .update({ taskdom_active_task: activeTaskData })
+            .eq('member_id', profile.member_id || memberId);
+
+        if (error) throw error;
+        return { success: true };
     },
 
     async clearTask(memberId: string) {
@@ -365,20 +357,43 @@ export const DbService = {
             console.warn('Attempted to clear task for missing profile:', memberId);
             return { success: false, error: 'Profile not found' };
         }
-        const params = { ...(profile.parameters || {}) };
-        delete params.taskdom_active_task;
-        delete params.taskdom_end_time;
-        return this.updateProfile(profile.id, { parameters: params });
+
+        const { error } = await supabaseAdmin
+            .from('tasks')
+            .update({ taskdom_active_task: null, taskdom_pending_state: null })
+            .eq('member_id', profile.member_id || memberId);
+
+        if (error) throw error;
+        return { success: true };
     },
 
     // --- TRIBUTES ---
     async getRecentTributes(limit = 10) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('tributes')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(limit);
         if (error) throw error;
         return data;
+    },
+
+    // --- TASK DATABASE ---
+    async getTasksFromDatabase() {
+        console.log("DB_SERVICE: Fetching from /api/tasks/all PROXY...");
+        try {
+            const resp = await fetch('/api/tasks/all');
+            const result = await resp.json();
+            if (result.success) {
+                console.log("DB_SERVICE: Received tasks via PROXY:", result.tasks?.length || 0);
+                return result.tasks;
+            } else {
+                console.error("DB_SERVICE_PROXY_ERROR:", result.error);
+                throw new Error(result.error);
+            }
+        } catch (err: any) {
+            console.error("DB_SERVICE_FETCH_FAILED:", err);
+            throw err;
+        }
     }
 };

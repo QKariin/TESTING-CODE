@@ -22,20 +22,28 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'Insufficient Capital. 300 coins required to skip duties.' }, { status: 403 });
         }
 
+        const { supabaseAdmin } = require('@/lib/supabase');
+        const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History, taskdom_active_task').eq('member_id', memberEmail).maybeSingle();
+
         // 1 & 2 & 3: Atomic Skip
         const params = { ...(profile.parameters || {}) };
-        let skippedText = 'Mandatory Task';
-        let skippedId = Date.now().toString();
 
-        if (profile.parameters?.taskdom_active_task) {
-            const activeTask = profile.parameters.taskdom_active_task;
-            skippedText = activeTask.TaskText || activeTask.tasktext || 'Mandatory Task';
-            skippedId = activeTask.id || skippedId;
+        // Cleanup old profile params if they exist
+        if (params.taskdom_active_task) {
             delete params.taskdom_active_task;
             delete params.taskdom_end_time;
         }
 
-        const { supabaseAdmin } = require('@/lib/supabase');
+        let skippedText = 'Mandatory Task';
+        let skippedId = Date.now().toString();
+
+        if (row && row.taskdom_active_task) {
+            try {
+                const activeTask = typeof row.taskdom_active_task === 'string' ? JSON.parse(row.taskdom_active_task) : row.taskdom_active_task;
+                skippedText = activeTask.TaskText || activeTask.tasktext || activeTask.text || 'Mandatory Task';
+                skippedId = activeTask.id || skippedId;
+            } catch (e) { }
+        }
 
         const profileDbUpdate = await supabaseAdmin.from('profiles').update({
             wallet: wallet - 300,
@@ -43,7 +51,6 @@ export async function POST(req: NextRequest) {
         }).eq('id', profile.id);
 
         let taskDbUpdate;
-        const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History').eq('member_id', memberEmail).maybeSingle();
         let history: any[] = [];
         try { history = typeof row?.Taskdom_History === 'string' ? JSON.parse(row.Taskdom_History) : (row?.Taskdom_History || []); } catch { }
 
@@ -58,9 +65,21 @@ export async function POST(req: NextRequest) {
         });
 
         if (row) {
-            taskDbUpdate = await supabaseAdmin.from('tasks').update({ Status: 'fail', 'Taskdom_History': JSON.stringify(history) }).eq('member_id', memberEmail);
+            taskDbUpdate = await supabaseAdmin.from('tasks').update({
+                Status: 'fail',
+                'Taskdom_History': JSON.stringify(history),
+                taskdom_active_task: null,
+                taskdom_pending_state: null
+            }).eq('member_id', memberEmail);
         } else {
-            taskDbUpdate = await supabaseAdmin.from('tasks').insert({ member_id: memberEmail, Name: profile.name || 'Slave', Status: 'fail', 'Taskdom_History': JSON.stringify(history) });
+            taskDbUpdate = await supabaseAdmin.from('tasks').insert({
+                member_id: memberEmail,
+                Name: profile.name || 'Slave',
+                Status: 'fail',
+                'Taskdom_History': JSON.stringify(history),
+                taskdom_active_task: null,
+                taskdom_pending_state: null
+            });
         }
 
         console.log("Profile update:", profileDbUpdate.error ? profileDbUpdate.error : "SUCCESS");

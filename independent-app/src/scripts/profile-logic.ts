@@ -1380,7 +1380,7 @@ function renderChatMessage(msg: any) {
     const slaveAv = getState().raw?.avatar_url || getState().raw?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
 
     const avatarUrl = isQueen ? queenAv : slaveAv;
-    const avatarHtml = `<img src="${avatarUrl}" class="chat-av">`;
+    const avatarHtml = `<img src="${getOptimizedUrl(avatarUrl, 100)}" class="chat-av">`;
 
     // 4. Content Processing
     let content = msg.content || msg.message || "";
@@ -1402,7 +1402,7 @@ function renderChatMessage(msg: any) {
             </div>
         `;
     } else if (msg.type === 'photo') {
-        content = `<img src="${content}" class="chat-img-attachment" />`;
+        content = `<img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" />`;
     }
 
     const timeStr = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -2336,7 +2336,7 @@ export async function loadQueenPosts() {
             <div class="qk-hero-img">
                 <div class="qk-feat-badge">FEATURED</div>
                 ${heroPost.media_url
-                ? `<img src="${heroPost.media_url}" alt="${heroPost.title || 'Queen Karin'}" />`
+                ? `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" />`
                 : `<div class="qk-hero-img-placeholder">👑</div>`
             }
             </div>
@@ -2366,7 +2366,7 @@ export async function loadQueenPosts() {
             return `
                     <div class="qk-card">
                         ${p.media_url
-                    ? `<div class="qk-card-img"><img src="${p.media_url}" alt="${p.title || ''}" /></div>`
+                    ? `<div class="qk-card-img"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`
                     : `<div class="qk-card-img-placeholder">👑</div>`
                 }
                         <div class="qk-card-body">
@@ -2522,7 +2522,7 @@ function _renderMosaicGrid(approved: any[], pending: any[]) {
         const isVid = _isVideo(t.proofUrl);
         const mediaHTML = isVid
             ? `<video src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" muted playsinline loop></video>`
-            : `<img src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`;
+            : `<img src="${getOptimizedUrl(t.proofUrl, 400)}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`;
 
         card.innerHTML = `
             ${mediaHTML}
@@ -2544,7 +2544,7 @@ function _renderMiniGrid(containerId: string, items: any[]) {
         const isVid = _isVideo(t.proofUrl);
         return isVid
             ? `<video src="${t.proofUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" muted playsinline loop></video>`
-            : `<img src="${t.proofUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
+            : `<img src="${getOptimizedUrl(t.proofUrl, 300)}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
     }).join('');
 }
 
@@ -2570,7 +2570,7 @@ function _openHistoryModal(approved: any[], idx: number) {
         <div style="font-family:Orbitron;font-size:0.5rem;color:#555;letter-spacing:3px;">${dateStr}</div>
         ${isVid
             ? `<video src="${t.proofUrl}" controls autoplay style="max-height:65vh;max-width:90vw;border-radius:6px;"></video>`
-            : `<img src="${t.proofUrl}" style="max-height:65vh;max-width:90vw;object-fit:contain;border-radius:6px;" />`
+            : `<img src="${getOptimizedUrl(t.proofUrl, 800)}" style="max-height:65vh;max-width:90vw;object-fit:contain;border-radius:6px;" />`
         }
         <div style="max-width:600px;text-align:center;">
             <div style="font-family:Rajdhani;font-size:0.9rem;color:#aaa;line-height:1.6;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>

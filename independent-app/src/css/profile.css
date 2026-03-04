@@ -92,7 +92,7 @@
     /* --- DESKTOP GRID LAYOUT (5x3 FULL BROWSER FIT) --- */
     #DESKTOP_APP {
         display: grid !important;
-        grid-template-columns: 20% 20% 20% 20% 20% !important;
+        grid-template-columns: 450px repeat(4, 1fr) !important;
         grid-template-rows: 20% 30% 50% !important;
         width: 100vw !important;
         height: 100vh !important;
@@ -692,6 +692,14 @@
     overflow-y: auto;
     /* Allow vertical scrolling internal to views */
     /* Ensures the Chat Container inside stays trapped */
+}
+
+#viewBuy {
+    background: #000 !important;
+    isolation: isolate;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
 }
 
 /* =========================================
@@ -3828,4 +3836,252 @@
     max-width: 100%;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* =============================================
+   EXCHEQUER RADIAL WHEEL — COIN SHOP
+   ============================================= */
+
+.exchequer-wheel-wrap {
+    position: relative;
+    width: 500px;
+    height: 500px;
+    flex-shrink: 0;
+}
+
+.exchequer-hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #1a2a4a 0%, #0d1528 60%, #060d1e 100%);
+    border: 3px solid rgba(197, 160, 89, 0.6);
+    box-shadow: 0 0 40px rgba(197, 160, 89, 0.25), inset 0 0 30px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.exchequer-hub-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: "Cinzel", serif;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #fff;
+    letter-spacing: 2px;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.exc-seg {
+    position: absolute;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.exc-seg-1 {
+    top: 30px;
+    left: 30px;
+    width: 185px;
+    height: 185px;
+    background: linear-gradient(135deg, #0e1a2e 0%, #1a2840 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px 4px 4px 4px;
+    clip-path: polygon(100% 100%, 0% 100%, 0% 0%, 55% 0%);
+}
+
+.exc-seg-2 {
+    top: 30px;
+    right: 30px;
+    width: 185px;
+    height: 185px;
+    background: linear-gradient(225deg, #0e1a2e 0%, #1a2840 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px 12px 4px 4px;
+    clip-path: polygon(0% 100%, 0% 0%, 45% 0%, 100% 100%);
+}
+
+.exc-seg-3 {
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    width: 210px;
+    height: 185px;
+    background: linear-gradient(270deg, #1a1000 0%, #2a1e00 50%, #161020 100%);
+    border: 1px solid rgba(197, 160, 89, 0.3);
+    border-radius: 12px;
+    clip-path: polygon(0% 0%, 80% 15%, 100% 50%, 80% 85%, 0% 100%);
+}
+
+.exc-seg-4 {
+    bottom: 30px;
+    right: 30px;
+    width: 185px;
+    height: 185px;
+    background: linear-gradient(315deg, #0e1a2e 0%, #1a2840 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px 4px 12px 4px;
+    clip-path: polygon(0% 0%, 100% 0%, 45% 100%, 0% 100%);
+}
+
+.exc-seg-5 {
+    bottom: 30px;
+    left: 30px;
+    width: 185px;
+    height: 185px;
+    background: linear-gradient(45deg, #0e1a2e 0%, #1a2840 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px 4px 4px 12px;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 55% 100%);
+}
+
+.exc-seg-6 {
+    top: 50%;
+    left: 5px;
+    transform: translateY(-50%);
+    width: 185px;
+    height: 185px;
+    background: linear-gradient(90deg, #0e1a2e 0%, #1a2840 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    clip-path: polygon(100% 0%, 20% 15%, 0% 50%, 20% 85%, 100% 100%);
+}
+
+.exc-seg:hover {
+    filter: brightness(1.35);
+    z-index: 15;
+}
+
+.exc-seg-featured:hover {
+    border-color: rgba(197, 160, 89, 0.7);
+    box-shadow: 0 0 30px rgba(197, 160, 89, 0.2);
+}
+
+.exc-seg-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 12px;
+    text-align: center;
+    pointer-events: none;
+    position: relative;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+}
+
+.exc-coin-icon {
+    font-size: 1.6rem;
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.4));
+    margin-bottom: 2px;
+}
+
+.exc-amount {
+    font-family: "Cinzel", serif;
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+}
+
+.exc-amount-royal {
+    font-size: 1.3rem;
+    color: #f0c060;
+    text-shadow: 0 0 12px rgba(240, 192, 96, 0.5);
+}
+
+.exc-label {
+    font-family: "Orbitron", sans-serif;
+    font-size: 0.52rem;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.exc-label-royal {
+    color: rgba(240, 192, 96, 0.8);
+    font-size: 0.55rem;
+}
+
+.exc-badge {
+    font-family: "Orbitron", sans-serif;
+    font-size: 0.45rem;
+    color: #f0c060;
+    border: 1px solid rgba(240, 192, 96, 0.5);
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    margin: 2px 0;
+    background: rgba(197, 160, 89, 0.08);
+}
+
+.exc-price {
+    font-family: "Orbitron", sans-serif;
+    font-size: 0.7rem;
+    color: #c5a059;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(197, 160, 89, 0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(197, 160, 89, 0.06);
+    margin-top: 3px;
+}
+
+.exc-price-royal {
+    font-size: 0.85rem;
+    color: #f0c060;
+    border-color: rgba(240, 192, 96, 0.5);
+    background: rgba(240, 192, 96, 0.08);
+    box-shadow: 0 0 8px rgba(240, 192, 96, 0.15);
+}
+
+.exchequer-wheel-wrap::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 1px solid rgba(197, 160, 89, 0.12);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.exchequer-wheel-wrap::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* EXCHEQUER SPECIFIC BACKGROUND FIX */
+#mobExchequer {
+    background-image: url('/assets/throne_bg_fresh.jpg') !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-color: transparent !important;
 }

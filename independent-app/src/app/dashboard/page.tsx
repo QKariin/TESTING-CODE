@@ -9,7 +9,8 @@ import '../../css/dashboard-mobile.css';
 
 // Scripts
 import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboard-main';
-import { closeModal, reviewTask, cancelReward, confirmReward, toggleRewardRecord, handleRewardFileUpload, selectSticker, openTaskGallery, closeTaskGallery, filterTaskGallery, addQueueTask, deleteQueueItem, openModById } from '@/scripts/dashboard-modals';
+import { closeModal, reviewTask, cancelReward, confirmReward, toggleRewardRecord, handleRewardFileUpload, selectSticker, openTaskGallery, closeTaskGallery, filterTaskGallery, openModById } from '@/scripts/dashboard-modals';
+import { deleteQueueItem, updateTaskQueue } from '@/scripts/dashboard-users';
 import { toggleProtocol, toggleNewbieImmunity, closeExclusionModal, sendBroadcast, saveBroadcastPreset, togglePresets, closeBroadcastModal, handleBroadcastFile, openBroadcastModal, openExclusionModal } from '@/scripts/dashboard-protocol';
 import { showProfile, switchProfileTab, openProfileUpload } from '@/scripts/dashboard-navigation';
 import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQueue, expandAdminCategory, updateDashboardAltar, showPosts, submitQueenPost, deleteQueenPost, loadQueenPostsDashboard } from '@/scripts/dashboard-main';
@@ -69,8 +70,8 @@ export default function DashboardPage() {
             (window as any).openTaskGallery = openTaskGallery;
             (window as any).closeTaskGallery = closeTaskGallery;
             (window as any).filterTaskGallery = filterTaskGallery;
-            (window as any).addQueueTask = addQueueTask;
             (window as any).deleteQueueItem = deleteQueueItem;
+            (window as any).updateTaskQueue = updateTaskQueue;
             (window as any).openModById = openModById;
             (window as any).switchProfileTab = switchProfileTab;
             (window as any).openProfileUpload = openProfileUpload;
@@ -160,7 +161,7 @@ export default function DashboardPage() {
                 >✦ POSTS</div>
                 <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
-                    <div id="adminDailyCode" style={{ color: 'var(--blue)', fontWeight: 900, fontFamily: 'Share Tech Mono', fontSize: '1.1rem' }}>----</div>
+                    <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: 'Orbitron', fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
                 </div>
                 <div className="sb-head">SUB LIST</div>
                 <div id="userList" className="user-list"></div>
@@ -184,35 +185,35 @@ export default function DashboardPage() {
                                 <div className="vs-label">Today's Tributes</div>
                                 <div className="vs-val" id="statTributes">0 <span className="vs-perc">+55%</span></div>
                             </div>
-                            <div className="vs-icon blue-bg">💰</div>
+                            <div className="vs-icon gold-bg">💰</div>
                         </div>
                         <div className="v-stat-card glass-card">
                             <div className="vs-info">
                                 <div className="vs-label">Active Slaves</div>
                                 <div className="vs-val" id="statActive">0 <span className="vs-perc">+5%</span></div>
                             </div>
-                            <div className="vs-icon blue-bg">👤</div>
+                            <div className="vs-icon gold-bg">👤</div>
                         </div>
                         <div className="v-stat-card glass-card">
                             <div className="vs-info">
                                 <div className="vs-label">Pending Reviews</div>
                                 <div className="vs-val" id="statPending">0 <span className="vs-perc neg">-14%</span></div>
                             </div>
-                            <div className="vs-icon blue-bg">📝</div>
+                            <div className="vs-icon gold-bg">📝</div>
                         </div>
                         <div className="v-stat-card glass-card">
                             <div className="vs-info">
                                 <div className="vs-label">Total Failures</div>
                                 <div className="vs-val" id="statSkipped">0 <span className="vs-perc">+8%</span></div>
                             </div>
-                            <div className="vs-icon blue-bg">⚠️</div>
+                            <div className="vs-icon gold-bg">⚠️</div>
                         </div>
                     </div>
 
                     <div className="v-grid-main">
                         {/* HERO CARD */}
                         <div className="v-hero-card glass-card span-2"
-                            style={{ backgroundImage: `linear-gradient(rgba(6, 11, 40, 0.8), rgba(6, 11, 40, 0.8)), url('/hero-bg.png')` }}>
+                            style={{ backgroundImage: `linear-gradient(rgba(15, 12, 5, 0.2), rgba(5, 5, 10, 0.9)), url('/hero-bg.png')`, border: '1px solid rgba(197, 160, 89, 0.2)' }}>
                             <div className="vh-content">
                                 <div className="vh-title">Welcome back,<br />Queen Karin</div>
                                 <div className="vh-sub" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -230,7 +231,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* GAUGE CARD */}
-                        <div className="v-gauge-card glass-card span-1">
+                        <div className="v-gauge-card glass-card span-1" style={{ border: '1px solid rgba(197, 160, 89, 0.2)' }}>
                             <div className="vg-header">
                                 <div className="vg-title">Silence Protocol</div>
                                 <div className="vg-sub">System Health</div>
@@ -398,20 +399,72 @@ export default function DashboardPage() {
                     <button className="upload-fab" onClick={() => (window as any).openProfileUpload(false)}>+</button>
                 </div>
 
-                {/* 3. USER VIEW */}
                 <div id="viewUser" style={{ display: 'none' }}>
                     <div className="split">
+                        {/* LEFT: COMMAND & FEED */}
                         <div className="chat-panel">
-                            <div className="cp-head">ENCRYPTED FEED</div>
-                            <div className="admin-dash-top" style={{ display: 'flex', flexDirection: 'column', height: '35%', borderBottom: '1px solid #333', background: '#080808' }}>
-                                <div className="ap-nav" style={{ display: 'flex', borderBottom: '1px solid #333', background: '#0a0a0a', flexShrink: 0 }}>
-                                    <button className="ap-tab active" onClick={() => (window as any).switchAdminTab('ops')} style={{ flex: 1, padding: '8px', background: 'transparent', border: 'none', color: '#666', fontFamily: 'Orbitron', cursor: 'pointer', borderBottom: '2px solid transparent', fontSize: '0.7rem' }}>OPS</button>
-                                    <button className="ap-tab" onClick={() => (window as any).switchAdminTab('intel')} style={{ flex: 1, padding: '8px', background: 'transparent', border: 'none', color: '#666', fontFamily: 'Orbitron', cursor: 'pointer', borderBottom: '2px solid transparent', fontSize: '0.7rem' }}>INTEL</button>
-                                    <button className="ap-tab" onClick={() => (window as any).switchAdminTab('record')} style={{ flex: 1, padding: '8px', background: 'transparent', border: 'none', color: '#666', fontFamily: 'Orbitron', cursor: 'pointer', borderBottom: '2px solid transparent', fontSize: '0.7rem' }}>RECORD</button>
+                            <div className="cp-head">RECORD FEED</div>
+
+                            {/* FULL OVERLAY COMMAND QUEUE - MOVED HERE TO COVER ENTIRE PANEL */}
+                            <div id="taskQueueContainer" className="task-queue-overlay hidden">
+                                <div className="q-head">
+                                    <span id="armoryTitle">COMMAND QUEUE</span>
+                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                        <input
+                                            type="text"
+                                            id="taskSearchInput"
+                                            placeholder="FILTER DIRECTIVES..."
+                                            onInput={() => (window as any).filterTaskGallery()}
+                                            style={{
+                                                background: 'rgba(0,0,0,0.5)',
+                                                border: '1px solid rgba(197,160,89,0.2)',
+                                                color: '#c5a059',
+                                                fontFamily: 'Orbitron',
+                                                fontSize: '0.6rem',
+                                                padding: '5px 10px',
+                                                borderRadius: '4px',
+                                                width: '150px'
+                                            }}
+                                        />
+                                        <button className="q-close" onClick={() => (window as any).closeTaskGallery()}>&times;</button>
+                                    </div>
                                 </div>
 
-                                <div className="ap-content" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-                                    <div id="tabOps" className="ap-view active" style={{ padding: '10px' }}>
+                                <div className="task-gallery-split" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', height: 'calc(100% - 60px)', overflow: 'hidden', position: 'relative' }}>
+                                    {/* LEFT: COMMAND QUEUE (10 TASKS) */}
+                                    <div className="command-queue-section" style={{ borderRight: '1px solid rgba(197,160,89,0.1)', padding: '20px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)' }}>
+                                        <div style={{ fontFamily: 'Orbitron', color: '#c5a059', fontSize: '0.6rem', letterSpacing: '2px', marginBottom: '15px', textTransform: 'uppercase', opacity: 0.7 }}>Command Queue</div>
+                                        <div id="armoryLiveQueue" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {/* Scheduled tasks go here */}
+                                        </div>
+                                    </div>
+
+                                    {/* RIGHT: DIRECTIVE GRID */}
+                                    <div className="directives-section" style={{ padding: '20px', overflowY: 'auto' }}>
+                                        <div id="glassTaskGrid">
+                                            {/* Directive cards go here */}
+                                        </div>
+                                    </div>
+
+                                    {/* TASK DETAIL MODAL (GLASS CARD) */}
+                                    <div id="taskDetailModal" className="task-detail-overlay hidden">
+                                        <div className="task-detail-glass">
+                                            <button className="detail-close" onClick={() => (window as any).closeTaskDetail()}>&times;</button>
+                                            <div id="taskDetailContent"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="admin-dash-top" style={{ display: 'flex', flexDirection: 'column', height: '40%', background: 'transparent' }}>
+                                <div className="ap-nav">
+                                    <button className="ap-tab active" id="tabBtnOps" onClick={() => (window as any).switchAdminTab('ops')}>DIRECTIVE</button>
+                                    <button className="ap-tab" id="tabBtnIntel" onClick={() => (window as any).switchAdminTab('intel')}>TELEMETRY</button>
+                                    <button className="ap-tab" id="tabBtnRecord" onClick={() => (window as any).switchAdminTab('record')}>ALTAR</button>
+                                </div>
+
+                                <div className="ap-content" style={{ flex: 1, overflowY: 'auto', background: 'transparent' }}>
+                                    <div id="tabOps" className="ap-view active">
                                         <div className="active-task-card gold-theme">
                                             <div className="at-header">
                                                 <div className="at-label">CURRENT STATUS</div>
@@ -429,22 +482,14 @@ export default function DashboardPage() {
                                                 </div>
                                             </div>
                                             <div id="idleActions" style={{ display: 'none', paddingTop: '10px' }}>
-                                                <button className="at-btn at-send" onClick={() => (window as any).adminTaskAction(null, 'send')}>SEND NEW TASK</button>
+                                                <button className="at-btn at-send" style={{ background: 'var(--gold)', color: '#000' }} onClick={() => (window as any).openTaskGallery()}>ISSUE NEW COMMAND</button>
                                             </div>
                                         </div>
-                                        <button className="schedule-btn" onClick={() => (window as any).toggleTaskQueue()}>SCHEDULE TASKS</button>
-                                        <div id="taskQueueContainer" className="task-queue-box hidden" style={{ marginTop: '10px' }}>
-                                            <div className="sec-title clickable-title" onClick={() => (window as any).openTaskGallery()} style={{ color: 'var(--blue)' }}>TASK QUEUE</div>
-                                            <div id="qListContainer" className="q-list-vertical" style={{ maxHeight: '150px' }}></div>
-                                            <div className="q-input-row">
-                                                <input type="text" id="qInput" className="q-input" placeholder="Add task..." list="cmsTasksList" />
-                                                <button className="q-add-btn" onClick={() => (window as any).addQueueTask()}>+</button>
-                                            </div>
-                                        </div>
+                                        <button className="schedule-btn" onClick={() => (window as any).openTaskGallery()}>TASK QUEUE</button>
                                     </div>
 
-                                    <div id="tabIntel" className="ap-view hidden" style={{ padding: '10px' }}>
-                                        <div id="userQueueSec" style={{ display: 'none', flexDirection: 'column', gap: '8px' }}></div>
+                                    <div id="tabIntel" className="ap-view hidden">
+                                        <div id="userQueueSec" style={{ display: 'none' }}></div>
                                         <div className="sec-box">
                                             <div className="sec-title">ENDURANCE TELEMETRY</div>
                                             <div id="kneelStatsBox" className="telemetry-grid">
@@ -453,140 +498,84 @@ export default function DashboardPage() {
                                             </div>
                                         </div>
                                         <div className="sec-box">
-                                            <div className="sec-title" style={{ color: 'var(--pink)' }}>DOSSIER</div>
-                                            <div id="dossierGrid" className="dossier-grid"></div>
-                                        </div>
-                                        <div className="sec-box">
                                             <div className="sec-title" style={{ color: 'var(--gold)' }}>TRIBUTE INVENTORY</div>
                                             <div id="inventoryGrid" className="inv-grid"></div>
                                         </div>
                                     </div>
 
-                                    <div id="tabRecord" className="ap-view hidden" style={{ padding: '10px', height: '100%', position: 'relative' }}>
+                                    <div id="tabRecord" className="ap-view hidden">
                                         <div id="adminOrbitalCanvas" className="admin-orbital-canvas">
                                             <div className="altar-label">THE SUPREME ALTAR</div>
-                                            <div className="altar-admin-row">
-                                                <div className="aa-slot" id="adminAltarSlot1" onClick={() => (window as any).manageAltar(1)}>
-                                                    <div className="aa-slot-label">I</div>
-                                                    <img src="" id="adminAltarImg1" className="aa-img hidden" alt="Altar 1" />
-                                                    <div className="aa-glow"></div>
-                                                </div>
-                                                <div className="aa-slot central" id="adminAltarSlot2" onClick={() => (window as any).manageAltar(2)}>
-                                                    <div className="aa-slot-label">II</div>
-                                                    <img src="" id="adminAltarImg2" className="aa-img hidden" alt="Altar 2" />
-                                                    <div className="aa-glow"></div>
-                                                </div>
-                                                <div className="aa-slot" id="adminAltarSlot3" onClick={() => (window as any).manageAltar(3)}>
-                                                    <div className="aa-slot-label">III</div>
-                                                    <img src="" id="adminAltarImg3" className="aa-img hidden" alt="Altar 3" />
-                                                    <div className="aa-glow"></div>
-                                                </div>
-                                            </div>
                                         </div>
-                                        <div className="admin-record-bento">
-                                            <div className="admin-bento-node node-accepted" onClick={() => (window as any).expandAdminCategory('accepted')}>
-                                                <div className="node-icon">✔️</div>
-                                                <div className="node-label">ACCEPTED</div>
-                                                <div className="node-count" id="adminAcceptedCount">0</div>
-                                            </div>
-                                            <div className="admin-bento-node node-routine" onClick={() => (window as any).expandAdminCategory('routine')}>
-                                                <div className="node-icon">⚓</div>
-                                                <div className="node-label">ROUTINE</div>
-                                                <div className="node-count" id="adminRoutineCount">0</div>
-                                            </div>
-                                            <div className="admin-bento-node node-pending" onClick={() => (window as any).expandAdminCategory('pending')}>
-                                                <div className="node-icon">⏳</div>
-                                                <div className="node-label">PENDING</div>
-                                                <div className="node-count" id="adminPendingCount">0</div>
-                                            </div>
-                                            <div className="admin-bento-node node-denied" onClick={() => (window as any).expandAdminCategory('denied')}>
-                                                <div className="node-icon">💀</div>
-                                                <div className="node-label">THE VOID</div>
-                                                <div className="node-count" id="adminDeniedCount">0</div>
-                                            </div>
-                                        </div>
+                                        {/* Bento Nodes... */}
                                     </div>
                                 </div>
                             </div>
 
-                            <div id="chatMediaOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 500, backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <div id="mediaOverlayClose" onClick={() => (window as any).closeChatPreview()} style={{ position: 'absolute', top: '20px', right: '20px', cursor: 'pointer', fontSize: '2rem', color: 'white', fontWeight: 300 }}>&times;</div>
-                                <div id="chatMediaOverlayContent" style={{ width: '100%', maxWidth: '90%', maxHeight: '90%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}></div>
-                            </div>
-                            <div className="c-body" id="adminChatBox"></div>
-                            <div className="hierarchy-top" id="mirrorRank">SLAVE</div>
-                            <div id="lastSeen" style={{ textAlign: 'center', fontFamily: 'Rajdhani', fontSize: '0.7rem', color: '#666', marginTop: '-20px', marginBottom: '20px', letterSpacing: '1px' }}>OFFLINE</div>
+                            <div className="c-body" id="adminChatBox" style={{ flex: 1, borderTop: '1px solid rgba(197,160,89,0.2)' }}></div>
+
                             <div className="c-foot">
                                 <input type="file" id="adminMediaInput" accept="image/*,video/*" className="hidden-input" onChange={(e) => (window as any).handleAdminUpload(e.target)} />
                                 <button className="btn-plus" onClick={() => document.getElementById('adminMediaInput')?.click()}>+</button>
-                                <input type="text" id="adminInp" className="inp" placeholder="Command..." onKeyPress={(e) => { if (e.key === 'Enter') (window as any).sendMsg(); }} />
+                                <input type="text" id="adminInp" className="inp" placeholder="Issue Command..." onKeyPress={(e) => { if (e.key === 'Enter') (window as any).sendMsg(); }} />
                                 <button onClick={() => (window as any).sendMsg()} className="btn-send">{'>'}</button>
                             </div>
                         </div>
 
-                        <div className="action-panel" style={{ background: '#050505', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
-                            <div id="apMirrorHeader" className="ap-mirror-header" style={{ padding: '20px', textAlign: 'center', borderBottom: '1px solid #333', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                                <div id="dMirrorHierarchy" className="hierarchy-top" style={{ margin: '0 auto 15px auto', display: 'inline-block' }} title="Current Rank">LOADING...</div>
-                                <div className="avatar-container" style={{ width: '120px', height: '140px', margin: '0 auto 15px' }}>
-                                    <img id="dProfilePic" src="https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png" alt="Profile" />
+                        {/* RIGHT: THE DOSSIER */}
+                        <div className="action-panel">
+                            <div id="apMirrorHeader" className="ap-mirror-header">
+                                <div id="dMirrorHierarchy" className="hierarchy-top">CHEVALIER</div>
+                                <div className="avatar-container">
+                                    <img id="dProfilePic" src="" alt="Profile" />
                                 </div>
-                                <div id="dMirrorName" className="identity-name" style={{ marginBottom: '5px', fontSize: '1.2rem' }}>SLAVE</div>
-                                <div id="dMirrorStatus" style={{ fontFamily: 'Orbitron', color: '#00ff00', fontSize: '0.7rem', letterSpacing: '1px', marginBottom: '15px' }}>ONLINE</div>
-                                <div className="stats-stack-row" style={{ marginBottom: '15px' }}>
+                                <div id="dMirrorName" className="identity-name" style={{ fontFamily: 'Cinzel', fontSize: '1.5rem', color: '#fff', marginBottom: '10px' }}>NAME</div>
+
+                                <div className="stats-stack-row" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '20px' }}>
                                     <div className="stat-item">
-                                        <span className="stat-lbl">MERIT</span>
-                                        <span id="dMirrorPoints" className="stat-val">0</span>
+                                        <span className="stat-lbl" style={{ color: '#c5a059' }}>MERIT</span>
+                                        <span id="dMirrorPoints" className="stat-val" style={{ fontSize: '1.2rem' }}>0</span>
                                     </div>
-                                    <div className="stat-divider"></div>
                                     <div className="stat-item">
-                                        <span className="stat-lbl">CAPITAL</span>
-                                        <span id="dMirrorWallet" className="stat-val">0</span>
-                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '5px' }}>
-                                            <button onClick={() => (window as any).adjustWallet('sub')} style={{ background: '#222', border: '1px solid #444', color: 'var(--red)', fontSize: '10px', cursor: 'pointer' }}>-</button>
-                                            <button onClick={() => (window as any).adjustWallet('add')} style={{ background: '#222', border: '1px solid #444', color: 'var(--green)', fontSize: '10px', cursor: 'pointer' }}>+</button>
-                                        </div>
+                                        <span className="stat-lbl" style={{ color: '#c5a059' }}>CAPITAL</span>
+                                        <span id="dMirrorWallet" className="stat-val" style={{ fontSize: '1.2rem' }}>0</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="ap-vitals-mirror" style={{ padding: '15px', background: '#080808', display: 'block' }}>
-                                <div className="kneel-sidebar-wrapper" style={{ marginBottom: '15px' }}>
-                                    <div className="kneel-bar-graphic" style={{ cursor: 'default' }}>
-                                        <div className="graphic-fill" style={{ width: '0%' }}></div>
+                            <div className="ap-vitals-mirror" style={{ padding: '30px', flex: 1, overflowY: 'auto' }}>
+                                <div id="progress_section" style={{ marginBottom: '30px' }}>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: '#888', letterSpacing: '2px', textAlign: 'center' }}>PROMOTION PROGRESS</div>
+                                    <div id="admin_NextRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#c5a059', textAlign: 'center', margin: '10px 0' }}>LOADING...</div>
+                                    <div id="admin_ProgressContainer"></div>
+                                </div>
+
+                                <div className="kneel-section" style={{ marginBottom: '20px' }}>
+                                    <div className="kneel-bar-graphic">
+                                        <div className="graphic-fill" id="kneelFill" style={{ width: '0%' }}></div>
                                         <span className="graphic-text">KNEEL TIME: <span id="dMirrorKneel">0h</span></span>
-                                        <div style={{ position: 'absolute', right: '5px', top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
-                                            <button onClick={() => (window as any).adjustKneel('add')} style={{ background: '#222', border: '1px solid #444', color: 'var(--green)', fontSize: '10px', padding: '2px 5px', cursor: 'pointer' }}>+1H</button>
-                                        </div>
+                                    </div>
+                                    <button onClick={() => (window as any).adjustKneel('add')} style={{ width: '100%', marginTop: '10px', background: 'rgba(197,160,89,0.1)', border: '1px solid #c5a059', color: '#c5a059', padding: '8px', cursor: 'pointer', fontFamily: 'Cinzel' }}>LOG KNEELING HOUR</button>
+                                </div>
+
+                                <div className="queue-section" style={{ marginBottom: '30px' }}>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: '#888', letterSpacing: '2px', textAlign: 'center', marginBottom: '15px' }}>DIRECTIVE QUEUE</div>
+                                    <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {/* Task queue items will be rendered here */}
                                     </div>
                                 </div>
 
-                                <div style={{ width: '100%', textAlign: 'center', paddingBottom: '15px', borderBottom: '1px solid #333', marginBottom: '15px' }}>
-                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', letterSpacing: '2px' }}>CURRENT CLASSIFICATION</div>
-                                    <div id="admin_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>LOADING...</div>
-                                    <div id="admin_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: '#888', fontStyle: 'italic', padding: '0 10px', lineHeight: 1.4 }}></div>
-                                </div>
-
-                                <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WORKING ON PROMOTION TO</div>
-                                    <div id="admin_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197, 160, 89, 0.3)', textTransform: 'uppercase' }}>LOADING...</div>
-                                </div>
-
-                                <div id="admin_ProgressContainer" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid #333', borderRadius: '4px', padding: '15px', marginBottom: '20px' }}></div>
-
-                                <div style={{ width: '100%', textAlign: 'left', padding: '0 5px', marginBottom: '15px' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', marginBottom: '8px' }}>PRIVILEGES GRANTED</div>
-                                    <ul id="admin_NextBenefits" style={{ color: '#ccc', fontSize: '0.75rem', fontFamily: 'Cinzel', paddingLeft: '20px', lineHeight: 1.6, margin: 0 }}></ul>
-                                </div>
-
-                                <div className="stat-line"><span>Routine</span> <strong id="dMirrorRoutine">PENDING</strong></div>
-                                <div className="stat-footer">
-                                    <div style={{ color: '#666', fontSize: '0.7rem', letterSpacing: '2px', marginBottom: '5px' }}>SLAVE SINCE</div>
-                                    <strong id="dMirrorSlaveSince" style={{ color: '#ccc', fontSize: '0.9rem' }}>--/--/--</strong>
+                                <div className="footer-stats" style={{ borderTop: '1px solid rgba(197,160,89,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                        <span style={{ color: '#666', fontSize: '0.7rem' }}>REGISTERED SINCE:</span>
+                                        <strong id="dMirrorSlaveSince" style={{ color: '#fff', fontSize: '0.7rem' }}>--/--/--</strong>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
 
             </div>
 
@@ -654,22 +643,6 @@ export default function DashboardPage() {
                     <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                         <button onClick={() => (window as any).closeBroadcastModal()} style={{ flex: 1, padding: '15px', background: '#666', color: 'white', border: 'none', borderRadius: '4px' }}>CANCEL</button>
                         <button onClick={() => (window as any).sendBroadcast()} className="br-btn">SEND BROADCAST</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="taskGalleryModal" className="modal" style={{ display: 'none' }}>
-                <div className="m-content" style={{ width: '98%', maxWidth: '1300px', height: '92vh', display: 'flex', flexDirection: 'column', padding: 0, border: '1px solid var(--blue)', background: 'rgba(5,5,5,0.98)', borderRadius: '15px', overflow: 'hidden' }}>
-                    <div style={{ padding: '20px', borderBottom: '1px solid #222', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.8)', flexShrink: 0, position: 'relative' }}>
-                        <button onClick={() => (window as any).closeTaskGallery()} style={{ position: 'absolute', right: '20px', top: '15px', background: 'transparent', border: 'none', color: '#444', fontSize: '2rem', cursor: 'pointer' }}>&times;</button>
-                        <div id="armoryTitle" style={{ color: 'white', fontWeight: 900, fontSize: '1.6rem', letterSpacing: '4px', fontFamily: 'Orbitron', textTransform: 'uppercase' }}>SLAVE TASKS</div>
-                        <input type="text" id="taskSearchInput" onKeyUp={() => (window as any).filterTaskGallery()} placeholder="SEARCH DIRECTIVES..." style={{ width: '300px', background: '#000', border: '1px solid #333', borderRadius: '15px', padding: '6px 15px', color: 'white', fontFamily: 'Rajdhani', fontSize: '0.75rem', outline: 'none', letterSpacing: '1px', textAlign: 'center' }} />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '420px 1fr', flex: 1, overflow: 'hidden' }}>
-                        <div style={{ borderRight: '1px solid #222', background: 'rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            <div id="armoryLiveQueue" style={{ flex: 1, overflowY: 'auto', padding: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}></div>
-                        </div>
-                        <div id="glassTaskGrid" style={{ flex: 1, overflowY: 'auto', padding: '20px', background: '#050505' }}></div>
                     </div>
                 </div>
             </div>

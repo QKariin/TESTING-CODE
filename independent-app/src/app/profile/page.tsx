@@ -58,6 +58,7 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
     const [benefitsOpen, setBenefitsOpen] = useState(false);
+    const [hoveredSub, setHoveredSub] = useState<string | null>(null);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -111,6 +112,35 @@ export default function ProfilePage() {
 
         async function loadProfile() {
             try {
+                // ─── LOCAL DEV BYPASS ────────────────────────────────────────
+                // Skips login when running on localhost so you can see UI changes instantly.
+                const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+                if (isLocal) {
+                    const mockProfile = {
+                        id: 'dev-user-local', member_id: 'dev@localhost.com',
+                        name: 'Queen Karin', hierarchy: 'QUEEN', score: 9999, wallet: 77777,
+                        avatar_url: 'https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png',
+                        profile_picture_url: 'https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png',
+                        parameters: { status: 'QUEEN', tributeHistory: '[]', taskdom_active_task: null, taskdom_end_time: null },
+                        kneel_history: { totalSessions: 42, totalMinutes: 120 },
+                        slave_since: '2024-01-01',
+                    };
+                    console.log('[DEV MODE] Local bypass active — using mock profile');
+                    setProfile(mockProfile);
+                    initProfileState(mockProfile);
+                    setTimeout(() => {
+                        renderProfileSidebar(mockProfile);
+                        updateKneelingUI();
+                        attachKneelListeners();
+                        switchTab('serve');
+                        getRandomTask(true);
+                        loadQueenPosts();
+                        renderHistoryAndAltar(mockProfile);
+                    }, 150);
+                    return;
+                }
+                // ─────────────────────────────────────────────────────────────
+
                 const supabase = createClient();
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
@@ -533,106 +563,129 @@ export default function ProfilePage() {
                     <div id="newsGrid" className="gallery-grid" style={{ marginTop: 50 }}></div>
                 </div>
 
-                <div id="viewBuy" className="view-wrapper hidden alt-grid-view" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 20 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="ribbon-label" style={{ margin: 0 }}>EXCHEQUER</div>
-                        <button onClick={() => switchTab('serve')} style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff4444', padding: '5px 15px', borderRadius: 20, cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 2 }}>✕ CLOSE</button>
-                    </div>
+                <div id="viewBuy" className="view-wrapper hidden alt-grid-view" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto', padding: '0 0 120px 0', width: '100%', height: '100%', background: '#000' }}>
 
-                    {/* TWO COLUMN LAYOUT */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 350px) 1fr', gap: 30, alignItems: 'start' }}>
+                    {/* BG: Gothic Throne Room */}
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url("https://upcdn.io/kW2K8hR/raw/pictures/kling_20260304_%E4%BD%9C%E5%93%81_make_me_si_1244_0-6V52.png")', backgroundSize: 'cover', backgroundPosition: 'center center', backgroundRepeat: 'no-repeat', opacity: 0.3, pointerEvents: 'none' }} />
 
-                        {/* LEFT COLUMN: HISTORY & SUBSCRIPTION */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                            {/* ACTIVE SUBSCRIPTION */}
-                            <div className="v-card" style={{ padding: 20, background: 'linear-gradient(135deg, rgba(197,160,89,0.1), rgba(0,0,0,0.8))', border: '1px solid rgba(197,160,89,0.3)' }}>
-                                <h3 style={{ fontFamily: 'Cinzel', color: '#c5a059', margin: '0 0 10px 0', fontSize: '1rem', letterSpacing: 2 }}>ACTIVE SUBSCRIPTION</h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
-                                    <i className="fas fa-crown" style={{ fontSize: '2rem', color: '#c5a059', opacity: 0.8 }}></i>
-                                    <div>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.9rem', color: '#fff', fontWeight: 'bold' }}>OFFICIAL TRIBUTE</div>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#aaa', marginTop: 5 }}>$55.00 / month</div>
-                                    </div>
-                                </div>
-                                <button className="action-btn" onClick={() => window.open('https://buy.stripe.com/14k7swbX56xccgM5km', '_blank')} style={{ width: '100%', marginTop: 15, background: 'rgba(197,160,89,0.1)', color: '#c5a059', border: '1px solid #c5a059', fontSize: '0.75rem', letterSpacing: 1 }}>MANAGE SUBSCRIPTION</button>
-                            </div>
+                    <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px' }}>
 
-                            {/* TRIBUTE HISTORY */}
-                            <div className="v-card" style={{ padding: 20, display: 'flex', flexDirection: 'column', height: '400px' }}>
-                                <h3 style={{ fontFamily: 'Cinzel', color: '#fff', margin: '0 0 15px 0', fontSize: '1rem', letterSpacing: 2 }}>TRANSACTION LOG</h3>
-                                <div id="exchequerHistoryList" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingRight: 10 }}>
-                                    <div style={{ color: '#666', fontFamily: 'Orbitron', fontSize: '0.8rem', textAlign: 'center', marginTop: 20 }}>LOADING LEDGER...</div>
-                                </div>
+                        {/* CLOSE */}
+                        <div style={{ position: 'absolute', top: 10, right: 0 }}>
+                            <button onClick={() => switchTab('serve')} style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(212,175,55,0.45)', color: '#d4af37', padding: '5px 14px', borderRadius: 4, cursor: 'pointer', fontFamily: 'Cinzel', fontSize: '0.65rem', letterSpacing: 3 }}>✕ CLOSE</button>
+                        </div>
+
+                        {/* top spacer for close button */}
+                        <div style={{ height: 50 }} />
+
+
+                        {/* ── SECTION 1: SUBSCRIPTIONS — 3D TIER FAN ── */}
+                        <div style={{ width: '100%', marginBottom: 50, display: 'flex', justifyContent: 'center' }}>
+                            <div style={{ perspective: '1000px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 0, width: '100%', paddingBottom: 20 }}>
+                                {([
+                                    { tier: 'BASIC', label: 'INITIATE', price: '€33', id: 'basic', defaultX: '-8%', defaultRotY: '8deg', defaultScale: 0.82, defaultZ: -60 },
+                                    { tier: 'ROYAL', label: 'PATRONAGE', price: '€77', id: 'royal', defaultX: '0', defaultRotY: '0deg', defaultScale: 1.0, defaultZ: 0 },
+                                    { tier: 'OWNERSHIP', label: 'ABSOLUTE', price: '€222', id: 'ownership', defaultX: '8%', defaultRotY: '-8deg', defaultScale: 0.82, defaultZ: -60 },
+                                ] as { tier: string, label: string, price: string, id: string, defaultX: string, defaultRotY: string, defaultScale: number, defaultZ: number }[]).map((sub, i) => {
+                                    const isHovered = hoveredSub === sub.id;
+                                    const anyHovered = hoveredSub !== null;
+                                    const isCenter = sub.id === 'royal';
+                                    // Active = hovered card comes forward; if nothing hovered, Royal is active
+                                    const isActive = anyHovered ? isHovered : isCenter;
+                                    const isBehind = anyHovered && !isHovered;
+
+                                    const transform = isActive
+                                        ? `translateY(-30px) scale(1.08) translateZ(0px) rotateY(0deg)`
+                                        : isBehind
+                                            ? `translateY(20px) scale(0.78) translateZ(-80px) rotateY(${sub.defaultRotY})`
+                                            : `translateY(${isCenter ? '-20px' : '15px'}) scale(${sub.defaultScale}) translateZ(${sub.defaultZ}px) rotateY(${sub.defaultRotY})`;
+
+                                    return (
+                                        <div key={sub.id}
+                                            onMouseEnter={() => setHoveredSub(sub.id)}
+                                            onMouseLeave={() => setHoveredSub(null)}
+                                            style={{
+                                                position: 'relative',
+                                                width: '26%',
+                                                flexShrink: 0,
+                                                marginLeft: i === 0 ? 0 : '-6%',
+                                                transform,
+                                                transition: 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
+                                                zIndex: isActive ? 10 : isBehind ? 1 : isCenter ? 5 : 2,
+                                                cursor: 'pointer',
+                                                filter: isBehind ? 'brightness(0.6)' : isActive ? 'brightness(1.1)' : 'brightness(0.85)',
+                                                transformStyle: 'preserve-3d',
+                                            }}>
+                                            <img src="https://upcdn.io/kW2K8hR/raw/pictures/unnamed%20(2)%20(1).png" alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', pointerEvents: 'none', userSelect: 'none' }} />
+
+                                            {/* TOP STRIP */}
+                                            <div style={{ position: 'absolute', top: '19%', left: '8%', right: '8%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.5rem, 1.2vw, 0.9rem)', color: '#d4af37', letterSpacing: 'clamp(2px, 0.5vw, 6px)', fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', whiteSpace: 'nowrap' }}>{sub.tier}</div>
+                                            </div>
+
+                                            {/* CENTER — PRICE */}
+                                            <div style={{ position: 'absolute', top: '35%', left: '10%', right: '10%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                                                <span style={{ fontFamily: 'Cinzel', fontSize: 'clamp(1.5rem, 3.5vw, 3rem)', fontWeight: 900, color: '#f3e5ab', textShadow: '0 4px 30px rgba(0,0,0,1), 0 0 20px rgba(212,175,55,0.3)', lineHeight: 1 }}>{sub.price}</span>
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.35rem, 0.7vw, 0.5rem)', color: '#d4af37', letterSpacing: 4 }}>/ MONTH</div>
+                                            </div>
+
+                                            {/* BOTTOM STRIP */}
+                                            <div style={{ position: 'absolute', bottom: '11%', left: '8%', right: '8%', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                onClick={() => (window as any).handleSubscribe?.(sub.id)}>
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.5rem, 1.1vw, 0.8rem)', color: '#f3e5ab', letterSpacing: 'clamp(2px, 0.5vw, 5px)', textShadow: '0 2px 8px rgba(0,0,0,0.9)', fontWeight: 'bold', whiteSpace: 'nowrap' }}>SUBSCRIBE</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN: COIN SHOP GRID */}
-                        <div className="v-card" style={{ padding: 25 }}>
-                            <h2 style={{ fontFamily: 'Cinzel', color: '#fff', margin: '0 0 5px 0', fontSize: '1.4rem', letterSpacing: 2 }}>ACQUIRE CAPITAL</h2>
-                            <p style={{ fontFamily: 'Orbitron', color: '#888', fontSize: '0.75rem', marginBottom: 25 }}>Select a tribute package to bolster your serving capacity.</p>
+                        {/* TITLE — between subscriptions and coins */}
+                        <div style={{ width: '100%', display: 'flex', alignItems: 'center', margin: '10px 0 30px' }}>
+                            <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.7))' }} />
+                            <div style={{ padding: '0 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                                <div style={{ fontFamily: 'Cinzel', fontSize: '2rem', fontWeight: 900, letterSpacing: 8, background: 'linear-gradient(to bottom, #fff8d0, #c8960c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', whiteSpace: 'nowrap' }}>ROYAL EXCHEQUER</div>
+                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: 'rgba(212,175,55,0.6)', letterSpacing: 6 }}>THE EMPEROR'S TREASURY</div>
+                            </div>
+                            <div style={{ flex: 1, height: 1, background: 'linear-gradient(270deg, transparent, rgba(212,175,55,0.7))' }} />
+                        </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-                                {/* TIER 1 */}
-                                <div className="v-card store-item exchequer-tier" style={{ background: 'rgba(10, 15, 30, 0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '25px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', height: '140px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
-                                        <span style={{ fontSize: '1.4rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px' }}>1,000</span>
-                                        <span style={{ fontSize: '1rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px' }}>SILVER COIN</span>
+                        {/* ── SECTION 2: BUY COINS ── */}
+                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginBottom: 30 }}>
+                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(212,175,55,0.65)', letterSpacing: 6, marginBottom: 10 }}>TREASURY VAULT</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 18, width: '100%' }}>
+                                {([
+                                    { amount: '150,000', price: '€1,000', coins: 150000, badge: 'EMPEROR' },
+                                    { amount: '70,000', price: '€500', coins: 70000, badge: 'BEST VALUE' },
+                                    { amount: '30,000', price: '€250', coins: 30000, badge: null },
+                                    { amount: '12,000', price: '€100', coins: 12000, badge: null },
+                                    { amount: '5,500', price: '€50', coins: 5500, badge: null },
+                                ] as { amount: string, price: string, coins: number, badge: string | null }[]).map(pkg => (
+                                    <div key={pkg.coins} onClick={() => (window as any).buyRealCoins(pkg.coins)}
+                                        style={{ position: 'relative', cursor: 'pointer', transition: 'transform 0.25s ease', width: 320, flexShrink: 0 }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.04)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; }}>
+                                        <img src="https://upcdn.io/kW2K8hR/raw/pictures/unnamed%20(1).png" alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', userSelect: 'none', pointerEvents: 'none' }} />
+                                        <div style={{ position: 'absolute', top: '16%', left: '18%', right: '18%', bottom: '20%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                            {pkg.badge && (
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: '#c8960c', letterSpacing: 2, border: '1px solid #c8960c', padding: '2px 6px', borderRadius: 2 }}>{pkg.badge}</div>
+                                            )}
+                                            <i className="fas fa-coins" style={{ fontSize: '1.6rem', color: '#c5a059', filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.9))' }}></i>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', fontWeight: 900, color: '#fff', letterSpacing: 1, textShadow: '0 3px 12px rgba(0,0,0,1)', lineHeight: 1 }}>{pkg.amount}</div>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.42rem', color: '#d4af37', letterSpacing: 3 }}>ROYAL SILVER</div>
+                                            <div style={{ marginTop: 4, background: 'rgba(0,0,0,0.7)', border: '1px solid #c8960c', borderRadius: 2, padding: '4px 10px' }}>
+                                                <span style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#f3e5ab', fontWeight: 'bold' }}>{pkg.price}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <button className="action-btn" onClick={() => buyRealCoins(1000)} style={{ width: '100%', fontSize: '0.9rem', background: '#0075ff', color: 'white', border: 'none', padding: '10px', borderRadius: '4px', fontFamily: 'Orbitron', fontWeight: 'bold' }}>€10.00</button>
-                                </div>
-
-                                {/* TIER 2 */}
-                                <div className="v-card store-item exchequer-tier" style={{ background: 'rgba(10, 15, 30, 0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '25px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', height: '140px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
-                                        <span style={{ fontSize: '1.4rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px' }}>5,500</span>
-                                        <span style={{ fontSize: '1rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px' }}>SILVER COIN</span>
-                                    </div>
-                                    <button className="action-btn" onClick={() => buyRealCoins(5500)} style={{ width: '100%', fontSize: '0.9rem', background: '#0075ff', color: 'white', border: 'none', padding: '10px', borderRadius: '4px', fontFamily: 'Orbitron', fontWeight: 'bold' }}>€50.00</button>
-                                </div>
-
-                                {/* TIER 3 */}
-                                <div className="v-card store-item exchequer-tier" style={{ background: 'rgba(10, 15, 30, 0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '25px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', height: '140px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
-                                        <span style={{ fontSize: '1.4rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px' }}>12,000</span>
-                                        <span style={{ fontSize: '1rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px' }}>SILVER COIN</span>
-                                    </div>
-                                    <button className="action-btn" onClick={() => buyRealCoins(12000)} style={{ width: '100%', fontSize: '0.9rem', background: '#0075ff', color: 'white', border: 'none', padding: '10px', borderRadius: '4px', fontFamily: 'Orbitron', fontWeight: 'bold' }}>€100.00</button>
-                                </div>
-
-                                {/* TIER 4 */}
-                                <div className="v-card store-item exchequer-tier" style={{ background: 'rgba(10, 15, 30, 0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '25px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', height: '140px', gridColumn: 'span 2' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', alignSelf: 'flex-start' }}>
-                                        <span style={{ fontSize: '1.6rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px' }}>30,000</span>
-                                        <span style={{ fontSize: '1.2rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px' }}>SILVER COIN</span>
-                                    </div>
-                                    <button className="action-btn" onClick={() => buyRealCoins(30000)} style={{ width: '100%', fontSize: '1rem', background: '#0075ff', color: 'white', border: 'none', padding: '12px', borderRadius: '4px', fontFamily: 'Orbitron', fontWeight: 'bold', letterSpacing: '2px' }}>€250.00</button>
-                                </div>
-
-                                {/* TIER 5 */}
-                                <div className="v-card store-item exchequer-tier" style={{ background: 'rgba(10, 15, 30, 0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '25px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', height: '295px', gridRow: 'span 2', gridColumn: '3' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginTop: '30px' }}>
-                                        <span style={{ fontSize: '1.6rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px' }}>70,000</span>
-                                        <span style={{ fontSize: '1.1rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px', marginTop: '15px' }}>SILVER COIN</span>
-                                    </div>
-                                    <button className="action-btn" onClick={() => buyRealCoins(70000)} style={{ width: '100%', fontSize: '0.9rem', background: '#0075ff', color: 'white', border: 'none', padding: '12px', borderRadius: '4px', fontFamily: 'Orbitron', fontWeight: 'bold' }}>€500.00</button>
-                                </div>
-
-                                {/* TIER 6 */}
-                                <div className="v-card store-item exchequer-tier" style={{ background: 'linear-gradient(135deg, rgba(10, 20, 40, 0.8), rgba(0, 30, 80, 0.6))', border: '1px solid rgba(0, 117, 255, 0.3)', borderRadius: '12px', padding: '25px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', height: '140px', gridColumn: 'span 2' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '10px', alignSelf: 'flex-start' }}>
-                                        <span style={{ fontSize: '2rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px', fontWeight: 'bold', textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>150,000</span>
-                                        <span style={{ fontSize: '1.4rem', color: '#fff', fontFamily: 'Cinzel', letterSpacing: '1px', textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>SILVER COIN</span>
-                                        <span style={{ fontSize: '0.65rem', color: '#0075ff', fontFamily: 'Orbitron', letterSpacing: '2px', border: '1px solid #0075ff', padding: '3px 8px', borderRadius: '3px', marginLeft: '10px' }}>MAX CAPACITY</span>
-                                    </div>
-                                    <button className="action-btn" onClick={() => buyRealCoins(150000)} style={{ width: '100%', fontSize: '1.1rem', background: '#0075ff', color: 'white', border: 'none', padding: '12px', borderRadius: '4px', fontFamily: 'Orbitron', fontWeight: 'bold', letterSpacing: '2px', boxShadow: '0 0 15px rgba(0, 117, 255, 0.4)' }}>€1000.00</button>
-                                </div>
+                                ))}
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
 
-            {/* MOBILE APP */}
             <div id="MOBILE_APP" style={{ display: 'none' }}>
                 <div id="viewMobileHome" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', maxWidth: '100vw', height: '100dvh', overflowY: 'auto', overflowX: 'hidden', display: 'block', padding: 0, zIndex: 1, background: 'transparent' }}>
                     <div className="mob-hud-row">
@@ -1021,6 +1074,6 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

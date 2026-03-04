@@ -89,12 +89,16 @@ function renderToHtml(m: any) {
 
     const content = m.content || m.message || "";
 
+    const avatarUrl = isMe
+        ? "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"
+        : (users.find(u => u.memberId === m.member_id)?.avatar || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png");
+
     if (m.type === 'wishlist') {
         const item = m.metadata || {};
         contentHtml = `
             <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                 <div style="width:100%; height:120px; overflow:hidden; position:relative;">
-                     <img src="${item.image}" style="width:100%; height:100%; object-fit:cover;">
+                     <img src="${getOptimizedUrl(item.image, 150)}" style="width:100%; height:100%; object-fit:cover;">
                      <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
                          TRIBUTE SENT
                      </div>
@@ -109,18 +113,14 @@ function renderToHtml(m: any) {
     }
 
     if (m.type === 'photo') {
-        contentHtml = `<div class="msg ${msgClass}"><img src="${content}" onclick="openChatPreview('${encodeURIComponent(content)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
+        contentHtml = `<div class="msg ${msgClass}"><img src="${getOptimizedUrl(content, 300)}" onclick="openChatPreview('${encodeURIComponent(content)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
     } else {
         let safeHtml = DOMPurify.sanitize(content);
         safeHtml = safeHtml.replace(/\n/g, "<br>");
         contentHtml = `<div class="msg ${msgClass}">${safeHtml}</div>`;
     }
 
-    const avatarUrl = isMe
-        ? "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"
-        : (users.find(u => u.memberId === m.member_id)?.avatar || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png");
-
-    const avatarHtml = `<img src="${avatarUrl}" class="chat-av">`;
+    const avatarHtml = `<img src="${getOptimizedUrl(avatarUrl, 100)}" class="chat-av">`;
 
     return `<div class="msg-row ${rowClass}">${!isMe ? avatarHtml : ''}${contentHtml}${isMe ? avatarHtml : ''}<div class="msg-meta ${isMe ? 'mm-out' : 'mm-in'}">${timeStr}</div></div>`;
 }
