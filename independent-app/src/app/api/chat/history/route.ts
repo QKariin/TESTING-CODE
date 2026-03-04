@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 export async function GET(req: Request) {
     try {
@@ -11,10 +12,18 @@ export async function GET(req: Request) {
         }
 
         const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        // Fetch messages for this specific user (or Queen view if requester is Queen)
-        // RLS will ensure the user only sees what they are allowed to.
-        const { data, error } = await supabase
+        const isHardcodedAdmin = user?.email && ["pr.finsko@gmail.com", "liviacechova@gmail.com"].includes(user.email.toLowerCase());
+
+        // Use service role if admin to bypass RLS, otherwise use regular client
+        const queryClient = isHardcodedAdmin ? createAdminClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        ) : supabase;
+
+        // Fetch messages for this specific user
+        const { data, error } = await queryClient
             .from('chats')
             .select('*')
             .eq('member_id', email)

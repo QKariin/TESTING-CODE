@@ -8,6 +8,8 @@ import { getOptimizedUrl, mediaType } from './media';
 const DOMPurify = (globalThis as any).DOMPurify || { sanitize: (s: string) => s };
 
 let chatChannel: any = null;
+let chatPollInterval: any = null;
+let lastChatMsgId: any = null;
 
 /**
  * Initializes the chat listener for a specific user (Slave).
@@ -21,6 +23,10 @@ export async function initDashboardChat(slaveEmail: string) {
         console.log(`[DASHBOARD-CHAT] Cleaning up existing subscription.`);
         chatChannel.unsubscribe();
         chatChannel = null;
+    }
+    if (chatPollInterval) {
+        clearInterval(chatPollInterval);
+        chatPollInterval = null;
     }
 
     const b = document.getElementById('adminChatBox');
@@ -46,6 +52,11 @@ export async function initDashboardChat(slaveEmail: string) {
         .subscribe((status) => {
             console.log(`[DASHBOARD-CHAT] Subscription status: ${status}`);
         });
+
+    // 4. Polling Fallback (Since RLS blocks Admin real-time subscriptions)
+    chatPollInterval = setInterval(() => {
+        loadDashboardChatHistory(cleanEmail);
+    }, 3000);
 }
 
 async function loadDashboardChatHistory(email: string) {
@@ -53,11 +64,20 @@ async function loadDashboardChatHistory(email: string) {
         const res = await fetch(`/api/chat/history?email=${encodeURIComponent(email)}`);
         const data = await res.json();
         if (data.success) {
-            const html = data.messages.map((m: any) => renderToHtml(m)).join('');
-            const b = document.getElementById('adminChatBox');
-            if (b) {
-                b.innerHTML = html + '<div id="chat-anchor" style="height:1px;"></div>';
-                forceBottom();
+            const msgs = data.messages || [];
+            const latestId = msgs.length > 0 ? msgs[msgs.length - 1].id : null;
+
+            // Only re-render if there's a new message or if the chat box is empty
+            if (latestId !== lastChatMsgId || msgs.length === 0) {
+                lastChatMsgId = latestId;
+                const html = msgs.map((m: any) => renderToHtml(m)).join('');
+                const b = document.getElementById('adminChatBox');
+                if (b) {
+                    // Check if user is currently scrolled up
+                    const isAtBottom = b.scrollHeight - b.scrollTop <= b.clientHeight + 50;
+                    b.innerHTML = html + '<div id="chat-anchor" style="height:1px;"></div>';
+                    if (isAtBottom || msgs.length <= 10) forceBottom();
+                }
             }
         }
     } catch (err) {
@@ -166,6 +186,10 @@ export async function sendMsg() {
         if (data.success) {
             console.log(`[DASHBOARD-CHAT] Message sent successfully.`);
             inp.value = "";
+            // Append instantly
+            if (data.data) {
+                appendChatMessage(data.data);
+            }
         } else {
             console.error(`[DASHBOARD-CHAT] Message send API error:`, data.error);
             alert(`Error: ${data.error}`);

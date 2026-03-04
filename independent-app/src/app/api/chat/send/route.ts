@@ -52,7 +52,8 @@ export async function POST(req: Request) {
                 return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
             }
         } else {
-            isQueen = (profile.hierarchy === 'Queen' || profile.hierarchy === 'Secretary');
+            const isHardcodedAdmin = ["pr.finsko@gmail.com", "liviacechova@gmail.com"].includes(senderEmail);
+            isQueen = (isHardcodedAdmin || profile.hierarchy === 'Queen' || profile.hierarchy === 'Secretary');
         }
         // If Queen sends, member_id (conversation context) is distinct from senderEmail
         const conversationContext = isQueen ? conversationId || senderEmail : senderEmail;
