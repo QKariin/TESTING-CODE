@@ -6,6 +6,7 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const email = searchParams.get('email');
+        const requester = searchParams.get('requester');
 
         if (!email) {
             return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
@@ -14,7 +15,8 @@ export async function GET(req: Request) {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
-        const isHardcodedAdmin = user?.email && ["ceo@qkarin.com", "liviacechova@gmail.com"].includes(user.email.toLowerCase());
+        let userEmail = requester || user?.email;
+        const isHardcodedAdmin = userEmail && ["ceo@qkarin.com", "liviacechova@gmail.com"].includes(userEmail.toLowerCase());
 
         // Use service role if admin to bypass RLS, otherwise use regular client
         const queryClient = isHardcodedAdmin ? createAdminClient(

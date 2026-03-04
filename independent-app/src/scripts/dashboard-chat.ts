@@ -21,7 +21,8 @@ export async function initDashboardChat(slaveEmail: string) {
     // 1. Clean up existing subscription
     if (chatChannel) {
         console.log(`[DASHBOARD-CHAT] Cleaning up existing subscription.`);
-        chatChannel.unsubscribe();
+        const supabase = createClient();
+        supabase.removeChannel(chatChannel);
         chatChannel = null;
     }
     if (chatPollInterval) {
@@ -39,7 +40,7 @@ export async function initDashboardChat(slaveEmail: string) {
     const supabase = createClient();
     console.log(`[DASHBOARD-CHAT] Subscribing to Realtime for ${cleanEmail}...`);
     chatChannel = supabase
-        .channel('chats') // Use the same global channel as profile
+        .channel('chats-' + cleanEmail) // Unique channel per slave
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
@@ -61,7 +62,15 @@ export async function initDashboardChat(slaveEmail: string) {
 
 async function loadDashboardChatHistory(email: string) {
     try {
-        const res = await fetch(`/api/chat/history?email=${encodeURIComponent(email)}`);
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        let url = `/api/chat/history?email=${encodeURIComponent(email)}`;
+        if (user?.email) {
+            url += `&requester=${encodeURIComponent(user.email)}`;
+        }
+
+        const res = await fetch(url);
         const data = await res.json();
         if (data.success) {
             const msgs = data.messages || [];
@@ -152,6 +161,8 @@ function forceBottom() {
 
 export async function sendMsg() {
     const inp = document.getElementById('adminInp') as HTMLInputElement;
+    const btn = document.querySelector('.btn-send') as HTMLButtonElement;
+
     if (!inp || !currId) {
         console.warn(`[DASHBOARD-CHAT] Send failed: Missing input ${!inp} or currId ${!currId}`);
         return;
@@ -160,6 +171,10 @@ export async function sendMsg() {
     const text = inp.value.trim();
     if (!text) return;
 
+    if (inp.disabled) return;
+    inp.disabled = true;
+    if (btn) btn.disabled = true;
+
     // We need to know the Admin's email to send it
     const supabase = createClient();
     const { data: { user }, error: userErr } = await supabase.auth.getUser();
@@ -167,6 +182,8 @@ export async function sendMsg() {
     if (userErr || !user?.email) {
         console.error(`[DASHBOARD-CHAT] Send failed: No authenticated user email found.`, userErr);
         alert("Authentication Error: Failed to identify admin email. Please re-login.");
+        inp.disabled = false;
+        if (btn) btn.disabled = false;
         return;
     }
 
@@ -197,6 +214,10 @@ export async function sendMsg() {
     } catch (err) {
         console.error(`[DASHBOARD-CHAT] Message send network error:`, err);
         alert("Network Error: Failed to reach the chat server.");
+    } finally {
+        inp.disabled = false;
+        if (btn) btn.disabled = false;
+        inp.focus();
     }
 }
 
