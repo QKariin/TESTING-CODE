@@ -73,38 +73,32 @@ function generateFilename(originalFile: File): string {
  * @param file The file from the input element
  */
 export async function uploadToSupabase(bucketName: string, folderPath: string, file: File): Promise<string> {
-    console.log(`[SupabaseStorage] Starting upload to ${bucketName}/${folderPath}...`);
+    console.log(`[SupabaseStorage] Starting PROXY upload to ${bucketName}/${folderPath}...`);
 
     try {
-        const supabase = createClient();
-
         // 1. Compress if it's an image
         const processedFile = await compressImage(file);
 
-        // 2. Generate secure filename
-        const filename = generateFilename(processedFile);
-        const fullPath = `${folderPath.replace(/^\/|\/$/g, '')}/${filename}`; // Clean slashes
+        // 2. Prepare Form Data
+        const formData = new FormData();
+        formData.append('file', processedFile);
+        formData.append('bucket', bucketName);
+        formData.append('folder', folderPath);
 
-        // 3. Upload to Supabase
-        const { data, error } = await supabase.storage
-            .from(bucketName)
-            .upload(fullPath, processedFile, {
-                cacheControl: '3600',
-                upsert: false
-            });
+        // 3. Call secure backend proxy
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+        });
 
-        if (error) {
-            console.error("[SupabaseStorage] Upload Error:", error);
-            throw error;
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Upload failed');
         }
 
-        // 4. Return the public URL immediately
-        const { data: urlData } = supabase.storage
-            .from(bucketName)
-            .getPublicUrl(fullPath);
-
-        console.log(`[SupabaseStorage] Success:`, urlData.publicUrl);
-        return urlData.publicUrl;
+        const data = await response.json();
+        console.log(`[SupabaseStorage] Proxy success:`, data.url);
+        return data.url;
 
     } catch (err: any) {
         console.error("[SupabaseStorage] Upload Failed:", err.message);

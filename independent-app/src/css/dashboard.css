@@ -1903,8 +1903,8 @@ body {
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
-    width: 240px;
-    height: 240px;
+    width: 320px;
+    height: 320px;
     flex-shrink: 0;
     overflow: hidden;
     transition: 0.2s;
