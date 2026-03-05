@@ -797,3 +797,50 @@
     border: none;
     transition: 0.2s;
 }
+
+.reward-tier-btn {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.reward-tier-btn:hover {
+    border-color: var(--gold);
+    background: rgba(197, 160, 89, 0.1);
+}
+
+.reward-tier-btn.selected {
+    border-color: var(--green);
+    background: rgba(57, 255, 20, 0.1);
+    box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
+}
+
+.rt-pts {
+    font-family: 'Orbitron';
+    font-weight: 900;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.rt-lbl {
+    font-family: 'Rajdhani';
+    font-weight: bold;
+    font-size: 0.6rem;
+    color: #888;
+    letter-spacing: 1px;
+}
+
+.reward-tier-btn.selected .rt-pts {
+    color: var(--green);
+}
+
+.reward-tier-btn.selected .rt-lbl {
+    color: white;
+}

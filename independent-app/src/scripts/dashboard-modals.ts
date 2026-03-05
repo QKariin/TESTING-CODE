@@ -129,6 +129,12 @@ function openRewardProtocol() {
     if (normalContent) normalContent.style.display = 'none';
     if (rewardOverlay) rewardOverlay.style.display = 'flex';
 
+    // Copy task text for visibility during reward
+    const taskTextSec = document.getElementById('reviewRewardTaskText');
+    if (taskTextSec && currTask) {
+        taskTextSec.innerHTML = `<div style="color:var(--gold); font-family:Orbitron; font-size:0.6rem; margin-bottom:5px; letter-spacing:1px;">TASK DESCRIPTION</div>` + clean(currTask.text || 'No description provided.');
+    }
+
     const grid = document.getElementById('stickerGrid');
     if (!grid) return;
 
@@ -143,8 +149,21 @@ function openRewardProtocol() {
             <div class="stk-name">${s.name}</div>
         </div>`).join('');
 
+    // Default to Normal Tier (50)
+    setRewardTier(50, 'tier_50');
+}
+
+export function setRewardTier(val: number, id: string) {
     const bonusInp = document.getElementById('rewardBonus') as HTMLInputElement;
-    if (bonusInp) bonusInp.value = "50";
+    if (bonusInp) bonusInp.value = val.toString();
+
+    document.querySelectorAll('.reward-tier-btn').forEach(el => el.classList.remove('selected'));
+    const target = document.getElementById(id);
+    if (target) target.classList.add('selected');
+
+    // Reset stickers when changing tiers to avoid confusion
+    setSelectedStickerId(null);
+    document.querySelectorAll('.sticker-card').forEach(el => el.classList.remove('selected'));
 }
 
 export function cancelReward() {
@@ -159,8 +178,17 @@ export function selectSticker(id: string, val: number) {
     document.querySelectorAll('.sticker-card').forEach(el => el.classList.remove('selected'));
     const target = document.getElementById('stk_' + id);
     if (target) target.classList.add('selected');
+
+    // Add sticker value to currently selected tier base
+    const activeTier = document.querySelector('.reward-tier-btn.selected');
+    let baseVal = 50;
+    if (activeTier) {
+        if (activeTier.id === 'tier_70') baseVal = 70;
+        else if (activeTier.id === 'tier_100') baseVal = 100;
+    }
+
     const bonusInp = document.getElementById('rewardBonus') as HTMLInputElement;
-    if (bonusInp) bonusInp.value = (50 + val).toString();
+    if (bonusInp) bonusInp.value = (baseVal + val).toString();
 }
 
 export async function handleRewardFileUpload(input: HTMLInputElement) {
@@ -635,5 +663,6 @@ if (typeof window !== 'undefined') {
     (window as any).confirmReward = confirmReward;
     (window as any).renderGlobalReview = renderGlobalReview;
     (window as any).closeListModal = closeListModal;
+    (window as any).setRewardTier = setRewardTier;
 }
 

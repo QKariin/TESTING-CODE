@@ -583,10 +583,37 @@ export default function DashboardPage() {
                         </div>
                         <div id="reviewRewardOverlay" style={{ display: 'none' }}>
                             <h3 style={{ color: 'var(--green)', marginBottom: '15px', textAlign: 'center' }}>REWARD PROTOCOL</h3>
+
+                            {/* NEW: TASK TEXT VISIBILITY WHILE REWARDING */}
+                            <div id="reviewRewardTaskText" className="m-text-scroll" style={{
+                                borderBottom: '1px solid #333',
+                                paddingBottom: '15px',
+                                marginBottom: '15px',
+                                fontSize: '0.85rem',
+                                opacity: 0.8,
+                                maxHeight: '100px',
+                                overflowY: 'auto'
+                            }}></div>
+
+                            <div className="rw-tier-row" style={{ display: 'flex', gap: '10px', width: '100%', marginBottom: '20px' }}>
+                                <div id="tier_50" className="reward-tier-btn" onClick={() => (window as any).setRewardTier(50, 'tier_50')}>
+                                    <div className="rt-pts">50</div>
+                                    <div className="rt-lbl">NORMAL</div>
+                                </div>
+                                <div id="tier_70" className="reward-tier-btn" onClick={() => (window as any).setRewardTier(70, 'tier_70')}>
+                                    <div className="rt-pts">70</div>
+                                    <div className="rt-lbl">IMPRESSIVE</div>
+                                </div>
+                                <div id="tier_100" className="reward-tier-btn" onClick={() => (window as any).setRewardTier(100, 'tier_100')}>
+                                    <div className="rt-pts">100</div>
+                                    <div className="rt-lbl">EXCELLENT</div>
+                                </div>
+                            </div>
+
                             <div id="stickerGrid" className="sticker-grid"></div>
                             <div className="reward-inputs">
                                 <div className="rw-group">
-                                    <div className="rw-label">BONUS COINS</div>
+                                    <div className="rw-label">TOTAL BONUS COINS</div>
                                     <input type="number" id="rewardBonus" className="rw-inp" defaultValue="50" />
                                 </div>
                                 <div className="rw-group">
