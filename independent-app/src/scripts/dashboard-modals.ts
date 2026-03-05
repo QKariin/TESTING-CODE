@@ -3,11 +3,11 @@
 
 import {
     currTask, pendingApproveTask, selectedStickerId, pendingRewardMedia,
-    stickerConfig, availableDailyTasks, currId, users,
+    stickerConfig, availableDailyTasks, currId, users, globalQueue,
     setCurrTask, setPendingApproveTask, setSelectedStickerId, setPendingRewardMedia,
     setMediaRecorder, setAudioChunks, mediaRecorder, audioChunks,
     ACCOUNT_ID, API_KEY, setDragSrcIndex, dragSrcIndex,
-    armoryTarget, setArmoryTarget
+    armoryTarget, setArmoryTarget, setGlobalQueue
 } from './dashboard-state';
 import { clean, raw, getOptimizedUrl } from './utils';
 import { mediaType as mediaTypeFunction, getSignedUrl } from './media';
@@ -117,6 +117,10 @@ export function reviewTask(decision: 'approve' | 'reject') {
         // Optimistic update
         const u = users.find(x => x.memberId === taskData.memberId);
         if (u) u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== taskData.id);
+
+        // --- GLOBAL SYNC ---
+        setGlobalQueue(globalQueue.filter((x: any) => x.id !== taskData.id));
+
         import('./dashboard-main').then(m => m.renderMainDashboard());
         closeModal();
 
@@ -235,6 +239,9 @@ export function confirmReward() {
     if (u) {
         // 1. Remove from local review queue
         u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== taskData.id);
+
+        // --- GLOBAL SYNC ---
+        setGlobalQueue(globalQueue.filter((x: any) => x.id !== taskData.id));
 
         // 2. Update local points/stats
         u.points = (u.points || 0) + bonus;
