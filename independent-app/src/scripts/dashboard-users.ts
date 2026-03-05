@@ -235,7 +235,6 @@ async function updateReviewQueue(u: any) {
     if (u.reviewQueue && u.reviewQueue.length > 0) {
         qSec.style.display = 'flex';
         qSec.innerHTML = `
-            <div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>
             <div class="pend-list">
                 ${u.reviewQueue.map((t: any) => {
             const isRoutine = t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine';
@@ -244,11 +243,10 @@ async function updateReviewQueue(u: any) {
 
             return `
                     <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false)">
-                        <img src="${getOptimizedUrl(t.proofUrl || '', 300)}" class="pend-thumb">
+                        <img src="${getOptimizedUrl(t.proofUrl || '', 400)}" class="pend-thumb">
                         <div class="pend-info">
                             <div class="pend-act" style="color:${isRoutine ? '#00ff00' : 'var(--gold)'}">${actType}</div>
                             <div class="pend-date">${dateStr}</div>
-                            <div class="pend-txt">${clean(t.text)}</div>
                         </div>
                     </div>`;
         }).join('')}

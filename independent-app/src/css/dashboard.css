@@ -1874,14 +1874,14 @@ body {
 .pend-list {
     display: flex;
     flex-direction: row;
-    gap: 12px;
+    gap: 16px;
     width: 100%;
     overflow-x: auto;
-    padding-bottom: 8px;
+    padding-bottom: 12px;
 }
 
 .pend-list::-webkit-scrollbar {
-    height: 6px;
+    height: 8px;
 }
 
 .pend-list::-webkit-scrollbar-track {
@@ -1890,7 +1890,7 @@ body {
 }
 
 .pend-list::-webkit-scrollbar-thumb {
-    background: var(--red);
+    background: var(--gold);
     border-radius: 4px;
 }
 
@@ -1899,12 +1899,12 @@ body {
     display: flex;
     flex-direction: column;
     background: rgba(0, 0, 0, 0.8);
-    border: 1px solid var(--red);
+    border: 1px solid var(--gold);
     border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 0 10px rgba(255, 0, 60, 0.1);
-    width: 160px;
-    height: 160px;
+    box-shadow: 0 0 10px rgba(197, 160, 89, 0.1);
+    width: 240px;
+    height: 240px;
     flex-shrink: 0;
     overflow: hidden;
     transition: 0.2s;
@@ -1912,7 +1912,7 @@ body {
 
 .pend-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0 15px rgba(255, 0, 60, 0.3);
+    box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
 }
 
 .pend-thumb {
