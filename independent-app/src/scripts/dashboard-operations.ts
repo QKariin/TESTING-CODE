@@ -30,9 +30,14 @@ function renderOperationsGrid() {
         }
     });
 
-    // Sort by Date to get the latest
-    pendingTasks.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    pendingRoutines.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Sort by Date to get the latest (newest first)
+    const sortNewest = (a: any, b: any) => {
+        const timeA = a.timestamp || new Date(a.date).getTime() || 0;
+        const timeB = b.timestamp || new Date(b.date).getTime() || 0;
+        return timeB - timeA;
+    };
+    pendingTasks.sort(sortNewest);
+    pendingRoutines.sort(sortNewest);
 
     const latestTask = pendingTasks[0];
     const latestRoutine = pendingRoutines[0];

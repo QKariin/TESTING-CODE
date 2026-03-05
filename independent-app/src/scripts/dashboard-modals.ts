@@ -567,8 +567,12 @@ export function renderGlobalReview(filterRoutine: boolean) {
         return isRoutine === filterRoutine;
     });
 
-    // Sort by Date
-    filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Sort by Date (newest first)
+    filtered.sort((a, b) => {
+        const timeA = a.timestamp || new Date(a.date).getTime() || 0;
+        const timeB = b.timestamp || new Date(b.date).getTime() || 0;
+        return timeB - timeA;
+    });
 
     const title = filterRoutine ? "DAILY ROUTINE QUEUE" : "TASK REVIEW QUEUE";
     const color = filterRoutine ? "#00ff00" : "var(--gold)";
