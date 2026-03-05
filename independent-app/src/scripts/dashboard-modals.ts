@@ -212,8 +212,41 @@ export function confirmReward() {
     DbService.approveTask(pendingApproveTask.id!, pendingApproveTask.memberId!, bonus, null, comment)
         .then(() => {
             const u = users.find(x => x.memberId === pendingApproveTask.memberId);
-            if (u) u.reviewQueue = u.reviewQueue.filter((x: any) => x.id !== pendingApproveTask.id);
+            if (u) {
+                // 1. Remove from local review queue
+                u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== pendingApproveTask.id);
+
+                // 2. Update local points/stats
+                u.points = (u.points || 0) + bonus;
+                if (u.wallet !== undefined) u.wallet = (u.wallet || 0) + bonus;
+                if (u.score !== undefined) u.score = (u.score || 0) + bonus;
+                if (u.parameters) {
+                    u.parameters.taskdom_completed_tasks = (u.parameters.taskdom_completed_tasks || 0) + 1;
+                }
+
+                // 3. Update local history entry for "Record" tab
+                try {
+                    let history = typeof u['Taskdom_History'] === 'string' ? JSON.parse(u['Taskdom_History'] || '[]') : (u['Taskdom_History'] || []);
+                    const entryIdx = history.findIndex((h: any) => h.id === pendingApproveTask.id);
+                    if (entryIdx > -1) {
+                        history[entryIdx].status = 'approve';
+                        history[entryIdx].completed = true;
+                        if (comment) history[entryIdx].adminComment = comment;
+                    }
+                    u['Taskdom_History'] = JSON.stringify(history);
+                } catch (e) {
+                    console.warn("Local history update failed:", e);
+                }
+            }
+
+            // 4. Force UI refresh
             import('./dashboard-main').then(m => m.renderMainDashboard());
+
+            // 5. Update selected user detail if we are looking at them
+            if (currId === pendingApproveTask.memberId) {
+                import('./dashboard-users').then(m => m.updateDetail(u));
+            }
+
             closeModal();
         })
         .catch(err => console.error("Approval error:", err));

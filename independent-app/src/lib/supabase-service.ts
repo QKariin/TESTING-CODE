@@ -248,31 +248,44 @@ export const DbService = {
     },
 
     async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
-        // 1. Update Taskdom_History in tasks table
+        // 1. Update Taskdom_History and legacy columns in tasks table
         const row = await this._getTaskRow(profileId);
         const history: any[] = this._parseHistory(row);
         const idx = history.findIndex((t: any) => t.id === taskId);
+
         if (idx > -1) {
             history[idx].status = 'approve';
             history[idx].completed = true;
             if (comment) history[idx].adminComment = comment;
         }
+
+        const newWallet = (row?.Wallet || 0) + bonus;
+        const newScore = (row?.Score || 0) + bonus;
+        const newCompleted = (row?.Taskdom_CompletedTasks || 0) + 1;
+
         await supabaseAdmin
             .from('tasks')
-            .update({ 'Taskdom_History': JSON.stringify(history), 'Status': 'approve' })
+            .update({
+                'Taskdom_History': JSON.stringify(history),
+                'Status': 'approve',
+                'Wallet': newWallet,
+                'Score': newScore,
+                'Taskdom_CompletedTasks': newCompleted
+            })
             .eq('member_id', profileId);
 
-        // 2. Award points in profiles
+        // 2. Sync with profiles table if it exists (modern users)
         const profile = await this.getProfile(profileId);
-        if (!profile || !profile.id) return;
-        await this.updateProfile(profile.id, {
-            wallet: (profile.wallet || 0) + bonus,
-            score: (profile.score || 0) + bonus,
-            parameters: {
-                ...(profile.parameters || {}),
-                taskdom_completed_tasks: (profile.parameters?.taskdom_completed_tasks || 0) + 1
-            }
-        });
+        if (profile && profile.id) {
+            await this.updateProfile(profile.id, {
+                wallet: (profile.wallet || 0) + bonus,
+                score: (profile.score || 0) + bonus,
+                parameters: {
+                    ...(profile.parameters || {}),
+                    taskdom_completed_tasks: (profile.parameters?.taskdom_completed_tasks || 0) + 1
+                }
+            });
+        }
 
         // 3. Send system chat message
         try {
@@ -281,25 +294,33 @@ export const DbService = {
     },
 
     async rejectTask(taskId: string, profileId: string) {
-        // 1. Update Taskdom_History in tasks table
+        // 1. Update Taskdom_History and legacy Status/Wallet in tasks table
         const row = await this._getTaskRow(profileId);
         const history: any[] = this._parseHistory(row);
         const idx = history.findIndex((t: any) => t.id === taskId);
+
         if (idx > -1) {
             history[idx].status = 'reject';
             history[idx].completed = false;
         }
+
+        const newWallet = Math.max(0, (row?.Wallet || 0) - 300);
+
         await supabaseAdmin
             .from('tasks')
-            .update({ 'Taskdom_History': JSON.stringify(history), 'Status': 'reject' })
+            .update({
+                'Taskdom_History': JSON.stringify(history),
+                'Status': 'reject',
+                'Wallet': newWallet
+            })
             .eq('member_id', profileId);
 
-        // 2. Deduct 300 coin penalty from profiles wallet
+        // 2. Sync with profiles table if it exists
         try {
             const profile = await this.getProfile(profileId);
-            if (profile?.id) {
-                const newWallet = Math.max(0, (profile.wallet || 0) - 300);
-                await this.updateProfile(profile.id, { wallet: newWallet });
+            if (profile && profile.id) {
+                const pWallet = Math.max(0, (profile.wallet || 0) - 300);
+                await this.updateProfile(profile.id, { wallet: pWallet });
             }
         } catch (_) { }
 
