@@ -29,11 +29,15 @@ export async function POST(request: Request) {
         // 1. Verify session
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        let email = (user?.email || '').toLowerCase().trim();
+
+        // Local Dev Bypass
+        if (!user && process.env.NODE_ENV === 'development') {
+            email = 'ceo@qkarin.com';
+        } else if (!user) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        const email = (user.email || '').toLowerCase().trim();
         const isCEO = email === 'ceo@qkarin.com' || email === 'queen@qkarin.com';
         if (!isCEO) {
             return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });

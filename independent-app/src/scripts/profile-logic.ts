@@ -1,7 +1,7 @@
 import { getState, setState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
 import { getHierarchyReport } from './hierarchy-rules';
-import { uploadToBytescale } from './mediaBytescale';
+import { uploadToSupabase } from './mediaSupabase';
 import { getOptimizedUrl } from './media';
 
 let globalTributes: any[] = [];
@@ -1132,19 +1132,19 @@ async function submitTaskEvidence(file: File) {
     }
 
     try {
-        // 1. Upload to Bytescale - Match Legacy parameters
-        console.log("Uploading to Bytescale...");
+        // 1. Upload to Supabase Storage ('proofs' bucket since it's evidence)
+        console.log("Uploading task proof to Supabase...");
         const folder = (userName || "slave").replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
-        const bytescaleUrl = await uploadToBytescale("evidence", file, folder);
-        console.log("Bytescale Upload Result:", bytescaleUrl);
+        const fileUrl = await uploadToSupabase("proofs", folder, file);
+        console.log("Supabase Upload Result:", fileUrl);
 
-        if (bytescaleUrl === "failed") {
-            console.error("Bytescale upload failed returned 'failed'");
-            alert("Transmission failed. Bytescale connection error.");
+        if (fileUrl === "failed") {
+            console.error("Supabase upload returned 'failed'");
+            alert("Transmission failed. Cloud bucket connection error.");
             return;
         }
 
-        // 2. Submit link to Supabase
+        // 2. Submit link to Postgres records
         console.log("Submitting URL to backend API...");
         const res = await fetch('/api/profile-action', {
             method: 'POST',
@@ -1153,7 +1153,7 @@ async function submitTaskEvidence(file: File) {
                 type: 'SUBMIT_TASK',
                 memberId: pid,
                 payload: {
-                    proofUrl: bytescaleUrl,
+                    proofUrl: fileUrl,
                     proofType: file.type,
                     taskText: taskText
                 }
@@ -2024,22 +2024,22 @@ export async function debugBytescale() {
     }
 
     // Create a tiny text file as a blob
-    const debugText = `Bytescale Connection Test\nTimestamp: ${new Date().toISOString()}\nMember: ${memberId}`;
+    const debugText = `Supabase Connection Test\nTimestamp: ${new Date().toISOString()}\nMember: ${memberId}`;
     const blob = new Blob([debugText], { type: 'text/plain' });
     const file = new File([blob], "debug_test.txt", { type: 'text/plain' });
 
     try {
-        const res = await uploadToBytescale("admin", file, "debug_tests");
+        const res = await uploadToSupabase("media", "debug_tests", file);
         if (res === "failed") {
-            alert("❌ BYTESCALE TEST FAILED\nCheck browser console for detailed status code.");
-            console.error("[DEBUG] Bytescale test upload failed.");
+            alert("❌ SUPABASE TEST FAILED\nCheck browser console for detailed status code.");
+            console.error("[DEBUG] Supabase test upload failed.");
         } else {
-            alert(`✅ BYTESCALE TEST SUCCESS!\nFile URL: ${res}`);
-            console.log("[DEBUG] Bytescale test success:", res);
+            alert(`✅ SUPABASE TEST SUCCESS!\nFile URL: ${res}`);
+            console.log("[DEBUG] Supabase test success:", res);
         }
     } catch (err: any) {
-        alert(`❌ BYTESCALE CONNECTION ERROR\n${err.message}`);
-        console.error("[DEBUG] Bytescale error:", err);
+        alert(`❌ SUPABASE CONNECTION ERROR\n${err.message}`);
+        console.error("[DEBUG] Supabase error:", err);
     }
 }
 

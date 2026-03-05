@@ -1,7 +1,7 @@
 // src/scripts/media.ts
 // media.ts - Converted to TypeScript
 
-import { getThumbnailBytescale, isBytescaleUrl, getBytescaleSignedUrl, mediaTypeBytescale } from "./mediaBytescale";
+
 
 export function fileType(file: File): "video" | "image" | "unknown" {
     if (!file) return "unknown";
@@ -23,14 +23,19 @@ export function mediaType(url: string | null | undefined): "video" | "image" | "
 
     const originalUrl = url.toLowerCase();
 
-    // 1. Bytescale Check
-    if (isBytescaleUrl(url)) return mediaTypeBytescale(url);
-
-    // 2. Explicit Wix Protocol Check (The Fix)
+    // 1. Explicit Wix Protocol Check
     if (originalUrl.startsWith('wix:image')) return "image";
     if (originalUrl.startsWith('wix:video')) return "video";
 
-    // 3. Extension Check
+    // 3. Supabase Check
+    if (originalUrl.includes('supabase.co/storage')) {
+        const isVideo = /\.(mp4|webm|mov)(\?|$)/.test(originalUrl);
+        const isImage = /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?|$)/.test(originalUrl);
+        if (isImage) return "image";
+        if (isVideo) return "video";
+    }
+
+    // 4. Extension Check
     const isVideoExt = /\.(mp4|webm|mov)(\?|$)/.test(originalUrl);
     const isImageExt = /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)(\?|$)/.test(originalUrl);
 
@@ -42,7 +47,7 @@ export function mediaType(url: string | null | undefined): "video" | "image" | "
 
 export function getThumbnail(url: string | null | undefined): string | null | undefined {
     if (!url) return url;
-    if (isBytescaleUrl(url)) return getThumbnailBytescale(url);
+    if (url.includes('supabase.co/storage') && mediaType(url) === 'image') return url; // Already client-compressed
     return getOptimizedUrl(url, 200); // Fallback to optimized wix
 }
 
@@ -110,13 +115,10 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
 
     if (url.startsWith("http")) return url;
 
-    return url;
+    return "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
 }
 
 export async function getSignedUrl(url: string | null | undefined): Promise<string> {
     if (!url) return "";
-    if (isBytescaleUrl(url)) {
-        return await getBytescaleSignedUrl(url);
-    }
     return url;
 }

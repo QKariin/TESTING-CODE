@@ -125,7 +125,7 @@ export async function updateDetail(u: any) {
     const finalPic = u.avatar || u.profilePicture || defaultPic;
 
     if (profPic) profPic.src = getOptimizedUrl(finalPic, 200);
-    if (headerBg) headerBg.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('${getOptimizedUrl(finalPic, 400)}')`;
+    if (headerBg) headerBg.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${getOptimizedUrl(finalPic, 400)}')`;
 
     let realRank = (u.hierarchy || "HALL BOY");
     setText('dMirrorHierarchy', realRank.toUpperCase());
@@ -138,11 +138,11 @@ export async function updateDetail(u: any) {
     }
 
     setText('dMirrorPoints', (u.points || 0).toLocaleString());
-    setText('dMirrorWallet', (u.coins || 0).toLocaleString());
+    setText('dMirrorWallet', (u.wallet || 0).toLocaleString());
 
     const totalKneel = u.kneelCount || 0;
     const kneelHrs = (totalKneel * 0.25).toFixed(1);
-    setText('dMirrorKneel', `${kneelHrs}h`);
+    setText('dMirrorKneel', `${kneelHrs} h`);
 
     const ranks = REWARD_DATA.ranks;
     const cleanName = (name: string) => (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -184,7 +184,6 @@ export async function updateDetail(u: any) {
     if (container) {
         let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>`;
 
-        // Bar builder (simplified for TS)
         const buildBar = (label: string, current: number, target: number, icon: string) => {
             const pct = Math.min((current / (target || 1)) * 100, 100);
             const isDone = current >= target;
@@ -314,35 +313,29 @@ export async function deleteQueueItem(memberId: string, idx: number) {
 }
 
 export function updateTaskQueue(u: any) {
-    console.log("[updateTaskQueue] Triggered for", u.memberId, "| Queue Length:", (u.task_queue || u.taskQueue || u.queue || []).length);
     const listContainer = document.getElementById('qListContainer');
     if (!listContainer) return;
 
+    const queue = (u.task_queue || u.taskQueue || u.queue || []) as any[];
+    const queueJson = JSON.stringify(queue);
+
+    // Prevent redundant renders and logging loops
+    if ((u as any)._lastQueueJson === queueJson) return;
+    (u as any)._lastQueueJson = queueJson;
+
+    console.log("[updateTaskQueue] Rendered | Queue Length:", queue.length);
+
     let personalTasks = u.task_queue || u.taskQueue || u.queue || [];
 
-    if (fillerUserId !== u.memberId || cachedFillers.length === 0) {
-        cachedFillers = (availableDailyTasks || []).sort(() => 0.5 - Math.random()).slice(0, 10);
-        fillerUserId = u.memberId;
-    }
-
-    const displayTasks = [...personalTasks, ...cachedFillers.slice(0, Math.max(0, 10 - personalTasks.length))];
-
-    listContainer.innerHTML = displayTasks.map((t, idx) => {
-        const isPersonal = idx < personalTasks.length;
-        const taskText = typeof t === 'string' ? t : (t.text || t.TaskText || 'Unnamed Task');
-        const niceText = clean(taskText);
-        return `
-            <div class="mini-active" style="border:1px solid ${isPersonal ? '#333' : '#222'}; opacity:${isPersonal ? 1 : 0.5}; margin-bottom:5px;">
-                <div class="ma-status" style="color:${isPersonal ? 'var(--gold)' : '#555'}">${isPersonal ? 'CMD' : 'AUTO'}</div>
-                <div class="ma-mid">
-                    <div class="ma-txt">${niceText}</div>
-                </div>
-                ${isPersonal ? `<button class="ma-btn" onclick="window.deleteQueueItem('${u.memberId}', ${idx})" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem; padding:0 5px;">&times;</button>` : ''}
-            </div>`;
-    }).join('');
+    listContainer.innerHTML = `
+        <div class="mini-active" style="border:1px solid rgba(197,160,89,0.3); background:rgba(0,0,0,0.5); border-radius:8px; cursor:pointer; text-align:center; padding:15px; transition:all 0.2s;" onclick="const q = document.getElementById('taskQueueContainer'); if(q && !q.classList.contains('hidden')) { if(window.closeTaskGallery) window.closeTaskGallery(); } else { if(window.openTaskGallery) window.openTaskGallery(); }" onmouseover="this.style.background='rgba(197,160,89,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
+            <div style="font-family:'Orbitron', sans-serif; font-size:1.5rem; color:#c5a059; margin-bottom:5px;">${personalTasks.length}</div>
+            <div style="font-family:'Cinzel', serif; font-size:0.7rem; color:#aaa; letter-spacing:2px;">SCHEDULED DIRECTIVES</div>
+            <div style="font-family:'Rajdhani', sans-serif; font-size:0.65rem; color:#666; margin-top:10px; text-transform:uppercase; letter-spacing:1px;">Tap to view full queue &rarr;</div>
+        </div>
+    `;
 }
 
-// Global functions for window
 if (typeof window !== 'undefined') {
     (window as any).updateDetail = updateDetail;
     (window as any).deleteQueueItem = deleteQueueItem;

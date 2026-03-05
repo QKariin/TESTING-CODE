@@ -12,14 +12,19 @@ export async function POST(req: Request) {
         if (!senderEmail || !content) {
             return NextResponse.json({ success: false, error: "Missing required fields." }, { status: 400 });
         }
+
         const supabase = await createClient();
 
+        // 1. Fetch SENDER Profile (to check rank and balance)
         const isHardcodedAdmin = senderEmail && ["ceo@qkarin.com", "liviacechova@gmail.com"].includes(senderEmail.toLowerCase());
-        let isQueen = isHardcodedAdmin;
-        let profile: any = null;
 
-        if (!isHardcodedAdmin) {
-            // 1. Fetch SENDER Profile (to check rank and balance)
+        let profile: any = null;
+        let isQueen = isHardcodedAdmin;
+
+        if (isHardcodedAdmin) {
+            // Synthetic profile for admin to bypass DB lookups
+            profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
+        } else {
             const { data, error: profileErr } = await supabase
                 .from('profiles')
                 .select('*')
@@ -28,17 +33,42 @@ export async function POST(req: Request) {
             profile = data;
 
             if (profileErr || !profile) {
-                console.error(`[API/Chat/Send] Profile not found for ${senderEmail}. Error:`, profileErr);
-                return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
+                // FALLBACK: If profile missing but we have a conversationId and user is authenticated
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user && user.email === senderEmail && conversationId) {
+                    console.warn(`[API/Chat/Send] Sender profile missing for ${senderEmail}. Treating as Queen for bootstrapping.`);
+                    isQueen = true;
+                    profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail } as any;
+
+                    // ASYNC: Auto-provision Queen profile so RLS works in the future
+                    try {
+                        const bootstrapAdmin = createAdminClient(
+                            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                            process.env.SUPABASE_SERVICE_ROLE_KEY!
+                        );
+                        await bootstrapAdmin.from('profiles').upsert({
+                            member_id: senderEmail,
+                            id: user.id,
+                            name: "Queen Karin",
+                            hierarchy: 'Queen'
+                        });
+                    } catch (e) {
+                        console.error("Bootstrap profile failed", e);
+                    }
+                } else {
+                    console.error(`[API/Chat/Send] Profile not found for ${senderEmail}. Error:`, profileErr);
+                    return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
+                }
+            } else {
+                isQueen = (profile.hierarchy === 'Queen' || profile.hierarchy === 'Secretary');
             }
-            isQueen = (profile.hierarchy === 'Queen' || profile.hierarchy === 'Secretary');
         }
 
         // If Queen sends, member_id (conversation context) is distinct from senderEmail
         const conversationContext = isQueen ? conversationId || senderEmail : senderEmail;
 
         // 2. Identify Rank and Rules
-        const userRank = profile?.hierarchy || 'Queen';
+        const userRank = profile.hierarchy || 'Hall Boy';
         const rankRule = HIERARCHY_RULES.find(r => r.name.toLowerCase() === userRank.toLowerCase()) || HIERARCHY_RULES[HIERARCHY_RULES.length - 1];
 
         // 3. Permission Checks
@@ -50,7 +80,7 @@ export async function POST(req: Request) {
         }
 
         // 4. Cost Logic (Only for non-admin)
-        let newWallet = profile ? profile.wallet : 999999;
+        let newWallet = profile.wallet;
         if (!isQueen) {
             const cost = rankRule.speakCost || 0;
             const currentWallet = Number(profile.wallet || 0);

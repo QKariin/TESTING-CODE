@@ -12,6 +12,7 @@ export let broadcastPresets: any[] = [];
 
 // --- UI STATE ---
 export let currId: string | null = null;
+export let adminEmail: string | null = null;
 export let lastChatJson: string = "";
 export let lastGalleryJson: string = "";
 export let lastHistoryJson: string = "";
@@ -58,6 +59,7 @@ export function setCurrId(id: string | null) {
     currId = id;
     (window as any).currId = id;
 }
+export function setAdminEmail(email: string | null) { adminEmail = email; }
 export function setLastChatJson(json: string) { lastChatJson = json; }
 export function setLastGalleryJson(json: string) { lastGalleryJson = json; }
 export function setLastHistoryJson(json: string) { lastHistoryJson = json; }

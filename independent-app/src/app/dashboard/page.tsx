@@ -17,7 +17,7 @@ import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQ
 import { closeChatPreview } from '@/scripts/chat';
 
 // State & Actions
-import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes } from '@/scripts/dashboard-state';
+import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail } from '@/scripts/dashboard-state';
 import { getAdminDashboardData } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
 
@@ -35,7 +35,10 @@ export default function DashboardPage() {
         const getCurrUser = async () => {
             const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
-            if (user?.email) setUserEmail(user.email);
+            if (user?.email) {
+                setUserEmail(user.email);
+                setAdminEmail(user.email);
+            }
         };
         getCurrUser();
 
@@ -99,7 +102,7 @@ export default function DashboardPage() {
                 const mappedUsers = data.users.map((u: any) => ({
                     ...u,
                     memberId: u.member_id,
-                    avatar: getOptimizedUrl(u.avatar_url || u.profile_picture_url || 'https://via.placeholder.com/150', 100),
+                    avatar: getOptimizedUrl(u.avatar_url || u.profile_picture_url || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png', 100),
                     points: u.score || 0,
                     // Parse JSON params if needed
                     activeTask: u.parameters?.taskdom_active_task || null,
@@ -157,7 +160,7 @@ export default function DashboardPage() {
                 <div
                     className="sb-dash-btn"
                     onClick={() => (window as any).showPosts()}
-                    style={{ backgroundImage: 'linear-gradient(135deg,rgba(197,160,89,0.08),transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
+                    style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.08), transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
                 >✦ POSTS</div>
                 <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
@@ -271,7 +274,7 @@ export default function DashboardPage() {
                             </div>
                             <div className="vb-content">
                                 <div className="vb-av-box glow-blue">
-                                    <img id="bestSubAvatar" src="https://via.placeholder.com/100" className="vb-av" alt="Top Subject" />
+                                    <img id="bestSubAvatar" src="https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png" className="vb-av" alt="Top Subject" />
                                 </div>
                                 <div id="bestSubName" className="vb-name">Searching...</div>
                                 <div id="bestSubValue" className="vb-val">0 PTS</div>
@@ -648,8 +651,8 @@ export default function DashboardPage() {
             </div>
 
             {/* SOUND ASSETS */}
-            <audio id="msgSound" src="https://static.wixstatic.com/mp3/ce3e5b_7b8a7b3cdcdf542e6b6fd01ef272d75bc.mp3" preload="auto"></audio>
-            <audio id="sfx-notify" src="https://static.wixstatic.com/mp3/ce3e5b_31aab32ecdf542e6b6fd01ef272d75bc.mp3" preload="auto"></audio>
+            <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
+            <audio id="sfx-notify" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
         </div>
     );
 }

@@ -446,7 +446,7 @@ export function openTaskDetail(idx: number, source: 'queue' | 'directive', initi
             </div>
             <div class="glass-detail-actions">
                 <button class="btn-glass enforce" onclick="window.showEnforceOptions('${encodeURIComponent(fullText)}')">ENFORCE</button>
-                <button class="btn-glass force" onclick="window.showForceOptions('${encodeURIComponent(fullText)}')">FORCE NOW</button>
+                <button class="btn-glass force" onclick="window.showForceOptions('${encodeURIComponent(fullText)}', ${source === 'queue' ? idx : -1})">FORCE NOW</button>
             </div>
         </div>
     `;
@@ -479,24 +479,24 @@ export function showEnforceOptions(taskText: string) {
         <div class="q-pos-grid">
             ${Array.from({ length: 10 }).map((_, i) => `<button class="q-pos-btn" onclick="window.enforceTask('${taskText}', ${i}); window.closeTaskDetail();">${i + 1}</button>`).join('')}
         </div>
-        <button class="btn-glass" style="width:100%; margin-top:10px;" onclick="window.openTaskGallery()">BACK</button>
+        <button class="btn-glass" style="width:100%; margin-top:10px;" onclick="window.closeTaskDetail(); window.openTaskGallery();">BACK</button>
     `;
 }
 
-export function showForceOptions(taskText: string) {
+export function showForceOptions(taskText: string, queueIdx: number = -1) {
     const container = document.getElementById('directiveActionContent');
     if (!container) return;
 
     container.innerHTML = `
         <div class="directive-sub-actions">
             <button class="btn-directive-sub" onclick="window.enforceTask('${taskText}', 0); window.closeTaskDetail();">TOP OF THE LIST!</button>
-            <button class="btn-directive-sub force-active" onclick="window.forceActiveTask('${taskText}'); window.closeTaskDetail();">FORCE NOW</button>
-            <button class="btn-glass" style="width:100%; margin-top:20px;" onclick="window.openTaskGallery()">BACK</button>
+            <button class="btn-directive-sub force-active" onclick="window.forceActiveTask('${taskText}', ${queueIdx}); window.closeTaskDetail();">FORCE NOW</button>
+            <button class="btn-glass" style="width:100%; margin-top:20px;" onclick="window.closeTaskDetail(); window.openTaskGallery();">BACK</button>
         </div>
     `;
 }
 
-export async function forceActiveTask(taskText: string) {
+export async function forceActiveTask(taskText: string, queueIdx: number = -1) {
     const decoded = decodeURIComponent(taskText);
     if (!currId) return;
 
@@ -504,14 +504,27 @@ export async function forceActiveTask(taskText: string) {
         const u = users.find(x => x.memberId === currId);
         if (!u) return;
 
-        // Force Active logic: Set active task directly via backend
-        const { secureUpdateTaskAction } = await import('@/actions/velo-actions');
-        await secureUpdateTaskAction(currId, {
+        const updates: any = {
             forceActive: {
                 text: decoded,
                 category: "Directive"
             }
-        });
+        };
+
+        // If forced from queue, remove it from queue
+        if (queueIdx !== -1) {
+            const queue = (u.task_queue || u.taskQueue || u.queue || []) as any[];
+            queue.splice(queueIdx, 1);
+            updates.taskQueue = queue;
+
+            u.task_queue = queue;
+            u.taskQueue = queue;
+            u.queue = queue;
+        }
+
+        // Force Active logic: Set active task directly via backend
+        const { secureUpdateTaskAction } = await import('@/actions/velo-actions');
+        await secureUpdateTaskAction(currId, updates);
 
         // Update local state instantly for UI
         u.activeTask = { text: decoded, TaskText: decoded };
@@ -519,7 +532,10 @@ export async function forceActiveTask(taskText: string) {
         u.pendingState = null;
 
         // Trigger UI updates
-        import('./dashboard-users').then(m => m.updateDetail(u));
+        import('./dashboard-users').then(m => {
+            m.updateDetail(u);
+            m.updateTaskQueue(u);
+        });
         import('./dashboard-modals').then(m => m.renderTaskGallery());
     } catch (err) {
         console.error("FORCE_ACTIVE_FAILED:", err);

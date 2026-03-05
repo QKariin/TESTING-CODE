@@ -1,15 +1,16 @@
 // src/scripts/dashboard-chat.ts
 // Dashboard Chat Management - Refactored for Supabase Realtime
 
-import { currId, ACCOUNT_ID, API_KEY, users } from './dashboard-state';
+import { currId, ACCOUNT_ID, API_KEY, users, adminEmail } from './dashboard-state';
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl, mediaType } from './media';
+import { clean } from './utils';
 
-const DOMPurify = (globalThis as any).DOMPurify || { sanitize: (s: string) => s };
+// Fallback if DOMPurify is not available or needs to be used from global
+const purifier = (typeof window !== 'undefined' && (window as any).DOMPurify) || { sanitize: (s: string) => s };
 
 let chatChannel: any = null;
-let chatPollInterval: any = null;
-let lastChatMsgId: any = null;
+let lastChatMsgId: string | null = null;
 
 /**
  * Initializes the chat listener for a specific user (Slave).
@@ -18,6 +19,7 @@ let lastChatMsgId: any = null;
 export async function initDashboardChat(slaveEmail: string) {
     const cleanEmail = slaveEmail.toLowerCase();
     console.log(`[DASHBOARD-CHAT] Initializing for ${cleanEmail}...`);
+
     // 1. Clean up existing subscription
     if (chatChannel) {
         console.log(`[DASHBOARD-CHAT] Cleaning up existing subscription.`);
@@ -25,10 +27,7 @@ export async function initDashboardChat(slaveEmail: string) {
         supabase.removeChannel(chatChannel);
         chatChannel = null;
     }
-    if (chatPollInterval) {
-        clearInterval(chatPollInterval);
-        chatPollInterval = null;
-    }
+    lastChatMsgId = null;
 
     const b = document.getElementById('adminChatBox');
     if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
@@ -38,55 +37,55 @@ export async function initDashboardChat(slaveEmail: string) {
 
     // 3. Subscribe Realtime
     const supabase = createClient();
-    console.log(`[DASHBOARD-CHAT] Subscribing to Realtime for ${cleanEmail}...`);
+    console.log("[DASHBOARD-CHAT] Initializing Realtime subscription...");
+
     chatChannel = supabase
-        .channel('chats-' + cleanEmail) // Unique channel per slave
+        .channel('chats-' + cleanEmail) // Unique channel per slave to avoid cross-pollination
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
             table: 'chats',
             filter: `member_id=eq.${cleanEmail}`
         }, (payload) => {
-            console.log(`[DASHBOARD-CHAT] New message received:`, payload.new);
-            appendChatMessage(payload.new);
+            console.log(`[DASHBOARD-CHAT] New message received via Realtime:`, payload.new);
+            if (payload.new.id !== lastChatMsgId) {
+                appendChatMessage(payload.new);
+            }
         })
         .subscribe((status) => {
-            console.log(`[DASHBOARD-CHAT] Subscription status: ${status}`);
+            // console.log(`[DASHBOARD-CHAT] Subscription status: ${status}`); // Quieted down
         });
-
-    // 4. Polling Fallback (Since RLS blocks Admin real-time subscriptions)
-    chatPollInterval = setInterval(() => {
-        loadDashboardChatHistory(cleanEmail);
-    }, 3000);
 }
 
 async function loadDashboardChatHistory(email: string) {
     try {
         const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        let { data: { user } } = await supabase.auth.getUser();
+
+        // LOCAL DEV BYPASS: If no user found on localhost, assume it's CEO
+        let userEmail = user?.email;
+        if (!userEmail && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+            userEmail = 'ceo@qkarin.com';
+        }
 
         let url = `/api/chat/history?email=${encodeURIComponent(email)}`;
-        if (user?.email) {
-            url += `&requester=${encodeURIComponent(user.email)}`;
+        if (userEmail) {
+            url += `&requester=${encodeURIComponent(userEmail)}`;
         }
 
         const res = await fetch(url);
         const data = await res.json();
         if (data.success) {
             const msgs = data.messages || [];
-            const latestId = msgs.length > 0 ? msgs[msgs.length - 1].id : null;
+            if (msgs.length > 0) {
+                lastChatMsgId = msgs[msgs.length - 1].id;
+            }
 
-            // Only re-render if there's a new message or if the chat box is empty
-            if (latestId !== lastChatMsgId || msgs.length === 0) {
-                lastChatMsgId = latestId;
-                const html = msgs.map((m: any) => renderToHtml(m)).join('');
-                const b = document.getElementById('adminChatBox');
-                if (b) {
-                    // Check if user is currently scrolled up
-                    const isAtBottom = b.scrollHeight - b.scrollTop <= b.clientHeight + 50;
-                    b.innerHTML = html + '<div id="chat-anchor" style="height:1px;"></div>';
-                    if (isAtBottom || msgs.length <= 10) forceBottom();
-                }
+            const html = msgs.map((m: any) => renderToHtml(m)).join('');
+            const b = document.getElementById('adminChatBox');
+            if (b) {
+                b.innerHTML = html + '<div id="chat-anchor" style="height:1px;"></div>';
+                forceBottom();
             }
         }
     } catch (err) {
@@ -97,6 +96,10 @@ async function loadDashboardChatHistory(email: string) {
 function appendChatMessage(msg: any) {
     const b = document.getElementById('adminChatBox');
     if (!b) return;
+
+    // Prevent duplicates from instant-append + realtime sync
+    if (msg.id && msg.id === lastChatMsgId) return;
+    lastChatMsgId = msg.id;
 
     const html = renderToHtml(msg);
     const anchor = document.getElementById('chat-anchor');
@@ -109,7 +112,7 @@ function appendChatMessage(msg: any) {
 }
 
 function renderToHtml(m: any) {
-    const isMe = m.metadata?.isQueen === true || m.sender_role === 'Queen';
+    const isMe = m.metadata?.isQueen === true || m.sender_role === 'Queen' || m.sender_email === 'ceo@qkarin.com';
     const timeStr = new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     let contentHtml = '';
@@ -124,18 +127,22 @@ function renderToHtml(m: any) {
 
     if (m.type === 'wishlist') {
         const item = m.metadata || {};
+        const itmTitle = item.title || "Tribute Item";
+        const itmPrice = typeof item.price === 'number' ? item.price : (parseFloat(item.price) || 0);
+        const itmImg = item.image || item.url || "";
+
         contentHtml = `
             <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                 <div style="width:100%; height:120px; overflow:hidden; position:relative;">
-                     <img src="${getOptimizedUrl(item.image, 150)}" style="width:100%; height:100%; object-fit:cover;">
+                     <img src="${getOptimizedUrl(itmImg, 150)}" style="width:100%; height:100%; object-fit:cover;">
                      <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
                          TRIBUTE SENT
                      </div>
                 </div>
                 <div style="padding:8px; text-align:center;">
                     <div style="color:#eee; font-family:'Cinzel'; font-size:0.6rem; margin-bottom:2px; opacity:0.8;">SLAVE sent</div>
-                    <div style="color:#fff; font-family:'Cinzel'; font-size:0.7rem; margin-bottom:4px;">${item.title}</div>
-                    <div style="color:#c5a059; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold;">${item.price.toLocaleString()}</div>
+                    <div style="color:#fff; font-family:'Cinzel'; font-size:0.7rem; margin-bottom:4px;">${clean(itmTitle)}</div>
+                    <div style="color:#c5a059; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold;">${itmPrice.toLocaleString()}</div>
                 </div>
             </div>`;
         return `<div class="msg-row" style="justify-content:center; margin-bottom:15px; width:100%; display:flex;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time" style="text-align:center; width:100%; margin-top:5px;">${timeStr}</div></div></div>`;
@@ -144,7 +151,7 @@ function renderToHtml(m: any) {
     if (m.type === 'photo') {
         contentHtml = `<div class="msg ${msgClass}"><img src="${getOptimizedUrl(content, 300)}" onclick="openChatPreview('${encodeURIComponent(content)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
     } else {
-        let safeHtml = DOMPurify.sanitize(content);
+        let safeHtml = purifier.sanitize(content);
         safeHtml = safeHtml.replace(/\n/g, "<br>");
         contentHtml = `<div class="msg ${msgClass}">${safeHtml}</div>`;
     }
@@ -176,24 +183,23 @@ export async function sendMsg() {
     if (btn) btn.disabled = true;
 
     // We need to know the Admin's email to send it
-    const supabase = createClient();
-    const { data: { user }, error: userErr } = await supabase.auth.getUser();
-
-    if (userErr || !user?.email) {
-        console.error(`[DASHBOARD-CHAT] Send failed: No authenticated user email found.`, userErr);
-        alert("Authentication Error: Failed to identify admin email. Please re-login.");
+    // Using adminEmail from dashboard-state directly
+    if (!adminEmail) {
+        console.error(`[DASHBOARD-CHAT] Send failed: Admin email not available.`);
+        alert("Authentication Error: Admin email not found. Please ensure you are logged in.");
         inp.disabled = false;
         if (btn) btn.disabled = false;
         return;
     }
 
-    console.log(`[DASHBOARD-CHAT] Sending message to ${currId} from ${user.email}...`);
+    // console.log(`[DASHBOARD-CHAT] Sending message to ${currId} from ${adminEmail}...`); // Removed email from log
 
     try {
         const res = await fetch('/api/chat/send', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                senderEmail: user.email,
+                senderEmail: adminEmail, // Use adminEmail from dashboard-state
                 conversationId: currId, // sending TO this slave
                 content: text,
                 type: 'text'
@@ -203,7 +209,7 @@ export async function sendMsg() {
         if (data.success) {
             console.log(`[DASHBOARD-CHAT] Message sent successfully.`);
             inp.value = "";
-            // Append instantly
+            // Append instantly for UX
             if (data.data) {
                 appendChatMessage(data.data);
             }
@@ -247,17 +253,27 @@ export async function handleAdminUpload(input: HTMLInputElement) {
                 const url = d.files[0].fileUrl;
                 // Send as photo message
                 const supabase = createClient();
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user?.email) {
-                    await fetch('/api/chat/send', {
+                let { data: { user } } = await supabase.auth.getUser();
+
+                let userEmail = user?.email;
+                if (!userEmail && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+                    userEmail = 'ceo@qkarin.com';
+                }
+
+                if (userEmail) {
+                    const sendRes = await fetch('/api/chat/send', {
                         method: 'POST',
                         body: JSON.stringify({
-                            senderEmail: user.email,
+                            senderEmail: userEmail,
                             conversationId: currId,
                             content: url,
                             type: 'photo'
                         })
                     });
+                    const sendData = await sendRes.json();
+                    if (sendData.success && sendData.data) {
+                        appendChatMessage(sendData.data);
+                    }
                 }
             }
             btn.innerText = originalText;

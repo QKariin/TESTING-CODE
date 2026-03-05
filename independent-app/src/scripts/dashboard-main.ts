@@ -160,11 +160,7 @@ export async function adjustWallet(action: 'add' | 'sub') {
         const u = users.find(x => x.memberId === currId);
         if (u) {
             u.wallet = result.newBalance;
-            // Re-render detail view if needed
-            // We need to call updateDetail(u) but it's currently a stub in this file.
-            // Let's manually update the DOM elements if updateDetail isn't available or working.
-            const walletEl = document.getElementById('dMirrorWallet');
-            if (walletEl) walletEl.innerText = (u.wallet || 0).toLocaleString();
+            updateDetail(u);
         }
     } else {
         console.error("Wallet adjustment failed:", result.error);
@@ -390,8 +386,8 @@ export async function submitQueenPost() {
 
         // Upload image if selected
         if (imageInput?.files?.[0]) {
-            const { uploadToBytescale } = await import('./mediaBytescale');
-            const url = await uploadToBytescale('queen_post', imageInput.files[0], 'queen_posts');
+            const { uploadToSupabase } = await import('./mediaSupabase');
+            const url = await uploadToSupabase('media', 'queen_posts', imageInput.files[0]);
             if (url !== 'failed') media_url = url;
         }
 

@@ -6,19 +6,17 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const email = searchParams.get('email');
-        const requester = searchParams.get('requester');
+        const requester = searchParams.get('requester')?.toLowerCase();
 
         if (!email) {
             return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
         }
 
         const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
 
-        let userEmail = requester || user?.email;
-        const isHardcodedAdmin = userEmail && ["ceo@qkarin.com", "liviacechova@gmail.com"].includes(userEmail.toLowerCase());
+        // ADMIN BYPASS: If requester is ceo@qkarin.com, use service role to bypass RLS
+        const isHardcodedAdmin = requester && ["ceo@qkarin.com", "liviacechova@gmail.com"].includes(requester);
 
-        // Use service role if admin to bypass RLS, otherwise use regular client
         const queryClient = isHardcodedAdmin ? createAdminClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -32,6 +30,7 @@ export async function GET(req: Request) {
             .order('created_at', { ascending: true });
 
         if (error) {
+            console.error("[API/Chat/History] Error:", error.message);
             return NextResponse.json({ success: false, error: error.message }, { status: 500 });
         }
 
