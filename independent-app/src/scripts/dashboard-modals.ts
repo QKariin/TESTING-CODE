@@ -17,6 +17,7 @@ let pendingDirectiveText = "";
 let workshopFillers: any[] = [];
 let workshopUserId: string | null = null;
 const workshopExpandedTexts = new Set<string>();
+let isConfirming = false;
 
 function stripHtml(html: string) {
     const tmp = document.createElement("DIV");
@@ -103,20 +104,27 @@ export async function openModById(taskId: string, memberId: string, isHistory: b
 }
 
 export function reviewTask(decision: 'approve' | 'reject') {
-    if (!currTask) return;
+    if (!currTask || isConfirming) return;
+
+    // Capture state locally to avoid race conditions
+    const taskData = { ...currTask };
+
     if (decision === 'approve') {
         openRewardProtocol();
     } else {
-        console.log("Task rejected:", currTask.id);
-        adminRejectTaskAction(currTask.id!, currTask.memberId!)
+        console.log("Task rejected:", taskData.id);
+        isConfirming = true;
+        adminRejectTaskAction(taskData.id!, taskData.memberId!)
             .then(res => {
+                isConfirming = false;
                 if (!res.success) throw new Error(res.error || 'Reject failed');
-                const u = users.find(x => x.memberId === currTask.memberId);
-                if (u) u.reviewQueue = u.reviewQueue.filter((x: any) => x.id !== currTask.id);
+                const u = users.find(x => x.memberId === taskData.memberId);
+                if (u) u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== taskData.id);
                 import('./dashboard-main').then(m => m.renderMainDashboard());
                 closeModal();
             })
             .catch(err => {
+                isConfirming = false;
                 console.error("Rejection error:", err);
                 alert("Error: " + err.message);
             });
@@ -207,19 +215,24 @@ export function toggleRewardRecord() {
 }
 
 export function confirmReward() {
-    if (!pendingApproveTask) return;
+    if (!pendingApproveTask || isConfirming) return;
+
+    // Capture state locally to avoid race conditions
+    const taskData = { ...pendingApproveTask };
     const bonusInp = document.getElementById('rewardBonus') as HTMLInputElement;
     const commentInp = document.getElementById('rewardComment') as HTMLInputElement;
     const bonus = parseInt(bonusInp?.value) || 50;
     const comment = commentInp?.value.trim();
 
-    adminApproveTaskAction(pendingApproveTask.id!, pendingApproveTask.memberId!, bonus, comment)
+    isConfirming = true;
+    adminApproveTaskAction(taskData.id!, taskData.memberId!, bonus, comment)
         .then(res => {
+            isConfirming = false;
             if (!res.success) throw new Error(res.error || 'Approval failed');
-            const u = users.find(x => x.memberId === pendingApproveTask.memberId);
+            const u = users.find(x => x.memberId === taskData.memberId);
             if (u) {
                 // 1. Remove from local review queue
-                u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== pendingApproveTask.id);
+                u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== taskData.id);
 
                 // 2. Update local points/stats
                 u.points = (u.points || 0) + bonus;
@@ -232,7 +245,7 @@ export function confirmReward() {
                 // 3. Update local history entry for "Record" tab
                 try {
                     let history = typeof u['Taskdom_History'] === 'string' ? JSON.parse(u['Taskdom_History'] || '[]') : (u['Taskdom_History'] || []);
-                    const entryIdx = history.findIndex((h: any) => h.id === pendingApproveTask.id);
+                    const entryIdx = history.findIndex((h: any) => h.id === taskData.id);
                     if (entryIdx > -1) {
                         history[entryIdx].status = 'approve';
                         history[entryIdx].completed = true;
@@ -248,13 +261,14 @@ export function confirmReward() {
             import('./dashboard-main').then(m => m.renderMainDashboard());
 
             // 5. Update selected user detail if we are looking at them
-            if (currId === pendingApproveTask.memberId) {
+            if (currId === taskData.memberId) {
                 import('./dashboard-users').then(m => m.updateDetail(u));
             }
 
             closeModal();
         })
         .catch(err => {
+            isConfirming = false;
             console.error("Approval error:", err);
             alert("Error: " + err.message);
         });
