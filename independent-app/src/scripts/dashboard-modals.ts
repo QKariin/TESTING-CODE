@@ -109,13 +109,17 @@ export function reviewTask(decision: 'approve' | 'reject') {
     } else {
         console.log("Task rejected:", currTask.id);
         adminRejectTaskAction(currTask.id!, currTask.memberId!)
-            .then(() => {
+            .then(res => {
+                if (!res.success) throw new Error(res.error || 'Reject failed');
                 const u = users.find(x => x.memberId === currTask.memberId);
                 if (u) u.reviewQueue = u.reviewQueue.filter((x: any) => x.id !== currTask.id);
                 import('./dashboard-main').then(m => m.renderMainDashboard());
                 closeModal();
             })
-            .catch(err => console.error("Rejection error:", err));
+            .catch(err => {
+                console.error("Rejection error:", err);
+                alert("Error: " + err.message);
+            });
     }
 }
 
@@ -210,7 +214,8 @@ export function confirmReward() {
     const comment = commentInp?.value.trim();
 
     adminApproveTaskAction(pendingApproveTask.id!, pendingApproveTask.memberId!, bonus, comment)
-        .then(() => {
+        .then(res => {
+            if (!res.success) throw new Error(res.error || 'Approval failed');
             const u = users.find(x => x.memberId === pendingApproveTask.memberId);
             if (u) {
                 // 1. Remove from local review queue
@@ -249,7 +254,10 @@ export function confirmReward() {
 
             closeModal();
         })
-        .catch(err => console.error("Approval error:", err));
+        .catch(err => {
+            console.error("Approval error:", err);
+            alert("Error: " + err.message);
+        });
 }
 
 let cachedTasks: any[] = [];
