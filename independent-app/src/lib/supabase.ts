@@ -24,6 +24,10 @@ export const supabase = {
         if (!clientInstance) clientInstance = createClient(supabaseUrl, supabaseAnonKey, clientConfig)
         return clientInstance.auth
     },
+    get storage() {
+        if (!clientInstance) clientInstance = createClient(supabaseUrl, supabaseAnonKey, clientConfig)
+        return clientInstance.storage
+    },
     from(table: string) {
         if (!clientInstance) clientInstance = createClient(supabaseUrl, supabaseAnonKey, clientConfig)
         return clientInstance.from(table)
@@ -34,6 +38,10 @@ export const supabaseAdmin = {
     get auth() {
         if (!adminInstance) adminInstance = createClient(supabaseUrl, supabaseServiceKey, { auth: { autoRefreshToken: false, persistSession: false } })
         return adminInstance.auth
+    },
+    get storage() {
+        if (!adminInstance) adminInstance = createClient(supabaseUrl, supabaseServiceKey, { auth: { autoRefreshToken: false, persistSession: false } })
+        return adminInstance.storage
     },
     from(table: string) {
         if (!adminInstance) adminInstance = createClient(supabaseUrl, supabaseServiceKey, { auth: { autoRefreshToken: false, persistSession: false } })

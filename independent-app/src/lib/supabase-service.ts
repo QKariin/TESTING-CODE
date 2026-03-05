@@ -207,26 +207,30 @@ export const DbService = {
             const pendingEntries = history.filter((t: any) => t.status === 'pending');
             for (const entry of pendingEntries) {
                 let finalUrl = entry.proofUrl;
-                if (finalUrl && (finalUrl.includes('/public/proofs/') || finalUrl.includes('proofs/tasks/'))) {
+                if (finalUrl && (finalUrl.includes('proofs/') || finalUrl.includes('/public/proofs/'))) {
                     try {
                         let path = "";
-                        if (finalUrl.includes('/public/proofs/')) {
-                            path = finalUrl.split('/public/proofs/')[1];
-                        } else if (finalUrl.includes('proofs/tasks/')) {
-                            path = finalUrl.split('proofs/tasks/')[1];
-                            path = 'tasks/' + path;
+                        // Case A: Full absolute public URL from Supabase
+                        if (finalUrl.includes('/object/public/proofs/')) {
+                            path = finalUrl.split('/object/public/proofs/')[1].split('?')[0];
+                        }
+                        // Case B: Relative path with my previous prefix
+                        else if (finalUrl.includes('/public/proofs/')) {
+                            path = finalUrl.split('/public/proofs/')[1].split('?')[0];
+                        }
+                        // Case C: Raw relative path starting with bucket or subpath
+                        else if (finalUrl.includes('proofs/tasks/')) {
+                            path = 'tasks/' + finalUrl.split('proofs/tasks/')[1].split('?')[0];
                         }
 
                         if (path) {
-                            const { data, error } = await supabaseAdmin.storage.from('proofs').createSignedUrl(path, 3600);
-                            if (error) {
-                                console.error("[DbService] Signing Error for path:", path, error.message);
-                            } else if (data && data.signedUrl) {
-                                finalUrl = data.signedUrl;
+                            const { data: signData, error: signErr } = await supabaseAdmin.storage.from('proofs').createSignedUrl(path, 7200);
+                            if (!signErr && signData?.signedUrl) {
+                                finalUrl = signData.signedUrl;
                             }
                         }
                     } catch (e) {
-                        console.error("[DbService] Signing Catch:", e);
+                        console.error("[DbService] Error signing proofUrl:", finalUrl, e);
                     }
                 }
 

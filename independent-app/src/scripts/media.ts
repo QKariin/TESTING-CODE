@@ -57,6 +57,7 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     if (url.startsWith("blob:")) return url;
     if (url === "FORCED" || url === "SKIPPED") return "https://upcdn.io/kW2K8hR/raw/public/collar-192.png";
     if (url.includes("supabase.co/storage")) return url;
+    if (url.includes("token=")) return url; // Already a signed URL
 
     // 1. CLOUDINARY
     if (url.includes("cloudinary.com")) {

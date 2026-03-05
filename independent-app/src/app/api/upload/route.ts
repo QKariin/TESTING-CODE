@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
         console.log("[API/Upload] Upload success:", data.path);
         const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fullPath);
-        const finalUrl = bucket === 'proofs' ? `/public/proofs/${fullPath}` : urlData.publicUrl;
+        const finalUrl = urlData.publicUrl; // Absolute Supabase URL (even if private)
 
         console.log("[API/Upload] Returning URL:", finalUrl);
         return NextResponse.json({ url: finalUrl, success: true });
