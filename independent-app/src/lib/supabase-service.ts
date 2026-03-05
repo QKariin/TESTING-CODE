@@ -207,19 +207,26 @@ export const DbService = {
             const pendingEntries = history.filter((t: any) => t.status === 'pending');
             for (const entry of pendingEntries) {
                 let finalUrl = entry.proofUrl;
-                if (finalUrl && finalUrl.includes('/public/proofs/')) {
+                if (finalUrl && (finalUrl.includes('/public/proofs/') || finalUrl.includes('proofs/tasks/'))) {
                     try {
-                        const pathParts = finalUrl.split('/public/proofs/');
-                        if (pathParts.length > 1) {
-                            const { data, error } = await supabaseAdmin.storage.from('proofs').createSignedUrl(pathParts[1], 3600);
-                            if (!error && data && data.signedUrl) {
-                                finalUrl = data.signedUrl.startsWith('http')
-                                    ? data.signedUrl
-                                    : `${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}${data.signedUrl}`;
+                        let path = "";
+                        if (finalUrl.includes('/public/proofs/')) {
+                            path = finalUrl.split('/public/proofs/')[1];
+                        } else if (finalUrl.includes('proofs/tasks/')) {
+                            path = finalUrl.split('proofs/tasks/')[1];
+                            path = 'tasks/' + path;
+                        }
+
+                        if (path) {
+                            const { data, error } = await supabaseAdmin.storage.from('proofs').createSignedUrl(path, 3600);
+                            if (error) {
+                                console.error("[DbService] Signing Error for path:", path, error.message);
+                            } else if (data && data.signedUrl) {
+                                finalUrl = data.signedUrl;
                             }
                         }
                     } catch (e) {
-                        console.error("Failed to generate signed url", e);
+                        console.error("[DbService] Signing Catch:", e);
                     }
                 }
 

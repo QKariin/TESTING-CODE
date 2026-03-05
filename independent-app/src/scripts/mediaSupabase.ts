@@ -92,8 +92,9 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
         });
 
         if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.error || 'Upload failed');
+            const errData = await response.json().catch(() => ({ error: 'Unknown server error' }));
+            console.error("[SupabaseStorage] Proxy Error Status:", response.status, errData);
+            throw new Error(errData.error || `Upload failed (${response.status})`);
         }
 
         const data = await response.json();
