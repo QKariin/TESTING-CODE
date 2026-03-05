@@ -609,6 +609,15 @@ export default function DashboardPage() {
                 </div>
             </div>
 
+            {/* AGGREGATED LIST MODAL */}
+            <div id="listModal" className="modal">
+                <div className="m-content list-m-content">
+                    <span onClick={() => (window as any).closeListModal()} className="modal-close-large">&times;</span>
+                    <div id="mListHeader" className="m-list-header"></div>
+                    <div id="mListGrid" className="ops-monitor-grid" style={{ flexWrap: 'wrap', justifyContent: 'center', padding: '40px 20px' }}></div>
+                </div>
+            </div>
+
             <div id="exclusionModal" className="modal" style={{ display: 'none' }}>
                 <div className="m-content" style={{ width: '400px', height: 'auto', maxHeight: '70vh', display: 'flex', flexDirection: 'column', padding: '20px' }}>
                     <h3 style={{ color: 'var(--red)', marginBottom: '15px', textAlign: 'center' }}>PROTOCOL EXCLUSIONS</h3>

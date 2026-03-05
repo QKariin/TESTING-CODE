@@ -38,6 +38,11 @@ export function closeModal() {
     setPendingRewardMedia(null);
 }
 
+export function closeListModal() {
+    const modal = document.getElementById('listModal');
+    if (modal) modal.classList.remove('active');
+}
+
 export function openModal(taskId: string | null, memberId: string | null, mediaUrl: string | null, mediaType: string | null, taskText: string | null, isHistory: boolean = false, status: string | null = null) {
     setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: mediaType, text: taskText });
     const modal = document.getElementById('reviewModal');
@@ -543,9 +548,10 @@ export async function forceActiveTask(taskText: string, queueIdx: number = -1) {
 }
 
 export function renderGlobalReview(filterRoutine: boolean) {
-    const modal = document.getElementById('reviewModal');
-    const qSec = document.getElementById('userQueueSec');
-    if (!modal || !qSec) return;
+    const modal = document.getElementById('listModal');
+    const header = document.getElementById('mListHeader');
+    const grid = document.getElementById('mListGrid');
+    if (!modal || !grid || !header) return;
 
     let allPending: any[] = [];
     users.forEach(u => {
@@ -561,38 +567,42 @@ export function renderGlobalReview(filterRoutine: boolean) {
         return isRoutine === filterRoutine;
     });
 
-    modal.classList.add('active');
-    qSec.style.display = 'flex';
+    // Sort by Date
+    filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    // Aesthetic Title
     const title = filterRoutine ? "DAILY ROUTINE QUEUE" : "TASK REVIEW QUEUE";
     const color = filterRoutine ? "#00ff00" : "var(--gold)";
 
-    qSec.innerHTML = `
-        <div style="width:100%; text-align:center; padding: 20px 0; font-family:'Orbitron'; font-size:1.2rem; color:${color}; letter-spacing:2px; border-bottom:1px solid #222; margin-bottom:20px;">
+    header.innerHTML = `
+        <div style="font-family:'Orbitron'; font-size:1.5rem; color:${color}; letter-spacing:3px; font-weight:900;">
             ${title}
         </div>
-        <div class="pend-list">
-            ${filtered.map((t: any) => {
+        <div style="font-family:'Rajdhani'; color:#666; font-size:0.9rem; margin-top:5px;">${filtered.length} ITEMS PENDING</div>
+    `;
+
+    grid.innerHTML = filtered.map((t: any) => {
         const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
         const isVideo = t.proofType === 'video' || mediaTypeFunction(t.proofUrl) === 'video';
-        const optUrl = getOptimizedUrl(t.proofUrl || '', 400);
-        const mediaTag = isVideo
-            ? `<video src="${optUrl}" class="pend-thumb" autoplay loop muted playsinline style="object-fit:cover;"></video>`
-            : `<img src="${optUrl}" class="pend-thumb" onerror="this.src='https://upcdn.io/kW2K8hR/raw/public/collar-192.png'">`;
+        const optUrl = getOptimizedUrl(t.proofUrl || '', 600);
 
         return `
-                    <div class="pend-card" onclick="window.openModById('${t.id}', '${t.memberId}', false)">
-                        ${mediaTag}
-                        <div class="pend-info">
-                            <div class="pend-name" style="font-family:'Rajdhani'; font-weight:700; color:#fff; font-size:0.9rem; margin-bottom:2px;">${clean(t.memberName)}</div>
-                            <div class="pend-date" style="font-size:0.7rem; color:#888;">${dateStr}</div>
-                        </div>
-                    </div>`;
-    }).join('')}
-            ${filtered.length === 0 ? `<div style="width:100%; text-align:center; padding:40px; color:#666; font-family:'Rajdhani';">NO PENDING ${filterRoutine ? 'ROUTINES' : 'TASKS'}</div>` : ''}
-        </div>
-    `;
+            <div class="ops-card ${filterRoutine ? 'routine' : 'task'}" onclick="window.openModById('${t.id}', '${t.memberId}', false)">
+                ${isVideo ?
+                `<video src="${optUrl}" class="ops-card-bg" autoplay muted loop playsinline></video>` :
+                `<img src="${optUrl}" class="ops-card-bg">`}
+                <div class="ops-card-overlay">
+                    <div class="ops-card-label" style="color:${color}">${filterRoutine ? 'ROUTINE' : 'TASK'}</div>
+                    <div class="ops-card-title">${clean(t.memberName)}</div>
+                    <div style="font-family:'Rajdhani'; font-size:0.8rem; color:#aaa; letter-spacing:1px;">${dateStr}</div>
+                </div>
+            </div>`;
+    }).join('');
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div style="width:100%; text-align:center; padding:100px; color:#444; font-family:'Orbitron'; font-size:1.2rem; background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed #222;">NO PENDING ${filterRoutine ? 'ROUTINES' : 'TASKS'}</div>`;
+    }
+
+    modal.classList.add('active');
 }
 
 // Redundant local handlers removed in favor of dashboard-users.ts implementations
@@ -620,5 +630,6 @@ if (typeof window !== 'undefined') {
     (window as any).toggleRewardRecord = toggleRewardRecord;
     (window as any).confirmReward = confirmReward;
     (window as any).renderGlobalReview = renderGlobalReview;
+    (window as any).closeListModal = closeListModal;
 }
 

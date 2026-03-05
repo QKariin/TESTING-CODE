@@ -897,6 +897,41 @@ body {
     /* Hide old cards if they are still rendered */
 }
 
+.list-m-content {
+    width: 95vw !important;
+    max-width: 1400px !important;
+    height: 90vh !important;
+    background: rgba(5, 5, 5, 0.98) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid #222 !important;
+    padding: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+}
+
+.m-list-header {
+    width: 100%;
+    text-align: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.modal-close-large {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 3rem;
+    color: #444;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 1200;
+}
+
+.modal-close-large:hover {
+    color: var(--red);
+}
+
 .mon-av-box {
     width: 50px;
     height: 50px;
