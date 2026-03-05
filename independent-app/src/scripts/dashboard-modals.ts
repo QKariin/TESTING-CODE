@@ -7,11 +7,11 @@ import {
     setCurrTask, setPendingApproveTask, setSelectedStickerId, setPendingRewardMedia,
     setMediaRecorder, setAudioChunks, mediaRecorder, audioChunks,
     ACCOUNT_ID, API_KEY, setDragSrcIndex, dragSrcIndex,
-    armoryTarget, setArmoryTarget
+    armoryTarget, setArmoryTarget, setRewardTier, setSelectedUserTask
 } from './dashboard-state';
 import { clean, raw, getOptimizedUrl } from './utils';
 import { mediaType as mediaTypeFunction, getSignedUrl } from './media';
-import { DbService } from '@/lib/supabase-service';
+import { adminApproveTaskAction, adminRejectTaskAction, adminGetTasksAction, adminAssignTaskAction } from '@/actions/velo-actions';
 
 let pendingDirectiveText = "";
 let workshopFillers: any[] = [];
@@ -108,7 +108,7 @@ export function reviewTask(decision: 'approve' | 'reject') {
         openRewardProtocol();
     } else {
         console.log("Task rejected:", currTask.id);
-        DbService.rejectTask(currTask.id!, currTask.memberId!)
+        adminRejectTaskAction(currTask.id!, currTask.memberId!)
             .then(() => {
                 const u = users.find(x => x.memberId === currTask.memberId);
                 if (u) u.reviewQueue = u.reviewQueue.filter((x: any) => x.id !== currTask.id);
@@ -209,7 +209,7 @@ export function confirmReward() {
     const bonus = parseInt(bonusInp?.value) || 50;
     const comment = commentInp?.value.trim();
 
-    DbService.approveTask(pendingApproveTask.id!, pendingApproveTask.memberId!, bonus, null, comment)
+    adminApproveTaskAction(pendingApproveTask.id!, pendingApproveTask.memberId!, bonus, comment)
         .then(() => {
             const u = users.find(x => x.memberId === pendingApproveTask.memberId);
             if (u) {
@@ -268,7 +268,8 @@ export async function openTaskGallery() {
 
     try {
         console.log("GALLERY: Fetching tasks...");
-        const tasks = await DbService.getTasksFromDatabase();
+        const res = await adminGetTasksAction();
+        const tasks = res.success ? res.tasks : [];
         cachedTasks = tasks || [];
         currentCategory = null;
         renderTaskGallery();
@@ -463,7 +464,7 @@ export async function pickTask(taskText: string) {
 
     try {
         console.log("PICK: Assigning task:", taskText.substring(0, 20) + "...");
-        await DbService.assignTask(currId, { text: taskText });
+        await adminAssignTaskAction(currId, taskText);
         // Refresh UI
         const u = users.find(x => x.memberId === currId);
         if (u) {

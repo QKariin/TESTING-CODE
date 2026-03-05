@@ -574,6 +574,46 @@ export async function getSubscriptionLink(email: string) {
 }
 
 // --- 8. REVIEW TASK (Admin) ---
+export async function adminApproveTaskAction(taskId: string, memberId: string, bonus: number, comment: string | null) {
+    try {
+        await DbService.approveTask(taskId, memberId, bonus, null, comment);
+        return { success: true };
+    } catch (e: any) {
+        console.error("adminApproveTaskAction error:", e);
+        return { success: false, error: e.message };
+    }
+}
+
+export async function adminRejectTaskAction(taskId: string, memberId: string) {
+    try {
+        await DbService.rejectTask(taskId, memberId);
+        return { success: true };
+    } catch (e: any) {
+        console.error("adminRejectTaskAction error:", e);
+        return { success: false, error: e.message };
+    }
+}
+
+export async function adminGetTasksAction() {
+    try {
+        const tasks = await DbService.getTasksFromDatabase();
+        return { success: true, tasks: tasks || [] };
+    } catch (e: any) {
+        console.error("adminGetTasksAction error:", e);
+        return { success: false, error: e.message };
+    }
+}
+
+export async function adminAssignTaskAction(memberId: string, taskText: string) {
+    try {
+        await DbService.assignTask(memberId, { text: taskText });
+        return { success: true };
+    } catch (e: any) {
+        console.error("adminAssignTaskAction error:", e);
+        return { success: false, error: e.message };
+    }
+}
+
 export async function reviewTaskAction(memberId: string, decision: 'approve' | 'reject', submissionId: string) {
     try {
         const profile = await getProfile(memberId);
