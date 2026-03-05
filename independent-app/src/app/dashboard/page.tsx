@@ -493,17 +493,6 @@ export default function DashboardPage() {
 
                                     <div id="tabIntel" className="ap-view hidden">
                                         <div id="userQueueSec" style={{ display: 'none' }}></div>
-                                        <div className="sec-box">
-                                            <div className="sec-title">ENDURANCE TELEMETRY</div>
-                                            <div id="kneelStatsBox" className="telemetry-grid">
-                                                <div className="t-stat"><span>TOTAL</span><strong id="dTotalKneel">0h</strong></div>
-                                                <div className="t-stat"><span>SESSION</span><strong id="dLastKneel">--</strong></div>
-                                            </div>
-                                        </div>
-                                        <div className="sec-box">
-                                            <div className="sec-title" style={{ color: 'var(--gold)' }}>TRIBUTE INVENTORY</div>
-                                            <div id="inventoryGrid" className="inv-grid"></div>
-                                        </div>
                                     </div>
 
                                     <div id="tabRecord" className="ap-view hidden">
