@@ -208,12 +208,18 @@ export const DbService = {
             for (const entry of pendingEntries) {
                 let finalUrl = entry.proofUrl;
                 if (finalUrl && finalUrl.includes('/public/proofs/')) {
-                    const pathParts = finalUrl.split('/public/proofs/');
-                    if (pathParts.length > 1) {
-                        const { data } = await supabaseAdmin.storage.from('proofs').createSignedUrl(pathParts[1], 3600);
-                        if (data && data.signedUrl) {
-                            finalUrl = data.signedUrl;
+                    try {
+                        const pathParts = finalUrl.split('/public/proofs/');
+                        if (pathParts.length > 1) {
+                            const { data, error } = await supabaseAdmin.storage.from('proofs').createSignedUrl(pathParts[1], 3600);
+                            if (!error && data && data.signedUrl) {
+                                finalUrl = data.signedUrl.startsWith('http')
+                                    ? data.signedUrl
+                                    : `${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}${data.signedUrl}`;
+                            }
                         }
+                    } catch (e) {
+                        console.error("Failed to generate signed url", e);
                     }
                 }
 
