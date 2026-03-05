@@ -114,14 +114,18 @@ export function reviewTask(decision: 'approve' | 'reject') {
     } else {
         console.log("Task rejected:", taskData.id);
         isConfirming = true;
+        // Optimistic update
+        const u = users.find(x => x.memberId === taskData.memberId);
+        if (u) u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== taskData.id);
+        import('./dashboard-main').then(m => m.renderMainDashboard());
+        closeModal();
+
         adminRejectTaskAction(taskData.id!, taskData.memberId!)
             .then(res => {
                 isConfirming = false;
-                if (!res.success) throw new Error(res.error || 'Reject failed');
-                const u = users.find(x => x.memberId === taskData.memberId);
-                if (u) u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== taskData.id);
-                import('./dashboard-main').then(m => m.renderMainDashboard());
-                closeModal();
+                if (!res.success) {
+                    console.error("Reject server-side fail:", res.error);
+                }
             })
             .catch(err => {
                 isConfirming = false;
@@ -225,48 +229,56 @@ export function confirmReward() {
     const comment = commentInp?.value.trim();
 
     isConfirming = true;
+
+    // --- OPTIMISTIC UPDATE START ---
+    const u = users.find(x => x.memberId === taskData.memberId);
+    if (u) {
+        // 1. Remove from local review queue
+        u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== taskData.id);
+
+        // 2. Update local points/stats
+        u.points = (u.points || 0) + bonus;
+        if (u.wallet !== undefined) u.wallet = (u.wallet || 0) + bonus;
+        if (u.score !== undefined) u.score = (u.score || 0) + bonus;
+        if (u.parameters) {
+            u.parameters.taskdom_completed_tasks = (u.parameters.taskdom_completed_tasks || 0) + 1;
+        }
+
+        // 3. Update local history entry for "Record" tab
+        try {
+            let history = typeof u['Taskdom_History'] === 'string' ? JSON.parse(u['Taskdom_History'] || '[]') : (u['Taskdom_History'] || []);
+            const entryIdx = history.findIndex((h: any) => h.id === taskData.id);
+            if (entryIdx > -1) {
+                history[entryIdx].status = 'approve';
+                history[entryIdx].completed = true;
+                if (comment) history[entryIdx].adminComment = comment;
+            }
+            u['Taskdom_History'] = JSON.stringify(history);
+        } catch (e) {
+            console.warn("Local history update failed:", e);
+        }
+    }
+
+    // 4. Force UI refresh
+    import('./dashboard-main').then(m => m.renderMainDashboard());
+
+    // 5. Update selected user detail if we are looking at them
+    if (u && currId === taskData.memberId) {
+        import('./dashboard-users').then(m => m.updateDetail(u));
+    }
+
+    closeModal();
+    // --- OPTIMISTIC UPDATE END ---
+
     adminApproveTaskAction(taskData.id!, taskData.memberId!, bonus, comment)
         .then(res => {
             isConfirming = false;
-            if (!res.success) throw new Error(res.error || 'Approval failed');
-            const u = users.find(x => x.memberId === taskData.memberId);
-            if (u) {
-                // 1. Remove from local review queue
-                u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== taskData.id);
-
-                // 2. Update local points/stats
-                u.points = (u.points || 0) + bonus;
-                if (u.wallet !== undefined) u.wallet = (u.wallet || 0) + bonus;
-                if (u.score !== undefined) u.score = (u.score || 0) + bonus;
-                if (u.parameters) {
-                    u.parameters.taskdom_completed_tasks = (u.parameters.taskdom_completed_tasks || 0) + 1;
-                }
-
-                // 3. Update local history entry for "Record" tab
-                try {
-                    let history = typeof u['Taskdom_History'] === 'string' ? JSON.parse(u['Taskdom_History'] || '[]') : (u['Taskdom_History'] || []);
-                    const entryIdx = history.findIndex((h: any) => h.id === taskData.id);
-                    if (entryIdx > -1) {
-                        history[entryIdx].status = 'approve';
-                        history[entryIdx].completed = true;
-                        if (comment) history[entryIdx].adminComment = comment;
-                    }
-                    u['Taskdom_History'] = JSON.stringify(history);
-                } catch (e) {
-                    console.warn("Local history update failed:", e);
-                }
+            if (!res.success) {
+                console.error("Approval server-side fail:", res.error);
+                alert("Notice: Server failed to sync reward, but UI updated locally.");
             }
-
-            // 4. Force UI refresh
-            import('./dashboard-main').then(m => m.renderMainDashboard());
-
-            // 5. Update selected user detail if we are looking at them
-            if (currId === taskData.memberId) {
-                import('./dashboard-users').then(m => m.updateDetail(u));
-            }
-
-            closeModal();
         })
+
         .catch(err => {
             isConfirming = false;
             console.error("Approval error:", err);
