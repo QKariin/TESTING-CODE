@@ -7,7 +7,7 @@ import {
     setCurrTask, setPendingApproveTask, setSelectedStickerId, setPendingRewardMedia,
     setMediaRecorder, setAudioChunks, mediaRecorder, audioChunks,
     ACCOUNT_ID, API_KEY, setDragSrcIndex, dragSrcIndex,
-    armoryTarget, setArmoryTarget, setRewardTier, setSelectedUserTask
+    armoryTarget, setArmoryTarget
 } from './dashboard-state';
 import { clean, raw, getOptimizedUrl } from './utils';
 import { mediaType as mediaTypeFunction, getSignedUrl } from './media';
