@@ -2437,8 +2437,13 @@ export function renderHistoryAndAltar(profileData: any) {
     _renderMiniGrid('gridAltarFailed', failed.slice(0, 6));
 }
 
-function _isVideo(url: string): boolean {
-    return /\.(mp4|mov|webm|ogg|avi)$/i.test(url) || url.includes('/video/');
+function _isVideo(url: string | null | undefined): boolean {
+    if (!url) return false;
+    const l = url.toLowerCase();
+    return l.startsWith('wix:video') ||
+        /\.(mp4|mov|webm|ogg|avi)(\?|$)/i.test(l) ||
+        l.includes('/video/') ||
+        (l.includes('supabase.co/storage') && /\.(mp4|webm|mov)(\?|$)/.test(l));
 }
 
 function _renderAltarHero(approved: any[]) {
