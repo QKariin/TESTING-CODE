@@ -206,9 +206,21 @@ export const DbService = {
             const history: any[] = this._parseHistory(row);
             const pendingEntries = history.filter((t: any) => t.status === 'pending');
             for (const entry of pendingEntries) {
+                let finalUrl = entry.proofUrl;
+                if (finalUrl && finalUrl.includes('/public/proofs/')) {
+                    const pathParts = finalUrl.split('/public/proofs/');
+                    if (pathParts.length > 1) {
+                        const { data } = await supabaseAdmin.storage.from('proofs').createSignedUrl(pathParts[1], 3600);
+                        if (data && data.signedUrl) {
+                            finalUrl = data.signedUrl;
+                        }
+                    }
+                }
+
                 pending.push({
                     ...entry,
                     id: entry.id,
+                    proofUrl: finalUrl,
                     member_id: row.member_id,
                     memberName: row['Name'] || 'Slave',
                     avatarUrl: row['Profile pic'] || null,
@@ -280,7 +292,7 @@ export const DbService = {
         } catch (_) { }
     },
 
-    async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string) {
+    async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string, isRoutine: boolean = false) {
         const now = new Date().toISOString();
         const taskId = Date.now().toString();
 
@@ -291,12 +303,14 @@ export const DbService = {
         // 2. Build new entry
         const newEntry: any = {
             id: taskId,
-            text: taskText,
+            text: isRoutine ? "Daily Routine" : taskText,
             proofUrl: proofUrl,
             proofType: (proofType || '').startsWith('video') ? 'video' : 'image',
             timestamp: now,
             status: 'pending',
-            completed: false
+            completed: false,
+            isRoutine: isRoutine,
+            category: isRoutine ? 'Routine' : undefined
         };
         history.unshift(newEntry);
 

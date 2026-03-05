@@ -234,15 +234,26 @@ async function updateReviewQueue(u: any) {
 
     if (u.reviewQueue && u.reviewQueue.length > 0) {
         qSec.style.display = 'flex';
-        qSec.innerHTML = `<div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>` +
-            u.reviewQueue.map((t: any) => `
-                <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false)">
-                    <img src="${getOptimizedUrl(t.proofUrl || '', 200)}" class="pend-thumb">
-                    <div class="pend-info">
-                        <div class="pend-act">PENDING</div>
-                        <div class="pend-txt">${clean(t.text)}</div>
-                    </div>
-                </div>`).join('');
+        qSec.innerHTML = `
+            <div class="sec-title" style="color:var(--red);">PENDING REVIEW</div>
+            <div class="pend-list">
+                ${u.reviewQueue.map((t: any) => {
+            const isRoutine = t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine';
+            const actType = isRoutine ? 'DAILY ROUTINE' : 'TASK';
+            const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+            return `
+                    <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false)">
+                        <img src="${getOptimizedUrl(t.proofUrl || '', 300)}" class="pend-thumb">
+                        <div class="pend-info">
+                            <div class="pend-act" style="color:${isRoutine ? '#00ff00' : 'var(--gold)'}">${actType}</div>
+                            <div class="pend-date">${dateStr}</div>
+                            <div class="pend-txt">${clean(t.text)}</div>
+                        </div>
+                    </div>`;
+        }).join('')}
+            </div>
+        `;
     } else {
         qSec.style.display = 'none';
     }

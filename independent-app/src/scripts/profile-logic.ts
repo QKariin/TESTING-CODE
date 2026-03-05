@@ -1063,26 +1063,26 @@ export function mobileRequestTask() { getRandomTask(); }
 export function mobileSkipTask() { skipTask(); }
 export function mobileUploadEvidence(input: HTMLInputElement) {
     if (input.files && input.files[0]) {
-        submitTaskEvidence(input.files[0]);
+        submitTaskEvidence(input.files[0], false);
         input.value = '';
     }
 }
 
 export function handleRoutineUpload(input: HTMLInputElement) {
-    if (input.files && input.files[0]) submitTaskEvidence(input.files[0]);
+    if (input.files && input.files[0]) submitTaskEvidence(input.files[0], true);
 }
 
 export function handleTaskEvidenceUpload(input: HTMLInputElement) {
     if (input.files && input.files[0]) {
-        submitTaskEvidence(input.files[0]);
+        submitTaskEvidence(input.files[0], false);
         input.value = '';
     }
 }
 
-async function submitTaskEvidence(file: File) {
+async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
     const { id, memberId, userName } = getState();
     const pid = memberId || id;
-    console.log("Starting task submission for:", pid, "File:", file.name, "Size:", file.size);
+    console.log("Starting task submission for:", pid, "File:", file.name, "Size:", file.size, "Routine:", isRoutine);
 
     if (!pid) {
         console.error("No memberId found in state during submission.");
@@ -1155,7 +1155,8 @@ async function submitTaskEvidence(file: File) {
                 payload: {
                     proofUrl: fileUrl,
                     proofType: file.type,
-                    taskText: taskText
+                    taskText: taskText,
+                    isRoutine: isRoutine
                 }
             })
         });

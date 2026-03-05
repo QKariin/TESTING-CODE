@@ -1873,49 +1873,95 @@ body {
 /* PENDING CARDS & HISTORY */
 .pend-list {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    gap: 12px;
     width: 100%;
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+.pend-list::-webkit-scrollbar {
+    height: 6px;
+}
+
+.pend-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.pend-list::-webkit-scrollbar-thumb {
+    background: var(--red);
+    border-radius: 4px;
 }
 
 .pend-card {
+    position: relative;
     display: flex;
-    gap: 12px;
-    background: rgba(255, 0, 60, 0.05);
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.8);
     border: 1px solid var(--red);
-    padding: 8px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    align-items: center;
     box-shadow: 0 0 10px rgba(255, 0, 60, 0.1);
-    width: 100%;
+    width: 160px;
+    height: 160px;
+    flex-shrink: 0;
+    overflow: hidden;
     transition: 0.2s;
-    height: 60px;
 }
 
 .pend-card:hover {
-    background: rgba(255, 0, 60, 0.1);
-    transform: translateX(2px);
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.3);
 }
 
 .pend-thumb {
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border: 1px solid #333;
-    background: #000;
-    flex-shrink: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.pend-card:hover .pend-thumb {
+    opacity: 0.8;
 }
 
 .pend-info {
-    flex: 1;
-    overflow: hidden;
-    position: relative !important;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.9) 30%, #000);
+    padding: 12px 10px 8px;
+    z-index: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    min-width: 0;
+}
+
+.pend-act {
+    font-family: 'Orbitron';
+    font-size: 0.6rem;
+    color: var(--gold);
+    font-weight: 900;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 2;
+}
+
+.pend-date {
+    font-family: 'Rajdhani';
+    font-size: 0.65rem;
+    color: #888;
+    margin-bottom: 2px;
+    position: relative;
+    z-index: 2;
 }
 
 .pend-txt {
@@ -1929,14 +1975,7 @@ body {
     line-height: 1.2;
     font-weight: bold;
     width: 100%;
-}
-
-.pend-act {
-    font-size: 0.6rem;
-    color: var(--red);
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    z-index: 2;
 }
 
 .history-grid {
@@ -4220,6 +4259,7 @@ h3,
 .q-item-remove:hover {
     color: #ff4444;
 }
+
 /* ENHANCED DIRECTIVE OPTIONS */
 .q-pos-grid {
     display: grid;
