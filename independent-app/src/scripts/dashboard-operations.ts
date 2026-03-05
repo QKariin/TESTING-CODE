@@ -14,60 +14,73 @@ function renderOperationsGrid() {
     const opsList = document.getElementById('opsList');
     if (!opsList) return;
 
-    const activeUsers = users.filter(u =>
-        (u.activeTask && u.endTime && u.endTime > Date.now()) ||
-        (u.reviewQueue && u.reviewQueue.length > 0)
-    );
+    let pendingTasks: any[] = [];
+    let pendingRoutines: any[] = [];
 
-    if (activeUsers.length === 0) {
-        opsList.innerHTML = `
-            <div class="ops-grid">
-                <div style="grid-column: 1/-1; text-align: center; color: #666; padding: 40px; font-family: 'Rajdhani'; font-size: 0.9rem;">
-                    NO ACTIVE OPERATIONS
-                </div>
-            </div>
-        `;
-        return;
-    }
-
-    let html = '<div class="ops-grid">';
-
-    activeUsers.forEach(u => {
-        const hasActiveTask = u.activeTask && u.endTime && u.endTime > Date.now();
-        const hasPendingReview = u.reviewQueue && u.reviewQueue.length > 0;
-
-        const cardClass = hasPendingReview ? 'red' : 'blue';
-        const badgeClass = hasPendingReview ? 'badge-r' : 'badge-b';
-        const badgeText = hasPendingReview ? 'REVIEW' : 'ACTIVE';
-
-        let detail = '';
-        let timer = '';
-
-        if (hasPendingReview) {
-            detail = `${u.reviewQueue.length} pending`;
-        } else if (hasActiveTask) {
-            detail = clean(u.activeTask.text).substring(0, 30);
-            const timeLeft = u.endTime - Date.now();
-            timer = formatTimer(timeLeft);
+    users.forEach(u => {
+        if (u.reviewQueue) {
+            u.reviewQueue.forEach((item: any) => {
+                const enrichedItem = { ...item, memberId: u.memberId, memberName: u.name };
+                if (item.isRoutine) {
+                    pendingRoutines.push(enrichedItem);
+                } else {
+                    pendingTasks.push(enrichedItem);
+                }
+            });
         }
-
-        const finalPic = getOptimizedUrl(u.avatar || u.profilePicture || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png', 100);
-
-        html += `
-            <div class="mon-card ${cardClass}" onclick="window.selectUserFromOps('${u.memberId}')">
-                <div class="mon-badge ${badgeClass}">${badgeText}</div>
-                <div class="mon-av-box">
-                    <img src="${getOptimizedUrl(finalPic, 100)}" class="mon-av">
-                </div>
-                <div class="mon-name">${clean(u.name)}</div>
-                <div class="mon-detail">${detail}</div>
-                ${timer ? `<div class="mon-timer">${timer}</div>` : ''}
-            </div>
-        `;
     });
+
+    // Sort by Date to get the latest
+    pendingTasks.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    pendingRoutines.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const latestTask = pendingTasks[0];
+    const latestRoutine = pendingRoutines[0];
+
+    const taskBg = latestTask ? getOptimizedUrl(latestTask.proofUrl, 400) : '';
+    const routineBg = latestRoutine ? getOptimizedUrl(latestRoutine.proofUrl, 400) : '';
+
+    const taskVideo = latestTask && (latestTask.proofUrl?.endsWith('.mp4') || latestTask.proofType?.includes('video'));
+    const routineVideo = latestRoutine && (latestRoutine.proofUrl?.endsWith('.mp4') || latestRoutine.proofType?.includes('video'));
+
+    let html = '<div class="ops-monitor-grid">';
+
+    // 1. TASK CARD (GOLD)
+    html += `
+        <div class="ops-card task" onclick="window.showQueueFiltered(false)">
+            ${taskBg ? (taskVideo ?
+            `<video src="${taskBg}" class="ops-card-bg" autoplay muted loop playsinline></video>` :
+            `<img src="${taskBg}" class="ops-card-bg">`) : ''}
+            <div class="ops-card-overlay">
+                <div class="ops-card-label">PENDING OPERATIONS</div>
+                <div class="ops-card-title">TASK QUEUE</div>
+                <div class="ops-counter gold">${pendingTasks.length}</div>
+            </div>
+        </div>
+    `;
+
+    // 2. ROUTINE CARD (SILVER)
+    html += `
+        <div class="ops-card routine" onclick="window.showQueueFiltered(true)">
+            ${routineBg ? (routineVideo ?
+            `<video src="${routineBg}" class="ops-card-bg" autoplay muted loop playsinline></video>` :
+            `<img src="${routineBg}" class="ops-card-bg">`) : ''}
+            <div class="ops-card-overlay">
+                <div class="ops-card-label">DAILY PROTOCOLS</div>
+                <div class="ops-card-title">ROUTINE QUEUE</div>
+                <div class="ops-counter silver">${pendingRoutines.length}</div>
+            </div>
+        </div>
+    `;
 
     html += '</div>';
     opsList.innerHTML = html;
+}
+
+export function showQueueFiltered(isRoutine: boolean) {
+    if ((window as any).renderGlobalReview) {
+        (window as any).renderGlobalReview(isRoutine);
+    }
 }
 
 function renderFeedLog() {
@@ -167,4 +180,5 @@ export function selectUserFromOps(memberId: string) {
 
 if (typeof window !== 'undefined') {
     (window as any).selectUserFromOps = selectUserFromOps;
+    (window as any).showQueueFiltered = showQueueFiltered;
 }

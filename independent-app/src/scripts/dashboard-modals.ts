@@ -542,6 +542,59 @@ export async function forceActiveTask(taskText: string, queueIdx: number = -1) {
     }
 }
 
+export function renderGlobalReview(filterRoutine: boolean) {
+    const modal = document.getElementById('reviewModal');
+    const qSec = document.getElementById('userQueueSec');
+    if (!modal || !qSec) return;
+
+    let allPending: any[] = [];
+    users.forEach(u => {
+        if (u.reviewQueue) {
+            u.reviewQueue.forEach((t: any) => {
+                allPending.push({ ...t, memberId: u.memberId, memberName: u.name });
+            });
+        }
+    });
+
+    const filtered = allPending.filter((t: any) => {
+        const isRoutine = t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine';
+        return isRoutine === filterRoutine;
+    });
+
+    modal.classList.add('active');
+    qSec.style.display = 'flex';
+
+    // Aesthetic Title
+    const title = filterRoutine ? "DAILY ROUTINE QUEUE" : "TASK REVIEW QUEUE";
+    const color = filterRoutine ? "#00ff00" : "var(--gold)";
+
+    qSec.innerHTML = `
+        <div style="width:100%; text-align:center; padding: 20px 0; font-family:'Orbitron'; font-size:1.2rem; color:${color}; letter-spacing:2px; border-bottom:1px solid #222; margin-bottom:20px;">
+            ${title}
+        </div>
+        <div class="pend-list">
+            ${filtered.map((t: any) => {
+        const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        const isVideo = t.proofType === 'video' || mediaTypeFunction(t.proofUrl) === 'video';
+        const optUrl = getOptimizedUrl(t.proofUrl || '', 400);
+        const mediaTag = isVideo
+            ? `<video src="${optUrl}" class="pend-thumb" autoplay loop muted playsinline style="object-fit:cover;"></video>`
+            : `<img src="${optUrl}" class="pend-thumb" onerror="this.src='https://upcdn.io/kW2K8hR/raw/public/collar-192.png'">`;
+
+        return `
+                    <div class="pend-card" onclick="window.openModById('${t.id}', '${t.memberId}', false)">
+                        ${mediaTag}
+                        <div class="pend-info">
+                            <div class="pend-name" style="font-family:'Rajdhani'; font-weight:700; color:#fff; font-size:0.9rem; margin-bottom:2px;">${clean(t.memberName)}</div>
+                            <div class="pend-date" style="font-size:0.7rem; color:#888;">${dateStr}</div>
+                        </div>
+                    </div>`;
+    }).join('')}
+            ${filtered.length === 0 ? `<div style="width:100%; text-align:center; padding:40px; color:#666; font-family:'Rajdhani';">NO PENDING ${filterRoutine ? 'ROUTINES' : 'TASKS'}</div>` : ''}
+        </div>
+    `;
+}
+
 // Redundant local handlers removed in favor of dashboard-users.ts implementations
 
 if (typeof window !== 'undefined') {
@@ -566,5 +619,6 @@ if (typeof window !== 'undefined') {
     (window as any).handleRewardFileUpload = handleRewardFileUpload;
     (window as any).toggleRewardRecord = toggleRewardRecord;
     (window as any).confirmReward = confirmReward;
+    (window as any).renderGlobalReview = renderGlobalReview;
 }
 
