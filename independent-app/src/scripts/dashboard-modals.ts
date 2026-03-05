@@ -18,6 +18,7 @@ let workshopFillers: any[] = [];
 let workshopUserId: string | null = null;
 const workshopExpandedTexts = new Set<string>();
 let isConfirming = false;
+let activeListFilter: boolean | null = null;
 
 function stripHtml(html: string) {
     const tmp = document.createElement("DIV");
@@ -40,6 +41,7 @@ export function closeModal() {
 }
 
 export function closeListModal() {
+    activeListFilter = null;
     const modal = document.getElementById('listModal');
     if (modal) modal.classList.remove('active');
 }
@@ -136,6 +138,9 @@ export function reviewTask(decision: 'approve' | 'reject') {
                 console.error("Rejection error:", err);
                 alert("Error: " + err.message);
             });
+
+        // Trigger List Refresh if open
+        if (activeListFilter !== null) renderGlobalReview(activeListFilter);
     }
 }
 
@@ -285,12 +290,14 @@ export function confirmReward() {
                 alert("Notice: Server failed to sync reward, but UI updated locally.");
             }
         })
-
         .catch(err => {
             isConfirming = false;
             console.error("Approval error:", err);
             alert("Error: " + err.message);
         });
+
+    // Trigger List Refresh if open
+    if (activeListFilter !== null) renderGlobalReview(activeListFilter);
 }
 
 let cachedTasks: any[] = [];
@@ -651,6 +658,7 @@ export async function forceActiveTask(taskText: string, queueIdx: number = -1) {
 }
 
 export function renderGlobalReview(filterRoutine: boolean) {
+    activeListFilter = filterRoutine;
     const modal = document.getElementById('listModal');
     const header = document.getElementById('mListHeader');
     const grid = document.getElementById('mListGrid');
