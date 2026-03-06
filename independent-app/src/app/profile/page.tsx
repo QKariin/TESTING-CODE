@@ -112,8 +112,7 @@ export default function ProfilePage() {
 
         async function loadProfile() {
             try {
-                // ─── LOCAL DEV BYPASS ────────────────────────────────────────
-                // Skips login when running on localhost so you can see UI changes instantly.
+                /* ─── LOCAL DEV BYPASS REMOVED TO ALLOW REAL ACCOUNT TESTING ───
                 const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
                 if (isLocal) {
                     const mockProfile = {
@@ -139,6 +138,7 @@ export default function ProfilePage() {
                     }, 150);
                     return;
                 }
+                */
                 // ─────────────────────────────────────────────────────────────
 
                 const supabase = createClient();

@@ -163,13 +163,12 @@ async function completeKneelAction() {
 
     // Database
     try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.email) {
+        const { memberId } = getState();
+        if (memberId) {
             await fetch('/api/kneel', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberEmail: user.email }),
+                body: JSON.stringify({ memberEmail: memberId }),
             });
         }
     } catch (err) { console.error(err); }
