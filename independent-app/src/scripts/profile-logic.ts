@@ -1127,7 +1127,7 @@ export async function updateRoutineWidget() {
             if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
             if (mobDone) mobDone.classList.remove('hidden');
             if (mobTime) mobTime.classList.add('hidden');
-        } else if (data.uploadedToday && data.todayStatus === 'approved') {
+        } else if (data.uploadedToday && (data.todayStatus === 'approved' || data.todayStatus === 'approve')) {
             // ── State 3b: Uploaded today, Approved ──────────────────────────
             if (display) display.textContent = data.routine;
             if (btn) {
