@@ -145,11 +145,20 @@ async function completeKneelAction() {
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     console.log('[KNEEL] SUCCESS!');
 
-    // 👇 UPDATE GLOBAL STATE
+    // 👇 UPDATE GLOBAL STATE IMMEDIATELY (Instant Feedback)
+    const now = Date.now();
     setState({
         isLocked: true,
-        lastWorshipTime: Date.now()
+        lastWorshipTime: now
     });
+
+    // 👇 PERSIST LOCALLY FOR DEV BYPASS
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        localStorage.setItem('dev_lastWorship', new Date(now).toISOString());
+    }
+
+    // Update UI immediately (Instant Lock)
+    updateKneelingUI();
 
     // Sound
     const snd = document.getElementById('msgSound') as HTMLAudioElement;
@@ -172,8 +181,6 @@ async function completeKneelAction() {
             });
         }
     } catch (err) { console.error(err); }
-
-    updateKneelingUI();
 }
 
 // ─── 5. UI SYNC ───

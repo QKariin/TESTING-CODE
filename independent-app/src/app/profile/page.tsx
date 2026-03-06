@@ -112,7 +112,8 @@ export default function ProfilePage() {
 
         async function loadProfile() {
             try {
-                /* ─── LOCAL DEV BYPASS REMOVED TO ALLOW REAL ACCOUNT TESTING ───
+                // ─── LOCAL DEV BYPASS ────────────────────────────────────────
+                // Skips login when running on localhost so you can see UI changes instantly.
                 const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
                 if (isLocal) {
                     const mockProfile = {
@@ -123,6 +124,8 @@ export default function ProfilePage() {
                         parameters: { status: 'QUEEN', tributeHistory: '[]', taskdom_active_task: null, taskdom_end_time: null },
                         kneel_history: { totalSessions: 42, totalMinutes: 120 },
                         slave_since: '2024-01-01',
+                        // 👇 Added to test persistence in dev mode
+                        lastWorship: localStorage.getItem('dev_lastWorship')
                     };
                     console.log('[DEV MODE] Local bypass active — using mock profile');
                     setProfile(mockProfile);
@@ -138,7 +141,6 @@ export default function ProfilePage() {
                     }, 150);
                     return;
                 }
-                */
                 // ─────────────────────────────────────────────────────────────
 
                 const supabase = createClient();
