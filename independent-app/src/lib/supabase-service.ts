@@ -432,20 +432,23 @@ export const DbService = {
 
     // --- TASK DATABASE ---
     async getTasksFromDatabase() {
-        console.log("DB_SERVICE: Fetching from /api/tasks/all PROXY...");
+        console.log("DB_SERVICE: Fetching tasks directly from Supabase (tasks_database)...");
         try {
-            const resp = await fetch('/api/tasks/all');
-            const result = await resp.json();
-            if (result.success) {
-                console.log("DB_SERVICE: Received tasks via PROXY:", result.tasks?.length || 0);
-                return result.tasks;
-            } else {
-                console.error("DB_SERVICE_PROXY_ERROR:", result.error);
-                throw new Error(result.error);
+            const { data, error } = await supabaseAdmin
+                .from('tasks_database')
+                .select('*')
+                .order('Category', { ascending: true });
+
+            if (error) {
+                console.error("DB_SERVICE: tasks_database query failed:", error.message);
+                return [];
             }
+
+            console.log("DB_SERVICE: tasks_database returned", data?.length || 0, "tasks");
+            return data || [];
         } catch (err: any) {
             console.error("DB_SERVICE_FETCH_FAILED:", err);
-            throw err;
+            return [];
         }
     }
 };

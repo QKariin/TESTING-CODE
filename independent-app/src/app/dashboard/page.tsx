@@ -406,7 +406,7 @@ export default function DashboardPage() {
                     <div className="split">
                         {/* LEFT: COMMAND & FEED */}
                         <div className="chat-panel">
-                            <div className="cp-head">RECORD FEED</div>
+                            <div className="cp-head">ENCRYPTED FEED</div>
 
                             {/* FULL OVERLAY COMMAND QUEUE - MOVED HERE TO COVER ENTIRE PANEL */}
                             <div id="taskQueueContainer" className="task-queue-overlay hidden">
@@ -461,34 +461,39 @@ export default function DashboardPage() {
 
                             <div className="admin-dash-top" style={{ display: 'flex', flexDirection: 'column', height: '40%', background: 'transparent' }}>
                                 <div className="ap-nav">
-                                    <button className="ap-tab active" id="tabBtnOps" onClick={() => (window as any).switchAdminTab('ops')}>DIRECTIVE</button>
-                                    <button className="ap-tab" id="tabBtnIntel" onClick={() => (window as any).switchAdminTab('intel')}>TELEMETRY</button>
-                                    <button className="ap-tab" id="tabBtnRecord" onClick={() => (window as any).switchAdminTab('record')}>ALTAR</button>
+                                    <button className="ap-tab active" id="tabBtnOps" onClick={() => (window as any).switchAdminTab('ops')}>OPS</button>
+                                    <button className="ap-tab" id="tabBtnIntel" onClick={() => (window as any).switchAdminTab('intel')}>INTEL</button>
+                                    <button className="ap-tab" id="tabBtnRecord" onClick={() => (window as any).switchAdminTab('record')}>RECORD</button>
                                 </div>
 
                                 <div className="ap-content" style={{ flex: 1, overflowY: 'auto', background: 'transparent' }}>
                                     <div id="tabOps" className="ap-view active">
-                                        <div className="active-task-card gold-theme">
-                                            <div className="at-header">
-                                                <div className="at-label">CURRENT STATUS</div>
+                                        <div className="active-task-card gold-theme" onClick={() => (window as any).toggleTaskDrawer()}>
+                                            <div className="at-label-row">
+                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                    <span id="statusDot" className="status-dot unproductive"></span>
+                                                    <div className="at-label">CURRENT STATUS</div>
+                                                </div>
                                                 <div id="dActiveStatus" className="at-status-text">UNPRODUCTIVE</div>
                                             </div>
-                                            <div id="activeTaskContent">
-                                                <div className="at-sub-label">ACTIVE DIRECTIVE</div>
-                                                <div id="dActiveText" className="at-text">None</div>
-                                                <div className="at-timer-row">
-                                                    <div className="at-timer-label">TIME REMAINING</div>
-                                                    <div id="dActiveTimer" className="at-timer-large">--:--</div>
+
+                                            <div id="taskDrawer" className="task-drawer">
+                                                <div id="activeTaskContent">
+                                                    <div className="at-sub-label">ACTIVE DIRECTIVE</div>
+                                                    <div id="dActiveText" className="at-text">None</div>
+                                                    <div className="at-timer-row">
+                                                        <div className="at-timer-label">TIME REMAINING</div>
+                                                        <div id="dActiveTimer" className="at-timer-large">--:--</div>
+                                                    </div>
+                                                    <div className="at-actions" onClick={(e) => e.stopPropagation()}>
+                                                        <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>CANCEL TASK</button>
+                                                    </div>
                                                 </div>
-                                                <div className="at-actions">
-                                                    <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>CANCEL TASK</button>
+                                                <div id="idleActions" style={{ display: 'none', paddingTop: '10px' }} onClick={(e) => e.stopPropagation()}>
+                                                    <button className="at-btn at-send" style={{ background: 'var(--gold)', color: '#000' }} onClick={() => (window as any).openTaskGallery()}>ISSUE NEW COMMAND</button>
                                                 </div>
-                                            </div>
-                                            <div id="idleActions" style={{ display: 'none', paddingTop: '10px' }}>
-                                                <button className="at-btn at-send" style={{ background: 'var(--gold)', color: '#000' }} onClick={() => (window as any).openTaskGallery()}>ISSUE NEW COMMAND</button>
                                             </div>
                                         </div>
-                                        <button className="schedule-btn" onClick={() => (window as any).openTaskGallery()}>TASK QUEUE</button>
                                     </div>
 
                                     <div id="tabIntel" className="ap-view hidden">

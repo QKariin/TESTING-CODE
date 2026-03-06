@@ -267,19 +267,33 @@ function updateActiveTask(u: any) {
     const activeText = document.getElementById('dActiveText');
     const activeTimer = document.getElementById('dActiveTimer');
     const activeStatus = document.getElementById('dActiveStatus');
+    const statusDot = document.getElementById('statusDot');
+    const idleActions = document.getElementById('idleActions');
+    const activeTaskContent = document.getElementById('activeTaskContent');
 
     if (!activeText || !activeTimer) return;
 
     const isPending = u.pendingState === "PENDING" || (u.activeTask && u.activeTask.proofUrl === "FORCED");
+    const hasActive = u.activeTask && u.endTime && u.endTime > Date.now();
 
-    if (u.activeTask && u.endTime && u.endTime > Date.now()) {
+    // Update Status Dot & Text
+    if (statusDot) {
+        statusDot.className = `status-dot ${hasActive ? 'productive' : 'unproductive'}`;
+    }
+
+    if (activeStatus) {
+        activeStatus.innerText = hasActive ? (isPending ? "PENDING" : "ACTIVE") : "UNPRODUCTIVE";
+        activeStatus.className = `at-status-text ${hasActive ? 'active' : ''}`;
+        activeStatus.style.color = hasActive ? (isPending ? "var(--pink)" : "var(--gold)") : "#666";
+    }
+
+    if (hasActive) {
+        if (idleActions) idleActions.style.display = 'none';
+        const failBtn = activeTaskContent?.querySelector('.at-fail') as HTMLElement;
+        if (failBtn) failBtn.style.display = 'block';
+
         const rawText = u.activeTask.text || u.activeTask.TaskText || "";
         activeText.innerHTML = rawText; // Support HTML directives
-
-        if (activeStatus) {
-            activeStatus.innerText = isPending ? "PENDING" : "ACTIVE";
-            activeStatus.style.color = isPending ? "var(--pink)" : "var(--gold)";
-        }
 
         const tick = () => {
             const diff = u.endTime - Date.now();
@@ -298,12 +312,19 @@ function updateActiveTask(u: any) {
         const interval = setInterval(tick, 1000);
         setCooldownInterval(interval);
     } else {
+        if (idleActions) idleActions.style.display = 'block';
+        const failBtn = activeTaskContent?.querySelector('.at-fail') as HTMLElement;
+        if (failBtn) failBtn.style.display = 'none';
+
         activeText.innerText = "None";
         activeTimer.innerText = "--:--";
-        if (activeStatus) {
-            activeStatus.innerText = "UNPRODUCTIVE";
-            activeStatus.style.color = "#666";
-        }
+    }
+}
+
+export function toggleTaskDrawer() {
+    const drawer = document.getElementById('taskDrawer');
+    if (drawer) {
+        drawer.classList.toggle('open');
     }
 }
 
@@ -353,4 +374,5 @@ export function updateTaskQueue(u: any) {
 if (typeof window !== 'undefined') {
     (window as any).updateDetail = updateDetail;
     (window as any).deleteQueueItem = deleteQueueItem;
+    (window as any).toggleTaskDrawer = toggleTaskDrawer;
 }

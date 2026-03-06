@@ -4412,3 +4412,96 @@ h3,
     background: rgba(255, 0, 222, 0.05);
     box-shadow: 0 0 20px rgba(255, 0, 222, 0.15);
 }
+
+/* --- DRAWER & GOLD THEME RECONSTRUCTION (from Conv 973777e0) --- */
+
+.active-task-card.gold-theme {
+    border: 1px solid rgba(197, 160, 89, 0.45) !important;
+    background: rgba(197, 160, 89, 0.03) !important;
+    box-shadow: 0 0 25px rgba(197, 160, 89, 0.08) !important;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 15px !important;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 25px;
+}
+
+.active-task-card.gold-theme:hover {
+    background: rgba(197, 160, 89, 0.06) !important;
+    border-color: rgba(197, 160, 89, 0.6) !important;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 12px;
+    display: inline-block;
+    vertical-align: middle;
+    transition: all 0.3s ease;
+}
+
+.status-dot.productive {
+    background: #00ff00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+}
+
+.status-dot.unproductive {
+    background: #444;
+    box-shadow: none;
+}
+
+.task-drawer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    opacity: 0;
+    width: 100%;
+}
+
+.task-drawer.open {
+    max-height: 800px;
+    opacity: 1;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(197, 160, 89, 0.15);
+}
+
+.at-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.at-status-text {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: #666;
+}
+
+.at-status-text.active {
+    color: #c5a059;
+    text-shadow: 0 0 10px rgba(197, 160, 89, 0.4);
+}
+
+.at-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    color: #fff !important;
+    line-height: 1.6;
+    margin: 15px 0;
+    text-align: left;
+}
+
+.at-timer-large {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    color: #c5a059;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+    text-align: center;
+}
