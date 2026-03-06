@@ -1404,6 +1404,20 @@ function subscribeToChat(email: string) {
             });
         })
         .subscribe();
+
+    // Listen for task approval/rejection to auto-update the routine widget
+    supabase
+        .channel('tasks_updates')
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tasks',
+            filter: `member_id=eq.${cleanEmail}`
+        }, (payload) => {
+            console.log('[REALTIME] Tasks table updated. Refreshing routine widget...');
+            updateRoutineWidget();
+        })
+        .subscribe();
 }
 
 function isSystemMessage(msg: any) {

@@ -42,7 +42,7 @@ export async function GET(req: Request) {
 
                 if (todaysRoutine) {
                     uploadedToday = true;
-                    todayStatus = todaysRoutine.status || 'pending';
+                    todayStatus = (todaysRoutine.status || todaysRoutine.Status || 'pending').toLowerCase();
                 }
             } catch (err) {
                 console.error('Failed parsing Taskdom_History', err);
