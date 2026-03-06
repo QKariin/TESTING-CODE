@@ -1085,7 +1085,7 @@ export async function updateRoutineWidget() {
     if (!email) return;
 
     try {
-        const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}`);
+        const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}&t=${Date.now()}`);
         if (!res.ok) return;
         const data = await res.json();
 
@@ -1854,6 +1854,11 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
         showErr(`Insufficient coins. You need ${cost} coins but have ${data.wallet || 0}.`);
     } else if (data.success && data.profile) {
         overlay.remove();
+
+        // Update local state so subsequent modal opens see the new value
+        setState({ raw: data.profile });
+        (window as any).__currentProfileRaw = data.profile;
+
         renderProfileSidebar(data.profile);
         loadChatHistory(user.email!);
     } else {
