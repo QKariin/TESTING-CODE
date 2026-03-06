@@ -14,13 +14,24 @@ async function syncKneelStatusFromServer() {
         if (!res.ok) return;
         const data = await res.json();
 
-        // ── Update lock state ──
-        if (data.lastWorshipMs) {
+        // ── Check LocalStorage fallback first (bulletproof reload protection) ──
+        const localWorship = localStorage.getItem('lastWorshipTime');
+        const localWorshipMs = localWorship ? parseInt(localWorship, 10) : 0;
+
+        // ── Update lock state (Use the newest timestamp between DB and LocalStorage) ──
+        if (data.lastWorshipMs || localWorshipMs) {
+            const finalWorship = Math.max(data.lastWorshipMs || 0, localWorshipMs);
+
+            // Re-calculate lock based on final timestamp
+            const now = Date.now();
+            const cdMs = (getState().cooldownMinutes || 60) * 60 * 1000;
+            const stillLocked = (now - finalWorship) < cdMs;
+
             setState({
-                lastWorshipTime: data.lastWorshipMs,
-                isLocked: data.isLocked,
+                lastWorshipTime: finalWorship,
+                isLocked: stillLocked,
             });
-            console.log(`[KNEEL] Server sync: isLocked=${data.isLocked}, minLeft=${data.minLeft}m, todayKneeling=${data.todayKneeling}`);
+            console.log(`[KNEEL] Sync: isLocked=${stillLocked}, finalWorship=${new Date(finalWorship).toLocaleTimeString()}`);
             updateKneelingUI();
         }
 
@@ -217,11 +228,15 @@ async function completeKneelAction() {
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     console.log('[KNEEL] SUCCESS!');
 
+    const now = Date.now();
     // 👇 UPDATE GLOBAL STATE
     setState({
         isLocked: true,
-        lastWorshipTime: Date.now()
+        lastWorshipTime: now
     });
+
+    // 👇 PERSIST LOCALLY (Bulletproof reload protection)
+    localStorage.setItem('lastWorshipTime', now.toString());
 
     // Sound
     const snd = document.getElementById('msgSound') as HTMLAudioElement;
