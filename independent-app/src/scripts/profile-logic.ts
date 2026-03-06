@@ -1742,6 +1742,16 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     if (isRoutine) {
         box.querySelectorAll<HTMLElement>('._routineChip').forEach(chip => {
             chip.addEventListener('click', () => {
+                box.querySelectorAll<HTMLElement>('._routineChip').forEach(c => {
+                    c.classList.remove('_selected');
+                    c.style.borderColor = '#2a2a2a'; c.style.color = '#888'; c.style.background = 'rgba(0,0,0,0.5)';
+                });
+                chip.classList.add('_selected');
+                chip.style.borderColor = '#c5a059'; chip.style.color = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.1)';
+
+                const isCustom = chip.getAttribute('data-value') === 'Custom Order';
+                const customWrap = document.getElementById('_customRoutineWrap') as HTMLElement;
+                if (customWrap) customWrap.style.display = isCustom ? 'block' : 'none';
             });
         });
     }
