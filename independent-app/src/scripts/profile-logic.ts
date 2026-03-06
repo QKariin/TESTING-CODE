@@ -1078,6 +1078,96 @@ export function mobileUploadEvidence(input: HTMLInputElement) {
     }
 }
 
+// ─── FREE ROUTINE SETTER (from widget — no coin cost) ───────────────────────
+export async function openSetRoutineModal() {
+    const supabase = (await import('@/utils/supabase/client')).createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) { alert('Please log in first.'); return; }
+
+    const existing = getState().raw?.routine || getState().raw?.routine || '';
+
+    const overlay = document.createElement('div');
+    overlay.id = '_setRoutineModal';
+    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;`;
+
+    const OPTIONS = ['Morning Kneel', 'Chastity Check', 'Cleanliness Check'];
+    const chipsHtml = OPTIONS.map(o => `
+        <div class="_rtChip" data-value="${o}" style="
+            padding:12px 16px;border:1px solid rgba(197,160,89,0.4);border-radius:6px;
+            font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.85);
+            cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.03);
+            ${existing === o ? 'border-color:#c5a059;background:rgba(197,160,89,0.15);color:#c5a059;' : ''}
+        ">${o}</div>
+    `).join('');
+
+    overlay.innerHTML = `
+        <div style="background:#07080f;border:1px solid #c5a059;border-radius:12px;padding:28px;width:100%;max-width:340px;font-family:'Orbitron';">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <div style="color:#c5a059;font-size:0.85rem;letter-spacing:3px;">SET YOUR ROUTINE</div>
+                <button id="_closeSetRoutine" style="background:none;border:none;color:#ff4444;font-size:1.4rem;cursor:pointer;">&times;</button>
+            </div>
+            <div style="font-size:0.6rem;color:rgba(255,255,255,0.5);letter-spacing:2px;margin-bottom:16px;">CHOOSE YOUR DAILY PROTOCOL</div>
+            <div id="_rtChips" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">${chipsHtml}</div>
+            <div style="margin-bottom:14px;">
+                <input id="_rtCustom" placeholder="Or describe your own protocol..." value="${existing && !OPTIONS.includes(existing) ? existing : ''}"
+                    style="width:100%;padding:11px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Cinzel';font-size:0.8rem;box-sizing:border-box;" />
+            </div>
+            <div id="_rtErr" style="color:#ff4444;font-size:0.65rem;letter-spacing:1px;margin-bottom:10px;display:none;"></div>
+            <div style="display:flex;gap:10px;">
+                <button id="_rtSave" style="flex:1;padding:12px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:'Orbitron';font-size:0.7rem;font-weight:700;letter-spacing:2px;border-radius:8px;cursor:pointer;">SAVE</button>
+                <button id="_rtCancel" style="flex:1;padding:12px;background:transparent;border:1px solid #555;color:#888;font-family:'Orbitron';font-size:0.7rem;letter-spacing:2px;border-radius:8px;cursor:pointer;">CANCEL</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Chip click toggle
+    overlay.querySelectorAll<HTMLElement>('._rtChip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            overlay.querySelectorAll<HTMLElement>('._rtChip').forEach(c => {
+                c.style.borderColor = 'rgba(197,160,89,0.4)'; c.style.background = 'rgba(255,255,255,0.03)'; c.style.color = 'rgba(255,255,255,0.85)';
+            });
+            chip.style.borderColor = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.15)'; chip.style.color = '#c5a059';
+            (document.getElementById('_rtCustom') as HTMLInputElement).value = '';
+        });
+    });
+
+    overlay.querySelector('#_closeSetRoutine')?.addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#_rtCancel')?.addEventListener('click', () => overlay.remove());
+
+    overlay.querySelector('#_rtSave')?.addEventListener('click', async () => {
+        const selected = overlay.querySelector<HTMLElement>('._rtChip[style*="rgb(197"]');
+        const custom = (document.getElementById('_rtCustom') as HTMLInputElement)?.value?.trim();
+        const value = custom || selected?.getAttribute('data-value') || '';
+        const errEl = document.getElementById('rtErr') as HTMLElement;
+        if (!value) { const e = overlay.querySelector<HTMLElement>('#_rtErr')!; e.textContent = 'Please pick or describe a routine.'; e.style.display = 'block'; return; }
+
+        const saveBtn = overlay.querySelector<HTMLButtonElement>('#_rtSave')!;
+        saveBtn.textContent = 'SAVING...'; saveBtn.disabled = true;
+
+        const res = await fetch('/api/profile-update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberEmail: user.email, field: 'routine', value, cost: 0 })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            overlay.remove();
+            // Update in-memory state so widget refreshes correctly
+            const raw = getState().raw || {};
+            raw.routine = value;
+            setState({ raw });
+            await updateRoutineWidget();
+        } else {
+            const e = overlay.querySelector<HTMLElement>('#_rtErr')!;
+            e.textContent = data.error || 'Save failed.'; e.style.display = 'block';
+            saveBtn.textContent = 'SAVE'; saveBtn.disabled = false;
+        }
+    });
+}
+
 // ─── DAILY ROUTINE WIDGET ───────────────────────────────────────────────────
 export async function updateRoutineWidget() {
     const { memberId, id } = getState();
@@ -1106,11 +1196,7 @@ export async function updateRoutineWidget() {
                 btn.style.background = 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)';
                 btn.style.opacity = '1';
                 btn.style.cursor = 'pointer';
-                (window as any).__routineAction = () => {
-                    const raw = (window as any).__currentProfileRaw || getState().raw || getState();
-                    const existingVal = raw?.routine || '';
-                    openTextFieldModal('routine', 'ROUTINE', existingVal);
-                };
+                (window as any).__routineAction = () => openSetRoutineModal();
             }
             if (mobBtn) { mobBtn.textContent = 'SET A ROUTINE'; mobBtn.onclick = () => (window as any).__routineAction?.(); }
             if (timeMsg) { timeMsg.classList.add('hidden'); }
