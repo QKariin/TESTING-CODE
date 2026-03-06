@@ -1123,10 +1123,10 @@ export async function updateRoutineWidget() {
                 btn.style.cursor = 'default';
                 (window as any).__routineAction = () => { }; // Disabled
             }
-            if (timeMsg) timeMsg.classList.remove('hidden');
+            if (timeMsg) timeMsg.classList.add('hidden');
             if (mobBtn) { mobBtn.textContent = '✔ DONE'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
             if (mobDone) mobDone.classList.remove('hidden');
-            if (mobTime) mobTime.classList.remove('hidden');
+            if (mobTime) mobTime.classList.add('hidden');
         } else {
             // ── State 2: Routine set, not uploaded today ────────────────────
             if (display) display.textContent = data.routine;
