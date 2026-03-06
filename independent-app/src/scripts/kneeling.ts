@@ -1,3 +1,4 @@
+import { createClient } from '@/utils/supabase/client';
 import { getState, setState } from '@/scripts/profile-state';
 
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
@@ -248,7 +249,27 @@ async function completeKneelAction() {
     if (deskReward) { deskReward.classList.remove('hidden'); deskReward.style.display = 'flex'; }
     if (mobReward) { mobReward.classList.remove('hidden'); mobReward.style.display = 'flex'; }
 
-    // NOTE: No DB call here. lastWorship is saved in /api/claim-reward when user picks reward.
+    // Database
+    try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
+            const res = await fetch('/api/kneel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberEmail: user.email }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (typeof data.todayKneeling === 'number') {
+                    console.log(`[KNEEL] Hours Sync: ${data.todayKneeling}/8`);
+                    updateKneelingHoursUI(data.todayKneeling);
+                }
+            }
+        }
+    } catch (err) { console.error(err); }
+
     updateKneelingUI();
 }
 
