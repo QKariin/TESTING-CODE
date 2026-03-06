@@ -6,6 +6,16 @@ import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = "force-dynamic";
 
+export async function OPTIONS() {
+    return NextResponse.json({}, {
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+    });
+}
+
 export async function POST(req: Request) {
     try {
         const body = await req.json();
@@ -26,7 +36,7 @@ export async function POST(req: Request) {
             const { data: profile } = await supabaseAdmin
                 .from('profiles')
                 .select('wallet')
-                .eq('member_id', memberEmail)
+                .ilike('member_id', memberEmail)
                 .maybeSingle();
 
             if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
@@ -38,14 +48,19 @@ export async function POST(req: Request) {
             await supabaseAdmin
                 .from('profiles')
                 .update({ wallet: (profile.wallet || 0) - cost })
-                .eq('member_id', memberEmail);
+                .ilike('member_id', memberEmail);
         }
 
-        const { data, error } = await supabaseAdmin
+        const { error } = await supabaseAdmin
             .from('profiles')
             .update({ [field]: value })
-            .eq('member_id', memberEmail)
+            .ilike('member_id', memberEmail);
+
+        // Fetch updated profile separately
+        const { data } = await supabaseAdmin
+            .from('profiles')
             .select('*')
+            .ilike('member_id', memberEmail)
             .maybeSingle();
 
         if (error) {
