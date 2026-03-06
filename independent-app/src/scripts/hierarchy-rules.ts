@@ -63,16 +63,25 @@ const getNum = (val: any) => {
 function buildStatsFromProfile(profile: any) {
     const params = profile.parameters || {};
 
-    // 1. Resolve Stats from TASKS Table (Merged into profile)
-    // We check the 'tasks' table columns first, then fallback to 'parameters'
-    const tasks = getNum(profile.Taskdom_CompletedTasks) || getNum(params.taskdom_completed_tasks);
+    // Parse Taskdom_History to derive accurate counts
+    let history: any[] = [];
+    try { history = JSON.parse(profile.Taskdom_History || '[]'); } catch { history = []; }
+
+    // LABOR = approved non-routine tasks
+    const approvedTasks = history.filter((t: any) => t.status === 'approve' && !t.isRoutine).length;
+    const tasks = approvedTasks || getNum(profile.Taskdom_CompletedTasks) || getNum(params.taskdom_completed_tasks);
+
+    // KNEELING = kneelCount from tasks table
     const kneels = getNum(profile.kneelCount) || getNum(params.kneel_count);
-    const streak = getNum(profile.Taskdom_Streak) || getNum(params.routine_streak);
+
+    // CONSISTENCY = count of approved routine uploads
+    const routineUploads = history.filter((t: any) => t.isRoutine && t.status === 'approve').length;
+    const streak = routineUploads || getNum(profile.Taskdom_Streak) || getNum(params.routine_streak);
 
     // Score/Wallet come from PROFILES table (Integers)
     const points = profile.score || 0;
-    // Spent usually isn't tracked in a simple column, defaulting to 0 or params
-    const spent = getNum(params.total_coins_spent);
+    // SACRIFICE: JSONB params (incremented on every spend), fallback to crowdfund contribution sum
+    const spent = getNum(params.total_coins_spent) || getNum(profile._totalSpent);
 
     // 2. Resolve Identity
     const img = profile.avatar_url || '';
@@ -129,7 +138,7 @@ export function getHierarchyReport(profile: any) {
         if (req.photo) requirements.push({ label: 'PHOTO', status: stats.hasPhoto ? 'VERIFIED' : 'MISSING', type: 'check', field: 'avatar_url' });
 
         if ((req.tasks || 0) > 0) requirements.push({ label: 'LABOR', icon: '🛠️', current: stats.tasks, target: req.tasks, type: 'bar' });
-        if ((req.kneels || 0) > 0) requirements.push({ label: 'ENDURANCE', icon: '🧎', current: stats.kneels, target: req.kneels, type: 'bar' });
+        if ((req.kneels || 0) > 0) requirements.push({ label: 'KNEELING', icon: '🧎', current: stats.kneels, target: req.kneels, type: 'bar' });
         if ((req.points || 0) > 0) requirements.push({ label: 'MERIT', icon: '✨', current: stats.points, target: req.points, type: 'bar' });
         if ((req.spent || 0) > 0) requirements.push({ label: 'SACRIFICE', icon: '💰', current: stats.spent, target: req.spent, type: 'bar' });
         if ((req.streak || 0) > 0) requirements.push({ label: 'CONSISTENCY', icon: '📅', current: stats.streak, target: req.streak, type: 'bar' });

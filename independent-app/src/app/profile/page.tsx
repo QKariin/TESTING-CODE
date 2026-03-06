@@ -3,11 +3,24 @@
 import React, { useEffect, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
-import { initProfileState } from '@/scripts/profile-state';
+import { initProfileState, setState } from '@/scripts/profile-state';
 import { updateKneelingUI, attachKneelListeners } from '@/scripts/kneeling';
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
 import { toggleSystemLog } from '@/scripts/chat';
+import {
+    openGlobalView,
+    closeGlobalView,
+    openGlobalSection,
+    closeGlobalSection,
+    loadLeaderboardPreview,
+    loadLeaderboard,
+    sendGlobalMessage,
+    sendGlobalQuickMessage,
+    handleGlobalTalkKey,
+    handleGlobalQuickKey,
+    handleGlobalPhotoUpload,
+} from '@/scripts/global-view';
 import {
     claimKneelReward,
     switchTab,
@@ -108,6 +121,17 @@ export default function ProfilePage() {
             (window as any).loadQueenPosts = loadQueenPosts;
             (window as any).renderHistoryAndAltar = renderHistoryAndAltar;
             (window as any).toggleSystemLog = toggleSystemLog;
+            (window as any).openGlobalView = openGlobalView;
+            (window as any).closeGlobalView = closeGlobalView;
+            (window as any).openGlobalSection = openGlobalSection;
+            (window as any).closeGlobalSection = closeGlobalSection;
+            (window as any).loadLeaderboardPreview = loadLeaderboardPreview;
+            (window as any).loadLeaderboard = loadLeaderboard;
+            (window as any).sendGlobalMessage = sendGlobalMessage;
+            (window as any).sendGlobalQuickMessage = sendGlobalQuickMessage;
+            (window as any).handleGlobalTalkKey = handleGlobalTalkKey;
+            (window as any).handleGlobalQuickKey = handleGlobalQuickKey;
+            (window as any).handleGlobalPhotoUpload = handleGlobalPhotoUpload;
         }
 
         async function loadProfile() {
@@ -116,26 +140,21 @@ export default function ProfilePage() {
                 // Skips login when running on localhost so you can see UI changes instantly.
                 const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
                 if (isLocal) {
-                    const mockProfile = {
-                        id: 'dev-user-local', member_id: 'dev@localhost.com',
-                        name: 'Queen Karin', hierarchy: 'QUEEN', score: 9999, wallet: 77777,
-                        avatar_url: 'https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png',
-                        profile_picture_url: 'https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png',
-                        parameters: { status: 'QUEEN', tributeHistory: '[]', taskdom_active_task: null, taskdom_end_time: null },
-                        kneel_history: { totalSessions: 42, totalMinutes: 120 },
-                        slave_since: '2024-01-01',
-                    };
-                    console.log('[DEV MODE] Local bypass active — using mock profile');
-                    setProfile(mockProfile);
-                    initProfileState(mockProfile);
+                    const TEST_EMAIL = 'pr.finsko@gmail.com';
+                    const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(TEST_EMAIL)}&full=true`);
+                    const unifiedData = await res.json();
+                    console.log('[DEV MODE] Loaded real user:', unifiedData);
+                    setProfile(unifiedData);
+                    initProfileState(unifiedData);
+                    setState({ cooldownMinutes: 1 }); // DEV: 1 min cooldown on localhost
                     setTimeout(() => {
-                        renderProfileSidebar(mockProfile);
+                        renderProfileSidebar(unifiedData);
                         updateKneelingUI();
                         attachKneelListeners();
                         switchTab('serve');
                         getRandomTask(true);
                         loadQueenPosts();
-                        renderHistoryAndAltar(mockProfile);
+                        renderHistoryAndAltar(unifiedData);
                     }, 150);
                     return;
                 }
@@ -394,9 +413,10 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }} onClick={() => switchTab('record')}>
-                        <div className="ribbon-label" style={{ textAlign: 'center' }}>CLASSIFICATION</div>
-                        <div id="desk_DashboardRank" style={{ fontFamily: 'Orbitron', fontSize: '1.1rem', color: '#fff', marginTop: 5, textTransform: 'uppercase', fontWeight: 'bold', textShadow: '0 0 10px rgba(197, 160, 89, 0.4)' }}>LOADING...</div>
+                    <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', gap: 6 }} onClick={() => openGlobalView()}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px' }}>TAP TO OPEN</div>
+                        <div style={{ fontFamily: 'Cinzel', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>GLOBAL</div>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.22)', letterSpacing: '1px', textAlign: 'center', lineHeight: 1.8 }}>LEADERBOARD · TALK · UPDATES</div>
                     </div>
 
                     <div id="gridHero" className="v-card serve-grid-item" style={{ background: "url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png')", backgroundSize: 'cover', backgroundPosition: 'center', minHeight: 'unset', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -902,12 +922,12 @@ export default function ProfilePage() {
                                 <div id="mobStatsContent" className="mob-internal-drawer">
                                     <div style={{ width: '100%', textAlign: 'center', paddingBottom: '15px', borderBottom: '1px solid #333', marginBottom: '15px' }}>
                                         <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', letterSpacing: '2px' }}>CURRENT CLASSIFICATION</div>
-                                        <div id="drawer_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{profile?.rank || "LOADING..."}</div>
+                                        <div id="drawer_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{profile?.hierarchy || '—'}</div>
                                         <div id="drawer_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: '#888', fontStyle: 'italic', padding: '0 10px', lineHeight: 1.4 }}></div>
                                     </div>
                                     <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px' }}>
                                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WORKING ON PROMOTION TO</div>
-                                        <div id="drawer_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197, 160, 89, 0.3)', textTransform: 'uppercase' }}>LOADING...</div>
+                                        <div id="drawer_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197, 160, 89, 0.3)', textTransform: 'uppercase' }}>—</div>
                                     </div>
                                     <div id="drawer_ProgressContainer" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid #333', borderRadius: '4px', padding: '15px', marginBottom: '20px' }}></div>
                                     <div style={{ width: '100%', textAlign: 'left', padding: '0 5px' }}>
@@ -1081,6 +1101,138 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
+
+            {/* ── GLOBAL COMMUNITY OVERLAY ── */}
+            <div id="globalViewOverlay" style={{ display: 'none', position: 'fixed', inset: 0, background: 'rgba(4,4,14,0.97)', zIndex: 3000, flexDirection: 'column', backdropFilter: 'blur(16px)' }}>
+
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 20px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0, background: 'rgba(0,0,0,0.25)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <div id="globalBreadcrumb" style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px' }}>GLOBAL</div>
+                        <div id="lbPreviewCount" style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px', borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '14px' }}></div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button id="globalBackBtn" onClick={() => closeGlobalSection()} style={{ display: 'none', background: 'none', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.48rem', padding: '5px 12px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>← BACK</button>
+                        <button onClick={() => closeGlobalView()} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.48rem', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}>✕</button>
+                    </div>
+                </div>
+
+                {/* ── BENTO MAIN VIEW ── */}
+                <div id="globalMainView" style={{ flex: 1, display: 'flex', gap: '12px', padding: '12px', overflow: 'hidden' }}>
+
+                    {/* LEFT — LEADERBOARD (dominant column) */}
+                    <div style={{ flex: '1.6', display: 'flex', flexDirection: 'column', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.14)', borderRadius: '14px', overflow: 'hidden', minWidth: 0 }}>
+                        <div style={{ padding: '12px 14px 8px', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '3px' }}>LEADERBOARD</div>
+                                <button onClick={() => openGlobalSection('leaderboard')} style={{ background: 'none', border: 'none', color: 'rgba(197,160,89,0.5)', fontFamily: 'Orbitron', fontSize: '0.42rem', cursor: 'pointer', letterSpacing: '1px' }}>FULL VIEW →</button>
+                            </div>
+                            <div style={{ display: 'flex', gap: '5px' }}>
+                                {(['today', 'alltime', 'weekly', 'monthly'] as const).map(p => (
+                                    <button key={p} id={`lbChip_${p}`} onClick={() => loadLeaderboardPreview(p)} style={{ padding: '3px 9px', background: p === 'today' ? 'rgba(197,160,89,0.2)' : 'transparent', border: `1px solid ${p === 'today' ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.07)'}`, color: p === 'today' ? '#c5a059' : 'rgba(255,255,255,0.28)', fontFamily: 'Orbitron', fontSize: '0.43rem', cursor: 'pointer', borderRadius: '3px', letterSpacing: '1px' }}>
+                                        {p === 'alltime' ? 'ALL TIME' : p.toUpperCase()}
+                                    </button>
+                                ))}
+                            </div>
+                            <div style={{ height: '1px', background: 'rgba(197,160,89,0.08)', marginTop: '10px', marginLeft: '-14px', marginRight: '-14px' }}></div>
+                        </div>
+                        <div id="globalPreview_leaderboard" style={{ flex: 1, overflowY: 'auto' }}></div>
+                    </div>
+
+                    {/* RIGHT — 2×2 grid */}
+                    <div style={{ flex: '1', display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '12px', minWidth: 0, minHeight: 0 }}>
+
+                        {/* TALK */}
+                        <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', overflow: 'hidden', minHeight: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px' }}>TALK</span>
+                                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 5px #4ade80', display: 'inline-block' }}></span>
+                                </div>
+                                <button onClick={() => openGlobalSection('talk')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.22)', fontFamily: 'Orbitron', fontSize: '0.38rem', cursor: 'pointer' }}>OPEN →</button>
+                            </div>
+                            <div id="globalPreview_talk" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
+                            <div style={{ display: 'flex', gap: '5px', padding: '7px 9px', borderTop: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
+                                <input id="globalQuickInput" type="text" placeholder="Quick message..." onKeyDown={(e) => handleGlobalQuickKey(e as any)} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.78rem', padding: '5px 8px', outline: 'none', borderRadius: '4px', minWidth: 0 }} />
+                                <button onClick={() => sendGlobalQuickMessage()} style={{ padding: '5px 10px', background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.38rem', cursor: 'pointer', borderRadius: '4px', flexShrink: 0, fontWeight: 700 }}>→</button>
+                            </div>
+                        </div>
+
+                        {/* BEST SPENDER */}
+                        <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(197,160,89,0.02)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: '14px', overflow: 'hidden', minHeight: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid rgba(197,160,89,0.08)', flexShrink: 0 }}>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#c5a059', letterSpacing: '2px' }}>BEST SPENDER</span>
+                                <button onClick={() => openGlobalSection('spenders')} style={{ background: 'none', border: 'none', color: 'rgba(197,160,89,0.4)', fontFamily: 'Orbitron', fontSize: '0.38rem', cursor: 'pointer' }}>FULL →</button>
+                            </div>
+                            <div id="globalPreview_spenders" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
+                        </div>
+
+                        {/* UPDATES */}
+                        <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', overflow: 'hidden', minHeight: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px' }}>UPDATES</span>
+                                <div style={{ display: 'flex', gap: '5px' }}>
+                                    <button onClick={() => document.getElementById('globalPhotoInput')?.click()} style={{ padding: '2px 7px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.25)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.38rem', cursor: 'pointer', borderRadius: '3px' }}>+ SHARE</button>
+                                    <button onClick={() => openGlobalSection('updates')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.22)', fontFamily: 'Orbitron', fontSize: '0.38rem', cursor: 'pointer' }}>VIEW →</button>
+                                </div>
+                            </div>
+                            <div id="globalPreview_updates" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
+                        </div>
+
+                        {/* QUEEN KARIN */}
+                        <div style={{ display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', borderRadius: '14px', overflow: 'hidden', minHeight: 0, cursor: 'pointer' }} onClick={() => openGlobalSection('queen')}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid rgba(197,160,89,0.1)', flexShrink: 0 }}>
+                                <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>QUEEN KARIN</span>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.4)' }}>VIEW →</span>
+                            </div>
+                            <div id="globalPreview_queen" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {/* ── EXPANDED: LEADERBOARD ── */}
+                <div id="gPanel_leaderboard" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', gap: '8px', padding: '12px 20px', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        {(['today', 'alltime', 'weekly', 'monthly'] as const).map(p => (
+                            <button key={p} id={`lbPeriod_${p}`} onClick={() => loadLeaderboard(p)} style={{ padding: '5px 14px', background: p === 'today' ? 'rgba(197,160,89,0.18)' : 'transparent', border: `1px solid ${p === 'today' ? 'rgba(197,160,89,0.45)' : 'rgba(255,255,255,0.08)'}`, color: p === 'today' ? '#c5a059' : 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.5rem', letterSpacing: '1px', cursor: 'pointer', borderRadius: '4px' }}>
+                                {p === 'alltime' ? 'ALL TIME' : p.toUpperCase()}
+                            </button>
+                        ))}
+                    </div>
+                    <div id="leaderboardList" style={{ flex: 1, overflowY: 'auto' }}></div>
+                </div>
+
+                {/* ── EXPANDED: TALK ── */}
+                <div id="gPanel_talk" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div id="globalTalkFeed" style={{ flex: 1, overflowY: 'auto', paddingTop: '12px' }}></div>
+                    <div style={{ display: 'flex', gap: '10px', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.07)', flexShrink: 0, background: 'rgba(0,0,0,0.3)' }}>
+                        <input id="globalTalkInput" type="text" placeholder="Say something to everyone..." onKeyDown={(e) => handleGlobalTalkKey(e as any)} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.9rem', padding: '9px 14px', outline: 'none', borderRadius: '6px' }} />
+                        <button onClick={() => sendGlobalMessage()} style={{ padding: '9px 18px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer', borderRadius: '6px', letterSpacing: '1px', flexShrink: 0 }}>SEND</button>
+                    </div>
+                </div>
+
+                {/* ── EXPANDED: UPDATES ── */}
+                <div id="gPanel_updates" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 16px', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <button id="globalUploadBtn" onClick={() => document.getElementById('globalPhotoInput')?.click()} style={{ padding: '7px 16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>+ SHARE PHOTO</button>
+                    </div>
+                    <div id="globalUpdatesGrid" style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', padding: '14px 16px', alignContent: 'start' }}></div>
+                </div>
+
+                {/* ── EXPANDED: BEST SPENDERS ── */}
+                <div id="gPanel_spenders" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div id="spendersList" style={{ flex: 1, overflowY: 'auto' }}></div>
+                </div>
+
+                {/* ── EXPANDED: QUEEN KARIN ── */}
+                <div id="gPanel_queen" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden', overflowY: 'auto' }}>
+                    <div id="queenFullContent"></div>
+                </div>
+
+                <input type="file" id="globalPhotoInput" accept="image/*,video/*" style={{ display: 'none' }} onChange={(e) => handleGlobalPhotoUpload(e.target as HTMLInputElement)} />
+            </div>
+
         </div >
     );
 }

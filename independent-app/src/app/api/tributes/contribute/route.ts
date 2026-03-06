@@ -15,7 +15,7 @@ export async function POST(request: Request) {
         // 1. Get User Profile and Check Balance
         const { data: profile, error: profileErr } = await supabase
             .from('profiles')
-            .select('wallet, score')
+            .select('wallet, score, parameters')
             .eq('member_id', memberEmail)
             .single();
 
@@ -34,11 +34,17 @@ export async function POST(request: Request) {
         const newWallet = currentWallet - contributionAmount;
         const meritGain = Math.floor(contributionAmount / 2);
         const newScore = currentScore + meritGain;
+        const params = profile.parameters || {};
+        const newParams = {
+            ...params,
+            total_coins_spent: (params.total_coins_spent || 0) + contributionAmount,
+            last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: contributionAmount }
+        };
 
-        // 3. Update Database Profiles Table
+        // 3. Update Database Profiles Table (wallet + score + parameters.total_coins_spent)
         const { error: updateProfileErr } = await supabase
             .from('profiles')
-            .update({ wallet: newWallet, score: newScore })
+            .update({ wallet: newWallet, score: newScore, parameters: newParams })
             .eq('member_id', memberEmail);
 
         if (updateProfileErr) {

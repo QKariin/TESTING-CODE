@@ -36,38 +36,17 @@ export async function POST(req: Request) {
         }
 
         // 2. Update DB
-        const { error: profileError } = await supabaseAdmin
+        const { error } = await supabaseAdmin
             .from('profiles')
             .update(updateData)
             .eq('member_id', memberEmail);
 
-        if (profileError) throw profileError;
-
-        // 3. Update kneeling details in tasks table (Sync for the UI)
-        const { data: taskRow } = await supabaseAdmin
-            .from('tasks')
-            .select('*')
-            .ilike('member_id', memberEmail)
-            .maybeSingle();
-
-        const now = new Date();
-        const { error: taskError } = await supabaseAdmin
-            .from('tasks')
-            .upsert({
-                member_id: memberEmail,
-                lastWorship: now.toISOString(),
-                'today kneeling': taskRow?.['today kneeling'] || '0', // Preserve current count if just claiming
-            }, { onConflict: 'member_id' });
+        if (error) throw error;
 
         const logMsg = choice === 'coins' ? `REWARD CLAIMED (+${COIN_REWARD} <i class="fas fa-coins" style="color:#c5a059;"></i>)` : `REWARD CLAIMED (+${POINT_REWARD} MERIT)`;
         try { await DbService.sendMessage(memberEmail, logMsg, 'system'); } catch (_) { }
 
-        return NextResponse.json({
-            success: true,
-            ...updateData,
-            todayKneeling: parseInt(taskRow?.['today kneeling'] || '0', 10),
-            lastWorship: now.toISOString()
-        });
+        return NextResponse.json({ success: true, ...updateData });
 
     } catch (err: any) {
         console.error('[Reward] Error:', err);

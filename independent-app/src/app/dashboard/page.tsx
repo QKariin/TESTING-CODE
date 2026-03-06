@@ -309,10 +309,20 @@ export default function DashboardPage() {
                             <div id="opsList" className="vm-body"></div>
                         </div>
 
-                        {/* INTEL FEED */}
+                        {/* REVENUE & INTEL STREAM */}
                         <div className="v-feed-card glass-card span-4">
                             <div className="vf-header">Revenue & Intel Stream</div>
-                            <div id="feedLog" className="vf-body feed-log"></div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', padding: '12px 14px' }}>
+                                <div onClick={() => (window as any).expandFeedSection('wishlist')} style={{ aspectRatio: '1', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WISHLIST</div>
+                                </div>
+                                <div style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>COMING SOON</div>
+                                </div>
+                                <div style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>COMING SOON</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -506,6 +516,7 @@ export default function DashboardPage() {
                                         </div>
                                         {/* Bento Nodes... */}
                                     </div>
+
                                 </div>
                             </div>
 
@@ -678,6 +689,15 @@ export default function DashboardPage() {
                         <button onClick={() => (window as any).sendBroadcast()} className="br-btn">SEND BROADCAST</button>
                     </div>
                 </div>
+            </div>
+
+            {/* SECTION EXPANDED OVERLAY */}
+            <div id="feedSectionOverlay" style={{ display: 'none', position: 'fixed', inset: 0, background: 'rgba(6,6,16,0.97)', zIndex: 1000, flexDirection: 'column', backdropFilter: 'blur(10px)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px', borderBottom: '1px solid rgba(197,160,89,0.2)', flexShrink: 0 }}>
+                    <div id="feedSectionOverlayTitle" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#c5a059', letterSpacing: '4px' }}>WISHLIST</div>
+                    <button onClick={() => (window as any).collapseFeedSection()} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
+                </div>
+                <div id="wishlistPanel" style={{ flex: 1, overflowY: 'auto' }}></div>
             </div>
 
             {/* SOUND ASSETS */}

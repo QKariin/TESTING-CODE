@@ -3,12 +3,13 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = "force-dynamic";
 
-const COOLDOWN_MS = 60 * 60 * 1000; // 60 minutes
+const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000; // 1 min dev / 60 min prod
 
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const memberEmail = searchParams.get('email');
+        const tz = searchParams.get('tz') || 'UTC';
 
         if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
 
@@ -28,10 +29,10 @@ export async function GET(req: Request) {
         const isLocked = lastWorshipMs > 0 && diffMs < COOLDOWN_MS;
         const minLeft = isLocked ? Math.ceil((COOLDOWN_MS - diffMs) / 60000) : 0;
 
-        // Midnight reset: compare lastWorship date vs today's date (UTC)
-        const todayStr = new Date().toISOString().split('T')[0];
+        // Midnight reset: compare in user's local timezone
+        const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: tz });
         const lastStr = lastWorshipMs > 0
-            ? new Date(lastWorshipMs).toISOString().split('T')[0]
+            ? new Date(lastWorshipMs).toLocaleDateString('en-CA', { timeZone: tz })
             : null;
         const isSameDay = lastStr === todayStr;
         const todayKneeling = isSameDay

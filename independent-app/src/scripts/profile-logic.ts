@@ -45,15 +45,6 @@ export async function claimKneelReward(type: 'coins' | 'points') {
             return;
         }
 
-        // 2. Sync lastWorshipTime + update kneeling hours bar from server response
-        if (data.lastWorship) {
-            setState({ lastWorshipTime: new Date(data.lastWorship).getTime() });
-        }
-        if (typeof data.todayKneeling === 'number') {
-            const { updateKneelingHoursUI } = await import('./kneeling');
-            updateKneelingHoursUI(data.todayKneeling);
-        }
-
         loadChatHistory(pid);
     } catch (err) {
         console.error('[REWARD] Save failed', err);
@@ -63,8 +54,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     // 3. Update local balance state
     const newWallet = type === 'coins' ? (wallet || 0) + amount : (wallet || 0);
     const newScore = type === 'points' ? (score || 0) + amount : (score || 0);
-    const updatedRaw = { ...(raw || {}), wallet: newWallet, score: newScore };
-    setState({ wallet: newWallet, score: newScore, raw: updatedRaw });
+    setState({ wallet: newWallet, score: newScore });
 
     if (type === 'coins') triggerCoinShower();
 
@@ -74,8 +64,20 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
     if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
-    // 5. Render Sidebar
-    renderProfileSidebar(updatedRaw);
+    // 5. Re-fetch fresh data so sidebar shows updated kneelCount + kneeling hours
+    try {
+        const freshRes = await fetch(`/api/slave-profile?email=${encodeURIComponent(pid)}&full=true`);
+        const freshData = await freshRes.json();
+        setState({ raw: freshData });
+        renderProfileSidebar(freshData);
+
+        const { updateKneelingHoursUI } = await import('./kneeling');
+        const todayKneeling = parseInt(freshData['today kneeling'] || '0', 10);
+        updateKneelingHoursUI(todayKneeling);
+    } catch (_) {
+        // Fallback: render with current raw if fetch fails
+        renderProfileSidebar(raw || {});
+    }
 }
 
 
@@ -207,11 +209,12 @@ function renderTributes() {
             .filter(Boolean) as typeof globalTributes;
         const quickItems = pinnedItems.length >= 2 ? pinnedItems : globalTributes.slice(0, 2);
 
-        // Last tribute info — read from API response (stored in globalLastTribute)
+        // Last tribute info — read from THIS user's own profile parameters (per-user, not global)
         const st = getState();
-        const lastTributeAt = globalLastTribute?.at || null;
-        const lastTributeTitle = globalLastTribute?.title || null;
-        const senderNameFromApi = globalLastTribute?.senderName || null;
+        const userLastTribute = st.raw?.parameters?.last_tribute || null;
+        const lastTributeAt = userLastTribute?.at || null;
+        const lastTributeTitle = userLastTribute?.title || null;
+        const senderNameFromApi = st.raw?.name || null;
 
         // Relative time helper
         function relativeTime(iso: string): string {
@@ -231,7 +234,7 @@ function renderTributes() {
                 || st?.raw?.name
                 || (st?.memberId ? st.memberId.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : 'Unknown');
 
-            const tributePrice = globalLastTribute?.price ? `<span style="color:#c5a059;">&nbsp;${globalLastTribute.price} <i class="fas fa-coins" style="font-size:0.45rem;"></i></span>` : '';
+            const tributePrice = userLastTribute?.amount ? `<span style="color:#c5a059;">&nbsp;${userLastTribute.amount} <i class="fas fa-coins" style="font-size:0.45rem;"></i></span>` : '';
             lastTributeHtml = `
             <div style="text-align:center; padding:6px 0 10px;">
                 <div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:rgba(197,160,89,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:5px;">LAST TRIBUTE &nbsp;·&nbsp; <span style="color:rgba(255,255,255,0.7);">${senderName}</span></div>
@@ -466,35 +469,39 @@ if (typeof window !== 'undefined') {
             const data = await res.json();
 
             if (data.success) {
-                setState({ wallet: data.newWallet, score: data.newScore });
+                const { raw } = getState();
+                const updatedParams = {
+                    ...(raw?.parameters || {}),
+                    total_coins_spent: (raw?.parameters?.total_coins_spent || 0) + amount,
+                    last_tribute: { at: new Date().toISOString(), title, amount }
+                };
+                const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams };
+                setState({ wallet: data.newWallet, score: data.newScore, raw: updatedRaw });
                 updateWalletDisplay();
-
-                // Save last tribute to localStorage immediately
-                try { localStorage.setItem('lastTribute', JSON.stringify({ at: new Date().toISOString(), title: title, sender: memberId })); } catch (_) { }
+                renderProfileSidebar(updatedRaw);
 
                 // Close wishlist overlay
                 document.getElementById('tributeHuntOverlay')?.classList.add('hidden');
                 document.getElementById('mob_TributeOverlay')?.classList.add('hidden');
 
                 showGiftToast(title, amount, data.meritGained);
-                // 4. Send Chat message
+
+                // 4. Send Chat message + immediately inject card into chat
                 const tributeObj = globalTributes.find(t => t.id === id);
-                if (tributeObj) {
-                    await fetch('/api/chat/send', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            senderEmail: memberId,
-                            content: `Contributed ${amount.toLocaleString()} to ${title}`,
-                            type: 'wishlist',
-                            metadata: {
-                                title: title,
-                                price: amount,
-                                image: tributeObj.display_url || tributeObj.image || ""
-                            }
-                        })
-                    });
-                }
+                const tributeImage = tributeObj?.display_url || tributeObj?.image || "";
+                const wishlistMsg = {
+                    sender_email: memberId,
+                    type: 'wishlist',
+                    content: `Contributed ${amount.toLocaleString()} to ${title}`,
+                    metadata: { title, price: amount, image: tributeImage, isQueen: false },
+                    created_at: new Date().toISOString()
+                };
+                appendChatCard(wishlistMsg);
+                fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senderEmail: memberId, content: wishlistMsg.content, type: 'wishlist', metadata: wishlistMsg.metadata })
+                }).catch(e => console.warn('[CHAT] Tribute message send failed:', e));
 
                 // Re-fetch tributes to instantly update the progress bar visually
                 loadTributes();
@@ -530,11 +537,16 @@ export async function buyTribute(id: string, title: string, cost: number) {
         const data = await res.json();
 
         if (data.success) {
-            setState({ wallet: data.newWallet, score: data.newScore });
+            const { raw } = getState();
+            const updatedParams = {
+                ...(raw?.parameters || {}),
+                total_coins_spent: (raw?.parameters?.total_coins_spent || 0) + cost,
+                last_tribute: { at: new Date().toISOString(), title, amount: cost }
+            };
+            const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams };
+            setState({ wallet: data.newWallet, score: data.newScore, raw: updatedRaw });
             updateWalletDisplay();
-
-            // Save last tribute to localStorage immediately
-            try { localStorage.setItem('lastTribute', JSON.stringify({ at: new Date().toISOString(), title: title, sender: memberId })); } catch (_) { }
+            renderProfileSidebar(updatedRaw);
 
             // Close wishlist overlay first, then show toast
             document.getElementById('tributeHuntOverlay')?.classList.add('hidden');
@@ -545,24 +557,22 @@ export async function buyTribute(id: string, title: string, cost: number) {
             // Re-render quick tribute section to update Last Tribute info
             loadTributes();
 
-            // Notify chat with rich card
+            // Notify chat with rich card + immediately inject card into chat
             const tributeObj = globalTributes.find(t => t.id === id);
-            if (tributeObj) {
-                await fetch('/api/chat/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        senderEmail: memberId,
-                        content: `Purchased "${title}"`,
-                        type: 'wishlist',
-                        metadata: {
-                            title: title,
-                            price: cost,
-                            image: tributeObj.display_url || tributeObj.image || ""
-                        }
-                    })
-                });
-            }
+            const tributeImage = tributeObj?.display_url || tributeObj?.image || "";
+            const wishlistMsg = {
+                sender_email: memberId,
+                type: 'wishlist',
+                content: `Purchased "${title}"`,
+                metadata: { title, price: cost, image: tributeImage, isQueen: false },
+                created_at: new Date().toISOString()
+            };
+            appendChatCard(wishlistMsg);
+            fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senderEmail: memberId, content: wishlistMsg.content, type: 'wishlist', metadata: wishlistMsg.metadata })
+            }).catch(e => console.warn('[CHAT] Tribute message send failed:', e));
 
             // Close modal if open
             document.getElementById('tributeHuntOverlay')?.classList.add('hidden');
@@ -1085,7 +1095,8 @@ export async function updateRoutineWidget() {
     if (!email) return;
 
     try {
-        const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}&t=${Date.now()}`);
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}&tz=${encodeURIComponent(tz)}&t=${Date.now()}`);
         if (!res.ok) return;
         const data = await res.json();
 
@@ -1127,18 +1138,18 @@ export async function updateRoutineWidget() {
             if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
             if (mobDone) mobDone.classList.remove('hidden');
             if (mobTime) mobTime.classList.add('hidden');
-        } else if (data.uploadedToday && (data.todayStatus === 'approved' || data.todayStatus === 'approve')) {
-            // ── State 3b: Uploaded today, Approved ──────────────────────────
+        } else if (data.uploadedToday && data.todayStatus === 'approved') {
+            // ── State 3b: Uploaded today, Approved — locked until 6am ────────
             if (display) display.textContent = data.routine;
             if (btn) {
-                btn.textContent = '✔ NEXT UPLOAD 6AM';
-                btn.style.background = 'linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 100%)';
-                btn.style.opacity = '0.7';
+                btn.innerHTML = 'ROUTINE DONE<br><span style="font-size:0.55rem;opacity:0.7;letter-spacing:1px;">NEXT CHECK: 6AM</span>';
+                btn.style.background = 'linear-gradient(135deg, #0d1a0d 0%, #1a2a1a 100%)';
+                btn.style.opacity = '0.75';
                 btn.style.cursor = 'default';
-                (window as any).__routineAction = () => { }; // Disabled
+                (window as any).__routineAction = () => { };
             }
             if (timeMsg) timeMsg.classList.add('hidden');
-            if (mobBtn) { mobBtn.textContent = '✔ DONE'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
+            if (mobBtn) { mobBtn.textContent = 'ROUTINE DONE — NEXT: 6AM'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
             if (mobDone) mobDone.classList.remove('hidden');
             if (mobTime) mobTime.classList.add('hidden');
         } else {
@@ -1166,15 +1177,19 @@ export async function updateRoutineWidget() {
 export function handleRoutineUpload(input: HTMLInputElement) {
     if (input.files && input.files[0]) {
         submitTaskEvidence(input.files[0], true).then(() => {
-            // After upload completes, flip the widget to "done" state without another API call
+            const display = document.getElementById('deskRoutineDisplay');
             const btn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
             const timeMsg = document.getElementById('deskRoutineTimeMsg');
             const mobBtn = document.getElementById('btnRoutineUpload') as HTMLButtonElement | null;
             const mobDone = document.getElementById('routineDoneMsg');
-            if (btn) { btn.textContent = '✔ NEXT UPLOAD 6AM'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; (window as any).__routineAction = () => { }; }
-            if (timeMsg) timeMsg.classList.remove('hidden');
-            if (mobBtn) { mobBtn.textContent = '✔ DONE'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
+            const mobTime = document.getElementById('routineTimeMsg');
+            // Replace routine text with pending state
+            if (display) display.textContent = 'PENDING APPROVAL';
+            if (btn) { btn.textContent = '✔ SUBMITTED'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; (window as any).__routineAction = () => { }; }
+            if (timeMsg) { timeMsg.textContent = 'AWAITING REVIEW'; timeMsg.classList.remove('hidden'); }
+            if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
             if (mobDone) mobDone.classList.remove('hidden');
+            if (mobTime) { mobTime.textContent = 'AWAITING REVIEW'; mobTime.classList.remove('hidden'); }
         });
     }
 }
@@ -1239,10 +1254,10 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
     }
 
     try {
-        // 1. Upload to Supabase Storage ('proofs' bucket since it's evidence)
+        // 1. Upload to Supabase Storage ('media' public bucket so URLs render everywhere)
         console.log("Uploading task proof to Supabase...");
-        const folder = (userName || "slave").replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
-        const fileUrl = await uploadToSupabase("proofs", folder, file);
+        const folder = `task-proofs/${(userName || "slave").replace(/[^a-z0-9-_]/gi, "_").toLowerCase()}`;
+        const fileUrl = await uploadToSupabase("media", folder, file);
         console.log("Supabase Upload Result:", fileUrl);
 
         if (fileUrl === "failed") {
@@ -1281,6 +1296,8 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
             ];
             const msg = mockeries[Math.floor(Math.random() * mockeries.length)];
             showTaskFeedback(msg, '#c5a059');
+            // Refresh gallery so the pending item appears immediately
+            refreshTaskGallery(pid);
         } else {
             console.error("Backend submission error:", data.error);
             // Restore UI on failure
@@ -1405,7 +1422,7 @@ function subscribeToChat(email: string) {
         })
         .subscribe();
 
-    // Listen for task approval/rejection to auto-update the routine widget
+    // Listen for task approval/rejection to auto-update the routine widget and gallery
     supabase
         .channel('tasks_updates')
         .on('postgres_changes', {
@@ -1414,10 +1431,24 @@ function subscribeToChat(email: string) {
             table: 'tasks',
             filter: `member_id=eq.${cleanEmail}`
         }, (payload) => {
-            console.log('[REALTIME] Tasks table updated. Refreshing routine widget...');
+            console.log('[REALTIME] Tasks table updated. Refreshing routine widget and gallery...');
             updateRoutineWidget();
+            refreshTaskGallery(cleanEmail);
         })
         .subscribe();
+}
+
+async function refreshTaskGallery(email: string) {
+    try {
+        const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email)}&full=true`);
+        const data = await res.json();
+        if (data && !data.error) {
+            renderHistoryAndAltar(data);
+            console.log('[GALLERY] Refreshed from DB.');
+        }
+    } catch (err) {
+        console.warn('[GALLERY] Refresh failed:', err);
+    }
 }
 
 function isSystemMessage(msg: any) {
@@ -1550,6 +1581,17 @@ function renderChatMessage(msg: any) {
     `;
 }
 
+function appendChatCard(msg: any) {
+    const html = renderChatMessage(msg);
+    ['chatContent', 'mob_chatContent'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.insertAdjacentHTML('beforeend', html);
+            el.scrollTop = el.scrollHeight;
+        }
+    });
+}
+
 export async function sendChatMessage() {
     const { memberId, wallet } = getState();
     const inputDesk = document.getElementById('chatMsgInput') as HTMLInputElement;
@@ -1561,6 +1603,7 @@ export async function sendChatMessage() {
     try {
         const res = await fetch('/api/chat/send', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ senderEmail: memberId, content: msg, type: 'text' })
         });
         const data = await res.json();
@@ -2001,6 +2044,13 @@ export function renderProfileSidebar(u: any) {
     const elDashRank = document.getElementById('desk_DashboardRank');
     if (elDashRank) elDashRank.innerText = currentRank.toUpperCase();
 
+    // Mobile drawer rank elements
+    const elDrawerCurRank = document.getElementById('drawer_CurrentRank');
+    if (elDrawerCurRank) elDrawerCurRank.innerText = currentRank.toUpperCase();
+
+    const elDrawerNextRank = document.getElementById('drawer_NextRank');
+    if (elDrawerNextRank) elDrawerNextRank.innerText = isMax ? 'MAXIMUM RANK' : nextRank.toUpperCase();
+
     const elSubName = document.getElementById('subName');
     if (elSubName) elSubName.innerText = u.name || 'SLAVE';
 
@@ -2025,6 +2075,16 @@ export function renderProfileSidebar(u: any) {
     const elNextBen = document.getElementById('desk_NextBenefits');
     if (elNextBen) {
         elNextBen.innerHTML = isMax ? '<li>You have reached the apex of servitude.</li>' : nextBenefits.map(b => `<li>${b}</li>`).join('');
+    }
+
+    const elDrawerCurBen = document.getElementById('drawer_CurrentBenefits');
+    if (elDrawerCurBen) {
+        elDrawerCurBen.innerHTML = currentBenefits.map(b => `<li>${b}</li>`).join('');
+    }
+
+    const elDrawerNextBen = document.getElementById('drawer_NextBenefits');
+    if (elDrawerNextBen) {
+        elDrawerNextBen.innerHTML = isMax ? '<li>You have reached the apex of servitude.</li>' : nextBenefits.map(b => `<li>${b}</li>`).join('');
     }
 
     const toggle = document.getElementById('desk_BenefitsToggle');
@@ -2118,7 +2178,7 @@ export function renderProfileSidebar(u: any) {
             }
         };
 
-        const iconMap: Record<string, string> = { LABOR: '', ENDURANCE: '', MERIT: '', SACRIFICE: '', CONSISTENCY: '' };
+        const iconMap: Record<string, string> = { LABOR: '', KNEELING: '', MERIT: '', SACRIFICE: '', CONSISTENCY: '' };
         const fieldIdMap: Record<string, string> = { IDENTITY: 'name', PHOTO: 'avatar_url', LIMITS: 'limits', KINKS: 'kinks', ROUTINE: 'routine' };
 
         let html = '';
@@ -2126,6 +2186,8 @@ export function renderProfileSidebar(u: any) {
             if (r.type === 'bar') {
                 html += buildBar(r.label, iconMap[r.label] || '•', r.current, r.target);
             } else {
+                // Hide IDENTITY and PHOTO rows entirely if already verified
+                if ((r.label === 'IDENTITY' || r.label === 'PHOTO') && r.status === 'VERIFIED') return;
                 const fieldKey = fieldIdMap[r.label];
                 // Safely grab the actual string value from the profile for the modal
                 const rawValue = fieldKey && u[fieldKey] ? (typeof u[fieldKey] === 'string' ? u[fieldKey] : JSON.stringify(u[fieldKey])) : '';
@@ -2135,15 +2197,24 @@ export function renderProfileSidebar(u: any) {
 
         container.innerHTML = html;
 
-        container.querySelectorAll<HTMLButtonElement>('[data-prof-action]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const action = btn.getAttribute('data-prof-action');
-                const field = btn.getAttribute('data-prof-field') || '';
-                const label = btn.getAttribute('data-prof-label') || '';
-                const val = btn.getAttribute('data-prof-value') || '';
+        // Mirror to mobile drawer
+        const drawerContainer = document.getElementById('drawer_ProgressContainer');
+        if (drawerContainer) {
+            drawerContainer.innerHTML = html;
+        }
 
-                if (action === 'photo') handleProfileUpload();
-                else if (action === 'field') openTextFieldModal(field, label, val);
+        [container, drawerContainer].forEach(c => {
+            if (!c) return;
+            c.querySelectorAll<HTMLButtonElement>('[data-prof-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const action = btn.getAttribute('data-prof-action');
+                    const field = btn.getAttribute('data-prof-field') || '';
+                    const label = btn.getAttribute('data-prof-label') || '';
+                    const val = btn.getAttribute('data-prof-value') || '';
+
+                    if (action === 'photo') handleProfileUpload();
+                    else if (action === 'field') openTextFieldModal(field, label, val);
+                });
             });
         });
 
@@ -2549,9 +2620,7 @@ export async function loadQueenPosts() {
 }
 
 // ─── ALTAR & HISTORY GALLERY (RECORDS TAB) ───────────────────────────────────
-export function renderHistoryAndAltar(profileData: any) {
-    // Taskdom_History is a JSON text column in the tasks table.
-    // profileData is the merged (profiles + tasks) object from loadProfile.
+export async function renderHistoryAndAltar(profileData: any) {
     let raw: any[] = [];
     const hist = profileData?.['Taskdom_History'];
     if (typeof hist === 'string' && hist) {
@@ -2561,19 +2630,55 @@ export function renderHistoryAndAltar(profileData: any) {
     }
     if (!raw.length) return;
 
-    const approved = raw.filter((t: any) => t.status === 'approve' && t.proofUrl && t.proofUrl !== 'SKIPPED');
+    const allApproved = raw.filter((t: any) => t.status === 'approve' && t.proofUrl && t.proofUrl !== 'SKIPPED');
+    const routines = allApproved.filter((t: any) => t.isRoutine);
+    const tasks = allApproved.filter((t: any) => !t.isRoutine).sort((a: any, b: any) =>
+        new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
+    );
     const failed = raw.filter((t: any) => t.status === 'fail' || t.status === 'reject');
-    const pending = raw.filter((t: any) => t.status === 'pending');
+    const pending = raw.filter((t: any) => t.status === 'pending' && !t.isRoutine);
 
-    // ── 1. SOVEREIGN ALTAR hero cards ────────────────────────────────────────
-    _renderAltarHero(approved);
+    // Pre-sign all Supabase storage URLs in one batch request
+    const allWithUrls = [...allApproved, ...failed, ...pending].filter((t: any) => t.proofUrl);
+    const urlMap = await _signUrlsBatch(allWithUrls.map((t: any) => t.proofUrl));
+    const resolveUrl = (url: string) => urlMap[url] || url;
 
-    // ── 2. DEDICATED ENTRIES — full mosaic grid (approved) ───────────────────
-    _renderMosaicGrid(approved, pending);
+    // Hero: highest merit awarded; tiebreak by most recent timestamp
+    const hero = tasks.length > 0
+        ? tasks.reduce((best: any, t: any) => {
+            const bm = best.meritAwarded || 0;
+            const tm = t.meritAwarded || 0;
+            if (tm > bm) return t;
+            if (tm === bm && new Date(t.timestamp || 0) > new Date(best.timestamp || 0)) return t;
+            return best;
+        })
+        : null;
 
-    // ── 3. Mini-grids inside sub-cards ───────────────────────────────────────
-    _renderMiniGrid('gridAltarRoutine', approved.slice(0, 6));
-    _renderMiniGrid('gridAltarFailed', failed.slice(0, 6));
+    _renderAltarHero(hero, resolveUrl);
+    _renderRoutineGrid('gridAltarRoutine', routines, resolveUrl);
+    _renderFailedGrid('gridAltarFailed', failed, resolveUrl);
+    _renderMosaicGrid(tasks, pending, resolveUrl);
+}
+
+async function _signUrlsBatch(urls: string[]): Promise<Record<string, string>> {
+    const unique = [...new Set(urls.filter(Boolean))];
+    if (!unique.length) return {};
+    try {
+        const res = await fetch('/api/sign-urls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ urls: unique })
+        });
+        const data = await res.json();
+        const signedList: string[] = data.urls || unique;
+        const map: Record<string, string> = {};
+        unique.forEach((u, i) => { map[u] = signedList[i] || u; });
+        return map;
+    } catch {
+        const map: Record<string, string> = {};
+        unique.forEach(u => { map[u] = u; });
+        return map;
+    }
 }
 
 function _isVideo(url: string | null | undefined): boolean {
@@ -2585,127 +2690,146 @@ function _isVideo(url: string | null | undefined): boolean {
         (l.includes('supabase.co/storage') && /\.(mp4|webm|mov)(\?|$)/.test(l));
 }
 
-function _renderAltarHero(approved: any[]) {
-    // altarMain = newest approved
+function _renderAltarHero(hero: any | null, resolveUrl: (u: string) => string) {
     const altarMain = document.getElementById('altarMain');
     const imgMain = document.getElementById('imgAltarMain') as HTMLImageElement | null;
     const titleMain = document.getElementById('titleAltarMain');
 
-    if (approved[0] && altarMain && imgMain) {
-        const p0 = approved[0];
-        const isVid0 = _isVideo(p0.proofUrl);
-        if (!isVid0) {
-            imgMain.src = p0.proofUrl;
-            imgMain.style.display = 'block';
-        } else {
-            // Replace img with video element
-            const vid = document.createElement('video');
-            vid.src = p0.proofUrl;
-            vid.className = 'hero-img';
-            vid.style.objectFit = 'cover';
-            vid.setAttribute('muted', '');
-            vid.setAttribute('playsinline', '');
-            vid.setAttribute('loop', '');
-            imgMain.replaceWith(vid);
-            vid.play().catch(() => { });
-        }
-        if (titleMain) titleMain.textContent = p0.text?.replace(/<[^>]+>/g, '').slice(0, 60) || '...';
-        altarMain.style.display = 'block';
-        altarMain.onclick = () => _openHistoryModal(approved, 0);
+    if (!hero || !altarMain || !imgMain) return;
+
+    const url = resolveUrl(hero.proofUrl);
+    const merit = hero.meritAwarded ? `+${hero.meritAwarded} MERIT` : '';
+
+    if (_isVideo(url)) {
+        const vid = document.createElement('video');
+        vid.src = url;
+        vid.className = 'hero-img';
+        vid.style.objectFit = 'cover';
+        vid.setAttribute('muted', '');
+        vid.setAttribute('playsinline', '');
+        vid.setAttribute('loop', '');
+        imgMain.replaceWith(vid);
+        vid.play().catch(() => { });
+    } else {
+        imgMain.src = url;
+        imgMain.style.display = 'block';
     }
 
-    // altarSub1 image = approved[1]
-    const altarSub1 = document.getElementById('altarSub1');
-    if (approved[1] && altarSub1) {
-        const p1 = approved[1];
-        if (!_isVideo(p1.proofUrl)) {
-            altarSub1.style.backgroundImage = `url('${p1.proofUrl}')`;
-            altarSub1.style.backgroundSize = 'cover';
-            altarSub1.style.backgroundPosition = 'center top';
-        }
-        altarSub1.onclick = () => _openHistoryModal(approved, 1);
+    if (titleMain) titleMain.textContent = (hero.text || '').replace(/<[^>]+>/g, '').slice(0, 60) || '...';
+    if (merit) {
+        const meritEl = document.createElement('div');
+        meritEl.style.cssText = 'position:absolute;bottom:60px;left:20px;background:rgba(197,160,89,0.9);color:#000;font-family:Orbitron;font-size:0.5rem;font-weight:900;padding:4px 10px;border-radius:3px;letter-spacing:1px;';
+        meritEl.textContent = merit;
+        altarMain.style.position = 'relative';
+        altarMain.appendChild(meritEl);
     }
-
-    const altarSub2 = document.getElementById('altarSub2');
-    if (approved[2] && altarSub2) {
-        const p2 = approved[2];
-        if (!_isVideo(p2.proofUrl)) {
-            altarSub2.style.backgroundImage = `url('${p2.proofUrl}')`;
-            altarSub2.style.backgroundSize = 'cover';
-            altarSub2.style.backgroundPosition = 'center top';
-        }
-        altarSub2.onclick = () => _openHistoryModal(approved, 2);
-    }
+    altarMain.style.display = 'block';
+    altarMain.onclick = () => _openHistoryModal([hero], 0, resolveUrl);
 }
 
-function _renderMosaicGrid(approved: any[], pending: any[]) {
+function _renderRoutineGrid(containerId: string, routines: any[], resolveUrl: (u: string) => string) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!routines.length) { el.innerHTML = '<div style="color:#333;font-family:Orbitron;font-size:0.4rem;text-align:center;padding:20px;letter-spacing:1px;">NO ROUTINES YET</div>'; return; }
+
+    el.innerHTML = routines.slice(0, 6).map((t: any) => {
+        const url = resolveUrl(t.proofUrl);
+        const isVid = _isVideo(url);
+        const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase();
+        const media = isVid
+            ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" muted playsinline loop></video>`
+            : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
+        return `
+            <div style="position:relative;overflow:hidden;border-radius:4px;cursor:pointer;" onclick="void(0)">
+                ${media}
+                <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.75));padding:4px 5px;border-radius:0 0 4px 4px;">
+                    <div style="font-family:Orbitron;font-size:0.35rem;color:#fff;letter-spacing:1px;">${dateStr}</div>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function _renderFailedGrid(containerId: string, failed: any[], resolveUrl: (u: string) => string) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!failed.length) { el.innerHTML = '<div style="color:#333;font-family:Orbitron;font-size:0.4rem;text-align:center;padding:20px;letter-spacing:1px;">NONE</div>'; return; }
+
+    el.innerHTML = failed.slice(0, 6).map((t: any) => {
+        const url = t.proofUrl ? resolveUrl(t.proofUrl) : null;
+        if (!url) return `<div style="background:#0a0a0a;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">✗</div>`;
+        const isVid = _isVideo(url);
+        return isVid
+            ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" muted playsinline loop></video>`
+            : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" />`;
+    }).join('');
+}
+
+function _renderMosaicGrid(tasks: any[], pending: any[], resolveUrl: (u: string) => string) {
     const grid = document.getElementById('mosaicGrid');
     if (!grid) return;
-
     grid.innerHTML = '';
 
-    // Show pending entries first (greyed out badge)
+    // Pending first
     pending.forEach((t: any) => {
         const card = document.createElement('div');
         card.className = 'mosaic-card';
-        card.style.cssText = 'position:relative;overflow:hidden;border-radius:6px;border:1px solid #1a1a1a;background:#060606;display:flex;flex-direction:column;cursor:default;opacity:0.6;';
+        card.style.cssText = 'position:relative;overflow:hidden;border-radius:6px;border:1px solid rgba(197,160,89,0.25);background:#060606;display:flex;flex-direction:column;cursor:default;';
+        const url = t.proofUrl ? resolveUrl(t.proofUrl) : null;
+        const isVidP = url ? _isVideo(url) : false;
+        const mediaP = url
+            ? (isVidP
+                ? `<video src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" muted playsinline></video>`
+                : `<img src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" loading="lazy">`)
+            : `<div style="aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#0a0a0a;font-size:2rem;">⏳</div>`;
         card.innerHTML = `
-            <div style="aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#0a0a0a;font-size:2rem;">⏳</div>
-            <div style="padding:10px 12px;">
-                <div style="font-family:Orbitron;font-size:0.45rem;color:#555;letter-spacing:2px;margin-bottom:4px;">AWAITING JUDGMENT</div>
-                <div style="font-family:Rajdhani;font-size:0.78rem;color:#555;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
+            <div style="position:relative;">
+                ${mediaP}
+                <div style="position:absolute;top:8px;left:8px;background:rgba(197,160,89,0.9);color:#000;font-family:Orbitron;font-size:0.4rem;font-weight:900;padding:3px 7px;border-radius:3px;letter-spacing:1.5px;">PENDING</div>
             </div>
-        `;
+            <div style="padding:10px 12px;">
+                <div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:2px;margin-bottom:4px;">AWAITING JUDGMENT</div>
+                <div style="font-family:Rajdhani;font-size:0.78rem;color:#888;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
+            </div>`;
         grid.appendChild(card);
     });
 
-    // Approved entries — full mosaic portrait cards
-    approved.forEach((t: any, i: number) => {
+    // Approved tasks (no routines), sorted by date descending
+    tasks.forEach((t: any, i: number) => {
         const card = document.createElement('div');
         card.className = 'mosaic-card';
         card.style.cssText = 'position:relative;overflow:hidden;border-radius:6px;border:1px solid #1a1a1a;background:#060606;display:flex;flex-direction:column;cursor:pointer;transition:border-color 0.3s,transform 0.3s;';
         card.onmouseover = () => { card.style.borderColor = 'rgba(197,160,89,0.4)'; card.style.transform = 'translateY(-3px)'; };
         card.onmouseout = () => { card.style.borderColor = '#1a1a1a'; card.style.transform = 'translateY(0)'; };
-        card.onclick = () => _openHistoryModal(approved, i);
+        card.onclick = () => _openHistoryModal(tasks, i, resolveUrl);
 
-        const dateStr = new Date(t.timestamp || t.created_at || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }).toUpperCase();
-        const isVid = _isVideo(t.proofUrl);
+        const url = resolveUrl(t.proofUrl);
+        const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }).toUpperCase();
+        const isVid = _isVideo(url);
         const mediaHTML = isVid
-            ? `<video src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" muted playsinline loop></video>`
-            : `<img src="${getOptimizedUrl(t.proofUrl, 400)}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`;
+            ? `<video src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" muted playsinline loop></video>`
+            : `<img src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`;
+        const meritBadge = t.meritAwarded ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#c5a059;font-family:Orbitron;font-size:0.38rem;padding:3px 7px;border-radius:3px;letter-spacing:1px;">+${t.meritAwarded}</div>` : '';
 
         card.innerHTML = `
             ${mediaHTML}
+            ${meritBadge}
             <div style="padding:10px 12px;">
                 <div style="font-family:Orbitron;font-size:0.45rem;color:#3a3a3a;letter-spacing:2px;margin-bottom:4px;">${dateStr}</div>
                 <div style="font-family:Rajdhani;font-size:0.78rem;color:#888;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
                 ${t.adminComment ? `<div style="font-family:Orbitron;font-size:0.42rem;color:#c5a059;margin-top:5px;font-style:italic;">"${t.adminComment}"</div>` : ''}
-            </div>
-            ${i < 3 ? '<div style="position:absolute;top:8px;left:8px;background:#c5a059;color:#000;font-family:Orbitron;font-size:0.4rem;padding:3px 8px;border-radius:2px;letter-spacing:1px;">APPROVED</div>' : ''}
-        `;
+            </div>`;
         grid.appendChild(card);
     });
-}
-
-function _renderMiniGrid(containerId: string, items: any[]) {
-    const el = document.getElementById(containerId);
-    if (!el) return;
-    el.innerHTML = items.map((t: any) => {
-        const isVid = _isVideo(t.proofUrl);
-        return isVid
-            ? `<video src="${t.proofUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" muted playsinline loop></video>`
-            : `<img src="${getOptimizedUrl(t.proofUrl, 300)}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
-    }).join('');
 }
 
 // Simple lightbox modal for viewing a task at full-size
 const _modalStyle = `position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:24px;`;
 
-function _openHistoryModal(approved: any[], idx: number) {
+function _openHistoryModal(items: any[], idx: number, resolveUrl: (u: string) => string) {
     const old = document.getElementById('__altarModal');
     if (old) old.remove();
 
-    const t = approved[idx];
+    const t = items[idx];
     if (!t) return;
 
     const overlay = document.createElement('div');
@@ -2713,28 +2837,31 @@ function _openHistoryModal(approved: any[], idx: number) {
     overlay.style.cssText = _modalStyle;
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
-    const isVid = _isVideo(t.proofUrl);
+    const url = resolveUrl(t.proofUrl);
+    const isVid = _isVideo(url);
     const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+    const meritStr = t.meritAwarded ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:2px;margin-bottom:8px;">+${t.meritAwarded} MERIT AWARDED</div>` : '';
 
     overlay.innerHTML = `
         <div style="font-family:Orbitron;font-size:0.5rem;color:#555;letter-spacing:3px;">${dateStr}</div>
         ${isVid
-            ? `<video src="${t.proofUrl}" controls autoplay style="max-height:65vh;max-width:90vw;border-radius:6px;"></video>`
-            : `<img src="${getOptimizedUrl(t.proofUrl, 800)}" style="max-height:65vh;max-width:90vw;object-fit:contain;border-radius:6px;" />`
+            ? `<video src="${url}" controls autoplay style="max-height:65vh;max-width:90vw;border-radius:6px;"></video>`
+            : `<img src="${url}" style="max-height:65vh;max-width:90vw;object-fit:contain;border-radius:6px;" />`
         }
         <div style="max-width:600px;text-align:center;">
+            ${meritStr}
             <div style="font-family:Rajdhani;font-size:0.9rem;color:#aaa;line-height:1.6;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
             ${t.adminComment ? `<div style="font-family:Cinzel;font-size:0.75rem;color:#c5a059;margin-top:10px;font-style:italic;">"${t.adminComment}"</div>` : ''}
         </div>
         <div style="display:flex;gap:12px;">
             ${idx > 0 ? `<button onclick="event.stopPropagation()" style="background:none;border:1px solid #333;color:#666;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;" id="__altarPrev">← PREV</button>` : ''}
             <button onclick="document.getElementById('__altarModal').remove()" style="background:none;border:1px solid #c5a059;color:#c5a059;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;">CLOSE</button>
-            ${idx < approved.length - 1 ? `<button onclick="event.stopPropagation()" style="background:none;border:1px solid #333;color:#666;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;" id="__altarNext">NEXT →</button>` : ''}
+            ${idx < items.length - 1 ? `<button onclick="event.stopPropagation()" style="background:none;border:1px solid #333;color:#666;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;" id="__altarNext">NEXT →</button>` : ''}
         </div>
     `;
 
     document.body.appendChild(overlay);
 
-    document.getElementById('__altarPrev')?.addEventListener('click', () => { overlay.remove(); _openHistoryModal(approved, idx - 1); });
-    document.getElementById('__altarNext')?.addEventListener('click', () => { overlay.remove(); _openHistoryModal(approved, idx + 1); });
+    document.getElementById('__altarPrev')?.addEventListener('click', () => { overlay.remove(); _openHistoryModal(items, idx - 1, resolveUrl); });
+    document.getElementById('__altarNext')?.addEventListener('click', () => { overlay.remove(); _openHistoryModal(items, idx + 1, resolveUrl); });
 }

@@ -256,6 +256,7 @@ export const DbService = {
         if (idx > -1) {
             history[idx].status = 'approve';
             history[idx].completed = true;
+            history[idx].meritAwarded = bonus;
             if (comment) history[idx].adminComment = comment;
         }
 

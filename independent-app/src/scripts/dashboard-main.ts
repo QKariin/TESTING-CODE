@@ -10,12 +10,14 @@ import {
 
 import { renderSidebar } from './dashboard-sidebar';
 import { renderOperationsMonitor } from './dashboard-operations';
+import { loadWishlistManager, openWishlistAdd, openWishlistEdit, closeWishlistModal, saveWishlistItem, deleteWishlistItem, handleWishlistImageSelect, previewWishlistUrl } from './dashboard-wishlist';
 import { updateDetail } from './dashboard-users';
 import { toggleMobStats } from './dashboard-utils';
 import { Bridge } from './bridge';
 import { unlockAudio } from './utils';
 import { getOptimizedUrl } from './media';
 import { processCoinTransaction, secureUpdateTaskAction } from '@/actions/velo-actions';
+import { createClient } from '@/utils/supabase/client';
 
 export function initDashboard() {
     // Audio Wake-Up Strategy
@@ -39,8 +41,40 @@ export function initDashboard() {
     // Start Systems
     startTimerLoop();
     renderMainDashboard();
+    subscribeToDashboardTaskUpdates();
 
     console.log('Dashboard initialized. ID:', dayCode);
+}
+
+function subscribeToDashboardTaskUpdates() {
+    const supabase = createClient();
+    supabase
+        .channel('dashboard_tasks_watch')
+        .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'tasks',
+        }, async () => {
+            console.log('[DASHBOARD REALTIME] Tasks changed — refreshing review queue...');
+            try {
+                const res = await fetch('/api/dashboard-data');
+                const data = await res.json();
+                if (data.globalQueue) {
+                    setGlobalQueue(data.globalQueue);
+                    // Re-map reviewQueue onto each user object (case-insensitive)
+                    users.forEach((u: any) => {
+                        const uid = (u.memberId || u.member_id || '').toLowerCase();
+                        u.reviewQueue = data.globalQueue.filter(
+                            (t: any) => (t.member_id || '').toLowerCase() === uid
+                        );
+                    });
+                    renderMainDashboard();
+                }
+            } catch (err) {
+                console.warn('[DASHBOARD REALTIME] Queue refresh failed:', err);
+            }
+        })
+        .subscribe();
 }
 
 // NAVIGATION: BACK TO DASHBOARD
@@ -135,16 +169,25 @@ export function switchAdminTab(tab: 'ops' | 'intel' | 'record') {
     tabs.forEach(t => t.classList.remove('active'));
     views.forEach(v => v.classList.add('hidden'));
 
-    if (tab === 'ops') {
-        tabs[0].classList.add('active');
-        document.getElementById('tabOps')?.classList.remove('hidden');
-    } else if (tab === 'intel') {
-        tabs[1].classList.add('active');
-        document.getElementById('tabIntel')?.classList.remove('hidden');
-    } else {
-        tabs[2].classList.add('active');
-        document.getElementById('tabRecord')?.classList.remove('hidden');
-    }
+    const tabMap: Record<string, string> = { ops: 'tabOps', intel: 'tabIntel', record: 'tabRecord' };
+    const btnMap: Record<string, string> = { ops: 'tabBtnOps', intel: 'tabBtnIntel', record: 'tabBtnRecord' };
+
+    document.getElementById(tabMap[tab])?.classList.remove('hidden');
+    document.getElementById(btnMap[tab])?.classList.add('active');
+}
+
+export function expandFeedSection(section: 'wishlist') {
+    const overlay = document.getElementById('feedSectionOverlay');
+    const title = document.getElementById('feedSectionOverlayTitle');
+    if (!overlay) return;
+    if (title) title.textContent = section.toUpperCase();
+    overlay.style.display = 'flex';
+    if (section === 'wishlist') loadWishlistManager();
+}
+
+export function collapseFeedSection() {
+    const overlay = document.getElementById('feedSectionOverlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 
@@ -516,6 +559,15 @@ if (typeof window !== 'undefined') {
     (window as any).renderMainDashboard = renderMainDashboard;
     (window as any).initDashboard = initDashboard;
     (window as any).switchAdminTab = switchAdminTab;
+    (window as any).expandFeedSection = expandFeedSection;
+    (window as any).collapseFeedSection = collapseFeedSection;
+    (window as any).openWishlistAdd = openWishlistAdd;
+    (window as any).openWishlistEdit = openWishlistEdit;
+    (window as any).closeWishlistModal = closeWishlistModal;
+    (window as any).saveWishlistItem = saveWishlistItem;
+    (window as any).deleteWishlistItem = deleteWishlistItem;
+    (window as any).handleWishlistImageSelect = handleWishlistImageSelect;
+    (window as any).previewWishlistUrl = previewWishlistUrl;
     (window as any).adjustWallet = adjustWallet;
     (window as any).manageAltar = manageAltar;
     (window as any).adminTaskAction = adminTaskAction;

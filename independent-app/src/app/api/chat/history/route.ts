@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 export async function GET(req: Request) {
@@ -12,21 +11,17 @@ export async function GET(req: Request) {
             return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
         }
 
-        const supabase = await createClient();
-
-        // ADMIN BYPASS: If requester is ceo@qkarin.com, use service role to bypass RLS
-        const isHardcodedAdmin = requester && ["ceo@qkarin.com", "liviacechova@gmail.com"].includes(requester);
-
-        const queryClient = isHardcodedAdmin ? createAdminClient(
+        // Use admin client to bypass RLS — messages are scoped to the requested email
+        const queryClient = createAdminClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
-        ) : supabase;
+        );
 
         // Fetch messages for this specific user
         const { data, error } = await queryClient
             .from('chats')
             .select('*')
-            .eq('member_id', email)
+            .ilike('member_id', email)
             .order('created_at', { ascending: true });
 
         if (error) {

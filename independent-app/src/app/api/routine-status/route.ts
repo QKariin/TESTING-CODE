@@ -26,6 +26,8 @@ export async function GET(req: Request) {
             .ilike('member_id', memberEmail)
             .maybeSingle();
 
+        const tz = searchParams.get('tz') || 'UTC';
+
         let uploadedToday = false;
         let todayStatus = 'none';
         if (taskRow?.Taskdom_History) {
@@ -34,15 +36,27 @@ export async function GET(req: Request) {
                     ? JSON.parse(taskRow.Taskdom_History)
                     : taskRow.Taskdom_History;
 
-                const todayStr = new Date().toISOString().split('T')[0];
+                // Use user's timezone for "today" — routine window resets at 6am local time
+                const now = new Date();
+                const localHour = parseInt(
+                    new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now),
+                    10
+                );
+                // Before 6am: still in yesterday's routine window
+                const windowDate = new Date(now);
+                if (localHour < 6) windowDate.setDate(windowDate.getDate() - 1);
+                const todayStr = windowDate.toLocaleDateString('en-CA', { timeZone: tz });
+
                 const todaysRoutine = Array.isArray(history) && history.find((t: any) => {
                     if (!t.isRoutine || !t.timestamp) return false;
-                    try { return new Date(t.timestamp).toISOString().split('T')[0] === todayStr; } catch { return false; }
+                    try { return new Date(t.timestamp).toLocaleDateString('en-CA', { timeZone: tz }) === todayStr; } catch { return false; }
                 });
 
                 if (todaysRoutine) {
                     uploadedToday = true;
-                    todayStatus = (todaysRoutine.status || todaysRoutine.Status || 'pending').toLowerCase();
+                    const raw = (todaysRoutine.status || todaysRoutine.Status || 'pending').toLowerCase();
+                    // Normalize: DB stores 'approve'/'reject', widget expects 'approved'/'rejected'
+                    todayStatus = raw === 'approve' ? 'approved' : raw === 'reject' ? 'rejected' : raw;
                 }
             } catch (err) {
                 console.error('Failed parsing Taskdom_History', err);

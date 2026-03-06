@@ -6,11 +6,11 @@ import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = "force-dynamic";
 
-const COOLDOWN_MS = 60 * 60 * 1000; // 60 minutes
+const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000; // 1 min dev / 60 min prod
 
 export async function POST(req: Request) {
     try {
-        const { memberEmail } = await req.json();
+        const { memberEmail, tz = 'UTC' } = await req.json();
         if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
 
         // Fetch current record from tasks table (member_id = email, case-insensitive)
@@ -32,10 +32,10 @@ export async function POST(req: Request) {
             }
         }
 
-        // Calculate today kneeling (reset if different local day using UTC midnight)
-        const todayStr = now.toISOString().split('T')[0]; // e.g. "2026-02-22"
+        // Calculate today kneeling (reset at midnight in user's local timezone)
+        const todayStr = now.toLocaleDateString('en-CA', { timeZone: tz });
         const lastWorshipStr = task?.lastWorship
-            ? new Date(task.lastWorship).toISOString().split('T')[0]
+            ? new Date(task.lastWorship).toLocaleDateString('en-CA', { timeZone: tz })
             : null;
 
         const isSameDay = lastWorshipStr === todayStr;

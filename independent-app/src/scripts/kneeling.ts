@@ -1,4 +1,3 @@
-import { createClient } from '@/utils/supabase/client';
 import { getState, setState } from '@/scripts/profile-state';
 
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
@@ -15,24 +14,13 @@ async function syncKneelStatusFromServer() {
         if (!res.ok) return;
         const data = await res.json();
 
-        // ── Check LocalStorage fallback first (bulletproof reload protection) ──
-        const localWorship = localStorage.getItem('lastWorshipTime');
-        const localWorshipMs = localWorship ? parseInt(localWorship, 10) : 0;
-
-        // ── Update lock state (Use the newest timestamp between DB and LocalStorage) ──
-        if (data.lastWorshipMs || localWorshipMs) {
-            const finalWorship = Math.max(data.lastWorshipMs || 0, localWorshipMs);
-
-            // Re-calculate lock based on final timestamp
-            const now = Date.now();
-            const cdMs = (getState().cooldownMinutes || 60) * 60 * 1000;
-            const stillLocked = (now - finalWorship) < cdMs;
-
+        // ── Update lock state ──
+        if (data.lastWorshipMs) {
             setState({
-                lastWorshipTime: finalWorship,
-                isLocked: stillLocked,
+                lastWorshipTime: data.lastWorshipMs,
+                isLocked: data.isLocked,
             });
-            console.log(`[KNEEL] Sync: isLocked=${stillLocked}, finalWorship=${new Date(finalWorship).toLocaleTimeString()}`);
+            console.log(`[KNEEL] Server sync: isLocked=${data.isLocked}, minLeft=${data.minLeft}m, todayKneeling=${data.todayKneeling}`);
             updateKneelingUI();
         }
 
@@ -229,46 +217,42 @@ async function completeKneelAction() {
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     console.log('[KNEEL] SUCCESS!');
 
-    const now = Date.now();
-    // 👇 UPDATE GLOBAL STATE
+    // Lock UI immediately so user can't double-kneel
     setState({
         isLocked: true,
-        lastWorshipTime: now
+        lastWorshipTime: Date.now()
     });
-
-    // 👇 PERSIST LOCALLY (Bulletproof reload protection)
-    localStorage.setItem('lastWorshipTime', now.toString());
 
     // Sound
     const snd = document.getElementById('msgSound') as HTMLAudioElement;
     if (snd) snd.play().catch(e => console.log(e));
 
-    // Rewards
+    // Write to DB: increment kneelCount + today kneeling + lastWorship
+    const { memberId, id } = getState();
+    const memberEmail = memberId || id;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    if (memberEmail) {
+        try {
+            const res = await fetch('/api/kneel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberEmail, tz })
+            });
+            const data = await res.json();
+            if (res.ok && typeof data.todayKneeling === 'number') {
+                updateKneelingHoursUI(data.todayKneeling);
+            }
+        } catch (err) {
+            console.warn('[KNEEL] DB write failed:', err);
+        }
+    }
+
+    // Show reward overlay
     const deskReward = document.getElementById('kneelRewardOverlay');
     const mobReward = document.getElementById('mobKneelReward');
     if (deskReward) { deskReward.classList.remove('hidden'); deskReward.style.display = 'flex'; }
     if (mobReward) { mobReward.classList.remove('hidden'); mobReward.style.display = 'flex'; }
-
-    // Database
-    try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.email) {
-            const res = await fetch('/api/kneel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberEmail: user.email }),
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                if (typeof data.todayKneeling === 'number') {
-                    console.log(`[KNEEL] Hours Sync: ${data.todayKneeling}/8`);
-                    updateKneelingHoursUI(data.todayKneeling);
-                }
-            }
-        }
-    } catch (err) { console.error(err); }
 
     updateKneelingUI();
 }

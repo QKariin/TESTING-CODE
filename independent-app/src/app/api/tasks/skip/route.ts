@@ -45,6 +45,8 @@ export async function POST(req: NextRequest) {
             } catch (e) { }
         }
 
+        params.total_coins_spent = (params.total_coins_spent || 0) + 300;
+
         const profileDbUpdate = await supabaseAdmin.from('profiles').update({
             wallet: wallet - 300,
             parameters: params
