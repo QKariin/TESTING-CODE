@@ -27,6 +27,7 @@ export async function GET(req: Request) {
             .maybeSingle();
 
         let uploadedToday = false;
+        let todayStatus = 'none';
         if (taskRow?.Taskdom_History) {
             try {
                 const history = typeof taskRow.Taskdom_History === 'string'
@@ -34,10 +35,15 @@ export async function GET(req: Request) {
                     : taskRow.Taskdom_History;
 
                 const todayStr = new Date().toISOString().split('T')[0];
-                uploadedToday = Array.isArray(history) && history.some((t: any) => {
+                const todaysRoutine = Array.isArray(history) && history.find((t: any) => {
                     if (!t.isRoutine || !t.timestamp) return false;
                     try { return new Date(t.timestamp).toISOString().split('T')[0] === todayStr; } catch { return false; }
                 });
+
+                if (todaysRoutine) {
+                    uploadedToday = true;
+                    todayStatus = todaysRoutine.status || 'pending';
+                }
             } catch (err) {
                 console.error('Failed parsing Taskdom_History', err);
             }
@@ -46,6 +52,7 @@ export async function GET(req: Request) {
         return NextResponse.json({
             routine,           // null = no routine set | string = their routine text
             uploadedToday,     // true = already uploaded today
+            todayStatus,       // 'pending', 'approved', 'rejected', or 'none'
         });
     } catch (err: any) {
         console.error('[routine-status]', err);

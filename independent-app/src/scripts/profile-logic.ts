@@ -1113,8 +1113,22 @@ export async function updateRoutineWidget() {
             }
             if (mobBtn) { mobBtn.textContent = 'SET A ROUTINE'; mobBtn.onclick = () => (window as any).__routineAction?.(); }
             if (timeMsg) { timeMsg.classList.add('hidden'); }
-        } else if (data.uploadedToday) {
-            // ── State 3: Uploaded today ─────────────────────────────────────
+        } else if (data.uploadedToday && data.todayStatus === 'pending') {
+            // ── State 3a: Uploaded today, Pending Approval ──────────────────
+            if (display) display.textContent = 'PENDING APPROVAL';
+            if (btn) {
+                btn.textContent = '✔ SUBMITTED';
+                btn.style.background = 'linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 100%)';
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'default';
+                (window as any).__routineAction = () => { }; // Disabled
+            }
+            if (timeMsg) timeMsg.classList.add('hidden');
+            if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
+            if (mobDone) mobDone.classList.remove('hidden');
+            if (mobTime) mobTime.classList.add('hidden');
+        } else if (data.uploadedToday && data.todayStatus === 'approved') {
+            // ── State 3b: Uploaded today, Approved ──────────────────────────
             if (display) display.textContent = data.routine;
             if (btn) {
                 btn.textContent = '✔ NEXT UPLOAD 6AM';
