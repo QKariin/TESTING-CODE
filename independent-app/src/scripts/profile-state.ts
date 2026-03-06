@@ -44,10 +44,8 @@ export function initProfileState(data: any) {
     let lastWorshipTime = 0;
 
     // 👇 FIX 1: Look for the REAL database column "lastWorship"
-    // Check all casings: camelCase (Wix legacy), PascalCase, lowercase (Postgres normalization), and snake_case fallback
-    const rawTime = data.lastWorship || data.LastWorship || data.lastworship || data.lastKneelDate || data.last_worship;
-
-    console.log('[KNEEL DEBUG] initProfileState rawTime:', rawTime, '| keys in data:', Object.keys(data).filter(k => k.toLowerCase().includes('wor') || k.toLowerCase().includes('kneel')));
+    // We check multiple casings just to be safe
+    const rawTime = data.lastWorship || data.LastWorship || data.lastKneelDate;
 
     if (rawTime) {
         const parsed = new Date(rawTime).getTime();

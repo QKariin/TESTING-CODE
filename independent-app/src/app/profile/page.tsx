@@ -158,13 +158,12 @@ export default function ProfilePage() {
                 let baseProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
                 if (baseProfile) {
-                    // 2. Fetch Stats (TASKS) - Case-INSENSITIVE to match legacy Wix rows
+                    // 2. Fetch Stats (TASKS) - Correct Case Sensitive Check
                     const { data: taskData } = await supabase
                         .from('tasks')
                         .select('*')
-                        .ilike('member_id', baseProfile.member_id)
+                        .eq('member_id', baseProfile.member_id)
                         .maybeSingle();
-                    console.log('[KNEEL DEBUG] taskData.lastWorship:', taskData?.lastWorship, '| taskData.lastworship:', (taskData as any)?.lastworship);
                     // 3. MERGE (Without renaming keys!)
                     const unifiedData = {
                         ...baseProfile,

@@ -27,13 +27,7 @@ export async function updateSession(request: NextRequest) {
 
     if (pathname.startsWith('/auth')) return supabaseResponse
 
-    const isDev = process.env.NODE_ENV === 'development';
-    const isProfilePage = pathname.startsWith('/profile');
-
     if (!user && !pathname.startsWith('/login')) {
-        if (isDev && isProfilePage) {
-            return supabaseResponse;
-        }
         return NextResponse.redirect(new URL('/login', request.url))
     }
 

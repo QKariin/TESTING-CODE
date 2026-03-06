@@ -1,9 +1,34 @@
-import { createClient } from '@/utils/supabase/client';
-// 👇 IMPORT THE STATE MANAGER
 import { getState, setState } from '@/scripts/profile-state';
 
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
 const REQUIRED_HOLD_TIME = 2000;
+
+// ─── 0. SERVER SYNC (RLS-safe via admin client) ───
+// The anon Supabase client cannot read the tasks table due to RLS.
+// This fetches cooldown status via an API route that uses supabaseAdmin.
+async function syncKneelStatusFromServer() {
+    const { memberId, id } = getState();
+    const email = memberId || id;
+    if (!email) return;
+
+    try {
+        const res = await fetch(`/api/kneel-status?email=${encodeURIComponent(email)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.lastWorshipMs) {
+            setState({
+                lastWorshipTime: data.lastWorshipMs,
+                isLocked: data.isLocked,
+            });
+            console.log(`[KNEEL] Server sync: isLocked=${data.isLocked}, minLeft=${data.minLeft}m`);
+            updateKneelingUI();
+        }
+    } catch (err) {
+        console.warn('[KNEEL] Server sync failed:', err);
+    }
+}
+
 // ─── 1. INITIALIZATION ───
 export function attachKneelListeners() {
     const desktopBtn = document.getElementById('heroKneelBtn');
@@ -60,8 +85,11 @@ export function attachKneelListeners() {
         console.log('[KNEEL] Connected to State & DOM:', btn.id);
     });
 
-    // Sync UI with initial state
+    // Sync UI with initial in-memory state first
     updateKneelingUI();
+
+    // Then fetch real server state (bypasses RLS) and update
+    syncKneelStatusFromServer();
 }
 
 // ─── 2. START HOLD ───
@@ -145,7 +173,7 @@ async function completeKneelAction() {
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     console.log('[KNEEL] SUCCESS!');
 
-    // 👇 UPDATE GLOBAL STATE (instant UI lock — same as Wix)
+    // 👇 UPDATE GLOBAL STATE
     setState({
         isLocked: true,
         lastWorshipTime: Date.now()
@@ -155,16 +183,13 @@ async function completeKneelAction() {
     const snd = document.getElementById('msgSound') as HTMLAudioElement;
     if (snd) snd.play().catch(e => console.log(e));
 
-    // Rewards — show overlay. DB write happens when user CLAIMS (matches Wix CLAIM_KNEEL_REWARD flow)
+    // Rewards
     const deskReward = document.getElementById('kneelRewardOverlay');
     const mobReward = document.getElementById('mobKneelReward');
     if (deskReward) { deskReward.classList.remove('hidden'); deskReward.style.display = 'flex'; }
     if (mobReward) { mobReward.classList.remove('hidden'); mobReward.style.display = 'flex'; }
 
-    // NOTE: No /api/kneel call here anymore.
-    // lastWorship + kneelCount are saved in /api/claim-reward when the user picks coins or points.
-    // This matches the Wix CLAIM_KNEEL_REWARD handler pattern exactly.
-
+    // NOTE: No DB call here. lastWorship is saved in /api/claim-reward when user picks reward.
     updateKneelingUI();
 }
 
