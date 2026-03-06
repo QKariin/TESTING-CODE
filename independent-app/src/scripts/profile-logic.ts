@@ -20,54 +20,64 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     if (!pid) return;
 
     const amount = type === 'coins' ? 10 : 50;
-
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
 
-    // 1. Calculate New Balance
+    // 1. Save to DB FIRST — this writes lastWorship + kneelCount (Wix CLAIM_KNEEL_REWARD pattern)
+    try {
+        const res = await fetch('/api/claim-reward', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ choice: type, memberEmail: pid })
+        });
+
+        const data = await res.json();
+
+        if (res.status === 429) {
+            // Cooldown still active — close overlay silently
+            console.log(`[REWARD] Cooldown still active (${data.minLeft}m left). Ignoring.`);
+            document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
+            document.getElementById('mobKneelReward')?.classList.add('hidden');
+            return;
+        }
+
+        if (!data.success) {
+            console.error('[REWARD] Server rejected claim:', data.error);
+            return;
+        }
+
+        // 2. Sync lastWorshipTime + update kneeling hours bar from server response
+        if (data.lastWorship) {
+            setState({ lastWorshipTime: new Date(data.lastWorship).getTime() });
+        }
+        if (typeof data.todayKneeling === 'number') {
+            const { updateKneelingHoursUI } = await import('./kneeling');
+            updateKneelingHoursUI(data.todayKneeling);
+        }
+
+        loadChatHistory(pid);
+    } catch (err) {
+        console.error('[REWARD] Save failed', err);
+        return;
+    }
+
+    // 3. Update local balance state
     const newWallet = type === 'coins' ? (wallet || 0) + amount : (wallet || 0);
     const newScore = type === 'points' ? (score || 0) + amount : (score || 0);
-
-    // 2. Update Raw Backup (Critical for Rank)
-    const updatedRaw = {
-        ...(raw || {}),
-        wallet: newWallet,
-        score: newScore
-    };
-
-    // 3. Save State
-    setState({
-        wallet: newWallet,
-        score: newScore,
-        raw: updatedRaw
-    });
+    const updatedRaw = { ...(raw || {}), wallet: newWallet, score: newScore };
+    setState({ wallet: newWallet, score: newScore, raw: updatedRaw });
 
     if (type === 'coins') triggerCoinShower();
 
     // 4. Hide UI
     document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
     document.getElementById('mobKneelReward')?.classList.add('hidden');
-
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
     if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
     // 5. Render Sidebar
     renderProfileSidebar(updatedRaw);
-
-    // 6. Save to DB
-    try {
-        await fetch('/api/claim-reward', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                choice: type,
-                memberEmail: pid
-            })
-        });
-        loadChatHistory(pid);
-    } catch (err) {
-        console.error("[REWARD] Save failed", err);
-    }
 }
+
 
 // ─── TAB SWITCHING ───
 export function switchTab(tab: string) {

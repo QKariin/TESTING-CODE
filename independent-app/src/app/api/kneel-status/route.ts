@@ -28,11 +28,22 @@ export async function GET(req: Request) {
         const isLocked = lastWorshipMs > 0 && diffMs < COOLDOWN_MS;
         const minLeft = isLocked ? Math.ceil((COOLDOWN_MS - diffMs) / 60000) : 0;
 
+        // Midnight reset: compare lastWorship date vs today's date (UTC)
+        const todayStr = new Date().toISOString().split('T')[0];
+        const lastStr = lastWorshipMs > 0
+            ? new Date(lastWorshipMs).toISOString().split('T')[0]
+            : null;
+        const isSameDay = lastStr === todayStr;
+        const todayKneeling = isSameDay
+            ? parseInt(taskRow?.['today kneeling'] || '0', 10)
+            : 0;
+
         return NextResponse.json({
             lastWorshipMs,
             isLocked,
             minLeft,
             kneelCount: taskRow?.kneelCount || 0,
+            todayKneeling,
         });
     } catch (err: any) {
         console.error('[kneel-status]', err);

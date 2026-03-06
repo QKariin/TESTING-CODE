@@ -4,8 +4,6 @@ let holdTimer: ReturnType<typeof setTimeout> | null = null;
 const REQUIRED_HOLD_TIME = 2000;
 
 // ─── 0. SERVER SYNC (RLS-safe via admin client) ───
-// The anon Supabase client cannot read the tasks table due to RLS.
-// This fetches cooldown status via an API route that uses supabaseAdmin.
 async function syncKneelStatusFromServer() {
     const { memberId, id } = getState();
     const email = memberId || id;
@@ -16,18 +14,64 @@ async function syncKneelStatusFromServer() {
         if (!res.ok) return;
         const data = await res.json();
 
+        // ── Update lock state ──
         if (data.lastWorshipMs) {
             setState({
                 lastWorshipTime: data.lastWorshipMs,
                 isLocked: data.isLocked,
             });
-            console.log(`[KNEEL] Server sync: isLocked=${data.isLocked}, minLeft=${data.minLeft}m`);
+            console.log(`[KNEEL] Server sync: isLocked=${data.isLocked}, minLeft=${data.minLeft}m, todayKneeling=${data.todayKneeling}`);
             updateKneelingUI();
         }
+
+        // ── Update Kneeling Hours bars ──
+        updateKneelingHoursUI(data.todayKneeling || 0);
+
     } catch (err) {
         console.warn('[KNEEL] Server sync failed:', err);
     }
 }
+
+// ─── Kneeling Hours UI (called on load + after each reward claimed) ───────
+export function updateKneelingHoursUI(todayCount: number) {
+    const GOAL = 8;
+    const MAX = 24;
+    const isOverGoal = todayCount >= GOAL;
+
+    // x/8 below goal, x/24 above goal
+    const display = isOverGoal ? `${todayCount} / ${MAX}` : `${todayCount} / ${GOAL}`;
+    const pct = isOverGoal
+        ? Math.min((todayCount / MAX) * 100, 100)
+        : Math.min((todayCount / GOAL) * 100, 100);
+
+    const goldFill = 'linear-gradient(90deg, #c5a059, #f0d080)';
+    const goldSolid = '#c5a059';
+
+    // Desktop bar
+    const deskFill = document.getElementById('deskKneelDailyFill');
+    const deskText = document.getElementById('deskKneelDailyText');
+    const deskCard = document.getElementById('gridStat1');
+    if (deskFill) {
+        deskFill.style.width = `${pct}%`;
+        deskFill.style.background = isOverGoal ? goldFill : goldSolid;
+    }
+    if (deskText) deskText.textContent = display;
+    if (deskCard && isOverGoal) {
+        deskCard.style.background = 'linear-gradient(135deg, rgba(197,160,89,0.15) 0%, rgba(197,160,89,0.05) 100%)';
+        deskCard.style.borderColor = 'rgba(197,160,89,0.5)';
+        deskCard.style.boxShadow = '0 0 20px rgba(197,160,89,0.2)';
+    }
+
+    // Mobile bar
+    const mobFill = document.getElementById('kneelDailyFill');
+    const mobText = document.getElementById('kneelDailyText');
+    if (mobFill) {
+        mobFill.style.width = `${pct}%`;
+        mobFill.style.background = isOverGoal ? goldFill : goldSolid;
+    }
+    if (mobText) mobText.textContent = display;
+}
+
 
 // ─── 1. INITIALIZATION ───
 export function attachKneelListeners() {
