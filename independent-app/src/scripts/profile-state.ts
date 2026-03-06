@@ -25,7 +25,7 @@ const DEFAULT_STATE: ProfileState = {
     rank: "INITIATE",
     revealMap: [],
     libraryProgress: 1,
-    raw: {} 
+    raw: {}
 };
 
 let state: ProfileState = { ...DEFAULT_STATE };
@@ -44,8 +44,10 @@ export function initProfileState(data: any) {
     let lastWorshipTime = 0;
 
     // 👇 FIX 1: Look for the REAL database column "lastWorship"
-    // We check multiple casings just to be safe
-    const rawTime = data.lastWorship || data.LastWorship || data.lastKneelDate;
+    // Check all casings: camelCase (Wix legacy), PascalCase, lowercase (Postgres normalization), and snake_case fallback
+    const rawTime = data.lastWorship || data.LastWorship || data.lastworship || data.lastKneelDate || data.last_worship;
+
+    console.log('[KNEEL DEBUG] initProfileState rawTime:', rawTime, '| keys in data:', Object.keys(data).filter(k => k.toLowerCase().includes('wor') || k.toLowerCase().includes('kneel')));
 
     if (rawTime) {
         const parsed = new Date(rawTime).getTime();
@@ -61,11 +63,11 @@ export function initProfileState(data: any) {
         rank: data.hierarchy || "Hall Boy",
         revealMap: data.parameters?.reveal_map || [],
         libraryProgress: data.parameters?.library_progress || 1,
-        
+
         lastWorshipTime: lastWorshipTime, // Sets the lock
         cooldownMinutes: 60,
-        
+
         // 👇 FIX 2: Save the full data object so we don't lose stats later
-        raw: data 
+        raw: data
     });
 }

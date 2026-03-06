@@ -145,20 +145,11 @@ async function completeKneelAction() {
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     console.log('[KNEEL] SUCCESS!');
 
-    // 👇 UPDATE GLOBAL STATE IMMEDIATELY (Instant Feedback)
-    const now = Date.now();
+    // 👇 UPDATE GLOBAL STATE
     setState({
         isLocked: true,
-        lastWorshipTime: now
+        lastWorshipTime: Date.now()
     });
-
-    // 👇 PERSIST LOCALLY FOR DEV BYPASS
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        localStorage.setItem('dev_lastWorship', new Date(now).toISOString());
-    }
-
-    // Update UI immediately (Instant Lock)
-    updateKneelingUI();
 
     // Sound
     const snd = document.getElementById('msgSound') as HTMLAudioElement;
@@ -172,15 +163,18 @@ async function completeKneelAction() {
 
     // Database
     try {
-        const { memberId } = getState();
-        if (memberId) {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
             await fetch('/api/kneel', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberEmail: memberId }),
+                body: JSON.stringify({ memberEmail: user.email }),
             });
         }
     } catch (err) { console.error(err); }
+
+    updateKneelingUI();
 }
 
 // ─── 5. UI SYNC ───
@@ -188,12 +182,21 @@ export function updateKneelingUI() {
     // 👇 READ FROM GLOBAL STATE
     const { isLocked, lastWorshipTime, cooldownMinutes } = getState();
 
+    // If holding, don't interrupt
+    if (!isLocked && holdTimer) return;
+
+    if (!isLocked && !holdTimer) {
+        // Only reset if we are visibly wrong (prevent flickering)
+        const txtMain = document.getElementById('heroKneelText');
+        if (txtMain && txtMain.innerText !== "HOLD TO KNEEL") resetUI();
+        return;
+    }
+
     const minutes = cooldownMinutes || 60;
     const now = Date.now();
     const diffMs = now - lastWorshipTime;
     const cooldownMs = minutes * 60 * 1000;
 
-    // 👇 CHECK COOLDOWN FIRST (Before early return)
     if (diffMs < cooldownMs) {
         // STILL LOCKED
         if (!isLocked) setState({ isLocked: true }); // Sync state if mismatched
@@ -213,19 +216,9 @@ export function updateKneelingUI() {
         if (mobText) mobText.innerText = `LOCKED: ${minLeft}m`;
         if (mobFill) { mobFill.style.transition = "none"; mobFill.style.width = `${Math.max(0, progress)}%`; }
         if (mobBar) { mobBar.style.borderColor = "#ff003c"; }
-        return; // Stay locked
     } else {
         // UNLOCK
         if (isLocked) setState({ isLocked: false });
-    }
-
-    // If holding, don't interrupt
-    if (!isLocked && holdTimer) return;
-
-    if (!isLocked && !holdTimer) {
-        // Only reset if we are visibly wrong (prevent flickering)
-        const txtMain = document.getElementById('heroKneelText');
-        if (txtMain && txtMain.innerText !== "HOLD TO KNEEL") resetUI();
-        return;
+        resetUI();
     }
 }

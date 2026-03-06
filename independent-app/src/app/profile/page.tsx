@@ -124,8 +124,6 @@ export default function ProfilePage() {
                         parameters: { status: 'QUEEN', tributeHistory: '[]', taskdom_active_task: null, taskdom_end_time: null },
                         kneel_history: { totalSessions: 42, totalMinutes: 120 },
                         slave_since: '2024-01-01',
-                        // 👇 Added to test persistence in dev mode
-                        lastWorship: localStorage.getItem('dev_lastWorship')
                     };
                     console.log('[DEV MODE] Local bypass active — using mock profile');
                     setProfile(mockProfile);
@@ -160,12 +158,13 @@ export default function ProfilePage() {
                 let baseProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
                 if (baseProfile) {
-                    // 2. Fetch Stats (TASKS) - Correct Case Sensitive Check
+                    // 2. Fetch Stats (TASKS) - Case-INSENSITIVE to match legacy Wix rows
                     const { data: taskData } = await supabase
                         .from('tasks')
                         .select('*')
-                        .eq('member_id', baseProfile.member_id)
+                        .ilike('member_id', baseProfile.member_id)
                         .maybeSingle();
+                    console.log('[KNEEL DEBUG] taskData.lastWorship:', taskData?.lastWorship, '| taskData.lastworship:', (taskData as any)?.lastworship);
                     // 3. MERGE (Without renaming keys!)
                     const unifiedData = {
                         ...baseProfile,

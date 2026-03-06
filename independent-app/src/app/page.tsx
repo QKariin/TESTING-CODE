@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 
 export default function Home() {
-  redirect('/login');
+  const isDev = process.env.NODE_ENV === 'development';
+  redirect(isDev ? '/profile' : '/login');
 }
