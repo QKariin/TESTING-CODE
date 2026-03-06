@@ -145,7 +145,7 @@ async function completeKneelAction() {
     if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
     console.log('[KNEEL] SUCCESS!');
 
-    // 👇 UPDATE GLOBAL STATE
+    // 👇 UPDATE GLOBAL STATE (instant UI lock — same as Wix)
     setState({
         isLocked: true,
         lastWorshipTime: Date.now()
@@ -155,24 +155,15 @@ async function completeKneelAction() {
     const snd = document.getElementById('msgSound') as HTMLAudioElement;
     if (snd) snd.play().catch(e => console.log(e));
 
-    // Rewards
+    // Rewards — show overlay. DB write happens when user CLAIMS (matches Wix CLAIM_KNEEL_REWARD flow)
     const deskReward = document.getElementById('kneelRewardOverlay');
     const mobReward = document.getElementById('mobKneelReward');
     if (deskReward) { deskReward.classList.remove('hidden'); deskReward.style.display = 'flex'; }
     if (mobReward) { mobReward.classList.remove('hidden'); mobReward.style.display = 'flex'; }
 
-    // Database
-    try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.email) {
-            await fetch('/api/kneel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberEmail: user.email }),
-            });
-        }
-    } catch (err) { console.error(err); }
+    // NOTE: No /api/kneel call here anymore.
+    // lastWorship + kneelCount are saved in /api/claim-reward when the user picks coins or points.
+    // This matches the Wix CLAIM_KNEEL_REWARD handler pattern exactly.
 
     updateKneelingUI();
 }
