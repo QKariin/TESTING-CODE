@@ -1078,8 +1078,92 @@ export function mobileUploadEvidence(input: HTMLInputElement) {
     }
 }
 
+// ─── DAILY ROUTINE WIDGET ───────────────────────────────────────────────────
+export async function updateRoutineWidget() {
+    const { memberId, id } = getState();
+    const email = memberId || id;
+    if (!email) return;
+
+    try {
+        const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const display = document.getElementById('deskRoutineDisplay');
+        const btn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
+        const timeMsg = document.getElementById('deskRoutineTimeMsg');
+
+        // Mobile equivalents
+        const mobBtn = document.getElementById('btnRoutineUpload') as HTMLButtonElement | null;
+        const mobDone = document.getElementById('routineDoneMsg');
+        const mobTime = document.getElementById('routineTimeMsg');
+
+        if (!data.routine) {
+            // ── State 1: No routine set ─────────────────────────────────────
+            if (display) display.textContent = 'No routine set yet';
+            if (btn) {
+                btn.textContent = 'SET A ROUTINE';
+                btn.style.background = 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)';
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                (window as any).__routineAction = () => {
+                    const raw = (window as any).__currentProfileRaw || getState().raw || getState();
+                    const existingVal = raw?.routine || '';
+                    openTextFieldModal('routine', 'ROUTINE', existingVal);
+                };
+            }
+            if (mobBtn) { mobBtn.textContent = 'SET A ROUTINE'; mobBtn.onclick = () => (window as any).__routineAction?.(); }
+            if (timeMsg) { timeMsg.classList.add('hidden'); }
+        } else if (data.uploadedToday) {
+            // ── State 3: Uploaded today ─────────────────────────────────────
+            if (display) display.textContent = data.routine;
+            if (btn) {
+                btn.textContent = '✔ NEXT UPLOAD 6AM';
+                btn.style.background = 'linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 100%)';
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'default';
+                (window as any).__routineAction = () => { }; // Disabled
+            }
+            if (timeMsg) timeMsg.classList.remove('hidden');
+            if (mobBtn) { mobBtn.textContent = '✔ DONE'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
+            if (mobDone) mobDone.classList.remove('hidden');
+            if (mobTime) mobTime.classList.remove('hidden');
+        } else {
+            // ── State 2: Routine set, not uploaded today ────────────────────
+            if (display) display.textContent = data.routine;
+            if (btn) {
+                btn.textContent = 'UPLOAD ROUTINE';
+                btn.style.background = 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)';
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                (window as any).__routineAction = () => {
+                    (document.getElementById('routineUploadInput') as HTMLInputElement)?.click();
+                };
+            }
+            if (mobBtn) { mobBtn.textContent = 'UPLOAD ROUTINE'; mobBtn.onclick = () => (document.getElementById('routineUploadInput') as HTMLInputElement)?.click(); }
+            if (timeMsg) timeMsg.classList.add('hidden');
+        }
+
+        console.log(`[ROUTINE] routine=${!!data.routine}, uploadedToday=${data.uploadedToday}`);
+    } catch (err) {
+        console.warn('[ROUTINE] Widget update failed:', err);
+    }
+}
+
 export function handleRoutineUpload(input: HTMLInputElement) {
-    if (input.files && input.files[0]) submitTaskEvidence(input.files[0], true);
+    if (input.files && input.files[0]) {
+        submitTaskEvidence(input.files[0], true).then(() => {
+            // After upload completes, flip the widget to "done" state without another API call
+            const btn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
+            const timeMsg = document.getElementById('deskRoutineTimeMsg');
+            const mobBtn = document.getElementById('btnRoutineUpload') as HTMLButtonElement | null;
+            const mobDone = document.getElementById('routineDoneMsg');
+            if (btn) { btn.textContent = '✔ NEXT UPLOAD 6AM'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; (window as any).__routineAction = () => { }; }
+            if (timeMsg) timeMsg.classList.remove('hidden');
+            if (mobBtn) { mobBtn.textContent = '✔ DONE'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
+            if (mobDone) mobDone.classList.remove('hidden');
+        });
+    }
 }
 
 export function handleTaskEvidenceUpload(input: HTMLInputElement) {
@@ -1834,6 +1918,9 @@ export function renderProfileSidebar(u: any) {
 
     // Trigger loading tributes exactly once when profile data lands and sidebar renders
     if (globalTributes.length === 0) loadTributes();
+
+    // Load routine widget state from server (bypasses RLS via admin API)
+    updateRoutineWidget();
 
     // ─── AUTO PROMOTION TRIGGER ───
     if (report.canPromote && !isPromoting && u.member_id) {

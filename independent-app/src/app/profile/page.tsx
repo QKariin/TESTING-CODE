@@ -360,16 +360,23 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="gridStat2" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 5 }}>
+                    <div id="gridStat2" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
                         <div className="ribbon-label" style={{ textAlign: 'center' }}>DAILY ROUTINE</div>
-                        <div id="deskRoutineDisplay" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: 'white', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 5 }}>LOADING...</div>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: 5, alignItems: 'center', marginTop: 5, flexDirection: 'column' }}>
-                            <button id="deskRoutineUploadBtn" className="v-icon-box" style={{ width: 30, height: 30, borderRadius: 8, fontSize: '0.8rem', cursor: 'pointer', background: '#0075ff' }} onClick={() => (document.getElementById('routineUploadInput') as any)?.click()}>
-                                <i className="fas fa-upload"></i>
-                            </button>
-                            <div id="deskRoutineTimeMsg" className="hidden" style={{ color: '#666', fontFamily: 'Orbitron', fontSize: '0.6rem', textAlign: 'center' }}>NO PROTOCOL</div>
-                            <div id="deskRoutineDoneMsg" className="hidden" style={{ color: '#00ff00', fontFamily: 'Orbitron', fontSize: '0.7rem', textAlign: 'center', lineHeight: 1.3 }}>✔ DONE</div>
-                        </div>
+                        <div id="deskRoutineDisplay" style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 1.4, minHeight: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>LOADING...</div>
+                        <button
+                            id="deskRoutineActionBtn"
+                            style={{
+                                width: '100%', padding: '7px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                background: 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
+                                color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700,
+                                letterSpacing: '1px', textTransform: 'uppercase',
+                                boxShadow: '0 4px 15px rgba(197,160,89,0.3)', transition: 'all 0.2s'
+                            }}
+                            onClick={() => (window as any).__routineAction?.()}
+                        >
+                            LOADING...
+                        </button>
+                        <div id="deskRoutineTimeMsg" className="hidden" style={{ color: '#666', fontFamily: 'Orbitron', fontSize: '0.55rem', textAlign: 'center' }}>NEXT UPLOAD 6AM</div>
                     </div>
 
                     <div id="gridStat3" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>

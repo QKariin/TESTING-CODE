@@ -381,9 +381,30 @@ export const DbService = {
             if (error) throw error;
         }
 
-        // 4. Send system chat message
+        // 4. If routine, also append timestamp to profiles.routine_history
+        if (isRoutine) {
+            try {
+                const { data: prof } = await supabaseAdmin
+                    .from('profiles')
+                    .select('routine_history')
+                    .ilike('member_id', memberId)
+                    .maybeSingle();
+
+                const prevHistory: string[] = Array.isArray(prof?.routine_history) ? prof.routine_history : [];
+                const updatedHistory = [...prevHistory, now];
+
+                await supabaseAdmin
+                    .from('profiles')
+                    .update({ routine_history: updatedHistory })
+                    .ilike('member_id', memberId);
+            } catch (histErr) {
+                console.warn('[submitTask] Could not update routine_history:', histErr);
+            }
+        }
+
+        // 5. Send system chat message
         try {
-            await this.sendMessage(memberId, `TASK SUBMITTED — AWAITING REVIEW`, 'system');
+            await this.sendMessage(memberId, isRoutine ? `ROUTINE UPLOADED — AWAITING APPROVAL` : `TASK SUBMITTED — AWAITING REVIEW`, 'system');
         } catch (_) { }
 
         return { success: true, taskId };
