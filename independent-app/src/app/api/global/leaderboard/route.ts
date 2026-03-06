@@ -19,7 +19,15 @@ export async function GET(req: Request) {
 
     const todayStr = new Date().toISOString().split('T')[0];
 
-    const entries = (tasks || []).map((t: any) => {
+    interface LeaderboardEntry {
+        email: string;
+        name: string;
+        hierarchy: string;
+        kneelCount: number;
+        todayHours: number;
+    }
+
+    const entries: LeaderboardEntry[] = (tasks || []).map((t: any) => {
         const prof = profileMap.get(t.member_id) || {};
         let todayHours = 0;
         try {
@@ -27,7 +35,7 @@ export async function GET(req: Request) {
                 ? JSON.parse(t['today kneeling'])
                 : t['today kneeling'];
             if (tk?.date === todayStr) todayHours = parseFloat(tk.hours || 0);
-        } catch {}
+        } catch { }
 
         return {
             email: t.member_id,
@@ -39,10 +47,10 @@ export async function GET(req: Request) {
     });
 
     if (period === 'today') {
-        entries.sort((a, b) => b.todayHours - a.todayHours);
+        entries.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.todayHours - a.todayHours);
         return NextResponse.json({ entries: entries.filter(e => e.todayHours > 0).slice(0, 20) });
     } else {
-        entries.sort((a, b) => b.kneelCount - a.kneelCount);
+        entries.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.kneelCount - a.kneelCount);
         return NextResponse.json({ entries: entries.filter(e => e.kneelCount > 0).slice(0, 20) });
     }
 }

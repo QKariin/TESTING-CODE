@@ -10,9 +10,16 @@ export async function GET() {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const entries = (profiles || []).map((p: any) => {
+    interface SpenderEntry {
+        email: string;
+        name: string;
+        hierarchy: string;
+        totalSpent: number;
+    }
+
+    const entries: SpenderEntry[] = (profiles || []).map((p: any) => {
         let params: any = {};
-        try { params = typeof p.parameters === 'string' ? JSON.parse(p.parameters) : (p.parameters || {}); } catch {}
+        try { params = typeof p.parameters === 'string' ? JSON.parse(p.parameters) : (p.parameters || {}); } catch { }
         const totalSpent = parseInt(params.total_coins_spent || 0);
         return {
             email: p.email,
@@ -20,8 +27,8 @@ export async function GET() {
             hierarchy: p.hierarchy || '—',
             totalSpent,
         };
-    }).filter(e => e.totalSpent > 0);
+    }).filter((e: SpenderEntry) => e.totalSpent > 0);
 
-    entries.sort((a, b) => b.totalSpent - a.totalSpent);
+    entries.sort((a: SpenderEntry, b: SpenderEntry) => b.totalSpent - a.totalSpent);
     return NextResponse.json({ entries: entries.slice(0, 20) });
 }

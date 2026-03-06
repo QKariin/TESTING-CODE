@@ -19,16 +19,23 @@ export async function GET() {
         : { data: [] };
     const nameMap = new Map((profiles || []).map((p: any) => [p.email, p.name]));
 
-    const updates = (data || []).map((m: any) => {
+    interface GlobalUpdate {
+        media_url: string;
+        caption: string;
+        senderName: string;
+        created_at: string;
+    }
+
+    const updates: GlobalUpdate[] = (data || []).map((m: any) => {
         let parsed: any = {};
-        try { parsed = JSON.parse(m.content); } catch {}
+        try { parsed = JSON.parse(m.content); } catch { }
         return {
             media_url: parsed.url || '',
             caption: parsed.caption || '',
             senderName: nameMap.get(m.member_id) || m.member_id?.split('@')[0] || 'SUBJECT',
             created_at: m.created_at,
         };
-    }).filter(u => u.media_url);
+    }).filter((u: GlobalUpdate) => u.media_url);
 
     return NextResponse.json({ updates });
 }
