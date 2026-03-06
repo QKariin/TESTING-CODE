@@ -10,21 +10,38 @@ export async function GET(req: Request) {
 
         if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
 
-        // Use supabaseAdmin to bypass RLS
+        // Only fetch routine from profiles (routine_history column does not exist)
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('routine, routine_history')
+            .select('routine')
             .ilike('member_id', memberEmail)
             .maybeSingle();
 
         const routine = profile?.routine || null;
-        const history: string[] = Array.isArray(profile?.routine_history) ? profile.routine_history : [];
 
-        // Check if uploaded today (UTC midnight reset)
-        const todayStr = new Date().toISOString().split('T')[0];
-        const uploadedToday = history.some((ts: string) => {
-            try { return new Date(ts).toISOString().split('T')[0] === todayStr; } catch { return false; }
-        });
+        // Fetch tasks history to see if they uploaded a routine today
+        const { data: taskRow } = await supabaseAdmin
+            .from('tasks')
+            .select('Taskdom_History')
+            .ilike('member_id', memberEmail)
+            .maybeSingle();
+
+        let uploadedToday = false;
+        if (taskRow?.Taskdom_History) {
+            try {
+                const history = typeof taskRow.Taskdom_History === 'string'
+                    ? JSON.parse(taskRow.Taskdom_History)
+                    : taskRow.Taskdom_History;
+
+                const todayStr = new Date().toISOString().split('T')[0];
+                uploadedToday = Array.isArray(history) && history.some((t: any) => {
+                    if (!t.isRoutine || !t.timestamp) return false;
+                    try { return new Date(t.timestamp).toISOString().split('T')[0] === todayStr; } catch { return false; }
+                });
+            } catch (err) {
+                console.error('Failed parsing Taskdom_History', err);
+            }
+        }
 
         return NextResponse.json({
             routine,           // null = no routine set | string = their routine text
