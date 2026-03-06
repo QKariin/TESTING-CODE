@@ -182,21 +182,12 @@ export function updateKneelingUI() {
     // 👇 READ FROM GLOBAL STATE
     const { isLocked, lastWorshipTime, cooldownMinutes } = getState();
 
-    // If holding, don't interrupt
-    if (!isLocked && holdTimer) return;
-
-    if (!isLocked && !holdTimer) {
-        // Only reset if we are visibly wrong (prevent flickering)
-        const txtMain = document.getElementById('heroKneelText');
-        if (txtMain && txtMain.innerText !== "HOLD TO KNEEL") resetUI();
-        return;
-    }
-
     const minutes = cooldownMinutes || 60;
     const now = Date.now();
     const diffMs = now - lastWorshipTime;
     const cooldownMs = minutes * 60 * 1000;
 
+    // 👇 CHECK COOLDOWN FIRST (Before early return)
     if (diffMs < cooldownMs) {
         // STILL LOCKED
         if (!isLocked) setState({ isLocked: true }); // Sync state if mismatched
@@ -216,9 +207,19 @@ export function updateKneelingUI() {
         if (mobText) mobText.innerText = `LOCKED: ${minLeft}m`;
         if (mobFill) { mobFill.style.transition = "none"; mobFill.style.width = `${Math.max(0, progress)}%`; }
         if (mobBar) { mobBar.style.borderColor = "#ff003c"; }
+        return; // Stay locked
     } else {
         // UNLOCK
         if (isLocked) setState({ isLocked: false });
-        resetUI();
+    }
+
+    // If holding, don't interrupt
+    if (!isLocked && holdTimer) return;
+
+    if (!isLocked && !holdTimer) {
+        // Only reset if we are visibly wrong (prevent flickering)
+        const txtMain = document.getElementById('heroKneelText');
+        if (txtMain && txtMain.innerText !== "HOLD TO KNEEL") resetUI();
+        return;
     }
 }
