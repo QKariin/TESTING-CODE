@@ -75,9 +75,9 @@
     .halo-circle-lg {
         position: relative;
         z-index: 2;
-        width: 380px;
-        /* Even bigger as requested */
-        height: 380px;
+        width: 340px;
+        /* Slightly smaller circle per request */
+        height: 340px;
         border-radius: 50%;
         border: 2px solid #c5a059;
         box-shadow: 0 0 40px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
@@ -175,8 +175,8 @@
         /* Enhanced border */
         border-radius: 12px;
         /* Smoother rounding */
-        padding: 18px 10px;
-        /* Taller padding */
+        padding: 10px;
+        /* Reduced height padding */
         display: flex;
         align-items: center;
         justify-content: space-around;
@@ -192,16 +192,19 @@
         flex-direction: column;
         align-items: center;
         gap: 3px;
+        width: 45%;
+        /* Stop columns from pushing each other out */
     }
 
     .h-val {
         font-family: 'Orbitron', sans-serif;
-        font-size: 2.6rem !important;
-        /* Made significantly bigger */
-        /* Force override */
+        font-size: clamp(1.2rem, 5vw, 1.5rem) !important;
+        /* Made a bit smaller per request */
         color: #fff;
         line-height: 1;
         font-weight: 800;
+        text-align: center;
+        word-break: break-all;
     }
 
     .h-lbl {
@@ -617,7 +620,7 @@
     }
 
     .h-val {
-        font-size: 2.6rem !important;
+        font-size: clamp(1.2rem, 5vw, 1.5rem) !important;
     }
 
     /* ── MOBILE BOTTOM NAV ── */
