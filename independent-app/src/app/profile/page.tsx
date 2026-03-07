@@ -1218,7 +1218,7 @@ export default function ProfilePage() {
                                 <span style={{ fontFamily: 'Cinzel', color: '#c5a059' }}>TRIBUTE STORE</span>
                                 <button onClick={() => (window as any).toggleTributeHunt()} style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem' }}>X</button>
                             </div>
-                            <div id="mob_huntStoreGrid" className="store-grid" style={{ width: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '5px', paddingBottom: '30px' }}></div>
+                            <div id="mob_huntStoreGrid" className="store-grid" style={{ width: '100%', overflowY: 'auto', paddingBottom: '30px' }}></div>
                         </div>
                         <div id="mob_chatContent" className="chat-area"></div>
                     </div>

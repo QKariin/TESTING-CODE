@@ -733,6 +733,17 @@
             0 0 24px rgba(255, 0, 0, 0.7);
     }
 
+    /* Shrink queen avatar when keyboard is open */
+    .mob-nav-queen-btn.mob-nav-queen-shrink {
+        transform: scale(0.55);
+        opacity: 0.5;
+        transition: transform 0.25s ease, opacity 0.25s ease;
+        pointer-events: none;
+    }
+    .mob-nav-queen-btn {
+        transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+
     .mob-nav-queen-img {
         width: 100%;
         height: 100%;
@@ -1523,12 +1534,13 @@
         border: 1px solid rgba(197,160,89,0.25) !important;
         color: #fff !important;
         font-family: 'Cinzel', serif !important;
-        font-size: 0.78rem !important;
+        font-size: 16px !important;
         letter-spacing: 0.5px;
         padding: 10px 14px 10px 42px !important;
         border-radius: 10px !important;
         outline: none !important;
         transition: border-color 0.2s;
+        touch-action: manipulation;
     }
     #mobChatOverlay .chat-input:focus {
         border-color: rgba(197,160,89,0.7) !important;

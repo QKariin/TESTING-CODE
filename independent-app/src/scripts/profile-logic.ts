@@ -1901,6 +1901,16 @@ export function openMobChatOverlay() {
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
     _setNavActive('');
     switchMobChatTab('chat');
+
+    // Shrink queen avatar button when keyboard opens
+    const input = document.getElementById('mob_chatMsgInput');
+    const queenBtn = document.querySelector('.mob-nav-queen-btn') as HTMLElement | null;
+    if (input && queenBtn && !(input as any).__mobChatFocusAttached) {
+        (input as any).__mobChatFocusAttached = true;
+        input.addEventListener('focus', () => queenBtn.classList.add('mob-nav-queen-shrink'));
+        input.addEventListener('blur', () => queenBtn.classList.remove('mob-nav-queen-shrink'));
+    }
+
     // Wait for slide-up animation then force scroll to bottom
     setTimeout(() => {
         const box = document.getElementById('mob_chatBox');
