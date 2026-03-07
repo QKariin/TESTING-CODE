@@ -44,164 +44,106 @@
         display: block;
         padding: 0;
         z-index: 1;
-        background: transparent !important;
+        background: url('https://static.wixstatic.com/media/ce3e5b_b1f7f0d080e4471ca7d292968d40feee~mv2.jpg') center top / cover no-repeat fixed !important;
     }
 
-    #viewMobileHome::-webkit-scrollbar,
-    #mobHomeScroll::-webkit-scrollbar,
-    #mobGlobalScroll::-webkit-scrollbar,
-    #mobRecordScroll::-webkit-scrollbar,
-    .mob-horiz-scroll::-webkit-scrollbar,
-    .qm-scroll-content::-webkit-scrollbar {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        background: transparent !important;
-    }
-
-    /* ── HALO HERO SECTION ── */
+    /* ── HALO HERO SECTION (OVERRIDDEN FOR OLD LOOK) ── */
     .halo-hero {
         width: 100%;
-        min-height: 100vw;
         position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 70px 20px 28px;
+        padding: 60px 20px 28px;
         box-sizing: border-box;
         overflow: hidden;
+        z-index: 2;
     }
 
-    .halo-hero::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image: url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png');
-        background-size: cover;
-        background-position: center top;
-        opacity: 0.18;
-        z-index: 0;
-    }
-
-    .halo-hero::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(ellipse at center 40%, transparent 30%, rgba(2, 5, 18, 0.85) 80%);
-        z-index: 1;
-    }
-
-    /* Large circle */
+    /* Large circle - overriding .halo-circle-lg to match .halo-ring */
     .halo-circle-lg {
         position: relative;
         z-index: 2;
-        width: min(82vw, 340px);
-        height: min(82vw, 340px);
+        width: 280px;
+        height: 280px;
         border-radius: 50%;
-        border: 2px solid rgba(197, 160, 89, 0.65);
-        box-shadow:
-            0 0 0 6px rgba(197, 160, 89, 0.06),
-            0 0 60px rgba(197, 160, 89, 0.25),
-            inset 0 0 50px rgba(2, 5, 18, 0.7);
-        background: radial-gradient(ellipse at center, rgba(197, 160, 89, 0.04) 0%, rgba(2, 5, 18, 0.75) 65%);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        border: 2px solid #c5a059;
+        box-shadow: 0 0 30px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        padding: 18px;
-    }
-
-    .halo-pic-wrap {
-        width: 90px;
-        height: 90px;
-        border-radius: 50%;
-        border: 2px solid rgba(197, 160, 89, 0.75);
-        box-shadow: 0 0 20px rgba(197, 160, 89, 0.45), 0 0 50px rgba(197, 160, 89, 0.1);
-        overflow: hidden;
-        flex-shrink: 0;
-        margin-bottom: 2px;
-    }
-
-    .halo-pic {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
-        display: block;
+        gap: 0;
+        padding: 0;
     }
 
     .halo-name-lg {
         font-family: 'Cinzel', serif;
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         color: #ffffff;
         text-transform: uppercase;
-        letter-spacing: 4px;
-        text-shadow: 0 0 20px rgba(255, 255, 255, 0.25), 0 2px 8px rgba(0, 0, 0, 0.8);
+        letter-spacing: 2px;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
         line-height: 1;
         text-align: center;
         max-width: 90%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-weight: 700;
-    }
-
-    .halo-email {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.36rem;
-        color: rgba(255, 255, 255, 0.18);
-        letter-spacing: 1px;
-        text-align: center;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        max-width: 85%;
+        font-weight: 400;
+        margin-bottom: 5px;
     }
 
     .halo-rank-lg {
         font-family: 'Orbitron', sans-serif;
-        font-size: 0.52rem;
+        font-size: 0.7rem;
         color: #c5a059;
-        letter-spacing: 3px;
+        letter-spacing: 4px;
         text-transform: uppercase;
-        opacity: 0.9;
+        font-weight: 400;
     }
 
-    /* 24-dot progress grid */
     .halo-progress-label {
         font-family: 'Orbitron', sans-serif;
-        font-size: 0.38rem;
-        color: rgba(197, 160, 89, 0.45);
-        letter-spacing: 2.5px;
-        margin-top: 4px;
-        margin-bottom: 6px;
+        font-size: 0.5rem;
+        color: #666;
+        letter-spacing: 2px;
+        margin-top: 15px;
+        margin-bottom: 5px;
     }
 
+    /* 24-dot progress grid - styling .kdot which the logic provides */
     .halo-dots-grid {
         display: grid;
         grid-template-columns: repeat(12, 1fr);
-        gap: 5px;
-        width: 84%;
+        gap: 3px;
+        width: 70%;
+        margin-bottom: 10px;
     }
 
     .kdot {
-        width: 100%;
-        aspect-ratio: 1;
-        border-radius: 50%;
-        transition: background 0.3s, box-shadow 0.3s;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 1px;
+        transition: all 0.3s ease;
+        aspect-ratio: auto;
+        /* override aspect-ratio if set elsewhere */
     }
 
     .kdot-lit {
-        background: hsl(42, 72%, 55%);
-        box-shadow: 0 0 6px rgba(197, 160, 89, 0.7), 0 0 12px rgba(197, 160, 89, 0.3);
+        background: #c5a059;
+        border-color: #f0d080;
+        box-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
     }
 
     .kdot-dim {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.3);
     }
 
     .kdot-off {
@@ -209,21 +151,23 @@
         border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    /* Stats pill below the circle */
+    /* STATS CARD (OVERRIDING .halo-stats-pill) */
     .halo-stats-pill {
         position: relative;
-        z-index: 2;
-        margin-top: 18px;
-        width: min(72vw, 280px);
-        background: rgba(4, 4, 14, 0.88);
-        border: 1px solid rgba(197, 160, 89, 0.22);
-        border-radius: 50px;
-        padding: 12px 24px;
+        z-index: 3;
+        margin-top: -40px;
+        width: 90%;
+        background: rgba(10, 10, 10, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px;
         display: flex;
         align-items: center;
         justify-content: space-around;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(197, 160, 89, 0.04);
-        backdrop-filter: blur(20px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(15px);
+        margin-bottom: 20px;
+        height: auto;
     }
 
     .h-stat {
@@ -235,7 +179,8 @@
 
     .h-val {
         font-family: 'Orbitron', sans-serif;
-        font-size: 1.4rem;
+        font-size: 1.4rem !important;
+        /* Force override */
         color: #fff;
         line-height: 1;
         font-weight: 700;
@@ -243,7 +188,7 @@
 
     .h-lbl {
         font-family: 'Orbitron', sans-serif;
-        font-size: 0.4rem;
+        font-size: 0.45rem !important;
         color: rgba(197, 160, 89, 0.5);
         letter-spacing: 2px;
     }
@@ -251,7 +196,7 @@
     .h-divider {
         width: 1px;
         height: 30px;
-        background: rgba(197, 160, 89, 0.18);
+        background: rgba(255, 255, 255, 0.1);
     }
 
     .mob-hud-row {
@@ -311,6 +256,12 @@
 
     .mob-stats-toggle-btn:active {
         background: rgba(197, 160, 89, 0.1);
+    }
+
+    .mob-kneel-zone {
+        width: 100%;
+        margin-top: 30px;
+        padding: 0 15px;
     }
 
     .mob-internal-drawer {
@@ -386,8 +337,15 @@
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.96); }
-        to { opacity: 1; transform: scale(1); }
+        from {
+            opacity: 0;
+            transform: scale(0.96);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
 
     .mob-reward-overlay {
@@ -456,13 +414,14 @@
         text-align: center;
         line-height: 1.4;
         margin: 5px 0 15px 0;
-        padding: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(0, 0, 0, 0.3);
-        min-height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        padding: 16px !important;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 4px;
+        margin: 15px 10px !important;
+        min-height: 60px !important;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: #ddd;
+        font-size: 0.8rem;
     }
 
     .mob-horiz-scroll {
@@ -578,31 +537,34 @@
 
     /* Task Action Buttons */
     .btn-upload-sm {
-        background: #c5a059 !important;
-        color: #000 !important;
-        border: none !important;
-        border-radius: 4px;
-        font-family: 'Orbitron', sans-serif;
-        font-weight: 700;
-        font-size: 0.75rem;
-        padding: 10px 0;
         width: 100%;
+        background: linear-gradient(135deg, #c5a059 0%, #8b6914 100%);
+        color: #000;
+        border: 1px solid #c5a059;
+        font-family: 'Cinzel', serif;
+        font-weight: 700;
+        letter-spacing: 2px;
+        padding: 14px;
+        border-radius: 4px;
+        font-size: 0.8rem;
         cursor: pointer;
         text-transform: uppercase;
-        box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
+        box-shadow: 0 4px 15px rgba(197, 160, 89, 0.2);
     }
 
     .btn-skip-sm {
-        background: rgba(255, 255, 255, 0.05) !important;
-        color: #888 !important;
-        border: 1px solid #444 !important;
-        border-radius: 4px;
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.7rem;
-        padding: 10px 0;
-        width: 100%;
-        cursor: pointer;
-        text-transform: uppercase;
+        background: none !important;
+        border: none !important;
+        color: #666 !important;
+        font-family: 'Orbitron', sans-serif !important;
+        font-size: 0.6rem !important;
+        letter-spacing: 1px !important;
+        padding: 10px 0 !important;
+        width: 100% !important;
+        display: block !important;
+        text-align: center !important;
+        box-shadow: none !important;
+        margin-top: 10px;
     }
 
     /* Fix stats pill */
@@ -906,8 +868,15 @@
 
     /* ── HUB OVERLAYS ── */
     @keyframes hubSlideUp {
-        from { opacity: 0; transform: translateY(28px); }
-        to   { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(28px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .hub-overlay {
@@ -1160,6 +1129,44 @@
         cursor: pointer;
         width: 100%;
         transition: opacity 0.2s;
+    }
+
+    .txt-status-green {
+        color: #00ff6a;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .working-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #00ff6a;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 10px #00ff6a;
+        animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(0, 255, 106, 0.7);
+        }
+
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(0, 255, 106, 0);
+        }
+
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(0, 255, 106, 0);
+        }
     }
 
     .hub-confirm-btn:active {
@@ -1649,7 +1656,9 @@
         outline: none;
     }
 
-    .mob-gl-talk-input::placeholder { color: #333; }
+    .mob-gl-talk-input::placeholder {
+        color: #333;
+    }
 
     .mob-gl-talk-send {
         background: rgba(197, 160, 89, 0.15);

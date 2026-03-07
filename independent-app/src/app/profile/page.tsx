@@ -1003,7 +1003,7 @@ export default function ProfilePage() {
                                 <div className="h-divider"></div>
                                 <div className="h-stat">
                                     <span className="h-val" id="mobCoins">{profile?.wallet || 0}</span>
-                                    <span className="h-lbl">CAPITAL</span>
+                                    <span className="h-lbl">NET</span>
                                 </div>
                             </div>
                         </div>
@@ -1057,7 +1057,9 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                                 <div id="qm_TaskActive" className="hidden" style={{ textAlign: 'center' }}>
-                                    <div className="txt-status-green" style={{ marginBottom: '5px' }}>WORKING</div>
+                                    <div className="txt-status-green" style={{ marginBottom: '5px' }}>
+                                        <span className="working-dot"></span> WORKING
+                                    </div>
                                     <div id="mobTaskText" style={{ marginBottom: '10px', minHeight: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', lineHeight: 1.3, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>LOADING ORDER...</div>
                                     <div className="card-timer-row">
                                         <div id="qm_timerH" className="card-t-box">00</div>:
@@ -1069,9 +1071,9 @@ export default function ProfilePage() {
                                         <button className="action-btn" onClick={() => (window as any).goToExchequer()} style={{ width: '100%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', padding: '12px', borderRadius: '8px', fontSize: '0.8rem', letterSpacing: '2px' }}>ADD COINS</button>
                                         <button className="text-btn" onClick={() => (window as any).cancelSkipWarning()} style={{ width: '100%', color: '#ccc', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: 1, background: 'none', border: 'none', padding: '5px' }}>RETURN TO SERVE</button>
                                     </div>
-                                    <div id="mobUploadBtnContainer" style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                                        <button id="mobBtnUpload" className="btn-upload-sm" style={{ flex: 1 }} onClick={() => document.getElementById('evidenceInputMob')?.click()}>UPLOAD</button>
-                                        <button id="mobBtnSkip" className="btn-skip-sm" style={{ flex: 1 }} onClick={() => (window as any).mobileSkipTask()}>SKIP</button>
+                                    <div id="mobUploadBtnContainer" style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '15px' }}>
+                                        <button id="mobBtnUpload" className="btn-upload-sm" onClick={() => document.getElementById('evidenceInputMob')?.click()}>UPLOAD TASK</button>
+                                        <button id="mobBtnSkip" className="btn-skip-sm" onClick={() => (window as any).mobileSkipTask()}>SKIP (-300)</button>
                                     </div>
                                     <div id="mobSkipConfirmContainer" style={{ display: 'none', flexDirection: 'column', gap: 15, marginTop: 15, alignItems: 'center', background: 'rgba(20, 0, 0, 0.6)', border: '1px solid rgba(255, 0, 60, 0.4)', boxShadow: '0 0 20px rgba(255, 0, 60, 0.1)', backdropFilter: 'blur(10px)', padding: '25px', borderRadius: '12px', width: '100%' }}>
                                         <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '2px', textShadow: '0 0 10px rgba(255,0,0,0.5)' }}>DISOBEDIENCE HAS A PRICE</div>

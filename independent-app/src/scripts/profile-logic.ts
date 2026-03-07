@@ -652,17 +652,28 @@ export function startTaskTimer(ms: number) {
     if (taskInterval) clearInterval(taskInterval);
 
     const updateUI = (totalMs: number) => {
-        const hrs = document.getElementById('timerH');
-        const mins = document.getElementById('timerM');
-        const secs = document.getElementById('timerS');
-
         const h = Math.floor(totalMs / (1000 * 60 * 60));
         const m = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((totalMs % (1000 * 60)) / 1000);
+        const hStr = String(h).padStart(2, '0');
+        const mStr = String(m).padStart(2, '0');
+        const sStr = String(s).padStart(2, '0');
 
-        if (hrs) hrs.innerText = String(h).padStart(2, '0');
-        if (mins) mins.innerText = String(m).padStart(2, '0');
-        if (secs) secs.innerText = String(s).padStart(2, '0');
+        // Desktop
+        const hrs = document.getElementById('timerH');
+        const mins = document.getElementById('timerM');
+        const secs = document.getElementById('timerS');
+        if (hrs) hrs.innerText = hStr;
+        if (mins) mins.innerText = mStr;
+        if (secs) secs.innerText = sStr;
+
+        // Mobile (QM)
+        const qmHrs = document.getElementById('qm_timerH');
+        const qmMins = document.getElementById('qm_timerM');
+        const qmSecs = document.getElementById('qm_timerS');
+        if (qmHrs) qmHrs.innerText = hStr;
+        if (qmMins) qmMins.innerText = mStr;
+        if (qmSecs) qmSecs.innerText = sStr;
     };
 
     let remaining = ms;
