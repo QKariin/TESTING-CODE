@@ -1412,8 +1412,20 @@ export async function loadChatHistory(email: string) {
                 renderSystemLogs(systemMessages);
             }
 
-            // 3. Render Chat
-            const html = chatMessages.map((m: any) => renderChatMessage(m)).join('');
+            // 3. Render Chat (pass prev timestamp for 5-min gap logic)
+            _lastRenderedChatTs = 0;
+            const html = chatMessages.map((m: any, i: number) => {
+                const prevTs = i === 0 ? 0 : new Date(chatMessages[i - 1].created_at || 0).getTime();
+                return renderChatMessage(m, prevTs);
+            }).join('');
+
+            // 4. Update Queen online status from last queen message
+            const myEmail = getState().memberId?.toLowerCase();
+            const lastQueenMsg = [...messages].reverse().find((m: any) => {
+                const s = (m.sender_email || m.sender || '').toLowerCase();
+                return s !== myEmail && s !== 'user' && s !== 'slave' && !isSystemMessage(m);
+            });
+            _updateQueenStatus(lastQueenMsg?.created_at || null);
             const containers = ['chatContent', 'mob_chatContent'];
 
             containers.forEach(id => {
@@ -1456,6 +1468,10 @@ function subscribeToChat(email: string) {
             }
 
             // 2. Handle Chat Messages
+            // Update Queen status if this is a Queen message
+            if (sender !== cleanEmail && sender !== 'user' && sender !== 'slave') {
+                _updateQueenStatus(msg.created_at || new Date().toISOString());
+            }
             const html = renderChatMessage(msg);
             const containers = ['chatContent', 'mob_chatContent'];
 
@@ -1561,71 +1577,108 @@ function appendSystemLog(msg: any) {
     });
 }
 
-function renderChatMessage(msg: any) {
+function _updateQueenStatus(lastSeenIso: string | null) {
+    const dot = document.getElementById('mobChatOnlineDot');
+    const txt = document.getElementById('mobChatStatusText2');
+    if (!txt) return;
+
+    if (!lastSeenIso) {
+        if (dot) dot.style.display = 'none';
+        txt.style.color = '#555';
+        txt.textContent = 'OFFLINE';
+        return;
+    }
+
+    const diff = Date.now() - new Date(lastSeenIso).getTime();
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (mins < 5) {
+        // Online
+        if (dot) { dot.style.display = 'block'; }
+        txt.style.color = '#22c55e';
+        txt.textContent = 'ONLINE';
+    } else {
+        // Offline — show last seen
+        if (dot) dot.style.display = 'none';
+        txt.style.color = '#555';
+        if (days >= 2) {
+            txt.textContent = `${days}d AGO`;
+        } else if (days === 1) {
+            txt.textContent = 'YESTERDAY';
+        } else if (hours >= 1) {
+            txt.textContent = `${hours}h AGO`;
+        } else {
+            txt.textContent = `${mins}m AGO`;
+        }
+    }
+}
+
+// Track timestamp of last rendered chat message for 5-min gap logic
+let _lastRenderedChatTs = 0;
+
+function renderChatMessage(msg: any, prevTs?: number): string {
     const senderEmail = (msg.sender_email || msg.sender || '').toLowerCase();
     const isSys = isSystemMessage(msg);
-
-    // 1. Identify "Me" (Slave) and "Queen"
     const myEmail = getState().memberId?.toLowerCase();
     const isMe = !isSys && (senderEmail === 'user' || senderEmail === 'slave' || senderEmail === myEmail);
-    const isQueen = msg.metadata?.isQueen || (!isMe && !isSys);
 
-    // 2. Identify Alignment Classes (Mirroring Dashboard)
-    // - Dashboard: Outbound = Queen (mirrored for Slave view), Inbound = Slave
-    // - Profile View: Outbound = Me (Slave), Inbound = Queen
-    // So for Slave view:
-    // Row: .mr-out (Me/Slave) vs .mr-in (Queen)
-    // Box: .m-out (Me/Slave) vs .m-in (Queen)
-    const rowClass = isMe ? 'mr-out' : 'mr-in';
-    const msgClass = isMe ? 'chat-msg-slave' : 'chat-msg-queen';
-    const fontClass = isQueen ? 'font-cinzel' : 'font-orbitron';
+    const ts = new Date(msg.created_at || Date.now()).getTime();
+    const compare = prevTs !== undefined ? prevTs : _lastRenderedChatTs;
+    const showTime = (ts - compare) > 5 * 60 * 1000;
+    _lastRenderedChatTs = ts;
 
-    // 3. Avatars (Mirroring Dashboard logic)
-    const queenAv = "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png";
-    const slaveAv = getState().raw?.avatar_url || getState().raw?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+    const timeStr = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const avatarUrl = isQueen ? queenAv : slaveAv;
-    const avatarHtml = `<img src="${getOptimizedUrl(avatarUrl, 100)}" class="chat-av">`;
+    const queenAvatar = `<img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" class="cb-queen-av" alt="Q" />`;
 
-    // 4. Content Processing
-    let content = msg.content || msg.message || "";
+    // Gift card → centered, no bubble
     if (msg.type === 'wishlist') {
         const meta = msg.metadata || {};
-        content = `
-            <div style="border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.3); margin:10px auto; width:220px; box-shadow:0 8px 30px rgba(0,0,0,0.5);">
-                <div style="width:100%; height:130px; background:url('${meta.image}') center/cover; background-color:#050510; position:relative;">
-                    <div style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent 50%, rgba(10,10,20,0.8) 100%);"></div>
-                    <div style="position:absolute; top:8px; right:8px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:3px 9px; display:flex; align-items:center; gap:4px;">
-                        <i class="fas fa-coins" style="color:#c5a059; font-size:0.55rem;"></i>
-                        <span style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${meta.price ? Number(meta.price).toLocaleString() : ''}</span>
+        return `
+            <div class="chat-gift-wrap">
+                <div class="chat-gift-card">
+                    <div class="chat-gift-img" style="background-image:url('${meta.image}')">
+                        ${meta.price ? `<div class="chat-gift-price"><i class="fas fa-coins"></i> ${Number(meta.price).toLocaleString()}</div>` : ''}
+                    </div>
+                    <div class="chat-gift-body">
+                        <div class="chat-gift-label">✦ Gift Sent</div>
+                        <div class="chat-gift-title">${meta.title || ''}</div>
                     </div>
                 </div>
-                <div style="padding:10px 13px 13px;">
-                    <div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(197,160,89,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:5px;">✦ Gift Sent</div>
-                    <div style="font-family:'Cinzel', serif; font-size:0.8rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase;">${meta.title || ''}</div>
-                </div>
+                <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
             </div>
         `;
-    } else if (msg.type === 'photo') {
+    }
+
+    let content = msg.content || msg.message || '';
+    if (msg.type === 'photo') {
         content = `<img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" />`;
     }
 
-    const timeStr = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    // 5. Assemble HTML (Row-based structure)
-    // If isMe (Slave), avatar is on the right. If isQueen, avatar is on the left.
-    // Dashboard logic: return `<div class="msg-row ${rowClass}">${!isMe ? avatarHtml : ''}${contentHtml}${isMe ? avatarHtml : ''}<div class="msg-meta ${isMe ? 'mm-out' : 'mm-in'}">${timeStr}</div></div>`;
-
-    return `
-        <div class="msg-row ${rowClass}">
-            ${!isMe ? avatarHtml : ''}
-            <div class="chat-bubble ${msgClass} ${fontClass}">
-                <div class="chat-bubble-content">${content}</div>
-                <div class="chat-bubble-time">${timeStr}</div>
+    if (isMe) {
+        // SLAVE — right, charcoal, no border, no avatar
+        return `
+            <div class="cb-row cb-row-me">
+                <div class="cb-wrap-me">
+                    <div class="cb-slave">${content}</div>
+                    <div class="chat-ts chat-ts-right">${timeStr}</div>
+                </div>
             </div>
-            ${isMe ? avatarHtml : ''}
-        </div>
-    `;
+        `;
+    } else {
+        // QUEEN — left, black, gold border, avatar
+        return `
+            <div class="cb-row cb-row-queen">
+                ${queenAvatar}
+                <div class="cb-wrap-queen">
+                    <div class="cb-queen">${content}</div>
+                    <div class="chat-ts chat-ts-left">${timeStr}</div>
+                </div>
+            </div>
+        `;
+    }
 }
 
 function appendChatCard(msg: any) {
@@ -1779,6 +1832,13 @@ export function openMobChatOverlay() {
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
     _setNavActive('');
     switchMobChatTab('chat');
+    // Wait for slide-up animation then force scroll to bottom
+    setTimeout(() => {
+        const box = document.getElementById('mob_chatBox');
+        if (box) box.scrollTop = box.scrollHeight;
+        const content = document.getElementById('mob_chatContent');
+        if (content) content.scrollTop = content.scrollHeight;
+    }, 380);
 }
 
 export function closeMobChatOverlay() {

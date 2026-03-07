@@ -1192,10 +1192,13 @@ export default function ProfilePage() {
             <div id="mobChatOverlay" className="mob-overlay" style={{ display: 'none' }}>
                 <div className="mob-overlay-header">
                     <div className="mob-overlay-title-wrap">
-                        <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" />
+                        <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
+                            <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" />
+                            <div id="mobChatOnlineDot" style={{ position: 'absolute', bottom: 2, right: 2, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #000', display: 'none' }}></div>
+                        </div>
                         <div>
                             <div className="mob-overlay-title">QUEEN KARIN</div>
-                            <div id="mobChatStatusText2" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>ONLINE</div>
+                            <div id="mobChatStatusText2" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>—</div>
                         </div>
                     </div>
                     <button className="mob-overlay-close" onClick={() => (window as any).closeMobChatOverlay()}>✕</button>
@@ -1208,8 +1211,8 @@ export default function ProfilePage() {
                 </div>
 
                 {/* CHAT TAB */}
-                <div id="mobChatTabChat" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-                    <div id="mob_chatBox" className="chat-body-frame" style={{ flex: 1, overflowY: 'auto', minHeight: 0, position: 'relative' }}>
+                <div id="mobChatTabChat" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+                    <div id="mob_chatBox" className="chat-body-frame" style={{ flex: 1, minHeight: 0, position: 'relative', overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as any}>
                         <div id="mob_TributeOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 9999, display: 'none', flexDirection: 'column', padding: '20px' }}>
                             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
                                 <span style={{ fontFamily: 'Cinzel', color: '#c5a059' }}>TRIBUTE STORE</span>
@@ -1219,7 +1222,7 @@ export default function ProfilePage() {
                         </div>
                         <div id="mob_chatContent" className="chat-area"></div>
                     </div>
-                    <div className="chat-footer" style={{ flexShrink: 0, position: 'relative', height: 65, background: '#080808', borderTop: '1px solid #222', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+                    <div className="chat-footer">
                         <div className="chat-input-wrapper">
                             <button className="chat-btn-plus" onClick={() => (window as any).handleMediaPlus()}>+</button>
                             <input type="text" id="mob_chatMsgInput" className="chat-input" placeholder="Transmit..." onKeyPress={(e: any) => (window as any).handleChatKey(e)} />
@@ -1231,7 +1234,12 @@ export default function ProfilePage() {
                                 <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
                             </svg>
                         </button>
-                        <button className="chat-btn-send" onClick={() => (window as any).sendChatMessage()}>{' > '}</button>
+                        <button className="chat-btn-send" onClick={() => (window as any).sendChatMessage()}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 

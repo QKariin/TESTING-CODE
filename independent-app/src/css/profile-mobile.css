@@ -1391,7 +1391,10 @@
     /* ── MOB FULL-SCREEN OVERLAYS (Chat, Queen's Wall) ── */
     .mob-overlay {
         position: fixed;
-        inset: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: calc(80px + env(safe-area-inset-bottom));
         z-index: 1000001;
         background: rgba(2, 5, 18, 0.99);
         display: flex;
@@ -1451,22 +1454,143 @@
         border-color: rgba(255, 255, 255, 0.4);
     }
 
-    /* Chat overlay specific */
-    #mobChatOverlay .chat-body-frame {
+    /* Kill scrollbar everywhere inside the chat overlay */
+    #mobChatOverlay * {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+    #mobChatOverlay *::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    /* Chat overlay specific — strict flex column, only #mob_chatBox scrolls */
+    #mobChatTabChat {
+        display: flex;
+        flex-direction: column;
         flex: 1;
-        overflow-y: auto;
         min-height: 0;
-        padding-bottom: 0;
-        position: relative;
+        /* NO overflow:hidden here — that's what clips messages */
+    }
+
+    #mob_chatBox {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        /* Override chat.css mobile rule that forces padding-top/bottom: 75px */
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        height: auto !important;
+    }
+    #mob_chatBox::-webkit-scrollbar { display: none; width: 0; }
+
+    #mob_chatContent {
+        padding: 16px 0 12px;
     }
 
     #mobChatOverlay .chat-footer {
+        position: relative !important;  /* override chat.css position:absolute */
+        bottom: auto !important;
         flex-shrink: 0;
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        background: #050505;
+        border-top: 1px solid rgba(197,160,89,0.3);
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* Input wrapper fills remaining space */
+    #mobChatOverlay .chat-input-wrapper {
+        flex: 1;
+        display: flex;
+        align-items: center;
         position: relative;
-        height: 65px;
-        background: #080808;
-        border-top: 1px solid #222;
-        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Input field */
+    #mobChatOverlay .chat-input {
+        width: 100% !important;
+        height: 42px;
+        background: #111 !important;
+        border: 1px solid rgba(197,160,89,0.25) !important;
+        color: #fff !important;
+        font-family: 'Cinzel', serif !important;
+        font-size: 0.78rem !important;
+        letter-spacing: 0.5px;
+        padding: 10px 14px 10px 42px !important;
+        border-radius: 10px !important;
+        outline: none !important;
+        transition: border-color 0.2s;
+    }
+    #mobChatOverlay .chat-input:focus {
+        border-color: rgba(197,160,89,0.7) !important;
+    }
+    #mobChatOverlay .chat-input::placeholder {
+        color: #333 !important;
+        font-family: 'Orbitron', sans-serif !important;
+        font-size: 0.55rem !important;
+        letter-spacing: 2px;
+    }
+
+    /* + button */
+    #mobChatOverlay .chat-btn-plus {
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: transparent !important;
+        border: 1px solid rgba(197,160,89,0.5) !important;
+        color: #c5a059 !important;
+        font-size: 1.1rem;
+        font-weight: 300;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        transition: background 0.2s;
+    }
+    #mobChatOverlay .chat-btn-plus:active {
+        background: rgba(197,160,89,0.15) !important;
+    }
+
+    /* Send button */
+    #mobChatOverlay .chat-btn-send {
+        background: none !important;
+        border: none !important;
+        color: #c5a059 !important;
+        font-size: 1.4rem !important;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 0 4px;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    /* Tribute button */
+    #mobChatOverlay .chat-btn-tribute {
+        background: none !important;
+        border: none !important;
+        cursor: pointer;
+        padding: 0 2px;
+        flex-shrink: 0;
+        opacity: 0.8;
+    }
+    #mobChatOverlay .chat-btn-tribute svg {
+        color: #c5a059 !important;
+        stroke: #c5a059 !important;
     }
 
     /* Queen wall overlay */
@@ -1474,6 +1598,290 @@
         flex: 1;
         overflow-y: auto;
         padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+    }
+
+    /* ── Mobile Chat Bubbles ── */
+
+    /* Row containers */
+    #mob_chatContent .cb-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        padding: 0 10px;
+        margin-bottom: 8px;
+    }
+    #mob_chatContent .cb-row-me    { justify-content: flex-end; }
+    #mob_chatContent .cb-row-queen { justify-content: flex-start; }
+
+    /* Queen avatar */
+    #mob_chatContent .cb-queen-av {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(197,160,89,0.4);
+        flex-shrink: 0;
+        align-self: flex-end;
+        margin-bottom: 18px;
+    }
+
+    /* Bubble wrappers */
+    #mob_chatContent .cb-wrap-me {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        max-width: 72%;
+    }
+    #mob_chatContent .cb-wrap-queen {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        max-width: 72%;
+    }
+
+    /* QUEEN bubble — left, black bg, gold gradient border */
+    #mob_chatContent .cb-queen {
+        background: #000;
+        border: 1px solid transparent;
+        background-clip: padding-box;
+        box-shadow: 0 0 0 1px rgba(197,160,89,0.6),
+                    inset 0 0 20px rgba(197,160,89,0.04);
+        color: #fff;
+        font-family: 'Cinzel', serif;
+        font-size: 0.82rem;
+        line-height: 1.55;
+        letter-spacing: 0.2px;
+        padding: 10px 14px;
+        border-radius: 16px 16px 16px 3px;
+        word-break: break-word;
+        white-space: pre-wrap;
+    }
+
+    /* SLAVE bubble — right, charcoal, no border */
+    #mob_chatContent .cb-slave {
+        background: #1c1c1e;
+        border: none;
+        color: #ffffff;
+        font-family: 'Cinzel', serif;
+        font-size: 0.82rem;
+        line-height: 1.55;
+        letter-spacing: 0.2px;
+        padding: 10px 14px;
+        border-radius: 16px 16px 3px 16px;
+        word-break: break-word;
+        white-space: pre-wrap;
+    }
+
+    /* Timestamps */
+    #mob_chatContent .chat-ts {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.34rem;
+        letter-spacing: 0.8px;
+        margin-top: 4px;
+    }
+    #mob_chatContent .chat-ts-left  { color: rgba(197,160,89,0.45); text-align: left; }
+    #mob_chatContent .chat-ts-right { color: #444; text-align: right; }
+
+    /* Gift card — centered service card */
+    #mob_chatContent .chat-gift-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 10px 0 4px;
+    }
+
+    #mob_chatContent .chat-gift-card {
+        width: 200px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #0a0a14;
+        border: 1px solid rgba(197,160,89,0.35);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+    }
+
+    #mob_chatContent .chat-gift-img {
+        width: 100%;
+        height: 110px;
+        background-size: cover;
+        background-position: center;
+        background-color: #050510;
+        position: relative;
+    }
+
+    #mob_chatContent .chat-gift-price {
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        background: rgba(5,5,20,0.9);
+        border: 1px solid rgba(197,160,89,0.6);
+        border-radius: 20px;
+        padding: 3px 8px;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.55rem;
+        color: #c5a059;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    #mob_chatContent .chat-gift-body {
+        padding: 8px 12px 12px;
+    }
+
+    #mob_chatContent .chat-gift-label {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.38rem;
+        color: rgba(197,160,89,0.5);
+        letter-spacing: 2px;
+        margin-bottom: 4px;
+    }
+
+    #mob_chatContent .chat-gift-title {
+        font-family: 'Cinzel', serif;
+        font-size: 0.75rem;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+
+    /* ── Mobile Tribute/Wishlist Store ── */
+    #mob_TributeOverlay {
+        position: absolute !important;
+        inset: 0 !important;
+        background: #030308 !important;
+        z-index: 9999 !important;
+        /* display controlled by JS — do NOT set display here */
+        flex-direction: column !important;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    #mob_TributeOverlay > div:first-child {
+        flex-shrink: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(197,160,89,0.2);
+        background: rgba(197,160,89,0.03);
+    }
+
+    #mob_huntStoreGrid {
+        flex: 1;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 12px 10px 24px !important;
+        /* 2-column grid for regular items */
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+        align-content: start;
+        width: 100% !important;
+        flex-direction: unset !important;
+    }
+    #mob_huntStoreGrid::-webkit-scrollbar { display: none; }
+
+    /* ── Regular wishlist card ── */
+    #mob_huntStoreGrid .store-item {
+        grid-column: span 1;
+        height: auto !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        background: #0a0a14 !important;
+        border: 1px solid rgba(197,160,89,0.22) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        cursor: pointer;
+        position: relative !important;
+        transform: none !important;
+        transition: border-color 0.2s !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+    }
+
+    /* Product image */
+    #mob_huntStoreGrid .store-item > div:nth-child(1) {
+        width: 100% !important;
+        height: 90px !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-color: #050510 !important;
+        flex-shrink: 0;
+        position: relative;
+    }
+
+    /* Price badge — already absolute positioned in HTML, just size it */
+    #mob_huntStoreGrid .store-item [style*="position:absolute"] {
+        font-size: 0.5rem !important;
+        padding: 2px 7px !important;
+    }
+
+    /* Body: name + button */
+    #mob_huntStoreGrid .store-item > div:last-child {
+        padding: 8px 9px 10px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 7px !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+    }
+
+    /* Item name */
+    #mob_huntStoreGrid .store-item > div:last-child > div:first-child {
+        font-family: 'Cinzel', serif !important;
+        font-size: 0.6rem !important;
+        color: #fff !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        line-height: 1.35 !important;
+        text-transform: uppercase !important;
+        flex: 1 !important;
+    }
+
+    /* Send button */
+    #mob_huntStoreGrid .store-item button {
+        width: 100% !important;
+        padding: 7px 0 !important;
+        font-family: 'Orbitron', sans-serif !important;
+        font-size: 0.42rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 1.5px !important;
+        border-radius: 6px !important;
+        background: linear-gradient(135deg, #c5a059 0%, #8b6914 100%) !important;
+        color: #000 !important;
+        border: none !important;
+        cursor: pointer !important;
+    }
+
+    /* ── Crowdfund card — full width ── */
+    #mob_huntStoreGrid .crowdfund-card {
+        grid-column: span 2 !important;
+        flex-direction: column !important;
+        height: auto !important;
+        border-radius: 14px !important;
+    }
+
+    /* Crowdfund: move image to top */
+    #mob_huntStoreGrid .crowdfund-card > div:last-child {
+        width: 100% !important;
+        height: 130px !important;
+        min-height: unset !important;
+        border-radius: 12px 12px 0 0 !important;
+        order: -1 !important;
+    }
+
+    #mob_huntStoreGrid .crowdfund-card > div:first-child {
+        padding: 14px !important;
+        flex-direction: column !important;
+        display: flex !important;
+        gap: 10px !important;
+    }
+
+    /* Crowdfund title */
+    #mob_huntStoreGrid .crowdfund-card [style*="font-size:2rem"] {
+        font-size: 1rem !important;
+        letter-spacing: 1px !important;
     }
 
     .mob-qwall-post {
