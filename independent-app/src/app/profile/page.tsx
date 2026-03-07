@@ -4,23 +4,10 @@ import React, { useEffect, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 import { initProfileState, setState } from '@/scripts/profile-state';
-import { updateKneelingUI, attachKneelListeners } from '@/scripts/kneeling';
+import { updateKneelingUI, attachKneelListeners, renderKneelDots } from '@/scripts/kneeling';
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
 import { toggleSystemLog } from '@/scripts/chat';
-import {
-    openGlobalView,
-    closeGlobalView,
-    openGlobalSection,
-    closeGlobalSection,
-    loadLeaderboardPreview,
-    loadLeaderboard,
-    sendGlobalMessage,
-    sendGlobalQuickMessage,
-    handleGlobalTalkKey,
-    handleGlobalQuickKey,
-    handleGlobalPhotoUpload,
-} from '@/scripts/global-view';
 import {
     claimKneelReward,
     switchTab,
@@ -64,7 +51,22 @@ import {
     mobileUploadEvidence,
     initChatSystem,
     loadQueenPosts,
-    renderHistoryAndAltar
+    renderHistoryAndAltar,
+    openAltarDrawer,
+    closeAltarDrawer,
+    toggleAltarSection,
+    mobNavTo,
+    openMobChatOverlay,
+    closeMobChatOverlay,
+    switchMobChatTab,
+    openMobQueenWall,
+    closeMobQueenWall,
+    openMobGlobal,
+    closeMobGlobal,
+    switchMobGlTab,
+    switchMobGlPeriod,
+    sendMobGlMessage,
+    handleMobGlKey,
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -120,18 +122,23 @@ export default function ProfilePage() {
             (window as any).debugBytescale = debugBytescale;
             (window as any).loadQueenPosts = loadQueenPosts;
             (window as any).renderHistoryAndAltar = renderHistoryAndAltar;
+            (window as any).openAltarDrawer = openAltarDrawer;
+            (window as any).closeAltarDrawer = closeAltarDrawer;
+            (window as any).toggleAltarSection = toggleAltarSection;
+            (window as any).mobNavTo = mobNavTo;
+            (window as any).openMobChatOverlay = openMobChatOverlay;
+            (window as any).closeMobChatOverlay = closeMobChatOverlay;
+            (window as any).switchMobChatTab = switchMobChatTab;
+            (window as any).openMobQueenWall = openMobQueenWall;
+            (window as any).closeMobQueenWall = closeMobQueenWall;
+            (window as any).openMobGlobal = openMobGlobal;
+            (window as any).closeMobGlobal = closeMobGlobal;
+            (window as any).switchMobGlTab = switchMobGlTab;
+            (window as any).switchMobGlPeriod = switchMobGlPeriod;
+            (window as any).sendMobGlMessage = sendMobGlMessage;
+            (window as any).handleMobGlKey = handleMobGlKey;
             (window as any).toggleSystemLog = toggleSystemLog;
-            (window as any).openGlobalView = openGlobalView;
-            (window as any).closeGlobalView = closeGlobalView;
-            (window as any).openGlobalSection = openGlobalSection;
-            (window as any).closeGlobalSection = closeGlobalSection;
-            (window as any).loadLeaderboardPreview = loadLeaderboardPreview;
-            (window as any).loadLeaderboard = loadLeaderboard;
-            (window as any).sendGlobalMessage = sendGlobalMessage;
-            (window as any).sendGlobalQuickMessage = sendGlobalQuickMessage;
-            (window as any).handleGlobalTalkKey = handleGlobalTalkKey;
-            (window as any).handleGlobalQuickKey = handleGlobalQuickKey;
-            (window as any).handleGlobalPhotoUpload = handleGlobalPhotoUpload;
+            (window as any).renderKneelDots = renderKneelDots;
         }
 
         async function loadProfile() {
@@ -349,23 +356,6 @@ export default function ProfilePage() {
                             <ul id="desk_NextBenefits" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, margin: 0 }}></ul>
                         </div>
 
-                        <div className="nav-menu" style={{ width: '100%', padding: '15px 0', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 20 }}>
-                            <button className="nav-btn" onClick={() => switchTab('serve')}>
-                                <span style={{ fontSize: '1.2rem', marginRight: 10 }}>🏠</span> DASHBOARD
-                            </button>
-                            <button className="nav-btn active" onClick={() => switchTab('record')}>
-                                <span style={{ fontSize: '1.2rem', marginRight: 10 }}>📜</span> RECORDS
-                            </button>
-                            <button className="nav-btn" onClick={() => { switchTab('news'); loadQueenPosts(); }}>
-                                <span style={{ fontSize: '1.2rem', marginRight: 10 }}>👑</span> QUEEN KARIN
-                            </button>
-                            <button className="nav-btn" onClick={() => switchTab('buy')}>
-                                <span style={{ fontSize: '1.2rem', marginRight: 10 }}>💰</span> EXCHEQUER
-                            </button>
-                            <button className="nav-btn" onClick={() => (window as any).handleLogout()} style={{ marginTop: 20, borderColor: 'rgba(255,0,0,0.3)', color: 'rgba(255,0,0,0.6)' }}>
-                                <span style={{ fontSize: '1.2rem', marginRight: 10 }}>🔓</span> LOGOUT
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -413,7 +403,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', gap: 6 }} onClick={() => openGlobalView()}>
+                    <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', gap: 6 }} onClick={() => window.location.href = '/global'}>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px' }}>TAP TO OPEN</div>
                         <div style={{ fontFamily: 'Cinzel', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>GLOBAL</div>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.22)', letterSpacing: '1px', textAlign: 'center', lineHeight: 1.8 }}>LEADERBOARD · TALK · UPDATES</div>
@@ -728,24 +718,80 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* === POPUP OVERLAYS === */}
-                    <div id="lobbyOverlay" className="mob-reward-overlay hidden" style={{ display: 'none' }}>
-                        <div className="mob-reward-card lobby-card">
-                            <div id="lobbyMenu" className="lobby-content">
-                                <button className="lobby-btn" onClick={() => (window as any).showLobbyAction('name')}>ADD YOUR NAME</button>
-                                <button className="lobby-btn" onClick={() => (window as any).showLobbyAction('photo')}>UPLOAD PHOTO</button>
-                                <button className="lobby-btn" onClick={() => (window as any).showLobbyAction('routine')}>GET ROUTINE</button>
-                                <button className="lobby-btn" onClick={() => (window as any).showLobbyAction('kinks')}>ADD KINKS</button>
-                                <button className="lobby-btn" onClick={() => (window as any).showLobbyAction('limits')}>ADD LIMITS</button>
-                                <div className="lobby-divider"></div>
-                                <button className="lobby-btn" style={{ color: '#ff4444' }} onClick={() => (window as any).handleLogout()}>LOGOUT</button>
-                                <button className="lobby-btn close" onClick={() => (window as any).closeLobby()}>CLOSE</button>
+                    {/* === SLAVE IDENTITY HUB === */}
+                    <div id="lobbyOverlay" className="hub-overlay hidden" style={{ display: 'none' }}>
+                        <div className="hub-header">
+                            <div>
+                                <div className="hub-title">SLAVE IDENTITY HUB</div>
+                                <div id="hubEmail" className="hub-subtitle">{profile?.member_id || ""}</div>
                             </div>
-                            <div id="lobbyActionView" className="lobby-content hidden">
-                                <div id="lobbyPrompt" className="lobby-prompt">...</div>
-                                <input type="text" id="lobbyInputText" className="lobby-input hidden" placeholder="Type here..." />
-                                <button id="lobbyInputFileBtn" className="lobby-file-btn hidden" onClick={() => document.getElementById('lobbyFile')?.click()}>PICK PHOTO</button>
-                                <input type="file" id="lobbyFile" hidden onChange={(e: any) => { const btn = document.getElementById('lobbyInputFileBtn'); if (btn) btn.innerText = 'PHOTO UPLOADED'; }} />
+                            <button className="hub-close-btn" onClick={() => (window as any).closeLobby()}>✕</button>
+                        </div>
+
+                        <div className="hub-scroll">
+                            {/* MAIN MENU */}
+                            <div id="lobbyMenu" className="lobby-content">
+                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('name')}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">✎</div>
+                                        <div>
+                                            <div className="hub-action-label">CHANGE NAME</div>
+                                            <div className="hub-action-desc">Update your display name</div>
+                                        </div>
+                                    </div>
+                                    <span className="hub-action-cost">100 ₡</span>
+                                </button>
+                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('photo')}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">◉</div>
+                                        <div>
+                                            <div className="hub-action-label">UPDATE PHOTO</div>
+                                            <div className="hub-action-desc">Replace profile picture</div>
+                                        </div>
+                                    </div>
+                                    <span className="hub-action-cost">200 ₡</span>
+                                </button>
+                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('routine')}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">◈</div>
+                                        <div>
+                                            <div className="hub-action-label">SET ROUTINE</div>
+                                            <div className="hub-action-desc">Select mandatory protocol</div>
+                                        </div>
+                                    </div>
+                                    <span className="hub-action-cost">300 ₡</span>
+                                </button>
+                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('kinks')}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">⬡</div>
+                                        <div>
+                                            <div className="hub-action-label">KINKS</div>
+                                            <div className="hub-action-desc">Define your preferences</div>
+                                        </div>
+                                    </div>
+                                    <span className="hub-action-cost">50 ₡</span>
+                                </button>
+                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('limits')}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">⊗</div>
+                                        <div>
+                                            <div className="hub-action-label">LIMITS</div>
+                                            <div className="hub-action-desc">Set your hard boundaries</div>
+                                        </div>
+                                    </div>
+                                    <span className="hub-action-cost">50 ₡</span>
+                                </button>
+                                <div className="hub-logout-row">
+                                    <button className="hub-logout-btn" onClick={() => (window as any).handleLogout()}>LOGOUT</button>
+                                </div>
+                            </div>
+
+                            {/* ACTION SUB-VIEW (shown by showLobbyAction) */}
+                            <div id="lobbyActionView" className="lobby-content hidden hub-action-view">
+                                <div id="lobbyPrompt" className="hub-prompt"></div>
+                                <input type="text" id="lobbyInputText" className="lobby-input hidden hub-text-input" placeholder="Type here..." />
+                                <button id="lobbyInputFileBtn" className="hub-file-btn hidden" onClick={() => document.getElementById('lobbyFile')?.click()}>PICK PHOTO</button>
+                                <input type="file" id="lobbyFile" hidden onChange={(e: any) => { const btn = document.getElementById('lobbyInputFileBtn'); if (btn) btn.innerText = 'PHOTO SELECTED ✓'; }} />
                                 <div id="routineSelectionArea" className="hidden" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                     <div className="routine-grid">
                                         <div className="routine-tile" onClick={(e: any) => (window as any).selectRoutineItem(e.currentTarget, 'Morning Kneel')}>Morning Kneel</div>
@@ -753,58 +799,94 @@ export default function ProfilePage() {
                                         <div className="routine-tile" onClick={(e: any) => (window as any).selectRoutineItem(e.currentTarget, 'Cleanliness Check')}>Cleanliness Check</div>
                                         <div className="routine-tile special" onClick={(e: any) => (window as any).selectRoutineItem(e.currentTarget, 'custom')}>CREATE OWN (+1000)</div>
                                     </div>
-                                    <input type="text" id="routineCustomInput" className="lobby-input hidden" placeholder="Describe..." style={{ marginTop: '10px' }} />
+                                    <input type="text" id="routineCustomInput" className="lobby-input hidden" placeholder="Describe your routine..." style={{ marginTop: '10px' }} />
                                 </div>
                                 <div id="kinkSelectionArea" className="hidden" style={{ width: '100%' }}>
                                     <div id="kinkGrid" className="routine-grid"></div>
                                 </div>
-                                <div className="lobby-cost-area"><span className="cost-lbl">COST:</span><span id="lobbyCostDisplay" className="cost-val">0</span></div>
-                                <button id="btnLobbyConfirm" className="lobby-btn gold" onClick={() => (window as any).confirmLobbyAction()}>SUBMIT</button>
-                                <button className="lobby-btn close" onClick={() => (window as any).backToLobbyMenu()}>BACK</button>
+                                <div className="hub-cost-row"><span className="hub-cost-label">COST</span><span id="lobbyCostDisplay" className="hub-cost-val">0 ₡</span></div>
+                                <button id="btnLobbyConfirm" className="hub-confirm-btn" onClick={() => (window as any).confirmLobbyAction()}>CONFIRM & PAY</button>
+                                <button className="hub-back-btn" onClick={() => (window as any).backToLobbyMenu()}>← BACK</button>
                             </div>
                         </div>
                     </div>
 
-                    <div id="queenOverlay" className="mob-reward-overlay hidden" style={{ display: 'none' }}>
-                        <div className="mob-reward-card queen-card-layout" style={{ width: '90%', maxHeight: '80vh', overflowY: 'auto' }}>
-                            <div className="mob-chat-header" style={{ width: '100%', justifyContent: 'space-between', marginBottom: '20px', background: 'transparent', border: 'none', padding: 0 }}>
-                                <div className="chat-queen-name" style={{ color: '#c5a059', fontSize: '1.2rem' }}>DAILY DUTIES</div>
-                                <button onClick={() => (window as any).closeQueenMenu()} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '2rem', cursor: 'pointer' }}>×</button>
+                    {/* === QUEEN COMMAND HUB === */}
+                    <div id="queenOverlay" className="hub-overlay hidden" style={{ display: 'none' }}>
+                        <div className="hub-header">
+                            <div>
+                                <div className="hub-title">QUEEN COMMAND HUB</div>
+                                <div className="hub-subtitle">SUPREME AUTHORITY PORTAL</div>
                             </div>
-                            <div style={{ width: '100%', marginBottom: '25px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
-                                <div className="duty-label">MANDATORY PROTOCOL</div>
-                                <div id="mobRoutineDisplay" style={{ color: 'white', fontFamily: 'Orbitron', textAlign: 'center', margin: '15px 0', fontSize: '1.1rem', letterSpacing: '2px' }}>LOADING...</div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                                    <button id="btnRoutineUpload" className="action-btn" onClick={() => document.getElementById('routineUploadInput')?.click()}>UPLOAD PROOF</button>
-                                    <div id="routineTimeMsg" className="hidden" style={{ color: '#666', fontSize: '0.7rem', fontStyle: 'italic' }}>WINDOW CLOSED</div>
-                                    <div id="routineDoneMsg" className="hidden" style={{ color: '#00ff00', fontSize: '0.9rem', fontFamily: 'Orbitron', textShadow: '0 0 10px #00ff00' }}>✔ SUBMITTED</div>
+                            <button className="hub-close-btn" onClick={() => (window as any).closeQueenMenu()}>✕</button>
+                        </div>
+
+                        <div className="hub-scroll">
+                            {/* MANDATORY PROTOCOL */}
+                            <div className="hub-section">
+                                <div className="hub-section-label">MANDATORY PROTOCOL</div>
+                                <div id="mobRoutineDisplay" className="hub-routine-text">LOADING...</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: '14px' }}>
+                                    <button id="btnRoutineUpload" className="hub-confirm-btn" onClick={() => document.getElementById('routineUploadInput')?.click()}>UPLOAD PROOF</button>
+                                    <div id="routineTimeMsg" className="hidden" style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#555', letterSpacing: '1px' }}>WINDOW CLOSED</div>
+                                    <div id="routineDoneMsg" className="hidden" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#00cc66', letterSpacing: '2px', textShadow: '0 0 10px rgba(0,204,102,0.5)' }}>✔ SUBMITTED</div>
                                 </div>
                             </div>
-                            <div style={{ width: '100%', marginBottom: '25px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
-                                <div className="duty-label">KNEELING HOURS</div>
-                                <div className="mob-kneel-bar" style={{ height: '35px', marginTop: '15px', cursor: 'default', background: '#000', border: '1px solid #444' }}>
-                                    <div id="kneelDailyFill" className="mob-bar-fill" style={{ width: '0%', background: '#c5a059' }}></div>
-                                    <div className="mob-bar-content" style={{ width: '100%', justifyContent: 'center' }}>
-                                        <span id="kneelDailyText" style={{ fontFamily: 'Orbitron', fontSize: '0.9rem', color: '#fff', zIndex: 2 }}>0 / 8</span>
+
+                            {/* KNEELING HISTORY */}
+                            <div className="hub-section">
+                                <div className="hub-section-label">KNEELING HISTORY</div>
+                                <div id="queen_kneelDots" className="halo-dots-grid" style={{ margin: '14px 0 10px' }}></div>
+                                <div className="hub-kneel-bar-wrap">
+                                    <div className="mob-kneel-bar" style={{ height: '32px', cursor: 'default', border: '1px solid rgba(197,160,89,0.3)', borderRadius: '4px', background: 'rgba(0,0,0,0.4)' }}>
+                                        <div id="kneelDailyFill" className="mob-bar-fill" style={{ background: 'linear-gradient(90deg,#c5a059,#f0d080)' }}></div>
+                                        <div className="mob-bar-content" style={{ width: '100%', justifyContent: 'center' }}>
+                                            <span id="kneelDailyText" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#fff', fontWeight: 700 }}>0 / 8</span>
+                                        </div>
+                                    </div>
+                                    <div className="hub-kneel-legend">
+                                        <span className="hub-legend-dot lit"></span><span>KNEELED</span>
+                                        <span className="hub-legend-dot dim"></span><span>MISSED</span>
+                                        <span className="hub-legend-dot off"></span><span>AHEAD</span>
                                     </div>
                                 </div>
                             </div>
-                            <div style={{ width: '100%', marginBottom: '25px', borderBottom: '1px solid #333', paddingBottom: '20px' }}>
-                                <div className="duty-label">LABOR COMPLETED</div>
-                                <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '15px' }}>
-                                    <div style={{ textAlign: 'center' }}>
-                                        <div style={{ fontSize: '0.6rem', color: '#888', fontFamily: 'Cinzel', marginBottom: '5px' }}>CURRENT STREAK</div>
-                                        <div id="mobStreak" style={{ fontSize: '1.8rem', color: 'white', fontFamily: 'Orbitron' }}>0</div>
+
+                            {/* LABOR RECORDS */}
+                            <div className="hub-section">
+                                <div className="hub-section-label">LABOR RECORDS</div>
+                                <div className="hub-stats-row">
+                                    <div className="hub-stat-block">
+                                        <div id="mobStreak" className="hub-stat-val">0</div>
+                                        <div className="hub-stat-lbl">DAY STREAK</div>
                                     </div>
-                                    <div style={{ textAlign: 'center' }}>
-                                        <div style={{ fontSize: '0.6rem', color: '#888', fontFamily: 'Cinzel', marginBottom: '5px' }}>TOTAL SERVED</div>
-                                        <div id="mobTotal" style={{ fontSize: '1.8rem', color: '#c5a059', fontFamily: 'Orbitron' }}>0</div>
+                                    <div className="hub-stat-divider"></div>
+                                    <div className="hub-stat-block">
+                                        <div id="mobTotal" className="hub-stat-val gold">0</div>
+                                        <div className="hub-stat-lbl">TOTAL SERVED</div>
                                     </div>
                                 </div>
                             </div>
-                            <div style={{ width: '100%', borderTop: '1px solid #333', paddingTop: '20px', marginTop: '10px', textAlign: 'center' }}>
-                                <div className="duty-label">SYSTEM DIAGNOSTICS</div>
-                                <button className="action-btn" onClick={() => (window as any).debugBytescale()} style={{ marginTop: '10px', background: '#333', fontSize: '0.7rem', opacity: 0.6 }}>TEST BYTESCALE</button>
+
+                            {/* SYSTEM DIAGNOSTICS */}
+                            <div className="hub-section">
+                                <div className="hub-section-label">SYSTEM DIAGNOSTICS</div>
+                                <div className="hub-diag-row">
+                                    <span className="hub-diag-dot ok"></span>
+                                    <span className="hub-diag-text">SUPABASE CONNECTED</span>
+                                </div>
+                                <div className="hub-diag-row">
+                                    <span className="hub-diag-dot ok"></span>
+                                    <span className="hub-diag-text">REALTIME ACTIVE</span>
+                                </div>
+                                <div className="hub-diag-row">
+                                    <span className="hub-diag-dot ok"></span>
+                                    <span id="diagSyncTime" className="hub-diag-text">LAST SYNC: —</span>
+                                </div>
+                                <div className="hub-diag-row">
+                                    <span className="hub-diag-dot ok"></span>
+                                    <span id="diagUserEmail" className="hub-diag-text">SESSION: —</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -820,6 +902,15 @@ export default function ProfilePage() {
                                 <button onClick={() => (window as any).goToExchequer()} className="mob-action-btn" style={{ borderColor: '#ff003c', color: '#ff003c' }}>BOOST WALLET</button>
                                 <button onClick={() => (window as any).closePoverty()} className="mob-action-btn" style={{ borderColor: '#444', color: '#888' }}>APOLOGIZE & RETURN</button>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* MOBILE TASK CELEBRATION */}
+                    <div id="mobCelebrationOverlay" style={{ display: 'none', position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 2147483646, alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.25s ease' }}>
+                        <div style={{ textAlign: 'center', padding: '40px 35px', border: '2px solid rgba(0,255,0,0.5)', borderRadius: '16px', background: 'rgba(0,12,0,0.95)', boxShadow: '0 0 60px rgba(0,255,0,0.15)', maxWidth: '280px' }}>
+                            <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>✓</div>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '1.1rem', fontWeight: 900, color: '#00ff00', textShadow: '0 0 30px #00ff00', letterSpacing: '4px', lineHeight: 1.2 }}>TASK<br />SUBMITTED</div>
+                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: 'rgba(0,255,0,0.4)', marginTop: '12px', letterSpacing: '2px' }}>AWAITING APPROVAL</div>
                         </div>
                     </div>
 
@@ -891,116 +982,66 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="mobHomeScroll" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 5px 10px 5px', boxSizing: 'border-box' }}>
+                    <div id="mobHomeScroll" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 0, boxSizing: 'border-box' }}>
 
-                        {/* 1. TOP BLOCK (HALO + KNEEL) */}
-                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div className="halo-section">
-                                <div className="halo-ring">
-                                    <div id="mob_slaveName" className="halo-name">{profile?.name || "SLAVE"}</div>
-                                    <div id="mob_slaveEmail" style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.2)', marginBottom: '5px', letterSpacing: '1px' }}>{profile?.member_id || ""}</div>
-                                    <div id="mob_rankStamp" className="halo-rank">{profile?.rank || "INITIATE"}</div>
-                                    <div className="mob-section-wrapper" style={{ width: '100%' }}>
-                                        <div className="mob-grid-label-center">DAILY PROGRESS</div>
-                                        <div id="mob_streakGrid" className="mob-streak-strip"></div>
-                                    </div>
-                                </div>
+                        {/* 1. HALO HERO SECTION */}
+                        <div className="halo-hero">
+                            {/* Large halo circle */}
+                            <div className="halo-circle-lg">
+                                <div id="mob_slaveName" className="halo-name-lg">{profile?.name || "SLAVE"}</div>
+                                <div id="mob_rankStamp" className="halo-rank-lg">{profile?.hierarchy || profile?.rank || "INITIATE"}</div>
+                                <div className="halo-progress-label">DAILY PROGRESS</div>
+                                <div id="mob_kneelDots" className="halo-dots-grid"></div>
                             </div>
 
-                            {/* Stats Card */}
-                            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3 }}>
-                                <div className="halo-stats-card">
-                                    <div className="h-stat"><span className="h-val" id="mobPoints">{profile?.score || 0}</span><span className="h-lbl">MERIT</span></div>
-                                    <div className="h-divider"></div>
-                                    <div className="h-stat"><span className="h-val" id="mobCoins">{profile?.wallet || 0}</span><span className="h-lbl">NET</span></div>
+                            {/* Stats pill */}
+                            <div className="halo-stats-pill">
+                                <div className="h-stat">
+                                    <span className="h-val" id="mobPoints">{profile?.score || 0}</span>
+                                    <span className="h-lbl">MERIT</span>
                                 </div>
-
-                                <div className="mob-stats-toggle-btn" onClick={() => (window as any).toggleMobileStats()}>
-                                    SLAVE STATS <span id="mobStatsArrow">▼</span>
-                                </div>
-
-                                <div id="mobStatsContent" className="mob-internal-drawer">
-                                    <div style={{ width: '100%', textAlign: 'center', paddingBottom: '15px', borderBottom: '1px solid #333', marginBottom: '15px' }}>
-                                        <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', letterSpacing: '2px' }}>CURRENT CLASSIFICATION</div>
-                                        <div id="drawer_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{profile?.hierarchy || '—'}</div>
-                                        <div id="drawer_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: '#888', fontStyle: 'italic', padding: '0 10px', lineHeight: 1.4 }}></div>
-                                    </div>
-                                    <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px' }}>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WORKING ON PROMOTION TO</div>
-                                        <div id="drawer_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197, 160, 89, 0.3)', textTransform: 'uppercase' }}>—</div>
-                                    </div>
-                                    <div id="drawer_ProgressContainer" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid #333', borderRadius: '4px', padding: '15px', marginBottom: '20px' }}></div>
-                                    <div style={{ width: '100%', textAlign: 'left', padding: '0 5px' }}>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', marginBottom: '8px' }}>PRIVILEGES GRANTED</div>
-                                        <ul id="drawer_NextBenefits" style={{ color: '#ccc', fontSize: '0.75rem', fontFamily: 'Cinzel', paddingLeft: '20px', lineHeight: 1.6, margin: 0 }}></ul>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* MOBILE KNEELING BUTTON (CONNECTED TO kneeling.ts) */}
-                            <div className="halo-stack" style={{ padding: '0 20px', width: '100%', marginTop: '15px', marginBottom: '30px' }}>
-                                <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone">
-                                    <div id="mob_kneelFill" className="mob-bar-fill"></div>
-                                    <div className="mob-bar-content">
-                                        <span className="kneel-icon-sm">◈</span>
-                                        <span id="mob_kneelText" className="kneel-text kneel-label">HOLD TO KNEEL</span>
-                                    </div>
+                                <div className="h-divider"></div>
+                                <div className="h-stat">
+                                    <span className="h-val" id="mobCoins">{profile?.wallet || 0}</span>
+                                    <span className="h-lbl">CAPITAL</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* CHAT SECTION */}
-                        <div id="mobChatSection" style={{ width: '100%', margin: 0, background: '#000', borderTop: '1px solid #333', borderBottom: '1px solid #333', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '15px', background: 'linear-gradient(180deg, #111 0%, #050505 100%)' }}>
-                                <div style={{ position: 'relative', width: '45px', height: '45px' }}>
-                                    <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: '1px solid #c5a059' }} alt="Queen Karin" />
-                                    <div id="mobChatOnlineDot" className="status-dot online" style={{ position: 'absolute', bottom: 0, right: 0 }}></div>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ fontFamily: 'Cinzel', fontWeight: 700, fontSize: '1rem', color: '#fff' }}>QUEEN KARIN</div>
-                                    <div id="mobChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#888' }}>ONLINE</div>
-                                </div>
+                        {/* SLAVE STATS DRAWER */}
+                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 16px', boxSizing: 'border-box' }}>
+                            <div className="mob-stats-toggle-btn" onClick={() => (window as any).toggleMobileStats()}>
+                                SLAVE STATS <span id="mobStatsArrow">▼</span>
                             </div>
-                            <div id="mob_systemTicker" className="system-ticker" style={{ cursor: 'pointer', margin: '0 15px 10px 15px', borderRadius: '0 0 12px 12px', borderLeft: '1px solid rgba(197,160,89,0.2)', borderRight: '1px solid rgba(197,160,89,0.2)', borderBottom: '1px solid rgba(197,160,89,0.2)', width: 'auto' }} onClick={() => (window as any).toggleSystemLog(true)}>SYSTEM ONLINE</div>
-                            <div id="btnEnterChatPanel" onClick={() => (window as any).toggleMobileChat(true)} style={{ width: '100%', padding: 12, textAlign: 'center', background: '#000', color: '#666', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 3, cursor: 'pointer', transition: '0.2s' }}>▼ ENTER CHAT</div>
-
-                            {/* MOBILE SYSTEM LOG OVERLAY */}
-                            <div id="mobSystemLogContainer" className="hidden" style={{ position: 'absolute', top: 15, left: 15, right: 15, bottom: 80, background: 'rgba(5,5,5,0.95)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, boxShadow: '0 15px 35px rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 100000, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
-                                <div style={{ width: '100%', padding: '15px 20px', background: 'rgba(197,160,89,0.05)', borderBottom: '1px solid rgba(197,160,89,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontWeight: 'bold', fontSize: '1.1rem' }}>SYSTEM LOGS</span>
-                                    <button onClick={() => (window as any).toggleSystemLog(true)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.5rem' }}>×</button>
+                            <div id="mobStatsContent" className="mob-internal-drawer">
+                                <div style={{ width: '100%', textAlign: 'center', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '15px' }}>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', letterSpacing: '2px' }}>CURRENT CLASSIFICATION</div>
+                                    <div id="drawer_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{profile?.hierarchy || '—'}</div>
+                                    <div id="drawer_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: '#888', fontStyle: 'italic', padding: '0 10px', lineHeight: 1.4 }}></div>
                                 </div>
-                                <div id="mob_systemLogContent" className="chat-area" style={{ flex: 1, overflowY: 'auto', padding: 20 }}></div>
-                            </div>
-
-                            <div id="inlineChatPanel" className="hidden" style={{ width: '100%', height: '450px', background: '#050505', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                                <div id="mob_chatBox" className="chat-body-frame" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', paddingBottom: 70, overflowY: 'auto' }}>
-                                    <div id="mob_TributeOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 9999, display: 'none', flexDirection: 'column', padding: '20px' }}>
-                                        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                                            <span style={{ fontFamily: 'Cinzel', color: '#c5a059' }}>TRIBUTE STORE</span>
-                                            <button onClick={() => (window as any).toggleTributeHunt()} style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem' }}>X</button>
-                                        </div>
-                                        <div id="mob_huntStoreGrid" className="store-grid" style={{ width: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '5px', paddingBottom: '30px' }}></div>
-                                    </div>
-                                    <div id="mob_chatContent" className="chat-area"></div>
+                                <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WORKING ON PROMOTION TO</div>
+                                    <div id="drawer_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197,160,89,0.3)', textTransform: 'uppercase' }}>—</div>
                                 </div>
-                                <div onClick={() => (window as any).toggleMobileChat(false)} style={{ position: 'absolute', top: 0, right: '10px', zIndex: 25, color: '#333', fontSize: '1.5rem', cursor: 'pointer' }}>×</div>
-                                <div className="chat-footer" style={{ position: 'absolute', bottom: 0, width: '100%', height: '65px', zIndex: 20, background: '#080808', borderTop: '1px solid #222' }}>
-                                    <div className="chat-input-wrapper">
-                                        <button className="chat-btn-plus" onClick={() => (window as any).handleMediaPlus()}>+</button>
-                                        <input type="text" id="mob_chatMsgInput" className="chat-input" placeholder="Transmit..." onKeyPress={(e: any) => (window as any).handleChatKey(e)} />
-                                    </div>
-                                    <button className="chat-btn-tribute" onClick={() => (window as any).toggleTributeHunt()} style={{ background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '0 10px' }}>
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ color: '#c5a059' }}>
-                                            <rect x="3" y="8" width="18" height="12" rx="1"></rect>
-                                            <path d="M12 8v12"></path>
-                                            <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
-                                        </svg>
-                                    </button>
-                                    <button className="chat-btn-send" onClick={() => (window as any).sendChatMessage()}>{' > '}</button>
+                                <div id="drawer_ProgressContainer" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px', padding: '15px', marginBottom: '20px' }}></div>
+                                <div style={{ width: '100%', textAlign: 'left', padding: '0 5px' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', marginBottom: '8px' }}>PRIVILEGES GRANTED</div>
+                                    <ul id="drawer_NextBenefits" style={{ color: '#ccc', fontSize: '0.75rem', fontFamily: 'Cinzel', paddingLeft: '20px', lineHeight: 1.6, margin: 0 }}></ul>
                                 </div>
                             </div>
                         </div>
+
+                        {/* MOBILE KNEELING BUTTON */}
+                        <div style={{ padding: '12px 20px 24px', width: '100%', boxSizing: 'border-box' }}>
+                            <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone">
+                                <div id="mob_kneelFill" className="mob-bar-fill"></div>
+                                <div className="mob-bar-content">
+                                    <span className="kneel-icon-sm">◈</span>
+                                    <span id="mob_kneelText" className="kneel-text kneel-label">HOLD TO KNEEL</span>
+                                </div>
+                            </div>
+                        </div>
+
 
                         {/* CURRENT STATUS */}
                         <div style={{ width: '100%', marginTop: '20px' }}>
@@ -1046,24 +1087,18 @@ export default function ProfilePage() {
                         </div>
 
                         {/* THE ALTAR */}
-                        <div style={{ width: '100%', marginTop: '20px' }} onClick={() => document.getElementById('altarHistoryPanel')?.classList.toggle('hidden')}>
+                        <div id="mobSectionAltar" style={{ width: '100%', marginTop: '20px' }}>
                             <div className="duty-label">THE ALTAR</div>
-                            <div className="mob-pyramid-stage" style={{ height: '240px', cursor: 'pointer' }}>
+                            <div className="mob-pyramid-stage" style={{ height: '240px', cursor: 'pointer' }} onClick={() => (window as any).openAltarDrawer()}>
                                 <div className="mob-idol side"><img id="mobRec_Slot2" src="" alt="Slot 2" /><div className="mob-rank-badge">II</div></div>
                                 <div className="mob-idol side right"><img id="mobRec_Slot3" src="" alt="Slot 3" /><div className="mob-rank-badge">III</div></div>
                                 <div className="mob-idol center"><img id="mobRec_Slot1" src="" alt="Slot 1" /><div className="mob-rank-badge main">I</div></div>
                             </div>
-                            <div style={{ textAlign: 'center', fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', marginTop: '-10px' }}>TAP TO REVEAL DATABASE</div>
-                        </div>
-                        <div id="altarHistoryPanel" className="hidden" style={{ width: '100%' }}>
-                            <div className="mob-grid-label-center" style={{ textAlign: 'left', paddingLeft: '10px', color: '#666', marginTop: '15px' }}>ACCEPTED PROTOCOLS</div>
-                            <div id="mobRec_Grid" className="mob-horiz-scroll"></div>
-                            <div className="mob-grid-label-center" style={{ textAlign: 'left', paddingLeft: '10px', color: '#ff003c', marginTop: '15px' }}>FAILED / DENIED</div>
-                            <div id="mobRec_Heap" className="mob-horiz-scroll small"></div>
+                            <div style={{ textAlign: 'center', fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', marginTop: '4px' }}>TAP TO VIEW RECORD</div>
                         </div>
 
                         {/* QUEEN'S WALL */}
-                        <div style={{ width: '100%', marginTop: '20px' }}>
+                        <div id="mobSectionQueen" style={{ width: '100%', marginTop: '20px' }}>
                             <div className="duty-label">QUEEN'S WALL</div>
                             <div id="qWall_ScrollTrack" className="mob-horiz-scroll" style={{ marginTop: '15px', paddingBottom: '10px', minHeight: '100px' }}>
                                 <div style={{ color: '#333', fontSize: '0.7rem', padding: '20px' }}>LOADING FEED...</div>
@@ -1100,138 +1135,196 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 </div>
+
+                {/* ALTAR BACKDROP + DRAWER — siblings of viewMobileHome so position:fixed is relative to viewport, not transformed scroll container */}
+                <div id="altarBackdrop" className="altar-backdrop" onClick={() => (window as any).closeAltarDrawer()}></div>
+
+                <div id="altarDrawer" className="altar-drawer">
+                    <div className="altar-drawer-handle-wrap">
+                        <div className="altar-drawer-handle"></div>
+                    </div>
+
+                    <div className="altar-section">
+                        <button className="altar-section-header" onClick={() => (window as any).toggleAltarSection('routine')}>
+                            <span className="altar-section-label">DAILY ROUTINE</span>
+                            <span id="altarSec_arrow_routine" className="altar-section-arrow">›</span>
+                        </button>
+                        <div id="altarSec_routine" className="altar-section-body">
+                            <div id="altarGrid_routine" className="altar-photo-grid"></div>
+                        </div>
+                    </div>
+
+                    <div className="altar-section">
+                        <button className="altar-section-header" onClick={() => (window as any).toggleAltarSection('accepted')}>
+                            <span className="altar-section-label">ACCEPTED PROTOCOLS</span>
+                            <span id="altarSec_arrow_accepted" className="altar-section-arrow">›</span>
+                        </button>
+                        <div id="altarSec_accepted" className="altar-section-body">
+                            <div id="altarGrid_accepted" className="altar-photo-grid"></div>
+                        </div>
+                    </div>
+
+                    <div className="altar-section">
+                        <button className="altar-section-header" onClick={() => (window as any).toggleAltarSection('rejected')}>
+                            <span className="altar-section-label" style={{ color: '#ff4444' }}>FAILED / DENIED</span>
+                            <span id="altarSec_arrow_rejected" className="altar-section-arrow">›</span>
+                        </button>
+                        <div id="altarSec_rejected" className="altar-section-body">
+                            <div id="altarGrid_rejected" className="altar-photo-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            {/* ── GLOBAL COMMUNITY OVERLAY ── */}
-            <div id="globalViewOverlay" style={{ display: 'none', position: 'fixed', inset: 0, background: 'rgba(4,4,14,0.97)', zIndex: 3000, flexDirection: 'column', backdropFilter: 'blur(16px)' }}>
+            {/* Global view lives at /global route — not rendered here */}
+            <div id="globalViewOverlay" style={{ display: 'none' }}></div>
 
-                {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 20px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0, background: 'rgba(0,0,0,0.25)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                        <div id="globalBreadcrumb" style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px' }}>GLOBAL</div>
-                        <div id="lbPreviewCount" style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px', borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '14px' }}></div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button id="globalBackBtn" onClick={() => closeGlobalSection()} style={{ display: 'none', background: 'none', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.48rem', padding: '5px 12px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>← BACK</button>
-                        <button onClick={() => closeGlobalView()} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.48rem', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}>✕</button>
-                    </div>
-                </div>
-
-                {/* ── BENTO MAIN VIEW ── */}
-                <div id="globalMainView" style={{ flex: 1, display: 'flex', gap: '12px', padding: '12px', overflow: 'hidden' }}>
-
-                    {/* LEFT — LEADERBOARD (dominant column) */}
-                    <div style={{ flex: '1.6', display: 'flex', flexDirection: 'column', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.14)', borderRadius: '14px', overflow: 'hidden', minWidth: 0 }}>
-                        <div style={{ padding: '12px 14px 8px', flexShrink: 0 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '3px' }}>LEADERBOARD</div>
-                                <button onClick={() => openGlobalSection('leaderboard')} style={{ background: 'none', border: 'none', color: 'rgba(197,160,89,0.5)', fontFamily: 'Orbitron', fontSize: '0.42rem', cursor: 'pointer', letterSpacing: '1px' }}>FULL VIEW →</button>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px' }}>
-                                {(['today', 'alltime', 'weekly', 'monthly'] as const).map(p => (
-                                    <button key={p} id={`lbChip_${p}`} onClick={() => loadLeaderboardPreview(p)} style={{ padding: '3px 9px', background: p === 'today' ? 'rgba(197,160,89,0.2)' : 'transparent', border: `1px solid ${p === 'today' ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.07)'}`, color: p === 'today' ? '#c5a059' : 'rgba(255,255,255,0.28)', fontFamily: 'Orbitron', fontSize: '0.43rem', cursor: 'pointer', borderRadius: '3px', letterSpacing: '1px' }}>
-                                        {p === 'alltime' ? 'ALL TIME' : p.toUpperCase()}
-                                    </button>
-                                ))}
-                            </div>
-                            <div style={{ height: '1px', background: 'rgba(197,160,89,0.08)', marginTop: '10px', marginLeft: '-14px', marginRight: '-14px' }}></div>
+            {/* ── MOB CHAT OVERLAY — root level, above MOBILE_APP ── */}
+            <div id="mobChatOverlay" className="mob-overlay" style={{ display: 'none' }}>
+                <div className="mob-overlay-header">
+                    <div className="mob-overlay-title-wrap">
+                        <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" />
+                        <div>
+                            <div className="mob-overlay-title">QUEEN KARIN</div>
+                            <div id="mobChatStatusText2" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>ONLINE</div>
                         </div>
-                        <div id="globalPreview_leaderboard" style={{ flex: 1, overflowY: 'auto' }}></div>
                     </div>
+                    <button className="mob-overlay-close" onClick={() => (window as any).closeMobChatOverlay()}>✕</button>
+                </div>
 
-                    {/* RIGHT — 2×2 grid */}
-                    <div style={{ flex: '1', display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '12px', minWidth: 0, minHeight: 0 }}>
+                {/* TAB BAR */}
+                <div className="mob-gl-tabs">
+                    <button id="mobChatBtnChat" className="mob-gl-tab active" onClick={() => (window as any).switchMobChatTab('chat')}>CHAT</button>
+                    <button id="mobChatBtnService" className="mob-gl-tab" onClick={() => (window as any).switchMobChatTab('service')}>SERVICE</button>
+                </div>
 
-                        {/* TALK */}
-                        <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', overflow: 'hidden', minHeight: 0 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px' }}>TALK</span>
-                                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 5px #4ade80', display: 'inline-block' }}></span>
-                                </div>
-                                <button onClick={() => openGlobalSection('talk')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.22)', fontFamily: 'Orbitron', fontSize: '0.38rem', cursor: 'pointer' }}>OPEN →</button>
+                {/* CHAT TAB */}
+                <div id="mobChatTabChat" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                    <div id="mob_chatBox" className="chat-body-frame" style={{ flex: 1, overflowY: 'auto', minHeight: 0, position: 'relative' }}>
+                        <div id="mob_TributeOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 9999, display: 'none', flexDirection: 'column', padding: '20px' }}>
+                            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
+                                <span style={{ fontFamily: 'Cinzel', color: '#c5a059' }}>TRIBUTE STORE</span>
+                                <button onClick={() => (window as any).toggleTributeHunt()} style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem' }}>X</button>
                             </div>
-                            <div id="globalPreview_talk" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
-                            <div style={{ display: 'flex', gap: '5px', padding: '7px 9px', borderTop: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
-                                <input id="globalQuickInput" type="text" placeholder="Quick message..." onKeyDown={(e) => handleGlobalQuickKey(e as any)} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.78rem', padding: '5px 8px', outline: 'none', borderRadius: '4px', minWidth: 0 }} />
-                                <button onClick={() => sendGlobalQuickMessage()} style={{ padding: '5px 10px', background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.38rem', cursor: 'pointer', borderRadius: '4px', flexShrink: 0, fontWeight: 700 }}>→</button>
-                            </div>
+                            <div id="mob_huntStoreGrid" className="store-grid" style={{ width: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '5px', paddingBottom: '30px' }}></div>
                         </div>
-
-                        {/* BEST SPENDER */}
-                        <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(197,160,89,0.02)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: '14px', overflow: 'hidden', minHeight: 0 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid rgba(197,160,89,0.08)', flexShrink: 0 }}>
-                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#c5a059', letterSpacing: '2px' }}>BEST SPENDER</span>
-                                <button onClick={() => openGlobalSection('spenders')} style={{ background: 'none', border: 'none', color: 'rgba(197,160,89,0.4)', fontFamily: 'Orbitron', fontSize: '0.38rem', cursor: 'pointer' }}>FULL →</button>
-                            </div>
-                            <div id="globalPreview_spenders" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
+                        <div id="mob_chatContent" className="chat-area"></div>
+                    </div>
+                    <div className="chat-footer" style={{ flexShrink: 0, position: 'relative', height: 65, background: '#080808', borderTop: '1px solid #222', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+                        <div className="chat-input-wrapper">
+                            <button className="chat-btn-plus" onClick={() => (window as any).handleMediaPlus()}>+</button>
+                            <input type="text" id="mob_chatMsgInput" className="chat-input" placeholder="Transmit..." onKeyPress={(e: any) => (window as any).handleChatKey(e)} />
                         </div>
-
-                        {/* UPDATES */}
-                        <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', overflow: 'hidden', minHeight: 0 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px' }}>UPDATES</span>
-                                <div style={{ display: 'flex', gap: '5px' }}>
-                                    <button onClick={() => document.getElementById('globalPhotoInput')?.click()} style={{ padding: '2px 7px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.25)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.38rem', cursor: 'pointer', borderRadius: '3px' }}>+ SHARE</button>
-                                    <button onClick={() => openGlobalSection('updates')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.22)', fontFamily: 'Orbitron', fontSize: '0.38rem', cursor: 'pointer' }}>VIEW →</button>
-                                </div>
-                            </div>
-                            <div id="globalPreview_updates" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
-                        </div>
-
-                        {/* QUEEN KARIN */}
-                        <div style={{ display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', borderRadius: '14px', overflow: 'hidden', minHeight: 0, cursor: 'pointer' }} onClick={() => openGlobalSection('queen')}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid rgba(197,160,89,0.1)', flexShrink: 0 }}>
-                                <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>QUEEN KARIN</span>
-                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.4)' }}>VIEW →</span>
-                            </div>
-                            <div id="globalPreview_queen" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
-                        </div>
-
+                        <button className="chat-btn-tribute" onClick={() => (window as any).toggleTributeHunt()} style={{ background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#c5a059' }}>
+                                <rect x="3" y="8" width="18" height="12" rx="1"></rect>
+                                <path d="M12 8v12"></path>
+                                <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
+                            </svg>
+                        </button>
+                        <button className="chat-btn-send" onClick={() => (window as any).sendChatMessage()}>{' > '}</button>
                     </div>
                 </div>
 
-                {/* ── EXPANDED: LEADERBOARD ── */}
-                <div id="gPanel_leaderboard" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', gap: '8px', padding: '12px 20px', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        {(['today', 'alltime', 'weekly', 'monthly'] as const).map(p => (
-                            <button key={p} id={`lbPeriod_${p}`} onClick={() => loadLeaderboard(p)} style={{ padding: '5px 14px', background: p === 'today' ? 'rgba(197,160,89,0.18)' : 'transparent', border: `1px solid ${p === 'today' ? 'rgba(197,160,89,0.45)' : 'rgba(255,255,255,0.08)'}`, color: p === 'today' ? '#c5a059' : 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.5rem', letterSpacing: '1px', cursor: 'pointer', borderRadius: '4px' }}>
-                                {p === 'alltime' ? 'ALL TIME' : p.toUpperCase()}
-                            </button>
-                        ))}
-                    </div>
-                    <div id="leaderboardList" style={{ flex: 1, overflowY: 'auto' }}></div>
+                {/* SERVICE TAB */}
+                <div id="mobChatTabService" style={{ display: 'none', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                    <div id="mob_systemLogContent" className="chat-area mob-gl-scroll" style={{ flex: 1 }}></div>
                 </div>
 
-                {/* ── EXPANDED: TALK ── */}
-                <div id="gPanel_talk" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div id="globalTalkFeed" style={{ flex: 1, overflowY: 'auto', paddingTop: '12px' }}></div>
-                    <div style={{ display: 'flex', gap: '10px', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.07)', flexShrink: 0, background: 'rgba(0,0,0,0.3)' }}>
-                        <input id="globalTalkInput" type="text" placeholder="Say something to everyone..." onKeyDown={(e) => handleGlobalTalkKey(e as any)} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.9rem', padding: '9px 14px', outline: 'none', borderRadius: '6px' }} />
-                        <button onClick={() => sendGlobalMessage()} style={{ padding: '9px 18px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer', borderRadius: '6px', letterSpacing: '1px', flexShrink: 0 }}>SEND</button>
-                    </div>
-                </div>
-
-                {/* ── EXPANDED: UPDATES ── */}
-                <div id="gPanel_updates" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 16px', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <button id="globalUploadBtn" onClick={() => document.getElementById('globalPhotoInput')?.click()} style={{ padding: '7px 16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>+ SHARE PHOTO</button>
-                    </div>
-                    <div id="globalUpdatesGrid" style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', padding: '14px 16px', alignContent: 'start' }}></div>
-                </div>
-
-                {/* ── EXPANDED: BEST SPENDERS ── */}
-                <div id="gPanel_spenders" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
-                    <div id="spendersList" style={{ flex: 1, overflowY: 'auto' }}></div>
-                </div>
-
-                {/* ── EXPANDED: QUEEN KARIN ── */}
-                <div id="gPanel_queen" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden', overflowY: 'auto' }}>
-                    <div id="queenFullContent"></div>
-                </div>
-
-                <input type="file" id="globalPhotoInput" accept="image/*,video/*" style={{ display: 'none' }} onChange={(e) => handleGlobalPhotoUpload(e.target as HTMLInputElement)} />
+                {/* Hidden stub so existing desktop toggle code doesn't error */}
+                <div id="mobSystemLogContainer" style={{ display: 'none' }}></div>
             </div>
+
+            {/* ── MOB QUEEN'S WALL OVERLAY — root level ── */}
+            <div id="mobQueenWallOverlay" className="mob-overlay" style={{ display: 'none' }}>
+                <div className="mob-overlay-header">
+                    <div className="mob-overlay-title-wrap">
+                        <span className="mob-overlay-title">QUEEN'S WALL</span>
+                    </div>
+                    <button className="mob-overlay-close" onClick={() => (window as any).closeMobQueenWall()}>✕</button>
+                </div>
+                <div className="mob-qwall-scroll">
+                    <div id="mobQWallContent"></div>
+                </div>
+            </div>
+
+            {/* ── GLOBAL OVERLAY ── */}
+            <div id="mobGlobalOverlay" className="mob-overlay" style={{ display: 'none', flexDirection: 'column' }}>
+                <div className="mob-overlay-header">
+                    <span className="mob-overlay-title">◎ GLOBAL</span>
+                    <button className="mob-overlay-close" onClick={() => (window as any).closeMobGlobal()}>✕</button>
+                </div>
+
+                {/* Tab bar */}
+                <div className="mob-gl-tabs">
+                    <button id="mobGlTab_rank" className="mob-gl-tab active" onClick={() => (window as any).switchMobGlTab('rank')}>RANK</button>
+                    <button id="mobGlTab_talk" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('talk')}>TALK</button>
+                    <button id="mobGlTab_queen" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('queen')}>QUEEN</button>
+                    <button id="mobGlTab_updates" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('updates')}>NEWS</button>
+                </div>
+
+                {/* RANK panel */}
+                <div id="mobGlPanel_rank" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                    <div className="mob-gl-period-bar">
+                        <button id="mobGlPeriod_today" className="mob-gl-period-btn active" onClick={() => (window as any).switchMobGlPeriod('today')}>TODAY</button>
+                        <button id="mobGlPeriod_weekly" className="mob-gl-period-btn" onClick={() => (window as any).switchMobGlPeriod('weekly')}>WEEK</button>
+                        <button id="mobGlPeriod_monthly" className="mob-gl-period-btn" onClick={() => (window as any).switchMobGlPeriod('monthly')}>MONTH</button>
+                        <button id="mobGlPeriod_alltime" className="mob-gl-period-btn" onClick={() => (window as any).switchMobGlPeriod('alltime')}>ALL</button>
+                    </div>
+                    <div id="mobGlRankList" className="mob-gl-scroll"></div>
+                </div>
+
+                {/* TALK panel */}
+                <div id="mobGlPanel_talk" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
+                    <div id="mobGlTalkFeed" className="mob-gl-scroll" style={{ flex: 1 }}></div>
+                    <div className="mob-gl-talk-footer">
+                        <input
+                            type="text"
+                            id="mobGlTalkInput"
+                            className="mob-gl-talk-input"
+                            placeholder="speak..."
+                            onKeyDown={(e) => (window as any).handleMobGlKey(e.nativeEvent)}
+                        />
+                        <button className="mob-gl-talk-send" onClick={() => (window as any).sendMobGlMessage()}>▶</button>
+                    </div>
+                </div>
+
+                {/* QUEEN panel */}
+                <div id="mobGlPanel_queen" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
+                    <div id="mobGlQueenFeed" className="mob-gl-scroll"></div>
+                </div>
+
+                {/* UPDATES panel */}
+                <div id="mobGlPanel_updates" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
+                    <div id="mobGlUpdatesFeed" className="mob-gl-scroll"></div>
+                </div>
+            </div>
+
+            {/* ── MOBILE BOTTOM NAV — at root level, no stacking context conflicts ── */}
+            <nav id="mobBottomNav" className="mob-bottom-nav">
+                <button id="mobNavProfile" className="mob-nav-item active" onClick={() => (window as any).mobNavTo('profile')}>
+                    <span className="mob-nav-icon">◆</span>
+                    <span className="mob-nav-label">PROFILE</span>
+                </button>
+                <button id="mobNavRecord" className="mob-nav-item" onClick={() => (window as any).openAltarDrawer()}>
+                    <span className="mob-nav-icon">▦</span>
+                    <span className="mob-nav-label">RECORD</span>
+                </button>
+                <button className="mob-nav-queen-btn" onClick={() => (window as any).openMobChatOverlay()}>
+                    <div className="mob-nav-queen-ring">
+                        <img id="navQueenPic" src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" className="mob-nav-queen-img" alt="Queen" />
+                    </div>
+                </button>
+                <button id="mobNavQueen" className="mob-nav-item" onClick={() => (window as any).openMobQueenWall()}>
+                    <span className="mob-nav-icon">♛</span>
+                    <span className="mob-nav-label">QUEEN</span>
+                </button>
+                <button id="mobNavGlobal" className="mob-nav-item" onClick={() => (window as any).openMobGlobal()}>
+                    <span className="mob-nav-icon">◎</span>
+                    <span className="mob-nav-label">GLOBAL</span>
+                </button>
+            </nav>
 
         </div >
     );

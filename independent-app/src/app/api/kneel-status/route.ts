@@ -16,7 +16,7 @@ export async function GET(req: Request) {
         // Use supabaseAdmin to bypass RLS — anon client can't read tasks table
         const { data: taskRow } = await supabaseAdmin
             .from('tasks')
-            .select('lastWorship, kneelCount, "today kneeling"')
+            .select('lastWorship, kneelCount, "today kneeling", kneel_history')
             .ilike('member_id', memberEmail)
             .maybeSingle();
 
@@ -39,12 +39,29 @@ export async function GET(req: Request) {
             ? parseInt(taskRow?.['today kneeling'] || '0', 10)
             : 0;
 
+        // Parse kneel_history and extract which hours today had a kneel
+        let kneelHours: number[] = [];
+        try {
+            const raw = (taskRow as any)?.kneel_history;
+            const history: string[] = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : []);
+            if (history.length) {
+                const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: tz });
+                kneelHours = [...new Set(
+                    history
+                        .filter(ts => { try { return new Date(ts).toLocaleDateString('en-CA', { timeZone: tz }) === todayStr; } catch { return false; } })
+                        .map(ts => { try { return new Date(ts).getHours(); } catch { return -1; } })
+                        .filter(h => h >= 0)
+                )];
+            }
+        } catch (_) { }
+
         return NextResponse.json({
             lastWorshipMs,
             isLocked,
             minLeft,
             kneelCount: taskRow?.kneelCount || 0,
             todayKneeling,
+            kneelHours,
         });
     } catch (err: any) {
         console.error('[kneel-status]', err);

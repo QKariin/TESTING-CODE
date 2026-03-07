@@ -10,7 +10,8 @@ async function syncKneelStatusFromServer() {
     if (!email) return;
 
     try {
-        const res = await fetch(`/api/kneel-status?email=${encodeURIComponent(email)}`);
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const res = await fetch(`/api/kneel-status?email=${encodeURIComponent(email)}&tz=${encodeURIComponent(tz)}`);
         if (!res.ok) return;
         const data = await res.json();
 
@@ -24,12 +25,33 @@ async function syncKneelStatusFromServer() {
             updateKneelingUI();
         }
 
-        // ── Update Kneeling Hours bars ──
+        // ── Update Kneeling Hours bars + dot grid ──
         updateKneelingHoursUI(data.todayKneeling || 0);
+        renderKneelDots(data.kneelHours || []);
 
     } catch (err) {
         console.warn('[KNEEL] Server sync failed:', err);
     }
+}
+
+// ─── Kneel Hour Dot Grid ───────────────────────────────────────────────────
+export function renderKneelDots(kneelHours: number[]) {
+    const currentHour = new Date().getHours();
+    const hoursSet = new Set(kneelHours);
+    let html = '';
+    for (let h = 0; h < 24; h++) {
+        const has = hoursSet.has(h);
+        const past = h < currentHour;
+        let cls = 'kdot';
+        if (has) cls += ' kdot-lit';
+        else if (past) cls += ' kdot-dim';
+        else cls += ' kdot-off';
+        html += `<div class="${cls}" title="${h}:00"></div>`;
+    }
+    const haloEl = document.getElementById('mob_kneelDots');
+    if (haloEl) haloEl.innerHTML = html;
+    const queenEl = document.getElementById('queen_kneelDots');
+    if (queenEl) queenEl.innerHTML = html;
 }
 
 // ─── Kneeling Hours UI (called on load + after each reward claimed) ───────
@@ -242,6 +264,7 @@ async function completeKneelAction() {
             const data = await res.json();
             if (res.ok && typeof data.todayKneeling === 'number') {
                 updateKneelingHoursUI(data.todayKneeling);
+                renderKneelDots(data.kneelHours || []);
             }
         } catch (err) {
             console.warn('[KNEEL] DB write failed:', err);

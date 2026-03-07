@@ -630,11 +630,20 @@ export function toggleTributeHunt() {
 }
 
 export function openLobby() {
-    document.getElementById('lobbyOverlay')?.classList.remove('hidden');
+    const el = document.getElementById('lobbyOverlay');
+    if (!el) return;
+    el.classList.remove('hidden');
+    el.style.display = 'flex';
+    const { memberId, id } = getState();
+    const emailEl = document.getElementById('hubEmail');
+    if (emailEl) emailEl.textContent = memberId || id || '';
 }
 
 export function closeLobby() {
-    document.getElementById('lobbyOverlay')?.classList.add('hidden');
+    const el = document.getElementById('lobbyOverlay');
+    if (!el) return;
+    el.classList.add('hidden');
+    el.style.display = 'none';
 }
 
 let taskInterval: any = null;
@@ -1053,19 +1062,30 @@ export async function executeSkipTask() {
 }
 
 export function openQueenMenu() {
-    document.getElementById('queenOverlay')?.classList.remove('hidden');
+    const el = document.getElementById('queenOverlay');
+    if (!el) return;
+    el.classList.remove('hidden');
+    el.style.display = 'flex';
+    const { memberId, id } = getState();
+    const diagUser = document.getElementById('diagUserEmail');
+    if (diagUser) diagUser.textContent = `SESSION: ${memberId || id || '—'}`;
+    const diagSync = document.getElementById('diagSyncTime');
+    if (diagSync) diagSync.textContent = `LAST SYNC: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 }
 
 export function closeQueenMenu() {
-    document.getElementById('queenOverlay')?.classList.add('hidden');
+    const el = document.getElementById('queenOverlay');
+    if (!el) return;
+    el.classList.add('hidden');
+    el.style.display = 'none';
 }
 
 export function toggleMobileStats() {
     const content = document.getElementById('mobStatsContent');
     const arrow = document.getElementById('mobStatsArrow');
     if (content) {
-        const isHidden = content.classList.toggle('hidden');
-        if (arrow) arrow.innerText = isHidden ? '▼' : '▲';
+        const isOpen = content.classList.toggle('open');
+        if (arrow) arrow.innerText = isOpen ? '▲' : '▼';
     }
 }
 
@@ -1287,6 +1307,22 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
 
         if (data.success) {
             console.log("Submission successful!");
+            // Show celebration overlays
+            const mobCeleb = document.getElementById('mobCelebrationOverlay');
+            if (mobCeleb) {
+                mobCeleb.style.display = 'flex';
+                setTimeout(() => { mobCeleb.style.display = 'none'; }, 2800);
+            }
+            const deskCeleb = document.getElementById('celebrationOverlay');
+            if (deskCeleb) {
+                deskCeleb.classList.remove('hidden');
+                deskCeleb.style.display = 'flex';
+                deskCeleb.style.opacity = '1';
+                setTimeout(() => {
+                    deskCeleb.style.opacity = '0';
+                    setTimeout(() => { deskCeleb.style.display = 'none'; deskCeleb.classList.add('hidden'); }, 300);
+                }, 2500);
+            }
             const mockeries = [
                 "Evidence submitted. We will see if it's as disappointing as usual.",
                 "Task uploaded. Hopefully less pathetic than your last attempt.",
@@ -1656,6 +1692,334 @@ export async function buyRewardFragment(cost: number) {
         }
     } catch (err) {
         console.error("Error buying fragment", err);
+    }
+}
+
+function _setNavActive(tab: string) {
+    const navIds: Record<string, string> = {
+        profile: 'mobNavProfile', record: 'mobNavRecord', queen: 'mobNavQueen', global: 'mobNavGlobal',
+    };
+    Object.entries(navIds).forEach(([key, id]) => {
+        document.getElementById(id)?.classList.toggle('active', key === tab);
+    });
+}
+
+export function mobNavTo(tab: 'profile' | 'record' | 'queen' | 'global') {
+    switch (tab) {
+        case 'profile':
+            _setNavActive('profile');
+            document.getElementById('viewMobileHome')?.scrollTo({ top: 0, behavior: 'smooth' });
+            break;
+        case 'record':
+            openAltarDrawer();
+            break;
+        case 'queen':
+            openMobQueenWall();
+            break;
+        case 'global':
+            (window as any).openGlobalView?.();
+            break;
+    }
+}
+
+// ─── MOB CHAT OVERLAY ────────────────────────────────────────────────────────
+function _closeAllMobOverlays(except?: string) {
+    ['mobChatOverlay', 'mobQueenWallOverlay', 'mobGlobalOverlay'].forEach(id => {
+        if (id === except) return;
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove('mob-overlay-open');
+        setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
+    });
+    if (except !== 'altar') closeAltarDrawer();
+}
+
+function _isOverlayOpen(id: string) {
+    return document.getElementById(id)?.classList.contains('mob-overlay-open') ?? false;
+}
+
+export function switchMobChatTab(tab: 'chat' | 'service') {
+    const chatPanel = document.getElementById('mobChatTabChat');
+    const svcPanel = document.getElementById('mobChatTabService');
+    const chatBtn = document.getElementById('mobChatBtnChat');
+    const svcBtn = document.getElementById('mobChatBtnService');
+    if (tab === 'chat') {
+        if (chatPanel) chatPanel.style.display = 'flex';
+        if (svcPanel) svcPanel.style.display = 'none';
+        if (chatBtn) chatBtn.classList.add('active');
+        if (svcBtn) svcBtn.classList.remove('active');
+        const box = document.getElementById('mob_chatBox');
+        if (box) box.scrollTop = box.scrollHeight;
+    } else {
+        if (chatPanel) chatPanel.style.display = 'none';
+        if (svcPanel) svcPanel.style.display = 'flex';
+        if (chatBtn) chatBtn.classList.remove('active');
+        if (svcBtn) svcBtn.classList.add('active');
+    }
+}
+
+export function openMobChatOverlay() {
+    // Toggle: if already open, close and return to profile
+    if (_isOverlayOpen('mobChatOverlay')) { closeMobChatOverlay(); return; }
+    _closeAllMobOverlays('mobChatOverlay');
+    const el = document.getElementById('mobChatOverlay');
+    if (!el) return;
+    el.style.display = 'flex';
+    requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
+    _setNavActive('');
+    switchMobChatTab('chat');
+}
+
+export function closeMobChatOverlay() {
+    const el = document.getElementById('mobChatOverlay');
+    if (!el) return;
+    el.classList.remove('mob-overlay-open');
+    setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
+    _setNavActive('profile');
+}
+
+// ─── MOB QUEEN'S WALL OVERLAY ────────────────────────────────────────────────
+export function openMobQueenWall() {
+    if (_isOverlayOpen('mobQueenWallOverlay')) { closeMobQueenWall(); return; }
+    _closeAllMobOverlays('mobQueenWallOverlay');
+    const el = document.getElementById('mobQueenWallOverlay');
+    if (!el) return;
+    el.style.display = 'flex';
+    requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
+    _setNavActive('queen');
+    _loadMobQueenPosts();
+}
+
+export function closeMobQueenWall() {
+    const el = document.getElementById('mobQueenWallOverlay');
+    if (!el) return;
+    el.classList.remove('mob-overlay-open');
+    setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
+    _setNavActive('profile');
+}
+
+async function _loadMobQueenPosts() {
+    const container = document.getElementById('mobQWallContent');
+    if (!container) return;
+    // Don't reload if already has content
+    if (container.children.length > 0) return;
+    container.innerHTML = `<div style="text-align:center;padding:50px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
+    try {
+        const res = await fetch('/api/posts', { cache: 'no-store' });
+        const data = await res.json();
+        if (!data.success || !data.posts?.length) {
+            container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO TRANSMISSIONS YET</div>`;
+            return;
+        }
+        container.innerHTML = data.posts.map((p: any) => `
+            <div class="mob-qwall-post">
+                ${p.media_url ? `<img src="${p.media_url}" alt="" onerror="this.style.display='none'" />` : ''}
+                <div class="mob-qwall-post-body">
+                    ${p.title ? `<div class="mob-qwall-post-title">${p.title}</div>` : ''}
+                    ${p.content ? `<div class="mob-qwall-post-content">${p.content}</div>` : ''}
+                    <div class="mob-qwall-post-date">${new Date(p.created_at || p._createdDate || Date.now()).toLocaleDateString()}</div>
+                </div>
+            </div>
+        `).join('');
+    } catch {
+        container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
+    }
+}
+
+// ─── MOB GLOBAL OVERLAY ──────────────────────────────────────────────────────
+const _mobGlLoaded: Record<string, boolean> = {};
+let _mobGlActivePeriod = 'today';
+
+export function openMobGlobal() {
+    if (_isOverlayOpen('mobGlobalOverlay')) { closeMobGlobal(); return; }
+    _closeAllMobOverlays('mobGlobalOverlay');
+    const el = document.getElementById('mobGlobalOverlay');
+    if (!el) return;
+    el.style.display = 'flex';
+    requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
+    _setNavActive('global');
+    _switchMobGlTab('rank');
+}
+
+export function closeMobGlobal() {
+    const el = document.getElementById('mobGlobalOverlay');
+    if (!el) return;
+    el.classList.remove('mob-overlay-open');
+    setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
+    _setNavActive('profile');
+}
+
+export function switchMobGlTab(tab: string) { _switchMobGlTab(tab); }
+
+function _switchMobGlTab(tab: string) {
+    // Update tab buttons
+    document.querySelectorAll('.mob-gl-tab').forEach(t => t.classList.remove('active'));
+    const activeTab = document.getElementById(`mobGlTab_${tab}`);
+    if (activeTab) activeTab.classList.add('active');
+
+    // Show/hide panels
+    document.querySelectorAll('.mob-gl-panel').forEach(p => (p as HTMLElement).style.display = 'none');
+    const activePanel = document.getElementById(`mobGlPanel_${tab}`);
+    if (activePanel) activePanel.style.display = 'flex';
+
+    // Load content if not loaded yet
+    if (tab === 'rank') _loadMobGlLeaderboard(_mobGlActivePeriod);
+    else if (tab === 'talk') _loadMobGlTalk();
+    else if (tab === 'queen') _loadMobGlQueen();
+    else if (tab === 'updates') _loadMobGlUpdates();
+}
+
+export function switchMobGlPeriod(period: string) {
+    _mobGlActivePeriod = period;
+    _mobGlLoaded['rank'] = false;
+    document.querySelectorAll('.mob-gl-period-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById(`mobGlPeriod_${period}`);
+    if (btn) btn.classList.add('active');
+    _loadMobGlLeaderboard(period);
+}
+
+async function _loadMobGlLeaderboard(period: string) {
+    if (_mobGlLoaded[`rank_${period}`]) return;
+    const container = document.getElementById('mobGlRankList');
+    if (!container) return;
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
+    try {
+        const res = await fetch(`/api/global/leaderboard?period=${period}`, { cache: 'no-store' });
+        const data = await res.json();
+        const entries: any[] = data.leaderboard || data.entries || [];
+        if (!entries.length) {
+            container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO DATA YET</div>`;
+            return;
+        }
+        container.innerHTML = entries.map((e: any, i: number) => `
+            <div class="mob-gl-rank-row">
+                <span class="mob-gl-rank-num">${i + 1}</span>
+                ${e.avatar ? `<img src="${e.avatar}" class="mob-gl-rank-avatar" alt="" onerror="this.style.display='none'"/>` : `<div class="mob-gl-rank-avatar-placeholder"></div>`}
+                <div class="mob-gl-rank-info">
+                    <div class="mob-gl-rank-name">${e.name || e.member_id || 'SLAVE'}</div>
+                    ${e.hierarchy ? `<div class="mob-gl-rank-tier">${e.hierarchy}</div>` : ''}
+                </div>
+                <span class="mob-gl-rank-score">${e.score ?? 0}</span>
+            </div>
+        `).join('');
+        _mobGlLoaded[`rank_${period}`] = true;
+    } catch {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
+    }
+}
+
+async function _loadMobGlTalk() {
+    if (_mobGlLoaded['talk']) return;
+    const container = document.getElementById('mobGlTalkFeed');
+    if (!container) return;
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
+    try {
+        const res = await fetch('/api/global/talk', { cache: 'no-store' });
+        const data = await res.json();
+        const msgs: any[] = data.messages || [];
+        _renderMobGlTalk(msgs);
+        _mobGlLoaded['talk'] = true;
+    } catch {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
+    }
+}
+
+function _renderMobGlTalk(msgs: any[]) {
+    const container = document.getElementById('mobGlTalkFeed');
+    if (!container) return;
+    if (!msgs.length) {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO MESSAGES YET</div>`;
+        return;
+    }
+    container.innerHTML = msgs.map((m: any) => `
+        <div class="mob-gl-talk-msg">
+            <span class="mob-gl-talk-name">${m.senderName || m.member_id || 'SLAVE'}</span>
+            <span class="mob-gl-talk-content">${m.content || ''}</span>
+            <span class="mob-gl-talk-time">${new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+    `).join('');
+    container.scrollTop = container.scrollHeight;
+}
+
+export async function sendMobGlMessage() {
+    const input = document.getElementById('mobGlTalkInput') as HTMLInputElement;
+    if (!input || !input.value.trim()) return;
+    const content = input.value.trim();
+    input.value = '';
+
+    const { memberId, id } = getState();
+    const senderEmail = memberId || id;
+    if (!senderEmail) return;
+
+    try {
+        await fetch('/api/global/talk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content, senderEmail })
+        });
+        _mobGlLoaded['talk'] = false;
+        _loadMobGlTalk();
+    } catch {
+        console.warn('[MOB_GLOBAL] Failed to send message');
+    }
+}
+
+export function handleMobGlKey(e: KeyboardEvent) {
+    if (e.key === 'Enter') sendMobGlMessage();
+}
+
+async function _loadMobGlQueen() {
+    if (_mobGlLoaded['queen']) return;
+    const container = document.getElementById('mobGlQueenFeed');
+    if (!container) return;
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
+    try {
+        const res = await fetch('/api/global/queen', { cache: 'no-store' });
+        const data = await res.json();
+        const posts: any[] = data.posts || data.transmissions || [];
+        if (!posts.length) {
+            container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO TRANSMISSIONS YET</div>`;
+            return;
+        }
+        container.innerHTML = posts.map((p: any) => `
+            <div class="mob-qwall-post">
+                ${p.media_url ? `<img src="${p.media_url}" alt="" onerror="this.style.display='none'" />` : ''}
+                <div class="mob-qwall-post-body">
+                    ${p.title ? `<div class="mob-qwall-post-title">${p.title}</div>` : ''}
+                    ${p.content ? `<div class="mob-qwall-post-content">${p.content}</div>` : ''}
+                    <div class="mob-qwall-post-date">${new Date(p.created_at || Date.now()).toLocaleDateString()}</div>
+                </div>
+            </div>
+        `).join('');
+        _mobGlLoaded['queen'] = true;
+    } catch {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
+    }
+}
+
+async function _loadMobGlUpdates() {
+    if (_mobGlLoaded['updates']) return;
+    const container = document.getElementById('mobGlUpdatesFeed');
+    if (!container) return;
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
+    try {
+        const res = await fetch('/api/global/updates', { cache: 'no-store' });
+        const data = await res.json();
+        const updates: any[] = data.updates || data.posts || [];
+        if (!updates.length) {
+            container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO UPDATES YET</div>`;
+            return;
+        }
+        container.innerHTML = updates.map((u: any) => `
+            <div class="mob-gl-update-card">
+                ${u.media_url ? `<img src="${u.media_url}" alt="" onerror="this.style.display='none'" />` : ''}
+                ${u.title ? `<div class="mob-gl-update-title">${u.title}</div>` : ''}
+                ${u.content ? `<div class="mob-gl-update-content">${u.content}</div>` : ''}
+            </div>
+        `).join('');
+        _mobGlLoaded['updates'] = true;
+    } catch {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
     }
 }
 
@@ -2065,6 +2429,8 @@ export function renderProfileSidebar(u: any) {
         if (elProfilePic) elProfilePic.src = photoSrc;
         const elMobUserPic = document.getElementById('hudUserPic') as HTMLImageElement;
         if (elMobUserPic) elMobUserPic.src = photoSrc;
+        const elMobHaloPic = document.getElementById('mob_profilePic') as HTMLImageElement;
+        if (elMobHaloPic) elMobHaloPic.src = photoSrc;
     }
 
     const elCurBen = document.getElementById('desk_CurrentBenefits');
@@ -2658,6 +3024,14 @@ export async function renderHistoryAndAltar(profileData: any) {
     _renderRoutineGrid('gridAltarRoutine', routines, resolveUrl);
     _renderFailedGrid('gridAltarFailed', failed, resolveUrl);
     _renderMosaicGrid(tasks, pending, resolveUrl);
+
+    // Mobile altar: top 3 approved photos by merit
+    const top3 = [...allApproved].sort((a: any, b: any) => {
+        const dm = (b.meritAwarded || 0) - (a.meritAwarded || 0);
+        if (dm !== 0) return dm;
+        return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
+    }).slice(0, 3);
+    _renderMobileAltar(top3, allApproved, routines, failed, resolveUrl);
 }
 
 async function _signUrlsBatch(urls: string[]): Promise<Record<string, string>> {
@@ -2725,6 +3099,139 @@ function _renderAltarHero(hero: any | null, resolveUrl: (u: string) => string) {
     }
     altarMain.style.display = 'block';
     altarMain.onclick = () => _openHistoryModal([hero], 0, resolveUrl);
+}
+
+// Stores resolved data for the altar drawer so it can be opened at any time
+let _altarResolveUrl: ((u: string) => string) | null = null;
+let _altarRoutines: any[] = [];
+let _altarAccepted: any[] = [];
+let _altarFailed: any[] = [];
+
+export function openAltarDrawer() {
+    const drawer = document.getElementById('altarDrawer');
+    // Toggle: if already open, close and return to profile
+    if (drawer?.classList.contains('open')) { closeAltarDrawer(); _setNavActive('profile'); return; }
+    _closeAllMobOverlays('altar');
+    const backdrop = document.getElementById('altarBackdrop');
+    if (drawer) drawer.classList.add('open');
+    if (backdrop) backdrop.classList.add('open');
+    _setNavActive('record');
+    _initAltarDrag();
+}
+
+export function closeAltarDrawer() {
+    const drawer = document.getElementById('altarDrawer');
+    const backdrop = document.getElementById('altarBackdrop');
+    if (drawer) drawer.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('open');
+}
+
+export function toggleAltarSection(section: string) {
+    const body = document.getElementById(`altarSec_${section}`);
+    const arrow = document.getElementById(`altarSec_arrow_${section}`);
+    if (!body) return;
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    if (arrow) arrow.textContent = isOpen ? '›' : '‹';
+}
+
+function _initAltarDrag() {
+    const drawer = document.getElementById('altarDrawer');
+    if (!drawer || (drawer as any).__dragInit) return;
+    (drawer as any).__dragInit = true;
+
+    let startY = 0;
+    let dragY = 0;
+
+    drawer.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+        dragY = 0;
+        drawer.style.transition = 'none';
+    }, { passive: true });
+
+    drawer.addEventListener('touchmove', (e) => {
+        const dy = e.touches[0].clientY - startY;
+        if (dy > 0) {
+            dragY = dy;
+            drawer.style.transform = `translateY(${dy}px)`;
+        }
+    }, { passive: true });
+
+    drawer.addEventListener('touchend', () => {
+        drawer.style.transition = '';
+        drawer.style.transform = '';
+        if (dragY > 90) closeAltarDrawer();
+    });
+}
+
+function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLElement | null {
+    const resolveUrl = _altarResolveUrl || ((u: string) => u);
+    const url = t.proofUrl ? resolveUrl(t.proofUrl) : null;
+    if (!url) return null;
+    const isVid = _isVideo(url);
+    const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase();
+    const meritBadge = t.meritAwarded
+        ? `<div class="altar-card-merit">+${t.meritAwarded}</div>`
+        : '';
+    const media = isVid
+        ? `<video src="${url}" class="altar-card-media" muted playsinline loop></video>`
+        : `<img src="${url}" class="altar-card-media" loading="lazy" />`;
+    const card = document.createElement('div');
+    card.className = 'altar-photo-card';
+    if (dimmed) card.style.filter = 'grayscale(0.65)';
+    card.innerHTML = `${media}${meritBadge}<div class="altar-card-date">${dateStr}</div>`;
+    card.onclick = () => _openHistoryModal(list, idx, resolveUrl);
+    return card;
+}
+
+function _fillAltarGrid(containerId: string, list: any[], dimmed = false) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = '';
+    if (!list.length) {
+        el.innerHTML = '<div class="altar-empty">NO RECORDS</div>';
+        return;
+    }
+    list.forEach((t, i) => {
+        const card = _makeAltarCard(t, list, i, dimmed);
+        if (card) el.appendChild(card);
+    });
+}
+
+function _renderMobileAltar(top3: any[], allApproved: any[], routines: any[], failed: any[], resolveUrl: (u: string) => string) {
+    // Store for drawer open/tab switch
+    _altarResolveUrl = resolveUrl;
+    _altarRoutines = routines;
+    _altarAccepted = allApproved.filter((t: any) => !t.isRoutine);
+    _altarFailed = failed;
+
+    // Fill the 3 idol slots with top-merit photos
+    const slotIds = ['mobRec_Slot1', 'mobRec_Slot2', 'mobRec_Slot3'];
+    top3.forEach((t, i) => {
+        const el = document.getElementById(slotIds[i]);
+        if (!el) return;
+        const url = resolveUrl(t.proofUrl);
+        const isVid = _isVideo(url);
+        if (isVid) {
+            const vid = document.createElement('video');
+            vid.id = slotIds[i];
+            vid.src = url;
+            vid.muted = true;
+            vid.playsInline = true;
+            vid.loop = true;
+            vid.autoplay = true;
+            vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
+            el.replaceWith(vid);
+        } else {
+            (el as HTMLImageElement).src = url;
+            (el as HTMLImageElement).style.pointerEvents = 'none';
+        }
+    });
+
+    // Populate drawer tab grids
+    _fillAltarGrid('altarGrid_routine', _altarRoutines);
+    _fillAltarGrid('altarGrid_accepted', _altarAccepted);
+    _fillAltarGrid('altarGrid_rejected', _altarFailed, true);
 }
 
 function _renderRoutineGrid(containerId: string, routines: any[], resolveUrl: (u: string) => string) {

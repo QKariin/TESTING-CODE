@@ -3,54 +3,57 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
+function parseNum(val: any): number {
+    if (val === null || val === undefined || val === '') return 0;
+    const n = Number(val);
+    return isNaN(n) ? 0 : n;
+}
+
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const period = searchParams.get('period') || 'today';
 
-    const [{ data: tasks, error: tErr }, { data: profiles, error: pErr }] = await Promise.all([
-        supabaseAdmin.from('tasks').select('member_id, kneelCount, "today kneeling"'),
-        supabaseAdmin.from('profiles').select('email, name, hierarchy'),
+    const colKey = period === 'weekly' ? 'Weekly Score'
+        : period === 'monthly' ? 'Monthly Score'
+        : period === 'alltime' ? 'Taskdom_Points'
+        : 'Daily Score';
+
+    const [{ data: tasks, error }, { data: profiles }] = await Promise.all([
+        supabaseAdmin
+            .from('tasks')
+            .select(`member_id, Name, Hierarchy, "Profile pic", "Daily Score", "Weekly Score", "Monthly Score", Taskdom_Points`),
+        supabaseAdmin
+            .from('profiles')
+            .select('member_id, hierarchy, avatar_url'),
     ]);
 
-    if (tErr) return NextResponse.json({ error: tErr.message }, { status: 500 });
-    if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const profileMap = new Map((profiles || []).map((p: any) => [p.email, p]));
-
-    const todayStr = new Date().toISOString().split('T')[0];
+    // profiles keyed by member_id (which is the email address)
+    const profileMap = new Map((profiles || []).map((p: any) => [p.member_id?.toLowerCase(), p]));
 
     interface LeaderboardEntry {
         email: string;
         name: string;
         hierarchy: string;
-        kneelCount: number;
-        todayHours: number;
+        avatar: string;
+        score: number;
     }
 
-    const entries: LeaderboardEntry[] = (tasks || []).map((t: any) => {
-        const prof = profileMap.get(t.member_id) || {};
-        let todayHours = 0;
-        try {
-            const tk = typeof t['today kneeling'] === 'string'
-                ? JSON.parse(t['today kneeling'])
-                : t['today kneeling'];
-            if (tk?.date === todayStr) todayHours = parseFloat(tk.hours || 0);
-        } catch { }
+    const entries: LeaderboardEntry[] = (tasks || [])
+        .map((t: any) => {
+            const prof: any = profileMap.get(t.member_id?.toLowerCase()) || {};
+            return {
+                email: t.member_id,
+                name: t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
+                hierarchy: prof.hierarchy || t.Hierarchy || '—',
+                avatar: prof.avatar_url || t['Profile pic'] || '',
+                score: parseNum(t[colKey]),
+            };
+        })
+        .filter((e: LeaderboardEntry) => e.score > 0)
+        .sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.score - a.score)
+        .slice(0, 10);
 
-        return {
-            email: t.member_id,
-            name: (prof as any).name || t.member_id?.split('@')[0] || 'SUBJECT',
-            hierarchy: (prof as any).hierarchy || '—',
-            kneelCount: parseInt(t.kneelCount || 0),
-            todayHours,
-        };
-    });
-
-    if (period === 'today') {
-        entries.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.todayHours - a.todayHours);
-        return NextResponse.json({ entries: entries.filter(e => e.todayHours > 0).slice(0, 20) });
-    } else {
-        entries.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.kneelCount - a.kneelCount);
-        return NextResponse.json({ entries: entries.filter(e => e.kneelCount > 0).slice(0, 20) });
-    }
+    return NextResponse.json({ entries, period });
 }
