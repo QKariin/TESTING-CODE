@@ -26,6 +26,11 @@
         color: white;
         font-family: 'Cinzel', serif;
         overflow: hidden;
+        scrollbar-width: none;
+    }
+
+    #MOBILE_APP::-webkit-scrollbar {
+        display: none;
     }
 
     #viewMobileHome {
@@ -45,6 +50,11 @@
         padding: 0;
         z-index: 1;
         background: url('https://static.wixstatic.com/media/ce3e5b_b1f7f0d080e4471ca7d292968d40feee~mv2.jpg') center top / cover no-repeat fixed !important;
+        scrollbar-width: none;
+    }
+
+    #viewMobileHome::-webkit-scrollbar {
+        display: none;
     }
 
     /* ── HALO HERO SECTION (OVERRIDDEN FOR OLD LOOK) ── */
@@ -65,11 +75,12 @@
     .halo-circle-lg {
         position: relative;
         z-index: 2;
-        width: 280px;
-        height: 280px;
+        width: 330px;
+        /* Slightly bigger as requested */
+        height: 330px;
         border-radius: 50%;
         border: 2px solid #c5a059;
-        box-shadow: 0 0 30px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
+        box-shadow: 0 0 40px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
         background: rgba(0, 0, 0, 0.3);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
@@ -156,7 +167,8 @@
         position: relative;
         z-index: 3;
         margin-top: -40px;
-        width: 90%;
+        width: 80% !important;
+        /* Adjusted to 80% as requested for slave stats/similar pills */
         background: rgba(10, 10, 10, 0.85);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
@@ -179,7 +191,7 @@
 
     .h-val {
         font-family: 'Orbitron', sans-serif;
-        font-size: 1.4rem !important;
+        font-size: 1.8rem !important;
         /* Force override */
         color: #fff;
         line-height: 1;
@@ -259,9 +271,9 @@
     }
 
     .mob-kneel-zone {
-        width: 100%;
-        margin-top: 30px;
-        padding: 0 15px;
+        width: 80%;
+        margin: 30px auto 0;
+        padding: 0;
     }
 
     .mob-internal-drawer {
@@ -283,6 +295,20 @@
         background: rgba(4, 4, 12, 0.95);
         border-radius: 10px;
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85);
+    }
+
+    .mob-kneel-zone {
+        width: 80% !important;
+        /* Match other sections 80% width */
+        margin: 20px auto;
+        /* Increased vertical spacing and centered */
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid #c5a059;
+        height: 44px;
+        position: relative;
+        overflow: hidden;
+        border-radius: 4px;
+        box-shadow: 0 0 15px rgba(197, 160, 89, 0.1);
     }
 
     .mob-kneel-bar {
@@ -529,27 +555,37 @@
     }
 
     .luxury-card {
-        background: rgba(4, 4, 12, 0.85);
-        border: 1px solid rgba(197, 160, 89, 0.12);
-        border-radius: 10px;
+        background: linear-gradient(180deg, rgba(30, 30, 30, 0.6) 0%, rgba(10, 10, 10, 0.9) 100%);
+        border: 1px solid rgba(197, 160, 89, 0.2);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border-radius: 2px;
+        padding: 24px 20px;
+        /* Increased padding */
+        position: relative;
+        overflow: hidden;
+        width: 85%;
+        /* Slightly narrower to allow for side gaps as requested */
+        margin: 10px auto;
+        box-sizing: border-box;
         backdrop-filter: blur(10px);
     }
 
     /* Task Action Buttons */
     .btn-upload-sm {
-        width: 100%;
-        background: linear-gradient(135deg, #c5a059 0%, #8b6914 100%);
-        color: #000;
+        width: 70% !important;
+        /* Upload button 70% width */
+        margin: 0 auto;
+        display: block;
+        background: linear-gradient(to right, #8a6d3b, #c5a059, #8a6d3b);
         border: 1px solid #c5a059;
         font-family: 'Cinzel', serif;
-        font-weight: 700;
-        letter-spacing: 2px;
+        color: #fff;
         padding: 14px;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        cursor: pointer;
+        font-weight: bold;
+        letter-spacing: 2px;
         text-transform: uppercase;
-        box-shadow: 0 4px 15px rgba(197, 160, 89, 0.2);
+        border-radius: 4px;
+        box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
     }
 
     .btn-skip-sm {
@@ -569,7 +605,9 @@
 
     /* Fix stats pill */
     .halo-stats-pill {
-        width: min(90vw, 380px) !important;
+        width: 80% !important;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .h-val {

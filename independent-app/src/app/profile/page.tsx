@@ -996,13 +996,19 @@ export default function ProfilePage() {
 
                             {/* Stats pill */}
                             <div className="halo-stats-pill">
-                                <div className="h-stat">
-                                    <span className="h-val" id="mobPoints">{profile?.score || 0}</span>
+                                <div className="h-stat" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+                                        <span className="h-val" id="mobPoints" style={{ fontSize: '2.2rem', fontWeight: 'bold' }}>{profile?.score || 0}</span>
+                                    </div>
                                     <span className="h-lbl">MERIT</span>
                                 </div>
                                 <div className="h-divider"></div>
-                                <div className="h-stat">
-                                    <span className="h-val" id="mobCoins">{profile?.wallet || 0}</span>
+                                <div className="h-stat" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" /></svg>
+                                        <span className="h-val" id="mobCoins" style={{ fontSize: '2.2rem', fontWeight: 'bold' }}>{profile?.wallet || 0}</span>
+                                    </div>
                                     <span className="h-lbl">NET</span>
                                 </div>
                             </div>
@@ -1073,7 +1079,7 @@ export default function ProfilePage() {
                                     </div>
                                     <div id="mobUploadBtnContainer" style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '15px' }}>
                                         <button id="mobBtnUpload" className="btn-upload-sm" onClick={() => document.getElementById('evidenceInputMob')?.click()}>UPLOAD TASK</button>
-                                        <button id="mobBtnSkip" className="btn-skip-sm" onClick={() => (window as any).mobileSkipTask()}>SKIP (-300)</button>
+                                        <button id="mobBtnSkip" className="btn-skip-sm" onClick={() => (window as any).mobileSkipTask()}>SKIP TASK</button>
                                     </div>
                                     <div id="mobSkipConfirmContainer" style={{ display: 'none', flexDirection: 'column', gap: 15, marginTop: 15, alignItems: 'center', background: 'rgba(20, 0, 0, 0.6)', border: '1px solid rgba(255, 0, 60, 0.4)', boxShadow: '0 0 20px rgba(255, 0, 60, 0.1)', backdropFilter: 'blur(10px)', padding: '25px', borderRadius: '12px', width: '100%' }}>
                                         <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '2px', textShadow: '0 0 10px rgba(255,0,0,0.5)' }}>DISOBEDIENCE HAS A PRICE</div>
