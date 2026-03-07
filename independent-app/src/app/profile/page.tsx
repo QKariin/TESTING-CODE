@@ -996,18 +996,18 @@ export default function ProfilePage() {
 
                             {/* Stats pill */}
                             <div className="halo-stats-pill">
-                                <div className="h-stat" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-                                        <span className="h-val" id="mobPoints" style={{ fontSize: '2.2rem', fontWeight: 'bold' }}>{profile?.score || 0}</span>
+                                <div className="h-stat" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: '50px' }}>
+                                        <svg style={{ position: 'absolute', opacity: 0.2, width: '48px', height: '48px', zIndex: 0 }} viewBox="0 0 24 24" fill="#c5a059"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+                                        <span className="h-val" id="mobPoints" style={{ position: 'relative', zIndex: 1, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>{profile?.score || 0}</span>
                                     </div>
                                     <span className="h-lbl">MERIT</span>
                                 </div>
                                 <div className="h-divider"></div>
-                                <div className="h-stat" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" /></svg>
-                                        <span className="h-val" id="mobCoins" style={{ fontSize: '2.2rem', fontWeight: 'bold' }}>{profile?.wallet || 0}</span>
+                                <div className="h-stat" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: '50px' }}>
+                                        <svg style={{ position: 'absolute', opacity: 0.2, width: '48px', height: '48px', zIndex: 0 }} viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" /></svg>
+                                        <span className="h-val" id="mobCoins" style={{ position: 'relative', zIndex: 1, textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>{profile?.wallet || 0}</span>
                                     </div>
                                     <span className="h-lbl">NET</span>
                                 </div>

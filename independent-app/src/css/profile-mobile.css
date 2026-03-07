@@ -166,19 +166,24 @@
     .halo-stats-pill {
         position: relative;
         z-index: 3;
-        margin-top: -40px;
-        width: 80% !important;
-        /* Adjusted to 80% as requested for slave stats/similar pills */
+        margin-top: -65px;
+        /* Overlap the halo circle substantially */
+        width: 85% !important;
+        /* Slightly wider */
         background: rgba(10, 10, 10, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        padding: 10px;
+        border: 1px solid rgba(197, 160, 89, 0.2);
+        /* Enhanced border */
+        border-radius: 12px;
+        /* Smoother rounding */
+        padding: 18px 10px;
+        /* Taller padding */
         display: flex;
         align-items: center;
         justify-content: space-around;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+        /* Deeper shadow */
         backdrop-filter: blur(15px);
-        margin-bottom: 20px;
+        margin-bottom: 30px;
         height: auto;
     }
 
@@ -191,11 +196,12 @@
 
     .h-val {
         font-family: 'Orbitron', sans-serif;
-        font-size: 1.8rem !important;
+        font-size: 2.6rem !important;
+        /* Made significantly bigger */
         /* Force override */
         color: #fff;
         line-height: 1;
-        font-weight: 700;
+        font-weight: 800;
     }
 
     .h-lbl {
@@ -611,7 +617,7 @@
     }
 
     .h-val {
-        font-size: 1rem !important;
+        font-size: 2.6rem !important;
     }
 
     /* ── MOBILE BOTTOM NAV ── */
