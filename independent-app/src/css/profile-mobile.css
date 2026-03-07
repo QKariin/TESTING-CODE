@@ -75,9 +75,9 @@
     .halo-circle-lg {
         position: relative;
         z-index: 2;
-        width: 330px;
-        /* Slightly bigger as requested */
-        height: 330px;
+        width: 380px;
+        /* Even bigger as requested */
+        height: 380px;
         border-radius: 50%;
         border: 2px solid #c5a059;
         box-shadow: 0 0 40px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
