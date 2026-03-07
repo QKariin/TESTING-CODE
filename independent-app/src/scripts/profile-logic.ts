@@ -353,7 +353,76 @@ function renderTributes() {
     };
 
     if (gridDesk) renderGrid(gridDesk);
-    if (gridMob) renderGrid(gridMob);
+    if (gridMob) renderGridMobile(gridMob);
+}
+
+function renderGridMobile(gridEl: HTMLElement) {
+    if (!gridEl) return;
+    const walletForSlider = getState()?.wallet || 0;
+
+    // Set the grid container itself
+    gridEl.style.display = 'grid';
+    gridEl.style.gridTemplateColumns = '1fr 1fr';
+    gridEl.style.gap = '10px';
+    gridEl.style.padding = '12px 10px 24px';
+    gridEl.style.overflowY = 'auto';
+    gridEl.style.flex = '1';
+    gridEl.style.alignContent = 'start';
+
+    gridEl.innerHTML = globalTributes.map(t => {
+        const img = getOptimizedUrl(t.image, 400) || '';
+
+        if (t.is_crowdfund) {
+            const goal = t.goal_amount || 1;
+            const raised = t.raised_amount || 0;
+            const pct = Math.min(100, Math.round((raised / goal) * 100));
+            const remaining = Math.max(10, goal - raised);
+            const sliderMax = Math.min(walletForSlider > 0 ? walletForSlider : remaining, remaining);
+            const sliderDefault = Math.min(200, sliderMax);
+
+            return `
+            <div style="grid-column:span 2; border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.25); box-shadow:0 4px 20px rgba(0,0,0,0.5);">
+                <div style="width:100%; height:130px; background-image:url('${img}'); background-size:cover; background-position:center; background-color:#050510;"></div>
+                <div style="padding:14px; display:flex; flex-direction:column; gap:10px;">
+                    <div style="font-family:'Cinzel',serif; font-size:1rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase;">${t.title}</div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-family:'Orbitron',sans-serif; font-size:0.75rem; color:#c5a059; font-weight:700;">${raised.toLocaleString()}</span>
+                        <span style="font-family:'Orbitron',sans-serif; font-size:0.6rem; color:rgba(255,255,255,0.3);">/ ${goal.toLocaleString()}</span>
+                        <i class="fas fa-coins" style="color:#c5a059; font-size:0.65rem;"></i>
+                    </div>
+                    <div style="width:100%; height:5px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden;">
+                        <div style="height:100%; width:${pct}%; background:linear-gradient(90deg,#c5a059,#f0d080); border-radius:3px;"></div>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="range" id="crowdfund_input_${t.id}" min="10" max="${sliderMax}" step="10" value="${sliderDefault}"
+                            oninput="window.updateCrowdfundSlider('${t.id}',this.value)"
+                            style="flex:1; height:5px; appearance:none; background:rgba(197,160,89,0.2); border-radius:3px; accent-color:#c5a059;" />
+                        <button id="crowdfund_btn_${t.id}" onclick="window.contributeCrowdfund('${t.id}','${t.title}')"
+                            style="background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:9px 14px; border-radius:8px; font-family:'Orbitron',sans-serif; font-size:0.5rem; font-weight:700; letter-spacing:1px; cursor:pointer; white-space:nowrap;">
+                            SEND <span id="crowdfund_display_${t.id}">${sliderDefault}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        return `
+        <div style="border-radius:12px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.22); display:flex; flex-direction:column; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.4);">
+            <div style="width:100%; height:100px; background-image:url('${img}'); background-size:cover; background-position:center; background-color:#050510; position:relative; flex-shrink:0;">
+                <div style="position:absolute; top:6px; right:6px; background:rgba(5,5,20,0.92); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:2px 8px; display:flex; align-items:center; gap:3px;">
+                    <i class="fas fa-coins" style="color:#c5a059; font-size:0.5rem;"></i>
+                    <span style="font-family:'Orbitron',sans-serif; font-size:0.55rem; color:#c5a059; font-weight:700;">${t.price.toLocaleString()}</span>
+                </div>
+            </div>
+            <div style="padding:8px 9px 10px; display:flex; flex-direction:column; gap:7px; flex:1;">
+                <div style="font-family:'Cinzel',serif; font-size:0.62rem; color:#fff; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3; flex:1;">${t.title}</div>
+                <button onclick="event.stopPropagation(); window.buyTribute('${t.id}','${t.title}',${t.price})"
+                    style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:7px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:0.42rem; font-weight:700; letter-spacing:1.5px; cursor:pointer;">
+                    SEND GIFT
+                </button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 // ─── Instantly update wallet/score DOM elements after any coin spend ────────
