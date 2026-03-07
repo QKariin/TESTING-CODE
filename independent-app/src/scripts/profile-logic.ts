@@ -358,9 +358,11 @@ function renderTributes() {
 
 function renderGridMobile(gridEl: HTMLElement) {
     if (!gridEl) return;
+    console.log('[TRIBUTE] renderGridMobile called, items:', globalTributes.length, globalTributes.map(t => ({ id: t.id, title: t.title, price: t.price, image: t.image?.slice(0, 60) })));
     const walletForSlider = getState()?.wallet || 0;
 
     // Set the grid container itself
+    gridEl.style.cssText = ''; // reset any previous inline styles
     gridEl.style.display = 'grid';
     gridEl.style.gridTemplateColumns = '1fr 1fr';
     gridEl.style.gap = '10px';
@@ -407,17 +409,17 @@ function renderGridMobile(gridEl: HTMLElement) {
         }
 
         return `
-        <div style="border-radius:12px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.22); display:flex; flex-direction:column; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.4);">
-            <div style="width:100%; height:100px; background-image:url('${img}'); background-size:cover; background-position:center; background-color:#050510; position:relative; flex-shrink:0;">
+        <div style="border-radius:12px; background:#0a0a14; border:1px solid rgba(197,160,89,0.22); display:flex; flex-direction:column; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.4); min-height:180px; overflow:visible;">
+            <div style="width:100%; height:110px; background-image:url('${img}'); background-size:cover; background-position:center; background-color:#111; border-radius:12px 12px 0 0; position:relative; flex-shrink:0;">
                 <div style="position:absolute; top:6px; right:6px; background:rgba(5,5,20,0.92); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:2px 8px; display:flex; align-items:center; gap:3px;">
                     <i class="fas fa-coins" style="color:#c5a059; font-size:0.5rem;"></i>
                     <span style="font-family:'Orbitron',sans-serif; font-size:0.55rem; color:#c5a059; font-weight:700;">${t.price.toLocaleString()}</span>
                 </div>
             </div>
-            <div style="padding:8px 9px 10px; display:flex; flex-direction:column; gap:7px; flex:1;">
+            <div style="padding:8px 9px 10px; display:flex; flex-direction:column; gap:7px; flex:1; min-height:70px;">
                 <div style="font-family:'Cinzel',serif; font-size:0.62rem; color:#fff; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3; flex:1;">${t.title}</div>
                 <button onclick="event.stopPropagation(); window.buyTribute('${t.id}','${t.title}',${t.price})"
-                    style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:7px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:0.42rem; font-weight:700; letter-spacing:1.5px; cursor:pointer;">
+                    style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:7px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:0.42rem; font-weight:700; letter-spacing:1.5px; cursor:pointer; display:block;">
                     SEND GIFT
                 </button>
             </div>
@@ -681,6 +683,10 @@ export function toggleTributeHunt() {
             if (overlayMob.style.display === 'none' || overlayMob.classList.contains('hidden')) {
                 overlayMob.style.display = 'flex';
                 overlayMob.classList.remove('hidden');
+                // Always re-render grid so it's never stale
+                const gridMob = document.getElementById('mob_huntStoreGrid');
+                console.log('[TRIBUTE] Opening mobile store. Items:', globalTributes.length, 'Grid el:', !!gridMob);
+                if (gridMob) renderGridMobile(gridMob);
             } else {
                 overlayMob.style.display = 'none';
             }
