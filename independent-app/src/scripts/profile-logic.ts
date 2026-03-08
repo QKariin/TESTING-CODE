@@ -3466,8 +3466,11 @@ function _renderMobileAltar(top3: any[], allApproved: any[], routines: any[], fa
             vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
             el.replaceWith(vid);
         } else {
-            (el as HTMLImageElement).src = url;
-            (el as HTMLImageElement).style.pointerEvents = 'none';
+            const img = el as HTMLImageElement;
+            img.dataset.loaded = 'true'; // signal onerror it's now a real URL
+            img.style.display = '';       // un-hide if onerror ran on placeholder
+            img.src = url;
+            img.style.pointerEvents = 'none';
         }
     });
 

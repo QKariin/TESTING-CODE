@@ -189,11 +189,11 @@ export default function ProfilePage() {
                 let baseProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
 
                 if (baseProfile) {
-                    // 2. Fetch Stats (TASKS) - Correct Case Sensitive Check
+                    // 2. Fetch Stats (TASKS) — ilike for case-insensitive email match
                     const { data: taskData } = await supabase
                         .from('tasks')
                         .select('*')
-                        .eq('member_id', baseProfile.member_id)
+                        .ilike('member_id', baseProfile.member_id)
                         .maybeSingle();
                     // 3. MERGE (Without renaming keys!)
                     const unifiedData = {
@@ -1110,9 +1110,9 @@ export default function ProfilePage() {
                         <div id="mobSectionAltar" style={{ width: '100%', marginTop: '20px' }}>
                             <div className="duty-label">THE ALTAR</div>
                             <div className="mob-pyramid-stage" style={{ height: '240px', cursor: 'pointer' }} onClick={() => (window as any).openAltarDrawer()}>
-                                <div className="mob-idol side"><img id="mobRec_Slot2" src="" alt="Slot 2" onError={(e) => { e.currentTarget.style.display = 'none' }} /><div className="mob-rank-badge">II</div></div>
-                                <div className="mob-idol side right"><img id="mobRec_Slot3" src="" alt="Slot 3" onError={(e) => { e.currentTarget.style.display = 'none' }} /><div className="mob-rank-badge">III</div></div>
-                                <div className="mob-idol center"><img id="mobRec_Slot1" src="" alt="Slot 1" onError={(e) => { e.currentTarget.style.display = 'none' }} /><div className="mob-rank-badge main">I</div></div>
+                                <div className="mob-idol side"><img id="mobRec_Slot2" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Slot 2" onError={(e) => { if (e.currentTarget.dataset.loaded) e.currentTarget.style.display = 'none'; }} /><div className="mob-rank-badge">II</div></div>
+                                <div className="mob-idol side right"><img id="mobRec_Slot3" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Slot 3" onError={(e) => { if (e.currentTarget.dataset.loaded) e.currentTarget.style.display = 'none'; }} /><div className="mob-rank-badge">III</div></div>
+                                <div className="mob-idol center"><img id="mobRec_Slot1" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Slot 1" onError={(e) => { if (e.currentTarget.dataset.loaded) e.currentTarget.style.display = 'none'; }} /><div className="mob-rank-badge main">I</div></div>
                             </div>
                             <div style={{ textAlign: 'center', fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', marginTop: '4px' }}>TAP TO VIEW RECORD</div>
                         </div>
