@@ -29,9 +29,9 @@ export async function GET() {
 
     // Batch-lookup profiles for all senders
     const allEmails = [...new Set([
-        ...(photosRes.data || []).map((r: any) => r.member_id),
-        ...(tributesRes.data || []).map((r: any) => r.member_id),
-        ...(pointsRes.data || []).map((r: any) => r.member_id),
+        ...(photosRes.data || []).map((r: any) => r.member_id?.toLowerCase()),
+        ...(tributesRes.data || []).map((r: any) => r.member_id?.toLowerCase()),
+        ...(pointsRes.data || []).map((r: any) => r.member_id?.toLowerCase()),
     ].filter(Boolean))];
 
     const { data: profiles } = allEmails.length

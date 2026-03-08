@@ -255,14 +255,21 @@ async function _loadUpdatesPreview() {
 
 function _buildUpdateCardPreview(u: any): string {
     if (u.kind === 'tribute') {
-        const initial = (u.sender_name || 'S')[0].toUpperCase();
-        return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
-            <div style="font-size:0.75rem;flex-shrink:0;">🎁</div>
-            <div style="flex:1;min-width:0;">
-                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);letter-spacing:1px;">${u.sender_name}</div>
-                <div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.title}</div>
+        return `<div style="margin:6px 8px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+            ${u.image ? `<div style="width:100%;height:100px;overflow:hidden;position:relative;background:#050510;">
+                <img src="${u.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.8) 100%);"></div>
+                <div style="position:absolute;top:6px;right:6px;background:rgba(5,5,20,0.9);border:1px solid rgba(197,160,89,0.6);border-radius:20px;padding:2px 8px;display:flex;align-items:center;gap:4px;">
+                    <span style="font-family:'Orbitron';font-size:0.55rem;color:#c5a059;font-weight:700;">💰 ${(u.price||0).toLocaleString()}</span>
+                </div>
+            </div>` : `<div style="padding:6px 10px 0;display:flex;justify-content:flex-end;">
+                <span style="font-family:'Orbitron';font-size:0.55rem;color:#c5a059;font-weight:700;background:rgba(5,5,20,0.9);border:1px solid rgba(197,160,89,0.6);border-radius:20px;padding:2px 8px;">💰 ${(u.price||0).toLocaleString()}</span>
+            </div>`}
+            <div style="padding:8px 12px 10px;">
+                <div style="font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:2px;margin-bottom:4px;">✦ Gift Sent</div>
+                <div style="font-family:'Cinzel';font-size:0.72rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title}</div>
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);margin-top:5px;letter-spacing:1px;">by ${u.sender_name}</div>
             </div>
-            <div style="font-family:'Orbitron';font-size:0.5rem;color:#c5a059;flex-shrink:0;">${(u.price||0).toLocaleString()}</div>
         </div>`;
     }
     if (u.kind === 'points') {
@@ -683,7 +690,7 @@ function _buildTributeCard(u: any): string {
             <img src="${u.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.8) 100%);"></div>
             <div style="position:absolute;top:8px;right:8px;background:rgba(5,5,20,0.9);border:1px solid rgba(197,160,89,0.6);border-radius:20px;padding:3px 9px;display:flex;align-items:center;gap:4px;">
-                <span style="font-family:'Orbitron';font-size:0.6rem;color:#c5a059;font-weight:700;letter-spacing:1px;">⚙ ${(u.price||0).toLocaleString()}</span>
+                <span style="font-family:'Orbitron';font-size:0.6rem;color:#c5a059;font-weight:700;letter-spacing:1px;">💰 ${(u.price||0).toLocaleString()}</span>
             </div>
         </div>` : ''}
         <div style="padding:10px 13px 13px;">
