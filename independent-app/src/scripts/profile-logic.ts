@@ -1848,6 +1848,15 @@ function _setNavActive(tab: string) {
 export function mobNavTo(tab: 'profile' | 'record' | 'queen' | 'global') {
     switch (tab) {
         case 'profile':
+            // Close everything that could be open
+            _closeAllMobOverlays();
+            closeAltarDrawer();
+            document.getElementById('__altarModal')?.remove();
+            document.getElementById('_reqModal')?.remove();
+            document.getElementById('_manageModal')?.remove();
+            document.getElementById('hubOverlay')?.classList.add('hidden');
+            document.getElementById('tributeHuntOverlay')?.classList.add('hidden');
+            document.getElementById('tributeHuntOverlay')?.style.setProperty('display', 'none');
             _setNavActive('profile');
             document.getElementById('viewMobileHome')?.scrollTo({ top: 0, behavior: 'smooth' });
             break;
@@ -3509,45 +3518,57 @@ function _renderMosaicGrid(tasks: any[], pending: any[], resolveUrl: (u: string)
 }
 
 // Simple lightbox modal for viewing a task at full-size
-const _modalStyle = `position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:24px;`;
-
 function _openHistoryModal(items: any[], idx: number, resolveUrl: (u: string) => string) {
-    const old = document.getElementById('__altarModal');
-    if (old) old.remove();
+    document.getElementById('__altarModal')?.remove();
 
     const t = items[idx];
     if (!t) return;
 
     const overlay = document.createElement('div');
     overlay.id = '__altarModal';
-    overlay.style.cssText = _modalStyle;
+    // z-index above everything: mobile nav (9999999), all overlays
+    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:10000001;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;`;
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
     const url = resolveUrl(t.proofUrl);
     const isVid = _isVideo(url);
     const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
-    const meritStr = t.meritAwarded ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:2px;margin-bottom:8px;">+${t.meritAwarded} MERIT AWARDED</div>` : '';
+
+    // Verdict badge
+    const status = (t.status || '').toLowerCase();
+    let verdictHtml = '';
+    if (status === 'approve' || status === 'approved') {
+        verdictHtml = `<div style="display:inline-block;background:rgba(0,200,80,0.15);border:1px solid rgba(0,200,80,0.5);color:#00c850;font-family:Orbitron;font-size:0.55rem;font-weight:700;letter-spacing:3px;padding:5px 16px;border-radius:4px;">✓ APPROVED</div>`;
+    } else if (status === 'reject' || status === 'rejected') {
+        verdictHtml = `<div style="display:inline-block;background:rgba(255,50,50,0.15);border:1px solid rgba(255,50,50,0.5);color:#ff4444;font-family:Orbitron;font-size:0.55rem;font-weight:700;letter-spacing:3px;padding:5px 16px;border-radius:4px;">✕ REJECTED</div>`;
+    }
+
+    const meritStr = t.meritAwarded
+        ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:2px;">+${t.meritAwarded} MERIT AWARDED</div>`
+        : `<div style="font-family:Orbitron;font-size:0.45rem;color:#444;letter-spacing:2px;">0 MERIT</div>`;
 
     overlay.innerHTML = `
-        <div style="font-family:Orbitron;font-size:0.5rem;color:#555;letter-spacing:3px;">${dateStr}</div>
+        <button id="__altarClose" style="position:absolute;top:16px;right:16px;background:rgba(255,68,68,0.12);border:1px solid rgba(255,68,68,0.35);color:#ff4444;font-family:Orbitron;font-size:0.55rem;font-weight:700;padding:7px 16px;cursor:pointer;border-radius:4px;letter-spacing:1px;z-index:1;">✕ CLOSE</button>
+        <div style="font-family:Orbitron;font-size:0.48rem;color:#555;letter-spacing:3px;">${dateStr}</div>
+        ${verdictHtml}
         ${isVid
-            ? `<video src="${url}" controls autoplay style="max-height:65vh;max-width:90vw;border-radius:6px;"></video>`
-            : `<img src="${url}" style="max-height:65vh;max-width:90vw;object-fit:contain;border-radius:6px;" />`
+            ? `<video src="${url}" controls autoplay style="max-height:58vh;max-width:88vw;border-radius:8px;"></video>`
+            : `<img src="${url}" style="max-height:58vh;max-width:88vw;object-fit:contain;border-radius:8px;" />`
         }
-        <div style="max-width:600px;text-align:center;">
+        <div style="max-width:580px;text-align:center;">
             ${meritStr}
-            <div style="font-family:Rajdhani;font-size:0.9rem;color:#aaa;line-height:1.6;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
-            ${t.adminComment ? `<div style="font-family:Cinzel;font-size:0.75rem;color:#c5a059;margin-top:10px;font-style:italic;">"${t.adminComment}"</div>` : ''}
+            <div style="font-family:Cinzel;font-size:0.85rem;color:#aaa;line-height:1.6;margin-top:6px;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
+            ${t.adminComment ? `<div style="font-family:Cinzel;font-size:0.7rem;color:#c5a059;margin-top:8px;font-style:italic;">"${t.adminComment}"</div>` : ''}
         </div>
-        <div style="display:flex;gap:12px;">
-            ${idx > 0 ? `<button onclick="event.stopPropagation()" style="background:none;border:1px solid #333;color:#666;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;" id="__altarPrev">← PREV</button>` : ''}
-            <button onclick="document.getElementById('__altarModal').remove()" style="background:none;border:1px solid #c5a059;color:#c5a059;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;">CLOSE</button>
-            ${idx < items.length - 1 ? `<button onclick="event.stopPropagation()" style="background:none;border:1px solid #333;color:#666;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;" id="__altarNext">NEXT →</button>` : ''}
+        <div style="display:flex;gap:12px;margin-top:4px;">
+            ${idx > 0 ? `<button id="__altarPrev" style="background:none;border:1px solid #333;color:#666;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;">← PREV</button>` : ''}
+            ${idx < items.length - 1 ? `<button id="__altarNext" style="background:none;border:1px solid #333;color:#666;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;">NEXT →</button>` : ''}
         </div>
     `;
 
     document.body.appendChild(overlay);
 
-    document.getElementById('__altarPrev')?.addEventListener('click', () => { overlay.remove(); _openHistoryModal(items, idx - 1, resolveUrl); });
-    document.getElementById('__altarNext')?.addEventListener('click', () => { overlay.remove(); _openHistoryModal(items, idx + 1, resolveUrl); });
+    document.getElementById('__altarClose')?.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); });
+    document.getElementById('__altarPrev')?.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); _openHistoryModal(items, idx - 1, resolveUrl); });
+    document.getElementById('__altarNext')?.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); _openHistoryModal(items, idx + 1, resolveUrl); });
 }
