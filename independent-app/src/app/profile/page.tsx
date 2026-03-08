@@ -1049,7 +1049,9 @@ export default function ProfilePage() {
 
                         {/* MOBILE KNEELING BUTTON */}
                         <div style={{ padding: '12px 20px 24px', width: '100%', boxSizing: 'border-box' }}>
-                            <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone">
+                            <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone"
+                                onContextMenu={(e) => e.preventDefault()}
+                                style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}>
                                 <div id="mob_kneelFill" className="mob-bar-fill"></div>
                                 <div className="mob-bar-content">
                                     <span className="kneel-icon-sm">◈</span>
