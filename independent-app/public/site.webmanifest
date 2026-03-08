@@ -1,6 +1,7 @@
 {
     "name": "Queen Karin",
     "short_name": "QKarin",
+    "start_url": "/",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",

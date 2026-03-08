@@ -219,14 +219,17 @@ function renderTributes() {
 
         // Relative time helper
         function relativeTime(iso: string): string {
-            const diff = Date.now() - new Date(iso).getTime();
+            if (!iso) return '';
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return '';
+            const diff = Date.now() - d.getTime();
             const mins = Math.floor(diff / 60000);
             const hours = Math.floor(diff / 3600000);
             const days = Math.floor(diff / 86400000);
             if (mins < 60) return `${mins}m ago`;
             if (hours < 24) return `${hours}h ago`;
             if (days < 7) return `${days}d ago`;
-            return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+            return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
         let lastTributeHtml = '';
@@ -1752,7 +1755,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
 
     const timeStr = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const queenAvatar = `<img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" class="cb-queen-av" alt="Q" />`;
+    const queenAvatar = `<img src="/queen-avatar.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`;
 
     // Gift card → centered, no bubble
     if (msg.type === 'wishlist') {
@@ -2560,7 +2563,8 @@ export function renderExchequerHistory(profile: any) {
             const sign = isIncome ? '+' : '';
             const color = isIncome ? '#00ff00' : '#ff4444';
             const icon = isIncome ? 'fa-arrow-left' : 'fa-arrow-right';
-            const timeStr = new Date(t.date || t.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const _tDate = new Date(t.date || t.created_at);
+            const timeStr = isNaN(_tDate.getTime()) ? '' : _tDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
             html += `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px;">
@@ -3263,7 +3267,8 @@ export async function loadQueenPosts() {
         const heroPost = posts[0];
         const restPosts = posts.slice(1);
 
-        const heroDate = new Date(heroPost.created_at).toLocaleDateString('en-GB', {
+        const _heroD = new Date(heroPost.created_at);
+        const heroDate = isNaN(_heroD.getTime()) ? '' : _heroD.toLocaleDateString('en-GB', {
             day: 'numeric', month: 'long', year: 'numeric'
         }).toUpperCase();
 
@@ -3296,7 +3301,8 @@ export async function loadQueenPosts() {
             <div class="qk-divider">ARCHIVES</div>
             <div class="qk-grid">
                 ${restPosts.map((p: any) => {
-            const d = new Date(p.created_at).toLocaleDateString('en-GB', {
+            const _pD = new Date(p.created_at);
+            const d = isNaN(_pD.getTime()) ? '' : _pD.toLocaleDateString('en-GB', {
                 day: 'numeric', month: 'short', year: 'numeric'
             }).toUpperCase();
             return `
