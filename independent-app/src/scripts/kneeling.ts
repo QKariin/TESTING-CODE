@@ -111,12 +111,16 @@ export function attachKneelListeners() {
         btn.style.touchAction = "none";
         btn.style.userSelect = "none";
         btn.style.webkitUserSelect = "none";
+        (btn.style as any).webkitTouchCallout = "none"; // iOS long-press callout
         btn.ondragstart = () => false; // Old school block
 
-        // 2. FORCE INNER ELEMENTS TO BE GHOSTS
-        // This is crucial. If the mouse sees the red bar, it thinks you left the button.
-        Array.from(btn.children).forEach((child) => {
-            (child as HTMLElement).style.pointerEvents = "none";
+        // 2. FORCE INNER ELEMENTS TO BE GHOSTS (recursive — covers text spans too)
+        btn.querySelectorAll('*').forEach((child) => {
+            const el = child as HTMLElement;
+            el.style.pointerEvents = "none";
+            el.style.userSelect = "none";
+            el.style.webkitUserSelect = "none";
+            (el.style as any).webkitTouchCallout = "none";
         });
         const fill = document.getElementById('heroKneelFill');
         if (fill) fill.style.pointerEvents = "none"; // Double check specific ID
