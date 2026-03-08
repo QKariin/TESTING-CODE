@@ -603,6 +603,59 @@
         backdrop-filter: blur(10px);
     }
 
+    /* Status text */
+    .txt-status-red {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 3px;
+        color: #ff003c;
+        text-transform: uppercase;
+    }
+
+    .txt-status-green {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 3px;
+        color: #00ff88;
+        text-transform: uppercase;
+    }
+
+    /* Glassmorphism lobby button */
+    .lobby-btn {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        padding: 14px 20px;
+        border-radius: 6px;
+        border: 1px solid #c5a059;
+        color: #c5a059;
+        background: rgba(10, 8, 4, 0.55);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(197, 160, 89, 0.12);
+        transition: background 0.2s, box-shadow 0.2s;
+        display: block;
+        text-align: center;
+    }
+
+    .lobby-btn:active {
+        background: rgba(197, 160, 89, 0.1);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(197, 160, 89, 0.2);
+    }
+
+    .lobby-btn.close {
+        border-color: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
     /* Task Action Buttons */
     .btn-upload-sm {
         width: 70% !important;
