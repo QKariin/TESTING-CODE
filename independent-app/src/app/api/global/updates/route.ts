@@ -41,13 +41,13 @@ export async function GET() {
             .in('member_id', allEmails)
         : { data: [] };
 
-    const profileMap = new Map((profiles || []).map((p: any) => [p.member_id?.toLowerCase(), p]));
+    const profileMap = new Map<string, any>((profiles || []).map((p: any) => [p.member_id?.toLowerCase(), p]));
 
     function getProfile(email: string) {
         const p = profileMap.get(email?.toLowerCase());
         return {
-            name: p?.name || email?.split('@')[0] || 'SUBJECT',
-            avatar: p?.avatar_url || p?.profile_picture_url || null,
+            name: (p as any)?.name || email?.split('@')[0] || 'SUBJECT',
+            avatar: (p as any)?.avatar_url || (p as any)?.profile_picture_url || null,
         };
     }
 
