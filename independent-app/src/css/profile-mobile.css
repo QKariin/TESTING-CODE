@@ -797,12 +797,13 @@
         padding-top: calc(16px + env(safe-area-inset-top));
     }
 
+    /* .altar-drawer-title uses global section header style */
     .altar-drawer-title {
-        font-family: 'Cinzel', serif;
-        font-size: 1rem;
-        color: #c5a059;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.6rem;
+        color: rgba(197, 160, 89, 0.7);
+        letter-spacing: 3px;
         font-weight: 700;
-        letter-spacing: 4px;
         text-transform: uppercase;
     }
 

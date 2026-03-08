@@ -549,7 +549,7 @@ export default function ProfilePage() {
                     <div className="record-landing">
                         <header className="chronicle-header" style={{ position: 'relative' }}>
                             <button onClick={() => switchTab('serve')} style={{ position: 'absolute', right: 20, top: 20, background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff4444', padding: '5px 15px', borderRadius: 20, cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 2 }}>✕ CLOSE</button>
-                            <h1 className="chronicle-title">THE CHRONICLES</h1>
+                            <h1 className="chronicle-title">SLAVE RECORD</h1>
                         </header>
                         <section className="chronicle-section">
                             <div className="chronicle-section-label">THE SOVEREIGN ALTAR</div>
@@ -1154,7 +1154,7 @@ export default function ProfilePage() {
 
                 <div id="altarDrawer" className="altar-drawer">
                     <div className="altar-drawer-topbar">
-                        <span className="altar-drawer-title">THE CHRONICLES</span>
+                        <span className="altar-drawer-title">SLAVE RECORD</span>
                         <button className="altar-drawer-close" onClick={() => (window as any).closeAltarDrawer()}>✕ CLOSE</button>
                     </div>
 
