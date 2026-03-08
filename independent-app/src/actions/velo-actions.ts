@@ -121,7 +121,7 @@ function mapUserForDashboard(p: any, t: any) {
         pendingState: t?.taskdom_pending_state || null,
         routineHistory: history,
         routinehistory: history, // Consistency
-        kneelCount: Number(p.kneelCount || p.kneel_count || params.kneel_count || 0),
+        kneelCount: Number(t?.kneelCount || p.kneelCount || p.kneel_count || params.kneel_count || 0),
         kneelHistory: p.kneel_history || {},
         joinedDate: p.joined_date,
         points: Number(p.score || 0),
@@ -135,7 +135,6 @@ function mapUserForDashboard(p: any, t: any) {
             const approvedTasks = history.filter((h: any) => h.status === 'approve' && !h.isRoutine).length;
             return approvedTasks || Number(t?.Taskdom_CompletedTasks || params.taskdom_completed_tasks || 0);
         })(),
-        kneelCount: Number(t?.kneelCount || p.kneelCount || p.kneel_count || params.kneel_count || 0),
         total_coins_spent: Number(params.total_coins_spent || p.total_coins_spent || 0),
         bestRoutinestreak: (() => {
             const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
