@@ -34,7 +34,48 @@ export async function GET(request: NextRequest) {
             .eq('member_id', email);
         const crowdfundTotal = (contribData || []).reduce((sum: number, r: any) => sum + (r.amount_given || 0), 0);
 
-        return NextResponse.json({ ...profileData, ...(taskData || {}), _totalSpent: crowdfundTotal });
+        // Parse Taskdom_History exactly like mapUserForDashboard in velo-actions.ts
+        const p = profileData as any || {};
+        const t = taskData as any || {};
+        const params = p.parameters || {};
+
+        let history: any[] = [];
+        if (t.Taskdom_History) {
+            try { history = typeof t.Taskdom_History === 'string' ? JSON.parse(t.Taskdom_History) : t.Taskdom_History; } catch (e) { history = []; }
+        }
+
+        const approvedTasks = history.filter((h: any) => h.status === 'approve' && !h.isRoutine).length;
+        const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
+
+        const defaultPic = "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+        const rawPic = p.avatar_url || p.profile_picture_url || "";
+        const finalPic = (rawPic && rawPic.length > 5 && rawPic !== "undefined" && rawPic !== "null") ? rawPic : defaultPic;
+
+        return NextResponse.json({
+            // Base: profileData fields (member_id, wallet, score, hierarchy, name, kinks, limits, etc.)
+            ...p,
+            // Taskdom fields needed by the profile (same keys as mapUserForDashboard)
+            Taskdom_History: t.Taskdom_History || null,
+            kneelCount: Number(t.kneelCount || p.kneelCount || p.kneel_count || params.kneel_count || 0),
+            'today kneeling': t['today kneeling'] || '0',
+            lastWorship: t.lastWorship || p.lastWorship || null,
+            taskdom_active_task: t.taskdom_active_task || null,
+            taskdom_pending_state: t.taskdom_pending_state || null,
+            // Computed hierarchy fields — same as mapUserForDashboard
+            taskdom_completed_tasks: approvedTasks || Number(t.Taskdom_CompletedTasks || params.taskdom_completed_tasks || 0),
+            total_coins_spent: Number(params.total_coins_spent || p.total_coins_spent || 0),
+            bestRoutinestreak: routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0),
+            routinestreak: Number(p.routinestreak || params.taskdom_current_streak || 0),
+            routineHistory: history,
+            routinehistory: history,
+            // Identity fields for getHierarchyReport check items
+            image: finalPic,
+            title: p.name || "",
+            kinks: p.kinks || "",
+            limits: p.limits || "",
+            // Crowdfund total
+            _totalSpent: crowdfundTotal,
+        });
     }
 
     const { data, error } = await supabase
