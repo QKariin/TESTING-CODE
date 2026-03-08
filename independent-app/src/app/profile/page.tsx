@@ -288,7 +288,7 @@ export default function ProfilePage() {
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
-                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} />
+                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'" />
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)' }}>
@@ -560,7 +560,7 @@ export default function ProfilePage() {
                             <div className="chronicle-section-label">THE SOVEREIGN ALTAR</div>
                             <div className="chronicle-hero">
                                 <div id="altarMain" className="hero-main mosaic-card">
-                                    <img id="imgAltarMain" src="" className="hero-img" />
+                                    <img id="imgAltarMain" src="" className="hero-img" onerror="this.style.display='none'" />
                                     <div className="hero-overlay">
                                         <div className="hero-label">SUPREME HIGHLIGHT</div>
                                         <h2 id="titleAltarMain" className="hero-title">...</h2>
@@ -718,12 +718,12 @@ export default function ProfilePage() {
                     <div className="mob-hud-row">
                         <div className="hud-circle slave" onClick={() => (window as any).openLobby()}>
                             <div className="hud-avatar">
-                                <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png", 100)} alt="Your Avatar" />
+                                <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png", 100)} alt="Your Avatar" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'" />
                             </div>
                             <div className="hud-gear">⚙</div>
                         </div>
                         <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>
-                            <img id="hudSlavePic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" alt="Queen Avatar" />
+                            <img id="hudSlavePic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" alt="Queen Avatar" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'" />
                             <div id="hudDomStatus" className="hud-status-dot offline"></div>
                         </div>
                     </div>
@@ -1108,9 +1108,9 @@ export default function ProfilePage() {
                         <div id="mobSectionAltar" style={{ width: '100%', marginTop: '20px' }}>
                             <div className="duty-label">THE ALTAR</div>
                             <div className="mob-pyramid-stage" style={{ height: '240px', cursor: 'pointer' }} onClick={() => (window as any).openAltarDrawer()}>
-                                <div className="mob-idol side"><img id="mobRec_Slot2" src="" alt="Slot 2" /><div className="mob-rank-badge">II</div></div>
-                                <div className="mob-idol side right"><img id="mobRec_Slot3" src="" alt="Slot 3" /><div className="mob-rank-badge">III</div></div>
-                                <div className="mob-idol center"><img id="mobRec_Slot1" src="" alt="Slot 1" /><div className="mob-rank-badge main">I</div></div>
+                                <div className="mob-idol side"><img id="mobRec_Slot2" src="" alt="Slot 2" onerror="this.style.display='none'" /><div className="mob-rank-badge">II</div></div>
+                                <div className="mob-idol side right"><img id="mobRec_Slot3" src="" alt="Slot 3" onerror="this.style.display='none'" /><div className="mob-rank-badge">III</div></div>
+                                <div className="mob-idol center"><img id="mobRec_Slot1" src="" alt="Slot 1" onerror="this.style.display='none'" /><div className="mob-rank-badge main">I</div></div>
                             </div>
                             <div style={{ textAlign: 'center', fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', marginTop: '4px' }}>TAP TO VIEW RECORD</div>
                         </div>

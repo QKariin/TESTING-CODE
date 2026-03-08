@@ -124,7 +124,10 @@ export async function updateDetail(u: any) {
     const defaultPic = "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
     const finalPic = u.avatar || u.profilePicture || defaultPic;
 
-    if (profPic) profPic.src = getOptimizedUrl(finalPic, 200);
+    if (profPic) {
+        profPic.src = getOptimizedUrl(finalPic, 200);
+        profPic.onerror = () => { profPic.src = defaultPic; };
+    }
     if (headerBg) headerBg.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${getOptimizedUrl(finalPic, 400)}')`;
 
     let realRank = (u.hierarchy || "HALL BOY");
@@ -287,7 +290,7 @@ async function updateReviewQueue(u: any) {
             const optUrl = getOptimizedUrl(t.proofUrl || '', 400);
             const mediaTag = isVideo
                 ? `<video src="${optUrl}" class="pend-thumb" autoplay loop muted playsinline style="object-fit:cover;"></video>`
-                : `<img src="${optUrl}" class="pend-thumb" onerror="this.src='https://upcdn.io/kW2K8hR/raw/public/collar-192.png'">`;
+                : `<img src="${optUrl}" class="pend-thumb" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">`;
 
             return `
                     <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false)">

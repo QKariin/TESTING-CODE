@@ -116,7 +116,7 @@ export function renderSidebar() {
         html += `
             <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" onclick="window.selUser('${u.memberId}')" style="cursor: pointer;">
                 <div class="u-avatar-main">
-                    <img src="${finalPic}" alt="${clean(u.name)}">
+                    <img src="${finalPic}" alt="${clean(u.name)}" onerror="this.src='${defaultPic}'">
                 </div>
                 <div class="u-info">
                     <div class="u-name">${clean(u.name)}</div>

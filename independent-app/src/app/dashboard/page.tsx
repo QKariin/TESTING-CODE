@@ -276,7 +276,7 @@ export default function DashboardPage() {
                             </div>
                             <div className="vb-content">
                                 <div className="vb-av-box glow-blue">
-                                    <img id="bestSubAvatar" src="https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png" className="vb-av" alt="Top Subject" />
+                                    <img id="bestSubAvatar" src="https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png" className="vb-av" alt="Top Subject" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'" />
                                 </div>
                                 <div id="bestSubName" className="vb-name">Searching...</div>
                                 <div id="bestSubValue" className="vb-val">0 PTS</div>
@@ -383,7 +383,7 @@ export default function DashboardPage() {
                     <div className="qp-header">
                         <div className="qp-cover"></div>
                         <div className="qp-av-con">
-                            <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" className="qp-av" alt="Profile" />
+                            <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" className="qp-av" alt="Profile" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'" />
                         </div>
                         <div className="qp-name">QUEEN KARIN</div>
                         <div className="qp-status">SYSTEM ADMINISTRATOR</div>
@@ -537,7 +537,7 @@ export default function DashboardPage() {
                             <div id="apMirrorHeader" className="ap-mirror-header">
                                 <div id="dMirrorHierarchy" className="hierarchy-top">CHEVALIER</div>
                                 <div className="avatar-container">
-                                    <img id="dProfilePic" src="" alt="Profile" />
+                                    <img id="dProfilePic" src="" alt="Profile" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'" />
                                 </div>
                                 <div id="dMirrorName" className="identity-name" style={{ fontFamily: 'Cinzel', fontSize: '1.5rem', color: '#fff', marginBottom: '10px' }}>NAME</div>
 

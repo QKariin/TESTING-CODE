@@ -246,7 +246,9 @@ function renderTributes() {
 
         const quickItemsHtml = lastTributeHtml + quickItems.map((t) => `
             <div onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})" style="position:relative; border-radius:12px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.25s ease; box-shadow:0 4px 20px rgba(0,0,0,0.4);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 30px rgba(197,160,89,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.4)';">
-                <div style="width:100%; height:120px; background:url('${getOptimizedUrl(t.image, 400)}') center/cover; background-color:#050510;"></div>
+                    <div style="width:100%; height:120px; background-color:#050510; position:relative; overflow:hidden;">
+                        <img src="${getOptimizedUrl(t.image, 400)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">
+                    </div>
                 <div style="position:absolute; top:10px; right:10px; background:rgba(5,5,20,0.85); border:1px solid rgba(197,160,89,0.5); border-radius:20px; padding:4px 10px; display:flex; align-items:center; gap:5px; backdrop-filter:blur(5px);">
                     <i class="fas fa-coins" style="color:#c5a059; font-size:0.7rem;"></i>
                     <span style="font-family:'Orbitron', sans-serif; font-size:0.75rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${t.price.toLocaleString()}</span>
@@ -319,7 +321,8 @@ function renderTributes() {
                     </div>
 
                     <!-- RIGHT: Big image -->
-                    <div style="width:260px; flex-shrink:0; background-color:#050510; background-image:url('${getOptimizedUrl(t.image, 600)}'); background-size:cover; background-position:center; position:relative; min-height:300px; border-radius:0 20px 20px 0;">
+                    <div style="width:260px; flex-shrink:0; background-color:#050510; position:relative; min-height:300px; border-radius:0 20px 20px 0; overflow:hidden;">
+                        <img src="${getOptimizedUrl(t.image, 600)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">
                         <div style="position:absolute; inset:0; background:linear-gradient(to right, rgba(10,10,20,0.6) 0%, transparent 40%); border-radius:0 20px 20px 0;"></div>
                     </div>
                 </div>
@@ -331,7 +334,9 @@ function renderTributes() {
                     onmouseout="this.style.boxShadow='0 4px 25px rgba(0,0,0,0.5)'; this.style.borderColor='rgba(197,160,89,0.2)'; this.style.transform='translateY(0)';">
 
                     <!-- Product image (fixed height) -->
-                    <div style="width:100%; height:120px; background:url('${getOptimizedUrl(t.image, 400)}') center/cover; background-color:#050510; flex-shrink:0;"></div>
+                    <div style="width:100%; height:120px; background-color:#050510; position:relative; overflow:hidden; flex-shrink:0;">
+                         <img src="${getOptimizedUrl(t.image, 400)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">
+                    </div>
 
                     <!-- Price badge -->
                     <div style="position:absolute; top:8px; right:8px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:3px 9px; display:flex; align-items:center; gap:4px; backdrop-filter:blur(6px);">
@@ -385,7 +390,9 @@ function renderGridMobile(gridEl: HTMLElement) {
 
             return `
             <div style="grid-column:span 2; border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.25); box-shadow:0 4px 20px rgba(0,0,0,0.5);">
-                <div style="width:100%; height:130px; background-image:url('${img}'); background-size:cover; background-position:center; background-color:#050510;"></div>
+                <div style="width:100%; height:130px; background-color:#050510; position:relative; overflow:hidden;">
+                    <img src="${img}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">
+                </div>
                 <div style="padding:14px; display:flex; flex-direction:column; gap:10px;">
                     <div style="font-family:'Cinzel',serif; font-size:1rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase;">${t.title}</div>
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -411,7 +418,8 @@ function renderGridMobile(gridEl: HTMLElement) {
 
         return `
         <div style="border-radius:12px; background:#0a0a14; border:1px solid rgba(197,160,89,0.22); display:flex; flex-direction:column; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.4); min-height:180px; overflow:visible;">
-            <div style="width:100%; height:110px; background-image:url('${img}'); background-size:cover; background-position:center; background-color:#111; border-radius:12px 12px 0 0; position:relative; flex-shrink:0;">
+            <div style="width:100%; height:110px; background-color:#111; border-radius:12px 12px 0 0; position:relative; flex-shrink:0; overflow:hidden;">
+                <img src="${img}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">
                 <div style="position:absolute; top:6px; right:6px; background:rgba(5,5,20,0.92); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:2px 8px; display:flex; align-items:center; gap:3px;">
                     <i class="fas fa-coins" style="color:#c5a059; font-size:0.5rem;"></i>
                     <span style="font-family:'Orbitron',sans-serif; font-size:0.55rem; color:#c5a059; font-weight:700;">${t.price.toLocaleString()}</span>
