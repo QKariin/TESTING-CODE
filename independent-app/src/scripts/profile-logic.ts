@@ -2117,18 +2117,25 @@ function _initMobGlRealtime() {
         .subscribe();
 }
 
+function _buildMobGlBubble(msg: any, myEmail: string): string {
+    const isMe = (msg.sender_email || '').toLowerCase() === myEmail.toLowerCase();
+    const name = msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT';
+    const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const label = isMe ? `YOU · ${time}` : `${name} · ${time}`;
+    return `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">
+        <div class="msg-col" style="align-items:${isMe ? 'flex-end' : 'flex-start'};">
+            <div class="msg ${isMe ? 'm-slave' : 'm-queen'}">${msg.message || ''}</div>
+            <div class="msg-time">${label}</div>
+        </div>
+    </div>`;
+}
+
 function _appendMobGlMessage(msg: any) {
     const container = document.getElementById('mobGlTalkFeed');
     if (!container || !msg?.message) return;
-    const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const el = document.createElement('div');
-    el.className = 'mob-gl-talk-msg';
-    el.innerHTML = `
-        <span class="mob-gl-talk-name">${msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT'}</span>
-        <span class="mob-gl-talk-content">${msg.message}</span>
-        <span class="mob-gl-talk-time">${time}</span>
-    `;
-    container.appendChild(el);
+    const { memberId, id } = getState();
+    const myEmail = memberId || id || '';
+    container.insertAdjacentHTML('beforeend', _buildMobGlBubble(msg, myEmail));
     container.scrollTop = container.scrollHeight;
 }
 
@@ -2139,13 +2146,9 @@ function _renderMobGlTalk(msgs: any[]) {
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO MESSAGES YET</div>`;
         return;
     }
-    container.innerHTML = msgs.map((m: any) => `
-        <div class="mob-gl-talk-msg">
-            <span class="mob-gl-talk-name">${m.sender_name || m.sender_email?.split('@')[0] || 'SLAVE'}</span>
-            <span class="mob-gl-talk-content">${m.message || ''}</span>
-            <span class="mob-gl-talk-time">${new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-        </div>
-    `).join('');
+    const { memberId, id } = getState();
+    const myEmail = memberId || id || '';
+    container.innerHTML = msgs.map((m: any) => _buildMobGlBubble(m, myEmail)).join('');
     container.scrollTop = container.scrollHeight;
 }
 

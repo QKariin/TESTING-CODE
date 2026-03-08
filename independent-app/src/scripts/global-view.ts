@@ -88,6 +88,7 @@ function _loadAllPreviews() {
     _loadSidePanels();
     _initTalkRealtime();
     _loadUpdatesPreview();
+    _initUpdatesRealtime();
     _loadSpendersPreview();
     _loadQueenPreview();
 }
@@ -546,31 +547,11 @@ function _buildBubble(msg: any, myEmail: string): string {
     const isMe = (msg.sender_email || '').toLowerCase() === myEmail.toLowerCase();
     const name = msg.sender_name || 'SUBJECT';
     const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const av = msg.sender_avatar;
-    const initial = (name[0] || 'S').toUpperCase();
-
-    if (isMe) {
-        return `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
-            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.22);margin-bottom:4px;letter-spacing:1px;">YOU · ${time}</div>
-            <div style="max-width:70%;padding:9px 13px;background:rgba(55,55,60,0.85);border:1px solid rgba(100,100,110,0.3);border-radius:14px 14px 3px 14px;">
-                <div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
-            </div>
-        </div>`;
-    }
-
-    const avatarHtml = av
-        ? `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-        : '';
-    return `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
-        <div style="width:32px;height:32px;border-radius:50%;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.25);overflow:hidden;flex-shrink:0;position:relative;">
-            ${avatarHtml}
-            <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">${initial}</div>
-        </div>
-        <div style="max-width:70%;">
-            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.55);margin-bottom:4px;letter-spacing:1px;">${name} · ${time}</div>
-            <div style="padding:9px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:3px 14px 14px 14px;">
-                <div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
-            </div>
+    const label = isMe ? `YOU · ${time}` : `${name} · ${time}`;
+    return `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">
+        <div class="msg-col" style="align-items:${isMe ? 'flex-end' : 'flex-start'};">
+            <div class="msg ${isMe ? 'm-slave' : 'm-queen'}">${msg.message || ''}</div>
+            <div class="msg-time">${label}</div>
         </div>
     </div>`;
 }
@@ -751,13 +732,15 @@ function _initUpdatesRealtime() {
                 const isPhoto = row.type === 'global_update';
                 if (!isWishlist && !isMerit && !isPhoto) return;
 
-                // Re-fetch to get enriched profile data then prepend
+                // Re-fetch to get enriched profile data then refresh both panels
                 fetch('/api/global/updates')
                     .then(r => r.json())
                     .then(({ updates }) => {
+                        if (!updates?.length) return;
                         const grid = document.getElementById('globalUpdatesGrid');
-                        if (!grid) return;
-                        if (updates?.length) grid.innerHTML = updates.map((u: any) => _buildUpdateCard(u)).join('');
+                        if (grid) grid.innerHTML = updates.map((u: any) => _buildUpdateCard(u)).join('');
+                        const preview = document.getElementById('globalPreview_updates');
+                        if (preview) preview.innerHTML = updates.slice(0, 4).map((u: any) => _buildUpdateCardPreview(u)).join('');
                     })
                     .catch(() => {});
             }
