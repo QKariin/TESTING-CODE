@@ -172,6 +172,7 @@ export default function ProfilePage() {
                 }
                 // ─────────────────────────────────────────────────────────────
 
+                // Get the authenticated user's email from the client-side auth session
                 const supabase = createClient();
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
@@ -179,31 +180,14 @@ export default function ProfilePage() {
                     return;
                 }
 
-                // 1. Fetch Identity (PROFILES)
-                const { data: profileData } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('member_id', user.email)
-                    .maybeSingle();
+                // Fetch all data via the admin API route (same as dashboard) — bypasses RLS
+                // Uses supabaseAdmin internally, returns merged profiles + tasks + crowdfund
+                const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(user.email!)}&full=true`);
+                const unifiedData = await res.json();
 
-                let baseProfile = profileData || (await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()).data;
+                if (unifiedData && !unifiedData.error && unifiedData.member_id) {
+                    console.log("[PROFILE] Loaded Data:", unifiedData);
 
-                if (baseProfile) {
-                    // 2. Fetch Stats (TASKS) — ilike for case-insensitive email match
-                    const { data: taskData } = await supabase
-                        .from('tasks')
-                        .select('*')
-                        .ilike('member_id', baseProfile.member_id)
-                        .maybeSingle();
-                    // 3. MERGE (Without renaming keys!)
-                    const unifiedData = {
-                        ...baseProfile,
-                        ...(taskData || {})
-                    };
-
-                    console.log("[ONE SOURCE] Loaded Data:", unifiedData);
-
-                    // 4. Initialize State & UI
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
 
@@ -214,7 +198,7 @@ export default function ProfilePage() {
                         switchTab('serve');
                         getRandomTask(true);
                         loadQueenPosts();
-                        renderHistoryAndAltar(unifiedData); // Populate Records tab
+                        renderHistoryAndAltar(unifiedData);
 
                         // Initialize Chat & Tracking
                         initChatSystem();
