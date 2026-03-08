@@ -501,7 +501,12 @@ export default function ProfilePage() {
                                     <button id="btnMediaPlus" className="chat-btn-plus" onClick={() => handleMediaPlus()}>+</button>
                                     <input type="text" id="chatMsgInput" className="chat-input" placeholder="Communicate with Queen Karin..." onKeyPress={(e: any) => handleChatKey(e)} />
                                 </div>
-                                <button className="chat-btn-send" onClick={() => sendChatMessage()} style={{ background: '#c5a059', borderRadius: 15, width: 45, height: 45, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{'>'}</button>
+                                <button className="chat-btn-send" onClick={() => sendChatMessage()} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
