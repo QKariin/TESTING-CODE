@@ -223,7 +223,7 @@ export default function ProfilePage() {
                 }
             } catch (err) {
                 console.error("Critical Load Error:", err);
-
+            } finally {
                 setLoading(false);
             }
         }
