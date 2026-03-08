@@ -2296,18 +2296,19 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     const existingChips = isChip && existingValue ? existingValue.split(',').map(s => s.trim()) : [];
 
     if (isChip) {
-        inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">SELECT AT LEAST 3 · ${costPerItem} COINS EACH</div>`;
+        inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">SAVED ITEMS ARE FREE · NEW ITEMS: ${costPerItem} ₡ EACH · MIN 3 TOTAL</div>`;
         inner += `<div id="_chipGrid" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;margin-bottom:14px;padding-right:4px;">`;
         CHIP_LIST.forEach(item => {
-            const isSelected = existingChips.includes(item);
-            const extraClass = isSelected ? ' _selected' : '';
-            const borderCol = isSelected ? '#c5a059' : '#2a2a2a';
-            const textCol = isSelected ? '#c5a059' : '#888';
-            const bgCol = isSelected ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
-
-            inner += `<div class="_reqChip${extraClass}" data-value="${item}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid ${borderCol};background:${bgCol};color:${textCol};font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${costPerItem}</span></div>`;
+            const isExisting = existingChips.includes(item);
+            const extraClass = isExisting ? ' _selected' : '';
+            const existingAttr = isExisting ? ' data-existing="true"' : '';
+            if (isExisting) {
+                inner += `<div class="_reqChip${extraClass}" data-value="${item}"${existingAttr} style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #00cc66;background:rgba(0,204,102,0.08);color:#00cc66;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.6rem;color:#00cc66;letter-spacing:1px;">✓ SAVED</span></div>`;
+            } else {
+                inner += `<div class="_reqChip" data-value="${item}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #2a2a2a;background:rgba(0,0,0,0.5);color:#888;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${costPerItem} ₡</span></div>`;
+            }
         });
-        inner += `</div><div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">TOTAL COST: 0 COINS</div>`;
+        inner += `</div><div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">NEW ITEMS: 0 · TOTAL COST: 0 COINS</div>`;
     } else if (isRoutine) {
         inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">PRESET: 1,000 COINS · CUSTOM: 2,000 COINS</div>`;
         inner += `<div id="_chipGrid" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">`;
@@ -2338,23 +2339,28 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     document.body.appendChild(overlay);
 
     if (isChip) {
-        const updateInitialCost = () => {
-            const count = box.querySelectorAll('._selected').length;
+        const updateCostDisplay = () => {
+            const newCount = box.querySelectorAll('._reqChip:not([data-existing="true"])._selected').length;
             const costDisplay = box.querySelector('#_reqCostDisplay') as HTMLElement;
-            if (costDisplay) costDisplay.innerText = `TOTAL COST: ${count * costPerItem} COINS`;
+            if (costDisplay) costDisplay.innerText = `NEW ITEMS: ${newCount} · TOTAL COST: ${(newCount * costPerItem).toLocaleString()} COINS`;
         };
-        updateInitialCost(); // run once on open
+        updateCostDisplay(); // run once on open
 
         box.querySelectorAll<HTMLElement>('._reqChip').forEach(chip => {
             chip.addEventListener('click', () => {
+                const isExisting = chip.getAttribute('data-existing') === 'true';
                 chip.classList.toggle('_selected');
                 const isOn = chip.classList.contains('_selected');
-                chip.style.borderColor = isOn ? '#c5a059' : '#2a2a2a';
-                chip.style.color = isOn ? '#c5a059' : '#888';
-                chip.style.background = isOn ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
-                const count = box.querySelectorAll('._selected').length;
-                const costDisplay = document.getElementById('_reqCostDisplay')!;
-                if (costDisplay) costDisplay.textContent = `TOTAL COST: ${(count * costPerItem).toLocaleString()} COINS`;
+                if (isExisting) {
+                    chip.style.borderColor = isOn ? '#00cc66' : '#2a2a2a';
+                    chip.style.color = isOn ? '#00cc66' : '#555';
+                    chip.style.background = isOn ? 'rgba(0,204,102,0.08)' : 'rgba(0,0,0,0.3)';
+                } else {
+                    chip.style.borderColor = isOn ? '#c5a059' : '#2a2a2a';
+                    chip.style.color = isOn ? '#c5a059' : '#888';
+                    chip.style.background = isOn ? 'rgba(197,160,89,0.1)' : 'rgba(0,0,0,0.5)';
+                }
+                updateCostDisplay();
             });
         });
     }
@@ -2450,7 +2456,9 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
         const selected = Array.from(box.querySelectorAll<HTMLElement>('._selected')).map(el => el.getAttribute('data-value') || '').filter(Boolean);
         if (selected.length < 3) { showErr('Select at least 3 items.'); return; }
         value = selected.join(', ');
-        cost = selected.length * costPerItem;
+        // Only charge for newly added items — existing (already paid) ones are free
+        const newItems = Array.from(box.querySelectorAll<HTMLElement>('._reqChip:not([data-existing="true"])._selected')).map(el => el.getAttribute('data-value') || '').filter(Boolean);
+        cost = newItems.length * costPerItem;
     } else if (isRoutine) {
         const selectedChip = box.querySelector<HTMLElement>('._routineChip._selected');
         if (!selectedChip) { showErr('Please select a protocol.'); return; }
