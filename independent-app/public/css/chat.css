@@ -413,6 +413,135 @@
     border-color: rgba(255, 0, 60, 0.2);
 }
 
+/* =========================================
+   1b. DESKTOP CHAT BUBBLES (cb-* classes)
+   Mirrors mobile WhatsApp layout for #chatContent
+   ========================================= */
+
+#chatContent .cb-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 0 20px;
+    margin-bottom: 10px;
+}
+#chatContent .cb-row-me    { justify-content: flex-end; }
+#chatContent .cb-row-queen { justify-content: flex-start; }
+
+#chatContent .cb-queen-av {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(197,160,89,0.4);
+    flex-shrink: 0;
+    align-self: flex-end;
+    margin-bottom: 20px;
+}
+
+#chatContent .cb-wrap-me {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: 65%;
+}
+#chatContent .cb-wrap-queen {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 65%;
+}
+
+#chatContent .cb-queen {
+    background: #000;
+    box-shadow: 0 0 0 1px rgba(197,160,89,0.6),
+                inset 0 0 20px rgba(197,160,89,0.04);
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    letter-spacing: 0.2px;
+    padding: 11px 16px;
+    border-radius: 16px 16px 16px 3px;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+#chatContent .cb-slave {
+    background: #1c1c1e;
+    color: #ffffff;
+    font-family: 'Cinzel', serif;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    letter-spacing: 0.2px;
+    padding: 11px 16px;
+    border-radius: 16px 16px 3px 16px;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+#chatContent .chat-ts {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.8px;
+    margin-top: 4px;
+}
+#chatContent .chat-ts-left  { color: rgba(197,160,89,0.45); text-align: left; }
+#chatContent .chat-ts-right { color: #444; text-align: right; }
+
+#chatContent .chat-gift-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 12px 0 6px;
+}
+#chatContent .chat-gift-card {
+    width: 220px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0a0a14;
+    border: 1px solid rgba(197,160,89,0.35);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+}
+#chatContent .chat-gift-img {
+    width: 100%;
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+    background-color: #050510;
+    position: relative;
+}
+#chatContent .chat-gift-price {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    background: rgba(5,5,20,0.9);
+    border: 1px solid rgba(197,160,89,0.6);
+    border-radius: 20px;
+    padding: 3px 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    color: #c5a059;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+#chatContent .chat-gift-body { padding: 10px 14px 14px; }
+#chatContent .chat-gift-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.45rem;
+    color: rgba(197,160,89,0.5);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+}
+#chatContent .chat-gift-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
 
 /* =========================================
    2. MOBILE OVERRIDE (CHAT + TRIBUTE SYSTEM)
