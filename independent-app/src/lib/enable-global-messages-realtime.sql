@@ -22,9 +22,10 @@ ALTER TABLE public.global_messages REPLICA IDENTITY FULL;
 ALTER TABLE public.global_messages ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Authenticated users can read global messages" ON public.global_messages;
-CREATE POLICY "Authenticated users can read global messages"
+DROP POLICY IF EXISTS "Anyone can read global messages" ON public.global_messages;
+CREATE POLICY "Anyone can read global messages"
 ON public.global_messages FOR SELECT
-USING (auth.role() = 'authenticated');
+USING (true);
 
 DROP POLICY IF EXISTS "Authenticated users can insert global messages" ON public.global_messages;
 CREATE POLICY "Authenticated users can insert global messages"

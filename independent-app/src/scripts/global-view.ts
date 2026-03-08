@@ -1,6 +1,6 @@
 // src/scripts/global-view.ts
 import { getState } from './profile-state';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/utils/supabase/client';
 
 let currentPeriod: 'today' | 'alltime' | 'weekly' | 'monthly' = 'today';
 let talkPollInterval: ReturnType<typeof setInterval> | null = null;
@@ -475,11 +475,7 @@ function _initTalkRealtime() {
     _fetchAndRenderOnline();
 
     // Realtime subscription on global_messages
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const sb = createClient(supabaseUrl, supabaseAnonKey);
-
-    realtimeChannel = sb
+    realtimeChannel = createClient()
         .channel('global_messages_channel')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' },
             (payload: any) => {
@@ -744,11 +740,8 @@ function _buildPhotoCard(u: any): string {
 
 function _initUpdatesRealtime() {
     if (updatesChannel) return; // already subscribed
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const sb = createClient(supabaseUrl, supabaseAnonKey);
 
-    updatesChannel = sb
+    updatesChannel = createClient()
         .channel('global_updates_channel')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' },
             (payload: any) => {
