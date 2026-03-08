@@ -24,12 +24,12 @@ export async function POST(req: Request) {
     // Get sender profile for name + avatar
     const { data: profile } = await supabaseAdmin
         .from('profiles')
-        .select('name, avatar_url, profile_picture_url')
+        .select('name, avatar_url')
         .ilike('member_id', senderEmail)
         .maybeSingle();
 
     const senderName = profile?.name || senderEmail.split('@')[0] || 'SUBJECT';
-    const senderAvatar = profile?.avatar_url || profile?.profile_picture_url || null;
+    const senderAvatar = profile?.avatar_url || null;
 
     const { data, error } = await supabaseAdmin
         .from('global_messages')

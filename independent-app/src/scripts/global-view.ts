@@ -483,6 +483,9 @@ function _initTalkRealtime() {
         .channel('global_messages_channel')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' },
             (payload: any) => {
+                const myEmail = getState().raw?.member_id || getState().raw?.email || '';
+                // Skip own messages — already shown optimistically on send
+                if ((payload.new?.sender_email || '').toLowerCase() === myEmail.toLowerCase()) return;
                 _appendMessage(payload.new);
             }
         )
@@ -618,13 +621,26 @@ export async function sendGlobalMessage() {
     const senderEmail = raw?.member_id || raw?.email;
     if (!senderEmail) return;
     input.value = '';
+
+    // Optimistic: show instantly with local profile data
+    const senderName = raw?.name || senderEmail.split('@')[0] || 'SUBJECT';
+    const senderAvatar = raw?.avatar_url || raw?.avatar || null;
+    _appendMessage({
+        sender_email: senderEmail,
+        sender_name: senderName,
+        sender_avatar: senderAvatar,
+        message,
+        created_at: new Date().toISOString(),
+    });
+
     try {
         await fetch('/api/global/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message, senderEmail }),
         });
-        // Realtime will append the message — no need to re-fetch
+        // Realtime will NOT duplicate — the optimistic bubble already shows it.
+        // On next poll/open the real record loads with correct name/avatar.
     } catch {}
 }
 
