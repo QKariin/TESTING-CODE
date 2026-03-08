@@ -34,33 +34,7 @@ export async function GET(request: NextRequest) {
             .eq('member_id', email);
         const crowdfundTotal = (contribData || []).reduce((sum: number, r: any) => sum + (r.amount_given || 0), 0);
 
-        // Extract parameters JSONB and compute hierarchy fields same as mapUserForDashboard
-        const params = (profileData as any)?.parameters || {};
-        let taskdomHistory: any[] = [];
-        if (taskData && (taskData as any).Taskdom_History) {
-            try {
-                const raw = (taskData as any).Taskdom_History;
-                taskdomHistory = typeof raw === 'string' ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
-            } catch (e) { taskdomHistory = []; }
-        }
-        const approvedTasks = taskdomHistory.filter((h: any) => h.status === 'approve' && !h.isRoutine).length;
-
-        return NextResponse.json({
-            ...profileData,
-            ...(taskData || {}),
-            _totalSpent: crowdfundTotal,
-            // Explicit mappings required by getHierarchyReport
-            kneelCount: Number((taskData as any)?.kneelCount || 0),
-            taskdom_completed_tasks: approvedTasks || Number((taskData as any)?.Taskdom_CompletedTasks || params.taskdom_completed_tasks || 0),
-            total_coins_spent: Number(params.total_coins_spent || (profileData as any)?.total_coins_spent || 0),
-            // Identity/check fields
-            image: (profileData as any)?.avatar_url || (profileData as any)?.profile_picture_url || '',
-            title: (profileData as any)?.name || '',
-            kinks: (profileData as any)?.kinks || '',
-            limits: (profileData as any)?.limits || '',
-            routineHistory: taskdomHistory,
-            routinehistory: taskdomHistory,
-        });
+        return NextResponse.json({ ...profileData, ...(taskData || {}), _totalSpent: crowdfundTotal });
     }
 
     const { data, error } = await supabase
