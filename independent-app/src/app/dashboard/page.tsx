@@ -109,7 +109,9 @@ export default function DashboardPage() {
                     endTime: u.parameters?.taskdom_end_time || null,
                     status: u.parameters?.status || u.hierarchy,
                     kneelCount: u.kneel_history?.totalSessions || 0,
-                    kneelHistory: u.kneel_history || {}
+                    kneelHistory: u.kneel_history || {},
+                    lastSeen: u.last_active,
+                    lastMessageTime: u.parameters?.lastMessageTime ? new Date(u.parameters.lastMessageTime).getTime() : 0
                 }));
 
                 setUsers(mappedUsers);

@@ -384,6 +384,10 @@ body {
     fill: var(--pink) !important;
 }
 
+.active-blue {
+    fill: var(--blue) !important;
+}
+
 .icon-dim {
     opacity: 0.15;
     fill: #555;
