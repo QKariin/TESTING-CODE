@@ -260,18 +260,18 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* BEST SUB */}
-                        <div className="v-best-sub glass-card span-1">
+                        {/* ENTER GLOBAL */}
+                        <div className="v-best-sub glass-card span-1" onClick={() => window.location.href = '/global'} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.22)')}>
                             <div className="vb-header">
-                                <div className="vb-title">Top Subject</div>
-                                <div className="vb-sub">Merit Leader</div>
+                                <div className="vb-title" style={{ fontFamily: 'Cinzel', color: '#c5a059', letterSpacing: '2px' }}>GLOBAL</div>
+                                <div className="vb-sub">Community Hub</div>
                             </div>
                             <div className="vb-content">
-                                <div className="vb-av-box glow-blue">
-                                    <img id="bestSubAvatar" src="https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png" className="vb-av" alt="Top Subject" onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
+                                <div style={{ width: 64, height: 64, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, background: 'rgba(197,160,89,0.06)', boxShadow: '0 0 24px rgba(197,160,89,0.12)' }}>
+                                    <span style={{ fontSize: '1.6rem', color: '#c5a059', opacity: 0.85 }}>◎</span>
                                 </div>
-                                <div id="bestSubName" className="vb-name">Searching...</div>
-                                <div id="bestSubValue" className="vb-val">0 PTS</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '2px' }}>LEADERBOARD · TALK · QUEEN</div>
+                                <div style={{ marginTop: 10, padding: '5px 18px', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', background: 'rgba(197,160,89,0.08)' }}>ENTER ↗</div>
                             </div>
                         </div>
 
