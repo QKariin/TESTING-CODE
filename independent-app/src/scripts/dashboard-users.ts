@@ -17,9 +17,8 @@ let fillerUserId: string | null = null;
 const mainDashboardExpandedTasks = new Set<string>();
 
 function calculateRoutineStreak(historyStr: string | any[]): number {
-    // ... (logic remains same for fallback if needed, but getHierarchyReport will handle most)
     if (!historyStr) return 0;
-    // ... (rest of the function)
+    return 0;
 }
 
 // Keep the internal streak calculator for fallback if needed, but we'll prioritize getHierarchyReport

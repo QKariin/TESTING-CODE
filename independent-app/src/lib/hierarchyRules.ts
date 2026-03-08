@@ -41,6 +41,8 @@ export interface HierarchyReport {
     isMax: boolean;
     canPromote: boolean;
     requirements: HierarchyRequirement[];
+    currentBenefits: string[];
+    nextBenefits: string[];
 }
 
 export interface HierarchyRule {
@@ -59,6 +61,7 @@ export interface HierarchyRule {
         photo?: boolean;
     };
     benefits: string[];
+    speakCost?: number;
 }
 
 export const HIERARCHY_RULES: HierarchyRule[] = [
@@ -67,43 +70,43 @@ export const HIERARCHY_RULES: HierarchyRule[] = [
         req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 365, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
         benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."],
         speakCost: 0
-    } as any,
+    },
     {
         name: "Secretary",
         req: { tasks: 500, kneels: 1500, points: 100000, spent: 500000, streak: 180, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
         benefits: ["The Line: A direct Audio Connection.", "Authority: Access to System Commands.", "The Throne: Total, Unfiltered Access."],
         speakCost: 0
-    } as any,
+    },
     {
         name: "Chamberlain",
         req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 90, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
         benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."],
         speakCost: 0
-    } as any,
+    },
     {
         name: "Butler",
         req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 30, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
         benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions.", "Speak Cost: 5 Coins."],
         speakCost: 5
-    } as any,
+    },
     {
         name: "Silverman",
         req: { tasks: 25, kneels: 65, points: 5000, spent: 5000, streak: 5, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
         benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."],
         speakCost: 10
-    } as any,
+    },
     {
         name: "Footman",
         req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0, name: true, photo: true },
         benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."],
         speakCost: 15
-    } as any,
+    },
     {
         name: "Hall Boy",
         req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
         benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks.", "Speak Cost: 20 Coins."],
         speakCost: 20
-    } as any
+    }
 ];
 
 // --- HELPER: RANK DETERMINATION (Dynamic Logic) ---
@@ -123,7 +126,9 @@ export function getHierarchyReport(item: SlaveRecord): HierarchyReport {
             nextRank: HIERARCHY_RULES[HIERARCHY_RULES.length - 2].name,
             isMax: false,
             canPromote: false,
-            requirements: []
+            requirements: [],
+            currentBenefits: HIERARCHY_RULES[HIERARCHY_RULES.length - 1].benefits,
+            nextBenefits: HIERARCHY_RULES[HIERARCHY_RULES.length - 2].benefits
         };
     }
     const clean = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -187,6 +192,7 @@ function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport
     const nextIndex = currentIndex - 1;
     const isMax = nextIndex < 0;
 
+    const currentRankObj = currentIndex >= 0 ? HIERARCHY_RULES[currentIndex] : HIERARCHY_RULES[HIERARCHY_RULES.length - 1];
     const nextRankObj = isMax ? HIERARCHY_RULES[0] : HIERARCHY_RULES[nextIndex];
     const req = nextRankObj.req;
 
@@ -195,7 +201,9 @@ function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport
         nextRank: nextRankObj.name,
         isMax: isMax,
         canPromote: false,
-        requirements: []
+        requirements: [],
+        currentBenefits: currentRankObj.benefits,
+        nextBenefits: isMax ? [] : nextRankObj.benefits
     };
 
     if (isMax) return report;

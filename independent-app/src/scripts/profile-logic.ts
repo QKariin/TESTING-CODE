@@ -2776,7 +2776,7 @@ export function renderProfileSidebar(u: any) {
         let html = '';
         requirements.forEach(r => {
             if (r.type === 'bar') {
-                html += buildBar(r.label, iconMap[r.label] || '•', r.current, r.target);
+                html += buildBar(r.label, iconMap[r.label] || '•', r.current ?? 0, r.target ?? 0);
             } else {
                 // Hide IDENTITY and PHOTO rows entirely if already verified
                 if ((r.label === 'IDENTITY' || r.label === 'PHOTO') && r.status === 'VERIFIED') return;
@@ -2784,7 +2784,7 @@ export function renderProfileSidebar(u: any) {
                 // Safely grab the actual string value from the profile for the modal
                 const _rawVal = fieldKey ? (u[fieldKey] || u.parameters?.[fieldKey] || '') : '';
                 const rawValue = _rawVal ? (typeof _rawVal === 'string' ? _rawVal : JSON.stringify(_rawVal)) : '';
-                html += buildCheck(r.label, r.status, fieldKey, rawValue);
+                html += buildCheck(r.label, r.status ?? '', fieldKey, rawValue);
             }
         });
 
