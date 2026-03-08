@@ -228,7 +228,8 @@ function renderTelemetry(u: any) {
     const container = document.getElementById('admin_TelemetryContainer');
     if (!container) return;
 
-    const data = u.tracking_data || {};
+    // Check both top-level and nested in parameters
+    const data = u.tracking_data || u.parameters?.tracking_data || {};
     if (Object.keys(data).length === 0) {
         container.innerHTML = '<div style="color:#444; font-size:0.6rem; text-align:center; grid-column:span 2;">NO DATA RECEIVED</div>';
         return;

@@ -45,7 +45,21 @@ export async function POST(req: NextRequest) {
         };
 
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-        let query = supabase.from('profiles').update({ tracking_data: trackingData });
+
+        // Use a more resilient approach: Update parameters JSONB and try tracking_data column
+        const updateData: any = {
+            tracking_data: trackingData, // Still try the dedicated column
+            last_active: new Date().toISOString()
+        };
+
+        // Also merge into existing parameters if possible (requires fetching first to be safe, but let's try a direct update first)
+        // Note: Supabase doesn't support partial JSONB updates via .update() easily without overwriting the whole column.
+        // However, we can use the 'parameters' column if it exists.
+
+        // Since we know 'parameters' exists from our schema check, let's use it as a reliable fallback/primary.
+        // To be safe and not overwrite other params, we'll just try to update tracking_data and last_active first.
+
+        let query = supabase.from('profiles').update(updateData);
 
         if (isUuid) {
             query = query.or(`id.eq.${userId},member_id.eq.${userId}`);
@@ -54,6 +68,36 @@ export async function POST(req: NextRequest) {
         }
 
         const { error } = await query;
+        if (error && error.message.includes("tracking_data")) {
+            console.log("Dedicated tracking_data column missing, falling back to parameters...");
+
+            // 1. Fetch current parameters
+            let fetchQuery = supabase.from('profiles').select('parameters');
+            if (isUuid) fetchQuery = fetchQuery.or(`id.eq.${userId},member_id.eq.${userId}`);
+            else fetchQuery = fetchQuery.eq('member_id', userId);
+
+            const { data: profile } = await fetchQuery.maybeSingle();
+            const currentParams = profile?.parameters || {};
+
+            // 2. Update parameters with merged tracking data
+            const fallbackQuery = supabase.from('profiles').update({
+                parameters: {
+                    ...currentParams,
+                    tracking_data: trackingData
+                },
+                last_active: new Date().toISOString()
+            });
+            if (isUuid) fallbackQuery.or(`id.eq.${userId},member_id.eq.${userId}`);
+            else fallbackQuery.eq('member_id', userId);
+
+            const { error: fallbackError } = await fallbackQuery;
+            if (fallbackError) {
+                console.error("Fallback Tracking Update Error:", fallbackError);
+                return NextResponse.json({ error: fallbackError.message }, { status: 500 });
+            }
+
+            return NextResponse.json({ success: true, note: "stored_in_parameters" });
+        }
 
         if (error) {
             console.error("Tracking Ping Update Error:", error);
