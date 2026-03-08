@@ -206,7 +206,7 @@ export default function GlobalPage() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 0 10px', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                         <button id="globalUploadBtn" onClick={() => document.getElementById('globalPhotoInput')?.click()} style={{ padding: '7px 18px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', color: '#000', fontFamily: 'Orbitron', fontSize: '0.52rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>+ SHARE PHOTO</button>
                     </div>
-                    <div id="globalUpdatesGrid" style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', padding: '12px 0', alignContent: 'start' }}></div>
+                    <div id="globalUpdatesGrid" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px 0' }}></div>
                 </div>
 
                 <div id="gPanel_spenders" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden', margin: '0 10px 10px' }}>

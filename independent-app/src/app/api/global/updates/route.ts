@@ -4,38 +4,103 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    const { data, error } = await supabaseAdmin
-        .from('chats')
-        .select('member_id, content, created_at')
-        .eq('type', 'global_update')
-        .order('created_at', { ascending: false })
-        .limit(60);
+    // Fetch photos, tributes, and points events in parallel
+    const [photosRes, tributesRes, pointsRes] = await Promise.all([
+        supabaseAdmin
+            .from('chats')
+            .select('member_id, content, created_at')
+            .eq('type', 'global_update')
+            .order('created_at', { ascending: false })
+            .limit(30),
+        supabaseAdmin
+            .from('chats')
+            .select('member_id, content, metadata, created_at')
+            .eq('type', 'wishlist')
+            .order('created_at', { ascending: false })
+            .limit(30),
+        supabaseAdmin
+            .from('chats')
+            .select('member_id, content, created_at')
+            .eq('type', 'system')
+            .ilike('content', '%MERIT%')
+            .order('created_at', { ascending: false })
+            .limit(30),
+    ]);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // Batch-lookup profiles for all senders
+    const allEmails = [...new Set([
+        ...(photosRes.data || []).map((r: any) => r.member_id),
+        ...(tributesRes.data || []).map((r: any) => r.member_id),
+        ...(pointsRes.data || []).map((r: any) => r.member_id),
+    ].filter(Boolean))];
 
-    const emails = [...new Set((data || []).map((m: any) => m.member_id))];
-    const { data: profiles } = emails.length
-        ? await supabaseAdmin.from('profiles').select('email, name').in('email', emails)
+    const { data: profiles } = allEmails.length
+        ? await supabaseAdmin
+            .from('profiles')
+            .select('member_id, name, avatar_url, profile_picture_url')
+            .in('member_id', allEmails)
         : { data: [] };
-    const nameMap = new Map((profiles || []).map((p: any) => [p.email, p.name]));
 
-    interface GlobalUpdate {
-        media_url: string;
-        caption: string;
-        senderName: string;
-        created_at: string;
+    const profileMap = new Map((profiles || []).map((p: any) => [p.member_id?.toLowerCase(), p]));
+
+    function getProfile(email: string) {
+        const p = profileMap.get(email?.toLowerCase());
+        return {
+            name: p?.name || email?.split('@')[0] || 'SUBJECT',
+            avatar: p?.avatar_url || p?.profile_picture_url || null,
+        };
     }
 
-    const updates: GlobalUpdate[] = (data || []).map((m: any) => {
+    // Photos
+    const photos = (photosRes.data || []).flatMap((r: any) => {
         let parsed: any = {};
-        try { parsed = JSON.parse(m.content); } catch { }
-        return {
-            media_url: parsed.url || '',
+        try { parsed = JSON.parse(r.content); } catch { }
+        if (!parsed.url) return [];
+        const { name, avatar } = getProfile(r.member_id);
+        return [{
+            kind: 'photo',
+            media_url: parsed.url,
             caption: parsed.caption || '',
-            senderName: nameMap.get(m.member_id) || m.member_id?.split('@')[0] || 'SUBJECT',
-            created_at: m.created_at,
+            sender_name: name,
+            sender_avatar: avatar,
+            created_at: r.created_at,
+        }];
+    });
+
+    // Tributes (wishlist purchases)
+    const tributes = (tributesRes.data || []).map((r: any) => {
+        const meta = r.metadata || {};
+        const { name, avatar } = getProfile(r.member_id);
+        return {
+            kind: 'tribute',
+            title: meta.title || r.content || 'Gift',
+            image: meta.image || null,
+            price: meta.price || 0,
+            sender_name: name,
+            sender_avatar: avatar,
+            created_at: r.created_at,
         };
-    }).filter((u: GlobalUpdate) => u.media_url);
+    });
+
+    // Points (MERIT earned from task rewards)
+    const points = (pointsRes.data || []).flatMap((r: any) => {
+        const match = r.content.match(/\+(\d+)\s*MERIT/i);
+        const pts = match ? parseInt(match[1]) : 0;
+        if (!pts) return [];
+        const { name, avatar } = getProfile(r.member_id);
+        return [{
+            kind: 'points',
+            points: pts,
+            sender_name: name,
+            sender_avatar: avatar,
+            created_at: r.created_at,
+        }];
+    });
+
+    // Merge + sort newest first
+    const updates = [...photos, ...tributes, ...points].sort(
+        (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    ).slice(0, 60);
 
     return NextResponse.json({ updates });
 }

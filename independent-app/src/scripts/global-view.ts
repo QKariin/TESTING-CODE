@@ -1,8 +1,14 @@
 // src/scripts/global-view.ts
 import { getState } from './profile-state';
+import { createClient } from '@supabase/supabase-js';
 
 let currentPeriod: 'today' | 'alltime' | 'weekly' | 'monthly' = 'today';
 let talkPollInterval: ReturnType<typeof setInterval> | null = null;
+let presenceInterval: ReturnType<typeof setInterval> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let realtimeChannel: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let updatesChannel: any = null;
 
 const DEFAULT_AVATAR = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png';
 const MEDAL_COLORS = ['#c5a059', '#9ca3af', '#cd7f32'];
@@ -52,6 +58,9 @@ function _setHeader(crumb: string, showBack: boolean) {
 
 function _stopPoll() {
     if (talkPollInterval) { clearInterval(talkPollInterval); talkPollInterval = null; }
+    if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
+    if (realtimeChannel) { realtimeChannel.unsubscribe(); realtimeChannel = null; }
+    if (updatesChannel) { updatesChannel.unsubscribe(); updatesChannel = null; }
 }
 
 // ─── OPEN EXPANDED ────────────────────────────────────────────────────────────
@@ -66,8 +75,8 @@ export function openGlobalSection(section: 'leaderboard' | 'talk' | 'updates' | 
     const panel = document.getElementById(`gPanel_${section}`);
     if (panel) panel.style.display = 'flex';
     if (section === 'leaderboard') loadLeaderboard(currentPeriod);
-    if (section === 'talk') { _loadTalkFull(true); talkPollInterval = setInterval(() => _loadTalkFull(false), 8000); }
-    if (section === 'updates') _loadUpdatesFull();
+    if (section === 'talk') { loadTalkFull(true); talkPollInterval = setInterval(() => loadTalkFull(false), 8000); }
+    if (section === 'updates') { _loadUpdatesFull(); _initUpdatesRealtime(); }
     if (section === 'spenders') _loadSpendersFull();
     if (section === 'queen') _loadQueenFull();
 }
@@ -77,8 +86,7 @@ export function openGlobalSection(section: 'leaderboard' | 'talk' | 'updates' | 
 function _loadAllPreviews() {
     loadLeaderboardPreview(currentPeriod);
     _loadSidePanels();
-    _loadTalkFull(true);
-    talkPollInterval = setInterval(() => _loadTalkFull(false), 8000);
+    _initTalkRealtime();
     _loadUpdatesPreview();
     _loadSpendersPreview();
     _loadQueenPreview();
@@ -206,7 +214,7 @@ async function _loadTalkPreview() {
     const el = document.getElementById('globalPreview_talk');
     if (!el) return;
     try {
-        const res = await fetch('/api/global/talk');
+        const res = await fetch('/api/global/messages');
         const data = await res.json();
         const msgs = (data.messages || []).slice(-4);
         if (!msgs.length) {
@@ -214,13 +222,14 @@ async function _loadTalkPreview() {
             return;
         }
         el.innerHTML = msgs.map((m: any) => {
-            const initial = (m.senderName || 'S')[0].toUpperCase();
+            const name = m.sender_name || 'SUBJECT';
+            const initial = name[0].toUpperCase();
             return `
             <div style="display:flex;align-items:flex-start;gap:7px;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.03);">
                 <div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.22);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.5rem;color:#c5a059;flex-shrink:0;">${initial}</div>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.55);letter-spacing:1px;margin-bottom:2px;">${m.senderName || 'SUBJECT'}</div>
-                    <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.content}</div>
+                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.55);letter-spacing:1px;margin-bottom:2px;">${name}</div>
+                    <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.message}</div>
                 </div>
             </div>`;
         }).join('');
@@ -235,23 +244,46 @@ async function _loadUpdatesPreview() {
     try {
         const res = await fetch('/api/global/updates');
         const data = await res.json();
-        const updates = (data.updates || []).slice(0, 6);
+        const updates = (data.updates || []).slice(0, 4);
         if (!updates.length) {
-            el.innerHTML = `<div style="text-align:center;padding:24px;font-family:'Orbitron';font-size:0.48rem;color:rgba(255,255,255,0.15);">NO PHOTOS YET</div>`;
+            el.innerHTML = `<div style="text-align:center;padding:24px;font-family:'Orbitron';font-size:0.48rem;color:rgba(255,255,255,0.15);">NO UPDATES YET</div>`;
             return;
         }
-        el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:6px;">
-            ${updates.map((u: any) => `
-                <div style="aspect-ratio:1;border-radius:4px;overflow:hidden;background:#0a0a14;position:relative;"
-                     onmouseenter="this.querySelector('.uov').style.opacity='1'"
-                     onmouseleave="this.querySelector('.uov').style.opacity='0'">
-                    <img src="${u.media_url}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
-                    <div class="uov" style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;padding:4px 5px;opacity:0;transition:opacity 0.15s;">
-                        <div style="font-family:'Cinzel';font-size:0.5rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.senderName}</div>
-                    </div>
-                </div>`).join('')}
-        </div>`;
+        el.innerHTML = updates.map((u: any) => _buildUpdateCardPreview(u)).join('');
     } catch {}
+}
+
+function _buildUpdateCardPreview(u: any): string {
+    if (u.kind === 'tribute') {
+        const initial = (u.sender_name || 'S')[0].toUpperCase();
+        return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
+            <div style="font-size:0.75rem;flex-shrink:0;">🎁</div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);letter-spacing:1px;">${u.sender_name}</div>
+                <div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.title}</div>
+            </div>
+            <div style="font-family:'Orbitron';font-size:0.5rem;color:#c5a059;flex-shrink:0;">${(u.price||0).toLocaleString()}</div>
+        </div>`;
+    }
+    if (u.kind === 'points') {
+        return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
+            <div style="font-size:0.75rem;flex-shrink:0;">⚡</div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</div>
+                <div style="font-family:'Rajdhani';font-size:0.75rem;color:#a78bfa;">+${u.points} MERIT</div>
+            </div>
+        </div>`;
+    }
+    // photo
+    return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
+        <div style="width:32px;height:32px;border-radius:4px;overflow:hidden;flex-shrink:0;">
+            <img src="${u.media_url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+        </div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</div>
+            ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.caption}</div>` : ''}
+        </div>
+    </div>`;
 }
 
 // ─── SPENDERS PREVIEW ────────────────────────────────────────────────────────
@@ -323,17 +355,18 @@ async function _loadQueenPreview() {
 export async function sendGlobalQuickMessage() {
     const input = document.getElementById('globalQuickInput') as HTMLInputElement;
     if (!input) return;
-    const content = input.value.trim();
-    if (!content) return;
+    const message = input.value.trim();
+    if (!message) return;
     const raw = getState().raw;
-    if (!raw?.email) return;
+    const senderEmail = raw?.member_id || raw?.email;
+    if (!senderEmail) return;
     input.value = '';
     input.placeholder = 'Sending...';
     try {
-        await fetch('/api/global/talk', {
+        await fetch('/api/global/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content, senderEmail: raw.email }),
+            body: JSON.stringify({ message, senderEmail }),
         });
         await _loadTalkPreview();
     } finally {
@@ -432,14 +465,124 @@ function _renderFullLeaderboard(entries: any[], period: string) {
 
 // ─── FULL TALK ─────────────────────────────────────────────────────────────────
 
-export async function loadTalkFull(scrollBottom = true) { await _loadTalkFull(scrollBottom); }
+export async function loadTalkFull(scrollBottom = true) { await _fetchAndRenderMessages(scrollBottom); }
 
-async function _loadTalkFull(scrollBottom: boolean) {
+// ─── REALTIME INIT ────────────────────────────────────────────────────────────
+
+function _initTalkRealtime() {
+    // Initial load
+    _fetchAndRenderMessages(true);
+    _fetchAndRenderOnline();
+
+    // Realtime subscription on global_messages
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const sb = createClient(supabaseUrl, supabaseAnonKey);
+
+    realtimeChannel = sb
+        .channel('global_messages_channel')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' },
+            (payload: any) => {
+                _appendMessage(payload.new);
+            }
+        )
+        .subscribe();
+
+    // Presence heartbeat — update last_active every 30s
+    const raw = getState().raw;
+    const email = raw?.member_id || raw?.email;
+    if (email) {
+        const heartbeat = () => fetch('/api/global/presence', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        }).catch(() => {});
+        heartbeat();
+        presenceInterval = setInterval(heartbeat, 30000);
+    }
+
+    // Poll online users every 30s
+    talkPollInterval = setInterval(_fetchAndRenderOnline, 30000);
+}
+
+// ─── FETCH MESSAGES ───────────────────────────────────────────────────────────
+
+async function _fetchAndRenderMessages(scrollBottom: boolean) {
     try {
-        const res = await fetch('/api/global/talk');
-        const { messages, online } = await res.json();
+        const res = await fetch('/api/global/messages');
+        const { messages } = await res.json();
+        _renderMessages(messages || [], scrollBottom);
+    } catch {}
+}
+
+// ─── APPEND A SINGLE NEW MESSAGE (realtime) ───────────────────────────────────
+
+function _appendMessage(msg: any) {
+    const feed = document.getElementById('globalTalkFeed');
+    if (!feed) return;
+    const myEmail = getState().raw?.member_id || getState().raw?.email || '';
+    const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
+    const el = document.createElement('div');
+    el.innerHTML = _buildBubble(msg, myEmail);
+    feed.appendChild(el.firstElementChild!);
+    if (wasNear) feed.scrollTop = feed.scrollHeight;
+}
+
+// ─── RENDER ALL MESSAGES ──────────────────────────────────────────────────────
+
+function _renderMessages(messages: any[], scrollBottom: boolean) {
+    const feed = document.getElementById('globalTalkFeed');
+    if (!feed) return;
+    const myEmail = getState().raw?.member_id || getState().raw?.email || '';
+    if (!messages.length) {
+        feed.innerHTML = `<div style="text-align:center;padding:60px 20px;font-family:'Orbitron';font-size:0.6rem;color:rgba(255,255,255,0.18);letter-spacing:3px;">BE THE FIRST TO SPEAK</div>`;
+        return;
+    }
+    const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
+    feed.innerHTML = messages.map(m => _buildBubble(m, myEmail)).join('');
+    if (scrollBottom || wasNear) feed.scrollTop = feed.scrollHeight;
+}
+
+function _buildBubble(msg: any, myEmail: string): string {
+    const isMe = (msg.sender_email || '').toLowerCase() === myEmail.toLowerCase();
+    const name = msg.sender_name || 'SUBJECT';
+    const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const av = msg.sender_avatar;
+    const initial = (name[0] || 'S').toUpperCase();
+
+    if (isMe) {
+        return `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
+            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.22);margin-bottom:4px;letter-spacing:1px;">YOU · ${time}</div>
+            <div style="max-width:70%;padding:9px 13px;background:rgba(55,55,60,0.85);border:1px solid rgba(100,100,110,0.3);border-radius:14px 14px 3px 14px;">
+                <div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
+            </div>
+        </div>`;
+    }
+
+    const avatarHtml = av
+        ? `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : '';
+    return `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.25);overflow:hidden;flex-shrink:0;position:relative;">
+            ${avatarHtml}
+            <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">${initial}</div>
+        </div>
+        <div style="max-width:70%;">
+            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.55);margin-bottom:4px;letter-spacing:1px;">${name} · ${time}</div>
+            <div style="padding:9px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:3px 14px 14px 14px;">
+                <div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ─── ONLINE USERS STRIP ───────────────────────────────────────────────────────
+
+async function _fetchAndRenderOnline() {
+    try {
+        const res = await fetch('/api/global/presence');
+        const { online } = await res.json();
         _renderOnlineUsers(online || []);
-        _renderTalkFull(messages || [], scrollBottom);
     } catch {}
 }
 
@@ -452,59 +595,36 @@ function _renderOnlineUsers(users: any[]) {
     }
     strip.innerHTML = users.map(u => {
         const initial = (u.name || 'S')[0].toUpperCase();
-        const av = u.avatar
-            ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.querySelector('.gl-av-init').style.display='flex'">`
-            : '';
+        const avHtml = u.avatar
+            ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.55rem;color:#c5a059;">${initial}</div>`
+            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.55rem;color:#c5a059;">${initial}</div>`;
         return `<div title="${u.name}" style="position:relative;flex-shrink:0;">
-            <div style="width:30px;height:30px;border-radius:50%;background:rgba(197,160,89,0.12);border:1.5px solid rgba(74,222,128,0.5);overflow:hidden;position:relative;cursor:default;">
-                ${av}
-                <div class="gl-av-init" style="display:${u.avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.55rem;color:#c5a059;">${initial}</div>
+            <div style="width:30px;height:30px;border-radius:50%;background:rgba(197,160,89,0.1);border:1.5px solid rgba(74,222,128,0.45);overflow:hidden;position:relative;">
+                ${avHtml}
             </div>
             <div style="position:absolute;bottom:0;right:0;width:7px;height:7px;border-radius:50%;background:#4ade80;border:1.5px solid #04040e;box-shadow:0 0 5px #4ade80;"></div>
         </div>`;
     }).join('');
 }
 
-function _renderTalkFull(messages: any[], scrollBottom: boolean) {
-    const feed = document.getElementById('globalTalkFeed');
-    if (!feed) return;
-    const myEmail = getState().raw?.member_id || getState().raw?.email || '';
-    if (!messages.length) {
-        feed.innerHTML = `<div style="text-align:center;padding:60px 20px;font-family:'Orbitron';font-size:0.6rem;color:rgba(255,255,255,0.18);letter-spacing:3px;">BE THE FIRST TO SPEAK</div>`;
-        return;
-    }
-    const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 80;
-    feed.innerHTML = messages.map((msg: any) => {
-        const isMe = msg.member_id === myEmail;
-        const name = msg.senderName || 'SUBJECT';
-        const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        return `
-        <div style="display:flex;flex-direction:column;align-items:${isMe ? 'flex-end' : 'flex-start'};margin-bottom:12px;padding:0 16px;">
-            <div style="font-family:'Orbitron';font-size:0.43rem;color:rgba(255,255,255,0.28);margin-bottom:3px;letter-spacing:1px;">${isMe ? 'YOU' : name} · ${time}</div>
-            <div style="max-width:72%;padding:9px 13px;background:${isMe ? 'rgba(197,160,89,0.12)' : 'rgba(255,255,255,0.05)'};border:1px solid ${isMe ? 'rgba(197,160,89,0.28)' : 'rgba(255,255,255,0.07)'};border-radius:${isMe ? '12px 12px 3px 12px' : '12px 12px 12px 3px'};">
-                <div style="font-family:'Rajdhani';font-size:0.9rem;color:#e8e8e8;line-height:1.45;">${msg.content}</div>
-            </div>
-        </div>`;
-    }).join('');
-    if (scrollBottom || wasNear) feed.scrollTop = feed.scrollHeight;
-}
+// ─── SEND ─────────────────────────────────────────────────────────────────────
 
 export async function sendGlobalMessage() {
     const input = document.getElementById('globalTalkInput') as HTMLInputElement;
     if (!input) return;
-    const content = input.value.trim();
-    if (!content) return;
+    const message = input.value.trim();
+    if (!message) return;
     const raw = getState().raw;
-    const email = raw?.member_id || raw?.email;
-    if (!email) return;
+    const senderEmail = raw?.member_id || raw?.email;
+    if (!senderEmail) return;
     input.value = '';
     try {
-        await fetch('/api/global/talk', {
+        await fetch('/api/global/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content, senderEmail: email }),
+            body: JSON.stringify({ message, senderEmail }),
         });
-        await _loadTalkFull(true);
+        // Realtime will append the message — no need to re-fetch
     } catch {}
 }
 
@@ -517,27 +637,123 @@ export function handleGlobalTalkKey(e: KeyboardEvent) {
 async function _loadUpdatesFull() {
     const grid = document.getElementById('globalUpdatesGrid');
     if (!grid) return;
-    grid.innerHTML = `<div style="text-align:center;padding:40px;font-family:'Orbitron';font-size:0.55rem;color:rgba(255,255,255,0.25);grid-column:1/-1;">LOADING...</div>`;
+    grid.innerHTML = `<div style="text-align:center;padding:40px;font-family:'Orbitron';font-size:0.55rem;color:rgba(255,255,255,0.25);">LOADING...</div>`;
     try {
         const res = await fetch('/api/global/updates');
         const { updates } = await res.json();
         if (!updates?.length) {
-            grid.innerHTML = `<div style="text-align:center;padding:60px;font-family:'Orbitron';font-size:0.6rem;color:rgba(255,255,255,0.18);grid-column:1/-1;">NO UPDATES YET</div>`;
+            grid.innerHTML = `<div style="text-align:center;padding:60px;font-family:'Orbitron';font-size:0.6rem;color:rgba(255,255,255,0.18);">NO UPDATES YET</div>`;
             return;
         }
-        grid.innerHTML = updates.map((u: any) => `
-            <div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.1);"
-                 onmouseenter="this.querySelector('.uinfo').style.opacity='1'"
-                 onmouseleave="this.querySelector('.uinfo').style.opacity='0'">
-                <img src="${u.media_url}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
-                <div class="uinfo" style="position:absolute;bottom:0;left:0;right:0;padding:7px 9px;background:linear-gradient(transparent,rgba(0,0,0,0.85));opacity:0;transition:opacity 0.15s;">
-                    <div style="font-family:'Cinzel';font-size:0.58rem;color:#fff;">${u.senderName}</div>
-                    ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.68rem;color:rgba(255,255,255,0.5);">${u.caption}</div>` : ''}
-                </div>
-            </div>`).join('');
+        grid.innerHTML = updates.map((u: any) => _buildUpdateCard(u)).join('');
     } catch {
-        grid.innerHTML = `<div style="text-align:center;padding:40px;font-family:'Orbitron';font-size:0.55rem;color:#ff4444;grid-column:1/-1;">FAILED</div>`;
+        grid.innerHTML = `<div style="text-align:center;padding:40px;font-family:'Orbitron';font-size:0.55rem;color:#ff4444;">FAILED</div>`;
     }
+}
+
+// ─── UPDATE CARD BUILDERS ─────────────────────────────────────────────────────
+
+function _buildUpdateCard(u: any): string {
+    if (u.kind === 'tribute') return _buildTributeCard(u);
+    if (u.kind === 'points') return _buildPointsCard(u);
+    return _buildPhotoCard(u);
+}
+
+function _buildTributeCard(u: any): string {
+    const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const initial = (u.sender_name || 'S')[0].toUpperCase();
+    const avHtml = u.sender_avatar
+        ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : '';
+    return `
+    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;max-width:320px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+        ${u.image ? `<div style="width:100%;height:140px;overflow:hidden;position:relative;background:#050510;">
+            <img src="${u.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.8) 100%);"></div>
+            <div style="position:absolute;top:8px;right:8px;background:rgba(5,5,20,0.9);border:1px solid rgba(197,160,89,0.6);border-radius:20px;padding:3px 9px;display:flex;align-items:center;gap:4px;">
+                <span style="font-family:'Orbitron';font-size:0.6rem;color:#c5a059;font-weight:700;letter-spacing:1px;">⚙ ${(u.price||0).toLocaleString()}</span>
+            </div>
+        </div>` : ''}
+        <div style="padding:10px 13px 13px;">
+            <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.5);letter-spacing:2px;margin-bottom:5px;">✦ GIFT SENT</div>
+            <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+                <div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.3);overflow:hidden;position:relative;flex-shrink:0;">
+                    ${avHtml}
+                    <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.5rem;color:#c5a059;">${initial}</div>
+                </div>
+                <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</span>
+                <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);margin-left:auto;">${time}</span>
+            </div>
+        </div>
+    </div>`;
+}
+
+function _buildPointsCard(u: any): string {
+    const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const initial = (u.sender_name || 'S')[0].toUpperCase();
+    const avHtml = u.sender_avatar
+        ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : '';
+    return `
+    <div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;max-width:320px;width:100%;">
+        <div style="width:42px;height:42px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
+            ${avHtml}
+            <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${initial}</div>
+        </div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:3px;">⚡ MERIT EARNED</div>
+            <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name}</div>
+            <div style="font-family:'Orbitron';font-size:0.85rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${u.points} MERIT</div>
+        </div>
+        <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);flex-shrink:0;align-self:flex-start;">${time}</div>
+    </div>`;
+}
+
+function _buildPhotoCard(u: any): string {
+    const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `
+    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;max-width:320px;width:100%;position:relative;"
+         onmouseenter="this.querySelector('.uinfo').style.opacity='1'"
+         onmouseleave="this.querySelector('.uinfo').style.opacity='0'">
+        <img src="${u.media_url}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy">
+        <div class="uinfo" style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.88));opacity:0;transition:opacity 0.15s;">
+            <div style="font-family:'Cinzel';font-size:0.62rem;color:#fff;">${u.sender_name} <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div>
+            ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.55);margin-top:2px;">${u.caption}</div>` : ''}
+        </div>
+    </div>`;
+}
+
+// ─── UPDATES REALTIME ─────────────────────────────────────────────────────────
+
+function _initUpdatesRealtime() {
+    if (updatesChannel) return; // already subscribed
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const sb = createClient(supabaseUrl, supabaseAnonKey);
+
+    updatesChannel = sb
+        .channel('global_updates_channel')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' },
+            (payload: any) => {
+                const row = payload.new;
+                const isWishlist = row.type === 'wishlist';
+                const isMerit = row.type === 'system' && /MERIT/i.test(row.content || '');
+                const isPhoto = row.type === 'global_update';
+                if (!isWishlist && !isMerit && !isPhoto) return;
+
+                // Re-fetch to get enriched profile data then prepend
+                fetch('/api/global/updates')
+                    .then(r => r.json())
+                    .then(({ updates }) => {
+                        const grid = document.getElementById('globalUpdatesGrid');
+                        if (!grid) return;
+                        if (updates?.length) grid.innerHTML = updates.map((u: any) => _buildUpdateCard(u)).join('');
+                    })
+                    .catch(() => {});
+            }
+        )
+        .subscribe();
 }
 
 // ─── FULL SPENDERS ────────────────────────────────────────────────────────────
