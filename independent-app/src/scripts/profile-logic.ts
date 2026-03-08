@@ -2303,7 +2303,8 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
             const extraClass = isExisting ? ' _selected' : '';
             const existingAttr = isExisting ? ' data-existing="true"' : '';
             if (isExisting) {
-                inner += `<div class="_reqChip${extraClass}" data-value="${item}"${existingAttr} style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #00cc66;background:rgba(0,204,102,0.08);color:#00cc66;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.6rem;color:#00cc66;letter-spacing:1px;">✓ SAVED</span></div>`;
+                const coinSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="#c5a059" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><circle cx="12" cy="12" r="10" stroke="#c5a059" stroke-width="2" fill="none"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 0 1 0 3H10.5a1.5 1.5 0 0 0 0 3H15" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+                inner += `<div class="_reqChip${extraClass}" data-value="${item}"${existingAttr} style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid rgba(197,160,89,0.7);background:rgba(197,160,89,0.08);color:#c5a059;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span style="display:flex;align-items:center;gap:7px;">${coinSvg}${item}</span><span style="font-size:0.6rem;color:rgba(197,160,89,0.6);letter-spacing:1px;">SAVED</span></div>`;
             } else {
                 inner += `<div class="_reqChip" data-value="${item}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #2a2a2a;background:rgba(0,0,0,0.5);color:#888;font-family:'Cinzel',serif;font-size:0.8rem;cursor:pointer;border-radius:4px;transition:all 0.2s;"><span>${item}</span><span style="font-size:0.65rem;color:#555;">${costPerItem} ₡</span></div>`;
             }
@@ -2352,9 +2353,9 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
                 chip.classList.toggle('_selected');
                 const isOn = chip.classList.contains('_selected');
                 if (isExisting) {
-                    chip.style.borderColor = isOn ? '#00cc66' : '#2a2a2a';
-                    chip.style.color = isOn ? '#00cc66' : '#555';
-                    chip.style.background = isOn ? 'rgba(0,204,102,0.08)' : 'rgba(0,0,0,0.3)';
+                    chip.style.borderColor = isOn ? 'rgba(197,160,89,0.7)' : '#2a2a2a';
+                    chip.style.color = isOn ? '#c5a059' : '#555';
+                    chip.style.background = isOn ? 'rgba(197,160,89,0.08)' : 'rgba(0,0,0,0.3)';
                 } else {
                     chip.style.borderColor = isOn ? '#c5a059' : '#2a2a2a';
                     chip.style.color = isOn ? '#c5a059' : '#888';
@@ -2486,8 +2487,14 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
     } else if (data.success && data.profile) {
         overlay.remove();
 
-        // Update local state so subsequent modal opens see the new value
-        setState({ raw: data.profile });
+        // Immediately reflect new wallet in UI — no refresh needed
+        const newWallet = data.profile.wallet ?? data.newWallet;
+        if (newWallet !== undefined) {
+            setState({ wallet: newWallet, raw: data.profile });
+            updateWalletDisplay();
+        } else {
+            setState({ raw: data.profile });
+        }
         (window as any).__currentProfileRaw = data.profile;
 
         renderProfileSidebar(data.profile);
