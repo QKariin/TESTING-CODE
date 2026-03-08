@@ -98,20 +98,12 @@ export default function DashboardPage() {
             const data = await getAdminDashboardData();
 
             if (data.success && data.users) {
-                // Map Supabase (snake_case) to Dashboard (camelCase)
                 const mappedUsers = data.users.map((u: any) => ({
                     ...u,
-                    memberId: u.member_id,
-                    avatar: getOptimizedUrl(u.avatar_url || u.profile_picture_url || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png', 100),
-                    points: u.score || 0,
-                    // Parse JSON params if needed
-                    activeTask: u.parameters?.taskdom_active_task || null,
-                    endTime: u.parameters?.taskdom_end_time || null,
-                    status: u.parameters?.status || u.hierarchy,
-                    kneelCount: u.kneel_history?.totalSessions || 0,
-                    kneelHistory: u.kneel_history || {},
-                    lastSeen: u.last_active,
-                    lastMessageTime: u.parameters?.lastMessageTime ? new Date(u.parameters.lastMessageTime).getTime() : 0
+                    // Ensure avatar uses optimized URL with fallback already handled by backend if possible,
+                    // but we'll apply getOptimizedUrl here for performance.
+                    avatar: getOptimizedUrl(u.avatar || u.avatar_url || u.profile_picture_url || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png', 100),
+                    lastMessageTime: u.parameters?.lastMessageTime || 0
                 }));
 
                 setUsers(mappedUsers);
@@ -276,7 +268,7 @@ export default function DashboardPage() {
                             </div>
                             <div className="vb-content">
                                 <div className="vb-av-box glow-blue">
-                                    <img id="bestSubAvatar" src="https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png" className="vb-av" alt="Top Subject" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'" />
+                                    <img id="bestSubAvatar" src="https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png" className="vb-av" alt="Top Subject" onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
                                 </div>
                                 <div id="bestSubName" className="vb-name">Searching...</div>
                                 <div id="bestSubValue" className="vb-val">0 PTS</div>
@@ -383,7 +375,7 @@ export default function DashboardPage() {
                     <div className="qp-header">
                         <div className="qp-cover"></div>
                         <div className="qp-av-con">
-                            <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" className="qp-av" alt="Profile" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'" />
+                            <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" className="qp-av" alt="Profile" onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
                         </div>
                         <div className="qp-name">QUEEN KARIN</div>
                         <div className="qp-status">SYSTEM ADMINISTRATOR</div>
@@ -537,7 +529,7 @@ export default function DashboardPage() {
                             <div id="apMirrorHeader" className="ap-mirror-header">
                                 <div id="dMirrorHierarchy" className="hierarchy-top">CHEVALIER</div>
                                 <div className="avatar-container">
-                                    <img id="dProfilePic" src="" alt="Profile" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'" />
+                                    <img id="dProfilePic" src="" alt="Profile" onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
                                 </div>
                                 <div id="dMirrorName" className="identity-name" style={{ fontFamily: 'Cinzel', fontSize: '1.5rem', color: '#fff', marginBottom: '10px' }}>NAME</div>
 

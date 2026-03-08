@@ -64,39 +64,46 @@ export interface HierarchyRule {
 export const HIERARCHY_RULES: HierarchyRule[] = [
     {
         name: "Queen's Champion",
-        req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 365, prefs: true, limits: true, kinks: true, routine: true },
-        benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."]
-    },
+        req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 365, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
+        benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."],
+        speakCost: 0
+    } as any,
     {
         name: "Secretary",
-        req: { tasks: 500, kneels: 1500, points: 100000, spent: 500000, streak: 180, prefs: true, limits: true, kinks: true, routine: true },
-        benefits: ["The Line: A direct Audio Connection.", "Authority: Access to System Commands.", "The Throne: Total, Unfiltered Access."]
-    },
+        req: { tasks: 500, kneels: 1500, points: 100000, spent: 500000, streak: 180, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
+        benefits: ["The Line: A direct Audio Connection.", "Authority: Access to System Commands.", "The Throne: Total, Unfiltered Access."],
+        speakCost: 0
+    } as any,
     {
         name: "Chamberlain",
-        req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 90, prefs: true, limits: true, kinks: true, routine: true },
-        benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."]
-    },
+        req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 90, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
+        benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."],
+        speakCost: 0
+    } as any,
     {
         name: "Butler",
-        req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 30, prefs: true, limits: true, kinks: true, routine: true },
-        benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions.", "Speak Cost: 5 Coins."]
-    },
+        req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 30, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
+        benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions.", "Speak Cost: 5 Coins."],
+        speakCost: 5
+    } as any,
     {
         name: "Silverman",
-        req: { tasks: 25, kneels: 65, points: 5000, spent: 5000, streak: 5, prefs: true, limits: true, kinks: true, routine: true },
-        benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."]
-    },
+        req: { tasks: 25, kneels: 65, points: 5000, spent: 5000, streak: 5, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
+        benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."],
+        speakCost: 10
+    } as any,
     {
         name: "Footman",
         req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0, name: true, photo: true },
-        benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."]
-    },
+        benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."],
+        speakCost: 15
+    } as any,
     {
         name: "Hall Boy",
         req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
-        benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks.", "Speak Cost: 20 Coins."]
-    }
+        benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks.", "Speak Cost: 20 Coins."],
+        speakCost: 20
+    } as any
 ];
 
 // --- HELPER: RANK DETERMINATION (Dynamic Logic) ---
@@ -125,34 +132,6 @@ export function getHierarchyReport(item: SlaveRecord): HierarchyReport {
     // Find index of current rank
     let currentIndex = HIERARCHY_RULES.findIndex(r => clean(r.name) === clean(currentHierarchy));
     if (currentIndex === -1) currentIndex = HIERARCHY_RULES.length - 1; // Default to Hall Boy
-
-    // Determine if we should be demoted (Gatekeeper Logic)
-    // 1. Photo Check
-    const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
-    const img = item.image_fld || item.image || item.profilePicture || "";
-    const hasPhoto = (img && img.length > 5 && !img.includes(SILHOUETTE) && img !== "undefined" && img !== "null");
-
-    // 2. Name Check
-    const nameStr = (item.title_fld || item.title || "").toUpperCase().trim();
-    const hasName = (nameStr.length > 0 && nameStr !== "SLAVE" && nameStr !== "NEW SLAVE");
-
-    // 3. Demotion Logic (Surgical)
-    // If rank is above Hall Boy but missing Name/Photo -> Demote to Hall Boy
-    if (currentIndex < HIERARCHY_RULES.length - 1 && (!hasName || !hasPhoto)) {
-        return generateReport(item, "Hall Boy");
-    }
-
-    // 4. Prefs/Routine Checks (For Silverman+)
-    const hasLimits = (item.limits?.length ?? 0) > 2;
-    const hasKinks = ((item.kinks || item.kink)?.length ?? 0) > 2;
-    const hasPrefs = hasLimits && hasKinks;
-    const hasRoutineSet = (item.routine?.length ?? 0) > 5 || (item.taskdom_routine?.length ?? 0) > 5;
-
-    if (currentIndex <= 4) { // Silverman or higher
-        if (!hasPrefs || !hasRoutineSet) {
-            return generateReport(item, "Footman");
-        }
-    }
 
     return generateReport(item, currentHierarchy);
 }
