@@ -41,6 +41,7 @@ function calculateInternalStreak(historyStr: string | any[]): number {
 
     const getDutyDay = (d: any) => {
         let date = new Date(d);
+        if (isNaN(date.getTime())) return '';
         if (date.getHours() < 6) date.setDate(date.getDate() - 1);
         return date.toISOString().split('T')[0];
     };
