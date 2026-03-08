@@ -163,6 +163,10 @@ export default function ProfilePage() {
                         getRandomTask(true);
                         loadQueenPosts();
                         renderHistoryAndAltar(unifiedData);
+
+                        // Initialize Chat & Tracking
+                        initChatSystem();
+                        trackUserAnalytics(unifiedData.id);
                     }, 150);
                     return;
                 }
@@ -211,17 +215,14 @@ export default function ProfilePage() {
                         getRandomTask(true);
                         loadQueenPosts();
                         renderHistoryAndAltar(unifiedData); // Populate Records tab
+
+                        // Initialize Chat & Tracking
+                        initChatSystem();
+                        trackUserAnalytics(unifiedData.id);
                     }, 150);
                 }
             } catch (err) {
                 console.error("Critical Load Error:", err);
-            } finally {
-
-                // 3. Initialize Chat & Tracking
-                if (unifiedData.id) {
-                    initChatSystem();
-                    trackUserAnalytics(unifiedData.id);
-                }
 
                 setLoading(false);
             }
