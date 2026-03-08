@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getHierarchyReport } from '@/scripts/hierarchy-rules';
+import { getHierarchyReport } from '@/lib/hierarchyRules';
 import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = "force-dynamic";

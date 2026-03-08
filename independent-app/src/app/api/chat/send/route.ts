@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { HIERARCHY_RULES } from '@/scripts/hierarchy-rules';
+import { HIERARCHY_RULES } from '@/lib/hierarchyRules';
 
 export async function POST(req: Request) {
     try {
