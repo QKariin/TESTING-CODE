@@ -756,13 +756,17 @@
 
 /* --- TYPOGRAPHY (REVERTED TO LUXURY) --- */
 
-.ribbon-label {
-    font-family: 'Cinzel', serif;
-    font-size: 0.65rem;
-    color: #555;
+/* ── GLOBAL SECTION HEADER — used by ribbon-label, chronicle-section-label, hub-section-label, altar-section-label ── */
+.ribbon-label,
+.chronicle-section-label,
+.hub-section-label,
+.altar-section-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    color: rgba(197, 160, 89, 0.7);
     letter-spacing: 3px;
     font-weight: 700;
-    margin-bottom: 5px;
+    text-transform: uppercase;
 }
 
 /* Status Text - Back to Cinzel/Orbitron blend for stability */
@@ -1871,10 +1875,6 @@
 
 /* 2. MOSAIC: ACCEPTED OFFERINGS */
 .chronicle-section-label {
-    font-family: 'Orbitron';
-    font-size: 0.8rem;
-    color: var(--gold);
-    letter-spacing: 4px;
     margin-bottom: 25px;
     display: flex;
     align-items: center;

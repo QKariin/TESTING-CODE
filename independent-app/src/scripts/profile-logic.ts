@@ -431,10 +431,11 @@ function renderGridMobile(gridEl: HTMLElement) {
 // ─── Instantly update wallet/score DOM elements after any coin spend ────────
 function updateWalletDisplay() {
     const { wallet, score } = getState();
-    const elCoins = document.getElementById('coins');
-    const elPoints = document.getElementById('points');
-    if (elCoins) elCoins.innerText = (wallet || 0).toLocaleString();
-    if (elPoints) elPoints.innerText = (score || 0).toLocaleString();
+    const w = (wallet || 0).toLocaleString();
+    const p = (score || 0).toLocaleString();
+    // Update all wallet/score display elements (desktop + mobile)
+    document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = w; });
+    document.querySelectorAll('#points, #mobPoints').forEach(el => { (el as HTMLElement).innerText = p; });
 }
 
 // ─── Gift Toast: warm personal confirmation ────────────────────────────────
@@ -2496,9 +2497,9 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
         setState({ wallet: immediateWallet, raw: patchedProfile });
         (window as any).__currentProfileRaw = patchedProfile;
 
-        // Force DOM update immediately
-        const elCoins = document.getElementById('coins');
-        if (elCoins) elCoins.innerText = immediateWallet.toLocaleString();
+        // Force DOM update immediately on all wallet displays
+        const wStr = immediateWallet.toLocaleString();
+        document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = wStr; });
 
         renderProfileSidebar(patchedProfile);
         loadChatHistory(email);
@@ -2791,10 +2792,10 @@ export function renderProfileSidebar(u: any) {
             });
         });
 
-        const elPoints = document.getElementById('points');
-        if (elPoints) elPoints.innerText = (u.score || 0).toLocaleString();
-        const elCoins = document.getElementById('coins');
-        if (elCoins) elCoins.innerText = (u.wallet || 0).toLocaleString();
+        const wStr = (u.wallet || 0).toLocaleString();
+        const pStr = (u.score || 0).toLocaleString();
+        document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = wStr; });
+        document.querySelectorAll('#points, #mobPoints').forEach(el => { (el as HTMLElement).innerText = pStr; });
     }
 }
 // --- DEBUG HELPERS ---
