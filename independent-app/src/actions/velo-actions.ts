@@ -75,6 +75,94 @@ export async function secureGetProfile(memberId: string) {
     }
 }
 
+// --- HELPER: MAP USER FOR DASHBOARD ---
+function mapUserForDashboard(p: any, t: any) {
+    const params = p.parameters || {};
+
+    let pQueue = [];
+    if (t && t.taskQueue) {
+        try {
+            pQueue = typeof t.taskQueue === 'string' ? JSON.parse(t.taskQueue) : (t.taskQueue || []);
+        } catch (e) { }
+    }
+
+    let activeTask = t?.taskdom_active_task || null;
+    let endTime = null;
+    try {
+        if (typeof activeTask === 'string') {
+            const parsed = JSON.parse(activeTask);
+            endTime = parsed.endTime || null;
+            activeTask = parsed;
+        } else if (activeTask && activeTask.endTime) {
+            endTime = activeTask.endTime;
+        }
+    } catch (e) { }
+
+    let history: any[] = [];
+    if (t && t.Taskdom_History) {
+        try { history = typeof t.Taskdom_History === 'string' ? JSON.parse(t.Taskdom_History) : t.Taskdom_History } catch (e) { }
+    }
+
+    const defaultPic = "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+    const rawPic = p.avatar_url || p.profile_picture_url || "";
+    const finalPic = (rawPic && rawPic.length > 5 && rawPic !== "undefined" && rawPic !== "null") ? rawPic : defaultPic;
+
+    return {
+        ...p,
+        id: p.member_id || p.id,
+        memberId: p.member_id || p.id,
+        name: p.name || p.title || "Unknown",
+        hierarchy: p.hierarchy || "Newbie",
+        score: Number(p.score || 0),
+        wallet: Number(p.wallet || 0),
+        queue: pQueue,
+        activeTask: activeTask,
+        endTime: endTime,
+        pendingState: t?.taskdom_pending_state || null,
+        routineHistory: history,
+        routinehistory: history, // Consistency
+        kneelCount: Number(p.kneelCount || p.kneel_count || params.kneel_count || 0),
+        kneelHistory: p.kneel_history || {},
+        joinedDate: p.joined_date,
+        points: Number(p.score || 0),
+        routine: p.routine || "None",
+        routineDoneToday: p.routine_done_today || false,
+        strikeCount: p.strike_count || 0,
+        lastSeen: p.last_active,
+
+        // Hierarchy specific mappings — computed from Taskdom_History exactly like profile page
+        taskdom_completed_tasks: (() => {
+            const approvedTasks = history.filter((h: any) => h.status === 'approve' && !h.isRoutine).length;
+            return approvedTasks || Number(t?.Taskdom_CompletedTasks || params.taskdom_completed_tasks || 0);
+        })(),
+        kneelCount: Number(t?.kneelCount || p.kneelCount || p.kneel_count || params.kneel_count || 0),
+        total_coins_spent: Number(params.total_coins_spent || p.total_coins_spent || 0),
+        bestRoutinestreak: (() => {
+            const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
+            return routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0);
+        })(),
+        routinestreak: Number(p.routinestreak || params.taskdom_current_streak || 0),
+
+        // Identity fields for checkmark logic
+        image: finalPic,
+        profilePicture: finalPic,
+        avatar: finalPic,
+        title: p.name || "",
+        limits: p.limits || "",
+        kinks: p.kinks || "",
+
+        // Pass raw item for other fields if needed
+        _raw: { ...p, Taskdom_History: t?.Taskdom_History },
+        parameters: {
+            ...params,
+            taskdom_active_task: activeTask,
+            taskdom_end_time: endTime,
+            status: t?.taskdom_pending_state || p.hierarchy,
+            lastMessageTime: params.lastMessageTime || 0
+        }
+    };
+}
+
 // --- 2.b GET ADMIN DASHBOARD DATA ---
 export async function getAdminDashboardData() {
     try {
@@ -93,7 +181,7 @@ export async function getAdminDashboardData() {
 
         const { data: tasksData, error: taskErr } = await supabaseAdmin
             .from('tasks')
-            .select('member_id, "Taskdom_History", taskQueue, taskdom_active_task, taskdom_pending_state');
+            .select('member_id, "Taskdom_History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship');
 
         const reviewQueue = await DbService.getReviewQueue();
 
@@ -102,39 +190,7 @@ export async function getAdminDashboardData() {
         // Map tasks data to profiles so the dashboard works
         const finalProfiles = (profiles || []).map(p => {
             const t = (tasksData || []).find(x => x.member_id === p.member_id || x.member_id === p.id);
-            if (t) {
-                let pQueue = [];
-                try {
-                    pQueue = typeof t.taskQueue === 'string' ? JSON.parse(t.taskQueue) : (t.taskQueue || []);
-                } catch (e) { }
-
-                let activeTask = t.taskdom_active_task;
-                let endTime = null;
-                try {
-                    if (typeof activeTask === 'string') {
-                        const parsed = JSON.parse(activeTask);
-                        endTime = parsed.endTime || null;
-                        activeTask = parsed;
-                    } else if (activeTask && activeTask.endTime) {
-                        endTime = activeTask.endTime;
-                    }
-                } catch (e) { }
-
-                return {
-                    ...p,
-                    'Taskdom_History': t['Taskdom_History'],
-                    task_queue: pQueue,
-                    taskQueue: pQueue,
-                    queue: pQueue,
-                    parameters: {
-                        ...(p.parameters || {}),
-                        taskdom_active_task: activeTask,
-                        taskdom_end_time: endTime,
-                        status: t.taskdom_pending_state || p.hierarchy
-                    }
-                };
-            }
-            return p;
+            return mapUserForDashboard(p, t);
         });
 
         return {
@@ -778,63 +834,7 @@ export async function getMasterData() {
 
         return (profiles || []).map((item: any) => {
             const uTasks = (tasks || []).find((t: any) => t.member_id === item.member_id || t.member_id === item.id);
-
-            // 1. Parse Queue
-            let queue: any[] = [];
-            if (uTasks && uTasks.taskQueue) {
-                try {
-                    queue = typeof uTasks.taskQueue === 'string' ? JSON.parse(uTasks.taskQueue) : uTasks.taskQueue;
-                } catch (e) { }
-            }
-
-            // 2. Fix URLs for HTML Display
-            queue = queue.map((q: any) => ({
-                ...q,
-                proofUrl: fixUrl(q.proofUrl)
-            }));
-
-            // 3. Parse History
-            let history: any[] = [];
-            if (uTasks && uTasks.Taskdom_History) {
-                try { history = typeof uTasks.Taskdom_History === 'string' ? JSON.parse(uTasks.Taskdom_History) : uTasks.Taskdom_History } catch (e) { }
-            }
-
-            // 4. Extract Active Task
-            let activeTask = null;
-            let endTime = null;
-            if (uTasks && uTasks.taskdom_active_task) {
-                try {
-                    const p = typeof uTasks.taskdom_active_task === 'string' ? JSON.parse(uTasks.taskdom_active_task) : uTasks.taskdom_active_task;
-                    activeTask = p;
-                    endTime = p.endTime || null;
-                } catch (e) { }
-            }
-
-            const pendingState = uTasks?.taskdom_pending_state || null;
-
-            // 5. Return Clean Object
-            return {
-                id: item.member_id || item.id,
-                memberId: item.member_id || item.id,
-                name: item.name || item.title || "Unknown",
-                hierarchy: item.hierarchy || "Newbie",
-                score: Number(item.score || 0),
-                wallet: Number(item.wallet || 0),
-                queue: queue,
-                activeTask: activeTask,
-                endTime: endTime,
-                pendingState: pendingState,
-                routineHistory: history,
-                kneelCount: item.kneel_count || 0,
-                kneelHistory: item.kneel_history || {},
-                joinedDate: item.joined_date,
-                points: item.score || 0,
-                routine: item.routine || "None",
-                routineDoneToday: item.routine_done_today || false,
-                strikeCount: item.strike_count || 0,
-                // Pass raw item for other fields if needed
-                _raw: { ...item, Taskdom_History: uTasks?.Taskdom_History }
-            };
+            return mapUserForDashboard(item, uTasks);
         });
     } catch (err) {
         console.error("Dashboard Data Error:", err);
