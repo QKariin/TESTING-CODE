@@ -77,7 +77,8 @@ export function openGlobalSection(section: 'leaderboard' | 'talk' | 'updates' | 
 function _loadAllPreviews() {
     loadLeaderboardPreview(currentPeriod);
     _loadSidePanels();
-    _loadTalkPreview();
+    _loadTalkFull(true);
+    talkPollInterval = setInterval(() => _loadTalkFull(false), 8000);
     _loadUpdatesPreview();
     _loadSpendersPreview();
     _loadQueenPreview();
@@ -430,6 +431,8 @@ function _renderFullLeaderboard(entries: any[], period: string) {
 }
 
 // ─── FULL TALK ─────────────────────────────────────────────────────────────────
+
+export async function loadTalkFull(scrollBottom = true) { await _loadTalkFull(scrollBottom); }
 
 async function _loadTalkFull(scrollBottom: boolean) {
     try {
