@@ -34,15 +34,35 @@ export async function GET(request: NextRequest) {
             .eq('member_id', email);
         const crowdfundTotal = (contribData || []).reduce((sum: number, r: any) => sum + (r.amount_given || 0), 0);
 
-        // Parse Taskdom_History exactly like mapUserForDashboard in velo-actions.ts
+        // --- Same mapping as mapUserForDashboard in velo-actions.ts ---
         const p = profileData as any || {};
         const t = taskData as any || {};
         const params = p.parameters || {};
 
+        // Parse Taskdom_History
         let history: any[] = [];
         if (t.Taskdom_History) {
             try { history = typeof t.Taskdom_History === 'string' ? JSON.parse(t.Taskdom_History) : t.Taskdom_History; } catch (e) { history = []; }
         }
+
+        // Parse taskQueue
+        let pQueue: any[] = [];
+        if (t.taskQueue) {
+            try { pQueue = typeof t.taskQueue === 'string' ? JSON.parse(t.taskQueue) : (t.taskQueue || []); } catch (e) { }
+        }
+
+        // Parse active task
+        let activeTask = t?.taskdom_active_task || null;
+        let endTime = null;
+        try {
+            if (typeof activeTask === 'string') {
+                const parsed = JSON.parse(activeTask);
+                endTime = parsed.endTime || null;
+                activeTask = parsed;
+            } else if (activeTask && activeTask.endTime) {
+                endTime = activeTask.endTime;
+            }
+        } catch (e) { }
 
         const approvedTasks = history.filter((h: any) => h.status === 'approve' && !h.isRoutine).length;
         const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
@@ -52,27 +72,55 @@ export async function GET(request: NextRequest) {
         const finalPic = (rawPic && rawPic.length > 5 && rawPic !== "undefined" && rawPic !== "null") ? rawPic : defaultPic;
 
         return NextResponse.json({
-            // Base: profileData fields (member_id, wallet, score, hierarchy, name, kinks, limits, etc.)
+            // Exact same output as mapUserForDashboard in velo-actions.ts
             ...p,
-            // Taskdom fields needed by the profile (same keys as mapUserForDashboard)
+            id: p.member_id || p.id,
+            memberId: p.member_id || p.id,
+            name: p.name || p.title || "Unknown",
+            hierarchy: p.hierarchy || "Hall Boy",
+            score: Number(p.score || 0),
+            wallet: Number(p.wallet || 0),
+            // Task fields
             Taskdom_History: t.Taskdom_History || null,
-            kneelCount: Number(t.kneelCount || p.kneelCount || p.kneel_count || params.kneel_count || 0),
+            queue: pQueue,
+            activeTask: activeTask,
+            endTime: endTime,
+            pendingState: t?.taskdom_pending_state || null,
+            taskdom_active_task: activeTask,
+            taskdom_pending_state: t?.taskdom_pending_state || null,
+            kneelCount: Number(t?.kneelCount || p.kneelCount || p.kneel_count || params.kneel_count || 0),
             'today kneeling': t['today kneeling'] || '0',
             lastWorship: t.lastWorship || p.lastWorship || null,
-            taskdom_active_task: t.taskdom_active_task || null,
-            taskdom_pending_state: t.taskdom_pending_state || null,
-            // Computed hierarchy fields — same as mapUserForDashboard
-            taskdom_completed_tasks: approvedTasks || Number(t.Taskdom_CompletedTasks || params.taskdom_completed_tasks || 0),
+            kneelHistory: p.kneel_history || t.kneel_history || {},
+            // Computed hierarchy fields
+            taskdom_completed_tasks: approvedTasks || Number(t?.Taskdom_CompletedTasks || params.taskdom_completed_tasks || 0),
             total_coins_spent: Number(params.total_coins_spent || p.total_coins_spent || 0),
             bestRoutinestreak: routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0),
             routinestreak: Number(p.routinestreak || params.taskdom_current_streak || 0),
             routineHistory: history,
             routinehistory: history,
-            // Identity fields for getHierarchyReport check items
+            // Profile details
+            joinedDate: p.joined_date,
+            points: Number(p.score || 0),
+            routine: p.routine || "None",
+            routineDoneToday: p.routine_done_today || false,
+            strikeCount: p.strike_count || 0,
+            lastSeen: p.last_active,
+            // Identity fields for getHierarchyReport
             image: finalPic,
+            profilePicture: finalPic,
+            avatar: finalPic,
             title: p.name || "",
             kinks: p.kinks || "",
             limits: p.limits || "",
+            // Parameters (enhanced, same as dashboard)
+            parameters: {
+                ...params,
+                taskdom_active_task: activeTask,
+                taskdom_end_time: endTime,
+                status: t?.taskdom_pending_state || p.hierarchy,
+                lastMessageTime: params.lastMessageTime || 0,
+            },
             // Crowdfund total
             _totalSpent: crowdfundTotal,
         });
