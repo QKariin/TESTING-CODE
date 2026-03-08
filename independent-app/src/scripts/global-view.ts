@@ -27,6 +27,7 @@ export function closeGlobalView() {
     const ov = document.getElementById('globalViewOverlay');
     if (ov) ov.style.display = 'none';
     _stopPoll();
+    _stopUpdatesRealtime();
 }
 
 export function closeGlobalSection() { _showMain(); }
@@ -60,6 +61,10 @@ function _stopPoll() {
     if (talkPollInterval) { clearInterval(talkPollInterval); talkPollInterval = null; }
     if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
     if (realtimeChannel) { realtimeChannel.unsubscribe(); realtimeChannel = null; }
+    // updatesChannel intentionally kept alive while overlay is open
+}
+
+function _stopUpdatesRealtime() {
     if (updatesChannel) { updatesChannel.unsubscribe(); updatesChannel = null; }
 }
 
@@ -88,6 +93,7 @@ function _loadAllPreviews() {
     _loadSidePanels();
     _initTalkRealtime();
     _loadUpdatesPreview();
+    _initUpdatesRealtime();
     _loadSpendersPreview();
     _loadQueenPreview();
 }
@@ -756,13 +762,15 @@ function _initUpdatesRealtime() {
                 const isPhoto = row.type === 'global_update';
                 if (!isWishlist && !isMerit && !isPhoto) return;
 
-                // Re-fetch to get enriched profile data then prepend
+                // Re-fetch with enriched profile data, update both full grid and main-view preview
                 fetch('/api/global/updates')
                     .then(r => r.json())
                     .then(({ updates }) => {
+                        if (!updates?.length) return;
                         const grid = document.getElementById('globalUpdatesGrid');
-                        if (!grid) return;
-                        if (updates?.length) grid.innerHTML = updates.map((u: any) => _buildUpdateCard(u)).join('');
+                        if (grid) grid.innerHTML = updates.map((u: any) => _buildUpdateCard(u)).join('');
+                        const preview = document.getElementById('globalPreview_updates');
+                        if (preview) preview.innerHTML = updates.slice(0, 4).map((u: any) => _buildUpdateCardPreview(u)).join('');
                     })
                     .catch(() => {});
             }
