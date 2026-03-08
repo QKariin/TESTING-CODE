@@ -1,6 +1,6 @@
 import { getState, setState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
-import { getHierarchyReport } from './hierarchy-rules';
+import { getHierarchyReport } from '../lib/hierarchyRules';
 import { uploadToSupabase } from './mediaSupabase';
 import { getOptimizedUrl } from './media';
 
@@ -1797,11 +1797,13 @@ export async function sendChatMessage() {
             if (inputDesk) inputDesk.value = '';
             if (inputMob) inputMob.value = '';
 
-            // Update local wallet in state
-            if (data.newWallet !== undefined) {
-                const { setState } = await import('./profile-state');
-                setState({ wallet: data.newWallet });
-            }
+            // Immediately update wallet — use API-returned value, fall back to client-side subtraction
+            const newWallet = data.newWallet !== undefined
+                ? data.newWallet
+                : Math.max(0, (getState().wallet || 0) - (data.costCharged || 0));
+            setState({ wallet: newWallet });
+            const wStr = newWallet.toLocaleString();
+            document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = wStr; });
         } else {
             alert(data.error || "Failed to send message.");
         }
