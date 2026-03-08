@@ -27,28 +27,35 @@ export async function GET() {
             .limit(30),
     ]);
 
-    // Batch-lookup profiles for all senders
+    // Collect unique sender emails
     const allEmails = [...new Set([
         ...(photosRes.data || []).map((r: any) => r.member_id?.toLowerCase()),
         ...(tributesRes.data || []).map((r: any) => r.member_id?.toLowerCase()),
         ...(pointsRes.data || []).map((r: any) => r.member_id?.toLowerCase()),
-    ].filter(Boolean))];
+    ].filter(Boolean))] as string[];
 
-    // Use ilike OR filter (same as global chat) for case-insensitive matching
-    const { data: profiles } = allEmails.length
-        ? await supabaseAdmin
-            .from('profiles')
-            .select('member_id, name, avatar_url, profile_picture_url')
-            .or(allEmails.map((e: string) => `member_id.ilike.${e}`).join(','))
-        : { data: [] };
-
-    const profileMap = new Map<string, any>((profiles || []).map((p: any) => [p.member_id?.toLowerCase(), p]));
+    // Lookup each profile individually with ilike (case-insensitive) — same pattern as /api/global/messages
+    const profileMap = new Map<string, any>();
+    if (allEmails.length) {
+        const profileResults = await Promise.all(
+            allEmails.map((email: string) =>
+                supabaseAdmin
+                    .from('profiles')
+                    .select('member_id, name, avatar_url')
+                    .ilike('member_id', email)
+                    .maybeSingle()
+            )
+        );
+        profileResults.forEach((res, i) => {
+            if (res.data) profileMap.set(allEmails[i].toLowerCase(), res.data);
+        });
+    }
 
     function getProfile(email: string) {
         const p = profileMap.get(email?.toLowerCase());
         return {
-            name: (p as any)?.name || email?.split('@')[0] || 'SUBJECT',
-            avatar: (p as any)?.avatar_url || (p as any)?.profile_picture_url || null,
+            name: p?.name || email?.split('@')[0] || 'SUBJECT',
+            avatar: p?.avatar_url || null,
         };
     }
 
