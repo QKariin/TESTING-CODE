@@ -207,7 +207,8 @@ function renderTributes() {
         const pinnedItems = pinned
             .map(keyword => globalTributes.find(t => t.title?.toLowerCase().includes(keyword)))
             .filter(Boolean) as typeof globalTributes;
-        const quickItems = pinnedItems.length >= 2 ? pinnedItems : globalTributes.slice(0, 2);
+        // Only show 1 featured item in the quick tribute box; full list opens via SPOIL ME
+        const quickItems = pinnedItems.length >= 1 ? [pinnedItems[0]] : globalTributes.slice(0, 1);
 
         // Last tribute info — read from THIS user's own profile parameters (per-user, not global)
         const st = getState();
@@ -2743,7 +2744,8 @@ export function renderProfileSidebar(u: any) {
                 if ((r.label === 'IDENTITY' || r.label === 'PHOTO') && r.status === 'VERIFIED') return;
                 const fieldKey = fieldIdMap[r.label];
                 // Safely grab the actual string value from the profile for the modal
-                const rawValue = fieldKey && u[fieldKey] ? (typeof u[fieldKey] === 'string' ? u[fieldKey] : JSON.stringify(u[fieldKey])) : '';
+                const _rawVal = fieldKey ? (u[fieldKey] || u.parameters?.[fieldKey] || '') : '';
+                const rawValue = _rawVal ? (typeof _rawVal === 'string' ? _rawVal : JSON.stringify(_rawVal)) : '';
                 html += buildCheck(r.label, r.status, fieldKey, rawValue);
             }
         });

@@ -93,9 +93,11 @@ function buildStatsFromProfile(profile: any) {
     // Valid if not empty and not the default "SLAVE"
     const hasName = nameStr.length > 0 && nameStr !== 'SLAVE' && nameStr !== 'NEW SLAVE';
 
-    // 3. Resolve Details
-    const hasLimits = !!(profile.limits && profile.limits.length > 2);
-    const hasKinks = !!(profile.kinks && profile.kinks.length > 2);
+    // 3. Resolve Details — check both direct columns AND parameters JSONB
+    const rawKinks = profile.kinks || params.kinks || '';
+    const rawLimits = profile.limits || params.limits || '';
+    const hasKinks = !!(rawKinks && String(rawKinks).length > 2);
+    const hasLimits = !!(rawLimits && String(rawLimits).length > 2);
     const hasRoutine = !!(profile.routine && profile.routine.length > 2);
 
     return {
