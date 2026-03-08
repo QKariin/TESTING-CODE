@@ -256,20 +256,15 @@ async function _loadUpdatesPreview() {
 function _buildUpdateCardPreview(u: any): string {
     if (u.kind === 'tribute') {
         const initial = (u.sender_name || 'S')[0].toUpperCase();
-        const avHtml = u.sender_avatar
-            ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.55rem;color:#c5a059;">${initial}</div>`
-            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.55rem;color:#c5a059;">${initial}</div>`;
         const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const coverSrc = u.sender_avatar || '';
         return `<div style="margin:6px 8px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
-            <div style="width:100%;height:100px;overflow:hidden;position:relative;background:#050510;">
-                ${u.image ? `<img src="${u.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
-                <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(10,10,20,0.9) 100%);"></div>
-                <div style="position:absolute;bottom:-14px;left:12px;width:30px;height:30px;border-radius:50%;background:rgba(197,160,89,0.12);border:2px solid #c5a059;overflow:hidden;position:absolute;">
-                    ${avHtml}
-                </div>
+            <div style="width:100%;height:110px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
+                ${coverSrc ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none'">` : ''}
+                <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.85) 100%);"></div>
+                <div style="position:absolute;bottom:8px;left:12px;font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.7);letter-spacing:2px;">✦ GIFT SENT</div>
             </div>
-            <div style="padding:20px 12px 10px;">
-                <div style="font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:2px;margin-bottom:4px;">✦ Gift Sent</div>
+            <div style="padding:10px 12px 10px;">
                 <div style="font-family:'Cinzel';font-size:0.72rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title}</div>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
                     <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</span>
@@ -686,21 +681,15 @@ function _buildUpdateCard(u: any): string {
 
 function _buildTributeCard(u: any): string {
     const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const initial = (u.sender_name || 'S')[0].toUpperCase();
-    const avHtml = u.sender_avatar
-        ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">${initial}</div>`
-        : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">${initial}</div>`;
+    const coverSrc = u.sender_avatar || '';
     return `
     <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;max-width:320px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
-        <div style="width:100%;height:140px;overflow:hidden;position:relative;background:#050510;">
-            ${u.image ? `<img src="${u.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
-            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(10,10,20,0.92) 100%);"></div>
-            <div style="position:absolute;bottom:-16px;left:14px;width:34px;height:34px;border-radius:50%;background:rgba(197,160,89,0.12);border:2px solid #c5a059;overflow:hidden;position:absolute;">
-                ${avHtml}
-            </div>
+        <div style="width:100%;height:140px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
+            ${coverSrc ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none'">` : ''}
+            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div>
+            <div style="position:absolute;bottom:10px;left:14px;font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div>
         </div>
-        <div style="padding:22px 14px 14px;">
-            <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.5);letter-spacing:2px;margin-bottom:5px;">✦ GIFT SENT</div>
+        <div style="padding:12px 14px 14px;">
             <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title}</div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
                 <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</span>

@@ -34,11 +34,12 @@ export async function GET() {
         ...(pointsRes.data || []).map((r: any) => r.member_id?.toLowerCase()),
     ].filter(Boolean))];
 
+    // Use ilike OR filter (same as global chat) for case-insensitive matching
     const { data: profiles } = allEmails.length
         ? await supabaseAdmin
             .from('profiles')
             .select('member_id, name, avatar_url, profile_picture_url')
-            .in('member_id', allEmails)
+            .or(allEmails.map((e: string) => `member_id.ilike.${e}`).join(','))
         : { data: [] };
 
     const profileMap = new Map<string, any>((profiles || []).map((p: any) => [p.member_id?.toLowerCase(), p]));
