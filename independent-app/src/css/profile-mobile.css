@@ -588,64 +588,65 @@
     }
 
     .luxury-card {
-        background: linear-gradient(180deg, rgba(30, 30, 30, 0.6) 0%, rgba(10, 10, 10, 0.9) 100%);
+        background: rgba(4, 4, 14, 0.38);
         border: 1px solid rgba(197, 160, 89, 0.2);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         border-radius: 2px;
-        padding: 24px 20px;
-        /* Increased padding */
+        padding: 28px 16px;
         position: relative;
         overflow: hidden;
-        width: 85%;
-        /* Slightly narrower to allow for side gaps as requested */
+        width: 95%;
         margin: 10px auto;
         box-sizing: border-box;
         backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
     }
 
     /* Status text */
     .txt-status-red {
         font-family: 'Orbitron', sans-serif;
-        font-size: 0.65rem;
+        font-size: 1rem;
         font-weight: 700;
-        letter-spacing: 3px;
+        letter-spacing: 7px;
         color: #ff003c;
         text-transform: uppercase;
     }
 
     .txt-status-green {
         font-family: 'Orbitron', sans-serif;
-        font-size: 0.65rem;
+        font-size: 1rem;
         font-weight: 700;
-        letter-spacing: 3px;
+        letter-spacing: 7px;
         color: #00ff88;
         text-transform: uppercase;
     }
 
     /* Glassmorphism lobby button */
     .lobby-btn {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.6rem;
+        font-family: 'Cinzel', serif;
+        font-size: 0.82rem;
         font-weight: 700;
-        letter-spacing: 2px;
+        letter-spacing: 5px;
         text-transform: uppercase;
         cursor: pointer;
-        padding: 14px 20px;
-        border-radius: 6px;
+        padding: 20px 30px;
+        border-radius: 0;
         border: 1px solid #c5a059;
         color: #c5a059;
-        background: rgba(10, 8, 4, 0.55);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(197, 160, 89, 0.12);
+        background: rgba(4, 4, 14, 0.45);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(197, 160, 89, 0.1);
         transition: background 0.2s, box-shadow 0.2s;
         display: block;
         text-align: center;
+        width: 80%;
+        margin: 0 auto;
     }
 
     .lobby-btn:active {
-        background: rgba(197, 160, 89, 0.1);
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(197, 160, 89, 0.2);
+        background: rgba(197, 160, 89, 0.08);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(197, 160, 89, 0.18);
     }
 
     .lobby-btn.close {
@@ -654,6 +655,8 @@
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
+        border-radius: 6px;
+        width: auto;
     }
 
     /* Task Action Buttons */

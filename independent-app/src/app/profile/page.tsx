@@ -1064,10 +1064,10 @@ export default function ProfilePage() {
                         {/* CURRENT STATUS */}
                         <div style={{ width: '100%', marginTop: '20px' }}>
                             <div className="duty-label">CURRENT STATUS</div>
-                            <div className="luxury-card" style={{ padding: '15px 5px' }}>
+                            <div className="luxury-card">
                                 <div id="qm_TaskIdle" className="hidden" style={{ textAlign: 'center' }}>
-                                    <div className="txt-status-red" style={{ marginBottom: '10px' }}>UNPRODUCTIVE</div>
-                                    <button id="mobNewTaskBtn" className="lobby-btn" style={{ width: '100%', borderColor: '#c5a059', color: '#c5a059' }} onClick={() => (window as any).mobileRequestTask()}>REQUEST TASK</button>
+                                    <div className="txt-status-red" style={{ marginBottom: '16px' }}>UNPRODUCTIVE</div>
+                                    <button id="mobNewTaskBtn" className="lobby-btn" onClick={() => (window as any).mobileRequestTask()}>REQUEST TASK</button>
                                     <div id="mobRequestWarningBox" style={{ display: 'none', flexDirection: 'column', gap: 12, marginTop: '10px', alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(20,0,0,0.8)', padding: '20px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
                                         <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
                                         <button className="action-btn" onClick={() => (window as any).goToExchequer()} style={{ width: '100%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', padding: '15px', borderRadius: '8px', fontSize: '0.8rem', letterSpacing: '2px' }}>ADD COINS</button>
