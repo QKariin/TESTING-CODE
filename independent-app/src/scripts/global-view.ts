@@ -75,7 +75,7 @@ export function openGlobalSection(section: 'leaderboard' | 'talk' | 'updates' | 
     const panel = document.getElementById(`gPanel_${section}`);
     if (panel) panel.style.display = 'flex';
     if (section === 'leaderboard') loadLeaderboard(currentPeriod);
-    if (section === 'talk') { loadTalkFull(true); talkPollInterval = setInterval(() => loadTalkFull(false), 8000); }
+    if (section === 'talk') { _initTalkRealtime(); }
     if (section === 'updates') { _loadUpdatesFull(); _initUpdatesRealtime(); }
     if (section === 'spenders') _loadSpendersFull();
     if (section === 'queen') _loadQueenFull();
