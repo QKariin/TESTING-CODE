@@ -2429,9 +2429,12 @@ export function renderExchequerHistory(profile: any) {
 }
 
 async function saveModalData(fieldId: string, label: string, overlay: HTMLElement, box: HTMLElement, isChip: boolean, isRoutine: boolean, costPerItem: number) {
+    // Get email from auth session, fall back to profile state (member_id)
     const supabase = createClient();
-    const { data: { user } = {} } = await supabase.auth.getUser(); // Added default empty object for data
-    if (!user?.email) return;
+    const { data: { user } = {} } = await supabase.auth.getUser();
+    const { memberId, id } = getState();
+    const email = user?.email || memberId || id;
+    if (!email) { console.error('[saveModalData] No email found'); return; }
 
     const saveBtn = document.getElementById('_reqSave') as HTMLButtonElement;
     const errEl = document.getElementById('_reqError') as HTMLElement;
@@ -2465,7 +2468,7 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
     const res = await fetch('/api/profile-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberEmail: user.email, field: fieldId, value, cost })
+        body: JSON.stringify({ memberEmail: email, field: fieldId, value, cost })
     });
     const data = await res.json();
 
@@ -2479,7 +2482,7 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
         (window as any).__currentProfileRaw = data.profile;
 
         renderProfileSidebar(data.profile);
-        loadChatHistory(user.email!);
+        loadChatHistory(email);
     } else {
         showErr('Save failed: ' + (data.error || 'Unknown error'));
     }
@@ -2490,7 +2493,7 @@ export function openManageProfileModal(u: any) {
     document.getElementById('_manageModal')?.remove();
     const overlay = document.createElement('div');
     overlay.id = '_manageModal';
-    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;`;
+    overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000000;display:flex;align-items:center;justify-content:center;padding:16px;`;
 
     const box = document.createElement('div');
     box.style.cssText = `background:#07080f;border:1px solid #c5a059;border-radius:12px;padding:24px;width:100%;max-width:320px;font-family:'Orbitron';`;
