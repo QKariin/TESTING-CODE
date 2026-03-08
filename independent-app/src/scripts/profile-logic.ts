@@ -480,6 +480,14 @@ function showGiftToast(title: string, amount: number, merit: number) {
         opacity: '0', transform: 'translateY(20px)',
         transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
     });
+    // Mobile-only overrides: clear footer nav (z-index 9999999, height ~85px)
+    if (window.innerWidth <= 768) {
+        toast.style.zIndex = '10000000';
+        toast.style.bottom = 'calc(85px + env(safe-area-inset-bottom) + 16px)';
+        toast.style.right = '12px';
+        toast.style.left = '12px';
+        toast.style.width = 'auto';
+    }
     document.body.appendChild(toast);
     requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; });
 }
