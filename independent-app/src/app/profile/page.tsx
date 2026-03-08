@@ -749,7 +749,7 @@ export default function ProfilePage() {
                                             <div className="hub-action-desc">Replace profile picture</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">200 ₡</span>
+                                    <span className="hub-action-cost">500 ₡</span>
                                 </button>
                                 <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('routine')}>
                                     <div className="hub-action-left">

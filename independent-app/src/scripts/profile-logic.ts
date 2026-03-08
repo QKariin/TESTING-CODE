@@ -2186,8 +2186,35 @@ export function closeRewardCard() { document.getElementById('rewardCardOverlay')
 export function closeExchequer() { document.getElementById('mobExchequer')?.classList.add('hidden'); }
 
 export function showLobbyAction(type: string) {
-    document.getElementById('lobbyMenu')?.classList.add('hidden');
-    document.getElementById('lobbyActionView')?.classList.remove('hidden');
+    // Close the hub first so the modal renders on top cleanly
+    closeLobby();
+
+    const state = getState();
+    const raw = (window as any).__currentProfileRaw || state.raw || state;
+    const params = raw?.parameters || {};
+
+    if (type === 'photo') {
+        handleProfileUpload();
+        return;
+    }
+    if (type === 'name') {
+        openTextFieldModal('name', 'Display Name', raw?.name || '');
+        return;
+    }
+    if (type === 'routine') {
+        openTextFieldModal('routine', 'ROUTINE', raw?.routine || '');
+        return;
+    }
+    if (type === 'kinks') {
+        const existing = Array.isArray(params.kinks) ? params.kinks.join(', ') : (params.kinks || raw?.kinks || '');
+        openTextFieldModal('kinks', 'KINKS', existing);
+        return;
+    }
+    if (type === 'limits') {
+        const existing = Array.isArray(params.limits) ? params.limits.join(', ') : (params.limits || raw?.limits || '');
+        openTextFieldModal('limits', 'LIMITS', existing);
+        return;
+    }
 }
 
 export function confirmLobbyAction() { backToLobbyMenu(); }
@@ -2253,7 +2280,8 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     document.getElementById('_reqModal')?.remove();
     const overlay = document.createElement('div');
     overlay.id = '_reqModal';
-    overlay.style.cssText = `position: fixed; top:0; right:0; bottom:0; left:300px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 16px; `;
+    const isMobile = window.innerWidth <= 768;
+    overlay.style.cssText = `position: fixed; top:0; right:0; bottom:0; left:${isMobile ? '0' : '300px'}; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); z-index: 10000000; display: flex; align-items: center; justify-content: center; padding: 16px; `;
     const box = document.createElement('div');
     box.style.cssText = `background:#07080f; border: 1px solid #c5a059; border-radius: 12px; padding: 24px; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; font-family: 'Orbitron'; `;
 
