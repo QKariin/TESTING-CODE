@@ -2487,17 +2487,20 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
     } else if (data.success && data.profile) {
         overlay.remove();
 
-        // Immediately reflect new wallet in UI — no refresh needed
-        const newWallet = data.profile.wallet ?? data.newWallet;
-        if (newWallet !== undefined) {
-            setState({ wallet: newWallet, raw: data.profile });
-            updateWalletDisplay();
-        } else {
-            setState({ raw: data.profile });
-        }
-        (window as any).__currentProfileRaw = data.profile;
+        // Compute deducted wallet client-side immediately — don't trust API response timing
+        const currentWallet = getState().wallet || 0;
+        const immediateWallet = cost > 0 ? Math.max(0, currentWallet - cost) : currentWallet;
 
-        renderProfileSidebar(data.profile);
+        // Patch profile so renderProfileSidebar also uses the correct wallet
+        const patchedProfile = { ...data.profile, wallet: immediateWallet };
+        setState({ wallet: immediateWallet, raw: patchedProfile });
+        (window as any).__currentProfileRaw = patchedProfile;
+
+        // Force DOM update immediately
+        const elCoins = document.getElementById('coins');
+        if (elCoins) elCoins.innerText = immediateWallet.toLocaleString();
+
+        renderProfileSidebar(patchedProfile);
         loadChatHistory(email);
     } else {
         showErr('Save failed: ' + (data.error || 'Unknown error'));
