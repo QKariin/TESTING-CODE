@@ -4,28 +4,41 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    const { data: messages, error } = await supabaseAdmin
-        .from('chats')
-        .select('member_id, content, created_at')
-        .eq('type', 'global_talk')
-        .order('created_at', { ascending: true })
-        .limit(100);
+    const [messagesRes, onlineRes] = await Promise.all([
+        supabaseAdmin
+            .from('chats')
+            .select('member_id, content, created_at')
+            .eq('type', 'global_talk')
+            .order('created_at', { ascending: true })
+            .limit(100),
+        supabaseAdmin
+            .from('profiles')
+            .select('member_id, name, avatar_url, profile_picture_url, last_active')
+            .gte('last_active', new Date(Date.now() - 2 * 60 * 1000).toISOString()),
+    ]);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (messagesRes.error) return NextResponse.json({ error: messagesRes.error.message }, { status: 500 });
 
-    const emails = [...new Set((messages || []).map((m: any) => m.member_id))];
+    const messages = messagesRes.data || [];
+    const emails = [...new Set(messages.map((m: any) => m.member_id))];
     const { data: profiles } = emails.length
-        ? await supabaseAdmin.from('profiles').select('email, name').in('email', emails)
+        ? await supabaseAdmin.from('profiles').select('member_id, name').in('member_id', emails)
         : { data: [] };
 
-    const nameMap = new Map((profiles || []).map((p: any) => [p.email, p.name]));
+    const nameMap = new Map((profiles || []).map((p: any) => [p.member_id, p.name]));
 
-    const enriched = (messages || []).map((m: any) => ({
+    const enriched = messages.map((m: any) => ({
         ...m,
         senderName: nameMap.get(m.member_id) || m.member_id?.split('@')[0] || 'SUBJECT',
     }));
 
-    return NextResponse.json({ messages: enriched });
+    const online = (onlineRes.data || []).map((p: any) => ({
+        email: p.member_id,
+        name: p.name || p.member_id?.split('@')[0] || 'SUBJECT',
+        avatar: p.avatar_url || p.profile_picture_url || null,
+    }));
+
+    return NextResponse.json({ messages: enriched, online });
 }
 
 export async function POST(req: Request) {
@@ -37,7 +50,7 @@ export async function POST(req: Request) {
     const { data, error } = await supabaseAdmin
         .from('chats')
         .insert({
-            member_id: senderEmail,
+            member_id: senderEmail.toLowerCase(),
             content: content.trim(),
             type: 'global_talk',
             sender: 'subject',

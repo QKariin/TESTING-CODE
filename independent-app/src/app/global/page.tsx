@@ -108,10 +108,14 @@ export default function GlobalPage() {
 
                     {/* TALK — big left column, full chat */}
                     <div style={{ gridRow: '1 / 3', display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '11px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
                             <div style={{ width: '3px', height: '14px', background: 'rgba(74,222,128,0.7)', borderRadius: '2px' }}></div>
                             <span style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.75)', letterSpacing: '2px' }}>GLOBAL TALK</span>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px #4ade80', display: 'inline-block' }}></span>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px #4ade80', display: 'inline-block', flexShrink: 0 }}></span>
+                        </div>
+                        {/* Online users strip */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(74,222,128,0.03)', flexShrink: 0, minHeight: '46px', overflowX: 'auto' }}>
+                            <div id="globalOnlineStrip" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap' }}></div>
                         </div>
                         <div id="globalTalkFeed" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: '8px' }}></div>
                         <div style={{ display: 'flex', gap: '8px', padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, background: 'rgba(0,0,0,0.25)' }}>

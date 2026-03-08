@@ -437,15 +437,38 @@ export async function loadTalkFull(scrollBottom = true) { await _loadTalkFull(sc
 async function _loadTalkFull(scrollBottom: boolean) {
     try {
         const res = await fetch('/api/global/talk');
-        const { messages } = await res.json();
+        const { messages, online } = await res.json();
+        _renderOnlineUsers(online || []);
         _renderTalkFull(messages || [], scrollBottom);
     } catch {}
+}
+
+function _renderOnlineUsers(users: any[]) {
+    const strip = document.getElementById('globalOnlineStrip');
+    if (!strip) return;
+    if (!users.length) {
+        strip.innerHTML = `<span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);letter-spacing:2px;">NO ONE ONLINE</span>`;
+        return;
+    }
+    strip.innerHTML = users.map(u => {
+        const initial = (u.name || 'S')[0].toUpperCase();
+        const av = u.avatar
+            ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.querySelector('.gl-av-init').style.display='flex'">`
+            : '';
+        return `<div title="${u.name}" style="position:relative;flex-shrink:0;">
+            <div style="width:30px;height:30px;border-radius:50%;background:rgba(197,160,89,0.12);border:1.5px solid rgba(74,222,128,0.5);overflow:hidden;position:relative;cursor:default;">
+                ${av}
+                <div class="gl-av-init" style="display:${u.avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.55rem;color:#c5a059;">${initial}</div>
+            </div>
+            <div style="position:absolute;bottom:0;right:0;width:7px;height:7px;border-radius:50%;background:#4ade80;border:1.5px solid #04040e;box-shadow:0 0 5px #4ade80;"></div>
+        </div>`;
+    }).join('');
 }
 
 function _renderTalkFull(messages: any[], scrollBottom: boolean) {
     const feed = document.getElementById('globalTalkFeed');
     if (!feed) return;
-    const myEmail = getState().raw?.email || '';
+    const myEmail = getState().raw?.member_id || getState().raw?.email || '';
     if (!messages.length) {
         feed.innerHTML = `<div style="text-align:center;padding:60px 20px;font-family:'Orbitron';font-size:0.6rem;color:rgba(255,255,255,0.18);letter-spacing:3px;">BE THE FIRST TO SPEAK</div>`;
         return;
@@ -472,13 +495,14 @@ export async function sendGlobalMessage() {
     const content = input.value.trim();
     if (!content) return;
     const raw = getState().raw;
-    if (!raw?.email) return;
+    const email = raw?.member_id || raw?.email;
+    if (!email) return;
     input.value = '';
     try {
         await fetch('/api/global/talk', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content, senderEmail: raw.email }),
+            body: JSON.stringify({ content, senderEmail: email }),
         });
         await _loadTalkFull(true);
     } catch {}
