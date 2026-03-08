@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QKarin",
-  description: "QKarin",
+  title: "Queen Karin",
+  description: "Queen Karin",
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',

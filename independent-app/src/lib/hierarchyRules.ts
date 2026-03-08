@@ -257,9 +257,9 @@ function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport
 
     statsMap.forEach(s => {
         const target = req[s.reqKey] as number | undefined;
-        if (target !== undefined && target >= 0) {
-            let current = (item[s.key] as number) || 0;
-            let active = s.activeKey ? (item[s.activeKey] as number) || 0 : 0;
+        if ((req as any)[s.reqKey] > 0 || (s.reqKey === "tasks" && (req as any).tasks >= 0)) {
+            let current = (item as any)[s.key] || 0;
+            let active = s.activeKey ? ((item as any)[s.activeKey] || 0) : 0;
 
             // --- STREAK FALLBACK: CALCULATE FROM HISTORY IF DATA IS MISSING ---
             if (s.reqKey === "streak" && current === 0 && active === 0) {
@@ -282,7 +282,7 @@ function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport
 
             // Add Active (Current) Streak if applicable
             if (s.activeKey) {
-                requirement.active = active;
+                (requirement as any).active = active;
             }
 
             report.requirements.push(requirement);
@@ -312,7 +312,7 @@ function calculateInternalStreak(historyStr: string | any[]): { current: number,
     if (!history || history.length === 0) return { current: 0, best: 0 };
 
     // Sort Newest First
-    history.sort((a, b) => new Date(b.date || b._createdDate || b).getTime() - new Date(a.date || a._createdDate || a).getTime());
+    history.sort((a: any, b: any) => new Date(b.date || b._createdDate || b).getTime() - new Date(a.date || a._createdDate || a).getTime());
 
     const getDutyDay = (d: any) => {
         let date = new Date(d);
@@ -353,7 +353,7 @@ function calculateInternalStreak(historyStr: string | any[]): { current: number,
     let lastDate: string | null = null;
 
     // Sort Oldest First for best streak scan
-    const chronHistory = [...history].sort((a, b) => new Date(a.date || a._createdDate || a).getTime() - new Date(b.date || b._createdDate || b).getTime());
+    const chronHistory = [...history].sort((a: any, b: any) => new Date(a.date || a._createdDate || a).getTime() - new Date(b.date || b._createdDate || b).getTime());
 
     chronHistory.forEach(h => {
         const day = getDutyDay(h.date || h._createdDate || h);

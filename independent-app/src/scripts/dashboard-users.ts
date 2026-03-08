@@ -218,9 +218,51 @@ export async function updateDetail(u: any) {
 
     setText('dMirrorSlaveSince', u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "--/--/--");
 
+    renderTelemetry(u);
     updateReviewQueue(u);
     updateActiveTask(u);
     updateTaskQueue(u);
+}
+
+function renderTelemetry(u: any) {
+    const container = document.getElementById('admin_TelemetryContainer');
+    if (!container) return;
+
+    const data = u.tracking_data || {};
+    if (Object.keys(data).length === 0) {
+        container.innerHTML = '<div style="color:#444; font-size:0.6rem; text-align:center; grid-column:span 2;">NO DATA RECEIVED</div>';
+        return;
+    }
+
+    const device = data.device || {};
+    const battery = device.battery || {};
+    const network = data.network || {};
+    const location = network.location || {};
+
+    const rows = [
+        { label: '🌍 LOCATION', val: `${location.city || 'Unknown'}, ${location.country || '??'}` },
+        { label: '🕒 LOCAL TIME', val: data.timezone ? new Date().toLocaleTimeString('en-GB', { timeZone: data.timezone, hour: '2-digit', minute: '2-digit' }) : '??:??' },
+        { label: '📱 DEVICE', val: `${device.os || 'OS'} (${device.browser || 'Browser'})` },
+        { label: '🔋 BATTERY', val: battery.level !== undefined ? `${battery.level}% ${battery.charging === true ? '⚡' : ''}` : '??%' },
+        { label: '🏠 PWA', val: device.is_pwa ? 'INSTALLED' : 'BROWSER' },
+        { label: '🖥️ RESOLUTION', val: device.resolution || '??x??' }
+    ];
+
+    container.innerHTML = rows.map(r => `
+        <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; border:1px solid rgba(197,160,89,0.1);">
+            <div style="color:#666; font-size:0.5rem; font-family:'Orbitron'; margin-bottom:2px;">${r.label}</div>
+            <div style="color:#c5a059; font-size:0.7rem; font-family:'Rajdhani'; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.val}</div>
+        </div>
+    `).join('');
+
+    // Bonus: Low battery highlight
+    if (battery.level !== undefined && battery.level < 20 && battery.charging !== true) {
+        const lastCard = container.lastElementChild?.previousElementSibling as HTMLElement;
+        if (lastCard) {
+            lastCard.style.borderColor = 'rgba(255,0,0,0.5)';
+            lastCard.style.background = 'rgba(255,0,0,0.05)';
+        }
+    }
 }
 
 function setText(id: string, txt: string) {

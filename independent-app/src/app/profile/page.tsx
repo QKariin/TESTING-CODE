@@ -8,6 +8,7 @@ import { updateKneelingUI, attachKneelListeners, renderKneelDots } from '@/scrip
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
 import { toggleSystemLog } from '@/scripts/chat';
+import { trackUserAnalytics } from '@/scripts/telemetry';
 import {
     claimKneelReward,
     switchTab,
@@ -216,8 +217,11 @@ export default function ProfilePage() {
                 console.error("Critical Load Error:", err);
             } finally {
 
-                // 3. Initialize Chat
-                initChatSystem();
+                // 3. Initialize Chat & Tracking
+                if (unifiedData.id) {
+                    initChatSystem();
+                    trackUserAnalytics(unifiedData.id);
+                }
 
                 setLoading(false);
             }
@@ -503,8 +507,8 @@ export default function ProfilePage() {
                                 </div>
                                 <button className="chat-btn-send" onClick={() => sendChatMessage()} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                 </button>
                             </div>
@@ -1244,8 +1248,8 @@ export default function ProfilePage() {
                         </button>
                         <button className="chat-btn-send" onClick={() => (window as any).sendChatMessage()}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </button>
                     </div>
