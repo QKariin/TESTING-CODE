@@ -10,6 +10,21 @@
 }
 
 @media screen and (max-width: 768px) {
+    /* ── Prevent long-press "Save Image" popup on all images ── */
+    #MOBILE_APP img {
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
+        user-select: none !important;
+        pointer-events: none;
+    }
+
+    /* ── Re-enable pointer events on images that need tapping ── */
+    #MOBILE_APP img[onclick],
+    #MOBILE_APP a img,
+    #MOBILE_APP button img {
+        pointer-events: auto;
+    }
+
     #DESKTOP_APP {
         display: none !important;
     }

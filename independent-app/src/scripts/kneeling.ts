@@ -152,6 +152,14 @@ export function attachKneelListeners() {
         // Block Context Menu
         btn.addEventListener('contextmenu', (e) => e.preventDefault());
 
+        // iOS Safari: touchstart preventDefault is the only reliable way to stop
+        // long-press text selection — must use passive:false to allow preventDefault
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
+        btn.addEventListener('touchend', (e) => { e.preventDefault(); }, { passive: false });
+
+        // Block selectstart on the button and bubble up
+        btn.addEventListener('selectstart', (e) => e.preventDefault());
+
         console.log('[KNEEL] Connected to State & DOM:', btn.id);
     });
 
