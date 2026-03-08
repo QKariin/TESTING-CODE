@@ -497,34 +497,62 @@ function showPovertyModal(itemTitle: string) {
     const existing = document.getElementById('povertyModal');
     if (existing) existing.remove();
 
+    const isMobile = window.innerWidth <= 768;
+
     const modal = document.createElement('div');
     modal.id = 'povertyModal';
-    modal.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:14px;">
-            <div>
-                <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,80,80,0.7); letter-spacing:3px; text-transform:uppercase; margin-bottom:8px;">⚠ Insufficient Coins</div>
-                <div style="font-family:'Cinzel', serif; font-size:1.1rem; color:#fff; font-weight:700; line-height:1.4;">You don't have enough coins<br>to spoil Queen Karin right now.</div>
-                ${itemTitle ? `<div style="font-family:'Cinzel', serif; font-size:0.85rem; color:rgba(255,255,255,0.4); margin-top:4px;"><em>${itemTitle}</em></div>` : ''}
+
+    if (isMobile) {
+        // ── MOBILE: fullscreen overlay appended to body (same pattern as gift toast) ──
+        modal.innerHTML = `
+            <div style="background:linear-gradient(135deg,#1a0010 0%,#0d0d1f 100%);border:1px solid rgba(255,0,60,0.35);border-radius:20px;padding:36px 28px;max-width:320px;width:100%;display:flex;flex-direction:column;gap:18px;align-items:center;text-align:center;">
+                <div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(255,0,60,0.7);letter-spacing:3px;text-transform:uppercase;">⚠ Insufficient Capital</div>
+                <h2 style="font-family:'Cinzel',serif;font-size:1.3rem;color:#ff003c;font-weight:700;margin:0;">DENIED</h2>
+                <div id="povertyInsultDyn" style="font-family:'Cinzel',serif;color:#ccc;font-size:0.9rem;line-height:1.5;">${itemTitle ? `"You cannot afford my attention."<br><span style="font-size:0.75rem;opacity:0.5;">${itemTitle}</span>` : '"You cannot afford my attention."'}</div>
+                <div style="display:flex;gap:10px;width:100%;margin-top:6px;">
+                    <button onclick="document.getElementById('povertyModal').remove();var w=document.getElementById('mob_TributeOverlay');if(w)w.style.display='none';" style="flex:1;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);padding:12px 0;border-radius:8px;font-family:'Orbitron',sans-serif;font-size:0.5rem;letter-spacing:1px;cursor:pointer;">CLOSE</button>
+                    <button onclick="document.getElementById('povertyModal').remove();var w=document.getElementById('mob_TributeOverlay');if(w)w.style.display='none';if(window.goToExchequer)window.goToExchequer();" style="flex:2;background:linear-gradient(135deg,#c5a059 0%,#8b6914 100%);color:#000;border:none;padding:12px 0;border-radius:8px;font-family:'Orbitron',sans-serif;font-size:0.5rem;font-weight:700;letter-spacing:1px;cursor:pointer;">BOOST WALLET</button>
+                </div>
             </div>
-            <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.35); line-height:1.8; border-top:1px solid rgba(255,80,80,0.15); padding-top:12px;">She deserves the best. Earn more coins &amp; come back worthy of her attention.</div>
-            <div style="display:flex; gap:10px;">
-                <button onclick="document.getElementById('povertyModal').remove()" style="flex:1; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">CLOSE</button>
-                <button onclick="document.getElementById('povertyModal').remove(); document.getElementById('tributeHuntOverlay')?.classList.add('hidden'); document.getElementById('mob_TributeOverlay')?.classList.add('hidden'); if(window.switchTab){ window.switchTab('buy'); }" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">ADD MORE COINS</button>
+        `;
+        Object.assign(modal.style, {
+            position: 'fixed', inset: '0', zIndex: '2147483647',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)',
+            padding: '24px',
+        });
+    } else {
+        // ── DESKTOP: floating card bottom-right ──
+        modal.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <div>
+                    <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,80,80,0.7); letter-spacing:3px; text-transform:uppercase; margin-bottom:8px;">⚠ Insufficient Coins</div>
+                    <div style="font-family:'Cinzel', serif; font-size:1.1rem; color:#fff; font-weight:700; line-height:1.4;">You don't have enough coins<br>to spoil Queen Karin right now.</div>
+                    ${itemTitle ? `<div style="font-family:'Cinzel', serif; font-size:0.85rem; color:rgba(255,255,255,0.4); margin-top:4px;"><em>${itemTitle}</em></div>` : ''}
+                </div>
+                <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.35); line-height:1.8; border-top:1px solid rgba(255,80,80,0.15); padding-top:12px;">She deserves the best. Earn more coins &amp; come back worthy of her attention.</div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="document.getElementById('povertyModal').remove()" style="flex:1; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">CLOSE</button>
+                    <button onclick="document.getElementById('povertyModal').remove(); document.getElementById('tributeHuntOverlay')?.classList.add('hidden'); if(window.goToExchequer){ window.goToExchequer(); }" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">ADD MORE COINS</button>
+                </div>
             </div>
-        </div>
-    `;
-    Object.assign(modal.style, {
-        position: 'fixed', bottom: '30px', right: '30px', zIndex: '99999',
-        background: 'linear-gradient(135deg, #1a0a0a 0%, #0d0d1f 100%)',
-        border: '1px solid rgba(255,80,80,0.3)',
-        borderRadius: '18px', padding: '24px 28px',
-        boxShadow: '0 30px 80px rgba(0,0,0,0.7)',
-        width: '460px', maxWidth: 'calc(100vw - 40px)',
-        opacity: '0', transform: 'translateY(20px)',
-        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-    });
+        `;
+        Object.assign(modal.style, {
+            position: 'fixed', bottom: '30px', right: '30px', zIndex: '99999',
+            background: 'linear-gradient(135deg, #1a0a0a 0%, #0d0d1f 100%)',
+            border: '1px solid rgba(255,80,80,0.3)',
+            borderRadius: '18px', padding: '24px 28px',
+            boxShadow: '0 30px 80px rgba(0,0,0,0.7)',
+            width: '460px', maxWidth: 'calc(100vw - 40px)',
+            opacity: '0', transform: 'translateY(20px)',
+            transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        });
+    }
+
     document.body.appendChild(modal);
-    requestAnimationFrame(() => { modal.style.opacity = '1'; modal.style.transform = 'translateY(0)'; });
+    if (!isMobile) {
+        requestAnimationFrame(() => { modal.style.opacity = '1'; modal.style.transform = 'translateY(0)'; });
+    }
 }
 
 // Attach the crowdfund function to the global window object so the onclick handlers can find it
@@ -1821,7 +1849,43 @@ export async function sendChatMessage() {
 }
 
 export async function buyRealCoins(amount: number) {
-    console.log("Redirecting to Stripe for amount:", amount);
+    try {
+        const res = await fetch('/api/stripe/coins', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ coins: amount }),
+        });
+        const data = await res.json();
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            console.error('[EXCHEQUER] Stripe coins error:', data.error);
+            alert('Could not initiate payment. Please try again.');
+        }
+    } catch (err) {
+        console.error('[EXCHEQUER] Network error:', err);
+        alert('Could not reach payment service. Please try again.');
+    }
+}
+
+export async function handleSubscribe(tierId: string) {
+    try {
+        const res = await fetch('/api/stripe/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tierId }),
+        });
+        const data = await res.json();
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            console.error('[EXCHEQUER] Stripe subscribe error:', data.error);
+            alert('Could not initiate subscription. Please try again.');
+        }
+    } catch (err) {
+        console.error('[EXCHEQUER] Network error:', err);
+        alert('Could not reach payment service. Please try again.');
+    }
 }
 
 export function toggleRewardSubMenu(show: boolean) {
@@ -2246,10 +2310,28 @@ async function _loadMobGlUpdates() {
 }
 
 export function closeModal() { document.getElementById('glassModal')!.style.display = 'none'; }
-export function closePoverty() { document.getElementById('povertyOverlay')?.classList.add('hidden'); }
-export function goToExchequer() { switchTab('buy'); closePoverty(); }
+export function closePoverty() {
+    document.getElementById('povertyModal')?.remove();
+    if (window.innerWidth <= 768) {
+        const wishlist = document.getElementById('mob_TributeOverlay');
+        if (wishlist) wishlist.style.display = 'none';
+    }
+}
+export function goToExchequer() {
+    closePoverty();
+    if (window.innerWidth <= 768) {
+        // Mobile: show the dedicated exchequer overlay
+        const overlay = document.getElementById('mobExchequer');
+        if (overlay) { overlay.classList.remove('hidden'); overlay.style.display = 'flex'; }
+    } else {
+        switchTab('buy');
+    }
+}
 export function closeRewardCard() { document.getElementById('rewardCardOverlay')?.classList.add('hidden'); }
-export function closeExchequer() { document.getElementById('mobExchequer')?.classList.add('hidden'); }
+export function closeExchequer() {
+    const overlay = document.getElementById('mobExchequer');
+    if (overlay) { overlay.classList.add('hidden'); overlay.style.display = 'none'; }
+}
 
 export function showLobbyAction(type: string) {
     // Close the hub first so the modal renders on top cleanly

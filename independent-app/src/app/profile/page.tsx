@@ -27,6 +27,7 @@ import {
     handleChatKey,
     sendChatMessage,
     buyRealCoins,
+    handleSubscribe,
     toggleRewardGrid,
     toggleRewardSubMenu,
     buyRewardFragment,
@@ -104,6 +105,7 @@ export default function ProfilePage() {
             (window as any).handleChatKey = handleChatKey;
             (window as any).sendChatMessage = sendChatMessage;
             (window as any).buyRealCoins = buyRealCoins;
+            (window as any).handleSubscribe = handleSubscribe;
             (window as any).toggleRewardGrid = toggleRewardGrid;
             (window as any).toggleRewardSubMenu = toggleRewardSubMenu;
             (window as any).buyRewardFragment = buyRewardFragment;
@@ -159,7 +161,14 @@ export default function ProfilePage() {
                         renderProfileSidebar(unifiedData);
                         updateKneelingUI();
                         attachKneelListeners();
-                        switchTab('serve');
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.get('exchequer') === 'open') {
+                            (window as any).goToExchequer();
+                        } else if (urlParams.get('tab') === 'record') {
+                            switchTab('record');
+                        } else {
+                            switchTab('serve');
+                        }
                         getRandomTask(true);
                         loadQueenPosts();
                         renderHistoryAndAltar(unifiedData);
@@ -195,7 +204,14 @@ export default function ProfilePage() {
                         renderProfileSidebar(unifiedData);
                         updateKneelingUI();
                         attachKneelListeners();
-                        switchTab('serve');
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.get('exchequer') === 'open') {
+                            (window as any).goToExchequer();
+                        } else if (urlParams.get('tab') === 'record') {
+                            switchTab('record');
+                        } else {
+                            switchTab('serve');
+                        }
                         getRandomTask(true);
                         loadQueenPosts();
                         renderHistoryAndAltar(unifiedData);

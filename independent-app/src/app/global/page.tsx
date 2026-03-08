@@ -16,6 +16,39 @@ import {
     handleGlobalPhotoUpload,
     loadTalkFull,
 } from '@/scripts/global-view';
+import { buyRealCoins, handleSubscribe } from '@/scripts/profile-logic';
+
+const SUB_CARDS = [
+    { tier: 'BASIC',     price: '€33',  id: 'basic',     rotY: '8deg',  defaultTransform: 'translateY(15px) scale(0.82) translateZ(-60px) rotateY(8deg)',  defaultZ: 2 },
+    { tier: 'ROYAL',     price: '€77',  id: 'royal',     rotY: '0deg',  defaultTransform: 'translateY(-20px) scale(1.0) translateZ(0px) rotateY(0deg)',     defaultZ: 5 },
+    { tier: 'OWNERSHIP', price: '€222', id: 'ownership', rotY: '-8deg', defaultTransform: 'translateY(15px) scale(0.82) translateZ(-60px) rotateY(-8deg)', defaultZ: 2 },
+];
+
+function onSubHover(hoveredId: string) {
+    SUB_CARDS.forEach(c => {
+        const el = document.getElementById(`exch-card-${c.id}`);
+        if (!el) return;
+        if (c.id === hoveredId) {
+            el.style.transform = 'translateY(-30px) scale(1.08) translateZ(0px) rotateY(0deg)';
+            el.style.filter = 'brightness(1.1)';
+            el.style.zIndex = '10';
+        } else {
+            el.style.transform = `translateY(20px) scale(0.78) translateZ(-80px) rotateY(${c.rotY})`;
+            el.style.filter = 'brightness(0.6)';
+            el.style.zIndex = '1';
+        }
+    });
+}
+
+function onSubLeave() {
+    SUB_CARDS.forEach(c => {
+        const el = document.getElementById(`exch-card-${c.id}`);
+        if (!el) return;
+        el.style.transform = c.defaultTransform;
+        el.style.filter = c.id === 'royal' ? 'brightness(1.0)' : 'brightness(0.85)';
+        el.style.zIndex = String(c.defaultZ);
+    });
+}
 
 export default function GlobalPage() {
     const [loading, setLoading] = useState(true);
@@ -24,6 +57,8 @@ export default function GlobalPage() {
         // Expose functions window needs
         (window as any).openGlobalSection = openGlobalSection;
         (window as any).closeGlobalSection = closeGlobalSection;
+        (window as any).buyRealCoins = buyRealCoins;
+        (window as any).handleSubscribe = handleSubscribe;
         (window as any).loadLeaderboardPreview = loadLeaderboardPreview;
         (window as any).loadLeaderboard = loadLeaderboard;
         (window as any).sendGlobalMessage = sendGlobalMessage;
@@ -87,15 +122,23 @@ export default function GlobalPage() {
                         <div id="globalBreadcrumb" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', borderLeft: '1px solid rgba(197,160,89,0.2)', paddingLeft: '12px' }}></div>
                         <button id="globalBackBtn" onClick={() => closeGlobalSection()} style={{ display: 'none', background: 'none', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.45rem', padding: '4px 11px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>← BACK</button>
                     </div>
-                    {/* Center: nav links back to profile */}
+                    {/* Center: nav links */}
                     <div style={{ display: 'flex', gap: '6px' }}>
-                        {(['DASHBOARD', 'RECORDS', 'EXCHEQUER'] as const).map((label) => (
-                            <button key={label} onClick={() => { window.location.href = '/profile'; }} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.4rem', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px', transition: 'all 0.15s' }}
-                                onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = 'rgba(197,160,89,0.4)'; (e.target as HTMLElement).style.color = '#c5a059'; }}
-                                onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}>
-                                {label}
-                            </button>
-                        ))}
+                        <button onClick={() => { window.location.href = '/profile'; }} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.4rem', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px', transition: 'all 0.15s' }}
+                            onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = 'rgba(197,160,89,0.4)'; (e.target as HTMLElement).style.color = '#c5a059'; }}
+                            onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}>
+                            DASHBOARD
+                        </button>
+                        <button onClick={() => { window.location.href = '/profile?tab=record'; }} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.4rem', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px', transition: 'all 0.15s' }}
+                            onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = 'rgba(197,160,89,0.4)'; (e.target as HTMLElement).style.color = '#c5a059'; }}
+                            onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}>
+                            RECORDS
+                        </button>
+                        <button onClick={() => openGlobalSection('exchequer')} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.35)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.4rem', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px', transition: 'all 0.15s' }}
+                            onMouseEnter={e => { (e.target as HTMLElement).style.background = 'rgba(197,160,89,0.1)'; }}
+                            onMouseLeave={e => { (e.target as HTMLElement).style.background = 'none'; }}>
+                            EXCHEQUER
+                        </button>
                     </div>
                     {/* Right: back to profile */}
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -215,6 +258,83 @@ export default function GlobalPage() {
 
                 <div id="gPanel_queen" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden', overflowY: 'auto', margin: '0 10px 10px' }}>
                     <div id="queenFullContent"></div>
+                </div>
+
+                {/* ── EXCHEQUER PANEL ── */}
+                {/* NOTE: display toggled by openGlobalSection() DOM manipulation, not React state */}
+                <div id="gPanel_exchequer" suppressHydrationWarning style={{ flex: 1, display: 'none', flexDirection: 'column', overflowY: 'auto', margin: '0 10px 10px', position: 'relative' }}>
+
+                    {/* BG */}
+                    <div style={{ position: 'fixed', inset: 0, backgroundImage: 'url("https://upcdn.io/kW2K8hR/raw/pictures/kling_20260304_%E4%BD%9C%E5%93%81_make_me_si_1244_0-6V52.png")', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18, pointerEvents: 'none', zIndex: 0 }} />
+
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px 80px', width: '100%' }}>
+
+                        {/* ── SUBSCRIPTIONS ── */}
+                        <div style={{ width: '100%', marginBottom: 50, display: 'flex', justifyContent: 'center' }}>
+                            <div style={{ perspective: '1000px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 0, width: '100%', maxWidth: 900, paddingBottom: 20 }}>
+                                {SUB_CARDS.map((sub, i) => (
+                                    <div key={sub.id}
+                                        id={`exch-card-${sub.id}`}
+                                        onMouseEnter={() => onSubHover(sub.id)}
+                                        onMouseLeave={() => onSubLeave()}
+                                        style={{ position: 'relative', width: '26%', flexShrink: 0, marginLeft: i === 0 ? 0 : '-6%', transform: sub.defaultTransform, transition: 'all 0.4s cubic-bezier(0.23,1,0.32,1)', zIndex: sub.defaultZ, cursor: 'pointer', filter: sub.id === 'royal' ? 'brightness(1.0)' : 'brightness(0.85)', transformStyle: 'preserve-3d' }}>
+                                        <img src="https://upcdn.io/kW2K8hR/raw/pictures/unnamed%20(2)%20(1).png" alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', pointerEvents: 'none', userSelect: 'none' }} />
+                                        <div style={{ position: 'absolute', top: '19%', left: '8%', right: '8%', display: 'flex', justifyContent: 'center' }}>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.5rem,1.2vw,0.9rem)', color: '#d4af37', letterSpacing: 'clamp(2px,0.5vw,6px)', fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.9)', whiteSpace: 'nowrap' }}>{sub.tier}</div>
+                                        </div>
+                                        <div style={{ position: 'absolute', top: '35%', left: '10%', right: '10%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                                            <span style={{ fontFamily: 'Cinzel', fontSize: 'clamp(1.5rem,3.5vw,3rem)', fontWeight: 900, color: '#f3e5ab', textShadow: '0 4px 30px rgba(0,0,0,1), 0 0 20px rgba(212,175,55,0.3)', lineHeight: 1 }}>{sub.price}</span>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.35rem,0.7vw,0.5rem)', color: '#d4af37', letterSpacing: 4 }}>/ MONTH</div>
+                                        </div>
+                                        <div onClick={() => handleSubscribe(sub.id)} style={{ position: 'absolute', bottom: '11%', left: '8%', right: '8%', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.5rem,1.1vw,0.8rem)', color: '#f3e5ab', letterSpacing: 'clamp(2px,0.5vw,5px)', textShadow: '0 2px 8px rgba(0,0,0,0.9)', fontWeight: 'bold', whiteSpace: 'nowrap' }}>SUBSCRIBE</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* ── DIVIDER TITLE ── */}
+                        <div style={{ width: '100%', maxWidth: 900, display: 'flex', alignItems: 'center', margin: '0 0 30px' }}>
+                            <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.7))' }} />
+                            <div style={{ padding: '0 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                                <div style={{ fontFamily: 'Cinzel', fontSize: '2rem', fontWeight: 900, letterSpacing: 8, background: 'linear-gradient(to bottom, #fff8d0, #c8960c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', whiteSpace: 'nowrap' }}>ROYAL EXCHEQUER</div>
+                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: 'rgba(212,175,55,0.6)', letterSpacing: 6 }}>THE EMPEROR'S TREASURY</div>
+                            </div>
+                            <div style={{ flex: 1, height: 1, background: 'linear-gradient(270deg, transparent, rgba(212,175,55,0.7))' }} />
+                        </div>
+
+                        {/* ── COIN PACKAGES ── */}
+                        <div style={{ width: '100%', maxWidth: 900, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(212,175,55,0.65)', letterSpacing: 6, marginBottom: 10 }}>TREASURY VAULT</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 18, width: '100%' }}>
+                                {([
+                                    { amount: '150,000', price: '€1,000', coins: 150000, badge: 'EMPEROR'    },
+                                    { amount: '70,000',  price: '€500',   coins: 70000,  badge: 'BEST VALUE' },
+                                    { amount: '30,000',  price: '€250',   coins: 30000,  badge: null         },
+                                    { amount: '12,000',  price: '€100',   coins: 12000,  badge: null         },
+                                    { amount: '5,500',   price: '€50',    coins: 5500,   badge: null         },
+                                ]).map(pkg => (
+                                    <div key={pkg.coins} onClick={() => buyRealCoins(pkg.coins)}
+                                        style={{ position: 'relative', cursor: 'pointer', transition: 'transform 0.25s ease', width: 280, flexShrink: 0 }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.04)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; }}>
+                                        <img src="https://upcdn.io/kW2K8hR/raw/pictures/unnamed%20(1).png" alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', userSelect: 'none', pointerEvents: 'none' }} />
+                                        <div style={{ position: 'absolute', top: '16%', left: '18%', right: '18%', bottom: '20%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                            {pkg.badge && <div style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: '#c8960c', letterSpacing: 2, border: '1px solid #c8960c', padding: '2px 6px', borderRadius: 2 }}>{pkg.badge}</div>}
+                                            <i className="fas fa-coins" style={{ fontSize: '1.6rem', color: '#c5a059', filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.9))' }}></i>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', fontWeight: 900, color: '#fff', letterSpacing: 1, textShadow: '0 3px 12px rgba(0,0,0,1)', lineHeight: 1 }}>{pkg.amount}</div>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.42rem', color: '#d4af37', letterSpacing: 3 }}>ROYAL SILVER</div>
+                                            <div style={{ marginTop: 4, background: 'rgba(0,0,0,0.7)', border: '1px solid #c8960c', borderRadius: 2, padding: '4px 10px' }}>
+                                                <span style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#f3e5ab', fontWeight: 'bold' }}>{pkg.price}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
                 <input type="file" id="globalPhotoInput" accept="image/*,video/*" style={{ display: 'none' }} onChange={(e) => handleGlobalPhotoUpload(e.target as HTMLInputElement)} />

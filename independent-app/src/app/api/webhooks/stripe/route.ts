@@ -67,32 +67,38 @@ export async function POST(req: Request) {
                 console.log(`✅ Account Created as Hall Boy.`);
             } else if (metadata.coinsToAdd) {
                 const coins = parseInt(metadata.coinsToAdd, 10);
-                const userEmail = metadata.wixUserEmail;
-                const userId = metadata.wixUserId; // Passed from stripepay.js
+                // Support both new metadata keys (email/userId) and legacy Wix keys
+                const userEmail = metadata.email || metadata.wixUserEmail;
+                const userId = metadata.userId || metadata.wixUserId;
 
                 console.log(`💰 Processing Coins: ${coins} for ${userEmail || userId}`);
 
-                // Find Profile
-                let query = supabaseAdmin.from('profiles').select('*');
-                if (userId) {
-                    query = query.eq('member_id', userId); // OR 'id' if you used UUID
-                } else if (userEmail) {
-                    // Fallback for legacy calls using email
-                    query = query.eq('member_id', userEmail);
+                // Find Profile — try email first (ilike for case-insensitivity), fallback to id
+                let profile: any = null;
+                if (userEmail) {
+                    const { data } = await supabaseAdmin
+                        .from('profiles')
+                        .select('*')
+                        .ilike('member_id', userEmail)
+                        .maybeSingle();
+                    profile = data;
+                }
+                if (!profile && userId) {
+                    const { data } = await supabaseAdmin
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', userId)
+                        .maybeSingle();
+                    profile = data;
                 }
 
-                const { data: profiles, error } = await query.single();
-
-                if (profiles) {
-                    const currentWallet = profiles.wallet || 0;
-                    const newBalance = currentWallet + coins;
-
+                if (profile) {
+                    const newBalance = (profile.wallet || 0) + coins;
                     await supabaseAdmin
                         .from('profiles')
                         .update({ wallet: newBalance })
-                        .eq('id', profiles.id);
-
-                    console.log(`✅ Wallet Updated: ${newBalance}`);
+                        .eq('id', profile.id);
+                    console.log(`✅ Wallet Updated: ${newBalance} (+${coins})`);
                 } else {
                     console.error(`❌ User not found for coin deposit: ${userEmail || userId}`);
                 }
@@ -102,35 +108,30 @@ export async function POST(req: Request) {
             // B. SUBSCRIPTION
             // Metadata: type="SUBSCRIPTION_55" OR mode="subscription"
             // ====================================================
-            if (session.mode === 'subscription' || metadata.type === "SUBSCRIPTION_55") {
+            if (session.mode === 'subscription' || metadata.type === "SUBSCRIPTION_55" || metadata.type === "SUBSCRIPTION") {
                 const subEmail = session.customer_details?.email || metadata.email;
-                console.log(`💎 Processing Subscription for: ${subEmail}`);
-
-                // Try to find profile by email (member_id is often email in this legacy system)
-                // If profiles uses UUIDs, we might need to lookup by email in auth.users first, 
-                // but since we don't have access to auth.users easily without specific admin rights, 
-                // we assume member_id might match email OR we search parameters->email if we stored it?
-                // The schema says member_id TEXT UNIQUE.
+                const tierId = metadata.tierId || 'basic'; // basic | royal | ownership
+                console.log(`💎 Processing Subscription [${tierId}] for: ${subEmail}`);
 
                 const { data: profile } = await supabaseAdmin
                     .from('profiles')
                     .select('*')
-                    .eq('member_id', subEmail)
-                    .single();
+                    .ilike('member_id', subEmail)
+                    .maybeSingle();
 
                 if (profile) {
-                    // Update existing user
                     const params = profile.parameters || {};
                     params.subscriptionStatus = "Active";
+                    params.subscriptionTier = tierId;
                     params.subscriptionDate = new Date().toISOString();
                     params.stripeSubscriptionId = session.subscription;
 
-                    // Assign Role Logic (The Buggle Request)
-                    // We map "Role" to a parameter or hierarchy change?
-                    // Snippet assigned role "65566...". We'll mark it in params.
                     params.roles = params.roles || [];
-                    if (!params.roles.includes("subscriber_55")) {
-                        params.roles.push("subscriber_55");
+                    const roleKey = `subscriber_${tierId}`;
+                    if (!params.roles.includes(roleKey)) {
+                        // Remove any previous subscription role before adding new one
+                        params.roles = params.roles.filter((r: string) => !r.startsWith('subscriber_'));
+                        params.roles.push(roleKey);
                     }
 
                     await supabaseAdmin
@@ -138,11 +139,8 @@ export async function POST(req: Request) {
                         .update({ parameters: params })
                         .eq('id', profile.id);
 
-                    console.log("✅ Subscription activated for existing user.");
+                    console.log(`✅ Subscription [${tierId}] activated for existing user.`);
                 } else {
-                    // User does not exist in Profiles?
-                    // We should probably create a "Shadow" profile or just log.
-                    // Velo code inserted into 'Tasks'. We can create a profile.
                     await supabaseAdmin.from('profiles').insert({
                         member_id: subEmail,
                         name: "New Subscriber",
@@ -150,12 +148,13 @@ export async function POST(req: Request) {
                         hierarchy: "Newbie",
                         parameters: {
                             subscriptionStatus: "Active",
+                            subscriptionTier: tierId,
                             subscriptionDate: new Date().toISOString(),
                             stripeSubscriptionId: session.subscription,
-                            roles: ["subscriber_55"]
+                            roles: [`subscriber_${tierId}`]
                         }
                     });
-                    console.log("✅ New Subscriber Profile created.");
+                    console.log(`✅ New Subscriber Profile created [${tierId}].`);
                 }
             }
 

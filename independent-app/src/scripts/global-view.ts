@@ -44,7 +44,7 @@ function _showMain() {
 }
 
 function _hidePanels() {
-    ['leaderboard', 'talk', 'updates', 'spenders', 'queen'].forEach(s => {
+    ['leaderboard', 'talk', 'updates', 'spenders', 'queen', 'exchequer'].forEach(s => {
         const p = document.getElementById(`gPanel_${s}`);
         if (p) p.style.display = 'none';
     });
@@ -70,12 +70,12 @@ function _stopUpdatesRealtime() {
 
 // ─── OPEN EXPANDED ────────────────────────────────────────────────────────────
 
-export function openGlobalSection(section: 'leaderboard' | 'talk' | 'updates' | 'spenders' | 'queen') {
+export function openGlobalSection(section: 'leaderboard' | 'talk' | 'updates' | 'spenders' | 'queen' | 'exchequer') {
     _stopPoll();
     const main = document.getElementById('globalMainView');
     if (main) main.style.display = 'none';
     _hidePanels();
-    const labels: Record<string, string> = { leaderboard: 'LEADERBOARD', talk: 'COMMUNITY TALK', updates: 'UPDATES', spenders: 'BEST SPENDERS', queen: 'QUEEN KARIN' };
+    const labels: Record<string, string> = { leaderboard: 'LEADERBOARD', talk: 'COMMUNITY TALK', updates: 'UPDATES', spenders: 'BEST SPENDERS', queen: 'QUEEN KARIN', exchequer: 'ROYAL EXCHEQUER' };
     _setHeader(`GLOBAL  ›  ${labels[section] || section.toUpperCase()}`, true);
     const panel = document.getElementById(`gPanel_${section}`);
     if (panel) panel.style.display = 'flex';
