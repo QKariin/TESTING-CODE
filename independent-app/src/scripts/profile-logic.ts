@@ -2006,6 +2006,8 @@ async function _loadMobQueenPosts() {
 // ─── MOB GLOBAL OVERLAY ──────────────────────────────────────────────────────
 const _mobGlLoaded: Record<string, boolean> = {};
 let _mobGlActivePeriod = 'today';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _mobGlRealtimeChannel: any = null;
 
 export function openMobGlobal() {
     if (_isOverlayOpen('mobGlobalOverlay')) { closeMobGlobal(); return; }
@@ -2024,6 +2026,8 @@ export function closeMobGlobal() {
     el.classList.remove('mob-overlay-open');
     setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     _setNavActive('profile');
+    if (_mobGlRealtimeChannel) { _mobGlRealtimeChannel.unsubscribe(); _mobGlRealtimeChannel = null; }
+    _mobGlLoaded['talk'] = false;
 }
 
 export function switchMobGlTab(tab: string) { _switchMobGlTab(tab); }
@@ -2091,14 +2095,41 @@ async function _loadMobGlTalk() {
     if (!container) return;
     container.innerHTML = `<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
     try {
-        const res = await fetch('/api/global/talk', { cache: 'no-store' });
+        const res = await fetch('/api/global/messages', { cache: 'no-store' });
         const data = await res.json();
         const msgs: any[] = data.messages || [];
         _renderMobGlTalk(msgs);
         _mobGlLoaded['talk'] = true;
+        _initMobGlRealtime();
     } catch {
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
     }
+}
+
+function _initMobGlRealtime() {
+    if (_mobGlRealtimeChannel) return;
+    const sb = createClient();
+    _mobGlRealtimeChannel = sb
+        .channel('mob_global_messages_channel')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' },
+            (payload: any) => { _appendMobGlMessage(payload.new); }
+        )
+        .subscribe();
+}
+
+function _appendMobGlMessage(msg: any) {
+    const container = document.getElementById('mobGlTalkFeed');
+    if (!container || !msg?.message) return;
+    const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const el = document.createElement('div');
+    el.className = 'mob-gl-talk-msg';
+    el.innerHTML = `
+        <span class="mob-gl-talk-name">${msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT'}</span>
+        <span class="mob-gl-talk-content">${msg.message}</span>
+        <span class="mob-gl-talk-time">${time}</span>
+    `;
+    container.appendChild(el);
+    container.scrollTop = container.scrollHeight;
 }
 
 function _renderMobGlTalk(msgs: any[]) {
@@ -2110,8 +2141,8 @@ function _renderMobGlTalk(msgs: any[]) {
     }
     container.innerHTML = msgs.map((m: any) => `
         <div class="mob-gl-talk-msg">
-            <span class="mob-gl-talk-name">${m.senderName || m.member_id || 'SLAVE'}</span>
-            <span class="mob-gl-talk-content">${m.content || ''}</span>
+            <span class="mob-gl-talk-name">${m.sender_name || m.sender_email?.split('@')[0] || 'SLAVE'}</span>
+            <span class="mob-gl-talk-content">${m.message || ''}</span>
             <span class="mob-gl-talk-time">${new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
         </div>
     `).join('');
@@ -2124,18 +2155,24 @@ export async function sendMobGlMessage() {
     const content = input.value.trim();
     input.value = '';
 
-    const { memberId, id } = getState();
+    const { memberId, id, raw } = getState();
     const senderEmail = memberId || id;
     if (!senderEmail) return;
 
+    // Optimistic update
+    _appendMobGlMessage({
+        sender_name: raw?.name || senderEmail.split('@')[0] || 'SUBJECT',
+        sender_email: senderEmail,
+        message: content,
+        created_at: new Date().toISOString(),
+    });
+
     try {
-        await fetch('/api/global/talk', {
+        await fetch('/api/global/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content, senderEmail })
+            body: JSON.stringify({ message: content, senderEmail })
         });
-        _mobGlLoaded['talk'] = false;
-        _loadMobGlTalk();
     } catch {
         console.warn('[MOB_GLOBAL] Failed to send message');
     }
