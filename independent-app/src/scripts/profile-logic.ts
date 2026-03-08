@@ -3316,14 +3316,12 @@ let _altarFailed: any[] = [];
 
 export function openAltarDrawer() {
     const drawer = document.getElementById('altarDrawer');
-    // Toggle: if already open, close and return to profile
     if (drawer?.classList.contains('open')) { closeAltarDrawer(); _setNavActive('profile'); return; }
     _closeAllMobOverlays('altar');
     const backdrop = document.getElementById('altarBackdrop');
     if (drawer) drawer.classList.add('open');
     if (backdrop) backdrop.classList.add('open');
     _setNavActive('record');
-    _initAltarDrag();
 }
 
 export function closeAltarDrawer() {
@@ -3331,6 +3329,7 @@ export function closeAltarDrawer() {
     const backdrop = document.getElementById('altarBackdrop');
     if (drawer) drawer.classList.remove('open');
     if (backdrop) backdrop.classList.remove('open');
+    _setNavActive('profile');
 }
 
 export function toggleAltarSection(section: string) {
@@ -3342,34 +3341,6 @@ export function toggleAltarSection(section: string) {
     if (arrow) arrow.textContent = isOpen ? '›' : '‹';
 }
 
-function _initAltarDrag() {
-    const drawer = document.getElementById('altarDrawer');
-    if (!drawer || (drawer as any).__dragInit) return;
-    (drawer as any).__dragInit = true;
-
-    let startY = 0;
-    let dragY = 0;
-
-    drawer.addEventListener('touchstart', (e) => {
-        startY = e.touches[0].clientY;
-        dragY = 0;
-        drawer.style.transition = 'none';
-    }, { passive: true });
-
-    drawer.addEventListener('touchmove', (e) => {
-        const dy = e.touches[0].clientY - startY;
-        if (dy > 0) {
-            dragY = dy;
-            drawer.style.transform = `translateY(${dy}px)`;
-        }
-    }, { passive: true });
-
-    drawer.addEventListener('touchend', () => {
-        drawer.style.transition = '';
-        drawer.style.transform = '';
-        if (dragY > 90) closeAltarDrawer();
-    });
-}
 
 function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLElement | null {
     const resolveUrl = _altarResolveUrl || ((u: string) => u);

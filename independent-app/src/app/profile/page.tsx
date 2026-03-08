@@ -1153,37 +1153,40 @@ export default function ProfilePage() {
                 <div id="altarBackdrop" className="altar-backdrop" onClick={() => (window as any).closeAltarDrawer()}></div>
 
                 <div id="altarDrawer" className="altar-drawer">
-                    <div className="altar-drawer-handle-wrap">
-                        <div className="altar-drawer-handle"></div>
+                    <div className="altar-drawer-topbar">
+                        <span className="altar-drawer-title">THE CHRONICLES</span>
+                        <button className="altar-drawer-close" onClick={() => (window as any).closeAltarDrawer()}>✕ CLOSE</button>
                     </div>
 
-                    <div className="altar-section">
-                        <button className="altar-section-header" onClick={() => (window as any).toggleAltarSection('routine')}>
-                            <span className="altar-section-label">DAILY ROUTINE</span>
-                            <span id="altarSec_arrow_routine" className="altar-section-arrow">›</span>
-                        </button>
-                        <div id="altarSec_routine" className="altar-section-body">
-                            <div id="altarGrid_routine" className="altar-photo-grid"></div>
+                    <div className="altar-drawer-content">
+                        <div className="altar-section">
+                            <button className="altar-section-header" onClick={() => (window as any).toggleAltarSection('routine')}>
+                                <span className="altar-section-label">DAILY ROUTINE</span>
+                                <span id="altarSec_arrow_routine" className="altar-section-arrow">›</span>
+                            </button>
+                            <div id="altarSec_routine" className="altar-section-body">
+                                <div id="altarGrid_routine" className="altar-photo-grid"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="altar-section">
-                        <button className="altar-section-header" onClick={() => (window as any).toggleAltarSection('accepted')}>
-                            <span className="altar-section-label">ACCEPTED PROTOCOLS</span>
-                            <span id="altarSec_arrow_accepted" className="altar-section-arrow">›</span>
-                        </button>
-                        <div id="altarSec_accepted" className="altar-section-body">
-                            <div id="altarGrid_accepted" className="altar-photo-grid"></div>
+                        <div className="altar-section">
+                            <button className="altar-section-header" onClick={() => (window as any).toggleAltarSection('accepted')}>
+                                <span className="altar-section-label">ACCEPTED PROTOCOLS</span>
+                                <span id="altarSec_arrow_accepted" className="altar-section-arrow">›</span>
+                            </button>
+                            <div id="altarSec_accepted" className="altar-section-body">
+                                <div id="altarGrid_accepted" className="altar-photo-grid"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="altar-section">
-                        <button className="altar-section-header" onClick={() => (window as any).toggleAltarSection('rejected')}>
-                            <span className="altar-section-label" style={{ color: '#ff4444' }}>FAILED / DENIED</span>
-                            <span id="altarSec_arrow_rejected" className="altar-section-arrow">›</span>
-                        </button>
-                        <div id="altarSec_rejected" className="altar-section-body">
-                            <div id="altarGrid_rejected" className="altar-photo-grid"></div>
+                        <div className="altar-section">
+                            <button className="altar-section-header" onClick={() => (window as any).toggleAltarSection('rejected')}>
+                                <span className="altar-section-label" style={{ color: '#ff4444' }}>FAILED / DENIED</span>
+                                <span id="altarSec_arrow_rejected" className="altar-section-arrow">›</span>
+                            </button>
+                            <div id="altarSec_rejected" className="altar-section-body">
+                                <div id="altarGrid_rejected" className="altar-photo-grid"></div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -754,31 +754,19 @@
 
     /* ── ALTAR BOTTOM DRAWER ── */
     .altar-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 99996;
-        background: transparent;
-        pointer-events: none;
-        transition: background 0.3s;
-    }
-
-    .altar-backdrop.open {
-        background: rgba(0, 0, 0, 0.35);
-        pointer-events: auto;
+        display: none;
     }
 
     .altar-drawer {
         position: fixed;
-        bottom: 0;
+        top: 0;
         left: 0;
         right: 0;
-        z-index: 99997;
-        background: rgba(4, 4, 14, 0.96);
+        bottom: 0;
+        z-index: 10000000;
+        background: rgba(4, 4, 14, 0.98);
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
-        border-top: 1px solid rgba(197, 160, 89, 0.4);
-        border-radius: 18px 18px 0 0;
-        max-height: 72vh;
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -791,24 +779,61 @@
     }
 
     .altar-drawer-handle-wrap {
-        display: flex;
-        justify-content: center;
-        padding: 10px 0 6px;
-        flex-shrink: 0;
-        cursor: grab;
+        display: none;
     }
 
     .altar-drawer-handle {
-        width: 36px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.18);
-        border-radius: 2px;
+        display: none;
+    }
+
+    /* Full-screen header */
+    .altar-drawer-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px 12px;
+        border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+        flex-shrink: 0;
+        padding-top: calc(16px + env(safe-area-inset-top));
+    }
+
+    .altar-drawer-title {
+        font-family: 'Cinzel', serif;
+        font-size: 1rem;
+        color: #c5a059;
+        font-weight: 700;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+    }
+
+    .altar-drawer-close {
+        background: rgba(255, 68, 68, 0.1);
+        border: 1px solid rgba(255, 68, 68, 0.3);
+        color: #ff4444;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        padding: 5px 14px;
+        border-radius: 20px;
+        cursor: pointer;
+        letter-spacing: 1px;
+    }
+
+    /* Scrollable content area */
+    .altar-drawer-content {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: none;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    }
+
+    .altar-drawer-content::-webkit-scrollbar {
+        display: none;
     }
 
     /* Accordion sections */
     .altar-section {
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        flex-shrink: 0;
     }
 
     .altar-section:last-child {
@@ -822,7 +847,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 16px 22px;
+        padding: 14px 20px;
         cursor: pointer;
         text-align: left;
     }
@@ -837,43 +862,64 @@
     }
 
     .altar-section-arrow {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         color: rgba(197, 160, 89, 0.6);
         transition: transform 0.2s;
         font-family: monospace;
         line-height: 1;
     }
 
+    /* Default: always-visible horizontal scroll row */
     .altar-section-body {
-        max-height: 0;
         overflow: hidden;
-        transition: max-height 0.4s ease, padding 0.3s ease;
-        padding: 0 14px;
+        padding: 0 14px 14px;
+        max-height: 145px;
+        transition: max-height 0.4s ease;
     }
 
+    /* Expanded: full wrap grid */
     .altar-section-body.open {
-        max-height: 500px;
-        padding: 10px 14px 16px;
-        overflow-y: auto;
+        max-height: 1200px;
+        overflow-y: visible;
+    }
+
+    /* Horizontal scroll row (default) */
+    .altar-photo-grid {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 4px;
         scrollbar-width: none;
     }
 
-    .altar-section-body.open::-webkit-scrollbar {
+    .altar-photo-grid::-webkit-scrollbar {
         display: none;
     }
 
-    .altar-photo-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
+    /* Expanded: wrap grid */
+    .altar-section-body.open .altar-photo-grid {
+        flex-wrap: wrap;
+        overflow-x: hidden;
     }
 
+    /* Card: fixed size for horizontal row */
     .altar-photo-card {
         position: relative;
-        border-radius: 5px;
+        border-radius: 6px;
         overflow: hidden;
         background: #0a0a0a;
         cursor: pointer;
+        flex-shrink: 0;
+        width: 88px;
+        height: 117px;
+    }
+
+    /* Expanded card: 3-per-row grid */
+    .altar-section-body.open .altar-photo-card {
+        width: calc(33.333% - 6px);
+        height: auto;
         aspect-ratio: 3 / 4;
     }
 
