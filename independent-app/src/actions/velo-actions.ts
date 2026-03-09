@@ -113,7 +113,7 @@ function mapUserForDashboard(p: any, t: any) {
         memberId: p.member_id || p.id,
         name: p.name || p.title || "Unknown",
         hierarchy: p.hierarchy || "Newbie",
-        score: Number(p.score || 0),
+        score: Number(t?.Score ?? t?.score ?? p.score ?? 0),
         wallet: Number(p.wallet || 0),
         queue: pQueue,
         activeTask: activeTask,
@@ -124,7 +124,7 @@ function mapUserForDashboard(p: any, t: any) {
         kneelCount: Number(t?.kneelCount || p.kneelCount || p.kneel_count || params.kneel_count || 0),
         kneelHistory: p.kneel_history || {},
         joinedDate: p.joined_date,
-        points: Number(p.score || 0),
+        points: Number(t?.Score ?? t?.score ?? p.score ?? 0),
         routine: p.routine || "None",
         routineDoneToday: p.routine_done_today || false,
         strikeCount: p.strike_count || 0,
@@ -183,7 +183,7 @@ export async function getAdminDashboardData() {
 
         const { data: tasksData, error: taskErr } = await supabaseAdmin
             .from('tasks')
-            .select('member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship');
+            .select('member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"');
 
         const reviewQueue = await DbService.getReviewQueue();
 

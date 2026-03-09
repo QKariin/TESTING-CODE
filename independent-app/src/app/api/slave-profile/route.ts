@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
             memberId: p.member_id || p.id,
             name: p.name || p.title || "Unknown",
             hierarchy: p.hierarchy || "Hall Boy",
-            score: Number(p.score || 0),
+            score: Number(t?.Score ?? t?.score ?? p.score ?? 0),
             wallet: Number(p.wallet || 0),
             // Task fields
             Taskdom_History: t.Taskdom_History || null,
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
             routinehistory: history,
             // Profile details
             joinedDate: p.joined_date,
-            points: Number(p.score || 0),
+            points: Number(t?.Score ?? t?.score ?? p.score ?? 0),
             routine: p.routine || "None",
             routineDoneToday: p.routine_done_today || false,
             strikeCount: p.strike_count || 0,
