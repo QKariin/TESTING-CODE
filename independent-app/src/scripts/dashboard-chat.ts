@@ -112,8 +112,9 @@ function appendChatMessage(msg: any) {
 }
 
 function renderToHtml(m: any) {
+    const resolvedAdminEmail = adminEmail || (typeof window !== 'undefined' ? (window as any).adminEmail : null);
     const isMe = m.metadata?.isQueen === true || m.sender_role === 'Queen'
-        || (adminEmail && m.sender_email?.toLowerCase() === adminEmail.toLowerCase());
+        || (resolvedAdminEmail && m.sender_email?.toLowerCase() === resolvedAdminEmail.toLowerCase());
     const timeStr = new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     let contentHtml = '';
@@ -183,9 +184,20 @@ export async function sendMsg() {
     inp.disabled = true;
     if (btn) btn.disabled = true;
 
-    // We need to know the Admin's email to send it
-    // Using adminEmail from dashboard-state directly
-    if (!adminEmail) {
+    // Resolve admin email: state → window fallback → Supabase auth
+    let senderEmail: string | null = adminEmail || (window as any).adminEmail || null;
+    if (!senderEmail) {
+        try {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            senderEmail = user?.email || null;
+            if (senderEmail) {
+                const { setAdminEmail } = await import('./dashboard-state');
+                setAdminEmail(senderEmail);
+            }
+        } catch (_) {}
+    }
+    if (!senderEmail) {
         console.error(`[DASHBOARD-CHAT] Send failed: Admin email not available.`);
         alert("Authentication Error: Admin email not found. Please ensure you are logged in.");
         inp.disabled = false;
@@ -200,7 +212,7 @@ export async function sendMsg() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                senderEmail: adminEmail, // Use adminEmail from dashboard-state
+                senderEmail: senderEmail,
                 conversationId: currId, // sending TO this slave
                 content: text,
                 type: 'text'

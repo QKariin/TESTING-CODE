@@ -59,7 +59,10 @@ export function setCurrId(id: string | null) {
     currId = id;
     (window as any).currId = id;
 }
-export function setAdminEmail(email: string | null) { adminEmail = email; }
+export function setAdminEmail(email: string | null) {
+    adminEmail = email;
+    if (typeof window !== 'undefined') (window as any).adminEmail = email;
+}
 export function setLastChatJson(json: string) { lastChatJson = json; }
 export function setLastGalleryJson(json: string) { lastGalleryJson = json; }
 export function setLastHistoryJson(json: string) { lastHistoryJson = json; }
