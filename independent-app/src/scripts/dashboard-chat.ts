@@ -112,9 +112,9 @@ function appendChatMessage(msg: any) {
 }
 
 function renderToHtml(m: any) {
-    const resolvedAdminEmail = adminEmail || (typeof window !== 'undefined' ? (window as any).adminEmail : null);
-    const isMe = m.metadata?.isQueen === true || m.sender_role === 'Queen'
-        || (resolvedAdminEmail && m.sender_email?.toLowerCase() === resolvedAdminEmail.toLowerCase());
+    // Admin message: sender is different from the conversation owner (member_id), and not a system message
+    const isMe = m.type !== 'system' && m.sender_email && m.member_id
+        && m.sender_email.toLowerCase() !== m.member_id.toLowerCase();
     const timeStr = new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     let contentHtml = '';
@@ -123,9 +123,7 @@ function renderToHtml(m: any) {
 
     const content = m.content || m.message || "";
 
-    const avatarUrl = isMe
-        ? "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png"
-        : (users.find(u => u.memberId === m.member_id)?.avatar || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png");
+    const slaveAvatar = users.find(u => u.memberId === m.member_id)?.avatar || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
 
     if (m.type === 'wishlist') {
         const item = m.metadata || {};
@@ -158,9 +156,10 @@ function renderToHtml(m: any) {
         contentHtml = `<div class="msg ${msgClass}">${safeHtml}</div>`;
     }
 
-    const avatarHtml = `<img src="${getOptimizedUrl(avatarUrl, 100)}" class="chat-av">`;
+    const avatarHtml = `<img src="${getOptimizedUrl(slaveAvatar, 100)}" class="chat-av">`;
+    const youLabel = isMe ? `<div class="msg-you-label">YOU</div>` : '';
 
-    return `<div class="msg-row ${rowClass}">${!isMe ? avatarHtml : ''}${contentHtml}${isMe ? avatarHtml : ''}<div class="msg-meta ${isMe ? 'mm-out' : 'mm-in'}">${timeStr}</div></div>`;
+    return `<div class="msg-row ${rowClass}">${!isMe ? avatarHtml : ''}${contentHtml}${isMe ? `<div class="msg-col-out">${youLabel}${avatarHtml}</div>` : ''}<div class="msg-meta ${isMe ? 'mm-out' : 'mm-in'}">${timeStr}</div></div>`;
 }
 
 function forceBottom() {
