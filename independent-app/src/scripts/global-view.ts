@@ -559,12 +559,43 @@ function _renderMessages(messages: any[], scrollBottom: boolean) {
     if (scrollBottom || wasNear) feed.scrollTop = feed.scrollHeight;
 }
 
+const QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
+
 function _buildBubble(msg: any, myEmail: string): string {
-    const isMe = (msg.sender_email || '').toLowerCase() === myEmail.toLowerCase();
+    const senderEmailLower = (msg.sender_email || '').toLowerCase();
+    const isMe = senderEmailLower === myEmail.toLowerCase();
+    const isQueen = QUEEN_EMAILS.includes(senderEmailLower);
     const name = msg.sender_name || 'SUBJECT';
     const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const av = msg.sender_avatar;
     const initial = (name[0] || 'S').toUpperCase();
+
+    // Queen/admin message — golden bubble, right-aligned if sent by me, left if by another queen
+    if (isQueen) {
+        if (isMe) {
+            return `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);margin-bottom:4px;letter-spacing:1px;">QUEEN KARIN · ${time}</div>
+                <div style="max-width:70%;padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:14px 14px 3px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);">
+                    <div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
+                </div>
+            </div>`;
+        }
+        const avatarHtml = av
+            ? `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            : '';
+        return `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.5);overflow:hidden;flex-shrink:0;position:relative;box-shadow:0 0 8px rgba(197,160,89,0.3);">
+                ${avatarHtml}
+                <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">♛</div>
+            </div>
+            <div style="max-width:70%;">
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.7);margin-bottom:4px;letter-spacing:1px;">QUEEN KARIN · ${time}</div>
+                <div style="padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:3px 14px 14px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);">
+                    <div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
+                </div>
+            </div>
+        </div>`;
+    }
 
     if (isMe) {
         return `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
