@@ -273,14 +273,6 @@ export default function ProfilePage() {
             <input type="file" id="evidenceInputMob" accept="image/*,video/*" className="hidden" onChange={(e: any) => mobileUploadEvidence(e.target)} />
             <input type="file" id="chatMediaInput" accept="image/*,video/*" className="hidden" />
 
-            {/* CELEBRATION OVERLAY */}
-            <div id="celebrationOverlay" className="hidden" style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 2147483647, display: 'none', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.3s' }}>
-                <div className="glass-card" style={{ border: '2px solid #00ff00', textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#00ff00', textShadow: '0 0 20px #00ff00', fontFamily: 'Orbitron' }}>
-                        TASK<br />SUBMITTED
-                    </div>
-                </div>
-            </div>
 
             {/* UNIVERSAL DESKTOP APP */}
             <div id="DESKTOP_APP">
@@ -928,14 +920,6 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* MOBILE TASK CELEBRATION */}
-                    <div id="mobCelebrationOverlay" style={{ display: 'none', position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 2147483646, alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.25s ease' }}>
-                        <div style={{ textAlign: 'center', padding: '40px 35px', border: '2px solid rgba(0,255,0,0.5)', borderRadius: '16px', background: 'rgba(0,12,0,0.95)', boxShadow: '0 0 60px rgba(0,255,0,0.15)', maxWidth: '280px' }}>
-                            <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>✓</div>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '1.1rem', fontWeight: 900, color: '#00ff00', textShadow: '0 0 30px #00ff00', letterSpacing: '4px', lineHeight: 1.2 }}>TASK<br />SUBMITTED</div>
-                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: 'rgba(0,255,0,0.4)', marginTop: '12px', letterSpacing: '2px' }}>AWAITING APPROVAL</div>
-                        </div>
-                    </div>
 
                     <div id="mobKneelReward" className="mob-reward-overlay hidden" style={{ display: 'none' }}>
                         <div className="mob-reward-card">

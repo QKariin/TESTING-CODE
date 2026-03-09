@@ -1442,22 +1442,6 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
 
         if (data.success) {
             console.log("Submission successful!");
-            // Show celebration overlays
-            const mobCeleb = document.getElementById('mobCelebrationOverlay');
-            if (mobCeleb) {
-                mobCeleb.style.display = 'flex';
-                setTimeout(() => { mobCeleb.style.display = 'none'; }, 2800);
-            }
-            const deskCeleb = document.getElementById('celebrationOverlay');
-            if (deskCeleb) {
-                deskCeleb.classList.remove('hidden');
-                deskCeleb.style.display = 'flex';
-                deskCeleb.style.opacity = '1';
-                setTimeout(() => {
-                    deskCeleb.style.opacity = '0';
-                    setTimeout(() => { deskCeleb.style.display = 'none'; deskCeleb.classList.add('hidden'); }, 300);
-                }, 2500);
-            }
             const mockeries = [
                 "Evidence submitted. We will see if it's as disappointing as usual.",
                 "Task uploaded. Hopefully less pathetic than your last attempt.",
