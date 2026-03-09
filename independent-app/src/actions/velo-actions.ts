@@ -881,7 +881,6 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
 
             // Update stats based on decision
             if (decision === 'approve') {
-                updates.score = (Number(profile.score) || 0) + 50;
                 updates.wallet = (Number(profile.wallet) || 0) + 10;
 
                 params.taskdom_completed_tasks = (Number(params.taskdom_completed_tasks) || 0) + 1;
@@ -902,6 +901,10 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
 
             await updateProfile(profile.id, updates);
             await supabaseAdmin.from('tasks').update(taskUpdates).eq('member_id', profile.member_id || userId);
+            if (decision === 'approve') {
+                const { DbService } = await import('@/lib/supabase-service');
+                await DbService.awardPoints(profile.member_id || userId, 50);
+            }
 
             return true;
         }
@@ -958,14 +961,16 @@ export async function secureUpdateProfileStats(memberId: string, type: 'skipped'
             params.taskdom_completed_tasks++;
         } else if (type === "approved") {
             params.taskdom_approved_tasks++;
-            currentScore += 5; // Specific logic from profile.web.js
-            updates.score = currentScore;
         } else if (type === "rejected") {
             params.taskdom_rejected_tasks++;
         }
 
         updates.parameters = params;
         await updateProfile(profile.id, updates);
+        if (type === 'approved') {
+            const { DbService } = await import('@/lib/supabase-service');
+            await DbService.awardPoints(memberId, 5);
+        }
 
         return true;
 
@@ -1291,12 +1296,13 @@ export async function checkExpiredTasks() {
                 if (activityLog.length > 50) params.activity_log = activityLog.slice(0, 50);
                 else params.activity_log = activityLog;
 
-                // SAVE UPDATES
+                // SAVE UPDATES (score deducted via awardPoints with negative value)
                 await updateProfile(profile.id, {
-                    score: currentScore,
                     routine_history: history,
                     parameters: params
                 });
+                const { DbService } = await import('@/lib/supabase-service');
+                await DbService.awardPoints(profile.member_id, -10);
             }
         }
 

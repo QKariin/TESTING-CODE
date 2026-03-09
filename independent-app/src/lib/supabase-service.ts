@@ -68,6 +68,42 @@ export const DbService = {
         return data;
     },
 
+    // --- CENTRALIZED POINTS AWARD (updates all score fields in tasks + profiles) ---
+    async awardPoints(memberEmail: string, points: number): Promise<void> {
+        if (!points) return;
+        const email = memberEmail.toLowerCase();
+
+        // Update all period score fields in tasks table
+        const { data: taskRow } = await supabaseAdmin
+            .from('tasks')
+            .select('"Score", "Daily Score", "Weekly Score", "Monthly Score", "Yearly Score"')
+            .ilike('member_id', email)
+            .maybeSingle();
+
+        if (taskRow) {
+            await supabaseAdmin.from('tasks').update({
+                'Score':         (Number(taskRow['Score'])         || 0) + points,
+                'Daily Score':   (Number(taskRow['Daily Score'])   || 0) + points,
+                'Weekly Score':  (Number(taskRow['Weekly Score'])  || 0) + points,
+                'Monthly Score': (Number(taskRow['Monthly Score']) || 0) + points,
+                'Yearly Score':  (Number(taskRow['Yearly Score'])  || 0) + points,
+            }).ilike('member_id', email);
+        }
+
+        // Keep profiles.score in sync
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('score')
+            .ilike('member_id', email)
+            .maybeSingle();
+
+        if (profile) {
+            await supabaseAdmin.from('profiles')
+                .update({ score: Math.max(0, (Number(profile.score) || 0) + points) })
+                .ilike('member_id', email);
+        }
+    },
+
     // --- REWARDS & KNEELING ---
     async claimKneel(memberId: string, amount: number, type: 'coins' | 'points') {
         const profile = await this.getProfile(memberId);
@@ -82,9 +118,10 @@ export const DbService = {
         };
 
         if (type === 'coins') updates.wallet = (profile.wallet || 0) + amount;
-        else updates.score = (profile.score || 0) + amount;
 
-        return this.updateProfile(profile.id, updates);
+        const result = await this.updateProfile(profile.id, updates);
+        if (type === 'points') await this.awardPoints(memberId, amount);
+        return result;
     },
 
     // --- TRANSACTIONS ---
@@ -261,7 +298,6 @@ export const DbService = {
         }
 
         const newWallet = (row?.Wallet || 0) + bonus;
-        const newScore = (row?.Score || 0) + bonus;
         const newCompleted = (row?.Taskdom_CompletedTasks || 0) + 1;
 
         await supabaseAdmin
@@ -270,17 +306,18 @@ export const DbService = {
                 'Taskdom_History': JSON.stringify(history),
                 'Status': 'approve',
                 'Wallet': newWallet,
-                'Score': newScore,
                 'Taskdom_CompletedTasks': newCompleted
             })
             .eq('member_id', profileId);
 
-        // 2. Sync with profiles table if it exists (modern users)
+        // 2. Award points via centralized function (updates Score + all period scores + profiles.score)
+        await this.awardPoints(profileId, bonus);
+
+        // 3. Sync wallet + parameters with profiles table
         const profile = await this.getProfile(profileId);
         if (profile && profile.id) {
             await this.updateProfile(profile.id, {
                 wallet: (profile.wallet || 0) + bonus,
-                score: (profile.score || 0) + bonus,
                 parameters: {
                     ...(profile.parameters || {}),
                     taskdom_completed_tasks: (profile.parameters?.taskdom_completed_tasks || 0) + 1

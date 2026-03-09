@@ -41,16 +41,19 @@ export async function POST(request: Request) {
             last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: contributionAmount }
         };
 
-        // 3. Update Database Profiles Table (wallet + score + parameters.total_coins_spent)
+        // 3. Update wallet + parameters (score via awardPoints below)
         const { error: updateProfileErr } = await supabase
             .from('profiles')
-            .update({ wallet: newWallet, score: newScore, parameters: newParams })
+            .update({ wallet: newWallet, parameters: newParams })
             .eq('member_id', memberEmail);
 
         if (updateProfileErr) {
             console.error("Profile update error:", updateProfileErr);
             return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
         }
+
+        // Award merit points via centralized function (updates all period scores)
+        await DbService.awardPoints(memberEmail, meritGain);
 
         // 4. Update the Crowdfund raised_amount in the Wishlist table
         // The tributeId passed from the client is the Title value (the Wishlist table has no lowercase 'id' column)

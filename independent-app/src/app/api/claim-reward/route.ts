@@ -27,21 +27,16 @@ export async function POST(req: Request) {
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
-        let updateData = {};
+        let updateData: any = {};
 
         if (choice === 'coins') {
             updateData = { wallet: (profile.wallet || 0) + COIN_REWARD };
+            const { error } = await supabaseAdmin.from('profiles').update(updateData).eq('member_id', memberEmail);
+            if (error) throw error;
         } else {
+            await DbService.awardPoints(memberEmail, POINT_REWARD);
             updateData = { score: (profile.score || 0) + POINT_REWARD };
         }
-
-        // 2. Update DB
-        const { error } = await supabaseAdmin
-            .from('profiles')
-            .update(updateData)
-            .eq('member_id', memberEmail);
-
-        if (error) throw error;
 
         const logMsg = choice === 'coins' ? `REWARD CLAIMED (+${COIN_REWARD} <i class="fas fa-coins" style="color:#c5a059;"></i>)` : `REWARD CLAIMED (+${POINT_REWARD} MERIT)`;
         try { await DbService.sendMessage(memberEmail, logMsg, 'system'); } catch (_) { }

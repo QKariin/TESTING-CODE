@@ -41,16 +41,19 @@ export async function POST(request: Request) {
             last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: tributeCost }
         };
 
-        // 3. Update wallet + score + parameters.total_coins_spent (critical — must succeed)
+        // 3. Update wallet + parameters (score via awardPoints below)
         const { error: updateErr } = await supabase
             .from('profiles')
-            .update({ wallet: newWallet, score: newScore, parameters: newParams })
+            .update({ wallet: newWallet, parameters: newParams })
             .eq('member_id', memberEmail);
 
         if (updateErr) {
             console.error("Profile update error:", updateErr);
             return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
         }
+
+        // Award merit points via centralized function (updates all period scores)
+        await DbService.awardPoints(memberEmail, meritGain);
 
         // 4. Non-blocking: record last tribute timestamp (fails silently if columns don't exist yet)
         supabase.from('profiles').update({
