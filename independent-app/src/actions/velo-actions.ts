@@ -130,12 +130,15 @@ function mapUserForDashboard(p: any, t: any) {
         strikeCount: p.strike_count || 0,
         lastSeen: p.last_active,
 
-        // Hierarchy specific mappings — computed from Taskdom_History exactly like profile page
-        taskdom_completed_tasks: (() => {
-            const approvedTasks = history.filter((h: any) => h.status === 'approve' && !h.isRoutine).length;
-            return approvedTasks || Number(t?.Taskdom_CompletedTasks || params.taskdom_completed_tasks || 0);
+        // Hierarchy specific mappings
+        taskdom_completed_tasks: Number(t?.Taskdom_CompletedTasks || params.taskdom_completed_tasks || 0),
+        total_coins_spent: (() => {
+            try {
+                const raw = t?.['Tribute History'];
+                const arr: any[] = typeof raw === 'string' ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
+                return arr.reduce((sum, e) => sum + (e.amount < 0 ? Math.abs(e.amount) : 0), 0);
+            } catch { return 0; }
         })(),
-        total_coins_spent: Number(params.total_coins_spent || p.total_coins_spent || 0),
         bestRoutinestreak: (() => {
             const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
             return routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0);
@@ -180,7 +183,7 @@ export async function getAdminDashboardData() {
 
         const { data: tasksData, error: taskErr } = await supabaseAdmin
             .from('tasks')
-            .select('member_id, "Taskdom_History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship');
+            .select('member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship');
 
         const reviewQueue = await DbService.getReviewQueue();
 

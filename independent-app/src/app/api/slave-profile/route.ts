@@ -64,8 +64,15 @@ export async function GET(request: NextRequest) {
             }
         } catch (e) { }
 
-        const approvedTasks = history.filter((h: any) => h.status === 'approve' && !h.isRoutine).length;
         const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
+
+        // Sacrifice: sum absolute values of negative entries in Tribute History
+        let tributeTotal = 0;
+        try {
+            const rawTributes = t?.['Tribute History'];
+            const tributeArr: any[] = typeof rawTributes === 'string' ? JSON.parse(rawTributes) : (Array.isArray(rawTributes) ? rawTributes : []);
+            tributeTotal = tributeArr.reduce((sum: number, e: any) => sum + (e.amount < 0 ? Math.abs(e.amount) : 0), 0);
+        } catch (e) { }
 
         const defaultPic = "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
         const rawPic = p.avatar_url || p.profile_picture_url || "";
@@ -93,8 +100,8 @@ export async function GET(request: NextRequest) {
             lastWorship: t.lastWorship || p.lastWorship || null,
             kneelHistory: p.kneel_history || t.kneel_history || {},
             // Computed hierarchy fields
-            taskdom_completed_tasks: approvedTasks || Number(t?.Taskdom_CompletedTasks || params.taskdom_completed_tasks || 0),
-            total_coins_spent: Number(params.total_coins_spent || p.total_coins_spent || 0),
+            taskdom_completed_tasks: Number(t?.['Taskdom_CompletedTasks'] || params.taskdom_completed_tasks || 0),
+            total_coins_spent: tributeTotal,
             bestRoutinestreak: routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0),
             routinestreak: Number(p.routinestreak || params.taskdom_current_streak || 0),
             routineHistory: history,
