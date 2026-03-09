@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { getAdminDashboardData } from '@/actions/velo-actions';
+import { getAdminDashboardData, loadUserMessages, insertMessage } from '@/actions/velo-actions';
 
 type Tab = 'home' | 'subjects' | 'posts' | 'queen';
 type ProfileTab = 'info' | 'tasks' | 'chat';
@@ -163,7 +163,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     <SubjectsView
                         users={filtered} allCount={users.length}
                         search={search} setSearch={setSearch}
-                        onSelect={(u) => { setSelectedUser(u); setProfileTab('info'); }}
+                        onSelect={(u) => { setSelectedUser(u); setProfileTab('chat'); }}
                     />
                 ) : tab === 'posts' ? (
                     <PostsView
@@ -436,21 +436,23 @@ function ChatView({ user }: { user: DashUser }) {
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
+    const [loadingMsgs, setLoadingMsgs] = useState(true);
     const bottomRef = useRef<HTMLDivElement>(null);
 
-    const loadMessages = useCallback(async () => {
-        const supabase = createClient();
-        const { data } = await supabase
-            .from('messages')
-            .select('*')
-            .eq('member_id', user.memberId)
-            .order('created_at', { ascending: true })
-            .limit(80);
+    const fetchMessages = useCallback(async () => {
+        // Use server action (admin client — bypasses RLS)
+        const data = await loadUserMessages(user.memberId);
         setMessages(data || []);
+        setLoadingMsgs(false);
     }, [user.memberId]);
 
-    useEffect(() => { loadMessages(); }, [loadMessages]);
-    useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+    useEffect(() => { fetchMessages(); }, [fetchMessages]);
+
+    useEffect(() => {
+        if (!loadingMsgs) {
+            bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+        }
+    }, [messages, loadingMsgs]);
 
     const sendMessage = async () => {
         const txt = input.trim();
@@ -458,17 +460,14 @@ function ChatView({ user }: { user: DashUser }) {
         setSending(true);
         setInput('');
         try {
-            const supabase = createClient();
-            await supabase.from('messages').insert({
-                member_id: user.memberId,
-                text: txt,
-                content: txt,
+            await insertMessage({
+                memberId: user.memberId,
                 sender: 'admin',
-                role: 'admin',
-                created_at: new Date().toISOString(),
+                message: txt,
                 type: 'text',
+                read: true,
             });
-            await loadMessages();
+            await fetchMessages();
         } finally { setSending(false); }
     };
 
@@ -476,29 +475,37 @@ function ChatView({ user }: { user: DashUser }) {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any }}>
-                {messages.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', color: '#222', letterSpacing: '2px' }}>NO MESSAGES YET</div>
+                {loadingMsgs && (
+                    <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#2a2a2a', letterSpacing: '2px' }}>LOADING...</div>
+                )}
+                {!loadingMsgs && messages.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#222', letterSpacing: '2px' }}>NO MESSAGES YET</div>
                 )}
                 {messages.map((msg, i) => {
-                    const isAdmin = msg.sender === 'admin' || msg.role === 'admin';
-                    const text = msg.text || msg.content || msg.message || '';
+                    const isAdmin = msg.sender === 'admin' || msg.sender === 'queen';
+                    // messages table uses 'message' field
+                    const text = msg.message || msg.content || msg.text || '';
+                    const hasMedia = msg.media_url || msg.mediaUrl;
                     return (
                         <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
                             <div style={{
-                                background: isAdmin ? '#c5a059' : 'rgba(28,28,28,0.95)',
+                                background: isAdmin ? 'linear-gradient(135deg, #c5a059, #a8893d)' : 'rgba(22,22,22,0.95)',
                                 color: isAdmin ? '#000' : '#ddd',
-                                padding: '9px 13px',
+                                padding: hasMedia ? '4px' : '9px 13px',
                                 borderRadius: isAdmin ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                                 maxWidth: '78%',
                                 fontSize: '0.9rem',
                                 lineHeight: 1.5,
                                 fontFamily: 'Rajdhani,sans-serif',
                                 wordBreak: 'break-word',
+                                border: isAdmin ? 'none' : '1px solid rgba(255,255,255,0.06)',
                             }}>
-                                {text}
-                                {msg.image_url && <img src={msg.image_url} style={{ display: 'block', maxWidth: '100%', borderRadius: 8, marginTop: 6 }} alt="" />}
+                                {text && <span>{text}</span>}
+                                {hasMedia && (
+                                    <img src={msg.media_url || msg.mediaUrl} style={{ display: 'block', maxWidth: '220px', maxHeight: '220px', borderRadius: 10, objectFit: 'cover' }} alt="" />
+                                )}
                             </div>
-                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#2a2a2a', marginTop: 3, letterSpacing: '1px' }}>
+                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#282828', marginTop: 3, letterSpacing: '1px' }}>
                                 {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                             </div>
                         </div>
@@ -519,7 +526,7 @@ function ChatView({ user }: { user: DashUser }) {
                 />
                 <button onClick={sendMessage} disabled={sending || !input.trim()}
                     style={{ background: sending || !input.trim() ? '#111' : '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: sending || !input.trim() ? '#333' : '#000', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', letterSpacing: '1px', padding: '10px 14px', cursor: 'pointer', flexShrink: 0, fontWeight: 700 }}>
-                    SEND
+                    {sending ? '...' : 'SEND'}
                 </button>
             </div>
         </div>
