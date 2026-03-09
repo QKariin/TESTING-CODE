@@ -2176,18 +2176,38 @@ function _initMobGlRealtime() {
         .subscribe();
 }
 
+const MOB_QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
+
+function _buildMobGlBubble(msg: any): string {
+    const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const senderEmail = (msg.sender_email || '').toLowerCase();
+    const isQueen = MOB_QUEEN_EMAILS.includes(senderEmail);
+    const name = msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT';
+    const content = msg.message || '';
+
+    if (isQueen) {
+        return `<div style="padding:8px 12px 6px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:10px;box-shadow:0 0 10px rgba(197,160,89,0.12);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                <span style="font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.8);letter-spacing:1px;">QUEEN KARIN</span>
+                <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);">${time}</span>
+            </div>
+            <span style="font-family:'Rajdhani';font-size:0.88rem;color:#f0d888;line-height:1.4;">${content}</span>
+        </div>`;
+    }
+
+    return `<div class="mob-gl-talk-msg">
+        <span class="mob-gl-talk-name">${name}</span>
+        <span class="mob-gl-talk-content">${content}</span>
+        <span class="mob-gl-talk-time">${time}</span>
+    </div>`;
+}
+
 function _appendMobGlMessage(msg: any) {
     const container = document.getElementById('mobGlTalkFeed');
     if (!container || !msg?.message) return;
-    const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const el = document.createElement('div');
-    el.className = 'mob-gl-talk-msg';
-    el.innerHTML = `
-        <span class="mob-gl-talk-name">${msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT'}</span>
-        <span class="mob-gl-talk-content">${msg.message}</span>
-        <span class="mob-gl-talk-time">${time}</span>
-    `;
-    container.appendChild(el);
+    el.innerHTML = _buildMobGlBubble(msg);
+    container.appendChild(el.firstElementChild!);
     container.scrollTop = container.scrollHeight;
 }
 
@@ -2198,13 +2218,7 @@ function _renderMobGlTalk(msgs: any[]) {
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO MESSAGES YET</div>`;
         return;
     }
-    container.innerHTML = msgs.map((m: any) => `
-        <div class="mob-gl-talk-msg">
-            <span class="mob-gl-talk-name">${m.sender_name || m.sender_email?.split('@')[0] || 'SLAVE'}</span>
-            <span class="mob-gl-talk-content">${m.message || ''}</span>
-            <span class="mob-gl-talk-time">${new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-        </div>
-    `).join('');
+    container.innerHTML = msgs.map((m: any) => _buildMobGlBubble(m)).join('');
     container.scrollTop = container.scrollHeight;
 }
 
