@@ -2393,37 +2393,29 @@ async function _doProfileUpload() {
         const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
         const elHudPic = document.getElementById('hudUserPic') as HTMLImageElement;
         if (elProfilePic) elProfilePic.style.opacity = '0.5';
+        if (elHudPic) elHudPic.style.opacity = '0.5';
 
         try {
-            // Upload via Bytescale (same as dashboard uploads — always works)
-            const ACCOUNT_ID = 'kW2K8hR';
-            const API_KEY = 'public_kW2K8hR6YbQXStTvMf5ZDYbVf1fQ';
+            // Upload via server-side route (handles Bytescale + DB update atomically)
             const fd = new FormData();
             fd.append('file', file);
-            const uploadRes = await fetch(
-                `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/avatars`,
-                { method: 'POST', headers: { Authorization: `Bearer ${API_KEY}` }, body: fd }
-            );
-            if (!uploadRes.ok) throw new Error('Upload service error');
-            const uploadData = await uploadRes.json();
-            const publicUrl = uploadData.files?.[0]?.fileUrl;
-            if (!publicUrl) throw new Error('No URL returned from upload');
+            fd.append('memberEmail', user.email);
 
-            const res = await fetch('/api/profile-update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberEmail: user.email, field: 'avatar_url', value: publicUrl })
-            });
+            const res = await fetch('/api/upload-avatar', { method: 'POST', body: fd });
             const data = await res.json();
+
             if (elProfilePic) elProfilePic.style.opacity = '1';
-            if (data.success) {
-                if (elProfilePic) elProfilePic.src = publicUrl;
-                if (elHudPic) elHudPic.src = publicUrl;
+            if (elHudPic) elHudPic.style.opacity = '1';
+
+            if (data.success && data.url) {
+                if (elProfilePic) elProfilePic.src = data.url;
+                if (elHudPic) elHudPic.src = data.url;
             } else {
-                alert('Photo update failed: ' + (data.error || 'Unknown error'));
+                alert('Photo upload failed: ' + (data.error || 'Unknown error'));
             }
         } catch (err: any) {
             if (elProfilePic) elProfilePic.style.opacity = '1';
+            if (elHudPic) elHudPic.style.opacity = '1';
             alert('Photo upload failed: ' + (err.message || 'Unknown error'));
         }
     };
