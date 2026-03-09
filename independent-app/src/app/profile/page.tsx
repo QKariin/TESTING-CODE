@@ -279,7 +279,7 @@ export default function ProfilePage() {
                 {/* SIDEBAR */}
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
-                        <div className="big-profile-circle" onClick={() => (document.getElementById('profileUploadInput') as any)?.click()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
+                        <div className="big-profile-circle" onClick={() => (window as any).handleProfileUpload?.()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
                             <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
                         </div>
 
@@ -1117,20 +1117,6 @@ export default function ProfilePage() {
                         {/* SLAVE RECORDS */}
                         <div style={{ width: '100%', marginTop: '20px' }}>
                             <div className="duty-label">SLAVE RECORDS</div>
-                            <div style={{ width: '100%', marginBottom: '20px' }}>
-                                <div className="duty-label" style={{ color: '#c5a059', borderColor: 'rgba(197, 160, 89, 0.3)' }}>DAILY DISCIPLINE</div>
-                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                    <div style={{ flex: '0 0 90px', height: '90px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid #c5a059', background: 'linear-gradient(180deg, #1a1a1a 0%, #000 100%)', borderRadius: '4px', boxShadow: '0 0 15px rgba(197, 160, 89, 0.1)' }}>
-                                        <div id="dispStreakVal" style={{ fontFamily: 'Orbitron', fontSize: '2rem', color: '#c5a059', lineHeight: 1, textShadow: '0 0 10px rgba(197, 160, 89, 0.3)' }}>0</div>
-                                        <div style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#888', marginTop: '5px', letterSpacing: '2px' }}>STREAK</div>
-                                    </div>
-                                    <div id="shelfRoutine" className="mob-horiz-scroll" style={{ flex: 1, height: '90px', alignItems: 'center' }}>
-                                        <div style={{ color: '#444', fontSize: '0.6rem', padding: '10px', fontFamily: 'Cinzel' }}>AWAITING PROOF</div>
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'center', fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', marginTop: '5px', letterSpacing: '1px' }}>PERSONAL BEST: <span id="dispBestStreak" style={{ color: '#888' }}>0</span> DAYS</div>
-                            </div>
-
                             <div id="trophySectionJail" style={{ position: 'relative', width: '100%', minHeight: '400px', overflow: 'hidden' }}>
                                 <div className="mob-grid-label-center" style={{ textAlign: 'left', paddingLeft: '10px', color: '#666' }}>HIERARCHY</div>
                                 <div id="shelfRanks" className="reward-shelf mob-horiz-scroll"></div>

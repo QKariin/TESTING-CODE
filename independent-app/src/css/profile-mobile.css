@@ -57,15 +57,24 @@
         touch-action: pan-y !important;
         overscroll-behavior: none !important;
         will-change: scroll-position;
-        transform: translateZ(0);
         display: block;
         padding: 0;
         z-index: 1;
-        background: url('https://static.wixstatic.com/media/ce3e5b_b1f7f0d080e4471ca7d292968d40feee~mv2.jpg') center top / cover no-repeat fixed !important;
+        background: url('/queen-bg-mobile.jpg') center top / cover no-repeat scroll !important;
         scrollbar-width: none;
         -webkit-touch-callout: none;
         user-select: none;
         -webkit-user-select: none;
+    }
+
+    /* Persistent background pin (fixes iOS Safari fixed-bg bug) */
+    #viewMobileHome::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: url('/queen-bg-mobile.jpg') center top / cover no-repeat;
+        z-index: -1;
+        pointer-events: none;
     }
 
     #viewMobileHome::-webkit-scrollbar {
@@ -182,21 +191,15 @@
         position: relative;
         z-index: 3;
         margin-top: -65px;
-        /* Overlap the halo circle substantially */
-        width: 85% !important;
-        /* Slightly wider */
+        width: 94% !important;
         background: rgba(10, 10, 10, 0.85);
         border: 1px solid rgba(197, 160, 89, 0.2);
-        /* Enhanced border */
         border-radius: 12px;
-        /* Smoother rounding */
-        padding: 10px;
-        /* Reduced height padding */
+        padding: 14px 10px;
         display: flex;
         align-items: center;
         justify-content: space-around;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-        /* Deeper shadow */
         backdrop-filter: blur(15px);
         margin-bottom: 30px;
         height: auto;
@@ -224,14 +227,14 @@
 
     .h-lbl {
         font-family: 'Orbitron', sans-serif;
-        font-size: 0.45rem !important;
+        font-size: 0.7rem !important;
         color: rgba(197, 160, 89, 0.5);
         letter-spacing: 2px;
     }
 
     .h-divider {
         width: 1px;
-        height: 30px;
+        height: 50px;
         background: rgba(255, 255, 255, 0.1);
     }
 
@@ -271,14 +274,14 @@
     }
 
     .mob-stats-toggle-btn {
-        width: 88%;
+        width: 94%;
         background: rgba(197, 160, 89, 0.04);
         border: 1px solid rgba(197, 160, 89, 0.2);
         color: rgba(197, 160, 89, 0.65);
         font-family: 'Orbitron', sans-serif;
         font-weight: 600;
-        font-size: 0.55rem;
-        padding: 9px 0;
+        font-size: 0.8rem;
+        padding: 14px 0;
         cursor: pointer;
         letter-spacing: 3px;
         display: flex;
