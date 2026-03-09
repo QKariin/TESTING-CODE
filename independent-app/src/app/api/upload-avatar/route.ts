@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         // 2. Update profiles table — write to both columns so either lookup works
         const { error: dbError } = await supabaseAdmin
             .from('profiles')
-            .update({ avatar_url: publicUrl, profile_picture_url: publicUrl })
+            .update({ avatar_url: publicUrl })
             .ilike('member_id', memberEmail);
 
         if (dbError) {
