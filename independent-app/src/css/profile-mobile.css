@@ -60,7 +60,7 @@
         display: block;
         padding: 0;
         z-index: 1;
-        background: url('/queen-bg-mobile.jpg') center top / cover no-repeat scroll !important;
+        background: #000 !important;
         scrollbar-width: none;
         -webkit-touch-callout: none;
         user-select: none;
@@ -73,8 +73,14 @@
         position: fixed;
         inset: 0;
         background: url('/queen-bg-mobile.jpg') center top / cover no-repeat;
+        opacity: 0.5;
         z-index: -1;
         pointer-events: none;
+    }
+
+    /* Black base behind the image */
+    #viewMobileHome {
+        background-color: #000 !important;
     }
 
     #viewMobileHome::-webkit-scrollbar {
