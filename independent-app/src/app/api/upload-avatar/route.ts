@@ -3,9 +3,6 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-const ACCOUNT_ID = 'kW2K8hR';
-const API_KEY = 'public_kW2K8hR6YbQXStTvMf5ZDYbVf1fQ';
-
 export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
@@ -16,35 +13,30 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing file or memberEmail' }, { status: 400 });
         }
 
-        // 1. Upload to Bytescale
-        const fd = new FormData();
-        fd.append('file', file);
+        // 1. Upload to Supabase Storage (avatars bucket)
+        const ext = file.name.split('.').pop() || 'jpg';
+        const filename = `avatars/${memberEmail.replace(/[^a-z0-9@._-]/gi, '_')}_${Date.now()}.${ext}`;
 
-        const uploadRes = await fetch(
-            `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/avatars`,
-            { method: 'POST', headers: { Authorization: `Bearer ${API_KEY}` }, body: fd }
-        );
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        const uploadJson = await uploadRes.json();
-        console.log('[upload-avatar] Bytescale response:', JSON.stringify(uploadJson));
+        const { error: uploadError } = await supabaseAdmin.storage
+            .from('media')
+            .upload(filename, buffer, {
+                contentType: file.type || 'image/jpeg',
+                upsert: true,
+            });
 
-        if (!uploadRes.ok) {
-            console.error('[upload-avatar] Bytescale error:', uploadJson);
-            return NextResponse.json({ error: 'Upload service error', detail: uploadJson }, { status: 500 });
+        if (uploadError) {
+            console.error('[upload-avatar] Storage error:', uploadError.message);
+            return NextResponse.json({ error: 'Storage upload failed: ' + uploadError.message }, { status: 500 });
         }
 
-        // Bytescale v2 returns either files[] or a single filePath
-        const publicUrl =
-            uploadJson?.files?.[0]?.fileUrl ||
-            uploadJson?.fileUrl ||
-            (uploadJson?.filePath ? `https://upcdn.io/${ACCOUNT_ID}/raw${uploadJson.filePath}` : null);
+        const { data: { publicUrl } } = supabaseAdmin.storage
+            .from('media')
+            .getPublicUrl(filename);
 
-        if (!publicUrl) {
-            console.error('[upload-avatar] No URL in response:', uploadJson);
-            return NextResponse.json({ error: 'No URL returned from upload', detail: uploadJson }, { status: 500 });
-        }
-
-        console.log('[upload-avatar] Got URL:', publicUrl);
+        console.log('[upload-avatar] Uploaded to:', publicUrl);
 
         // 2. Update profiles table — write to both columns so either lookup works
         const { error: dbError } = await supabaseAdmin

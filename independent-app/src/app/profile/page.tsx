@@ -283,12 +283,12 @@ export default function ProfilePage() {
                             <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)' }}>
-                            <div id="subName" className="identity-name" style={{ fontSize: '1.5rem', letterSpacing: 5, margin: '0', fontWeight: 'bold', color: '#c5a059' }}>
+                        <div onClick={() => (window as any).openManageProfileModal?.()} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)', cursor: 'pointer', userSelect: 'none' }}>
+                            <div id="subName" className="identity-name" style={{ fontSize: '1.5rem', letterSpacing: 5, margin: '0', fontWeight: 'bold', color: '#c5a059', pointerEvents: 'none' }}>
                                 {profile?.name || "SLAVE"}
                             </div>
                             <button
-                                onClick={() => (window as any).openManageProfileModal?.()}
+                                onClick={(e) => { e.stopPropagation(); (window as any).openManageProfileModal?.(); }}
                                 style={{ background: 'none', border: 'none', color: '#c5a059', cursor: 'pointer', padding: 0, display: 'flex' }}
                                 title="Manage Profile Options"
                             >
@@ -338,6 +338,10 @@ export default function ProfilePage() {
                             </button>
                             <ul id="desk_CurrentBenefits" className="hidden" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, marginTop: 10, textAlign: 'left' }}></ul>
                         </div>
+
+                        <button onClick={() => (window as any).handleLogout?.()} style={{ marginTop: 20, width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.55rem', letterSpacing: 2, padding: '10px 0', cursor: 'pointer', borderRadius: 6, transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(197,160,89,0.4)'; e.currentTarget.style.color = '#c5a059'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}>
+                            LOG OUT
+                        </button>
                     </div>
 
                     <div className="sidebar-scrollable-area" style={{ flex: 1, overflowY: 'auto', width: '100%', display: 'flex', flexDirection: 'column', padding: '0 15px 0 15px', boxSizing: 'border-box', paddingRight: 30 }}>

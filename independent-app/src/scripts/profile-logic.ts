@@ -2396,10 +2396,10 @@ async function _doProfileUpload() {
         if (elHudPic) elHudPic.style.opacity = '0.5';
 
         try {
-            // Upload via server-side route (handles Bytescale + DB update atomically)
+            // Upload via server-side route (Supabase storage + DB update atomically)
             const fd = new FormData();
             fd.append('file', file);
-            fd.append('memberEmail', user.email);
+            fd.append('memberEmail', user.email ?? '');
 
             const res = await fetch('/api/upload-avatar', { method: 'POST', body: fd });
             const data = await res.json();
