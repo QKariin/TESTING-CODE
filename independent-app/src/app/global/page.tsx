@@ -190,16 +190,16 @@ export default function GlobalPage() {
                         <div id="globalPreview_leaderboard" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
                     </div>
 
-                    {/* QUEEN KARIN */}
-                    <div style={{ display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.25)', borderRadius: '12px', overflow: 'hidden', minHeight: 0, cursor: 'pointer' }} onClick={() => openGlobalSection('queen')}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div style={{ width: '3px', height: '14px', background: '#c5a059', borderRadius: '2px' }}></div>
-                                <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>QUEEN KARIN</span>
-                            </div>
-                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: 'rgba(197,160,89,0.45)', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.18)', padding: '3px 8px', borderRadius: '3px' }}>VIEW ↗</span>
+                    {/* ACADEMY */}
+                    <div style={{ display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.25)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
+                            <div style={{ width: '3px', height: '14px', background: '#c5a059', borderRadius: '2px', marginRight: '8px' }}></div>
+                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>ACADEMY</span>
                         </div>
-                        <div id="globalPreview_queen" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 10px', gap: '10px' }}>
+                            <img src="/academy-obedience.png" alt="Obedience Academy" style={{ width: '85%', maxWidth: '240px' }} />
+                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', textTransform: 'uppercase' }}>Coming Soon</span>
+                        </div>
                     </div>
 
                     {/* UPDATES */}
@@ -217,16 +217,16 @@ export default function GlobalPage() {
                         <div id="globalPreview_updates" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
                     </div>
 
-                    {/* BEST SPENDER */}
+                    {/* CHALLENGES */}
                     <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(197,160,89,0.02)', border: '1px solid rgba(197,160,89,0.14)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid rgba(197,160,89,0.08)', flexShrink: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div style={{ width: '3px', height: '14px', background: '#c5a059', borderRadius: '2px' }}></div>
-                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.52rem', color: '#c5a059', letterSpacing: '2px' }}>BEST SPENDER</span>
-                            </div>
-                            <button onClick={() => openGlobalSection('spenders')} style={{ background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', color: 'rgba(197,160,89,0.5)', fontFamily: 'Orbitron', fontSize: '0.36rem', padding: '3px 8px', cursor: 'pointer', borderRadius: '3px' }}>FULL ↗</button>
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid rgba(197,160,89,0.08)', flexShrink: 0 }}>
+                            <div style={{ width: '3px', height: '14px', background: '#c5a059', borderRadius: '2px', marginRight: '8px' }}></div>
+                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>CHALLENGES</span>
                         </div>
-                        <div id="globalPreview_spenders" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px', gap: '8px' }}>
+                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.9rem', color: '#c5a059', letterSpacing: '4px', fontWeight: 700 }}>CHALLENGES</span>
+                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', textTransform: 'uppercase' }}>Coming Soon</span>
+                        </div>
                     </div>
 
                 </div>
