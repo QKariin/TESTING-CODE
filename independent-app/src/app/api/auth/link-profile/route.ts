@@ -134,7 +134,9 @@ export async function POST(req: Request) {
                         id: user.id,
                         member_id: userEmail,
                         name: userEmail.split('@')[0],
-                        hierarchy: 'Slave'
+                        hierarchy: 'Hall Boy',
+                        wallet: 5000,
+                        avatar_url: 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png',
                     })
                     .select()
                     .single();
