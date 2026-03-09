@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/client';
 import '../../css/dashboard.css';
 import '../../css/dashboard-modals.css';
 import '../../css/dashboard-mobile.css';
+import MobileDashboard from './MobileDashboard';
 
 // Scripts
 import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboard-main';
@@ -23,7 +24,15 @@ import { getOptimizedUrl } from '@/scripts/media';
 
 export default function DashboardPage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
 
     const handleLogout = async () => {
         const supabase = createClient();
@@ -188,6 +197,11 @@ export default function DashboardPage() {
 
         loadLiveAction();
     }, []);
+
+    // ── MOBILE: render completely separate mobile dashboard ──────────────────
+    if (isMobile) {
+        return <MobileDashboard userEmail={userEmail || ''} />;
+    }
 
     return (
         <div className="layout">

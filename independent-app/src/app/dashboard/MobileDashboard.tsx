@@ -1,0 +1,513 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@/utils/supabase/client';
+import { getAdminDashboardData } from '@/actions/velo-actions';
+
+type Tab = 'home' | 'subjects' | 'posts' | 'queen';
+type ProfileTab = 'info' | 'tasks';
+
+interface DashUser {
+    memberId: string;
+    name: string;
+    avatar: string;
+    rank: string;
+    wallet: number;
+    score: number;
+    parameters: any;
+    reviewQueue: any[];
+    lastMessageTime: number;
+}
+
+const RANK_COLOR: Record<string, string> = {
+    'Goddess': '#ff69b4',
+    'Chevalier': '#d4af37',
+    'Sentinel': '#4a9eff',
+    'Enforcer': '#ff8c42',
+    'Knight': '#b8b8b8',
+    'Devotee': '#4ecdc4',
+    'Aspirant': '#6bcb77',
+    'Hall Boy': '#555',
+    'Newbie': '#444',
+};
+const rc = (rank: string) => RANK_COLOR[rank] || '#777';
+
+// ─────────────────────────────────────────────────────────────────────────────
+export default function MobileDashboard({ userEmail }: { userEmail: string }) {
+    const [tab, setTab] = useState<Tab>('home');
+    const [users, setUsers] = useState<DashUser[]>([]);
+    const [globalQueue, setGlobalQueue] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedUser, setSelectedUser] = useState<DashUser | null>(null);
+    const [profileTab, setProfileTab] = useState<ProfileTab>('info');
+    const [search, setSearch] = useState('');
+    const [posts, setPosts] = useState<any[]>([]);
+    const [postTitle, setPostTitle] = useState('');
+    const [postBody, setPostBody] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const [dailyCode, setDailyCode] = useState('----');
+
+    const loadData = useCallback(async () => {
+        try {
+            const data = await getAdminDashboardData();
+            if (data.success && data.users) {
+                const queue = data.globalQueue || [];
+                setGlobalQueue(queue);
+                const mapped: DashUser[] = data.users.map((u: any) => ({
+                    memberId: u.memberId || u.member_id || '',
+                    name: u.name || (u.memberId || '').split('@')[0] || 'Unknown',
+                    avatar: u.avatar || u.avatar_url || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png',
+                    rank: u.rank || u.hierarchy || 'Hall Boy',
+                    wallet: Number(u.wallet) || 0,
+                    score: Number(u.score) || 0,
+                    parameters: u.parameters || {},
+                    reviewQueue: queue.filter((t: any) => t.member_id === u.memberId || t.ownerId === u.memberId),
+                    lastMessageTime: u.parameters?.lastMessageTime || 0,
+                }));
+                setUsers(mapped);
+            }
+        } finally {
+            setLoading(false);
+        }
+        const d = new Date();
+        const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+        setDailyCode(String((seed * 7 + 1337) % 9000 + 1000));
+    }, []);
+
+    const loadPosts = useCallback(async () => {
+        try {
+            const supabase = createClient();
+            const { data } = await supabase
+                .from('queen_posts')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(30);
+            setPosts(data || []);
+        } catch (_) { setPosts([]); }
+    }, []);
+
+    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => { if (tab === 'posts') loadPosts(); }, [tab, loadPosts]);
+
+    const handleLogout = async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        window.location.href = '/login';
+    };
+
+    const submitPost = async () => {
+        if (!postBody.trim()) return;
+        setSubmitting(true);
+        try {
+            const supabase = createClient();
+            await supabase.from('queen_posts').insert({
+                title: postTitle.trim() || null,
+                body: postBody.trim(),
+                created_at: new Date().toISOString(),
+                author: userEmail,
+            });
+            setPostTitle(''); setPostBody('');
+            await loadPosts();
+        } finally { setSubmitting(false); }
+    };
+
+    const filtered = search
+        ? users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.memberId.toLowerCase().includes(search.toLowerCase()))
+        : users;
+
+    const stats = {
+        active: users.length,
+        pending: globalQueue.length,
+        kneelMins: users.reduce((s, u) => s + (u.parameters?.totalKneelMinutes || 0), 0),
+        totalMerit: users.reduce((s, u) => s + (u.score || 0), 0),
+    };
+
+    if (loading) return (
+        <div style={S.loadWrap}>
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            <div style={S.spinner} />
+            <p style={S.loadTxt}>LOADING SYSTEM...</p>
+        </div>
+    );
+
+    return (
+        <div style={S.root}>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+                @keyframes spin{to{transform:rotate(360deg)}}
+                * { box-sizing: border-box; }
+                body { margin: 0; padding: 0; background: #030303; }
+                input::placeholder { color: #444; }
+                textarea::placeholder { color: #444; }
+                button:active { opacity: 0.75; }
+            `}</style>
+
+            {/* TOP BAR */}
+            <div style={S.topBar}>
+                <span style={S.topBrand}>⚔ COMMAND CENTER</span>
+                <span style={S.topCode}>{dailyCode}</span>
+            </div>
+
+            {/* CONTENT */}
+            <div style={S.content}>
+                {selectedUser ? (
+                    <UserProfile
+                        user={selectedUser}
+                        profileTab={profileTab}
+                        setProfileTab={setProfileTab}
+                        onBack={() => setSelectedUser(null)}
+                    />
+                ) : tab === 'home' ? (
+                    <HomeView stats={stats} users={users} dailyCode={dailyCode} />
+                ) : tab === 'subjects' ? (
+                    <SubjectsView
+                        users={filtered} allCount={users.length}
+                        search={search} setSearch={setSearch}
+                        onSelect={(u) => { setSelectedUser(u); setProfileTab('info'); }}
+                    />
+                ) : tab === 'posts' ? (
+                    <PostsView
+                        posts={posts}
+                        title={postTitle} setTitle={setPostTitle}
+                        body={postBody} setBody={setPostBody}
+                        submitting={submitting} onSubmit={submitPost}
+                    />
+                ) : (
+                    <QueenView userEmail={userEmail} onLogout={handleLogout} users={users} stats={stats} />
+                )}
+            </div>
+
+            {/* BOTTOM NAV */}
+            {!selectedUser && (
+                <nav style={S.nav}>
+                    {([
+                        { key: 'home' as Tab, icon: '⌂', label: 'HOME' },
+                        { key: 'subjects' as Tab, icon: '◉', label: `SUBS` },
+                        { key: 'posts' as Tab, icon: '✦', label: 'POSTS' },
+                        { key: 'queen' as Tab, icon: '♛', label: 'QUEEN' },
+                    ]).map(({ key, icon, label }) => (
+                        <button key={key} style={{ ...S.navBtn, ...(tab === key ? S.navActive : {}) }} onClick={() => setTab(key)}>
+                            <span style={{ fontSize: '1.3rem', lineHeight: 1, color: tab === key ? '#c5a059' : '#2e2e2e' }}>{icon}</span>
+                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', letterSpacing: '1.5px', color: tab === key ? '#c5a059' : '#2e2e2e', textTransform: 'uppercase' }}>
+                                {label}{key === 'subjects' && users.length > 0 ? ` ${users.length}` : ''}
+                            </span>
+                        </button>
+                    ))}
+                </nav>
+            )}
+        </div>
+    );
+}
+
+// ─── HOME VIEW ───────────────────────────────────────────────────────────────
+function HomeView({ stats, users, dailyCode }: { stats: any; users: DashUser[]; dailyCode: string }) {
+    const recent = [...users].sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0)).slice(0, 6);
+    return (
+        <div style={S.scroll}>
+            {/* Hero */}
+            <div style={S.heroCard}>
+                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '3px', marginBottom: 4 }}>WELCOME BACK</div>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.7rem', color: '#fff', lineHeight: 1.2 }}>Queen Karin</div>
+                <div style={{ fontSize: '0.8rem', color: '#666', marginTop: 6, letterSpacing: '1px' }}>System dominance at 98%</div>
+                <div style={{ marginTop: 12 }}>
+                    <span style={{ background: 'rgba(107,203,119,0.15)', border: '1px solid rgba(107,203,119,0.3)', color: '#6bcb77', fontSize: '0.5rem', fontFamily: 'Orbitron,monospace', letterSpacing: '2px', padding: '4px 12px', borderRadius: 100 }}>● ONLINE</span>
+                </div>
+            </div>
+
+            {/* Stats 2×2 */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, flexShrink: 0 }}>
+                {[
+                    { label: 'SUBJECTS', val: stats.active, icon: '👤', c: '#4a9eff' },
+                    { label: 'PENDING', val: stats.pending, icon: '📋', c: '#ff8c42' },
+                    { label: 'KNEEL MIN', val: stats.kneelMins, icon: '⏱', c: '#c5a059' },
+                    { label: 'MERIT POOL', val: stats.totalMerit.toLocaleString(), icon: '⚡', c: '#6bcb77' },
+                ].map(item => (
+                    <div key={item.label} style={S.statCard}>
+                        <div style={{ width: 34, height: 34, borderRadius: 8, background: item.c + '22', color: item.c, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', marginBottom: 6 }}>{item.icon}</div>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.3rem', fontWeight: 700, color: '#fff', lineHeight: 1 }}>{item.val}</div>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1.5px', marginTop: 4 }}>{item.label}</div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Daily code */}
+            <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '20px 18px', textAlign: 'center', flexShrink: 0 }}>
+                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '3px', marginBottom: 10 }}>TODAY'S VERIFICATION CODE</div>
+                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '2.6rem', fontWeight: 900, color: '#c5a059', letterSpacing: '10px', textShadow: '0 0 30px rgba(197,160,89,0.25)' }}>{dailyCode}</div>
+                <div style={{ fontSize: '0.68rem', color: '#3a3a3a', marginTop: 8 }}>Share with subjects to verify</div>
+            </div>
+
+            {/* Recent subjects */}
+            {recent.length > 0 && (
+                <div style={S.card}>
+                    <div style={S.cardTitle}>RECENT SUBJECTS</div>
+                    {recent.map(u => (
+                        <div key={u.memberId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            <img src={u.avatar} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.2)', flexShrink: 0 }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: rc(u.rank), letterSpacing: '1.5px', marginTop: 2 }}>{u.rank}</div>
+                            </div>
+                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.55rem', color: '#c5a059' }}>⚡{u.score}</div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', color: '#4ecdc4', marginTop: 2 }}>💰{u.wallet.toLocaleString()}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── SUBJECTS VIEW ───────────────────────────────────────────────────────────
+function SubjectsView({ users, allCount, search, setSearch, onSelect }: {
+    users: DashUser[]; allCount: number; search: string; setSearch: (s: string) => void; onSelect: (u: DashUser) => void;
+}) {
+    return (
+        <div style={S.scroll}>
+            {/* Search bar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(15,15,15,0.9)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10, padding: '10px 14px', flexShrink: 0 }}>
+                <span style={{ fontSize: '1rem', flexShrink: 0 }}>🔍</span>
+                <input type="text" placeholder="Search subjects..." value={search} onChange={e => setSearch(e.target.value)}
+                    style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', letterSpacing: '1px' }} />
+                {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', color: '#555', fontSize: '0.9rem', cursor: 'pointer', padding: 0, flexShrink: 0 }}>✕</button>}
+            </div>
+            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#333', letterSpacing: '2px', paddingLeft: 2, flexShrink: 0 }}>{users.length} OF {allCount} SUBJECTS</div>
+
+            {users.map(u => (
+                <button key={u.memberId} onClick={() => onSelect(u)} style={S.userCard}>
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <img src={u.avatar} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${rc(u.rank)}44`, display: 'block' }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                        {u.reviewQueue.length > 0 && (
+                            <div style={{ position: 'absolute', top: -3, right: -3, width: 17, height: 17, background: '#ff4444', borderRadius: '50%', fontSize: '0.42rem', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,monospace', fontWeight: 700, border: '1.5px solid #030303' }}>{u.reviewQueue.length}</div>
+                        )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.92rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 5 }}>{u.name}</div>
+                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', letterSpacing: '1px', padding: '2px 9px', borderRadius: 100, background: rc(u.rank) + '22', color: rc(u.rank), border: `1px solid ${rc(u.rank)}44` }}>{u.rank}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0 }}>
+                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.55rem', color: '#c5a059' }}>⚡ {u.score}</span>
+                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#4ecdc4' }}>💰 {u.wallet.toLocaleString()}</span>
+                        {u.reviewQueue.length > 0 && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#ff8c42' }}>📋 {u.reviewQueue.length}</span>}
+                    </div>
+                    <div style={{ color: '#222', fontSize: '1.5rem', lineHeight: 1, flexShrink: 0, marginLeft: 4 }}>›</div>
+                </button>
+            ))}
+        </div>
+    );
+}
+
+// ─── USER PROFILE ────────────────────────────────────────────────────────────
+function UserProfile({ user, profileTab, setProfileTab, onBack }: {
+    user: DashUser; profileTab: ProfileTab; setProfileTab: (t: ProfileTab) => void; onBack: () => void;
+}) {
+    const color = rc(user.rank);
+    const devotion = user.parameters?.devotion || 0;
+    const devPct = Math.min(100, (devotion / 1000) * 100);
+
+    return (
+        <div style={{ ...S.scroll, paddingTop: 0 }}>
+            {/* Header */}
+            <div style={{ padding: '14px 14px 20px', background: 'rgba(6,6,6,0.97)', borderBottom: `1px solid ${color}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                <button onClick={onBack} style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: '#666', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', letterSpacing: '2px', padding: '6px 14px', cursor: 'pointer', borderRadius: 6, marginBottom: 16 }}>← BACK</button>
+                <img src={user.avatar} style={{ width: 88, height: 88, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${color}55`, boxShadow: `0 0 30px ${color}22`, marginBottom: 10 }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.58rem', letterSpacing: '2px', padding: '3px 14px', borderRadius: 100, background: color + '22', color, border: `1px solid ${color}55`, marginBottom: 8 }}>{user.rank}</span>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.45rem', color: '#fff', letterSpacing: '2px', textAlign: 'center' }}>{user.name}</div>
+                <div style={{ fontSize: '0.68rem', color: '#3a3a3a', marginTop: 4, letterSpacing: '1px' }}>{user.memberId}</div>
+
+                {/* Stats row */}
+                <div style={{ display: 'flex', width: '100%', marginTop: 18, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 10, padding: '12px 0' }}>
+                    {[
+                        { label: 'MERIT', val: user.score, color: '#c5a059' },
+                        { label: 'CAPITAL', val: user.wallet.toLocaleString(), color: '#4ecdc4' },
+                        { label: 'PENDING', val: user.reviewQueue.length, color: '#ff8c42' },
+                    ].map((s, i) => (
+                        <div key={s.label} style={{ flex: 1, textAlign: 'center', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.3rem', fontWeight: 700, color: s.color }}>{s.val}</div>
+                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#444', letterSpacing: '1.5px', marginTop: 4 }}>{s.label}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Tabs */}
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(197,160,89,0.1)', background: 'rgba(6,6,6,0.97)', flexShrink: 0 }}>
+                {(['info', 'tasks'] as ProfileTab[]).map(t => (
+                    <button key={t} onClick={() => setProfileTab(t)} style={{ flex: 1, padding: '12px', background: 'none', border: 'none', borderBottom: profileTab === t ? '2px solid #c5a059' : '2px solid transparent', color: profileTab === t ? '#c5a059' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', letterSpacing: '2px', cursor: 'pointer' }}>
+                        {t === 'info' ? 'PROFILE' : 'TASKS'}
+                    </button>
+                ))}
+            </div>
+
+            {/* Tab content */}
+            {profileTab === 'info' ? (
+                <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {/* Devotion */}
+                    <div style={S.card}>
+                        <div style={S.cardTitle}>DEVOTION PROGRESS</div>
+                        <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 100, overflow: 'hidden', marginBottom: 6 }}>
+                            <div style={{ height: '100%', width: `${devPct}%`, background: color, borderRadius: 100, transition: 'width 0.5s ease' }} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#444' }}>{devotion} / 1000</span>
+                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color }}>{devPct.toFixed(0)}%</span>
+                        </div>
+                    </div>
+
+                    {/* Kneel stats */}
+                    {user.parameters?.totalKneelMinutes > 0 && (
+                        <div style={S.card}>
+                            <div style={S.cardTitle}>ENDURANCE RECORD</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                                {[
+                                    { val: user.parameters.totalKneelMinutes, lbl: 'TOTAL MIN' },
+                                    { val: user.parameters.kneelCount || 0, lbl: 'SESSIONS' },
+                                    { val: user.parameters.longestKneel || 0, lbl: 'BEST MIN' },
+                                ].map(item => (
+                                    <div key={item.lbl} style={{ textAlign: 'center' }}>
+                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.1rem', color: '#c5a059' }}>{item.val}</div>
+                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#444', letterSpacing: '1px', marginTop: 4 }}>{item.lbl}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Intel */}
+                    <div style={S.card}>
+                        <div style={S.cardTitle}>INTEL</div>
+                        {[
+                            { label: 'EMAIL', val: user.memberId },
+                            { label: 'RANK', val: user.rank, valColor: color },
+                            { label: 'MERIT', val: String(user.score) },
+                            { label: 'CAPITAL', val: user.wallet.toLocaleString() + ' coins' },
+                        ].map((row, i) => (
+                            <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#444', letterSpacing: '1.5px' }}>{row.label}</span>
+                                <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: (row as any).valColor || '#aaa', maxWidth: '55%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{row.val}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {user.reviewQueue.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#2a2a2a', letterSpacing: '2px' }}>NO PENDING TASKS</div>
+                    ) : user.reviewQueue.map((task: any, i: number) => (
+                        <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: '1px solid rgba(255,140,66,0.15)', borderRadius: 10, padding: '14px' }}>
+                            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                                {task.proof_url && <img src={task.proof_url} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} alt="" />}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd', marginBottom: 4 }}>{task.taskName || task.task_name || 'Task'}</div>
+                                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#444', letterSpacing: '1px' }}>{task.submitted_at ? new Date(task.submitted_at).toLocaleDateString() : ''}</div>
+                                    {task.notes && <div style={{ fontSize: '0.8rem', color: '#777', marginTop: 6, lineHeight: 1.5 }}>{task.notes}</div>}
+                                </div>
+                            </div>
+                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#ff8c42', letterSpacing: '2px', marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,140,66,0.1)' }}>PENDING REVIEW</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── POSTS VIEW ──────────────────────────────────────────────────────────────
+function PostsView({ posts, title, setTitle, body, setBody, submitting, onSubmit }: {
+    posts: any[]; title: string; setTitle: (s: string) => void; body: string; setBody: (s: string) => void; submitting: boolean; onSubmit: () => void;
+}) {
+    return (
+        <div style={S.scroll}>
+            <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '18px', display: 'flex', flexDirection: 'column', gap: 12, flexShrink: 0 }}>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: '#c5a059', letterSpacing: '4px', marginBottom: 4 }}>QUEEN'S DISPATCH</div>
+                <input type="text" placeholder="Title (optional)" value={title} onChange={e => setTitle(e.target.value)}
+                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', padding: '10px 14px', outline: 'none', width: '100%', letterSpacing: '0.5px' }} />
+                <textarea placeholder="Write your decree..." value={body} onChange={e => setBody(e.target.value)} rows={4}
+                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', padding: '10px 14px', outline: 'none', resize: 'none', lineHeight: 1.6, width: '100%' }} />
+                <button onClick={onSubmit} disabled={submitting || !body.trim()}
+                    style={{ background: submitting || !body.trim() ? '#222' : '#c5a059', color: submitting || !body.trim() ? '#444' : '#000', border: 'none', borderRadius: 6, fontFamily: 'Cinzel,serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '3px', padding: '14px', cursor: 'pointer', width: '100%' }}>
+                    {submitting ? 'PUBLISHING...' : 'PUBLISH DECREE'}
+                </button>
+            </div>
+
+            {posts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#2a2a2a', letterSpacing: '2px' }}>NO POSTS YET</div>
+            ) : posts.map((post: any) => (
+                <div key={post.id} style={{ background: 'rgba(12,12,12,0.9)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 10, padding: '16px' }}>
+                    {post.title && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#c5a059', marginBottom: 8 }}>{post.title}</div>}
+                    <div style={{ fontSize: '0.9rem', color: '#bbb', lineHeight: 1.7, letterSpacing: '0.3px' }}>{post.body}</div>
+                    {post.media_url && <img src={post.media_url} style={{ width: '100%', borderRadius: 8, marginTop: 10, objectFit: 'cover', maxHeight: 220 }} alt="" />}
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#333', letterSpacing: '1.5px', marginTop: 12 }}>
+                        {post.created_at ? new Date(post.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// ─── QUEEN VIEW ──────────────────────────────────────────────────────────────
+function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; onLogout: () => void; users: DashUser[]; stats: any }) {
+    return (
+        <div style={S.scroll}>
+            <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.4)', boxShadow: '0 0 40px rgba(197,160,89,0.15)' }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.4rem', color: '#c5a059', letterSpacing: '4px', marginTop: 4 }}>QUEEN KARIN</div>
+                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#555', letterSpacing: '3px' }}>SYSTEM ADMINISTRATOR</div>
+                <div style={{ fontSize: '0.72rem', color: '#333', letterSpacing: '1px' }}>{userEmail}</div>
+            </div>
+
+            <div style={S.card}>
+                <div style={S.cardTitle}>SYSTEM OVERVIEW</div>
+                {[
+                    { label: 'Total Subjects', val: stats.active },
+                    { label: 'Pending Reviews', val: stats.pending },
+                    { label: 'Total Kneel Time', val: `${stats.kneelMins} min` },
+                    { label: 'Merit Pool', val: stats.totalMerit.toLocaleString() },
+                ].map((item, i) => (
+                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#555', letterSpacing: '1px' }}>{item.label}</span>
+                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.8rem', color: '#c5a059', fontWeight: 700 }}>{item.val}</span>
+                    </div>
+                ))}
+            </div>
+
+            <div style={S.card}>
+                <div style={S.cardTitle}>NAVIGATE</div>
+                <button onClick={() => window.location.href = '/global'} style={{ display: 'block', width: '100%', background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.2)', color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.75rem', letterSpacing: '3px', padding: '14px', cursor: 'pointer', borderRadius: 8, textAlign: 'center', marginBottom: 10 }}>
+                    GLOBAL HUB ↗
+                </button>
+                <button onClick={() => window.location.href = '/profile'} style={{ display: 'block', width: '100%', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.12)', color: '#888', fontFamily: 'Cinzel,serif', fontSize: '0.75rem', letterSpacing: '3px', padding: '14px', cursor: 'pointer', borderRadius: 8, textAlign: 'center' }}>
+                    SLAVE RECORDS ↗
+                </button>
+            </div>
+
+            <button onClick={onLogout} style={{ background: 'rgba(255,0,0,0.06)', border: '1px solid rgba(255,0,0,0.2)', color: '#ff4444', fontFamily: 'Orbitron,monospace', fontSize: '0.58rem', letterSpacing: '3px', padding: '16px', cursor: 'pointer', borderRadius: 8, width: '100%', flexShrink: 0 }}>
+                LOG OUT
+            </button>
+        </div>
+    );
+}
+
+// ─── SHARED STYLES ───────────────────────────────────────────────────────────
+const S: Record<string, React.CSSProperties> = {
+    root: { display: 'flex', flexDirection: 'column', height: '100dvh', background: '#030303', color: '#fff', fontFamily: "'Rajdhani', sans-serif", overflow: 'hidden', WebkitFontSmoothing: 'antialiased' },
+    topBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 50, minHeight: 50, background: 'rgba(4,4,4,0.99)', borderBottom: '1px solid rgba(197,160,89,0.15)', padding: '0 16px', flexShrink: 0, zIndex: 10 },
+    topBrand: { fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: '#c5a059', letterSpacing: '3px' },
+    topCode: { fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', color: '#c5a059', fontWeight: 900, letterSpacing: '2px', background: 'rgba(197,160,89,0.07)', padding: '3px 10px', borderRadius: 4, border: '1px solid rgba(197,160,89,0.12)' },
+    content: { flex: 1, minHeight: 0, overflow: 'hidden' },
+    nav: { display: 'flex', alignItems: 'stretch', height: 60, minHeight: 60, background: 'rgba(4,4,4,0.99)', borderTop: '1px solid rgba(197,160,89,0.15)', flexShrink: 0 },
+    navBtn: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'none', border: 'none', borderTop: '2px solid transparent', cursor: 'pointer', padding: '6px 0', outline: 'none', WebkitTapHighlightColor: 'transparent' },
+    navActive: { borderTopColor: 'rgba(197,160,89,0.5)' },
+    loadWrap: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#030303', gap: 16 },
+    spinner: { width: 32, height: 32, border: '2px solid rgba(197,160,89,0.1)', borderTopColor: '#c5a059', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+    loadTxt: { fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px', margin: 0 },
+    scroll: { height: '100%', overflowY: 'auto', overflowX: 'hidden', padding: '14px 12px 20px', display: 'flex', flexDirection: 'column', gap: 12, WebkitOverflowScrolling: 'touch' as any },
+    heroCard: { background: "linear-gradient(135deg, rgba(197,160,89,0.08) 0%, rgba(8,6,2,0.95) 100%), url('/hero-bg.png') center/cover", border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, padding: '22px 20px', flexShrink: 0 },
+    statCard: { background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.07)', borderRadius: 10, padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 6 },
+    card: { background: 'rgba(11,11,11,0.95)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 10, padding: '16px 14px', flexShrink: 0 },
+    cardTitle: { fontFamily: 'Cinzel,serif', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 12, opacity: 0.8 },
+    userCard: { display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(11,11,11,0.95)', border: '1px solid rgba(197,160,89,0.07)', borderRadius: 10, padding: '12px 14px', width: '100%', cursor: 'pointer', textAlign: 'left', WebkitTapHighlightColor: 'transparent', outline: 'none', flexShrink: 0 },
+};
