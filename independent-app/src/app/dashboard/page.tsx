@@ -61,7 +61,7 @@ export default function DashboardPage() {
                 document.getElementById('mobNavHome')?.classList.add('active');
             };
             (window as any).showProfile = (id?: string) => {
-                showProfile(id);
+                (showProfile as any)(id);
                 if (id) {
                     // Opening a user's detail — close subjects drawer
                     document.querySelector('.sidebar')?.classList.remove('mob-open');
