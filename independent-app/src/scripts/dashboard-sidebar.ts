@@ -26,9 +26,17 @@ export function renderSidebar() {
 
     const now = Date.now();
 
+    const getLastSeenMs = (u: any): number => {
+        const raw = u.lastSeen || u.lastWorship || null;
+        if (!raw) return 0;
+        const t = new Date(raw).getTime();
+        return isNaN(t) ? 0 : t;
+    };
+
     const isUserOnline = (u: any) => {
-        if (!u || !u.lastSeen) return false;
-        const ls = new Date(u.lastSeen).getTime();
+        if (!u) return false;
+        const ls = getLastSeenMs(u);
+        if (!ls) return false;
         return (now - ls) / 60000 < 5;
     };
 
@@ -72,11 +80,7 @@ export function renderSidebar() {
     let offlineIds = currentVisualOrder.filter(id => !onlineIds.includes(id));
 
     const offlineData = offlineIds.map(id => users.find(x => x.memberId === id)).filter(u => u);
-    offlineData.sort((a, b) => {
-        const tA = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
-        const tB = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
-        return tB - tA;
-    });
+    offlineData.sort((a, b) => getLastSeenMs(b) - getLastSeenMs(a));
 
     currentVisualOrder = [...onlineIds, ...offlineData.map(u => u.memberId)];
 
@@ -90,7 +94,7 @@ export function renderSidebar() {
         const hasMsg = hasUnreadMessage(u);
         const online = isUserOnline(u);
 
-        const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+        const ls = getLastSeenMs(u);
         let statusText = "OFFLINE";
 
         if (online) {
@@ -119,6 +123,8 @@ export function renderSidebar() {
             <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" onclick="window.selUser('${u.memberId}')" style="cursor: pointer;">
                 <div class="u-avatar-main">
                     <img src="${finalPic}" alt="${clean(u.name)}" onerror="this.onerror=null;this.src='${defaultPic}'">
+                    <div class="notif-dot"></div>
+                    ${online ? '<div class="online-dot"></div>' : ''}
                 </div>
                 <div class="u-info">
                     <div class="u-name">${clean(u.name)}</div>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { getAdminDashboardData, loadUserMessages, insertMessage } from '@/actions/velo-actions';
+import { getAdminDashboardData, loadUserMessages, insertMessage, getUnreadMessageStatus } from '@/actions/velo-actions';
 
 type Tab = 'home' | 'subjects' | 'posts' | 'queen';
 type ProfileTab = 'info' | 'tasks' | 'chat';
@@ -16,7 +16,34 @@ interface DashUser {
     score: number;
     parameters: any;
     reviewQueue: any[];
-    lastMessageTime: number;
+    lastMessageTime: string | null;
+    lastSeen: string | null;
+    hasActiveTask: boolean;
+}
+
+function getOnlineStatus(lastSeen: string | null): 'online' | 'recent' | 'away' | 'offline' {
+    if (!lastSeen) return 'offline';
+    const diff = Date.now() - new Date(lastSeen).getTime();
+    if (diff < 5 * 60 * 1000) return 'online';
+    if (diff < 30 * 60 * 1000) return 'recent';
+    if (diff < 2 * 60 * 60 * 1000) return 'away';
+    return 'offline';
+}
+
+function statusColor(s: ReturnType<typeof getOnlineStatus>) {
+    if (s === 'online') return '#6bcb77';
+    if (s === 'recent') return '#c5a059';
+    if (s === 'away') return '#ff8c42';
+    return '#222';
+}
+
+function timeAgo(iso: string | null): string {
+    if (!iso) return '';
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
 }
 
 const RANK_COLOR: Record<string, string> = {
@@ -46,10 +73,16 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     const [postBody, setPostBody] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [dailyCode, setDailyCode] = useState('----');
+    // unreadMap: memberId -> ISO timestamp of last slave message
+    const [unreadMap, setUnreadMap] = useState<Record<string, string>>({});
 
     const loadData = useCallback(async () => {
         try {
-            const data = await getAdminDashboardData();
+            const [data, unread] = await Promise.all([
+                getAdminDashboardData(),
+                getUnreadMessageStatus(),
+            ]);
+            setUnreadMap(unread);
             if (data.success && data.users) {
                 const queue = data.globalQueue || [];
                 setGlobalQueue(queue);
@@ -62,7 +95,10 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     score: Number(u.score) || 0,
                     parameters: u.parameters || {},
                     reviewQueue: queue.filter((t: any) => t.member_id === u.memberId || t.ownerId === u.memberId),
-                    lastMessageTime: u.parameters?.lastMessageTime || 0,
+                    lastMessageTime: u.parameters?.lastMessageTime || null,
+                    // lastSeen: prefer last_active (profile), fallback to lastWorship (tasks)
+                    lastSeen: u.lastSeen || u.last_active || u.lastWorship || null,
+                    hasActiveTask: !!(u.parameters?.taskdom_active_task),
                 }));
                 setUsers(mapped);
             }
@@ -87,6 +123,10 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        const interval = setInterval(loadData, 8000);
+        return () => clearInterval(interval);
+    }, [loadData]);
     useEffect(() => { if (tab === 'posts') loadPosts(); }, [tab, loadPosts]);
 
     const handleLogout = async () => {
@@ -115,8 +155,16 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
         ? users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.memberId.toLowerCase().includes(search.toLowerCase()))
         : users;
 
+    const onlineCount = users.filter(u => getOnlineStatus(u.lastSeen) === 'online').length;
+    const unreadCount = users.filter(u => {
+        const lastSlaveMsg = unreadMap[u.memberId];
+        if (!lastSlaveMsg) return false;
+        const lastRead = typeof window !== 'undefined' ? localStorage.getItem(`chat_read_${u.memberId}`) : null;
+        return !lastRead || new Date(lastSlaveMsg) > new Date(lastRead);
+    }).length;
     const stats = {
         active: users.length,
+        online: onlineCount,
         pending: globalQueue.length,
         kneelMins: users.reduce((s, u) => s + (u.parameters?.totalKneelMinutes || 0), 0),
         totalMerit: users.reduce((s, u) => s + (u.score || 0), 0),
@@ -137,9 +185,11 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 @keyframes spin{to{transform:rotate(360deg)}}
                 * { box-sizing: border-box; }
                 body { margin: 0; padding: 0; background: #030303; }
+                input, textarea, select { font-size: 16px !important; }
                 input::placeholder { color: #444; }
                 textarea::placeholder { color: #444; }
                 button:active { opacity: 0.75; }
+                input, textarea { touch-action: manipulation; }
             `}</style>
 
             {/* TOP BAR */}
@@ -163,6 +213,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     <SubjectsView
                         users={filtered} allCount={users.length}
                         search={search} setSearch={setSearch}
+                        unreadMap={unreadMap}
                         onSelect={(u) => { setSelectedUser(u); setProfileTab('chat'); }}
                     />
                 ) : tab === 'posts' ? (
@@ -181,15 +232,20 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
             {!selectedUser && (
                 <nav style={S.nav}>
                     {([
-                        { key: 'home' as Tab, icon: '⌂', label: 'HOME' },
-                        { key: 'subjects' as Tab, icon: '◉', label: `SUBS` },
-                        { key: 'posts' as Tab, icon: '✦', label: 'POSTS' },
-                        { key: 'queen' as Tab, icon: '♛', label: 'QUEEN' },
-                    ]).map(({ key, icon, label }) => (
+                        { key: 'home' as Tab, icon: '⌂', label: 'HOME', badge: undefined as number | undefined, badgeColor: '#6bcb77' },
+                        { key: 'subjects' as Tab, icon: '◉', label: 'SUBS', badge: unreadCount > 0 ? unreadCount : (onlineCount > 0 ? onlineCount : undefined), badgeColor: unreadCount > 0 ? '#4a9eff' : '#6bcb77' },
+                        { key: 'posts' as Tab, icon: '✦', label: 'POSTS', badge: undefined as number | undefined, badgeColor: '#6bcb77' },
+                        { key: 'queen' as Tab, icon: '♛', label: 'QUEEN', badge: undefined as number | undefined, badgeColor: '#6bcb77' },
+                    ]).map(({ key, icon, label, badge, badgeColor }) => (
                         <button key={key} style={{ ...S.navBtn, ...(tab === key ? S.navActive : {}) }} onClick={() => setTab(key)}>
-                            <span style={{ fontSize: '1.3rem', lineHeight: 1, color: tab === key ? '#c5a059' : '#2e2e2e' }}>{icon}</span>
+                            <div style={{ position: 'relative' }}>
+                                <span style={{ fontSize: '1.3rem', lineHeight: 1, color: tab === key ? '#c5a059' : '#2e2e2e' }}>{icon}</span>
+                                {badge !== undefined && (
+                                    <div style={{ position: 'absolute', top: -4, right: -8, minWidth: 14, height: 14, background: badgeColor, borderRadius: 7, fontSize: '0.36rem', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,monospace', fontWeight: 700, padding: '0 3px' }}>{badge}</div>
+                                )}
+                            </div>
                             <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', letterSpacing: '1.5px', color: tab === key ? '#c5a059' : '#2e2e2e', textTransform: 'uppercase' }}>
-                                {label}{key === 'subjects' && users.length > 0 ? ` ${users.length}` : ''}
+                                {label}
                             </span>
                         </button>
                     ))}
@@ -201,7 +257,11 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 
 // ─── HOME VIEW ───────────────────────────────────────────────────────────────
 function HomeView({ stats, users, dailyCode }: { stats: any; users: DashUser[]; dailyCode: string }) {
-    const recent = [...users].sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0)).slice(0, 6);
+    const recent = [...users].sort((a, b) => {
+        const at = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+        const bt = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+        return bt - at;
+    }).slice(0, 6);
     return (
         <div style={S.scroll}>
             {/* Hero */}
@@ -261,9 +321,30 @@ function HomeView({ stats, users, dailyCode }: { stats: any; users: DashUser[]; 
 }
 
 // ─── SUBJECTS VIEW ───────────────────────────────────────────────────────────
-function SubjectsView({ users, allCount, search, setSearch, onSelect }: {
-    users: DashUser[]; allCount: number; search: string; setSearch: (s: string) => void; onSelect: (u: DashUser) => void;
+function hasUnread(memberId: string, unreadMap: Record<string, string>): boolean {
+    const lastSlaveMsg = unreadMap[memberId];
+    if (!lastSlaveMsg) return false;
+    const lastRead = localStorage.getItem(`chat_read_${memberId}`);
+    if (!lastRead) return true;
+    return new Date(lastSlaveMsg) > new Date(lastRead);
+}
+
+function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect }: {
+    users: DashUser[]; allCount: number; search: string; setSearch: (s: string) => void;
+    unreadMap: Record<string, string>; onSelect: (u: DashUser) => void;
 }) {
+    const statusOrder = { online: 0, recent: 1, away: 2, offline: 3 };
+    const sorted = [...users].sort((a, b) => {
+        // Unread messages first
+        const au = hasUnread(a.memberId, unreadMap) ? 0 : 1;
+        const bu = hasUnread(b.memberId, unreadMap) ? 0 : 1;
+        if (au !== bu) return au - bu;
+        const sa = statusOrder[getOnlineStatus(a.lastSeen)];
+        const sb = statusOrder[getOnlineStatus(b.lastSeen)];
+        if (sa !== sb) return sa - sb;
+        if (b.reviewQueue.length !== a.reviewQueue.length) return b.reviewQueue.length - a.reviewQueue.length;
+        return 0;
+    });
     return (
         <div style={S.scroll}>
             {/* Search bar */}
@@ -273,28 +354,57 @@ function SubjectsView({ users, allCount, search, setSearch, onSelect }: {
                     style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', letterSpacing: '1px' }} />
                 {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', color: '#555', fontSize: '0.9rem', cursor: 'pointer', padding: 0, flexShrink: 0 }}>✕</button>}
             </div>
-            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#333', letterSpacing: '2px', paddingLeft: 2, flexShrink: 0 }}>{users.length} OF {allCount} SUBJECTS</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 2, flexShrink: 0 }}>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#333', letterSpacing: '2px' }}>{sorted.length} OF {allCount} SUBJECTS</span>
+                {sorted.filter(u => getOnlineStatus(u.lastSeen) === 'online').length > 0 && (
+                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#6bcb77', letterSpacing: '2px' }}>
+                        ● {sorted.filter(u => getOnlineStatus(u.lastSeen) === 'online').length} ONLINE
+                    </span>
+                )}
+            </div>
 
-            {users.map(u => (
-                <button key={u.memberId} onClick={() => onSelect(u)} style={S.userCard}>
+            {sorted.map(u => {
+                const status = getOnlineStatus(u.lastSeen);
+                const dotC = statusColor(status);
+                const unread = hasUnread(u.memberId, unreadMap);
+                return (
+                <button key={u.memberId} onClick={() => onSelect(u)}
+                    style={{ ...S.userCard, ...(unread ? { border: '1px solid rgba(74,158,255,0.35)', background: 'rgba(74,158,255,0.04)' } : {}) }}>
                     <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <img src={u.avatar} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${rc(u.rank)}44`, display: 'block' }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                        <img src={u.avatar} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${unread ? '#4a9eff' : rc(u.rank) + '44'}`, display: 'block' }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                        {/* Online status dot */}
+                        <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, background: dotC, borderRadius: '50%', border: '2px solid #030303', boxShadow: status === 'online' ? `0 0 6px ${dotC}` : 'none' }} />
+                        {/* Pending review badge (top-right of avatar) */}
                         {u.reviewQueue.length > 0 && (
                             <div style={{ position: 'absolute', top: -3, right: -3, width: 17, height: 17, background: '#ff4444', borderRadius: '50%', fontSize: '0.42rem', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,monospace', fontWeight: 700, border: '1.5px solid #030303' }}>{u.reviewQueue.length}</div>
                         )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.92rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 5 }}>{u.name}</div>
-                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', letterSpacing: '1px', padding: '2px 9px', borderRadius: 100, background: rc(u.rank) + '22', color: rc(u.rank), border: `1px solid ${rc(u.rank)}44` }}>{u.rank}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: unread ? '#fff' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, fontWeight: unread ? 700 : 400 }}>{u.name}</div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', letterSpacing: '1px', padding: '2px 8px', borderRadius: 100, background: rc(u.rank) + '22', color: rc(u.rank), border: `1px solid ${rc(u.rank)}44` }}>{u.rank}</span>
+                            {status !== 'offline' && (
+                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: dotC, letterSpacing: '1px' }}>
+                                    {status === 'online' ? '● ONLINE' : timeAgo(u.lastSeen)}
+                                </span>
+                            )}
+                            {u.hasActiveTask && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#ff8c42', letterSpacing: '1px' }}>WORKING</span>}
+                        </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0 }}>
-                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.55rem', color: '#c5a059' }}>⚡ {u.score}</span>
-                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#4ecdc4' }}>💰 {u.wallet.toLocaleString()}</span>
-                        {u.reviewQueue.length > 0 && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#ff8c42' }}>📋 {u.reviewQueue.length}</span>}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                        {/* Message icon — lit up when unread */}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ opacity: unread ? 1 : 0.15, filter: unread ? 'drop-shadow(0 0 5px #4a9eff)' : 'none', flexShrink: 0 }}>
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill={unread ? '#4a9eff' : '#333'} />
+                            {unread && <circle cx="19" cy="5" r="4" fill="#ff4444" />}
+                        </svg>
+                        {u.reviewQueue.length > 0 && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#ff8c42' }}>📋 {u.reviewQueue.length}</span>}
                     </div>
                     <div style={{ color: '#222', fontSize: '1.5rem', lineHeight: 1, flexShrink: 0, marginLeft: 4 }}>›</div>
                 </button>
-            ))}
+                );
+            })}
         </div>
     );
 }
@@ -436,40 +546,58 @@ function ChatView({ user }: { user: DashUser }) {
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
+    const [sendError, setSendError] = useState('');
     const [loadingMsgs, setLoadingMsgs] = useState(true);
     const bottomRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const fetchMessages = useCallback(async () => {
-        // Use server action (admin client — bypasses RLS)
-        const data = await loadUserMessages(user.memberId);
-        setMessages(data || []);
-        setLoadingMsgs(false);
+        try {
+            const data = await loadUserMessages(user.memberId);
+            setMessages(data || []);
+            localStorage.setItem(`chat_read_${user.memberId}`, new Date().toISOString());
+        } finally {
+            setLoadingMsgs(false);
+        }
     }, [user.memberId]);
 
-    useEffect(() => { fetchMessages(); }, [fetchMessages]);
+    useEffect(() => {
+        fetchMessages();
+        const interval = setInterval(fetchMessages, 8000);
+        return () => clearInterval(interval);
+    }, [fetchMessages]);
 
     useEffect(() => {
-        if (!loadingMsgs) {
-            bottomRef.current?.scrollIntoView({ behavior: 'auto' });
-        }
+        if (!loadingMsgs) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, loadingMsgs]);
 
     const sendMessage = async () => {
         const txt = input.trim();
         if (!txt || sending) return;
         setSending(true);
-        setInput('');
+        setSendError('');
         try {
-            await insertMessage({
+            const result = await insertMessage({
                 memberId: user.memberId,
                 sender: 'admin',
                 message: txt,
                 type: 'text',
                 read: true,
             });
-            await fetchMessages();
-        } finally { setSending(false); }
+            if (result && (result as any).error) {
+                setSendError('Failed to send');
+            } else {
+                setInput('');
+                await fetchMessages();
+            }
+        } catch (e: any) {
+            setSendError(e?.message || 'Send failed');
+        } finally {
+            setSending(false);
+        }
     };
+
+    const canSend = input.trim().length > 0 && !sending;
 
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -483,7 +611,6 @@ function ChatView({ user }: { user: DashUser }) {
                 )}
                 {messages.map((msg, i) => {
                     const isAdmin = msg.sender === 'admin' || msg.sender === 'queen';
-                    // messages table uses 'message' field
                     const text = msg.message || msg.content || msg.text || '';
                     const hasMedia = msg.media_url || msg.mediaUrl;
                     return (
@@ -494,7 +621,7 @@ function ChatView({ user }: { user: DashUser }) {
                                 padding: hasMedia ? '4px' : '9px 13px',
                                 borderRadius: isAdmin ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                                 maxWidth: '78%',
-                                fontSize: '0.9rem',
+                                fontSize: '0.92rem',
                                 lineHeight: 1.5,
                                 fontFamily: 'Rajdhani,sans-serif',
                                 wordBreak: 'break-word',
@@ -514,18 +641,32 @@ function ChatView({ user }: { user: DashUser }) {
                 <div ref={bottomRef} />
             </div>
 
-            {/* Input */}
+            {/* Error */}
+            {sendError && (
+                <div style={{ padding: '6px 14px', background: 'rgba(255,0,0,0.1)', color: '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', letterSpacing: '1px', textAlign: 'center' }}>
+                    {sendError} — tap to retry
+                </div>
+            )}
+
+            {/* Input — font-size 16px prevents iOS zoom */}
             <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: '1px solid rgba(197,160,89,0.1)', flexShrink: 0, background: 'rgba(4,4,4,0.98)' }}>
                 <input
+                    ref={inputRef}
                     type="text"
                     value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
+                    onChange={e => { setInput(e.target.value); setSendError(''); }}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }}
                     placeholder="Issue command..."
-                    style={{ flex: 1, background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#fff', padding: '10px 14px', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.92rem', outline: 'none' }}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    style={{ flex: 1, background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#fff', padding: '10px 14px', fontFamily: 'Rajdhani,sans-serif', fontSize: '16px', outline: 'none', WebkitAppearance: 'none' as any }}
                 />
-                <button onClick={sendMessage} disabled={sending || !input.trim()}
-                    style={{ background: sending || !input.trim() ? '#111' : '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: sending || !input.trim() ? '#333' : '#000', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', letterSpacing: '1px', padding: '10px 14px', cursor: 'pointer', flexShrink: 0, fontWeight: 700 }}>
+                <button
+                    onTouchEnd={e => { e.preventDefault(); sendMessage(); }}
+                    onClick={sendMessage}
+                    style={{ background: canSend ? '#c5a059' : '#111', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: canSend ? '#000' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.55rem', letterSpacing: '1px', padding: '10px 16px', cursor: canSend ? 'pointer' : 'default', flexShrink: 0, fontWeight: 700, WebkitTapHighlightColor: 'transparent' }}>
                     {sending ? '...' : 'SEND'}
                 </button>
             </div>

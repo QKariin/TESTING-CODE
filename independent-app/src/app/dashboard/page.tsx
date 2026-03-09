@@ -19,7 +19,7 @@ import { closeChatPreview } from '@/scripts/chat';
 
 // State & Actions
 import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail } from '@/scripts/dashboard-state';
-import { getAdminDashboardData } from '@/actions/velo-actions';
+import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
 
 export default function DashboardPage() {
@@ -140,17 +140,29 @@ export default function DashboardPage() {
 
         // 2. Fetch Real Data & Hydrate State
         const loadLiveAction = async () => {
-            console.log("Fetching Admin Dashboard Data...");
-            const data = await getAdminDashboardData();
+            const [data, unreadMap] = await Promise.all([
+                getAdminDashboardData(),
+                getUnreadMessageStatus(),
+            ]);
 
             if (data.success && data.users) {
-                const mappedUsers = data.users.map((u: any) => ({
-                    ...u,
-                    // Ensure avatar uses optimized URL with fallback already handled by backend if possible,
-                    // but we'll apply getOptimizedUrl here for performance.
-                    avatar: getOptimizedUrl(u.avatar || u.avatar_url || u.profile_picture_url || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png', 100),
-                    lastMessageTime: u.parameters?.lastMessageTime || 0
-                }));
+                const mappedUsers = data.users.map((u: any) => {
+                    // lastMessageTime: prefer unreadMap (direct from messages table), fallback to parameters
+                    const msgFromMessages = unreadMap[u.memberId || u.member_id];
+                    const msgFromParams = u.parameters?.lastMessageTime;
+                    const rawMsgTime = msgFromMessages || msgFromParams || null;
+                    const lastMessageTime = rawMsgTime ? new Date(rawMsgTime).getTime() : 0;
+
+                    // lastSeen: prefer last_active (profile), fallback to lastWorship (tasks)
+                    const lastSeen = u.lastSeen || u.last_active || u.lastWorship || null;
+
+                    return {
+                        ...u,
+                        avatar: getOptimizedUrl(u.avatar || u.avatar_url || u.profile_picture_url || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png', 100),
+                        lastMessageTime,
+                        lastSeen,
+                    };
+                });
 
                 setUsers(mappedUsers);
                 setAvailableDailyTasks(data.dailyTasks || []);
@@ -196,6 +208,9 @@ export default function DashboardPage() {
         };
 
         loadLiveAction();
+        // Poll every 10 seconds — refreshes lastSeen, messages, tasks
+        const pollInterval = setInterval(loadLiveAction, 10000);
+        return () => clearInterval(pollInterval);
     }, []);
 
     // ── MOBILE: render completely separate mobile dashboard ──────────────────

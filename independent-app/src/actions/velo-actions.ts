@@ -155,12 +155,13 @@ function mapUserForDashboard(p: any, t: any) {
 
         // Pass raw item for other fields if needed
         _raw: { ...p, Taskdom_History: t?.Taskdom_History },
+        lastWorship: t?.lastWorship || null,
         parameters: {
             ...params,
             taskdom_active_task: activeTask,
             taskdom_end_time: endTime,
             status: t?.taskdom_pending_state || p.hierarchy,
-            lastMessageTime: params.lastMessageTime || 0
+            lastMessageTime: params.lastMessageTime || null
         }
     };
 }
@@ -807,6 +808,29 @@ export async function loadUserMessages(memberId: string) {
     }
 }
 
+
+// --- 11b. UNREAD MESSAGE STATUS (for mobile dashboard notifications) ---
+export async function getUnreadMessageStatus(): Promise<Record<string, string>> {
+    try {
+        // Get the most recent slave message per member_id
+        const { data, error } = await supabaseAdmin
+            .from('messages')
+            .select('member_id, created_at, sender')
+            .in('sender', ['slave', 'user', 'sub'])
+            .order('created_at', { ascending: false });
+        if (error || !data) return {};
+        // Keep only the latest message per member
+        const result: Record<string, string> = {};
+        for (const row of data) {
+            if (row.member_id && !result[row.member_id]) {
+                result[row.member_id] = row.created_at;
+            }
+        }
+        return result;
+    } catch {
+        return {};
+    }
+}
 
 // --- 12. DASHBOARD CONTROLLER (backend/DashboardController.jsw) ---
 
