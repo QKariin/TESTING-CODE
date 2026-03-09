@@ -171,8 +171,9 @@ export async function sendMsg() {
     const inp = document.getElementById('adminInp') as HTMLInputElement;
     const btn = document.querySelector('.btn-send') as HTMLButtonElement;
 
-    if (!inp || !currId) {
-        console.warn(`[DASHBOARD-CHAT] Send failed: Missing input ${!inp} or currId ${!currId}`);
+    const activeCurrId = currId || (window as any).currId;
+    if (!inp || !activeCurrId) {
+        console.warn(`[DASHBOARD-CHAT] Send failed: Missing input ${!inp} or currId ${!activeCurrId}`);
         return;
     }
 
@@ -212,7 +213,7 @@ export async function sendMsg() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 senderEmail: senderEmail,
-                conversationId: currId, // sending TO this slave
+                conversationId: activeCurrId, // sending TO this slave
                 content: text,
                 type: 'text'
             })

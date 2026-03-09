@@ -1112,6 +1112,7 @@ body {
     flex-direction: row;
     gap: 10px;
     margin-bottom: 12px;
+    width: 100%;
     max-width: 100%;
     align-items: flex-end;
 }
