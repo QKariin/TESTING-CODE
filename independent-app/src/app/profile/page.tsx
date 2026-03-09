@@ -1114,14 +1114,6 @@ export default function ProfilePage() {
                             <div style={{ textAlign: 'center', fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', marginTop: '4px' }}>TAP TO VIEW RECORD</div>
                         </div>
 
-                        {/* QUEEN'S WALL */}
-                        <div id="mobSectionQueen" style={{ width: '100%', marginTop: '20px' }}>
-                            <div className="duty-label">QUEEN'S WALL</div>
-                            <div id="qWall_ScrollTrack" className="mob-horiz-scroll" style={{ marginTop: '15px', paddingBottom: '10px', minHeight: '100px' }}>
-                                <div style={{ color: '#333', fontSize: '0.7rem', padding: '20px' }}>LOADING FEED...</div>
-                            </div>
-                        </div>
-
                         {/* SLAVE RECORDS */}
                         <div style={{ width: '100%', marginTop: '20px' }}>
                             <div className="duty-label">SLAVE RECORDS</div>
