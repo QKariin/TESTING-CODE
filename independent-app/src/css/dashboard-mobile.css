@@ -23,6 +23,11 @@
         background: #000;
     }
 
+    /* ── MODALS must be above top bar ── */
+    .modal { z-index: 2000 !important; }
+    .modal .m-content { z-index: 2001 !important; }
+    #feedSectionOverlay { z-index: 2000 !important; }
+
     /* ── TOP BAR ── */
     .mob-top-bar {
         display: flex;

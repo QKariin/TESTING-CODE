@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { getAdminDashboardData } from '@/actions/velo-actions';
 
 type Tab = 'home' | 'subjects' | 'posts' | 'queen';
-type ProfileTab = 'info' | 'tasks';
+type ProfileTab = 'info' | 'tasks' | 'chat';
 
 interface DashUser {
     memberId: string;
@@ -306,110 +306,222 @@ function UserProfile({ user, profileTab, setProfileTab, onBack }: {
     const color = rc(user.rank);
     const devotion = user.parameters?.devotion || 0;
     const devPct = Math.min(100, (devotion / 1000) * 100);
+    const touchStartX = useRef(0);
+    const touchStartY = useRef(0);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+    };
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        const dx = e.changedTouches[0].clientX - touchStartX.current;
+        const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+        if (dx > 80 && dy < 60) onBack();
+    };
 
     return (
-        <div style={{ ...S.scroll, paddingTop: 0 }}>
-            {/* Header */}
-            <div style={{ padding: '14px 14px 20px', background: 'rgba(6,6,6,0.97)', borderBottom: `1px solid ${color}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                <button onClick={onBack} style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: '#666', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', letterSpacing: '2px', padding: '6px 14px', cursor: 'pointer', borderRadius: 6, marginBottom: 16 }}>← BACK</button>
-                <img src={user.avatar} style={{ width: 88, height: 88, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${color}55`, boxShadow: `0 0 30px ${color}22`, marginBottom: 10 }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
-                <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.58rem', letterSpacing: '2px', padding: '3px 14px', borderRadius: 100, background: color + '22', color, border: `1px solid ${color}55`, marginBottom: 8 }}>{user.rank}</span>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.45rem', color: '#fff', letterSpacing: '2px', textAlign: 'center' }}>{user.name}</div>
-                <div style={{ fontSize: '0.68rem', color: '#3a3a3a', marginTop: 4, letterSpacing: '1px' }}>{user.memberId}</div>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#040404' }}
+            onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
 
-                {/* Stats row */}
-                <div style={{ display: 'flex', width: '100%', marginTop: 18, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 10, padding: '12px 0' }}>
+            {/* ── Profile header ── */}
+            <div style={{ padding: '14px 14px 18px', background: 'rgba(6,6,6,0.97)', borderBottom: `1px solid ${color}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                <button onClick={onBack} style={S.backBtn}>← BACK</button>
+                <img src={user.avatar} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${color}55`, boxShadow: `0 0 24px ${color}20`, marginBottom: 8 }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.56rem', letterSpacing: '2px', padding: '3px 14px', borderRadius: 100, background: color + '22', color, border: `1px solid ${color}55`, marginBottom: 7 }}>{user.rank}</span>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.35rem', color: '#fff', letterSpacing: '2px', textAlign: 'center' }}>{user.name}</div>
+                <div style={{ fontSize: '0.66rem', color: '#3a3a3a', marginTop: 3, letterSpacing: '1px' }}>{user.memberId}</div>
+                {/* Stats */}
+                <div style={{ display: 'flex', width: '100%', marginTop: 14, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 10, padding: '10px 0' }}>
                     {[
                         { label: 'MERIT', val: user.score, color: '#c5a059' },
                         { label: 'CAPITAL', val: user.wallet.toLocaleString(), color: '#4ecdc4' },
                         { label: 'PENDING', val: user.reviewQueue.length, color: '#ff8c42' },
                     ].map((s, i) => (
                         <div key={s.label} style={{ flex: 1, textAlign: 'center', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.3rem', fontWeight: 700, color: s.color }}>{s.val}</div>
-                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#444', letterSpacing: '1.5px', marginTop: 4 }}>{s.label}</div>
+                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.2rem', fontWeight: 700, color: s.color }}>{s.val}</div>
+                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#444', letterSpacing: '1.5px', marginTop: 3 }}>{s.label}</div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* Tabs */}
+            {/* ── Tabs ── */}
             <div style={{ display: 'flex', borderBottom: '1px solid rgba(197,160,89,0.1)', background: 'rgba(6,6,6,0.97)', flexShrink: 0 }}>
-                {(['info', 'tasks'] as ProfileTab[]).map(t => (
-                    <button key={t} onClick={() => setProfileTab(t)} style={{ flex: 1, padding: '12px', background: 'none', border: 'none', borderBottom: profileTab === t ? '2px solid #c5a059' : '2px solid transparent', color: profileTab === t ? '#c5a059' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', letterSpacing: '2px', cursor: 'pointer' }}>
-                        {t === 'info' ? 'PROFILE' : 'TASKS'}
+                {(['info', 'tasks', 'chat'] as ProfileTab[]).map(t => (
+                    <button key={t} onClick={() => setProfileTab(t)} style={{ flex: 1, padding: '11px', background: 'none', border: 'none', borderBottom: profileTab === t ? '2px solid #c5a059' : '2px solid transparent', color: profileTab === t ? '#c5a059' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', letterSpacing: '2px', cursor: 'pointer' }}>
+                        {t === 'info' ? 'PROFILE' : t === 'tasks' ? 'TASKS' : 'CHAT'}
                     </button>
                 ))}
             </div>
 
-            {/* Tab content */}
-            {profileTab === 'info' ? (
-                <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {/* Devotion */}
-                    <div style={S.card}>
-                        <div style={S.cardTitle}>DEVOTION PROGRESS</div>
-                        <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 100, overflow: 'hidden', marginBottom: 6 }}>
-                            <div style={{ height: '100%', width: `${devPct}%`, background: color, borderRadius: 100, transition: 'width 0.5s ease' }} />
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#444' }}>{devotion} / 1000</span>
-                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color }}>{devPct.toFixed(0)}%</span>
-                        </div>
-                    </div>
-
-                    {/* Kneel stats */}
-                    {user.parameters?.totalKneelMinutes > 0 && (
-                        <div style={S.card}>
-                            <div style={S.cardTitle}>ENDURANCE RECORD</div>
-                            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                                {[
-                                    { val: user.parameters.totalKneelMinutes, lbl: 'TOTAL MIN' },
-                                    { val: user.parameters.kneelCount || 0, lbl: 'SESSIONS' },
-                                    { val: user.parameters.longestKneel || 0, lbl: 'BEST MIN' },
-                                ].map(item => (
-                                    <div key={item.lbl} style={{ textAlign: 'center' }}>
-                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.1rem', color: '#c5a059' }}>{item.val}</div>
-                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#444', letterSpacing: '1px', marginTop: 4 }}>{item.lbl}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Intel */}
-                    <div style={S.card}>
-                        <div style={S.cardTitle}>INTEL</div>
-                        {[
-                            { label: 'EMAIL', val: user.memberId },
-                            { label: 'RANK', val: user.rank, valColor: color },
-                            { label: 'MERIT', val: String(user.score) },
-                            { label: 'CAPITAL', val: user.wallet.toLocaleString() + ' coins' },
-                        ].map((row, i) => (
-                            <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#444', letterSpacing: '1.5px' }}>{row.label}</span>
-                                <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: (row as any).valColor || '#aaa', maxWidth: '55%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{row.val}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            {/* ── Tab content ── */}
+            {profileTab === 'chat' ? (
+                <ChatView user={user} />
             ) : (
-                <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {user.reviewQueue.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#2a2a2a', letterSpacing: '2px' }}>NO PENDING TASKS</div>
-                    ) : user.reviewQueue.map((task: any, i: number) => (
-                        <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: '1px solid rgba(255,140,66,0.15)', borderRadius: 10, padding: '14px' }}>
-                            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                                {task.proof_url && <img src={task.proof_url} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} alt="" />}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd', marginBottom: 4 }}>{task.taskName || task.task_name || 'Task'}</div>
-                                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#444', letterSpacing: '1px' }}>{task.submitted_at ? new Date(task.submitted_at).toLocaleDateString() : ''}</div>
-                                    {task.notes && <div style={{ fontSize: '0.8rem', color: '#777', marginTop: 6, lineHeight: 1.5 }}>{task.notes}</div>}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: 12, WebkitOverflowScrolling: 'touch' as any }}>
+                    {profileTab === 'info' && (<>
+                        {/* Devotion */}
+                        <div style={S.card}>
+                            <div style={S.cardTitle}>DEVOTION PROGRESS</div>
+                            <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 100, overflow: 'hidden', marginBottom: 6 }}>
+                                <div style={{ height: '100%', width: `${devPct}%`, background: color, borderRadius: 100, transition: 'width 0.5s ease' }} />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', color: '#444' }}>{devotion} / 1000</span>
+                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', color }}>{devPct.toFixed(0)}%</span>
+                            </div>
+                        </div>
+
+                        {/* Kneel */}
+                        {user.parameters?.totalKneelMinutes > 0 && (
+                            <div style={S.card}>
+                                <div style={S.cardTitle}>ENDURANCE RECORD</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                                    {[
+                                        { val: user.parameters.totalKneelMinutes, lbl: 'TOTAL MIN' },
+                                        { val: user.parameters.kneelCount || 0, lbl: 'SESSIONS' },
+                                        { val: user.parameters.longestKneel || 0, lbl: 'BEST MIN' },
+                                    ].map(item => (
+                                        <div key={item.lbl} style={{ textAlign: 'center' }}>
+                                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.1rem', color: '#c5a059' }}>{item.val}</div>
+                                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.35rem', color: '#444', letterSpacing: '1px', marginTop: 4 }}>{item.lbl}</div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#ff8c42', letterSpacing: '2px', marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,140,66,0.1)' }}>PENDING REVIEW</div>
+                        )}
+
+                        {/* Intel */}
+                        <div style={S.card}>
+                            <div style={S.cardTitle}>INTEL</div>
+                            {[
+                                { label: 'EMAIL', val: user.memberId },
+                                { label: 'RANK', val: user.rank, valColor: color },
+                                { label: 'MERIT', val: String(user.score) },
+                                { label: 'CAPITAL', val: user.wallet.toLocaleString() + ' coins' },
+                            ].map((row, i) => (
+                                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', color: '#444', letterSpacing: '1.5px' }}>{row.label}</span>
+                                    <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: (row as any).valColor || '#aaa', maxWidth: '55%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{row.val}</span>
+                                </div>
+                            ))}
                         </div>
-                    ))}
+                    </>)}
+
+                    {profileTab === 'tasks' && (<>
+                        {user.reviewQueue.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#2a2a2a', letterSpacing: '2px' }}>NO PENDING TASKS</div>
+                        ) : user.reviewQueue.map((task: any, i: number) => (
+                            <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: '1px solid rgba(255,140,66,0.15)', borderRadius: 10, padding: '14px' }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                                    {task.proof_url && <img src={task.proof_url} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} alt="" />}
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd', marginBottom: 4 }}>{task.taskName || task.task_name || 'Task'}</div>
+                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#444', letterSpacing: '1px' }}>{task.submitted_at ? new Date(task.submitted_at).toLocaleDateString() : ''}</div>
+                                        {task.notes && <div style={{ fontSize: '0.8rem', color: '#777', marginTop: 6, lineHeight: 1.5 }}>{task.notes}</div>}
+                                    </div>
+                                </div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#ff8c42', letterSpacing: '2px', marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,140,66,0.1)' }}>PENDING REVIEW</div>
+                            </div>
+                        ))}
+                    </>)}
                 </div>
             )}
+        </div>
+    );
+}
+
+// ─── CHAT VIEW ───────────────────────────────────────────────────────────────
+function ChatView({ user }: { user: DashUser }) {
+    const [messages, setMessages] = useState<any[]>([]);
+    const [input, setInput] = useState('');
+    const [sending, setSending] = useState(false);
+    const bottomRef = useRef<HTMLDivElement>(null);
+
+    const loadMessages = useCallback(async () => {
+        const supabase = createClient();
+        const { data } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('member_id', user.memberId)
+            .order('created_at', { ascending: true })
+            .limit(80);
+        setMessages(data || []);
+    }, [user.memberId]);
+
+    useEffect(() => { loadMessages(); }, [loadMessages]);
+    useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+    const sendMessage = async () => {
+        const txt = input.trim();
+        if (!txt || sending) return;
+        setSending(true);
+        setInput('');
+        try {
+            const supabase = createClient();
+            await supabase.from('messages').insert({
+                member_id: user.memberId,
+                text: txt,
+                content: txt,
+                sender: 'admin',
+                role: 'admin',
+                created_at: new Date().toISOString(),
+                type: 'text',
+            });
+            await loadMessages();
+        } finally { setSending(false); }
+    };
+
+    return (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {/* Messages */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any }}>
+                {messages.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', color: '#222', letterSpacing: '2px' }}>NO MESSAGES YET</div>
+                )}
+                {messages.map((msg, i) => {
+                    const isAdmin = msg.sender === 'admin' || msg.role === 'admin';
+                    const text = msg.text || msg.content || msg.message || '';
+                    return (
+                        <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
+                            <div style={{
+                                background: isAdmin ? '#c5a059' : 'rgba(28,28,28,0.95)',
+                                color: isAdmin ? '#000' : '#ddd',
+                                padding: '9px 13px',
+                                borderRadius: isAdmin ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                                maxWidth: '78%',
+                                fontSize: '0.9rem',
+                                lineHeight: 1.5,
+                                fontFamily: 'Rajdhani,sans-serif',
+                                wordBreak: 'break-word',
+                            }}>
+                                {text}
+                                {msg.image_url && <img src={msg.image_url} style={{ display: 'block', maxWidth: '100%', borderRadius: 8, marginTop: 6 }} alt="" />}
+                            </div>
+                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#2a2a2a', marginTop: 3, letterSpacing: '1px' }}>
+                                {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </div>
+                        </div>
+                    );
+                })}
+                <div ref={bottomRef} />
+            </div>
+
+            {/* Input */}
+            <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: '1px solid rgba(197,160,89,0.1)', flexShrink: 0, background: 'rgba(4,4,4,0.98)' }}>
+                <input
+                    type="text"
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
+                    placeholder="Issue command..."
+                    style={{ flex: 1, background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#fff', padding: '10px 14px', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.92rem', outline: 'none' }}
+                />
+                <button onClick={sendMessage} disabled={sending || !input.trim()}
+                    style={{ background: sending || !input.trim() ? '#111' : '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: sending || !input.trim() ? '#333' : '#000', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', letterSpacing: '1px', padding: '10px 14px', cursor: 'pointer', flexShrink: 0, fontWeight: 700 }}>
+                    SEND
+                </button>
+            </div>
         </div>
     );
 }
