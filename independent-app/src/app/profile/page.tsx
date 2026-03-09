@@ -1205,7 +1205,7 @@ export default function ProfilePage() {
                 <div className="mob-overlay-header">
                     <div className="mob-overlay-title-wrap">
                         <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
-                            <img src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" />
+                            <img src="/queen-karin.png" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" />
                             <div id="mobChatOnlineDot" style={{ position: 'absolute', bottom: 2, right: 2, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #000', display: 'none' }}></div>
                         </div>
                         <div>

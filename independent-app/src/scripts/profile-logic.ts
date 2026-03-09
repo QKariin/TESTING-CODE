@@ -2391,12 +2391,23 @@ async function _doProfileUpload() {
         if (!file) return;
 
         const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
+        const elHudPic = document.getElementById('hudUserPic') as HTMLImageElement;
         if (elProfilePic) elProfilePic.style.opacity = '0.5';
 
         try {
-            const { uploadToSupabase } = await import('./mediaSupabase');
-            const publicUrl = await uploadToSupabase('media', 'avatars', file);
-            if (!publicUrl || publicUrl === 'failed') throw new Error('Upload failed');
+            // Upload via Bytescale (same as dashboard uploads — always works)
+            const ACCOUNT_ID = 'kW2K8hR';
+            const API_KEY = 'public_kW2K8hR6YbQXStTvMf5ZDYbVf1fQ';
+            const fd = new FormData();
+            fd.append('file', file);
+            const uploadRes = await fetch(
+                `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/avatars`,
+                { method: 'POST', headers: { Authorization: `Bearer ${API_KEY}` }, body: fd }
+            );
+            if (!uploadRes.ok) throw new Error('Upload service error');
+            const uploadData = await uploadRes.json();
+            const publicUrl = uploadData.files?.[0]?.fileUrl;
+            if (!publicUrl) throw new Error('No URL returned from upload');
 
             const res = await fetch('/api/profile-update', {
                 method: 'POST',
@@ -2405,18 +2416,11 @@ async function _doProfileUpload() {
             });
             const data = await res.json();
             if (elProfilePic) elProfilePic.style.opacity = '1';
-            if (data.success && data.profile) {
+            if (data.success) {
                 if (elProfilePic) elProfilePic.src = publicUrl;
-                const elMobPic = document.getElementById('hudUserPic') as HTMLImageElement;
-                if (elMobPic) elMobPic.src = publicUrl;
-                renderProfileSidebar(data.profile);
-                loadChatHistory(user.email!);
-                const { getState } = await import('./profile-state');
-                const state = getState();
-                renderHistoryAndAltar(state);
-                renderExchequerHistory(state);
+                if (elHudPic) elHudPic.src = publicUrl;
             } else {
-                alert('Photo upload failed: ' + (data.error || 'Unknown error'));
+                alert('Photo update failed: ' + (data.error || 'Unknown error'));
             }
         } catch (err: any) {
             if (elProfilePic) elProfilePic.style.opacity = '1';
