@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { getAdminDashboardData, loadUserMessages, insertMessage, getUnreadMessageStatus } from '@/actions/velo-actions';
+import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
 
 type Tab = 'home' | 'subjects' | 'posts' | 'queen';
 type ProfileTab = 'info' | 'tasks' | 'chat';
@@ -553,9 +553,12 @@ function ChatView({ user }: { user: DashUser }) {
 
     const fetchMessages = useCallback(async () => {
         try {
-            const data = await loadUserMessages(user.memberId);
-            setMessages(data || []);
-            localStorage.setItem(`chat_read_${user.memberId}`, new Date().toISOString());
+            const res = await fetch(`/api/admin-chat?memberId=${encodeURIComponent(user.memberId)}`);
+            const json = await res.json();
+            if (json.messages) {
+                setMessages(json.messages);
+                localStorage.setItem(`chat_read_${user.memberId}`, new Date().toISOString());
+            }
         } finally {
             setLoadingMsgs(false);
         }
@@ -577,21 +580,20 @@ function ChatView({ user }: { user: DashUser }) {
         setSending(true);
         setSendError('');
         try {
-            const result = await insertMessage({
-                memberId: user.memberId,
-                sender: 'admin',
-                message: txt,
-                type: 'text',
-                read: true,
+            const res = await fetch('/api/admin-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: user.memberId, message: txt }),
             });
-            if (result && (result as any).error) {
-                setSendError('Failed to send');
+            const json = await res.json();
+            if (!res.ok || json.error) {
+                setSendError(json.error || 'Send failed');
             } else {
                 setInput('');
                 await fetchMessages();
             }
         } catch (e: any) {
-            setSendError(e?.message || 'Send failed');
+            setSendError(e?.message || 'Network error');
         } finally {
             setSending(false);
         }
