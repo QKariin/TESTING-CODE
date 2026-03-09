@@ -1,4 +1,4 @@
-/** v1.1.0 - Added Register mode */
+/** v1.2.0 - Added Register + Forgot Password */
 "use client";
 
 import { useState } from 'react';
@@ -6,7 +6,7 @@ import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-    const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [mode, setMode] = useState<'login' | 'register' | 'reset'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -84,6 +84,25 @@ export default function LoginPage() {
 
         // Immediate session — apply same check as Google callback
         await checkProfileAndRedirect(email);
+        setLoading(false);
+    };
+
+    const handleReset = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        setMessage(null);
+
+        const supabase = createClient();
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/auth/reset-password`,
+        });
+
+        if (error) {
+            setError(error.message);
+        } else {
+            setMessage('Reset link sent. Check your email.');
+        }
         setLoading(false);
     };
 
@@ -408,52 +427,76 @@ export default function LoginPage() {
 
             <div className="login-card">
                 <div className="card-border-glow"></div>
-                <h1>{mode === 'login' ? 'IDENTIFICATION' : 'ENLISTMENT'}</h1>
+                <h1>{mode === 'login' ? 'IDENTIFICATION' : mode === 'register' ? 'ENLISTMENT' : 'RECOVER ACCESS'}</h1>
 
-                <form onSubmit={mode === 'login' ? handleLogin : handleRegister}>
-                    <div className="input-group">
-                        <label>MEMBER EMAIL</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            placeholder="NAME@PROTOCOL.COM"
-                        />
-                    </div>
-
-                    <div className="input-group">
-                        <label>PASSWORD</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            placeholder="••••••••"
-                        />
-                    </div>
-
-                    {mode === 'register' && (
+                {mode === 'reset' ? (
+                    <form onSubmit={handleReset}>
                         <div className="input-group">
-                            <label>CONFIRM PASSWORD</label>
+                            <label>MEMBER EMAIL</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                placeholder="NAME@PROTOCOL.COM"
+                            />
+                        </div>
+                        <button type="submit" className="login-btn" disabled={loading}>
+                            <div className="btn-shine"></div>
+                            {loading ? <><span className="loading-spinner"></span>SENDING...</> : 'SEND RESET LINK'}
+                        </button>
+                    </form>
+                ) : (
+                    <form onSubmit={mode === 'login' ? handleLogin : handleRegister}>
+                        <div className="input-group">
+                            <label>MEMBER EMAIL</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                placeholder="NAME@PROTOCOL.COM"
+                            />
+                        </div>
+
+                        <div className="input-group">
+                            <label>PASSWORD</label>
                             <input
                                 type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 required
                                 placeholder="••••••••"
                             />
+                            {mode === 'login' && (
+                                <button type="button" className="toggle-link" style={{ marginTop: '6px', fontSize: '0.6rem', display: 'block' }} onClick={() => { setMode('reset'); setError(null); setMessage(null); }}>
+                                    FORGOT PASSWORD?
+                                </button>
+                            )}
                         </div>
-                    )}
 
-                    <button type="submit" className="login-btn" disabled={loading}>
-                        <div className="btn-shine"></div>
-                        {loading ? (
-                            <><span className="loading-spinner"></span>
-                            {mode === 'login' ? 'VERIFYING...' : 'REGISTERING...'}</>
-                        ) : mode === 'login' ? 'ACCESS SYSTEM' : 'ENLIST'}
-                    </button>
-                </form>
+                        {mode === 'register' && (
+                            <div className="input-group">
+                                <label>CONFIRM PASSWORD</label>
+                                <input
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                        )}
+
+                        <button type="submit" className="login-btn" disabled={loading}>
+                            <div className="btn-shine"></div>
+                            {loading ? (
+                                <><span className="loading-spinner"></span>
+                                {mode === 'login' ? 'VERIFYING...' : 'REGISTERING...'}</>
+                            ) : mode === 'login' ? 'ACCESS SYSTEM' : 'ENLIST'}
+                        </button>
+                    </form>
+                )}
 
                 {mode === 'login' && (
                     <>
@@ -481,9 +524,9 @@ export default function LoginPage() {
                             </button>
                         </>
                     ) : (
-                        <>ALREADY ENLISTED?
+                        <>
                             <button className="toggle-link" onClick={() => { setMode('login'); setError(null); setMessage(null); }}>
-                                LOG IN
+                                BACK TO LOGIN
                             </button>
                         </>
                     )}
