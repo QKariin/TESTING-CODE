@@ -90,7 +90,8 @@ export default function GlobalPage() {
                     .eq('member_id', user.email)
                     .maybeSingle();
 
-                if (profileData) initProfileState(profileData);
+                // If no profile row (e.g. admin/queen), init with auth email so send + isMe work
+                initProfileState(profileData || { member_id: user.email, email: user.email, name: 'QUEEN' });
             } catch (err) {
                 console.error('[GLOBAL] init error:', err);
             } finally {
