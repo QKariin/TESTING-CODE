@@ -1,19 +1,39 @@
-/** v1.0.2 - Fixed Auth Client Import */
+/** v1.1.0 - Added Register mode */
 "use client";
 
 import { useState } from 'react';
-// 👇 CHANGE THIS LINE: Use the client that supports Cookies/SSR
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-    // Initialize the client inside the login handlers to prevent build-time evaluation 
-
+    const [mode, setMode] = useState<'login' | 'register'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [message, setMessage] = useState<string | null>(null);
     const router = useRouter();
+
+    // Same profile check logic as /auth/callback
+    const checkProfileAndRedirect = async (userEmail: string) => {
+        const email_lower = userEmail.trim().toLowerCase();
+        if (email_lower === 'ceo@qkarin.com' || email_lower === 'liviacechova@gmail.com') {
+            router.push('/dashboard');
+            return;
+        }
+        try {
+            const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email_lower)}&full=true`);
+            const data = await res.json();
+            if (data && !data.error && data.member_id) {
+                router.push('/profile');
+            } else {
+                router.push('/tribute');
+            }
+        } catch {
+            router.push('/tribute');
+        }
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -21,21 +41,49 @@ export default function LoginPage() {
         setError(null);
 
         const supabase = createClient();
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
             setError(error.message);
         } else {
-            // Check routing logic
-            if (email.toLowerCase() === 'ceo@qkarin.com') {
-                router.push('/dashboard');
-            } else {
-                router.push('/profile');
-            }
+            await checkProfileAndRedirect(email);
         }
+        setLoading(false);
+    };
+
+    const handleRegister = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setMessage(null);
+
+        if (password !== confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters.');
+            return;
+        }
+
+        setLoading(true);
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.signUp({ email, password });
+
+        if (error) {
+            setError(error.message);
+            setLoading(false);
+            return;
+        }
+
+        if (!data.session) {
+            // Email confirmation required — Supabase sent a confirmation email
+            setMessage('Check your email to confirm your account, then log in.');
+            setLoading(false);
+            return;
+        }
+
+        // Immediate session — apply same check as Google callback
+        await checkProfileAndRedirect(email);
         setLoading(false);
     };
 
@@ -47,12 +95,8 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                // Ensure this matches your callback route
                 redirectTo: `${window.location.origin}/auth/callback`,
-                queryParams: {
-                    access_type: 'offline',
-                    prompt: 'consent',
-                },
+                queryParams: { access_type: 'offline', prompt: 'consent' },
             }
         });
 
@@ -62,12 +106,8 @@ export default function LoginPage() {
         }
     };
 
-    // ... (Keep the rest of your JSX/CSS exactly the same) ...
-    // Just make sure to COPY existing JSX below this line
     return (
         <div className="login-container">
-            {/* ... Paste your existing JSX/CSS here ... */}
-            {/* Cinematic Procedural Background */}
             <div className="vignette"></div>
             <div className="particle-layer"></div>
             <div className="scanner-line"></div>
@@ -87,7 +127,6 @@ export default function LoginPage() {
                     position: relative;
                 }
 
-                /* Deep Shadows & Vignette */
                 .vignette {
                     position: absolute;
                     inset: 0;
@@ -96,11 +135,10 @@ export default function LoginPage() {
                     z-index: 1;
                 }
 
-                /* Procedural Dust Particles */
                 .particle-layer {
                     position: absolute;
                     inset: 0;
-                    background-image: 
+                    background-image:
                         radial-gradient(circle at 20% 30%, rgba(197, 160, 89, 0.05) 1px, transparent 1px),
                         radial-gradient(circle at 80% 70%, rgba(197, 160, 89, 0.05) 1px, transparent 1px);
                     background-size: 100px 100px, 150px 150px;
@@ -113,7 +151,6 @@ export default function LoginPage() {
                     to { transform: translateY(-100px); }
                 }
 
-                /* Tactical Scanner Line */
                 .scanner-line {
                     position: absolute;
                     top: -100px;
@@ -139,9 +176,7 @@ export default function LoginPage() {
                     border: 1px solid rgba(197, 160, 89, 0.2);
                     padding: 50px 40px;
                     border-radius: 2px;
-                    box-shadow: 
-                        0 0 50px rgba(0,0,0,0.9),
-                        inset 0 0 20px rgba(197, 160, 89, 0.05);
+                    box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(197, 160, 89, 0.05);
                     width: 100%;
                     max-width: 420px;
                     text-align: center;
@@ -209,6 +244,7 @@ export default function LoginPage() {
                     outline: none;
                     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                     border-radius: 0;
+                    box-sizing: border-box;
                 }
 
                 input:focus {
@@ -302,9 +338,7 @@ export default function LoginPage() {
                     transition: all 0.6s;
                 }
 
-                .login-btn:hover .btn-shine {
-                    left: 200%;
-                }
+                .login-btn:hover .btn-shine { left: 200%; }
 
                 .error-msg {
                     color: #ff4d4d;
@@ -317,8 +351,41 @@ export default function LoginPage() {
                     letter-spacing: 1px;
                 }
 
+                .success-msg {
+                    color: #c5a059;
+                    font-size: 0.75rem;
+                    margin-top: 20px;
+                    padding: 10px;
+                    background: rgba(197, 160, 89, 0.08);
+                    border-left: 2px solid #c5a059;
+                    letter-spacing: 1px;
+                }
+
+                .toggle-mode {
+                    margin-top: 28px;
+                    font-size: 0.65rem;
+                    color: #555;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                }
+
+                .toggle-link {
+                    background: none;
+                    border: none;
+                    color: #c5a059;
+                    cursor: pointer;
+                    font-family: 'Cinzel', serif;
+                    font-size: 0.65rem;
+                    letter-spacing: 2px;
+                    text-decoration: underline;
+                    padding: 0;
+                    margin-left: 6px;
+                }
+
+                .toggle-link:hover { color: #fff; }
+
                 .footer-text {
-                    margin-top: 40px;
+                    margin-top: 30px;
                     font-size: 0.55rem;
                     color: #555;
                     letter-spacing: 4px;
@@ -336,16 +403,14 @@ export default function LoginPage() {
                     margin-right: 10px;
                 }
 
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
+                @keyframes spin { to { transform: rotate(360deg); } }
             `}</style>
 
             <div className="login-card">
                 <div className="card-border-glow"></div>
-                <h1>IDENTIFICATION</h1>
+                <h1>{mode === 'login' ? 'IDENTIFICATION' : 'ENLISTMENT'}</h1>
 
-                <form onSubmit={handleLogin}>
+                <form onSubmit={mode === 'login' ? handleLogin : handleRegister}>
                     <div className="input-group">
                         <label>MEMBER EMAIL</label>
                         <input
@@ -368,34 +433,61 @@ export default function LoginPage() {
                         />
                     </div>
 
+                    {mode === 'register' && (
+                        <div className="input-group">
+                            <label>CONFIRM PASSWORD</label>
+                            <input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                                placeholder="••••••••"
+                            />
+                        </div>
+                    )}
+
                     <button type="submit" className="login-btn" disabled={loading}>
                         <div className="btn-shine"></div>
                         {loading ? (
-                            <>
-                                <span className="loading-spinner"></span>
-                                VERIFYING...
-                            </>
-                        ) : 'ACCESS SYSTEM'}
+                            <><span className="loading-spinner"></span>
+                            {mode === 'login' ? 'VERIFYING...' : 'REGISTERING...'}</>
+                        ) : mode === 'login' ? 'ACCESS SYSTEM' : 'ENLIST'}
                     </button>
                 </form>
 
-                <div className="divider">OR USE FEDERATED ID</div>
+                {mode === 'login' && (
+                    <>
+                        <div className="divider">OR USE FEDERATED ID</div>
+                        <button onClick={handleGoogleLogin} className="google-btn" disabled={loading}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                            </svg>
+                            Google Authentication
+                        </button>
+                    </>
+                )}
 
-                <button
-                    onClick={handleGoogleLogin}
-                    className="google-btn"
-                    disabled={loading}
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                    </svg>
-                    Google Authentication
-                </button>
+                {error && <div className="error-msg">⚠ {error.toUpperCase()}</div>}
+                {message && <div className="success-msg">{message}</div>}
 
-                {error && <div className="error-msg">ACCESS DENIED: {error.toUpperCase()}</div>}
+                <div className="toggle-mode">
+                    {mode === 'login' ? (
+                        <>NO ACCOUNT?
+                            <button className="toggle-link" onClick={() => { setMode('register'); setError(null); setMessage(null); }}>
+                                ENLIST HERE
+                            </button>
+                        </>
+                    ) : (
+                        <>ALREADY ENLISTED?
+                            <button className="toggle-link" onClick={() => { setMode('login'); setError(null); setMessage(null); }}>
+                                LOG IN
+                            </button>
+                        </>
+                    )}
+                </div>
 
                 <div className="footer-text">PROPERTY OF QUEEN KARIN // EST. 2024</div>
             </div>
