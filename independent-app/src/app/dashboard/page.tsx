@@ -44,8 +44,20 @@ export default function DashboardPage() {
 
         // Inject scripts into window for legacy compatibility (DOM onclick handlers)
         if (typeof window !== 'undefined') {
-            (window as any).showHome = showHome;
-            (window as any).showProfile = showProfile;
+            // Wrapped with mobile nav sync
+            (window as any).showHome = () => {
+                showHome();
+                document.querySelector('.sidebar')?.classList.remove('mob-open');
+                document.querySelectorAll('.mob-nav-btn').forEach((b: any) => b.classList.remove('active'));
+                document.getElementById('mobNavHome')?.classList.add('active');
+            };
+            (window as any).showProfile = (id?: string) => {
+                showProfile(id);
+                if (id) {
+                    // Opening a user's detail — close subjects drawer
+                    document.querySelector('.sidebar')?.classList.remove('mob-open');
+                }
+            };
             (window as any).closeModal = closeModal;
             (window as any).reviewTask = reviewTask;
             (window as any).cancelReward = cancelReward;
@@ -78,11 +90,36 @@ export default function DashboardPage() {
             (window as any).openModById = openModById;
             (window as any).switchProfileTab = switchProfileTab;
             (window as any).openProfileUpload = openProfileUpload;
-            (window as any).showPosts = showPosts;
+            (window as any).showPosts = () => {
+                showPosts();
+                document.querySelector('.sidebar')?.classList.remove('mob-open');
+                document.querySelectorAll('.mob-nav-btn').forEach((b: any) => b.classList.remove('active'));
+                document.getElementById('mobNavPosts')?.classList.add('active');
+            };
             (window as any).submitQueenPost = submitQueenPost;
             (window as any).deleteQueenPost = deleteQueenPost;
             (window as any).loadQueenPostsDashboard = loadQueenPostsDashboard;
             (window as any).closeChatPreview = closeChatPreview;
+
+            // Mobile nav controller
+            (window as any).mobNav = (tab: string) => {
+                const sidebar = document.querySelector('.sidebar');
+                document.querySelectorAll('.mob-nav-btn').forEach((b: any) => b.classList.remove('active'));
+                const btnMap: Record<string, string> = { home: 'mobNavHome', subs: 'mobNavSubs', posts: 'mobNavPosts', queen: 'mobNavQueen' };
+                document.getElementById(btnMap[tab])?.classList.add('active');
+                if (tab === 'subs') {
+                    sidebar?.classList.add('mob-open');
+                    ['viewHome', 'viewPosts', 'viewProfile', 'viewUser'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.display = 'none';
+                    });
+                } else {
+                    sidebar?.classList.remove('mob-open');
+                    if (tab === 'home') showHome();
+                    else if (tab === 'posts') showPosts();
+                    else if (tab === 'queen') showProfile();
+                }
+            };
 
             // Additional Bindings from scripts
             (window as any).initDashboard = initDashboard;
@@ -140,6 +177,12 @@ export default function DashboardPage() {
 
                 console.log("Dashboard Hydrated with Live Data:", mappedUsers.length, "users");
                 renderMainDashboard();
+                // Mirror daily code to mobile top bar
+                setTimeout(() => {
+                    const src = document.getElementById('adminDailyCode');
+                    const mob = document.getElementById('adminDailyCodeMob');
+                    if (src && mob) mob.textContent = src.textContent;
+                }, 400);
             }
         };
 
@@ -148,6 +191,12 @@ export default function DashboardPage() {
 
     return (
         <div className="layout">
+            {/* MOBILE TOP BAR */}
+            <div className="mob-top-bar">
+                <div className="mob-top-brand">Command Center</div>
+                <div id="adminDailyCodeMob" className="mob-top-code">----</div>
+            </div>
+
             {/* SIDEBAR */}
             <div className="sidebar">
                 <div className="sb-dash-btn" onClick={() => (window as any).showHome()}>DASHBOARD</div>
@@ -407,6 +456,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div id="viewUser" style={{ display: 'none' }}>
+                    <div className="mob-swipe-hint">← CHAT &nbsp;·&nbsp; DOSSIER →</div>
                     <div className="split">
                         {/* LEFT: COMMAND & FEED */}
                         <div className="chat-panel">
@@ -587,6 +637,26 @@ export default function DashboardPage() {
 
 
             </div>
+
+            {/* MOBILE BOTTOM NAV */}
+            <nav className="mob-bottom-nav">
+                <button className="mob-nav-btn active" id="mobNavHome" onClick={() => (window as any).mobNav?.('home')}>
+                    <span className="mob-nav-icon">⌂</span>
+                    <span className="mob-nav-label">HOME</span>
+                </button>
+                <button className="mob-nav-btn" id="mobNavSubs" onClick={() => (window as any).mobNav?.('subs')}>
+                    <span className="mob-nav-icon">◉</span>
+                    <span className="mob-nav-label">SUBJECTS</span>
+                </button>
+                <button className="mob-nav-btn" id="mobNavPosts" onClick={() => (window as any).mobNav?.('posts')}>
+                    <span className="mob-nav-icon">✦</span>
+                    <span className="mob-nav-label">POSTS</span>
+                </button>
+                <button className="mob-nav-btn" id="mobNavQueen" onClick={() => (window as any).mobNav?.('queen')}>
+                    <span className="mob-nav-icon">♛</span>
+                    <span className="mob-nav-label">QUEEN</span>
+                </button>
+            </nav>
 
             {/* SHARED MODALS */}
             <div id="reviewModal" className="modal">
