@@ -349,7 +349,7 @@
         height: 52px;
         background: rgba(4, 4, 8, 0.95);
         border: 1.5px solid rgba(197, 160, 89, 0.6);
-        border-radius: 8px;
+        border-radius: 50px;
         position: relative;
         overflow: hidden;
         cursor: pointer;
@@ -378,7 +378,7 @@
         left: 0;
         width: 0%;
         height: 100%;
-        background: linear-gradient(90deg, hsl(0, 80%, 20%), hsl(0, 40%, 8%));
+        background: linear-gradient(90deg, #cc0000 0%, #000000 100%);
         z-index: 1;
         transition: width 0.1s linear;
     }
@@ -397,10 +397,10 @@
     }
 
     .kneel-text {
-        font-family: 'Orbitron', sans-serif;
+        font-family: 'Cinzel', serif;
         font-size: 0.7rem;
         letter-spacing: 3px;
-        color: rgba(255, 255, 255, 0.8);
+        color: #c5a059;
         font-weight: 600;
     }
 
