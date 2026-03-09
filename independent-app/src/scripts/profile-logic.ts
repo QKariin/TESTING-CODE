@@ -2379,20 +2379,22 @@ async function _doProfileUpload() {
         const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
         if (elProfilePic) elProfilePic.style.opacity = '0.5';
 
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const dataUrl = e.target?.result as string;
+        try {
+            const { uploadToSupabase } = await import('./mediaSupabase');
+            const publicUrl = await uploadToSupabase('media', 'avatars', file);
+            if (!publicUrl || publicUrl === 'failed') throw new Error('Upload failed');
+
             const res = await fetch('/api/profile-update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberEmail: user.email, field: 'avatar_url', value: dataUrl })
+                body: JSON.stringify({ memberEmail: user.email, field: 'avatar_url', value: publicUrl })
             });
             const data = await res.json();
             if (elProfilePic) elProfilePic.style.opacity = '1';
             if (data.success && data.profile) {
-                if (elProfilePic) elProfilePic.src = dataUrl;
+                if (elProfilePic) elProfilePic.src = publicUrl;
                 const elMobPic = document.getElementById('hudUserPic') as HTMLImageElement;
-                if (elMobPic) elMobPic.src = dataUrl;
+                if (elMobPic) elMobPic.src = publicUrl;
                 renderProfileSidebar(data.profile);
                 loadChatHistory(user.email!);
                 const { getState } = await import('./profile-state');
@@ -2402,8 +2404,10 @@ async function _doProfileUpload() {
             } else {
                 alert('Photo upload failed: ' + (data.error || 'Unknown error'));
             }
-        };
-        reader.readAsDataURL(file);
+        } catch (err: any) {
+            if (elProfilePic) elProfilePic.style.opacity = '1';
+            alert('Photo upload failed: ' + (err.message || 'Unknown error'));
+        }
     };
     input.click();
 }

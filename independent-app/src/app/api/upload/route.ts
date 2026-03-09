@@ -1,56 +1,44 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Bypass RLS
-const supabase = createClient(supabaseUrl, supabaseKey);
+export const dynamic = 'force-dynamic';
 
-export async function POST(request: Request) {
-    console.log("[API/Upload] Received upload request");
+export async function POST(req: NextRequest) {
     try {
-        const formData = await request.formData();
-        const file = formData.get('file') as any;
-        const bucket = formData.get('bucket') as string;
-        const folder = formData.get('folder') as string;
+        const formData = await req.formData();
+        const file = formData.get('file') as File | null;
+        const bucket = (formData.get('bucket') as string) || 'media';
+        const folder = (formData.get('folder') as string) || 'uploads';
 
-        console.log(`[API/Upload] Target: ${bucket}/${folder}, File: ${file?.name}, Type: ${file?.type}`);
-
-        if (!file || !bucket || !folder) {
-            console.error("[API/Upload] Missing fields");
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        if (!file) {
+            return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+        const ext = file.name.split('.').pop() || 'jpg';
+        const filename = `${folder}/${crypto.randomUUID()}.${ext}`;
 
-        const ext = file.name.split('.').pop() || 'bin';
-        const filename = `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
-        const fullPath = `${folder.replace(/^\/|\/$/g, '')}/${filename}`;
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        console.log(`[API/Upload] Uploading to path: ${fullPath}`);
-
-        const { data, error } = await supabase.storage
+        const { error } = await supabaseAdmin.storage
             .from(bucket)
-            .upload(fullPath, buffer, {
-                contentType: file.type || 'application/octet-stream',
-                cacheControl: '3600',
-                upsert: false
+            .upload(filename, buffer, {
+                contentType: file.type || 'image/jpeg',
+                upsert: true,
             });
 
         if (error) {
-            console.error("[API/Upload] Supabase Storage Error:", error);
+            console.error('[upload] storage error:', error.message);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        console.log("[API/Upload] Upload success:", data.path);
-        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fullPath);
-        const finalUrl = urlData.publicUrl; // Absolute Supabase URL (even if private)
+        const { data: { publicUrl } } = supabaseAdmin.storage
+            .from(bucket)
+            .getPublicUrl(filename);
 
-        console.log("[API/Upload] Returning URL:", finalUrl);
-        return NextResponse.json({ url: finalUrl, success: true });
-
-    } catch (error: any) {
-        console.error("[API/Upload] Fatal Catch:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ url: publicUrl });
+    } catch (err: any) {
+        console.error('[upload] unexpected error:', err);
+        return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 }
