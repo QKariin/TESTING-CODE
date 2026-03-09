@@ -38,11 +38,19 @@ export async function POST(req: Request) {
             profile = data;
 
             if (profileErr || !profile) {
-                console.error(`[API/Chat/Send] Profile not found for ${senderEmail}. Error:`, profileErr);
-                return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
+                // No slave profile — check if it's the authenticated admin user
+                const { data: { user: authUser } } = await supabase.auth.getUser();
+                if (authUser?.email?.toLowerCase() === senderEmail) {
+                    // Authenticated user with no slave profile = admin/Queen
+                    profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
+                    isQueen = true;
+                } else {
+                    console.error(`[API/Chat/Send] Profile not found for ${senderEmail}. Error:`, profileErr);
+                    return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
+                }
+            } else {
+                isQueen = (profile.hierarchy === 'Queen' || profile.hierarchy === 'Secretary');
             }
-
-            isQueen = (profile.hierarchy === 'Queen' || profile.hierarchy === 'Secretary');
         }
 
         // If Queen sends, member_id (conversation context) is distinct from senderEmail

@@ -112,7 +112,8 @@ function appendChatMessage(msg: any) {
 }
 
 function renderToHtml(m: any) {
-    const isMe = m.metadata?.isQueen === true || m.sender_role === 'Queen' || m.sender_email === 'ceo@qkarin.com';
+    const isMe = m.metadata?.isQueen === true || m.sender_role === 'Queen'
+        || (adminEmail && m.sender_email?.toLowerCase() === adminEmail.toLowerCase());
     const timeStr = new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     let contentHtml = '';
