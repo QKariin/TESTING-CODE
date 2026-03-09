@@ -206,6 +206,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         profileTab={profileTab}
                         setProfileTab={setProfileTab}
                         onBack={() => setSelectedUser(null)}
+                        adminEmail={userEmail}
                     />
                 ) : tab === 'home' ? (
                     <HomeView stats={stats} users={users} dailyCode={dailyCode} />
@@ -410,8 +411,8 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect 
 }
 
 // ─── USER PROFILE ────────────────────────────────────────────────────────────
-function UserProfile({ user, profileTab, setProfileTab, onBack }: {
-    user: DashUser; profileTab: ProfileTab; setProfileTab: (t: ProfileTab) => void; onBack: () => void;
+function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail }: {
+    user: DashUser; profileTab: ProfileTab; setProfileTab: (t: ProfileTab) => void; onBack: () => void; adminEmail: string | null;
 }) {
     const color = rc(user.rank);
     const devotion = user.parameters?.devotion || 0;
@@ -466,7 +467,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack }: {
 
             {/* ── Tab content ── */}
             {profileTab === 'chat' ? (
-                <ChatView user={user} />
+                <ChatView user={user} adminEmail={adminEmail} />
             ) : (
                 <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: 12, WebkitOverflowScrolling: 'touch' as any }}>
                     {profileTab === 'info' && (<>
@@ -541,28 +542,30 @@ function UserProfile({ user, profileTab, setProfileTab, onBack }: {
     );
 }
 
-// ─── CHAT VIEW ───────────────────────────────────────────────────────────────
-function ChatView({ user }: { user: DashUser }) {
+// ─── CHAT VIEW — same endpoints as desktop dashboard ─────────────────────────
+function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | null }) {
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
     const [sendError, setSendError] = useState('');
     const [loadingMsgs, setLoadingMsgs] = useState(true);
     const bottomRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
 
+    // Same as desktop: GET /api/chat/history?email=memberId&requester=adminEmail
     const fetchMessages = useCallback(async () => {
         try {
-            const res = await fetch(`/api/admin-chat?memberId=${encodeURIComponent(user.memberId)}`);
+            let url = `/api/chat/history?email=${encodeURIComponent(user.memberId)}`;
+            if (adminEmail) url += `&requester=${encodeURIComponent(adminEmail)}`;
+            const res = await fetch(url);
             const json = await res.json();
-            if (json.messages) {
+            if (json.success && json.messages) {
                 setMessages(json.messages);
                 localStorage.setItem(`chat_read_${user.memberId}`, new Date().toISOString());
             }
         } finally {
             setLoadingMsgs(false);
         }
-    }, [user.memberId]);
+    }, [user.memberId, adminEmail]);
 
     useEffect(() => {
         fetchMessages();
@@ -574,19 +577,25 @@ function ChatView({ user }: { user: DashUser }) {
         if (!loadingMsgs) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, loadingMsgs]);
 
+    // Same as desktop: POST /api/chat/send with senderEmail + conversationId + content
     const sendMessage = async () => {
         const txt = input.trim();
         if (!txt || sending) return;
         setSending(true);
         setSendError('');
         try {
-            const res = await fetch('/api/admin-chat', {
+            const res = await fetch('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId: user.memberId, message: txt }),
+                body: JSON.stringify({
+                    senderEmail: adminEmail,
+                    conversationId: user.memberId,
+                    content: txt,
+                    type: 'text',
+                }),
             });
             const json = await res.json();
-            if (!res.ok || json.error) {
+            if (!res.ok || !json.success) {
                 setSendError(json.error || 'Send failed');
             } else {
                 setInput('');
@@ -612,15 +621,18 @@ function ChatView({ user }: { user: DashUser }) {
                     <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#222', letterSpacing: '2px' }}>NO MESSAGES YET</div>
                 )}
                 {messages.map((msg, i) => {
-                    const isAdmin = msg.sender === 'admin' || msg.sender === 'queen';
-                    const text = msg.message || msg.content || msg.text || '';
-                    const hasMedia = msg.media_url || msg.mediaUrl;
+                    // Same logic as desktop renderToHtml: admin = sender_email !== member_id
+                    const isAdmin = msg.sender_email && msg.member_id
+                        ? msg.sender_email.toLowerCase() !== msg.member_id.toLowerCase()
+                        : msg.sender === 'admin' || msg.sender === 'queen';
+                    const text = msg.content || msg.message || '';
+                    const isPhoto = msg.type === 'photo';
                     return (
                         <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
                             <div style={{
                                 background: isAdmin ? 'linear-gradient(135deg, #c5a059, #a8893d)' : 'rgba(22,22,22,0.95)',
                                 color: isAdmin ? '#000' : '#ddd',
-                                padding: hasMedia ? '4px' : '9px 13px',
+                                padding: isPhoto ? '4px' : '9px 13px',
                                 borderRadius: isAdmin ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                                 maxWidth: '78%',
                                 fontSize: '0.92rem',
@@ -629,10 +641,10 @@ function ChatView({ user }: { user: DashUser }) {
                                 wordBreak: 'break-word',
                                 border: isAdmin ? 'none' : '1px solid rgba(255,255,255,0.06)',
                             }}>
-                                {text && <span>{text}</span>}
-                                {hasMedia && (
-                                    <img src={msg.media_url || msg.mediaUrl} style={{ display: 'block', maxWidth: '220px', maxHeight: '220px', borderRadius: 10, objectFit: 'cover' }} alt="" />
-                                )}
+                                {isPhoto
+                                    ? <img src={text} style={{ display: 'block', maxWidth: 220, maxHeight: 220, borderRadius: 10, objectFit: 'cover' }} alt="" />
+                                    : <span>{text}</span>
+                                }
                             </div>
                             <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#282828', marginTop: 3, letterSpacing: '1px' }}>
                                 {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
@@ -643,27 +655,22 @@ function ChatView({ user }: { user: DashUser }) {
                 <div ref={bottomRef} />
             </div>
 
-            {/* Error */}
             {sendError && (
                 <div style={{ padding: '6px 14px', background: 'rgba(255,0,0,0.1)', color: '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', letterSpacing: '1px', textAlign: 'center' }}>
-                    {sendError} — tap to retry
+                    {sendError}
                 </div>
             )}
 
-            {/* Input — font-size 16px prevents iOS zoom */}
+            {/* Input — 16px prevents iOS zoom */}
             <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: '1px solid rgba(197,160,89,0.1)', flexShrink: 0, background: 'rgba(4,4,4,0.98)' }}>
                 <input
-                    ref={inputRef}
                     type="text"
                     value={input}
                     onChange={e => { setInput(e.target.value); setSendError(''); }}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }}
                     placeholder="Issue command..."
                     autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck={false}
-                    style={{ flex: 1, background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#fff', padding: '10px 14px', fontFamily: 'Rajdhani,sans-serif', fontSize: '16px', outline: 'none', WebkitAppearance: 'none' as any }}
+                    style={{ flex: 1, background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#fff', padding: '10px 14px', fontFamily: 'Rajdhani,sans-serif', fontSize: '16px', outline: 'none' }}
                 />
                 <button
                     onTouchEnd={e => { e.preventDefault(); sendMessage(); }}
