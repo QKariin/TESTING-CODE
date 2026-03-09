@@ -1341,7 +1341,7 @@ export default function ProfilePage() {
                 </button>
                 <button className="mob-nav-queen-btn" onClick={() => (window as any).openMobChatOverlay()}>
                     <div className="mob-nav-queen-ring">
-                        <img id="navQueenPic" src="https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png" className="mob-nav-queen-img" alt="Queen" />
+                        <img id="navQueenPic" src="/queen-karin.png" className="mob-nav-queen-img" alt="Queen" />
                     </div>
                 </button>
                 <button id="mobNavQueen" className="mob-nav-item" onClick={() => (window as any).openMobQueenWall()}>

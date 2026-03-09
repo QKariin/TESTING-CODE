@@ -667,8 +667,10 @@ export async function sendGlobalMessage() {
     input.value = '';
 
     // Optimistic: show instantly with local profile data
-    const senderName = raw?.name || senderEmail.split('@')[0] || 'SUBJECT';
-    const senderAvatar = raw?.avatar_url || raw?.avatar || null;
+    const QUEEN_EMAILS_LOCAL = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
+    const isQueenLocal = QUEEN_EMAILS_LOCAL.includes(senderEmail.toLowerCase());
+    const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
+    const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
     _appendMessage({
         sender_email: senderEmail,
         sender_name: senderName,

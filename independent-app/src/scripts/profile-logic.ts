@@ -1739,7 +1739,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
 
     const timeStr = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const queenAvatar = `<img src="/queen-avatar.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`;
+    const queenAvatar = `<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`;
 
     // Gift card → centered, no bubble
     if (msg.type === 'wishlist') {

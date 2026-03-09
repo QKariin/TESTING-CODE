@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     const QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
     const isQueenSender = QUEEN_EMAILS.includes(senderEmail.toLowerCase());
     const senderName = profile?.name || (isQueenSender ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
-    const senderAvatar = profile?.avatar_url || null;
+    const senderAvatar = profile?.avatar_url || (isQueenSender ? '/queen-karin.png' : null);
 
     const { data, error } = await supabaseAdmin
         .from('global_messages')
