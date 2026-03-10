@@ -21,7 +21,7 @@ import { closeChatPreview } from '@/scripts/chat';
 import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail, users, currId } from '@/scripts/dashboard-state';
 import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
-import { renderSidebar } from '@/scripts/dashboard-sidebar';
+import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
 
 export default function DashboardPage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -56,12 +56,14 @@ export default function DashboardPage() {
         if (typeof window !== 'undefined') {
             // Wrapped with mobile nav sync
             (window as any).showHome = () => {
+                markPendingRead(); // leaving a chat — mark it as read now
                 showHome();
                 document.querySelector('.sidebar')?.classList.remove('mob-open');
                 document.querySelectorAll('.mob-nav-btn').forEach((b: any) => b.classList.remove('active'));
                 document.getElementById('mobNavHome')?.classList.add('active');
             };
             (window as any).showProfile = (id?: string) => {
+                if (!id) markPendingRead(); // navigating to Queen view — leaving chat
                 (showProfile as any)(id);
                 if (id) {
                     // Opening a user's detail — close subjects drawer
@@ -101,6 +103,7 @@ export default function DashboardPage() {
             (window as any).switchProfileTab = switchProfileTab;
             (window as any).openProfileUpload = openProfileUpload;
             (window as any).showPosts = () => {
+                markPendingRead(); // leaving a chat — mark it as read now
                 showPosts();
                 document.querySelector('.sidebar')?.classList.remove('mob-open');
                 document.querySelectorAll('.mob-nav-btn').forEach((b: any) => b.classList.remove('active'));

@@ -6,11 +6,28 @@ import { clean } from './utils';
 import { triggerSound } from './utils';
 import { getOptimizedUrl } from './media';
 
-// firstUnreadTime: when each user's FIRST unread message arrived (cleared on open)
+// firstUnreadTime: when each user's FIRST unread message arrived
 const firstUnreadTime: Record<string, number> = {};
-// onlineJoinTime: when each user first came online this session (stable)
+// onlineJoinTime: when each user first came online (only set on offline→online transition)
 const onlineJoinTime: Record<string, number> = {};
 const soundMemory: { [key: string]: number } = {};
+// Track previous online state to detect actual transitions, not jitter
+const prevOnlineState: Record<string, boolean> = {};
+
+// pendingReadId: user currently open who had unread — read is deferred until we leave them
+let pendingReadId: string | null = null;
+
+/**
+ * Mark the pending (currently viewed) user as read.
+ * Call this when navigating AWAY from a user (selecting another, going home/posts).
+ */
+export function markPendingRead() {
+    if (pendingReadId) {
+        localStorage.setItem('read_' + pendingReadId, Date.now().toString());
+        delete firstUnreadTime[pendingReadId];
+        pendingReadId = null;
+    }
+}
 
 export function renderSidebar() {
     if (!users.length) return;
@@ -33,25 +50,30 @@ export function renderSidebar() {
     // ── Update tracking state ────────────────────────────────────────────
     users.forEach(u => {
         const online = isUserOnline(u);
+        const wasOnline = prevOnlineState[u.memberId] ?? false;
         const hasMsg = hasUnreadMessage(u);
         const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
 
-        // Track first unread time — set only once per unread streak, never overwrite
+        // Track first unread time — set only once per streak
         if (hasMsg && msgTime > 0 && !firstUnreadTime[u.memberId]) {
             firstUnreadTime[u.memberId] = msgTime;
         }
-        // Clear if no longer has unread (was read)
-        if (!hasMsg) {
+        // Clear only if no longer unread AND not the pending-read user (still being viewed)
+        if (!hasMsg && u.memberId !== pendingReadId) {
             delete firstUnreadTime[u.memberId];
         }
 
-        // Track online join time — set when first seen online, cleared when offline
-        if (online && !onlineJoinTime[u.memberId]) {
+        // ── Online join time: only update on actual offline→online transition ──
+        // This prevents jitter at the 5-min boundary from moving users around
+        if (online && !wasOnline) {
+            // Genuine transition: came online now
             onlineJoinTime[u.memberId] = now;
         }
         if (!online) {
             delete onlineJoinTime[u.memberId];
         }
+        // Record current state for next render comparison
+        prevOnlineState[u.memberId] = online;
 
         // Sound notification
         const lastSoundLS = Number(localStorage.getItem('sound_' + u.memberId) || 0);
@@ -65,14 +87,18 @@ export function renderSidebar() {
     });
 
     // ── Sort into 3 groups ───────────────────────────────────────────────
-    // Group 1: has unread — FIFO queue: first message received = TOP
+    // For GROUP membership: pendingReadId stays in unread group while being viewed
+    const hasUnreadForSort = (u: any) =>
+        u.memberId === pendingReadId ? true : hasUnreadMessage(u);
+
+    // Group 1: has unread — FIFO queue: earliest message = top
     const withUnread = users
-        .filter(u => hasUnreadMessage(u))
+        .filter(u => hasUnreadForSort(u))
         .sort((a, b) => (firstUnreadTime[a.memberId] || 0) - (firstUnreadTime[b.memberId] || 0));
 
     const withUnreadIds = new Set(withUnread.map(u => u.memberId));
 
-    // Group 2: online, no unread — stable order by when they came online (first = top)
+    // Group 2: online, no unread — stable by first time seen online
     const onlineNoUnread = users
         .filter(u => isUserOnline(u) && !withUnreadIds.has(u.memberId))
         .sort((a, b) => (onlineJoinTime[a.memberId] || now) - (onlineJoinTime[b.memberId] || now));
@@ -98,6 +124,7 @@ export function renderSidebar() {
 
         const isActive = currId === u.memberId;
         const isQueen = u.hierarchy === "Queen";
+        // Visual dot: only show if actually unread (not for the currently open pending user)
         const hasMsg = hasUnreadMessage(u);
         const online = isUserOnline(u);
 
@@ -208,9 +235,21 @@ function hasUnreadMessageCurrentUser(u: any) {
 export function selUser(id: string) {
     if (id === currId) return;
 
-    localStorage.setItem('read_' + id, Date.now().toString());
-    // Do NOT delete firstUnreadTime here — order only changes on new message / offline
-    // Do NOT call renderSidebar() — opening a chat must never reorder the list
+    // ── Mark the PREVIOUS user as read (deferred — only now that we're leaving them) ──
+    markPendingRead();
+
+    // If the user we're opening has unread messages, defer their read mark
+    const u = users.find(x => x.memberId === id);
+    if (u) {
+        const readTime = localStorage.getItem('read_' + id);
+        const hasUnread = readTime
+            ? (u.lastMessageTime || 0) > parseInt(readTime)
+            : (u.lastMessageTime || 0) > 0;
+        if (hasUnread) {
+            pendingReadId = id;
+        }
+    }
+    // NOTE: do NOT write localStorage.read here — deferred until we leave this user
 
     const chatBox = document.getElementById('adminChatBox');
     if (chatBox) chatBox.innerHTML = "";
@@ -219,10 +258,10 @@ export function selUser(id: string) {
 
     // Just swap the active highlight — no re-render, no reorder
     document.querySelectorAll('#userList .u-item').forEach(el => el.classList.remove('active'));
-    const target = document.querySelector(`#userList .u-item[onclick*="${id}"]`);
+    const target = document.querySelector(`#userList .u-item[data-id="${id}"]`);
     if (target) target.classList.add('active');
 
-    // Also clear the unread mail icon on the opened user without full re-render
+    // Remove the visual mail dot (they're reading it now) but DON'T change sort position
     if (target) target.classList.remove('has-msg');
 
     const vHome = document.getElementById('viewHome');
@@ -237,8 +276,8 @@ export function selUser(id: string) {
         import('./dashboard-users'),
         import('./dashboard-chat')
     ]).then(([{ updateDetail }, { initDashboardChat }]) => {
-        const u = users.find(x => x.memberId === id);
-        if (u) updateDetail(u);
+        const openUser = users.find(x => x.memberId === id);
+        if (openUser) updateDetail(openUser);
         initDashboardChat(id);
     });
 }
