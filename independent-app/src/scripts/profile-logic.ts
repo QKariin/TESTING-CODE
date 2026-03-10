@@ -1806,6 +1806,8 @@ function renderChatMessage(msg: any, prevTs?: number): string {
     let content = msg.content || msg.message || '';
     if (msg.type === 'photo') {
         content = `<img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" />`;
+    } else if (msg.type === 'video') {
+        content = `<video src="${content}" class="chat-img-attachment" controls playsinline style="max-width:100%;border-radius:8px;"></video>`;
     }
 
     if (isMe) {
