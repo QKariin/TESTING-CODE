@@ -2358,6 +2358,7 @@ export function closePoverty() {
 export function goToExchequer() {
     closePoverty();
     if (window.innerWidth <= 768) {
+        closeMobChatOverlay();
         // Mobile: show the dedicated exchequer overlay
         const overlay = document.getElementById('mobExchequer');
         if (overlay) { overlay.classList.remove('hidden'); overlay.style.display = 'flex'; }

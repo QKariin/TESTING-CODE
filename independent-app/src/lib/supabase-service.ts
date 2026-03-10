@@ -452,7 +452,8 @@ export const DbService = {
         const profile = await this.getProfile(memberId);
         if (!profile || !profile.id) throw new Error('Profile not linked');
 
-        const activeTaskData = JSON.stringify({ ...task, assigned_at: new Date().toISOString() });
+        const endTime = Date.now() + (24 * 3600 * 1000); // 24 hours default
+        const activeTaskData = JSON.stringify({ ...task, assigned_at: new Date().toISOString(), endTime });
         const { error } = await supabaseAdmin
             .from('tasks')
             .update({ taskdom_active_task: activeTaskData })

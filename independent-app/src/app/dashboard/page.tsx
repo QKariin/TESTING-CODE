@@ -11,14 +11,14 @@ import MobileDashboard from './MobileDashboard';
 // Scripts
 import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboard-main';
 import { closeModal, reviewTask, cancelReward, confirmReward, toggleRewardRecord, handleRewardFileUpload, selectSticker, openTaskGallery, closeTaskGallery, filterTaskGallery, openModById } from '@/scripts/dashboard-modals';
-import { deleteQueueItem, updateTaskQueue } from '@/scripts/dashboard-users';
+import { deleteQueueItem, updateTaskQueue, updateDetail } from '@/scripts/dashboard-users';
 import { toggleProtocol, toggleNewbieImmunity, closeExclusionModal, sendBroadcast, saveBroadcastPreset, togglePresets, closeBroadcastModal, handleBroadcastFile, openBroadcastModal, openExclusionModal } from '@/scripts/dashboard-protocol';
 import { showProfile, switchProfileTab, openProfileUpload } from '@/scripts/dashboard-navigation';
 import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQueue, expandAdminCategory, updateDashboardAltar, showPosts, submitQueenPost, deleteQueenPost, loadQueenPostsDashboard } from '@/scripts/dashboard-main';
 import { closeChatPreview } from '@/scripts/chat';
 
 // State & Actions
-import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail, users } from '@/scripts/dashboard-state';
+import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail, users, currId } from '@/scripts/dashboard-state';
 import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
 import { renderSidebar } from '@/scripts/dashboard-sidebar';
@@ -199,6 +199,12 @@ export default function DashboardPage() {
 
                 console.log("Dashboard Hydrated with Live Data:", mappedUsers.length, "users");
                 renderMainDashboard();
+
+                // If a user profile is open, refresh their Current Status with the latest data
+                if (currId) {
+                    const openUser = mappedUsers.find((u: any) => u.memberId === currId || u.member_id === currId);
+                    if (openUser) updateDetail(openUser);
+                }
                 // Mirror daily code to mobile top bar
                 setTimeout(() => {
                     const src = document.getElementById('adminDailyCode');

@@ -284,7 +284,8 @@ function updateActiveTask(u: any) {
     if (!activeText || !activeTimer) return;
 
     const isPending = u.pendingState === "PENDING" || (u.activeTask && u.activeTask.proofUrl === "FORCED");
-    const hasActive = u.activeTask && u.endTime && u.endTime > Date.now();
+    // Show as active if: task exists AND (no endTime stored, or timer hasn't expired, or it's pending review)
+    const hasActive = u.activeTask && (!u.endTime || u.endTime > Date.now() || isPending);
 
     // Update Status Dot & Text
     if (statusDot) {
@@ -305,22 +306,26 @@ function updateActiveTask(u: any) {
         const rawText = u.activeTask.text || u.activeTask.TaskText || "";
         activeText.innerHTML = rawText; // Support HTML directives
 
-        const tick = () => {
-            const diff = u.endTime - Date.now();
-            if (diff <= 0) {
-                activeTimer.innerText = "00:00";
-                if (activeStatus && !isPending) {
-                    activeStatus.innerText = "OVERDUE";
-                    activeStatus.style.color = "var(--red)";
+        if (u.endTime) {
+            const tick = () => {
+                const diff = u.endTime - Date.now();
+                if (diff <= 0) {
+                    activeTimer.innerText = "00:00";
+                    if (activeStatus && !isPending) {
+                        activeStatus.innerText = "OVERDUE";
+                        activeStatus.style.color = "var(--red)";
+                    }
+                    clearInterval(cooldownInterval);
+                    return;
                 }
-                clearInterval(cooldownInterval);
-                return;
-            }
-            activeTimer.innerText = formatTimer(diff);
-        };
-        tick();
-        const interval = setInterval(tick, 1000);
-        setCooldownInterval(interval);
+                activeTimer.innerText = formatTimer(diff);
+            };
+            tick();
+            const interval = setInterval(tick, 1000);
+            setCooldownInterval(interval);
+        } else {
+            activeTimer.innerText = "--:--";
+        }
     } else {
         if (idleActions) idleActions.style.display = 'block';
         const failBtn = activeTaskContent?.querySelector('.at-fail') as HTMLElement;
