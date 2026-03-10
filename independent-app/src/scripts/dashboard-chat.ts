@@ -113,56 +113,71 @@ function appendChatMessage(msg: any) {
 }
 
 function renderToHtml(m: any) {
-    // Admin message: sender is different from the conversation owner (member_id), and not a system message
+    // Admin (Queen) message: sender differs from the member owning the conversation
     const isMe = m.type !== 'system' && m.sender_email && m.member_id
         && m.sender_email.toLowerCase() !== m.member_id.toLowerCase();
-    const timeStr = new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    let contentHtml = '';
-    const msgClass = isMe ? 'm-out' : 'm-in';
-    const rowClass = isMe ? 'mr-out' : 'mr-in';
-
+    const ts = new Date(m.created_at || Date.now()).getTime();
+    const timeStr = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const content = m.content || m.message || "";
 
-    const slaveAvatar = users.find(u => u.memberId === m.member_id)?.avatar || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+    const queenAvatar = `<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`;
 
+    // ── Tribute / wishlist card ── centered, no bubble
     if (m.type === 'wishlist') {
         const item = m.metadata || {};
         const itmTitle = item.title || "Tribute Item";
         const itmPrice = typeof item.price === 'number' ? item.price : (parseFloat(item.price) || 0);
         const itmImg = item.image || item.url || "";
-
-        contentHtml = `
-            <div class="msg-wishlist-card" style="margin: 0 auto; padding:0; overflow:hidden; background:linear-gradient(180deg, #1a1a1a, #000); border:1px solid #c5a059; border-radius:4px; max-width:200px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                <div style="width:100%; height:120px; overflow:hidden; position:relative;">
-                     <img src="${getOptimizedUrl(itmImg, 150)}" style="width:100%; height:100%; object-fit:cover;">
-                     <div style="position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.7); color:#c5a059; font-size:0.6rem; padding:2px; text-align:center;">
-                         TRIBUTE SENT
-                     </div>
+        return `
+            <div class="chat-gift-wrap">
+                <div class="chat-gift-card">
+                    <div class="chat-gift-img" style="background-image:url('${getOptimizedUrl(itmImg, 200)}')">
+                        ${itmPrice ? `<div class="chat-gift-price"><i class="fas fa-coins"></i> ${itmPrice.toLocaleString()}</div>` : ''}
+                    </div>
+                    <div class="chat-gift-body">
+                        <div class="chat-gift-label">✦ Tribute Sent</div>
+                        <div class="chat-gift-title">${clean(itmTitle)}</div>
+                    </div>
                 </div>
-                <div style="padding:8px; text-align:center;">
-                    <div style="color:#eee; font-family:'Cinzel'; font-size:0.6rem; margin-bottom:2px; opacity:0.8;">SLAVE sent</div>
-                    <div style="color:#fff; font-family:'Cinzel'; font-size:0.7rem; margin-bottom:4px;">${clean(itmTitle)}</div>
-                    <div style="color:#c5a059; font-family:'Orbitron'; font-size:0.8rem; font-weight:bold;">${itmPrice.toLocaleString()}</div>
-                </div>
+                <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
             </div>`;
-        return `<div class="msg-row" style="justify-content:center; margin-bottom:15px; width:100%; display:flex;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time" style="text-align:center; width:100%; margin-top:5px;">${timeStr}</div></div></div>`;
     }
+
+    // ── Build bubble content ──
+    let bubble = '';
+    const bubbleClass = isMe ? 'cb-queen' : 'cb-slave';
 
     if (m.type === 'photo') {
-        contentHtml = `<div class="msg ${msgClass}"><img src="${getOptimizedUrl(content, 300)}" onclick="openChatPreview('${encodeURIComponent(content)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
+        bubble = `<div class="${bubbleClass}"><img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" style="cursor:pointer" onclick="openChatPreview('${encodeURIComponent(content)}', false)" /></div>`;
     } else if (m.type === 'video') {
-        contentHtml = `<div class="msg ${msgClass}" style="padding:4px;"><video src="${content}" controls playsinline style="display:block; max-width:240px; max-height:300px; border-radius:6px; background:#000;"></video></div>`;
+        bubble = `<div class="${bubbleClass}" style="padding:4px;"><video src="${content}" controls playsinline class="chat-img-attachment"></video></div>`;
     } else {
         let safeHtml = purifier.sanitize(content);
-        safeHtml = safeHtml.replace(/\n/g, "<br>");
-        contentHtml = `<div class="msg ${msgClass}">${safeHtml}</div>`;
+        safeHtml = safeHtml.replace(/\n/g, '<br>');
+        bubble = `<div class="${bubbleClass}">${safeHtml}</div>`;
     }
 
-    const avatarHtml = `<img src="${getOptimizedUrl(slaveAvatar, 100)}" class="chat-av">`;
-    const youLabel = isMe ? `<div class="msg-you-label">YOU</div>` : '';
-
-    return `<div class="msg-row ${rowClass}">${!isMe ? avatarHtml : ''}${contentHtml}${isMe ? `<div class="msg-col-out">${youLabel}${avatarHtml}</div>` : ''}<div class="msg-meta ${isMe ? 'mm-out' : 'mm-in'}">${timeStr}</div></div>`;
+    // isMe = Queen (admin) → left side with avatar
+    // !isMe = Slave → right side, no avatar
+    if (isMe) {
+        return `
+            <div class="cb-row cb-row-queen">
+                ${queenAvatar}
+                <div class="cb-wrap-queen">
+                    ${bubble}
+                    <div class="chat-ts chat-ts-left">${timeStr}</div>
+                </div>
+            </div>`;
+    } else {
+        return `
+            <div class="cb-row cb-row-me">
+                <div class="cb-wrap-me">
+                    ${bubble}
+                    <div class="chat-ts chat-ts-right">${timeStr}</div>
+                </div>
+            </div>`;
+    }
 }
 
 function forceBottom() {

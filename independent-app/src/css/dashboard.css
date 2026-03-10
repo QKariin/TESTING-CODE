@@ -4556,3 +4556,152 @@ h3,
     margin-bottom: 20px;
     text-align: center;
 }
+/* ── Dashboard Chat Bubbles (matches profile design) ────────────────── */
+#adminChatBox {
+    padding: 16px 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+#adminChatBox .cb-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+#adminChatBox .cb-row-me    { justify-content: flex-end; }
+#adminChatBox .cb-row-queen { justify-content: flex-start; }
+
+/* Queen avatar */
+#adminChatBox .cb-queen-av {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(197,160,89,0.4);
+    flex-shrink: 0;
+    align-self: flex-end;
+    margin-bottom: 18px;
+}
+
+/* Bubble wrappers */
+#adminChatBox .cb-wrap-me {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: 72%;
+}
+#adminChatBox .cb-wrap-queen {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 72%;
+}
+
+/* Queen bubble — left, black bg, gold border */
+#adminChatBox .cb-queen {
+    background: #000;
+    box-shadow: 0 0 0 1px rgba(197,160,89,0.6), inset 0 0 20px rgba(197,160,89,0.04);
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    letter-spacing: 0.2px;
+    padding: 10px 14px;
+    border-radius: 16px 16px 16px 3px;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+/* Slave bubble — right, charcoal, no border */
+#adminChatBox .cb-slave {
+    background: #1c1c1e;
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    letter-spacing: 0.2px;
+    padding: 10px 14px;
+    border-radius: 16px 16px 3px 16px;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+/* Timestamps */
+#adminChatBox .chat-ts {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.34rem;
+    letter-spacing: 0.8px;
+    margin-top: 4px;
+}
+#adminChatBox .chat-ts-left  { color: rgba(197,160,89,0.45); text-align: left; }
+#adminChatBox .chat-ts-right { color: #444; text-align: right; }
+
+/* Images & videos in bubbles */
+#adminChatBox .chat-img-attachment {
+    max-width: 240px;
+    max-height: 260px;
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+    display: block;
+    margin-top: 2px;
+}
+
+/* Tribute / gift card */
+#adminChatBox .chat-gift-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0 4px;
+    width: 100%;
+}
+#adminChatBox .chat-gift-card {
+    width: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0a0a14;
+    border: 1px solid rgba(197,160,89,0.35);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+}
+#adminChatBox .chat-gift-img {
+    width: 100%;
+    height: 110px;
+    background-size: cover;
+    background-position: center;
+    background-color: #050510;
+    position: relative;
+}
+#adminChatBox .chat-gift-price {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    background: rgba(5,5,20,0.9);
+    border: 1px solid rgba(197,160,89,0.6);
+    border-radius: 20px;
+    padding: 3px 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    color: #c5a059;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+#adminChatBox .chat-gift-body {
+    padding: 8px 12px 12px;
+}
+#adminChatBox .chat-gift-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.38rem;
+    color: rgba(197,160,89,0.5);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+}
+#adminChatBox .chat-gift-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
