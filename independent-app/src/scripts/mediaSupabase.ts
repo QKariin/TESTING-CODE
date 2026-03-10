@@ -111,23 +111,30 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
 }
 
 async function uploadVideoDirectly(bucketName: string, folderPath: string, file: File): Promise<string> {
-    console.log(`[SupabaseStorage] Direct video upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+    console.log(`[SupabaseStorage] Video upload via admin proxy: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
     try {
-        const supabase = createClient();
-        const ext = file.name.split('.').pop() || 'mp4';
-        const filename = `${folderPath}/${generateFilename(file)}`;
-        const { error } = await supabase.storage
-            .from(bucketName)
-            .upload(filename, file, { contentType: file.type, upsert: true });
-        if (error) {
-            console.error('[SupabaseStorage] Direct video upload error:', error.message);
+        // Use the admin API route — supabaseAdmin bypasses RLS, File uploaded directly (no Buffer)
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('bucket', bucketName);
+        formData.append('folder', folderPath);
+
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            console.error('[SupabaseStorage] Video proxy error:', response.status, errData);
             return 'failed';
         }
-        const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(filename);
-        console.log('[SupabaseStorage] Direct video upload success:', publicUrl);
-        return publicUrl;
+
+        const data = await response.json();
+        console.log('[SupabaseStorage] Video upload success:', data.url);
+        return data.url;
     } catch (err: any) {
-        console.error('[SupabaseStorage] Direct video upload exception:', err.message);
+        console.error('[SupabaseStorage] Video upload exception:', err.message);
         return 'failed';
     }
 }

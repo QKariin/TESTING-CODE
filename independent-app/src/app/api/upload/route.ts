@@ -14,16 +14,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
-        const ext = file.name.split('.').pop() || 'jpg';
+        const ext = file.name.split('.').pop() || 'bin';
         const filename = `${folder}/${crypto.randomUUID()}.${ext}`;
 
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-
+        // Upload File directly — avoids loading entire video into a Buffer
         const { error } = await supabaseAdmin.storage
             .from(bucket)
-            .upload(filename, buffer, {
-                contentType: file.type || 'image/jpeg',
+            .upload(filename, file, {
+                contentType: file.type || 'application/octet-stream',
                 upsert: true,
             });
 
