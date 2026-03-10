@@ -1,3 +1,15 @@
+// Ping every 60s to keep profiles.last_active fresh — powers online status in dashboard
+export function startPresenceHeartbeat(userId: string): ReturnType<typeof setInterval> | null {
+    if (!userId) return null;
+    const ping = () => fetch('/api/tracking/ping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, clientData: {} }),
+    }).catch(() => {});
+    ping(); // immediate first ping
+    return setInterval(ping, 60000);
+}
+
 export async function trackUserAnalytics(userId: string) {
     if (!userId) return;
 

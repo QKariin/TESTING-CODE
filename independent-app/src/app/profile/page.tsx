@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 import { initProfileState, setState } from '@/scripts/profile-state';
@@ -8,7 +8,7 @@ import { updateKneelingUI, attachKneelListeners, renderKneelDots } from '@/scrip
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
 import { toggleSystemLog } from '@/scripts/chat';
-import { trackUserAnalytics } from '@/scripts/telemetry';
+import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
 import {
     claimKneelReward,
     switchTab,
@@ -77,6 +77,7 @@ export default function ProfilePage() {
     const [profile, setProfile] = useState<any>(null);
     const [benefitsOpen, setBenefitsOpen] = useState(false);
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
+    const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -178,6 +179,9 @@ export default function ProfilePage() {
                         // Initialize Chat & Tracking
                         initChatSystem();
                         trackUserAnalytics(unifiedData.id);
+                        if (!heartbeatRef.current) {
+                            heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
+                        }
                     }, 150);
                     return;
                 }
@@ -221,6 +225,9 @@ export default function ProfilePage() {
                         // Initialize Chat & Tracking
                         initChatSystem();
                         trackUserAnalytics(unifiedData.id);
+                        if (!heartbeatRef.current) {
+                            heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
+                        }
                     }, 150);
                 }
             } catch (err) {
@@ -231,6 +238,12 @@ export default function ProfilePage() {
         }
 
         loadProfile();
+        return () => {
+            if (heartbeatRef.current) {
+                clearInterval(heartbeatRef.current);
+                heartbeatRef.current = null;
+            }
+        };
     }, []);
 
     // ─── 2. ATTACH KNEEL LISTENERS ────────────────────────────────────────
