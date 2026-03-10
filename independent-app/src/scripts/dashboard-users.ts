@@ -284,8 +284,15 @@ function updateActiveTask(u: any) {
     if (!activeText || !activeTimer) return;
 
     const isPending = u.pendingState === "PENDING" || (u.activeTask && u.activeTask.proofUrl === "FORCED");
-    // Show as active if: task exists AND (no endTime stored, or timer hasn't expired, or it's pending review)
-    const hasActive = u.activeTask && (!u.endTime || u.endTime > Date.now() || isPending);
+
+    // Resolve endTime: use stored endTime, or calculate from assigned_at + 24h, or null
+    let resolvedEndTime = u.endTime || null;
+    if (!resolvedEndTime && u.activeTask?.assigned_at) {
+        resolvedEndTime = new Date(u.activeTask.assigned_at).getTime() + (24 * 60 * 60 * 1000);
+    }
+
+    // Show as active if: task exists AND (no endTime, or timer hasn't expired, or it's pending review)
+    const hasActive = u.activeTask && (!resolvedEndTime || resolvedEndTime > Date.now() || isPending);
 
     // Update Status Dot & Text
     if (statusDot) {
@@ -306,9 +313,9 @@ function updateActiveTask(u: any) {
         const rawText = u.activeTask.text || u.activeTask.TaskText || "";
         activeText.innerHTML = rawText; // Support HTML directives
 
-        if (u.endTime) {
+        if (resolvedEndTime) {
             const tick = () => {
-                const diff = u.endTime - Date.now();
+                const diff = resolvedEndTime - Date.now();
                 if (diff <= 0) {
                     activeTimer.innerText = "00:00";
                     if (activeStatus && !isPending) {

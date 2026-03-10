@@ -612,10 +612,7 @@ export default function DashboardPage() {
                                                 <div id="activeTaskContent">
                                                     <div className="at-sub-label">ACTIVE DIRECTIVE</div>
                                                     <div id="dActiveText" className="at-text">None</div>
-                                                    <div className="at-timer-row">
-                                                        <div className="at-timer-label">TIME REMAINING</div>
-                                                        <div id="dActiveTimer" className="at-timer-large">--:--</div>
-                                                    </div>
+                                                    <div id="dActiveTimer" className="at-timer-large">--:--</div>
                                                     <div className="at-actions" onClick={(e) => e.stopPropagation()}>
                                                         <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>CANCEL TASK</button>
                                                     </div>
