@@ -145,9 +145,12 @@ function renderToHtml(m: any) {
     }
 
     // ── Build bubble content ──
-    let bubble = '';
+    // Dashboard perspective: admin (isMe) → RIGHT, slave → LEFT
     const bubbleClass = isMe ? 'cb-queen' : 'cb-slave';
+    const slaveAvatar = users.find(u => u.memberId === m.member_id)?.avatar || '';
+    const slaveAv = slaveAvatar ? `<img src="${getOptimizedUrl(slaveAvatar, 60)}" class="cb-queen-av" alt="" />` : '';
 
+    let bubble = '';
     if (m.type === 'photo') {
         bubble = `<div class="${bubbleClass}"><img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" style="cursor:pointer" onclick="openChatPreview('${encodeURIComponent(content)}', false)" /></div>`;
     } else if (m.type === 'video') {
@@ -158,23 +161,23 @@ function renderToHtml(m: any) {
         bubble = `<div class="${bubbleClass}">${safeHtml}</div>`;
     }
 
-    // isMe = Queen (admin) → left side with avatar
-    // !isMe = Slave → right side, no avatar
+    // Admin (isMe) → RIGHT, no avatar
     if (isMe) {
-        return `
-            <div class="cb-row cb-row-queen">
-                ${queenAvatar}
-                <div class="cb-wrap-queen">
-                    ${bubble}
-                    <div class="chat-ts chat-ts-left">${timeStr}</div>
-                </div>
-            </div>`;
-    } else {
         return `
             <div class="cb-row cb-row-me">
                 <div class="cb-wrap-me">
                     ${bubble}
                     <div class="chat-ts chat-ts-right">${timeStr}</div>
+                </div>
+            </div>`;
+    } else {
+        // Slave → LEFT, slave avatar
+        return `
+            <div class="cb-row cb-row-queen">
+                ${slaveAv}
+                <div class="cb-wrap-queen">
+                    ${bubble}
+                    <div class="chat-ts chat-ts-left">${timeStr}</div>
                 </div>
             </div>`;
     }
