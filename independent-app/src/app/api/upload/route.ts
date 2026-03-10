@@ -14,7 +14,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
-        const ext = file.name.split('.').pop() || 'bin';
+        // Use safe ext passed from client (handles HEIC→jpg, empty ext, uppercase)
+        const rawExt = (formData.get('ext') as string) || file.name.split('.').pop() || 'bin';
+        const ext = rawExt.toLowerCase().slice(0, 5);
         const filename = `${folder}/${crypto.randomUUID()}.${ext}`;
 
         // Upload File directly — avoids loading entire video into a Buffer
