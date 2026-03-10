@@ -5,6 +5,7 @@ import { currId, ACCOUNT_ID, API_KEY, users, adminEmail } from './dashboard-stat
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl, mediaType } from './media';
 import { clean } from './utils';
+import { uploadToSupabase } from './mediaSupabase';
 
 // Fallback if DOMPurify is not available or needs to be used from global
 const purifier = (typeof window !== 'undefined' && (window as any).DOMPurify) || { sanitize: (s: string) => s };
@@ -150,6 +151,8 @@ function renderToHtml(m: any) {
 
     if (m.type === 'photo') {
         contentHtml = `<div class="msg ${msgClass}"><img src="${getOptimizedUrl(content, 300)}" onclick="openChatPreview('${encodeURIComponent(content)}', false)" style="cursor:pointer; display:block; max-width:100%;"></div>`;
+    } else if (m.type === 'video') {
+        contentHtml = `<div class="msg ${msgClass}" style="padding:4px;"><video src="${content}" controls playsinline style="display:block; max-width:240px; max-height:300px; border-radius:6px; background:#000;"></video></div>`;
     } else {
         let safeHtml = purifier.sanitize(content);
         safeHtml = safeHtml.replace(/\n/g, "<br>");
@@ -240,66 +243,74 @@ export async function sendMsg() {
     }
 }
 
-export async function handleAdminUpload(input: HTMLInputElement) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const fd = new FormData();
-        fd.append("file", file);
+export async function handleAdminUpload(file: File) {
+    if (!file) return;
+    const activeCurrId = currId || (window as any).currId;
+    if (!activeCurrId) return;
 
-        try {
-            const btn = document.querySelector('.btn-plus') as HTMLButtonElement;
-            const originalText = btn.innerText;
-            btn.innerText = "⏳";
+    const btn = document.querySelector('.btn-plus') as HTMLButtonElement;
+    if (btn) { btn.innerText = '⏳'; btn.disabled = true; }
 
-            const res = await fetch(
-                `https://api.bytescale.com/v2/accounts/${ACCOUNT_ID}/uploads/form_data?path=/admin`,
-                { method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` }, body: fd }
-            );
+    try {
+        const isVideo = file.type.startsWith('video/');
+        const msgType = isVideo ? 'video' : 'photo';
 
-            if (!res.ok) {
-                btn.innerText = originalText;
-                return;
-            }
-
-            const d = await res.json();
-            if (d.files && d.files[0] && d.files[0].fileUrl) {
-                const url = d.files[0].fileUrl;
-                // Send as photo message
-                const supabase = createClient();
-                let { data: { user } } = await supabase.auth.getUser();
-
-                let userEmail = user?.email;
-                if (!userEmail && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-                    userEmail = 'ceo@qkarin.com';
-                }
-
-                if (userEmail) {
-                    const sendRes = await fetch('/api/chat/send', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            senderEmail: userEmail,
-                            conversationId: currId,
-                            content: url,
-                            type: 'photo'
-                        })
-                    });
-                    const sendData = await sendRes.json();
-                    if (sendData.success && sendData.data) {
-                        appendChatMessage(sendData.data);
-                    }
-                }
-            }
-            btn.innerText = originalText;
-        } catch (err) {
-            console.error("Upload error", err);
-            const btn = document.querySelector('.btn-plus') as HTMLButtonElement;
-            if (btn) btn.innerText = "+";
+        // Upload directly to Supabase (videos bypass API route size limit)
+        const url = await uploadToSupabase('media', 'admin-chat', file);
+        if (url === 'failed') {
+            console.error('[DASHBOARD-CHAT] Media upload failed');
+            return;
         }
+
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        let userEmail = user?.email;
+        if (!userEmail && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+            userEmail = 'ceo@qkarin.com';
+        }
+        if (!userEmail) return;
+
+        const sendRes = await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                senderEmail: userEmail,
+                conversationId: activeCurrId,
+                content: url,
+                type: msgType,
+            }),
+        });
+        const sendData = await sendRes.json();
+        if (sendData.success && sendData.data) {
+            appendChatMessage(sendData.data);
+        } else {
+            console.error('[DASHBOARD-CHAT] Send error:', sendData.error);
+        }
+    } catch (err) {
+        console.error('[DASHBOARD-CHAT] Upload error:', err);
+    } finally {
+        if (btn) { btn.innerText = '+'; btn.disabled = false; }
     }
+}
+
+// iOS-safe media picker for admin chat — dynamic input avoids hidden-element restriction
+export function triggerAdminMediaPick() {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*,video/*';
+    inp.style.position = 'fixed';
+    inp.style.top = '-9999px';
+    document.body.appendChild(inp);
+    inp.onchange = () => {
+        document.body.removeChild(inp);
+        if (inp.files?.[0]) handleAdminUpload(inp.files[0]);
+    };
+    inp.click();
 }
 
 // Global Bindings
 if (typeof window !== 'undefined') {
     (window as any).sendMsg = sendMsg;
     (window as any).handleAdminUpload = handleAdminUpload;
+    (window as any).triggerAdminMediaPick = triggerAdminMediaPick;
 }

@@ -638,8 +638,7 @@ export default function DashboardPage() {
                             <div className="c-body" id="adminChatBox" style={{ flex: 1, borderTop: '1px solid rgba(197,160,89,0.2)' }}></div>
 
                             <div className="c-foot">
-                                <input type="file" id="adminMediaInput" accept="image/*,video/*" className="hidden-input" onChange={(e) => (window as any).handleAdminUpload(e.target)} />
-                                <button className="btn-plus" onClick={() => document.getElementById('adminMediaInput')?.click()}>+</button>
+                                <button className="btn-plus" onClick={() => (window as any).triggerAdminMediaPick()}>+</button>
                                 <input type="text" id="adminInp" className="inp" placeholder="Issue Command..." onKeyPress={(e) => { if (e.key === 'Enter') (window as any).sendMsg(); }} />
                                 <button onClick={() => (window as any).sendMsg()} className="btn-send">{'>'}</button>
                             </div>
