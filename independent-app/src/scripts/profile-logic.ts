@@ -1256,6 +1256,7 @@ export async function updateRoutineWidget() {
         const data = await res.json();
 
         const display = document.getElementById('deskRoutineDisplay');
+        const mobDisplay = document.getElementById('mobRoutineDisplay'); // mobile routine name display
         const btn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
         const timeMsg = document.getElementById('deskRoutineTimeMsg');
 
@@ -1264,9 +1265,26 @@ export async function updateRoutineWidget() {
         const mobDone = document.getElementById('routineDoneMsg');
         const mobTime = document.getElementById('routineTimeMsg');
 
+        // iOS-safe routine upload: create input dynamically so .click() fires
+        // synchronously within the user gesture (same fix as profile photo)
+        const triggerRoutineFilePick = () => {
+            const inp = document.createElement('input');
+            inp.type = 'file';
+            inp.accept = 'image/*,video/*';
+            inp.style.position = 'fixed';
+            inp.style.top = '-9999px';
+            document.body.appendChild(inp);
+            inp.onchange = () => {
+                document.body.removeChild(inp);
+                if (inp.files?.[0]) handleRoutineUpload(inp);
+            };
+            inp.click();
+        };
+
         if (!data.routine) {
             // ── State 1: No routine set ─────────────────────────────────────
             if (display) display.textContent = 'No routine set yet';
+            if (mobDisplay) mobDisplay.textContent = 'No routine set';
             if (btn) {
                 btn.textContent = 'SET A ROUTINE';
                 btn.style.background = 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)';
@@ -1277,25 +1295,27 @@ export async function updateRoutineWidget() {
                     openTextFieldModal('routine', 'ROUTINE', existingVal);
                 };
             }
-            if (mobBtn) { mobBtn.textContent = 'SET A ROUTINE'; mobBtn.onclick = () => (window as any).__routineAction?.(); }
+            if (mobBtn) { mobBtn.textContent = 'SET A ROUTINE'; mobBtn.style.opacity = '1'; mobBtn.style.cursor = 'pointer'; mobBtn.onclick = () => (window as any).__routineAction?.(); }
             if (timeMsg) { timeMsg.classList.add('hidden'); }
         } else if (data.uploadedToday && data.todayStatus === 'pending') {
             // ── State 3a: Uploaded today, Pending Approval ──────────────────
             if (display) display.textContent = 'PENDING APPROVAL';
+            if (mobDisplay) mobDisplay.textContent = data.routine;
             if (btn) {
                 btn.textContent = '✔ SUBMITTED';
                 btn.style.background = 'linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 100%)';
                 btn.style.opacity = '0.7';
                 btn.style.cursor = 'default';
-                (window as any).__routineAction = () => { }; // Disabled
+                (window as any).__routineAction = () => { };
             }
             if (timeMsg) timeMsg.classList.add('hidden');
-            if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
+            if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
             if (mobDone) mobDone.classList.remove('hidden');
             if (mobTime) mobTime.classList.add('hidden');
         } else if (data.uploadedToday && data.todayStatus === 'approved') {
-            // ── State 3b: Uploaded today, Approved — locked until 6am ────────
+            // ── State 3b: Uploaded today, Approved ───────────────────────────
             if (display) display.textContent = data.routine;
+            if (mobDisplay) mobDisplay.textContent = data.routine;
             if (btn) {
                 btn.innerHTML = 'ROUTINE DONE<br><span style="font-size:0.55rem;opacity:0.7;letter-spacing:1px;">NEXT CHECK: 6AM</span>';
                 btn.style.background = 'linear-gradient(135deg, #0d1a0d 0%, #1a2a1a 100%)';
@@ -1304,22 +1324,23 @@ export async function updateRoutineWidget() {
                 (window as any).__routineAction = () => { };
             }
             if (timeMsg) timeMsg.classList.add('hidden');
-            if (mobBtn) { mobBtn.textContent = 'ROUTINE DONE — NEXT: 6AM'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
+            if (mobBtn) { mobBtn.textContent = 'ROUTINE DONE — NEXT: 6AM'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
             if (mobDone) mobDone.classList.remove('hidden');
             if (mobTime) mobTime.classList.add('hidden');
         } else {
             // ── State 2: Routine set, not uploaded today ────────────────────
             if (display) display.textContent = data.routine;
+            if (mobDisplay) mobDisplay.textContent = data.routine;
             if (btn) {
                 btn.textContent = 'UPLOAD ROUTINE';
                 btn.style.background = 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)';
                 btn.style.opacity = '1';
                 btn.style.cursor = 'pointer';
-                (window as any).__routineAction = () => {
-                    (document.getElementById('routineUploadInput') as HTMLInputElement)?.click();
-                };
+                (window as any).__routineAction = triggerRoutineFilePick;
             }
-            if (mobBtn) { mobBtn.textContent = 'UPLOAD ROUTINE'; mobBtn.onclick = () => (document.getElementById('routineUploadInput') as HTMLInputElement)?.click(); }
+            // iOS-safe: use dynamic input instead of clicking hidden input
+            if (mobBtn) { mobBtn.textContent = 'UPLOAD ROUTINE'; mobBtn.style.opacity = '1'; mobBtn.style.cursor = 'pointer'; mobBtn.onclick = triggerRoutineFilePick; }
+            if (mobDone) mobDone.classList.add('hidden');
             if (timeMsg) timeMsg.classList.add('hidden');
         }
 
@@ -1333,16 +1354,17 @@ export function handleRoutineUpload(input: HTMLInputElement) {
     if (input.files && input.files[0]) {
         submitTaskEvidence(input.files[0], true).then(() => {
             const display = document.getElementById('deskRoutineDisplay');
+            const mobDisplay = document.getElementById('mobRoutineDisplay');
             const btn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
             const timeMsg = document.getElementById('deskRoutineTimeMsg');
             const mobBtn = document.getElementById('btnRoutineUpload') as HTMLButtonElement | null;
             const mobDone = document.getElementById('routineDoneMsg');
             const mobTime = document.getElementById('routineTimeMsg');
-            // Replace routine text with pending state
             if (display) display.textContent = 'PENDING APPROVAL';
+            if (mobDisplay) mobDisplay.textContent = 'PENDING APPROVAL';
             if (btn) { btn.textContent = '✔ SUBMITTED'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; (window as any).__routineAction = () => { }; }
             if (timeMsg) { timeMsg.textContent = 'AWAITING REVIEW'; timeMsg.classList.remove('hidden'); }
-            if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; }
+            if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
             if (mobDone) mobDone.classList.remove('hidden');
             if (mobTime) { mobTime.textContent = 'AWAITING REVIEW'; mobTime.classList.remove('hidden'); }
         });
