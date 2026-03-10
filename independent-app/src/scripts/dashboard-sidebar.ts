@@ -6,23 +6,15 @@ import { clean } from './utils';
 import { triggerSound } from './utils';
 import { getOptimizedUrl } from './media';
 
-let currentVisualOrder: string[] = [];
-let previousOnlineStates: { [key: string]: boolean } = {};
+// firstUnreadTime: when each user's FIRST unread message arrived (cleared on open)
+const firstUnreadTime: Record<string, number> = {};
+// onlineJoinTime: when each user first came online this session (stable)
+const onlineJoinTime: Record<string, number> = {};
 const soundMemory: { [key: string]: number } = {};
 
 export function renderSidebar() {
     const list = document.getElementById('userList');
     if (!list || !users.length) return;
-
-    const allDbIds = users.map(u => u.memberId);
-
-    // Force the visual order to be unique and only include real users
-    currentVisualOrder = [...new Set(currentVisualOrder)].filter(id => allDbIds.includes(id));
-
-    // Add any missing users from the database to the end
-    allDbIds.forEach(id => {
-        if (!currentVisualOrder.includes(id)) currentVisualOrder.push(id);
-    });
 
     const now = Date.now();
 
@@ -36,57 +28,65 @@ export function renderSidebar() {
     const isUserOnline = (u: any) => {
         if (!u) return false;
         const ls = getLastSeenMs(u);
-        if (!ls) return false;
-        return (now - ls) / 60000 < 5;
+        return ls > 0 && (now - ls) / 60000 < 5;
     };
 
+    // ── Update tracking state ────────────────────────────────────────────
     users.forEach(u => {
-        const isOnline = isUserOnline(u);
-        const wasOnline = previousOnlineStates[u.memberId];
+        const online = isUserOnline(u);
         const hasMsg = hasUnreadMessage(u);
+        const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
 
-        if (hasMsg) {
-            currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
-            currentVisualOrder.unshift(u.memberId);
+        // Track first unread time — set only once per unread streak, never overwrite
+        if (hasMsg && msgTime > 0 && !firstUnreadTime[u.memberId]) {
+            firstUnreadTime[u.memberId] = msgTime;
+        }
+        // Clear if no longer has unread (was read)
+        if (!hasMsg) {
+            delete firstUnreadTime[u.memberId];
         }
 
-        const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
+        // Track online join time — set when first seen online, cleared when offline
+        if (online && !onlineJoinTime[u.memberId]) {
+            onlineJoinTime[u.memberId] = now;
+        }
+        if (!online) {
+            delete onlineJoinTime[u.memberId];
+        }
+
+        // Sound notification
         const lastSoundLS = Number(localStorage.getItem('sound_' + u.memberId) || 0);
         const lastSoundRAM = soundMemory[u.memberId] || 0;
-        const hasMsgCurrent = hasUnreadMessageCurrentUser(u);
-
         const lastSound = Math.max(lastSoundLS, lastSoundRAM);
-        const isNewMessage = hasMsgCurrent && msgTime > lastSound;
-
-        if (isNewMessage) {
+        if (hasUnreadMessageCurrentUser(u) && msgTime > lastSound) {
             soundMemory[u.memberId] = msgTime;
             localStorage.setItem('sound_' + u.memberId, msgTime.toString());
             triggerSound('sfx-notify');
         }
-
-        else if (isOnline && (wasOnline === false || wasOnline === undefined)) {
-            currentVisualOrder = currentVisualOrder.filter(id => id !== u.memberId);
-            const lastOnlineIdx = currentVisualOrder.findLastIndex(id => {
-                const usr = users.find(x => x.memberId === id);
-                return isUserOnline(usr);
-            });
-            currentVisualOrder.splice(lastOnlineIdx + 1, 0, u.memberId);
-        }
-
-        previousOnlineStates[u.memberId] = isOnline;
     });
 
-    let onlineIds = currentVisualOrder.filter(id => isUserOnline(users.find(x => x.memberId === id)));
-    let offlineIds = currentVisualOrder.filter(id => !onlineIds.includes(id));
+    // ── Sort into 3 groups ───────────────────────────────────────────────
+    // Group 1: has unread — FIFO queue: first message received = TOP
+    const withUnread = users
+        .filter(u => hasUnreadMessage(u))
+        .sort((a, b) => (firstUnreadTime[a.memberId] || 0) - (firstUnreadTime[b.memberId] || 0));
 
-    const offlineData = offlineIds.map(id => users.find(x => x.memberId === id)).filter(u => u);
-    offlineData.sort((a, b) => getLastSeenMs(b) - getLastSeenMs(a));
+    const withUnreadIds = new Set(withUnread.map(u => u.memberId));
 
-    currentVisualOrder = [...onlineIds, ...offlineData.map(u => u.memberId)];
+    // Group 2: online, no unread — stable order by when they came online (first = top)
+    const onlineNoUnread = users
+        .filter(u => isUserOnline(u) && !withUnreadIds.has(u.memberId))
+        .sort((a, b) => (onlineJoinTime[a.memberId] || now) - (onlineJoinTime[b.memberId] || now));
+
+    // Group 3: offline, no unread — most recently seen first
+    const offlineNoUnread = users
+        .filter(u => !isUserOnline(u) && !withUnreadIds.has(u.memberId))
+        .sort((a, b) => getLastSeenMs(b) - getLastSeenMs(a));
+
+    const sorted = [...withUnread, ...onlineNoUnread, ...offlineNoUnread];
 
     let html = '';
-    currentVisualOrder.forEach(id => {
-        const u = users.find(x => x.memberId === id);
+    sorted.forEach(u => {
         if (!u) return;
 
         const isActive = currId === u.memberId;
@@ -185,10 +185,9 @@ function hasUnreadMessageCurrentUser(u: any) {
 export function selUser(id: string) {
     if (id === currId) return;
 
-    // In standalone app, we don't need postMessage to select user
-    // We'll update the state directly or call an internal handler
-
     localStorage.setItem('read_' + id, Date.now().toString());
+    // Clear unread queue position so they return to stable online order
+    delete firstUnreadTime[id];
     const chatBox = document.getElementById('adminChatBox');
     if (chatBox) chatBox.innerHTML = "";
 
