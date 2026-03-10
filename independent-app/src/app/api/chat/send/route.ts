@@ -60,11 +60,11 @@ export async function POST(req: Request) {
         const userRank = profile.hierarchy || 'Hall Boy';
         const rankRule = HIERARCHY_RULES.find(r => r.name.toLowerCase() === userRank.toLowerCase()) || HIERARCHY_RULES[HIERARCHY_RULES.length - 1];
 
-        // 3. Permission Checks
-        if (type === 'photo' && !rankRule.benefits.some(b => b.includes('Photos'))) {
+        // 3. Permission Checks (admin/Queen bypasses all)
+        if (!isQueen && type === 'photo' && !rankRule.benefits.some(b => b.includes('Photos'))) {
             return NextResponse.json({ success: false, error: `Rank "${userRank}" does not have photo permissions.` }, { status: 403 });
         }
-        if (type === 'video' && !rankRule.benefits.some(b => b.includes('Videos'))) {
+        if (!isQueen && type === 'video' && !rankRule.benefits.some(b => b.includes('Videos'))) {
             return NextResponse.json({ success: false, error: `Rank "${userRank}" does not have video permissions.` }, { status: 403 });
         }
 
