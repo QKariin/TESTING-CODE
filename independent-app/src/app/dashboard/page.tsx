@@ -584,14 +584,14 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            <div className="admin-dash-top" style={{ display: 'flex', flexDirection: 'column', height: 'auto', maxHeight: '55%', background: 'transparent' }}>
+                            <div className="admin-dash-top" style={{ display: 'flex', flexDirection: 'column', height: 'auto', background: 'transparent' }}>
                                 <div className="ap-nav">
                                     <button className="ap-tab active" id="tabBtnOps" onClick={() => (window as any).switchAdminTab('ops')}>OPS</button>
                                     <button className="ap-tab" id="tabBtnIntel" onClick={() => (window as any).switchAdminTab('intel')}>INTEL</button>
                                     <button className="ap-tab" id="tabBtnRecord" onClick={() => (window as any).switchAdminTab('record')}>RECORD</button>
                                 </div>
 
-                                <div className="ap-content" style={{ height: 'auto', overflowY: 'auto', background: 'transparent' }}>
+                                <div className="ap-content" style={{ flex: 1, overflowY: 'auto', background: 'transparent' }}>
                                     <div id="tabOps" className="ap-view active">
                                         <div className="active-task-card gold-theme" onClick={() => (window as any).toggleTaskDrawer()}>
                                             <div className="at-label-row">
