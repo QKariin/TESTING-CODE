@@ -413,15 +413,39 @@ export default function ProfilePage() {
                     <div id="gridHero" className="v-card serve-grid-item" style={{ background: "url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png')", backgroundSize: 'cover', backgroundPosition: 'center', minHeight: 'unset', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(2,5,18,0.9) 0%, rgba(2,5,18,0.4) 100%)' }}></div>
 
-                        <div id="kneelRewardOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 5000, backdropFilter: 'blur(20px)', display: 'none', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ textAlign: 'center', width: '100%', padding: 20 }}>
-                                <div className="mob-reward-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, width: '100%', maxHeight: 'unset', overflow: 'visible' }}>
-                                    <h2 style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '1.2rem', letterSpacing: 4, marginBottom: 20, textTransform: 'uppercase' }}>DEVOTION RECOGNIZED</h2>
-                                    <div className="mob-reward-actions" style={{ display: 'flex', flexDirection: 'row', gap: 20, width: '100%', justifyContent: 'center' }}>
-                                        <button onClick={() => claimKneelReward('coins')} className="action-btn" style={{ borderColor: '#c5a059', color: '#c5a059', background: 'rgba(197,160,89,0.08)', fontSize: '0.85rem', flex: 1, maxWidth: 180, padding: '10px 0', height: 45 }}>CLAIM COINS</button>
-                                        <button onClick={() => claimKneelReward('points')} className="action-btn" style={{ borderColor: '#888', color: '#888', background: 'rgba(136,136,136,0.08)', fontSize: '0.85rem', flex: 1, maxWidth: 180, padding: '10px 0', height: 45 }}>CLAIM POINTS</button>
-                                    </div>
+                        <div id="kneelRewardOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.96)', zIndex: 5000, backdropFilter: 'blur(24px)', display: 'none', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '100%', padding: '16px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                                {/* Crown icon */}
+                                <div style={{ fontSize: '2rem', lineHeight: 1, marginBottom: 8, filter: 'drop-shadow(0 0 12px rgba(197,160,89,0.8))' }}>♛</div>
+
+                                {/* Title */}
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: 4 }}>SESSION COMPLETE</div>
+                                <h2 style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '1.15rem', letterSpacing: 3, margin: '0 0 4px', textTransform: 'uppercase', textShadow: '0 0 20px rgba(197,160,89,0.5)' }}>DEVOTION RECOGNIZED</h2>
+
+                                {/* Divider */}
+                                <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, #c5a059, transparent)', margin: '10px 0 16px' }}></div>
+
+                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 2, marginBottom: 18, textAlign: 'center' }}>Choose your tribute, loyal subject</div>
+
+                                {/* Reward cards */}
+                                <div style={{ display: 'flex', flexDirection: 'row', gap: 12, width: '100%' }}>
+                                    {/* Coins option */}
+                                    <button onClick={() => claimKneelReward('coins')} style={{ flex: 1, background: 'linear-gradient(135deg, rgba(197,160,89,0.12) 0%, rgba(197,160,89,0.04) 100%)', border: '1px solid rgba(197,160,89,0.5)', borderRadius: 10, padding: '14px 8px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 0.2s', boxShadow: '0 0 20px rgba(197,160,89,0.1), inset 0 1px 0 rgba(197,160,89,0.15)', outline: 'none' }}>
+                                        <div style={{ fontSize: '1.4rem', filter: 'drop-shadow(0 0 8px rgba(197,160,89,0.6))' }}>🪙</div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '3px', fontWeight: 700 }}>COINS</div>
+                                        <div style={{ fontFamily: 'Cinzel', fontSize: '0.62rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 1, textAlign: 'center', lineHeight: 1.5 }}>Add to your treasury</div>
+                                    </button>
+
+                                    {/* Points option */}
+                                    <button onClick={() => claimKneelReward('points')} style={{ flex: 1, background: 'linear-gradient(135deg, rgba(160,180,255,0.08) 0%, rgba(160,180,255,0.02) 100%)', border: '1px solid rgba(160,180,255,0.3)', borderRadius: 10, padding: '14px 8px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 0.2s', boxShadow: '0 0 20px rgba(160,180,255,0.06), inset 0 1px 0 rgba(160,180,255,0.1)', outline: 'none' }}>
+                                        <div style={{ fontSize: '1.4rem', filter: 'drop-shadow(0 0 8px rgba(160,180,255,0.5))' }}>⭐</div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#a0b4ff', letterSpacing: '3px', fontWeight: 700 }}>MERIT</div>
+                                        <div style={{ fontFamily: 'Cinzel', fontSize: '0.62rem', color: 'rgba(160,180,255,0.5)', letterSpacing: 1, textAlign: 'center', lineHeight: 1.5 }}>Rise in rank</div>
+                                    </button>
                                 </div>
+
+                                {/* Subtitle */}
+                                <div style={{ marginTop: 14, fontFamily: 'Orbitron', fontSize: '0.48rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px', textAlign: 'center' }}>YOUR LOYALTY DOES NOT GO UNNOTICED</div>
                             </div>
                         </div>
 
