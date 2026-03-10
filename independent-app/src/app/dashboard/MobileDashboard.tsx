@@ -542,9 +542,23 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail }: {
     );
 }
 
+// ─── Service message helper ───────────────────────────────────────────────────
+function isSystemMessage(msg: any): boolean {
+    if (!msg) return false;
+    const sender = (msg.sender_email || msg.sender || '').toLowerCase();
+    const content = (msg.content || msg.message || '').toUpperCase();
+    return sender === 'system' ||
+        content.includes('COINS RECEIVED') ||
+        content.includes('TASK APPROVED') ||
+        content.includes('POINTS RECEIVED') ||
+        content.includes('TASK REJECTED') ||
+        content.includes('TASK VERIFIED');
+}
+
 // ─── CHAT VIEW — same endpoints as desktop dashboard ─────────────────────────
 function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | null }) {
     const [messages, setMessages] = useState<any[]>([]);
+    const [chatTab, setChatTab] = useState<'chat' | 'service'>('chat');
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
     const [sendError, setSendError] = useState('');
@@ -610,50 +624,97 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
 
     const canSend = input.trim().length > 0 && !sending;
 
+    const chatMsgs = messages.filter(m => !isSystemMessage(m));
+    const sysMsgs  = messages.filter(m => isSystemMessage(m));
+
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            {/* Messages */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any }}>
-                {loadingMsgs && (
-                    <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#2a2a2a', letterSpacing: '2px' }}>LOADING...</div>
-                )}
-                {!loadingMsgs && messages.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#222', letterSpacing: '2px' }}>NO MESSAGES YET</div>
-                )}
-                {messages.map((msg, i) => {
-                    // Same logic as desktop renderToHtml: admin = sender_email !== member_id
-                    const isAdmin = msg.sender_email && msg.member_id
-                        ? msg.sender_email.toLowerCase() !== msg.member_id.toLowerCase()
-                        : msg.sender === 'admin' || msg.sender === 'queen';
-                    const text = msg.content || msg.message || '';
-                    const isPhoto = msg.type === 'photo';
-                    return (
-                        <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
-                            <div style={{
-                                background: isAdmin ? 'linear-gradient(135deg, #c5a059, #a8893d)' : 'rgba(22,22,22,0.95)',
-                                color: isAdmin ? '#000' : '#ddd',
-                                padding: isPhoto ? '4px' : '9px 13px',
-                                borderRadius: isAdmin ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                                maxWidth: '78%',
-                                fontSize: '0.92rem',
-                                lineHeight: 1.5,
-                                fontFamily: 'Rajdhani,sans-serif',
-                                wordBreak: 'break-word',
-                                border: isAdmin ? 'none' : '1px solid rgba(255,255,255,0.06)',
-                            }}>
-                                {isPhoto
-                                    ? <img src={text} style={{ display: 'block', maxWidth: 220, maxHeight: 220, borderRadius: 10, objectFit: 'cover' }} alt="" />
-                                    : <span>{text}</span>
-                                }
-                            </div>
-                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#282828', marginTop: 3, letterSpacing: '1px' }}>
-                                {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                            </div>
-                        </div>
-                    );
-                })}
-                <div ref={bottomRef} />
+
+            {/* ── Tab bar: CHAT / SERVICE ── */}
+            <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid rgba(197,160,89,0.15)', background: 'rgba(0,0,0,0.4)' }}>
+                {(['chat', 'service'] as const).map(t => (
+                    <button key={t} onClick={() => setChatTab(t)} style={{
+                        flex: 1, padding: '12px 4px', background: 'none', border: 'none',
+                        borderBottom: chatTab === t ? '2px solid #c5a059' : '2px solid transparent',
+                        color: chatTab === t ? '#c5a059' : '#444',
+                        fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', letterSpacing: '2px',
+                        cursor: 'pointer', textTransform: 'uppercase',
+                        WebkitTapHighlightColor: 'transparent',
+                    }}>
+                        {t === 'chat' ? 'CHAT' : 'SERVICE'}
+                    </button>
+                ))}
             </div>
+
+            {/* ── CHAT TAB ── */}
+            {chatTab === 'chat' && (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any }}>
+                    {loadingMsgs && (
+                        <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#2a2a2a', letterSpacing: '2px' }}>LOADING...</div>
+                    )}
+                    {!loadingMsgs && chatMsgs.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#222', letterSpacing: '2px' }}>NO MESSAGES YET</div>
+                    )}
+                    {chatMsgs.map((msg, i) => {
+                        const isAdmin = msg.sender_email && msg.member_id
+                            ? msg.sender_email.toLowerCase() !== msg.member_id.toLowerCase()
+                            : msg.sender === 'admin' || msg.sender === 'queen';
+                        const text = msg.content || msg.message || '';
+                        const isPhoto = msg.type === 'photo';
+                        const isVideo = msg.type === 'video';
+                        return (
+                            <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
+                                <div style={{
+                                    background: isAdmin ? '#000' : '#1c1c1e',
+                                    color: '#fff',
+                                    padding: (isPhoto || isVideo) ? '4px' : '10px 14px',
+                                    borderRadius: isAdmin ? '16px 16px 3px 16px' : '16px 16px 16px 3px',
+                                    maxWidth: '78%',
+                                    fontSize: '0.95rem',
+                                    lineHeight: 1.55,
+                                    fontFamily: 'Cinzel,serif',
+                                    letterSpacing: '0.2px',
+                                    wordBreak: 'break-word',
+                                    boxShadow: isAdmin ? '0 0 0 1px rgba(197,160,89,0.6)' : undefined,
+                                    border: isAdmin ? undefined : '1px solid rgba(255,255,255,0.06)',
+                                }}>
+                                    {isPhoto
+                                        ? <img src={text} style={{ display: 'block', maxWidth: 220, maxHeight: 220, borderRadius: 10, objectFit: 'cover' }} alt="" />
+                                        : isVideo
+                                            ? <video src={text} controls playsInline style={{ display: 'block', maxWidth: 220, borderRadius: 10 }} />
+                                            : <span>{text}</span>
+                                    }
+                                </div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: isAdmin ? '#444' : 'rgba(197,160,89,0.45)', marginTop: 3, letterSpacing: '0.8px' }}>
+                                    {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                </div>
+                            </div>
+                        );
+                    })}
+                    <div ref={bottomRef} />
+                </div>
+            )}
+
+            {/* ── SERVICE TAB ── */}
+            {chatTab === 'service' && (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any }}>
+                    {sysMsgs.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#222', letterSpacing: '2px' }}>NO SERVICE MESSAGES</div>
+                    )}
+                    {sysMsgs.map((msg, i) => {
+                        const d = new Date(msg.created_at || Date.now());
+                        const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+                        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const content = msg.content || msg.message || '';
+                        return (
+                            <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', borderLeft: '2px solid #c5a059', padding: '9px 14px', borderRadius: '0 6px 6px 0' }}>
+                                <span style={{ fontFamily: 'Cinzel,serif', color: '#c5a059', fontSize: '0.82rem', lineHeight: 1.5 }}>{content}</span>
+                                <span style={{ fontFamily: 'Orbitron,monospace', color: 'rgba(255,255,255,0.25)', fontSize: '0.55rem', marginTop: 5, letterSpacing: '1px' }}>{dateStr} · {timeStr}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {sendError && (
                 <div style={{ padding: '6px 14px', background: 'rgba(255,0,0,0.1)', color: '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', letterSpacing: '1px', textAlign: 'center' }}>
@@ -661,24 +722,26 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                 </div>
             )}
 
-            {/* Input — 16px prevents iOS zoom */}
-            <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: '1px solid rgba(197,160,89,0.1)', flexShrink: 0, background: 'rgba(4,4,4,0.98)' }}>
-                <input
-                    type="text"
-                    value={input}
-                    onChange={e => { setInput(e.target.value); setSendError(''); }}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }}
-                    placeholder="Issue command..."
-                    autoComplete="off"
-                    style={{ flex: 1, background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#fff', padding: '10px 14px', fontFamily: 'Rajdhani,sans-serif', fontSize: '16px', outline: 'none' }}
-                />
-                <button
-                    onTouchEnd={e => { e.preventDefault(); sendMessage(); }}
-                    onClick={sendMessage}
-                    style={{ background: canSend ? '#c5a059' : '#111', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: canSend ? '#000' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.55rem', letterSpacing: '1px', padding: '10px 16px', cursor: canSend ? 'pointer' : 'default', flexShrink: 0, fontWeight: 700, WebkitTapHighlightColor: 'transparent' }}>
-                    {sending ? '...' : 'SEND'}
-                </button>
-            </div>
+            {/* Input — only visible on CHAT tab; 16px prevents iOS zoom */}
+            {chatTab === 'chat' && (
+                <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: '1px solid rgba(197,160,89,0.1)', flexShrink: 0, background: 'rgba(4,4,4,0.98)' }}>
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={e => { setInput(e.target.value); setSendError(''); }}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }}
+                        placeholder="Issue command..."
+                        autoComplete="off"
+                        style={{ flex: 1, background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#fff', padding: '10px 14px', fontFamily: 'Rajdhani,sans-serif', fontSize: '16px', outline: 'none' }}
+                    />
+                    <button
+                        onTouchEnd={e => { e.preventDefault(); sendMessage(); }}
+                        onClick={sendMessage}
+                        style={{ background: canSend ? '#c5a059' : '#111', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: canSend ? '#000' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.55rem', letterSpacing: '1px', padding: '10px 16px', cursor: canSend ? 'pointer' : 'default', flexShrink: 0, fontWeight: 700, WebkitTapHighlightColor: 'transparent' }}>
+                        {sending ? '...' : 'SEND'}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
