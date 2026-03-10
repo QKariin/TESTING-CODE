@@ -13,8 +13,7 @@ const onlineJoinTime: Record<string, number> = {};
 const soundMemory: { [key: string]: number } = {};
 
 export function renderSidebar() {
-    const list = document.getElementById('userList');
-    if (!list || !users.length) return;
+    if (!users.length) return;
 
     const now = Date.now();
 
@@ -85,6 +84,14 @@ export function renderSidebar() {
 
     const sorted = [...withUnread, ...onlineNoUnread, ...offlineNoUnread];
 
+    // ── FLIP: record positions before re-render ──────────────────────────
+    const list = document.getElementById('userList');
+    if (!list) return;
+    const beforeRects: Record<string, DOMRect> = {};
+    list.querySelectorAll<HTMLElement>('.u-item[data-id]').forEach(el => {
+        beforeRects[el.dataset.id!] = el.getBoundingClientRect();
+    });
+
     let html = '';
     sorted.forEach(u => {
         if (!u) return;
@@ -120,7 +127,7 @@ export function renderSidebar() {
         const finalPic = getOptimizedUrl(rawPic, 80) || defaultPic;
 
         html += `
-            <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" onclick="window.selUser('${u.memberId}')" style="cursor: pointer;">
+            <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor: pointer;">
                 <div class="u-avatar-main">
                     <img src="${finalPic}" alt="${clean(u.name)}" onerror="this.onerror=null;this.src='${defaultPic}'">
                     <div class="notif-dot"></div>
@@ -138,6 +145,22 @@ export function renderSidebar() {
     });
 
     list.innerHTML = html;
+
+    // ── FLIP: animate items from their old position to new ───────────────
+    list.querySelectorAll<HTMLElement>('.u-item[data-id]').forEach(el => {
+        const id = el.dataset.id!;
+        const before = beforeRects[id];
+        if (!before) return; // new item — fade in instead
+        const after = el.getBoundingClientRect();
+        const dy = before.top - after.top;
+        if (Math.abs(dy) < 2) return; // didn't move, skip
+        el.style.transition = 'none';
+        el.style.transform = `translateY(${dy}px)`;
+        requestAnimationFrame(() => {
+            el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+            el.style.transform = 'translateY(0)';
+        });
+    });
 }
 
 function renderUserIcons(u: any) {
@@ -186,27 +209,28 @@ export function selUser(id: string) {
     if (id === currId) return;
 
     localStorage.setItem('read_' + id, Date.now().toString());
-    // Clear unread queue position so they return to stable online order
-    delete firstUnreadTime[id];
+    // Do NOT delete firstUnreadTime here — order only changes on new message / offline
+    // Do NOT call renderSidebar() — opening a chat must never reorder the list
+
     const chatBox = document.getElementById('adminChatBox');
     if (chatBox) chatBox.innerHTML = "";
 
     setCurrId(id);
 
-    // Update UI visibility (using domestic message bus or direct DOM)
+    // Just swap the active highlight — no re-render, no reorder
+    document.querySelectorAll('#userList .u-item').forEach(el => el.classList.remove('active'));
+    const target = document.querySelector(`#userList .u-item[onclick*="${id}"]`);
+    if (target) target.classList.add('active');
+
+    // Also clear the unread mail icon on the opened user without full re-render
+    if (target) target.classList.remove('has-msg');
+
     const vHome = document.getElementById('viewHome');
     if (vHome) vHome.style.display = 'none';
-
     const vProfile = document.getElementById('viewProfile');
     if (vProfile) vProfile.style.display = 'none';
-
     const vUser = document.getElementById('viewUser');
-    if (vUser) {
-        vUser.style.display = 'flex';
-        vUser.classList.add('active');
-    }
-
-    renderSidebar();
+    if (vUser) { vUser.style.display = 'flex'; vUser.classList.add('active'); }
 
     // Trigger update for user detail and chat
     Promise.all([
