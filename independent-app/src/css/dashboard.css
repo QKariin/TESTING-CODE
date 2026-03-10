@@ -414,6 +414,11 @@ body {
     fill: var(--blue) !important;
 }
 
+.active-grey {
+    fill: #aaa !important;
+    filter: drop-shadow(0 0 4px rgba(180, 180, 180, 0.6));
+}
+
 .icon-dim {
     opacity: 0.15;
     fill: #555;
@@ -4534,12 +4539,13 @@ h3,
 }
 
 .at-text {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.95rem;
-    color: #fff !important;
-    line-height: 1.6;
+    font-family: 'Cinzel', serif;
+    font-size: 1.05rem;
+    color: #c5a059 !important;
+    text-shadow: 0 0 12px rgba(197, 160, 89, 0.35);
+    line-height: 1.7;
     margin: 15px 0;
-    text-align: left;
+    text-align: center;
 }
 
 .at-timer-large {
