@@ -73,19 +73,22 @@ function generateFilename(originalFile: File): string {
  * @param file The file from the input element
  */
 export async function uploadToSupabase(bucketName: string, folderPath: string, file: File): Promise<string> {
-    console.log(`[SupabaseStorage] Starting PROXY upload to ${bucketName}/${folderPath}...`);
+    console.log(`[SupabaseStorage] Starting upload to ${bucketName}/${folderPath}... type=${file.type} size=${file.size}`);
 
     try {
-        // 1. Compress if it's an image
+        // Videos upload directly from client to avoid the 4.5MB API route body limit
+        if (file.type.startsWith('video/')) {
+            return await uploadVideoDirectly(bucketName, folderPath, file);
+        }
+
+        // Images: compress then proxy through API route
         const processedFile = await compressImage(file);
 
-        // 2. Prepare Form Data
         const formData = new FormData();
         formData.append('file', processedFile);
         formData.append('bucket', bucketName);
         formData.append('folder', folderPath);
 
-        // 3. Call secure backend proxy
         const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData,
@@ -104,5 +107,27 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
     } catch (err: any) {
         console.error("[SupabaseStorage] Upload Failed:", err.message);
         return "failed";
+    }
+}
+
+async function uploadVideoDirectly(bucketName: string, folderPath: string, file: File): Promise<string> {
+    console.log(`[SupabaseStorage] Direct video upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+    try {
+        const supabase = createClient();
+        const ext = file.name.split('.').pop() || 'mp4';
+        const filename = `${folderPath}/${generateFilename(file)}`;
+        const { error } = await supabase.storage
+            .from(bucketName)
+            .upload(filename, file, { contentType: file.type, upsert: true });
+        if (error) {
+            console.error('[SupabaseStorage] Direct video upload error:', error.message);
+            return 'failed';
+        }
+        const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(filename);
+        console.log('[SupabaseStorage] Direct video upload success:', publicUrl);
+        return publicUrl;
+    } catch (err: any) {
+        console.error('[SupabaseStorage] Direct video upload exception:', err.message);
+        return 'failed';
     }
 }

@@ -1378,6 +1378,21 @@ export function handleTaskEvidenceUpload(input: HTMLInputElement) {
     }
 }
 
+// iOS-safe task evidence picker — dynamic input avoids hidden-element click restriction
+export function triggerTaskEvidencePick() {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*,video/*';
+    inp.style.position = 'fixed';
+    inp.style.top = '-9999px';
+    document.body.appendChild(inp);
+    inp.onchange = () => {
+        document.body.removeChild(inp);
+        if (inp.files?.[0]) submitTaskEvidence(inp.files[0], false);
+    };
+    inp.click();
+}
+
 async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
     const { id, memberId, userName } = getState();
     const pid = memberId || id;

@@ -69,6 +69,7 @@ import {
     switchMobGlPeriod,
     sendMobGlMessage,
     handleMobGlKey,
+    triggerTaskEvidencePick,
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -99,6 +100,7 @@ export default function ProfilePage() {
             (window as any).mobileUploadEvidence = mobileUploadEvidence;
             (window as any).handleRoutineUpload = handleRoutineUpload;
             (window as any).handleTaskEvidenceUpload = handleTaskEvidenceUpload;
+            (window as any).triggerTaskEvidencePick = triggerTaskEvidencePick;
             (window as any).handleProfileUpload = handleProfileUpload;
             (window as any).handleAdminUpload = handleAdminUpload;
             (window as any).handleMediaPlus = handleMediaPlus;
@@ -489,7 +491,7 @@ export default function ProfilePage() {
                                     <button className="text-btn" onClick={() => (window as any).cancelSkipWarning()} style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: '5px', width: 240 }}>RETURN TO SERVE</button>
                                 </div>
                                 <div id="uploadBtnContainer" style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 10, alignItems: 'center' }}>
-                                    <button id="uploadBtn" className="action-btn" style={{ width: 240, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: '#c5a059', fontWeight: 'bold', border: '1px solid #c5a059', boxShadow: '0 0 15px rgba(197,160,89,0.2)' }} onClick={() => (document.getElementById('taskEvidenceInput') as any)?.click()}>UPDATE TASK</button>
+                                    <button id="uploadBtn" className="action-btn" style={{ width: 240, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: '#c5a059', fontWeight: 'bold', border: '1px solid #c5a059', boxShadow: '0 0 15px rgba(197,160,89,0.2)' }} onClick={triggerTaskEvidencePick}>UPDATE TASK</button>
                                     <button id="btnSkip" onClick={() => (window as any).skipTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 240 }}>SKIP TASK</button>
                                 </div>
                                 <div id="skipConfirmContainer" style={{ display: 'none', flexDirection: 'column', gap: 10, marginTop: 10, alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.4)', background: 'rgba(20,0,0,0.8)', padding: '15px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
@@ -1139,7 +1141,7 @@ export default function ProfilePage() {
                                         <button className="text-btn" onClick={() => (window as any).cancelSkipWarning()} style={{ width: '100%', color: '#ccc', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: 1, background: 'none', border: 'none', padding: '5px' }}>RETURN TO SERVE</button>
                                     </div>
                                     <div id="mobUploadBtnContainer" style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '15px' }}>
-                                        <button id="mobBtnUpload" className="btn-upload-sm" onClick={() => document.getElementById('evidenceInputMob')?.click()}>UPLOAD TASK</button>
+                                        <button id="mobBtnUpload" className="btn-upload-sm" onClick={triggerTaskEvidencePick}>UPLOAD TASK</button>
                                         <button id="mobBtnSkip" className="btn-skip-sm" onClick={() => (window as any).mobileSkipTask()}>SKIP TASK</button>
                                     </div>
                                     <div id="mobSkipConfirmContainer" style={{ display: 'none', flexDirection: 'column', gap: 15, marginTop: 15, alignItems: 'center', background: 'rgba(20, 0, 0, 0.6)', border: '1px solid rgba(255, 0, 60, 0.4)', boxShadow: '0 0 20px rgba(255, 0, 60, 0.1)', backdropFilter: 'blur(10px)', padding: '25px', borderRadius: '12px', width: '100%' }}>
