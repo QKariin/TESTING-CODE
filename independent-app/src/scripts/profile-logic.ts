@@ -1454,7 +1454,13 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
 
         if (fileUrl === "failed") {
             console.error("Supabase upload returned 'failed'");
-            alert("Transmission failed. Cloud bucket connection error.");
+            if (readyText) { readyText.innerHTML = taskText; readyText.style.color = 'white'; }
+            if (mobTaskText) { mobTaskText.innerHTML = taskText; mobTaskText.style.color = 'white'; }
+            if (uploadCont) uploadCont.style.display = 'flex';
+            if (mobUploadCont) mobUploadCont.style.display = 'flex';
+            if (activeTimerRow) activeTimerRow.style.display = 'flex';
+            if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'flex';
+            showTaskFeedback("Upload failed — please try again.", 'var(--red)');
             return;
         }
 
