@@ -18,9 +18,10 @@ import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQ
 import { closeChatPreview } from '@/scripts/chat';
 
 // State & Actions
-import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail } from '@/scripts/dashboard-state';
+import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail, users } from '@/scripts/dashboard-state';
 import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
+import { renderSidebar } from '@/scripts/dashboard-sidebar';
 
 export default function DashboardPage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -208,9 +209,50 @@ export default function DashboardPage() {
         };
 
         loadLiveAction();
-        // Poll every 10 seconds — refreshes lastSeen, messages, tasks
+        // Poll every 10 seconds — refreshes lastSeen, tasks, and anything missed by realtime
         const pollInterval = setInterval(loadLiveAction, 10000);
-        return () => clearInterval(pollInterval);
+
+        // ── Supabase Realtime: instant push on new chat messages ──────────────
+        // Requires Realtime to be enabled for the 'chats' table in Supabase dashboard
+        const supabaseRt = createClient();
+        const realtimeChannel = supabaseRt
+            .channel('chats-admin-live')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'chats',
+            }, (payload: any) => {
+                const msg = payload.new;
+                if (!msg) return;
+
+                // Ignore messages sent by admin/Queen
+                const isQueenMsg = msg.metadata?.isQueen === true;
+                if (isQueenMsg) return;
+
+                const memberId = (msg.member_id || '').toLowerCase();
+                if (!memberId) return;
+
+                const msgTime = new Date(msg.created_at).getTime();
+
+                // Patch the user's lastMessageTime in state so sidebar lights up
+                const updatedUsers = users.map((u: any) => {
+                    const uid = (u.memberId || u.member_id || '').toLowerCase();
+                    if (uid === memberId) {
+                        return { ...u, lastMessageTime: Math.max(u.lastMessageTime || 0, msgTime) };
+                    }
+                    return u;
+                });
+                setUsers(updatedUsers);
+
+                // Re-render sidebar — sound + pink SVG glow handled inside renderSidebar
+                renderSidebar();
+            })
+            .subscribe();
+
+        return () => {
+            clearInterval(pollInterval);
+            supabaseRt.removeChannel(realtimeChannel);
+        };
     }, []);
 
     // ── MOBILE: render completely separate mobile dashboard ──────────────────

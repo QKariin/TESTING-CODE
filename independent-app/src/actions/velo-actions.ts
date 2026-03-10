@@ -809,21 +809,24 @@ export async function loadUserMessages(memberId: string) {
 }
 
 
-// --- 11b. UNREAD MESSAGE STATUS (for mobile dashboard notifications) ---
+// --- 11b. UNREAD MESSAGE STATUS (for dashboard notifications) ---
+// Queries the 'chats' table (same table used by /api/chat/send + /api/chat/history)
 export async function getUnreadMessageStatus(): Promise<Record<string, string>> {
     try {
-        // Get the most recent slave message per member_id
         const { data, error } = await supabaseAdmin
-            .from('messages')
-            .select('member_id, created_at, sender')
-            .in('sender', ['slave', 'user', 'sub'])
+            .from('chats')
+            .select('member_id, created_at, metadata')
             .order('created_at', { ascending: false });
         if (error || !data) return {};
-        // Keep only the latest message per member
+        // Keep only the latest user (non-admin) message per member
         const result: Record<string, string> = {};
         for (const row of data) {
-            if (row.member_id && !result[row.member_id]) {
-                result[row.member_id] = row.created_at;
+            if (!row.member_id) continue;
+            const key = row.member_id.toLowerCase();
+            if (result[key]) continue; // already have a newer one
+            const isQueenMsg = row.metadata?.isQueen === true;
+            if (!isQueenMsg) {
+                result[key] = row.created_at;
             }
         }
         return result;
