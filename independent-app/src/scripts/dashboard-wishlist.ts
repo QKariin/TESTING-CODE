@@ -226,10 +226,13 @@ export async function handleWishlistImageSelect(input: HTMLInputElement) {
             (document.getElementById('wishlistImgUrl') as HTMLInputElement).value = data.url;
             if (preview) preview.innerHTML = `<img src="${data.url}" style="width:100%;height:100%;object-fit:cover;">`;
         } else {
-            if (preview) preview.innerHTML = `<span style="color:#ff4444;font-family:'Orbitron';font-size:0.55rem;">UPLOAD FAILED</span>`;
+            const errMsg = data.error || 'Upload failed';
+            console.error('[wishlist/upload]', errMsg);
+            if (preview) preview.innerHTML = `<span style="color:#ff4444;font-family:'Orbitron';font-size:0.48rem;padding:8px;text-align:center;display:block;">${errMsg}</span>`;
         }
-    } catch {
-        if (preview) preview.innerHTML = `<span style="color:#ff4444;font-family:'Orbitron';font-size:0.55rem;">UPLOAD FAILED</span>`;
+    } catch (err: any) {
+        console.error('[wishlist/upload] network error', err);
+        if (preview) preview.innerHTML = `<span style="color:#ff4444;font-family:'Orbitron';font-size:0.48rem;">NETWORK ERROR</span>`;
     }
 }
 

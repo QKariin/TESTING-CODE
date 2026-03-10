@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,19 +9,44 @@ export async function POST(req: Request) {
         const file = formData.get('file') as File | null;
         if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
-        const ext = file.name.split('.').pop() || 'jpg';
-        const path = `wishlist/${Date.now()}.${ext}`;
-        const buffer = Buffer.from(await file.arrayBuffer());
+        // Validate it's an image
+        if (!file.type.startsWith('image/')) {
+            return NextResponse.json({ error: 'Only image files allowed' }, { status: 400 });
+        }
 
-        const { error } = await supabaseAdmin.storage
+        // Use a fresh admin client — avoids proxy issues with storage
+        const adminClient = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            { auth: { autoRefreshToken: false, persistSession: false } }
+        );
+
+        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const storagePath = `wishlist/${fileName}`;
+
+        // Upload the File object directly — more reliable than Buffer in serverless
+        const { error: uploadError } = await adminClient.storage
             .from('media')
-            .upload(path, buffer, { contentType: file.type, upsert: true });
+            .upload(storagePath, file, {
+                contentType: file.type,
+                upsert: false,
+            });
 
-        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        if (uploadError) {
+            console.error('[wishlist/upload] Supabase upload error:', uploadError);
+            return NextResponse.json({ error: uploadError.message }, { status: 500 });
+        }
 
-        const { data: urlData } = supabaseAdmin.storage.from('media').getPublicUrl(path);
+        const { data: urlData } = adminClient.storage
+            .from('media')
+            .getPublicUrl(storagePath);
+
+        console.log('[wishlist/upload] Success:', urlData.publicUrl);
         return NextResponse.json({ success: true, url: urlData.publicUrl });
+
     } catch (err: any) {
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        console.error('[wishlist/upload] Caught error:', err);
+        return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 });
     }
 }
