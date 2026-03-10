@@ -815,17 +815,18 @@ export async function getUnreadMessageStatus(): Promise<Record<string, string>> 
     try {
         const { data, error } = await supabaseAdmin
             .from('chats')
-            .select('member_id, created_at, metadata')
+            .select('member_id, created_at, metadata, type, sender_email')
             .order('created_at', { ascending: false });
         if (error || !data) return {};
-        // Keep only the latest user (non-admin) message per member
+        // Keep only the latest real user message per member — skip admin and system messages
         const result: Record<string, string> = {};
         for (const row of data) {
             if (!row.member_id) continue;
             const key = row.member_id.toLowerCase();
             if (result[key]) continue; // already have a newer one
             const isQueenMsg = row.metadata?.isQueen === true;
-            if (!isQueenMsg) {
+            const isSystemMsg = row.type === 'system' || (row.sender_email || '').toLowerCase() === 'system';
+            if (!isQueenMsg && !isSystemMsg) {
                 result[key] = row.created_at;
             }
         }
