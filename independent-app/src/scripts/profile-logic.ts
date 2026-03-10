@@ -2379,15 +2379,19 @@ export function selectRoutineItem(el: HTMLElement, type: string) {
 }
 
 async function _doProfileUpload() {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.email) return;
-
+    // iOS Safari blocks programmatic input.click() if called after any await.
+    // Solution: create input and click it synchronously first,
+    // then resolve the user email inside the onchange handler.
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
+    input.style.position = 'fixed';
+    input.style.top = '-9999px';
+    document.body.appendChild(input);
+
     input.onchange = async () => {
         const file = input.files?.[0];
+        document.body.removeChild(input);
         if (!file) return;
 
         const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
@@ -2396,10 +2400,19 @@ async function _doProfileUpload() {
         if (elHudPic) elHudPic.style.opacity = '0.5';
 
         try {
-            // Upload via server-side route (Supabase storage + DB update atomically)
+            // Get user email here (after file selected — async is fine now)
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user?.email) {
+                alert('Not logged in.');
+                if (elProfilePic) elProfilePic.style.opacity = '1';
+                if (elHudPic) elHudPic.style.opacity = '1';
+                return;
+            }
+
             const fd = new FormData();
             fd.append('file', file);
-            fd.append('memberEmail', user.email ?? '');
+            fd.append('memberEmail', user.email);
 
             const res = await fetch('/api/upload-avatar', { method: 'POST', body: fd });
             const data = await res.json();
@@ -2419,6 +2432,8 @@ async function _doProfileUpload() {
             alert('Photo upload failed: ' + (err.message || 'Unknown error'));
         }
     };
+
+    // Click synchronously — must happen within the user gesture on iOS
     input.click();
 }
 
