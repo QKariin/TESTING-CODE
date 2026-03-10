@@ -2183,4 +2183,135 @@
         padding: 4px 14px 14px;
         line-height: 1.5;
     }
+
+    /* ── EXCHEQUER MODAL ───────────────────────────────────────────────── */
+
+    /* Force it above everything — inline zIndex:2147483640 is overridden by !important */
+    #mobExchequer {
+        z-index: 2147483647 !important;
+    }
+
+    .lobby-card {
+        background: linear-gradient(160deg, rgba(8, 10, 24, 0.99) 0%, rgba(2, 5, 18, 1) 100%) !important;
+        border: 1px solid rgba(197, 160, 89, 0.35) !important;
+        box-shadow: 0 0 60px rgba(197, 160, 89, 0.12), 0 0 0 1px rgba(197, 160, 89, 0.06) !important;
+        padding: 28px 20px 22px !important;
+        gap: 18px !important;
+    }
+
+    .lobby-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .lobby-header::before {
+        content: '♛';
+        font-size: 1.6rem;
+        color: #c5a059;
+        filter: drop-shadow(0 0 10px rgba(197, 160, 89, 0.7));
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .lobby-title {
+        font-family: 'Cinzel', serif;
+        font-size: 1.3rem;
+        color: #c5a059;
+        letter-spacing: 6px;
+        text-transform: uppercase;
+        text-shadow: 0 0 20px rgba(197, 160, 89, 0.45);
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .lobby-header::after {
+        content: 'SELECT YOUR TRIBUTE';
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.48rem;
+        color: rgba(197, 160, 89, 0.45);
+        letter-spacing: 4px;
+        margin-top: 4px;
+    }
+
+    .coin-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .coin-tile {
+        background: linear-gradient(135deg, rgba(197, 160, 89, 0.1) 0%, rgba(197, 160, 89, 0.03) 100%);
+        border: 1px solid rgba(197, 160, 89, 0.3);
+        border-radius: 10px;
+        padding: 16px 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .coin-tile:active {
+        background: rgba(197, 160, 89, 0.2);
+        border-color: rgba(197, 160, 89, 0.7);
+        transform: scale(0.97);
+    }
+
+    .coin-amount {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #c5a059;
+        letter-spacing: 1px;
+        text-shadow: 0 0 10px rgba(197, 160, 89, 0.4);
+    }
+
+    .coin-amount::before {
+        content: '🪙 ';
+        font-size: 0.85rem;
+    }
+
+    .coin-price {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.6rem;
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 1px;
+        background: rgba(255, 255, 255, 0.04);
+        padding: 3px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .lobby-btn {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        padding: 13px 0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        -webkit-tap-highlight-color: transparent;
+        width: 100%;
+        outline: none;
+    }
+
+    .lobby-btn.close {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.35);
+    }
+
+    .lobby-btn.close:active {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.6);
+    }
 }
