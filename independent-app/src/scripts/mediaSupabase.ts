@@ -138,12 +138,19 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
 }
 
 async function uploadFileDirectly(bucketName: string, folderPath: string, file: File): Promise<string> {
-    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-    console.log(`[SupabaseStorage] Signed upload: ${file.name} (${sizeMB}MB)`);
+    const sizeMB = file.size / 1024 / 1024;
+    console.log(`[SupabaseStorage] Signed upload: ${file.name} (${sizeMB.toFixed(1)}MB)`);
+
+    // Hard size guard — Supabase free tier default is 50MB per file
+    if (sizeMB > 50) {
+        console.warn(`[SupabaseStorage] File too large: ${sizeMB.toFixed(1)}MB`);
+        return `failed:size:${sizeMB.toFixed(0)}MB`;
+    }
+
     try {
         const storagePath = `${folderPath}/${generateFilename(file)}`;
 
-        // 1. Request a signed upload URL from the backend (uses supabaseAdmin, no RLS)
+        // 1. Get signed upload URL from backend
         const signRes = await fetch('/api/upload/signed', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -158,8 +165,7 @@ async function uploadFileDirectly(bucketName: string, folderPath: string, file: 
 
         const { signedUrl, publicUrl } = await signRes.json();
 
-        // 2. Upload directly from browser using the signed URL — no serverless size limit
-        // Infer content-type from extension if MIME is empty (common on Android)
+        // 2. PUT directly to Supabase — infer content-type if empty (Android)
         const ext = file.name.split('.').pop()?.toLowerCase() || '';
         const mimeMap: Record<string, string> = {
             mp4: 'video/mp4', mov: 'video/quicktime', avi: 'video/x-msvideo',
@@ -167,6 +173,7 @@ async function uploadFileDirectly(bucketName: string, folderPath: string, file: 
             '3gp': 'video/3gpp', hevc: 'video/mp4',
         };
         const contentType = file.type || mimeMap[ext] || 'video/mp4';
+
         const uploadRes = await fetch(signedUrl, {
             method: 'PUT',
             headers: { 'Content-Type': contentType },
@@ -174,14 +181,19 @@ async function uploadFileDirectly(bucketName: string, folderPath: string, file: 
         });
 
         if (!uploadRes.ok) {
-            console.error('[SupabaseStorage] Signed upload PUT failed:', uploadRes.status);
+            const body = await uploadRes.text().catch(() => '');
+            console.error(`[SupabaseStorage] PUT failed ${uploadRes.status}:`, body);
+            // Supabase returns 413 when file exceeds bucket size limit
+            if (uploadRes.status === 413 || body.includes('Payload Too Large') || body.includes('size')) {
+                return `failed:size:${sizeMB.toFixed(0)}MB`;
+            }
             return 'failed';
         }
 
-        console.log('[SupabaseStorage] Video signed upload success:', publicUrl);
+        console.log('[SupabaseStorage] Video upload success:', publicUrl);
         return publicUrl;
     } catch (err: any) {
-        console.error('[SupabaseStorage] Video signed upload exception:', err.message);
+        console.error('[SupabaseStorage] Video upload exception:', err.message);
         return 'failed';
     }
 }

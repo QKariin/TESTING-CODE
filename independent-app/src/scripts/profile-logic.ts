@@ -1452,15 +1452,20 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         const fileUrl = await uploadToSupabase("media", folder, file);
         console.log("Supabase Upload Result:", fileUrl);
 
-        if (fileUrl === "failed") {
-            console.error("Supabase upload returned 'failed'");
+        if (!fileUrl || fileUrl.startsWith("failed")) {
+            const isSizeError = fileUrl?.startsWith("failed:size");
+            const sizeVal = isSizeError ? fileUrl.split(':')[2] : null;
+            const msg = isSizeError
+                ? `Video too large (${sizeVal}). Maximum is 50MB. Please trim or compress the video before uploading.`
+                : "Upload failed — please try again.";
+
             if (readyText) { readyText.innerHTML = taskText; readyText.style.color = 'white'; }
             if (mobTaskText) { mobTaskText.innerHTML = taskText; mobTaskText.style.color = 'white'; }
             if (uploadCont) uploadCont.style.display = 'flex';
             if (mobUploadCont) mobUploadCont.style.display = 'flex';
             if (activeTimerRow) activeTimerRow.style.display = 'flex';
             if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'flex';
-            showTaskFeedback("Upload failed — please try again.", 'var(--red)');
+            showTaskFeedback(msg, 'var(--red)');
             return;
         }
 
