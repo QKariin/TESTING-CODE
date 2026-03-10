@@ -76,10 +76,33 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
     console.log(`[SupabaseStorage] Starting upload to ${bucketName}/${folderPath}... type=${file.type} size=${file.size}`);
 
     try {
-        // All files go through signed URL path — bypasses Vercel 4.5MB body limit entirely
-        // Videos skip compression, images get compressed first
-        const processedFile = file.type.startsWith('video/') ? file : await compressImage(file);
-        return await uploadFileDirectly(bucketName, folderPath, processedFile);
+        // Videos: signed URL direct upload — bypasses 4.5MB Vercel body limit
+        if (file.type.startsWith('video/')) {
+            return await uploadFileDirectly(bucketName, folderPath, file);
+        }
+
+        // Images: compress then proxy through API route (supabaseAdmin, bypasses RLS)
+        const processedFile = await compressImage(file);
+
+        const formData = new FormData();
+        formData.append('file', processedFile);
+        formData.append('bucket', bucketName);
+        formData.append('folder', folderPath);
+
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({ error: 'Unknown server error' }));
+            console.error("[SupabaseStorage] Proxy Error Status:", response.status, errData);
+            throw new Error(errData.error || `Upload failed (${response.status})`);
+        }
+
+        const data = await response.json();
+        console.log(`[SupabaseStorage] Proxy success:`, data.url);
+        return data.url;
 
     } catch (err: any) {
         console.error("[SupabaseStorage] Upload Failed:", err.message);
