@@ -4556,6 +4556,109 @@ h3,
     margin-bottom: 20px;
     text-align: center;
 }
+/* ── Dashboard Service / System Log ─────────────────────────────────── */
+.dash-system-ticker {
+    width: 100%;
+    padding: 7px 14px;
+    background: #080808;
+    border-top: 1px solid rgba(197,160,89,0.12);
+    border-bottom: 1px solid rgba(197,160,89,0.12);
+    color: #c5a059;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.58rem;
+    text-align: center;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.dash-system-ticker:hover {
+    background: rgba(197,160,89,0.06);
+}
+.dash-system-ticker.ticker-flash {
+    animation: dash-ticker-flash 0.5s ease-out;
+}
+@keyframes dash-ticker-flash {
+    0%   { background: rgba(197,160,89,0.25); color: #fff; }
+    100% { background: #080808; color: #c5a059; }
+}
+
+/* Overlay — sits on top of adminChatBox */
+.dash-syslog-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 52px; /* keep footer visible */
+    background: rgba(4,4,4,0.97);
+    border: 1px solid rgba(197,160,89,0.25);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.dash-syslog-container.hidden { display: none !important; }
+
+.dash-syslog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    background: rgba(197,160,89,0.04);
+    border-bottom: 1px solid rgba(197,160,89,0.2);
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    color: #c5a059;
+    letter-spacing: 2px;
+    flex-shrink: 0;
+}
+.dash-syslog-close {
+    background: none;
+    border: none;
+    color: rgba(197,160,89,0.6);
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 2px;
+}
+.dash-syslog-close:hover { color: #c5a059; }
+
+.dash-syslog-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.dash-syslog-entry {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255,255,255,0.02);
+    border-left: 2px solid #c5a059;
+    padding: 9px 14px;
+    border-radius: 0 6px 6px 0;
+}
+.dash-syslog-text {
+    font-family: 'Cinzel', serif;
+    color: #c5a059;
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+.dash-syslog-time {
+    font-family: 'Orbitron', sans-serif;
+    color: rgba(255,255,255,0.25);
+    font-size: 0.55rem;
+    margin-top: 5px;
+    letter-spacing: 1px;
+}
+
 /* ── Dashboard Chat Bubbles (matches profile design) ────────────────── */
 #adminChatBox {
     padding: 16px 10px 12px;

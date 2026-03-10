@@ -13,6 +13,64 @@ const purifier = (typeof window !== 'undefined' && (window as any).DOMPurify) ||
 let chatChannel: any = null;
 let lastChatMsgId: string | null = null;
 
+// ── Service / System message helpers ────────────────────────────────────────
+
+function isSystemMessage(msg: any): boolean {
+    if (!msg) return false;
+    const sender = (msg.sender_email || msg.sender || '').toLowerCase();
+    const content = (msg.content || msg.message || '').toUpperCase();
+    return sender === 'system' ||
+        content.includes('COINS RECEIVED') ||
+        content.includes('TASK APPROVED') ||
+        content.includes('POINTS RECEIVED') ||
+        content.includes('TASK REJECTED') ||
+        content.includes('TASK VERIFIED');
+}
+
+function getSystemLogHtml(msg: any): string {
+    const d = new Date(msg.created_at || msg._createdDate || Date.now());
+    const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const content = msg.content || msg.message || '';
+    return `<div class="dash-syslog-entry">
+        <span class="dash-syslog-text">${content}</span>
+        <span class="dash-syslog-time">${dateStr} · ${timeStr}</span>
+    </div>`;
+}
+
+function updateSystemTicker(msg: any) {
+    if (!msg) return;
+    const content = msg.content || msg.message || '';
+    const el = document.getElementById('dashSystemTicker');
+    if (el) {
+        el.innerHTML = `<span style="color:#fff;">◈</span> ${content}`;
+        el.classList.remove('ticker-flash');
+        void (el as HTMLElement).offsetWidth;
+        el.classList.add('ticker-flash');
+    }
+}
+
+export function toggleDashSystemLog() {
+    const d = document.getElementById('dashSystemLogContainer');
+    if (!d) return;
+    const isHidden = d.style.display === 'none' || d.classList.contains('hidden');
+    if (isHidden) {
+        d.classList.remove('hidden');
+        d.style.display = 'flex';
+    } else {
+        d.classList.add('hidden');
+        d.style.display = 'none';
+    }
+}
+
+function appendToSystemLog(msg: any) {
+    const logEl = document.getElementById('dashSystemLogContent');
+    if (!logEl) return;
+    logEl.insertAdjacentHTML('beforeend', getSystemLogHtml(msg));
+    logEl.scrollTop = logEl.scrollHeight;
+    updateSystemTicker(msg);
+}
+
 /**
  * Initializes the chat listener for a specific user (Slave).
  * Called when a user is selected in the sidebar.
@@ -82,7 +140,21 @@ async function loadDashboardChatHistory(email: string) {
                 lastChatMsgId = msgs[msgs.length - 1].id;
             }
 
-            const html = msgs.map((m: any) => renderToHtml(m)).join('');
+            // Split: system messages → log panel, chat messages → chat box
+            const sysMsgs = msgs.filter((m: any) => isSystemMessage(m));
+            const chatMsgs = msgs.filter((m: any) => !isSystemMessage(m));
+
+            // Populate system log
+            const logEl = document.getElementById('dashSystemLogContent');
+            if (logEl) {
+                logEl.innerHTML = sysMsgs.map((m: any) => getSystemLogHtml(m)).join('');
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+            // Update ticker with most recent system message
+            if (sysMsgs.length > 0) updateSystemTicker(sysMsgs[sysMsgs.length - 1]);
+
+            // Populate chat
+            const html = chatMsgs.map((m: any) => renderToHtml(m)).join('');
             const b = document.getElementById('adminChatBox');
             if (b) {
                 b.innerHTML = html + '<div id="chat-anchor" style="height:1px;"></div>';
@@ -95,12 +167,18 @@ async function loadDashboardChatHistory(email: string) {
 }
 
 function appendChatMessage(msg: any) {
-    const b = document.getElementById('adminChatBox');
-    if (!b) return;
-
     // Prevent duplicates from instant-append + realtime sync
     if (msg.id && msg.id === lastChatMsgId) return;
     lastChatMsgId = msg.id;
+
+    // System message → route to log panel, update ticker
+    if (isSystemMessage(msg)) {
+        appendToSystemLog(msg);
+        return;
+    }
+
+    const b = document.getElementById('adminChatBox');
+    if (!b) return;
 
     const html = renderToHtml(msg);
     const anchor = document.getElementById('chat-anchor');
@@ -331,4 +409,5 @@ if (typeof window !== 'undefined') {
     (window as any).sendMsg = sendMsg;
     (window as any).handleAdminUpload = handleAdminUpload;
     (window as any).triggerAdminMediaPick = triggerAdminMediaPick;
+    (window as any).toggleDashSystemLog = toggleDashSystemLog;
 }

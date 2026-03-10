@@ -110,6 +110,7 @@ export default function DashboardPage() {
             (window as any).deleteQueenPost = deleteQueenPost;
             (window as any).loadQueenPostsDashboard = loadQueenPostsDashboard;
             (window as any).closeChatPreview = closeChatPreview;
+            (window as any).toggleDashSystemLog = () => import('@/scripts/dashboard-chat').then(m => m.toggleDashSystemLog());
 
             // Mobile nav controller
             (window as any).mobNav = (tab: string) => {
@@ -636,6 +637,21 @@ export default function DashboardPage() {
                                     </div>
 
                                 </div>
+                            </div>
+
+                            {/* SYSTEM TICKER — click to open service log */}
+                            <div id="dashSystemTicker" className="dash-system-ticker"
+                                onClick={() => (window as any).toggleDashSystemLog()}>
+                                SYSTEM ONLINE
+                            </div>
+
+                            {/* SYSTEM LOG OVERLAY — covers chat area */}
+                            <div id="dashSystemLogContainer" className="dash-syslog-container hidden" style={{ display: 'none' }}>
+                                <div className="dash-syslog-header">
+                                    <span>SYSTEM LOGS</span>
+                                    <button className="dash-syslog-close" onClick={() => (window as any).toggleDashSystemLog()}>&times;</button>
+                                </div>
+                                <div id="dashSystemLogContent" className="dash-syslog-body"></div>
                             </div>
 
                             <div className="c-body" id="adminChatBox" style={{ flex: 1, borderTop: '1px solid rgba(197,160,89,0.2)' }}></div>
