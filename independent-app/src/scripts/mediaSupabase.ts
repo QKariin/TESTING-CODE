@@ -111,30 +111,43 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
 }
 
 async function uploadVideoDirectly(bucketName: string, folderPath: string, file: File): Promise<string> {
-    console.log(`[SupabaseStorage] Video upload via admin proxy: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+    console.log(`[SupabaseStorage] Video signed upload: ${file.name} (${sizeMB}MB)`);
     try {
-        // Use the admin API route — supabaseAdmin bypasses RLS, File uploaded directly (no Buffer)
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('bucket', bucketName);
-        formData.append('folder', folderPath);
+        const ext = file.name.split('.').pop() || 'mp4';
+        const storagePath = `${folderPath}/${generateFilename(file)}`;
 
-        const response = await fetch('/api/upload', {
+        // 1. Request a signed upload URL from the backend (uses supabaseAdmin, no RLS)
+        const signRes = await fetch('/api/upload/signed', {
             method: 'POST',
-            body: formData,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bucket: bucketName, path: storagePath }),
         });
 
-        if (!response.ok) {
-            const errData = await response.json().catch(() => ({ error: 'Unknown error' }));
-            console.error('[SupabaseStorage] Video proxy error:', response.status, errData);
+        if (!signRes.ok) {
+            const err = await signRes.json().catch(() => ({}));
+            console.error('[SupabaseStorage] Failed to get signed URL:', err);
             return 'failed';
         }
 
-        const data = await response.json();
-        console.log('[SupabaseStorage] Video upload success:', data.url);
-        return data.url;
+        const { signedUrl, publicUrl } = await signRes.json();
+
+        // 2. Upload directly from browser using the signed URL — no serverless size limit
+        const uploadRes = await fetch(signedUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type },
+            body: file,
+        });
+
+        if (!uploadRes.ok) {
+            console.error('[SupabaseStorage] Signed upload PUT failed:', uploadRes.status);
+            return 'failed';
+        }
+
+        console.log('[SupabaseStorage] Video signed upload success:', publicUrl);
+        return publicUrl;
     } catch (err: any) {
-        console.error('[SupabaseStorage] Video upload exception:', err.message);
+        console.error('[SupabaseStorage] Video signed upload exception:', err.message);
         return 'failed';
     }
 }
