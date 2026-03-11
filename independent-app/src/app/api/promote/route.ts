@@ -51,7 +51,7 @@ export async function POST(req: Request) {
             profilePicture: finalPic,
             // stats — normalize column name variants
             taskdom_completed_tasks: Number(taskData?.['Taskdom_CompletedTasks'] || 0),
-            total_coins_spent:       tributeTotal || Number(profile.total_coins_spent || profileParams.total_coins_spent || 0),
+            total_coins_spent:       tributeTotal || Number(profileParams.wishlist_spent || 0),
             kneelCount:              Number(taskData?.kneelCount || profile.kneelCount || profileParams.kneel_count || 0),
             score:                   Number(taskData?.Score ?? taskData?.score ?? profile.score ?? 0),
             bestRoutinestreak:       Number(profile.bestRoutinestreak || profileParams.routine_streak || profileParams.bestRoutinestreak || 0),

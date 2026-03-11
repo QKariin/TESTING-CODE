@@ -55,7 +55,7 @@ export async function GET() {
         if (amount === 0) {
             let params: any = {};
             try { params = typeof prof.parameters === 'string' ? JSON.parse(prof.parameters) : (prof.parameters || {}); } catch { }
-            amount = parseNum(params.total_coins_spent);
+            amount = parseNum(params.wishlist_spent);
         }
         if (amount > 0) spenders.push({ ...base, amount });
 

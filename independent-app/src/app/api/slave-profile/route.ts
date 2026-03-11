@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
             kneelHistory: p.kneel_history || t.kneel_history || {},
             // Computed hierarchy fields
             taskdom_completed_tasks: Number(t?.['Taskdom_CompletedTasks'] || 0),
-            total_coins_spent: tributeTotal,
+            total_coins_spent: tributeTotal || Number(params.wishlist_spent || 0),
             bestRoutinestreak: routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0),
             routinestreak: Number(p.routinestreak || params.taskdom_current_streak || 0),
             routineHistory: history,

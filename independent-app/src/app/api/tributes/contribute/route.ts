@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         const params = profile.parameters || {};
         const newParams = {
             ...params,
-            total_coins_spent: (params.total_coins_spent || 0) + contributionAmount,
+            wishlist_spent: (Number(params.wishlist_spent) || 0) + contributionAmount,
             last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: contributionAmount }
         };
 

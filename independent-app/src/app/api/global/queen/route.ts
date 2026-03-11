@@ -12,7 +12,7 @@ export async function GET() {
     const totalTribute = (profiles || []).reduce((sum: number, p: any) => {
         let params: any = {};
         try { params = typeof p.parameters === 'string' ? JSON.parse(p.parameters) : (p.parameters || {}); } catch {}
-        return sum + parseInt(params.total_coins_spent || 0);
+        return sum + parseInt(params.wishlist_spent || 0);
     }, 0);
 
     return NextResponse.json({

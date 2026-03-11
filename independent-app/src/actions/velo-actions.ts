@@ -132,13 +132,7 @@ function mapUserForDashboard(p: any, t: any) {
 
         // Hierarchy specific mappings
         taskdom_completed_tasks: Number(t?.Taskdom_CompletedTasks || 0),
-        total_coins_spent: (() => {
-            try {
-                const raw = t?.['Tribute History'];
-                const arr: any[] = typeof raw === 'string' ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
-                return arr.reduce((sum, e) => sum + (e.amount < 0 ? Math.abs(e.amount) : 0), 0);
-            } catch { return 0; }
-        })(),
+        total_coins_spent: Number(params.wishlist_spent || 0),
         bestRoutinestreak: (() => {
             const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
             return routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0);
@@ -475,11 +469,6 @@ export async function processCoinTransaction(memberId: string, amount: number, r
             wallet: currentWallet + amount
         };
 
-        // Track Spent
-        if (amount < 0) {
-            updates.total_coins_spent = (profile.total_coins_spent || 0) + Math.abs(amount);
-        }
-
         // Log Transaction (reward_vault or parameters.tributeHistory)
         // Schema says 'reward_vault'. Let's use that or add a specific history param.
         // Velo used 'tributeHistory'. Let's stick to parameters or a JSONB column.
@@ -536,7 +525,6 @@ export async function updateProfileAction(memberId: string, data: any) {
 
         let updates: any = {
             wallet: (profile.wallet || 0) - cost,
-            total_coins_spent: (profile.total_coins_spent || 0) + cost
         };
 
         if (data.name) updates.title = data.name; // Mapping title -> name? Schema has 'name', Velo has 'title'

@@ -592,7 +592,7 @@ if (typeof window !== 'undefined') {
                 const { raw } = getState();
                 const updatedParams = {
                     ...(raw?.parameters || {}),
-                    total_coins_spent: (raw?.parameters?.total_coins_spent || 0) + amount,
+                    wishlist_spent: (Number(raw?.parameters?.wishlist_spent) || 0) + amount,
                     last_tribute: { at: new Date().toISOString(), title, amount }
                 };
                 const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams };
@@ -660,7 +660,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
             const { raw } = getState();
             const updatedParams = {
                 ...(raw?.parameters || {}),
-                total_coins_spent: (raw?.parameters?.total_coins_spent || 0) + cost,
+                wishlist_spent: (Number(raw?.parameters?.wishlist_spent) || 0) + cost,
                 last_tribute: { at: new Date().toISOString(), title, amount: cost }
             };
             const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams };

@@ -20,7 +20,7 @@ export async function GET() {
     const entries: SpenderEntry[] = (profiles || []).map((p: any) => {
         let params: any = {};
         try { params = typeof p.parameters === 'string' ? JSON.parse(p.parameters) : (p.parameters || {}); } catch { }
-        const totalSpent = parseInt(params.total_coins_spent || 0);
+        const totalSpent = parseInt(params.wishlist_spent || 0);
         return {
             email: p.email,
             name: p.name || p.email?.split('@')[0] || 'SUBJECT',

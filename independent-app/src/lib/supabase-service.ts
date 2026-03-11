@@ -135,18 +135,6 @@ export const DbService = {
         // Safely execute the update
         const updates: any = { wallet: newWallet };
 
-        // Increment total_coins_spent in JSONB parameters
-        if (amount < 0) {
-            const params = { ...(profile.parameters || {}) };
-            params.total_coins_spent = (params.total_coins_spent || 0) + Math.abs(amount);
-            updates.parameters = params;
-
-            // Also update legacy column if it exists in the row
-            if (profile.hasOwnProperty('total_coins_spent')) {
-                updates.total_coins_spent = (profile.total_coins_spent || 0) + Math.abs(amount);
-            }
-        }
-
         return this.updateProfile(profile.id, updates);
     },
 
