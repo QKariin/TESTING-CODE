@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
             lastWorship: t.lastWorship || p.lastWorship || null,
             kneelHistory: p.kneel_history || t.kneel_history || {},
             // Computed hierarchy fields
-            taskdom_completed_tasks: Number(t?.['Taskdom_CompletedTasks'] || params.taskdom_completed_tasks || 0),
+            taskdom_completed_tasks: Number(t?.['Taskdom_CompletedTasks'] || 0),
             total_coins_spent: tributeTotal,
             bestRoutinestreak: routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0),
             routinestreak: Number(p.routinestreak || params.taskdom_current_streak || 0),

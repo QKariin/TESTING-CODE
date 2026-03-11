@@ -131,7 +131,7 @@ function mapUserForDashboard(p: any, t: any) {
         lastSeen: p.last_active,
 
         // Hierarchy specific mappings
-        taskdom_completed_tasks: Number(t?.Taskdom_CompletedTasks || params.taskdom_completed_tasks || 0),
+        taskdom_completed_tasks: Number(t?.Taskdom_CompletedTasks || 0),
         total_coins_spent: (() => {
             try {
                 const raw = t?.['Tribute History'];
@@ -700,7 +700,6 @@ export async function reviewTaskAction(memberId: string, decision: 'approve' | '
             let params = profile.parameters || {};
 
             if (decision === 'approve') {
-                params.taskdom_completed_tasks = (params.taskdom_completed_tasks || 0) + 1;
                 params.taskdom_current_streak = (params.taskdom_current_streak || 0) + 1;
             } else if (decision === 'reject') {
                 params.taskdom_current_streak = 0;
@@ -910,9 +909,7 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
             // Update stats based on decision
             if (decision === 'approve') {
                 updates.wallet = (Number(profile.wallet) || 0) + 10;
-
-                params.taskdom_completed_tasks = (Number(params.taskdom_completed_tasks) || 0) + 1;
-                params.taskdom_streak = (Number(params.taskdom_streak) || 0) + 1; // Velo used Taskdom_Streak
+                params.taskdom_streak = (Number(params.taskdom_streak) || 0) + 1;
             } else {
                 params.taskdom_streak = 0;
             }
@@ -922,6 +919,12 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
             const historyItem = { ...task, status: decision, reviewedAt: new Date().toISOString() };
             history.unshift(historyItem);
             queue.splice(index, 1);
+
+            // Recount approved tasks (self-heals any prior corruption)
+            if (decision === 'approve') {
+                const approvedCount = history.filter((t: any) => t.status === 'approve' && t.type !== 'routine').length;
+                taskUpdates['Taskdom_CompletedTasks'] = String(approvedCount);
+            }
 
             // Save back
             taskUpdates.taskQueue = JSON.stringify(queue);
@@ -986,7 +989,6 @@ export async function secureUpdateProfileStats(memberId: string, type: 'skipped'
         } else if (type === "completed") {
             params.taskdom_total_tasks++;
             params.taskdom_current_streak++;
-            params.taskdom_completed_tasks++;
         } else if (type === "approved") {
             params.taskdom_approved_tasks++;
         } else if (type === "rejected") {

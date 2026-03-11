@@ -298,7 +298,10 @@ export const DbService = {
         }
 
         const newWallet = (row?.Wallet || 0) + bonus;
-        const newCompleted = (row?.Taskdom_CompletedTasks || 0) + 1;
+        // Recount from history to self-heal any prior corruption (avoids TEXT string-concat bug)
+        const approvedCount = history.filter((t: any) =>
+            t.status === 'approve' && t.type !== 'routine'
+        ).length;
 
         await supabaseAdmin
             .from('tasks')
@@ -306,22 +309,18 @@ export const DbService = {
                 'Taskdom_History': JSON.stringify(history),
                 'Status': 'approve',
                 'Wallet': newWallet,
-                'Taskdom_CompletedTasks': newCompleted
+                'Taskdom_CompletedTasks': String(approvedCount)
             })
             .eq('member_id', profileId);
 
         // 2. Award points via centralized function (updates Score + all period scores + profiles.score)
         await this.awardPoints(profileId, bonus);
 
-        // 3. Sync wallet + parameters with profiles table
+        // 3. Sync wallet with profiles table
         const profile = await this.getProfile(profileId);
         if (profile && profile.id) {
             await this.updateProfile(profile.id, {
                 wallet: (profile.wallet || 0) + bonus,
-                parameters: {
-                    ...(profile.parameters || {}),
-                    taskdom_completed_tasks: (profile.parameters?.taskdom_completed_tasks || 0) + 1
-                }
             });
         }
 
