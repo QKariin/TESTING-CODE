@@ -1463,12 +1463,20 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
                 ? `Video too large (${sizeVal}). Maximum is 50MB. Please trim or compress the video before uploading.`
                 : "Upload failed — please try again.";
 
-            if (readyText) { readyText.innerHTML = taskText; readyText.style.color = 'white'; }
-            if (mobTaskText) { mobTaskText.innerHTML = taskText; mobTaskText.style.color = 'white'; }
-            if (uploadCont) uploadCont.style.display = 'flex';
-            if (mobUploadCont) mobUploadCont.style.display = 'flex';
-            if (activeTimerRow) activeTimerRow.style.display = 'flex';
-            if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'flex';
+            if (!isRoutine) {
+                const readyText = document.getElementById('readyText');
+                const mobTaskText = document.getElementById('mobTaskText');
+                const uploadCont = document.getElementById('uploadBtnContainer');
+                const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+                const activeTimerRow = document.getElementById('activeTimerRow');
+                const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
+                if (readyText) { readyText.innerHTML = taskText; readyText.style.color = 'white'; }
+                if (mobTaskText) { mobTaskText.innerHTML = taskText; mobTaskText.style.color = 'white'; }
+                if (uploadCont) uploadCont.style.display = 'flex';
+                if (mobUploadCont) mobUploadCont.style.display = 'flex';
+                if (activeTimerRow) activeTimerRow.style.display = 'flex';
+                if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'flex';
+            }
             showTaskFeedback(msg, 'var(--red)');
             return;
         }
