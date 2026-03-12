@@ -77,9 +77,11 @@ export async function GET(req: NextRequest) {
         // 4. Assign it efficiently reusing our profile fetch
         const activeTaskPayload = { ...randomTask, assigned_at: new Date().toISOString() };
 
-        await supabaseAdmin.from('tasks').update({
+        await supabaseAdmin.from('tasks').upsert({
+            member_id: profile.member_id || memberEmail,
+            Name: profile.name || memberEmail,
             taskdom_active_task: JSON.stringify(activeTaskPayload)
-        }).eq('member_id', profile.member_id || memberEmail);
+        }, { onConflict: 'member_id' });
 
         return NextResponse.json({
             success: true,

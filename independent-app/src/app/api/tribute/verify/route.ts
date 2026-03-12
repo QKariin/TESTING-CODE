@@ -58,6 +58,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
+        // Create tasks row so task assignment works immediately
+        await supabaseAdmin
+            .from('tasks')
+            .insert({
+                member_id: identifier,
+                Name: displayName,
+                Status: 'idle',
+                Taskdom_History: '[]',
+                taskdom_active_task: null,
+                taskdom_pending_state: null,
+            });
+
         return NextResponse.json({ success: true, created: true, identifier });
     } catch (err: any) {
         console.error('Verify tribute error:', err);

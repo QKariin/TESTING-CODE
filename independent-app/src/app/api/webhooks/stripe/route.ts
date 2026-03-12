@@ -65,6 +65,18 @@ export async function POST(req: Request) {
                         parameters: { devotion: 100 }
                     });
 
+                // Create tasks row so task assignment works immediately
+                await supabaseAdmin
+                    .from('tasks')
+                    .insert({
+                        member_id: userEmail,
+                        Name: userName,
+                        Status: 'idle',
+                        Taskdom_History: '[]',
+                        taskdom_active_task: null,
+                        taskdom_pending_state: null,
+                    });
+
                 console.log(`✅ Account Created as Hall Boy.`);
             } else if (metadata.coinsToAdd) {
                 const coins = parseInt(metadata.coinsToAdd, 10);
