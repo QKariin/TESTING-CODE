@@ -1,16 +1,13 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
+import '@/css/tribute.css';
 
 export default function TributePage() {
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
     const [status, setStatus] = useState<string | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
-
-    // Supabase client instance will be created lazily to prevent prerender crashes
 
     useEffect(() => {
         const fetchUserAndCheck = async () => {
@@ -38,19 +35,15 @@ export default function TributePage() {
                 body: JSON.stringify({ type: 'entrance_tribute' })
             });
             const data = await response.json();
-            if (data.url) {
-                window.location.href = data.url;
-            }
-        } catch (error) {
-            console.error('Tribute failed:', error);
-            setStatus("CONECTION ERROR. TRY AGAIN.");
+            if (data.url) window.location.href = data.url;
+        } catch {
+            setStatus('Connection error. Try again.');
         } finally {
             setLoading(false);
         }
     };
 
     const handleLogout = async () => {
-        // This now uses the correct client to clear the cookie
         const supabase = createClient();
         await supabase.auth.signOut();
         window.location.href = '/login';
@@ -58,146 +51,62 @@ export default function TributePage() {
 
     const handleRefresh = async () => {
         setLoading(true);
-        setStatus("SCANNING CORE DATABASE...");
+        setStatus('Scanning records...');
         try {
             const res = await fetch('/api/auth/link-profile', { method: 'POST' });
             const data = await res.json();
-
             if (data.success && data.linked) {
-                setStatus("PROFILE LOCATED. REDIRECTING...");
-                setTimeout(() => {
-                    window.location.href = '/profile';
-                }, 1500);
+                setStatus('Profile located. Redirecting...');
+                setTimeout(() => { window.location.href = '/profile'; }, 1500);
             } else {
-                setStatus(data.message === "No profile found to link" ? "NO LEGACY PROFILE FOUND FOR THIS EMAIL." : null);
+                setStatus(data.message === 'No profile found to link' ? 'No record found.' : null);
                 setLoading(false);
             }
-        } catch (err) {
-            console.error("Refresh failed", err);
-            setStatus("SCAN FAILED. TRY AGAIN.");
+        } catch {
+            setStatus('Scan failed. Try again.');
             setLoading(false);
         }
     };
 
     return (
         <div className="tribute-container">
-            <style jsx>{`
-                .tribute-container {
-                    min-height: 100vh;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    background: radial-gradient(circle at center, #1a1a1a 0%, #050505 100%);
-                    color: #c5a059;
-                    font-family: 'Cinzel', serif;
-                    text-align: center;
-                    padding: 20px;
-                }
-                .card {
-                    background: rgba(10, 10, 10, 0.9);
-                    border: 1px solid rgba(197, 160, 89, 0.2);
-                    padding: 60px 40px;
-                    max-width: 500px;
-                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(197, 160, 89, 0.05);
-                    backdrop-filter: blur(20px);
-                    border-radius: 4px;
-                    position: relative;
-                }
-                h1 {
-                    letter-spacing: 8px;
-                    margin-bottom: 25px;
-                    font-size: 2.22rem;
-                    color: #fff;
-                    text-shadow: 0 0 15px rgba(255,255,255,0.1);
-                }
-                p {
-                    font-family: 'Rajdhani', sans-serif;
-                    color: rgba(255,255,255,0.6);
-                    font-size: 1rem;
-                    line-height: 1.8;
-                    margin-bottom: 45px;
-                    letter-spacing: 1.5px;
-                    text-transform: uppercase;
-                }
-                .tribute-btn {
-                    background: #c5a059;
-                    color: #000;
-                    border: none;
-                    padding: 18px 50px;
-                    font-family: 'Cinzel', serif;
-                    font-weight: 900;
-                    letter-spacing: 4px;
-                    cursor: pointer;
-                    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-                    width: 100%;
-                    margin-bottom: 20px;
-                }
-                .tribute-btn:hover {
-                    background: #fff;
-                    transform: translateY(-2px);
-                    box-shadow: 0 10px 30px rgba(255,255,255,0.2);
-                }
-                .secondary-actions {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 15px;
-                    margin-top: 20px;
-                }
-                .text-link {
-                    background: none;
-                    border: none;
-                    color: rgba(197, 160, 89, 0.6);
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 0.7rem;
-                    letter-spacing: 2px;
-                    cursor: pointer;
-                    text-decoration: none;
-                    transition: color 0.3s;
-                }
-                .text-link:hover {
-                    color: #fff;
-                }
-                .logout-btn {
-                    margin-top: 30px;
-                }
-                .status-msg {
-                    margin-top: 20px;
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 0.8rem;
-                    color: #fff;
-                    letter-spacing: 2px;
-                    height: 20px;
-                }
-            `}</style>
+            <div className="tribute-bg" />
+            <div className="tribute-overlay" />
 
-            <div className="card">
-                <h1>ENTRANCE TRIBUTE</h1>
-                <p>
-                    The gates are locked.
-                    Your current identity has no recorded history in the command console.
-                    {userEmail && <div style={{ color: '#fff', fontSize: '0.9rem', margin: '15px 0', border: '1px dashed rgba(197, 160, 89, 0.3)', padding: '10px' }}>LOGGED IN AS: <br /><strong>{userEmail}</strong></div>}
-                    Initialize your station with a one-time tribute to proceed.
+            <div className="tribute-card">
+                <div className="tribute-crown">✦</div>
+                <h1>Queen Karin</h1>
+                <p className="tribute-subtitle">Entrance Tribute Required</p>
+
+                <p className="tribute-desc">
+                    The gates are locked.<br />
+                    Your identity holds no record in the command console.<br />
+                    A one-time tribute is required to proceed.
                 </p>
 
-                <button
-                    className="tribute-btn"
-                    onClick={handleTribute}
-                    disabled={loading}
-                >
-                    {loading ? "INITIALIZING..." : "SEND TRIBUTE"}
+                {userEmail && (
+                    <div className="tribute-identity">
+                        Logged in as
+                        <strong>{userEmail}</strong>
+                    </div>
+                )}
+
+                <button className="tribute-btn" onClick={handleTribute} disabled={loading}>
+                    {loading ? 'Initializing...' : 'Send Tribute'}
                 </button>
 
-                <div className="secondary-actions">
-                    <button className="text-link" onClick={handleRefresh} disabled={loading}>
-                        ALREADY PAID? RE-CHECK PROFILE
+                <div className="tribute-links">
+                    <button className="tribute-link" onClick={handleRefresh} disabled={loading}>
+                        Already paid? Re-check profile
                     </button>
-                    <button className="text-link logout-btn" onClick={handleLogout} disabled={loading}>
-                        LOGOUT / SWITCH ACCOUNT
+                    <button className="tribute-link" onClick={handleLogout} disabled={loading}>
+                        Logout / Switch account
                     </button>
                 </div>
 
-                {status && <div className="status-msg">{status}</div>}
+                {status && <div className="tribute-status">{status}</div>}
+
+                <div className="tribute-footer">Property of Queen Karin &nbsp;·&nbsp; Est. 2024</div>
             </div>
         </div>
     );
