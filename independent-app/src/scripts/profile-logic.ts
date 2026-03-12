@@ -1605,12 +1605,23 @@ function initOneSignal(memberId: string) {
                 allowLocalhostAsSecureOrigin: true,
             });
             await OneSignal.login(memberId);
-            // Request permission if not already granted or denied
-            const state = await OneSignal.Notifications.permissionNative;
-            if (state === 'default') {
-                setTimeout(() => {
-                    OneSignal.Notifications.requestPermission();
-                }, 4000);
+
+            // Only prompt if permission not yet decided
+            const state = OneSignal.Notifications.permissionNative;
+            if (state !== 'granted' && state !== 'denied') {
+                const banner = document.getElementById('pushBanner');
+                const allowBtn = document.getElementById('pushAllowBtn');
+                const dismissBtn = document.getElementById('pushDismissBtn');
+                if (banner) {
+                    setTimeout(() => { banner.style.display = 'flex'; }, 3000);
+                    allowBtn?.addEventListener('click', async () => {
+                        banner.style.display = 'none';
+                        await OneSignal.Notifications.requestPermission();
+                    });
+                    dismissBtn?.addEventListener('click', () => {
+                        banner.style.display = 'none';
+                    });
+                }
             }
         } catch (e) {
             console.error('[OneSignal] init error:', e);

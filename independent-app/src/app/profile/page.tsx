@@ -288,6 +288,12 @@ export default function ProfilePage() {
             <input type="file" id="evidenceInputMob" accept="image/*,video/*" className="hidden" onChange={(e: any) => mobileUploadEvidence(e.target)} />
             <input type="file" id="chatMediaInput" accept="image/*,video/*" className="hidden" />
 
+            {/* Push notification opt-in banner */}
+            <div id="pushBanner" style={{ display: 'none', position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: 'rgba(10,6,2,0.95)', border: '1px solid rgba(197,160,89,0.5)', borderRadius: 12, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 30px rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', whiteSpace: 'nowrap' }}>
+                <span style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#c5a059' }}>👑 Enable Queen's notifications</span>
+                <button id="pushAllowBtn" style={{ background: 'linear-gradient(135deg, #c5a059, #8b6914)', border: 'none', borderRadius: 8, padding: '6px 14px', color: '#000', fontFamily: 'Orbitron', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>ALLOW</button>
+                <button id="pushDismissBtn" style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}>✕</button>
+            </div>
 
             {/* UNIVERSAL DESKTOP APP */}
             <div id="DESKTOP_APP">
