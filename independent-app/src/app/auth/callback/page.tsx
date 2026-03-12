@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
 function getTwitterIdentifier(user: any): string | null {
-    const providerId = user?.user_metadata?.provider_id;
+    const providerId = user?.user_metadata?.provider_id
+        || user?.user_metadata?.sub
+        || user?.identities?.find((i: any) => i.provider === 'twitter')?.id;
     return providerId ? `twitter_${providerId}` : null;
 }
 
@@ -21,18 +23,20 @@ export default function AuthCallbackPage() {
             const hash = new URLSearchParams(window.location.hash.substring(1));
             const accessToken = hash.get('access_token');
             if (accessToken) {
-                setStatus('Authenticating...');
+                setStatus('Authenticating via hash...');
                 const { data } = await supabase.auth.setSession({
                     access_token: accessToken,
                     refresh_token: hash.get('refresh_token') || '',
                 });
                 if (data?.user) {
                     const identifier = data.user.email || getTwitterIdentifier(data.user);
+                    setStatus(`Hash user found: ${identifier || 'NO_ID'}`);
                     if (identifier) { await routeUser(identifier); return; }
                 }
             }
 
-            // Google OAuth 2.0 — browser client auto-exchanges the ?code= param
+            // Google / Twitter PKCE — wait for session
+            setStatus('Waiting for session...');
             const user = await new Promise<any>((resolve) => {
                 const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
                     if (session?.user) { subscription.unsubscribe(); resolve(session.user); }
@@ -44,13 +48,17 @@ export default function AuthCallbackPage() {
             });
 
             if (!user) {
-                router.replace('/login?error=auth_failed');
+                setStatus('No session found — check URL below');
+                const info = `search=${window.location.search}|hash=${window.location.hash.substring(0, 80) || 'empty'}`;
+                setTimeout(() => router.replace(`/login?error=auth_failed&info=${encodeURIComponent(info)}`), 3000);
                 return;
             }
 
             const identifier = user.email || getTwitterIdentifier(user);
             if (!identifier) {
-                router.replace('/login?error=auth_failed');
+                const meta = JSON.stringify(user.user_metadata || {});
+                setStatus(`User found but no identifier. Meta: ${meta.substring(0, 100)}`);
+                setTimeout(() => router.replace(`/login?error=no_identifier&meta=${encodeURIComponent(meta)}`), 5000);
                 return;
             }
 
@@ -58,7 +66,7 @@ export default function AuthCallbackPage() {
         };
 
         const routeUser = async (identifier: string) => {
-            setStatus('Access granted...');
+            setStatus(`Routing: ${identifier.substring(0, 30)}...`);
             const id = identifier.trim().toLowerCase();
             if (id === 'ceo@qkarin.com' || id === 'liviacechova@gmail.com') {
                 router.replace('/dashboard');
@@ -88,8 +96,10 @@ export default function AuthCallbackPage() {
             flexDirection: 'column',
             gap: '20px',
             fontSize: '0.75rem',
-            letterSpacing: '4px',
+            letterSpacing: '3px',
             textTransform: 'uppercase',
+            padding: '20px',
+            textAlign: 'center',
         }}>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap');
