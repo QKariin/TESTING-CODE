@@ -3545,11 +3545,15 @@ export async function loadQueenPosts() {
         }).toUpperCase();
 
         const heroLocked = !heroPost.userHasAccess;
+        const heroIsVideo = heroPost.media_type === 'video';
         const heroMediaHTML = !heroPost.media_url ? `<div class="qk-hero-img-placeholder">👑</div>` :
-            heroLocked ? `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="filter:blur(12px) brightness(0.5);pointer-events:none;" />` :
-            heroPost.media_type === 'video'
-                ? `<video src="${heroPost.media_url}" muted playsinline preload="metadata" onclick="window.openQkLightbox('video','${heroPost.media_url}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
-                : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="cursor:pointer;" />`;
+            heroLocked
+                ? (heroIsVideo
+                    ? `<div style="width:100%;height:100%;background:#080808;display:flex;align-items:center;justify-content:center;"><span style="font-size:4rem;opacity:0.2;">🎬</span></div>`
+                    : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(12px) brightness(0.45);pointer-events:none;" />`)
+                : heroIsVideo
+                    ? `<video src="${heroPost.media_url}" muted playsinline preload="metadata" onclick="window.openQkLightbox('video','${heroPost.media_url}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
+                    : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="width:100%;height:100%;object-fit:cover;object-position:center top;cursor:pointer;" />`;
         const heroHTML = `
         <div class="qk-hero">
             <div class="qk-hero-img" style="position:relative;">
@@ -3590,11 +3594,15 @@ export async function loadQueenPosts() {
             const locked = !p.userHasAccess;
             const likeCount = p.likes || 0;
             const liked = p.userHasLiked || false;
+            const isVideo = p.media_type === 'video';
             const cardMediaHTML = !p.media_url ? `<div class="qk-card-img-placeholder">👑</div>` :
-                locked ? `<div class="qk-card-img qk-card-media qk-blurred"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="" /></div>` :
-                p.media_type === 'video'
-                    ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')"><video src="${p.media_url}" muted playsinline preload="metadata" class="qk-card-video"></video><div class="qk-play-icon">▶</div></div>`
-                    : `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('image','${getOptimizedUrl(p.media_url, 1200)}')"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`;
+                locked
+                    ? (isVideo
+                        ? `<div class="qk-card-img qk-card-media" style="background:#080808;display:flex;align-items:center;justify-content:center;"><span style="font-size:2.5rem;opacity:0.25;">🎬</span></div>`
+                        : `<div class="qk-card-img qk-card-media qk-blurred"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="" /></div>`)
+                    : isVideo
+                        ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')"><video src="${p.media_url}" muted playsinline preload="metadata" class="qk-card-video"></video><div class="qk-play-icon">▶</div></div>`
+                        : `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('image','${getOptimizedUrl(p.media_url, 1200)}')"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`;
             return `
                     <div class="qk-card${locked ? ' qk-card-locked' : ''}">
                         ${cardMediaHTML}
