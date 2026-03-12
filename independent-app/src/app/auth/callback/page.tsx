@@ -12,18 +12,33 @@ export default function AuthCallbackPage() {
         const run = async () => {
             const supabase = createClient();
 
-            // Try PKCE code exchange first (OAuth 2.0), then fall back to existing session (OAuth 1.0a)
+            // Try PKCE code exchange first (OAuth 2.0 / Google)
             const code = new URLSearchParams(window.location.search).get('code');
             if (code) {
                 await supabase.auth.exchangeCodeForSession(code);
             }
 
-            // Give session a moment to settle
-            await new Promise(r => setTimeout(r, 500));
+            // Wait for auth state — works for both OAuth 2.0 and OAuth 1.0a (Twitter)
+            const finalUser = await new Promise<any>((resolve) => {
+                const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+                    if (session?.user) {
+                        subscription.unsubscribe();
+                        resolve(session.user);
+                    }
+                });
+                // Also check immediately in case session already exists
+                supabase.auth.getUser().then(({ data }) => {
+                    if (data.user) {
+                        subscription.unsubscribe();
+                        resolve(data.user);
+                    }
+                });
+                // Timeout after 8s
+                setTimeout(() => { subscription.unsubscribe(); resolve(null); }, 8000);
+            });
 
             setStatus('Checking records...');
 
-            const { data: { user: finalUser } } = await supabase.auth.getUser();
             if (!finalUser) { router.replace('/login?error=auth_failed'); return; }
 
             const email = finalUser.email?.trim().toLowerCase() || '';
