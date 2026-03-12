@@ -3535,7 +3535,8 @@ export async function loadQueenPosts() {
         `;
 
         // Use first post with media as hero; fall back to posts[0] if none have media
-        const heroIdx = posts.findIndex((p: any) => p.media_url);
+        const hasMedia = (p: any) => p.media_url && !String(p.media_url).startsWith('failed');
+        const heroIdx = posts.findIndex(hasMedia);
         const heroPost = heroIdx >= 0 ? posts[heroIdx] : posts[0];
         const restPosts = posts.filter((_: any, i: number) => i !== (heroIdx >= 0 ? heroIdx : 0));
 
@@ -3546,7 +3547,8 @@ export async function loadQueenPosts() {
 
         const heroLocked = !heroPost.userHasAccess;
         const heroIsVideo = heroPost.media_type === 'video';
-        const heroMediaHTML = !heroPost.media_url ? `<div class="qk-hero-img-placeholder">👑</div>` :
+        const heroHasMedia = heroPost.media_url && !String(heroPost.media_url).startsWith('failed');
+        const heroMediaHTML = !heroHasMedia ? `<div class="qk-hero-img-placeholder">👑</div>` :
             heroLocked
                 ? (heroIsVideo
                     ? `<div style="width:100%;height:100%;background:#080808;display:flex;align-items:center;justify-content:center;"><span style="font-size:4rem;opacity:0.2;">🎬</span></div>`
@@ -3595,7 +3597,8 @@ export async function loadQueenPosts() {
             const likeCount = p.likes || 0;
             const liked = p.userHasLiked || false;
             const isVideo = p.media_type === 'video';
-            const cardMediaHTML = !p.media_url ? `<div class="qk-card-img-placeholder">👑</div>` :
+            const cardHasMedia = p.media_url && !String(p.media_url).startsWith('failed');
+            const cardMediaHTML = !cardHasMedia ? `<div class="qk-card-img-placeholder">👑</div>` :
                 locked
                     ? (isVideo
                         ? `<div class="qk-card-img qk-card-media" style="background:#080808;display:flex;align-items:center;justify-content:center;"><span style="font-size:2.5rem;opacity:0.25;">🎬</span></div>`

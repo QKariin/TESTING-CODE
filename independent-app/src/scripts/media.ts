@@ -53,6 +53,7 @@ export function getThumbnail(url: string | null | undefined): string | null | un
 
 export function getOptimizedUrl(url: string | null | undefined, width: number = 400): string {
     if (!url || typeof url !== "string") return "";
+    if (url.startsWith("failed")) return ""; // bad upload result stored in DB
     if (url.startsWith("data:")) return url;
     if (url.startsWith("blob:")) return url;
     if (url === "FORCED" || url === "SKIPPED") return "https://upcdn.io/kW2K8hR/raw/public/collar-192.png";

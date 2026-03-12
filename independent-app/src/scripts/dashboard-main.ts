@@ -398,14 +398,14 @@ export async function loadQueenPostsDashboard() {
                     </div>
                     <button onclick="window.deleteQueenPost('${p.id}')" style="background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:Orbitron;font-size:0.6rem;flex-shrink:0;margin-left:15px;">DEL</button>
                 </div>
-                ${p.media_url ? `
+                ${p.media_url && !p.media_url.startsWith('failed') ? `
                     <div style="width:100%;border-radius:6px;border:1px solid #222;overflow:hidden;">
                         ${p.media_type === 'video'
                             ? `<video src="${p.media_url}" controls style="width:100%;max-height:300px;display:block;background:#000;"></video>`
-                            : `<img src="${getOptimizedUrl(p.media_url, 400)}" style="width:100%;object-fit:cover;max-height:300px;display:block;" onerror="this.insertAdjacentHTML('afterend','<div style=\\'color:#ff4444;font-family:Orbitron;font-size:0.55rem;padding:8px;\\'>IMG LOAD FAILED — check Supabase bucket is public</div>');this.remove();" />`
+                            : `<img src="${getOptimizedUrl(p.media_url, 400)}" style="width:100%;object-fit:cover;max-height:300px;display:block;" onerror="this.insertAdjacentHTML('afterend','<div style=\\'color:#ff4444;font-family:Orbitron;font-size:0.55rem;padding:8px;\\'>IMAGE FAILED TO LOAD — Supabase \\'media\\' bucket may not be public</div>');this.remove();" />`
                         }
                         <div style="font-family:monospace;font-size:0.55rem;color:#444;padding:4px 8px;word-break:break-all;">${p.media_url}</div>
-                    </div>` : ''}
+                    </div>` : p.media_url?.startsWith('failed') ? `<div style="color:#ff6b6b;font-family:Orbitron;font-size:0.55rem;padding:6px 0;">⚠ Upload failed: ${p.media_url}</div>` : ''}
                 <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
                     <div style="font-family:Orbitron;font-size:0.5rem;color:#444;letter-spacing:1px;">${new Date(p.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).toUpperCase()}</div>
                     ${p.min_rank && p.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:1px;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.2);padding:2px 8px;border-radius:3px;">🔒 ${p.min_rank.toUpperCase()}</div>` : ''}
