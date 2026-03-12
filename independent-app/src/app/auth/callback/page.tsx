@@ -38,7 +38,8 @@ export default function AuthCallbackPage() {
             }
 
             if (!user?.email) {
-                router.replace('/login?error=auth_failed');
+                const debugInfo = `search=${window.location.search} hash=${window.location.hash.substring(0, 40) || 'empty'}`;
+                router.replace(`/login?error=auth_failed&info=${encodeURIComponent(debugInfo)}`);
                 return;
             }
 

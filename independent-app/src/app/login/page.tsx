@@ -1,9 +1,9 @@
 /** v1.4.0 - Redesign: photo bg, Cinzel only, OAuth first, email collapsed */
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import '@/css/login.css';
 
 export default function LoginPage() {
@@ -16,6 +16,12 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const info = searchParams.get('info');
+        if (info) setError(`DEBUG: ${info}`);
+    }, [searchParams]);
 
     const checkProfileAndRedirect = async (userEmail: string) => {
         const email_lower = userEmail.trim().toLowerCase();
