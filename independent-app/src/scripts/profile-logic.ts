@@ -1606,6 +1606,14 @@ function initOneSignal(memberId: string) {
             allowLocalhostAsSecureOrigin: true,
         });
         await OneSignal.login(memberId);
+        // Request permission if not already granted
+        const permission = await OneSignal.Notifications.permission;
+        if (!permission) {
+            // Small delay so it doesn't fire the moment the page loads
+            setTimeout(() => {
+                OneSignal.Notifications.requestPermission();
+            }, 5000);
+        }
     });
 }
 
