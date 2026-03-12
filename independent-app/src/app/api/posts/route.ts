@@ -98,6 +98,31 @@ export async function POST(request: Request) {
     }
 }
 
+// ── PATCH: CEO only – update min_rank and/or price ──────────────────────────
+export async function PATCH(request: Request) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
+        const email = (user.email || '').toLowerCase().trim();
+        if (email !== 'ceo@qkarin.com' && email !== 'queen@qkarin.com') {
+            return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+        }
+
+        const { id, min_rank, price } = await request.json();
+        if (!id) return NextResponse.json({ success: false, error: 'No ID' }, { status: 400 });
+
+        const admin = getAdmin();
+        const { error } = await admin.from('social_feed').update({ min_rank, price }).eq('id', id);
+        if (error) throw error;
+
+        return NextResponse.json({ success: true });
+    } catch (err: any) {
+        return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    }
+}
+
 // ── DELETE: CEO only – delete a post ────────────────────────────────────────
 export async function DELETE(request: Request) {
     try {

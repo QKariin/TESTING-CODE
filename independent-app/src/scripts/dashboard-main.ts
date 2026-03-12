@@ -408,11 +408,18 @@ export async function loadQueenPostsDashboard() {
                     </div>` : p.media_url?.startsWith('failed') ? `<div style="color:#ff6b6b;font-family:Orbitron;font-size:0.55rem;padding:6px 0;">⚠ Upload failed: ${p.media_url}</div>` : ''}
                 <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
                     <div style="font-family:Orbitron;font-size:0.5rem;color:#444;letter-spacing:1px;">${new Date(p.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).toUpperCase()}</div>
-                    ${p.min_rank && p.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:1px;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.2);padding:2px 8px;border-radius:3px;">🔒 ${p.min_rank.toUpperCase()}</div>` : ''}
-                    ${p.price > 0 ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#888;letter-spacing:1px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:3px;">💰 ${p.price} COINS</div>` : ''}
                     ${p.media_type && p.media_type !== 'text' ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#888;letter-spacing:1px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:3px;">${p.media_type.toUpperCase()}</div>` : ''}
                     <div style="font-family:Orbitron;font-size:0.45rem;color:#888;letter-spacing:1px;">♥ ${p.likes || 0}</div>
                     ${p.is_published === false ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#ff6b6b;letter-spacing:1px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);padding:2px 8px;border-radius:3px;">DRAFT</div>` : ''}
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:8px;border-top:1px solid #161616;">
+                    <select id="editRank_${p.id}" style="background:#111;border:1px solid #333;color:#c5a059;font-family:Orbitron;font-size:0.5rem;padding:6px 10px;border-radius:4px;letter-spacing:1px;outline:none;">
+                        ${['Hall Boy','Footman','Silverman','Butler','Chamberlain','Secretary',"Queen's Champion"].map(r =>
+                            `<option value="${r}"${p.min_rank === r ? ' selected' : ''}>${r}</option>`
+                        ).join('')}
+                    </select>
+                    <input id="editPrice_${p.id}" type="number" min="0" value="${p.price || 0}" style="background:#111;border:1px solid #333;color:#fff;font-family:Orbitron;font-size:0.5rem;padding:6px 10px;border-radius:4px;width:100px;outline:none;" placeholder="COINS" />
+                    <button onclick="window.updateQueenPost('${p.id}')" style="background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.4);color:#c5a059;font-family:Orbitron;font-size:0.5rem;padding:6px 14px;border-radius:4px;cursor:pointer;letter-spacing:2px;">SAVE</button>
                 </div>
             </div>
         `).join('');
@@ -497,6 +504,31 @@ export async function submitQueenPost() {
 }
 
 // Delete a post
+export async function updateQueenPost(id: string) {
+    const rankEl = document.getElementById(`editRank_${id}`) as HTMLSelectElement;
+    const priceEl = document.getElementById(`editPrice_${id}`) as HTMLInputElement;
+    if (!rankEl || !priceEl) return;
+
+    const min_rank = rankEl.value;
+    const price = parseInt(priceEl.value, 10) || 0;
+
+    try {
+        const res = await fetch('/api/posts', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, min_rank, price }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            loadQueenPostsDashboard();
+        } else {
+            alert('Update failed: ' + data.error);
+        }
+    } catch (err) {
+        alert('Network error updating post.');
+    }
+}
+
 export async function deleteQueenPost(id: string) {
     if (!confirm('Delete this post permanently?')) return;
 
@@ -610,6 +642,7 @@ if (typeof window !== 'undefined') {
     (window as any).showPosts = showPosts;
     (window as any).submitQueenPost = submitQueenPost;
     (window as any).deleteQueenPost = deleteQueenPost;
+    (window as any).updateQueenPost = updateQueenPost;
     (window as any).loadQueenPostsDashboard = loadQueenPostsDashboard;
     (window as any).reviewTask = reviewTask;
     (window as any).approveFromGallery = reviewTask; // alias for backward compat
