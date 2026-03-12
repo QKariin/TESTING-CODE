@@ -73,33 +73,22 @@
     margin-bottom: 30px;
 }
 
-.tribute-desc {
-    font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.4);
-    letter-spacing: 2px;
+.tribute-gate {
+    font-size: 0.62rem;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 2.5px;
     text-transform: uppercase;
-    line-height: 1.9;
-    margin-bottom: 24px;
-}
-
-.tribute-identity {
-    border: 1px dashed rgba(197, 160, 89, 0.25);
-    padding: 12px 16px;
+    line-height: 2;
     margin-bottom: 28px;
-    font-size: 0.58rem;
-    color: rgba(197, 160, 89, 0.5);
-    letter-spacing: 2px;
-    text-transform: uppercase;
 }
 
-.tribute-identity strong {
+.tribute-gate strong {
     display: block;
-    margin-top: 5px;
-    font-size: 0.78rem;
-    color: #e8d5a8;
-    letter-spacing: 1px;
+    font-size: 1.05rem;
+    color: rgba(197, 160, 89, 0.7);
+    letter-spacing: 4px;
+    margin-top: 6px;
     font-weight: 600;
-    word-break: break-all;
 }
 
 .tribute-btn {
@@ -107,25 +96,67 @@
     background: rgba(197, 160, 89, 0.9);
     color: #0a0602;
     border: none;
-    padding: 16px;
+    padding: 18px;
     font-family: 'Cinzel', serif;
     font-weight: 700;
     letter-spacing: 4px;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     cursor: pointer;
     text-transform: uppercase;
-    transition: background 0.3s, letter-spacing 0.3s;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: letter-spacing 0.4s ease, background 0.3s;
+    animation: tributePulse 3s ease-in-out infinite;
 }
 
+@keyframes tributePulse {
+    0%, 100% { box-shadow: 0 0 0px rgba(197, 160, 89, 0); }
+    50%       { box-shadow: 0 0 28px rgba(197, 160, 89, 0.45), 0 0 6px rgba(197, 160, 89, 0.2); }
+}
+
+.tribute-btn::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    transition: left 0.5s ease;
+}
+
+.tribute-btn:hover::after { left: 160%; }
 .tribute-btn:hover {
-    background: #c5a059;
-    letter-spacing: 5px;
+    background: #d4ae6a;
+    letter-spacing: 6px;
+    animation: none;
+    box-shadow: 0 0 32px rgba(197, 160, 89, 0.5);
 }
 
 .tribute-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    animation: none;
+}
+
+.tribute-identity {
+    border: 1px dashed rgba(197, 160, 89, 0.2);
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    font-size: 0.55rem;
+    color: rgba(197, 160, 89, 0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.tribute-identity strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.72rem;
+    color: rgba(232, 213, 168, 0.7);
+    letter-spacing: 1px;
+    font-weight: 600;
+    word-break: break-all;
 }
 
 .tribute-links {

@@ -78,11 +78,14 @@ export default function TributePage() {
                 <h1>Queen Karin</h1>
                 <p className="tribute-subtitle">Entrance Tribute Required</p>
 
-                <p className="tribute-desc">
-                    The gates are locked.<br />
-                    Your identity holds no record in the command console.<br />
-                    A one-time tribute is required to proceed.
-                </p>
+                <div className="tribute-gate">
+                    The gates are locked
+                    <strong>$55 entrance tribute required</strong>
+                </div>
+
+                <button className="tribute-btn" onClick={handleTribute} disabled={loading}>
+                    {loading ? 'Initializing...' : 'Send Tribute — $55'}
+                </button>
 
                 {userEmail && (
                     <div className="tribute-identity">
@@ -90,10 +93,6 @@ export default function TributePage() {
                         <strong>{userEmail}</strong>
                     </div>
                 )}
-
-                <button className="tribute-btn" onClick={handleTribute} disabled={loading}>
-                    {loading ? 'Initializing...' : 'Send Tribute'}
-                </button>
 
                 <div className="tribute-links">
                     <button className="tribute-link" onClick={handleRefresh} disabled={loading}>
