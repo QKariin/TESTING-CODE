@@ -12,19 +12,14 @@ export default function AuthCallbackPage() {
         const run = async () => {
             const supabase = createClient();
 
-            // Exchange code for session (PKCE flow)
-            const { data: { user }, error } = await supabase.auth.getUser();
-
-            if (error || !user) {
-                // Try exchanging the code first if no session yet
-                const { data, error: exchErr } = await supabase.auth.exchangeCodeForSession(
-                    new URLSearchParams(window.location.search).get('code') || ''
-                );
-                if (exchErr || !data.user) {
-                    router.replace('/login?error=auth_failed');
-                    return;
-                }
+            // Try PKCE code exchange first (OAuth 2.0), then fall back to existing session (OAuth 1.0a)
+            const code = new URLSearchParams(window.location.search).get('code');
+            if (code) {
+                await supabase.auth.exchangeCodeForSession(code);
             }
+
+            // Give session a moment to settle
+            await new Promise(r => setTimeout(r, 500));
 
             setStatus('Checking records...');
 
