@@ -72,6 +72,8 @@ import {
     triggerTaskEvidencePick,
     unlockPost,
     togglePostLike,
+    openQkLightbox,
+    closeQkLightbox,
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -149,6 +151,8 @@ export default function ProfilePage() {
             (window as any).renderKneelDots = renderKneelDots;
             (window as any).unlockPost = unlockPost;
             (window as any).togglePostLike = togglePostLike;
+            (window as any).openQkLightbox = openQkLightbox;
+            (window as any).closeQkLightbox = closeQkLightbox;
         }
 
         async function loadProfile() {

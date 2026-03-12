@@ -3434,6 +3434,98 @@ export async function loadQueenPosts() {
                 height: 1px;
                 background: linear-gradient(90deg,transparent,#1a1a1a,transparent);
             }
+            /* LOCK OVERLAY */
+            .qk-card { position: relative; }
+            .qk-lock-overlay {
+                position: absolute;
+                inset: 0;
+                z-index: 10;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                background: rgba(0,0,0,0.55);
+                border-radius: 6px;
+            }
+            .qk-lock-icon { font-size: 1.6rem; }
+            .qk-lock-price {
+                font-family: Orbitron;
+                font-size: 0.55rem;
+                color: #c5a059;
+                letter-spacing: 2px;
+            }
+            .qk-lock-rank {
+                font-family: Orbitron;
+                font-size: 0.5rem;
+                color: #888;
+                letter-spacing: 1.5px;
+            }
+            .qk-unlock-btn {
+                margin-top: 4px;
+                background: #c5a059;
+                color: #000;
+                border: none;
+                font-family: Orbitron;
+                font-size: 0.55rem;
+                letter-spacing: 2px;
+                padding: 7px 16px;
+                border-radius: 3px;
+                cursor: pointer;
+            }
+            .qk-unlock-btn:hover { background: #e0bb70; }
+            .qk-blurred img { filter: blur(10px) brightness(0.45); transform: scale(1.05); }
+            /* VIDEO */
+            .qk-card-video {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center top;
+                display: block;
+                pointer-events: none;
+            }
+            .qk-card-media { cursor: pointer; }
+            .qk-play-icon {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2rem;
+                color: rgba(255,255,255,0.85);
+                text-shadow: 0 0 20px rgba(0,0,0,0.8);
+                pointer-events: none;
+            }
+            .qk-play-hero {
+                font-size: 3.5rem;
+                z-index: 3;
+            }
+            /* LIKE BAR */
+            .qk-like-bar {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 8px 18px 12px;
+                border-top: 1px solid #111;
+            }
+            .qk-like-btn {
+                background: none;
+                border: none;
+                color: #444;
+                font-size: 1rem;
+                cursor: pointer;
+                padding: 0;
+                line-height: 1;
+                transition: color 0.2s, transform 0.15s;
+            }
+            .qk-like-btn:hover { color: #c5a059; transform: scale(1.2); }
+            .qk-like-btn.liked { color: #c5a059; }
+            .qk-like-count {
+                font-family: Orbitron;
+                font-size: 0.5rem;
+                color: #444;
+                letter-spacing: 1px;
+            }
             @media (max-width: 700px) {
                 .qk-hero { grid-template-columns: 1fr; height: auto; }
                 .qk-hero-img { height: 300px; }
@@ -3450,20 +3542,30 @@ export async function loadQueenPosts() {
             day: 'numeric', month: 'long', year: 'numeric'
         }).toUpperCase();
 
+        const heroLocked = !heroPost.userHasAccess;
+        const heroMediaHTML = !heroPost.media_url ? `<div class="qk-hero-img-placeholder">👑</div>` :
+            heroLocked ? `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="filter:blur(12px) brightness(0.5);pointer-events:none;" />` :
+            heroPost.media_type === 'video'
+                ? `<video src="${heroPost.media_url}" muted playsinline preload="metadata" onclick="window.openQkLightbox('video','${heroPost.media_url}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
+                : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="cursor:pointer;" />`;
         const heroHTML = `
         <div class="qk-hero">
-            <div class="qk-hero-img">
+            <div class="qk-hero-img" style="position:relative;">
                 <div class="qk-feat-badge">FEATURED</div>
-                ${heroPost.media_url
-                ? `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" />`
-                : `<div class="qk-hero-img-placeholder">👑</div>`
-            }
+                ${heroMediaHTML}
+                ${heroLocked ? `
+                <div class="qk-lock-overlay">
+                    <div class="qk-lock-icon">🔒</div>
+                    ${heroPost.price > 0 ? `<div class="qk-lock-price">${heroPost.price} COINS</div>` : ''}
+                    ${heroPost.min_rank && heroPost.min_rank !== 'Hall Boy' ? `<div class="qk-lock-rank">REQUIRES ${(heroPost.min_rank || '').toUpperCase()}</div>` : ''}
+                    ${heroPost.price > 0 ? `<button class="qk-unlock-btn" onclick="window.unlockPost('${heroPost.id}', ${heroPost.price})">UNLOCK</button>` : ''}
+                </div>` : ''}
             </div>
             <div class="qk-hero-body">
                 <div>
                     <div class="qk-hero-date">${heroDate}</div>
                     <div class="qk-hero-title">${heroPost.title || 'Queen\'s Dispatch'}</div>
-                    <div class="qk-hero-content">${heroPost.content || ''}</div>
+                    ${!heroLocked ? `<div class="qk-hero-content">${heroPost.content || ''}</div>` : ''}
                 </div>
                 <div class="qk-hero-footer">
                     <div class="qk-queen-sig">👑</div>
@@ -3484,14 +3586,16 @@ export async function loadQueenPosts() {
                 day: 'numeric', month: 'short', year: 'numeric'
             }).toUpperCase();
             const locked = !p.userHasAccess;
-            const likeCount = p.like_count || 0;
+            const likeCount = p.likes || 0;
             const liked = p.userHasLiked || false;
+            const cardMediaHTML = !p.media_url ? `<div class="qk-card-img-placeholder">👑</div>` :
+                locked ? `<div class="qk-card-img qk-card-media qk-blurred"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="" /></div>` :
+                p.media_type === 'video'
+                    ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')"><video src="${p.media_url}" muted playsinline preload="metadata" class="qk-card-video"></video><div class="qk-play-icon">▶</div></div>`
+                    : `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('image','${getOptimizedUrl(p.media_url, 1200)}')"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`;
             return `
                     <div class="qk-card${locked ? ' qk-card-locked' : ''}">
-                        ${p.media_url
-                    ? `<div class="qk-card-img qk-card-media"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`
-                    : `<div class="qk-card-img-placeholder">👑</div>`
-                }
+                        ${cardMediaHTML}
                         ${locked ? `
                         <div class="qk-lock-overlay">
                             <div class="qk-lock-icon">🔒</div>
@@ -3518,7 +3622,12 @@ export async function loadQueenPosts() {
         newsGrid.style.flexDirection = 'column';
         newsGrid.style.padding = '0';
         newsGrid.style.gap = '0';
-        newsGrid.innerHTML = CSS + `
+        const lightboxHTML = `
+        <div id="qkLightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;align-items:center;justify-content:center;flex-direction:column;">
+            <button onclick="window.closeQkLightbox()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#c5a059;font-size:2rem;cursor:pointer;z-index:1;">✕</button>
+            <div id="qkLightboxContent" style="max-width:95vw;max-height:90vh;display:flex;align-items:center;justify-content:center;"></div>
+        </div>`;
+        newsGrid.innerHTML = CSS + lightboxHTML + `
             <div class="qk-feed-wrap">
                 <div class="qk-header">
                     <div>
@@ -3954,4 +4063,23 @@ export async function togglePostLike(postId: string, btnEl: HTMLButtonElement) {
         const current = parseInt(countEl.textContent || '0');
         countEl.textContent = String(liked ? current + 1 : Math.max(current - 1, 0));
     }
+}
+
+export function openQkLightbox(type: 'image' | 'video', src: string) {
+    const lb = document.getElementById('qkLightbox');
+    const content = document.getElementById('qkLightboxContent');
+    if (!lb || !content) return;
+    content.innerHTML = type === 'video'
+        ? `<video src="${src}" controls autoplay playsinline style="max-width:95vw;max-height:88vh;border-radius:4px;"></video>`
+        : `<img src="${src}" style="max-width:95vw;max-height:88vh;object-fit:contain;border-radius:4px;" />`;
+    lb.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+export function closeQkLightbox() {
+    const lb = document.getElementById('qkLightbox');
+    const content = document.getElementById('qkLightboxContent');
+    if (lb) lb.style.display = 'none';
+    if (content) content.innerHTML = '';
+    document.body.style.overflow = '';
 }
