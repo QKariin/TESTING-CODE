@@ -1594,6 +1594,7 @@ export function initChatSystem() {
 }
 
 function initOneSignal(memberId: string) {
+    // Init OneSignal in background (for subscription management)
     const w = window as any;
     w.OneSignalDeferred = w.OneSignalDeferred || [];
     w.OneSignalDeferred.push(async (OneSignal: any) => {
@@ -1605,34 +1606,42 @@ function initOneSignal(memberId: string) {
                 allowLocalhostAsSecureOrigin: true,
             });
             await OneSignal.login(memberId);
-
-            const state = OneSignal.Notifications.permissionNative;
-            if (state !== 'granted') {
-                const banner = document.getElementById('pushBanner');
-                const allowBtn = document.getElementById('pushAllowBtn');
-                const allowLabel = document.getElementById('pushAllowLabel');
-                const dismissBtn = document.getElementById('pushDismissBtn');
-                if (banner) {
-                    if (state === 'denied') {
-                        if (allowLabel) allowLabel.textContent = 'HOW TO ENABLE';
-                        allowBtn?.addEventListener('click', () => {
-                            banner.style.display = 'none';
-                            alert('To enable notifications: open your browser site settings for throne.qkarin.com and set Notifications to Allow.');
-                        });
-                    } else {
-                        allowBtn?.addEventListener('click', async () => {
-                            banner.style.display = 'none';
-                            await OneSignal.Notifications.requestPermission();
-                        });
-                    }
-                    dismissBtn?.addEventListener('click', () => { banner.style.display = 'none'; });
-                    setTimeout(() => { banner.style.display = 'flex'; }, 2000);
-                }
-            }
         } catch (e) {
             console.error('[OneSignal] init error:', e);
         }
     });
+
+    // Show opt-in banner based on native Notification API (works regardless of OneSignal)
+    if (!('Notification' in window)) return;
+    if ((window as any).Notification.permission === 'granted') return;
+
+    const banner = document.getElementById('pushBanner');
+    const allowBtn = document.getElementById('pushAllowBtn');
+    const allowLabel = document.getElementById('pushAllowLabel');
+    const dismissBtn = document.getElementById('pushDismissBtn');
+    if (!banner) return;
+
+    if ((window as any).Notification.permission === 'denied') {
+        if (allowLabel) allowLabel.textContent = 'HOW TO ENABLE';
+        allowBtn?.addEventListener('click', () => {
+            banner.style.display = 'none';
+            alert('Go to your browser settings → Site Settings → Notifications → find throne.qkarin.com → set to Allow.');
+        });
+    } else {
+        allowBtn?.addEventListener('click', async () => {
+            banner.style.display = 'none';
+            // Request via OneSignal if available, else native
+            const OS = (window as any).OneSignal;
+            if (OS?.Notifications?.requestPermission) {
+                await OS.Notifications.requestPermission();
+            } else {
+                await (window as any).Notification.requestPermission();
+            }
+        });
+    }
+
+    dismissBtn?.addEventListener('click', () => { banner.style.display = 'none'; });
+    setTimeout(() => { banner.style.display = 'flex'; }, 2000);
 }
 
 export async function loadChatHistory(email: string) {
