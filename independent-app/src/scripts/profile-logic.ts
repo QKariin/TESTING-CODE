@@ -1411,7 +1411,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
     // UI Feedback - routine and task buttons are separate
     const uploadBtn = document.getElementById('uploadBtn');        // Desktop Task
     const mobTaskBtn = document.getElementById('mobBtnUpload');    // Mobile Task
-    const mobRoutineBtn = document.getElementById('btnRoutineUpload'); // Mobile Routine
+    const mobRoutineBtn = document.getElementById('btnRoutineUpload') as HTMLButtonElement | null; // Mobile Routine
 
     const originalText = uploadBtn?.innerText;
     const originalMobTaskText = mobTaskBtn?.innerText;
@@ -1666,6 +1666,15 @@ function subscribeToChat(email: string) {
             // Update Queen status if this is a Queen message
             if (sender !== cleanEmail && sender !== 'user' && sender !== 'slave') {
                 _updateQueenStatus(msg.created_at || new Date().toISOString());
+                // Show notification if chat overlay is closed
+                const chatOverlay = document.getElementById('mobChatOverlay');
+                const isOpen = chatOverlay && (chatOverlay.style.display === 'flex' || chatOverlay.classList.contains('mob-overlay-open'));
+                if (!isOpen) {
+                    const badge = document.getElementById('mobMsgBadge');
+                    if (badge) badge.classList.add('active');
+                    const ring = document.querySelector('.mob-nav-queen-ring');
+                    if (ring) ring.classList.add('has-new-msg');
+                }
             }
             const html = renderChatMessage(msg);
             const containers = ['chatContent', 'mob_chatContent'];
@@ -2073,6 +2082,11 @@ export function openMobChatOverlay() {
     const el = document.getElementById('mobChatOverlay');
     if (!el) return;
     el.style.display = 'flex';
+    // Clear message notification
+    const badge = document.getElementById('mobMsgBadge');
+    if (badge) badge.classList.remove('active');
+    const ring = document.querySelector('.mob-nav-queen-ring');
+    if (ring) ring.classList.remove('has-new-msg');
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
     _setNavActive('');
     switchMobChatTab('chat');

@@ -1388,6 +1388,7 @@ export default function ProfilePage() {
                     <div className="mob-nav-queen-ring">
                         <img id="navQueenPic" src="/queen-karin.png" className="mob-nav-queen-img" alt="Queen" />
                     </div>
+                    <div id="mobMsgBadge"></div>
                 </button>
                 <button id="mobNavQueen" className="mob-nav-item" onClick={() => (window as any).openMobQueenWall()}>
                     <span className="mob-nav-icon">♛</span>

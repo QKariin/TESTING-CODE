@@ -802,8 +802,8 @@
     }
 
     .mob-nav-queen-ring {
-        width: 112px;
-        height: 112px;
+        width: 90px;
+        height: 90px;
         border-radius: 50%;
         border: 2px solid rgba(255, 0, 0, 0.75);
         box-shadow:
@@ -814,6 +814,60 @@
         background: #000;
         transition: box-shadow 0.2s;
         flex-shrink: 0;
+    }
+
+    .mob-nav-queen-btn {
+        position: relative;
+    }
+
+    /* New message — ring goes gold and ripples */
+    .mob-nav-queen-ring.has-new-msg {
+        border-color: rgba(197, 160, 89, 1);
+        animation: queenRingAlert 1.8s ease-in-out infinite;
+    }
+
+    @keyframes queenRingAlert {
+        0%, 100% {
+            box-shadow:
+                0 0 0 0px rgba(197, 160, 89, 0),
+                0 0 12px rgba(197, 160, 89, 0.4),
+                0 0 30px rgba(197, 160, 89, 0.15);
+        }
+        40% {
+            box-shadow:
+                0 0 0 8px rgba(197, 160, 89, 0),
+                0 0 22px rgba(197, 160, 89, 0.8),
+                0 0 50px rgba(197, 160, 89, 0.35);
+        }
+        60% {
+            box-shadow:
+                0 0 0 14px rgba(197, 160, 89, 0),
+                0 0 28px rgba(197, 160, 89, 0.6),
+                0 0 60px rgba(197, 160, 89, 0.2);
+        }
+    }
+
+    #mobMsgBadge {
+        display: none;
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #c5a059;
+        border: 1.5px solid #000;
+        z-index: 10;
+        animation: mobBadgePop 1.8s ease-in-out infinite;
+    }
+
+    #mobMsgBadge.active {
+        display: block;
+    }
+
+    @keyframes mobBadgePop {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.4); opacity: 0.7; }
     }
 
     .mob-nav-queen-btn:active .mob-nav-queen-ring {
