@@ -32,7 +32,7 @@ export async function POST(req: Request) {
             line_items: [
                 {
                     price_data: {
-                        currency: 'usd',
+                        currency: 'eur',
                         product_data: {
                             name: 'Entrance Tribute',
                             description: 'One-time tribute for system access and Hall Boy initialization.',

@@ -80,11 +80,11 @@ export default function TributePage() {
 
                 <div className="tribute-gate">
                     The gates are locked
-                    <strong>$55 entrance tribute required</strong>
+                    <strong>€55 entrance tribute required</strong>
                 </div>
 
                 <button className="tribute-btn" onClick={handleTribute} disabled={loading}>
-                    {loading ? 'Initializing...' : 'Send Tribute — $55'}
+                    {loading ? 'Initializing...' : 'Send Tribute'}
                 </button>
 
                 {userEmail && (
