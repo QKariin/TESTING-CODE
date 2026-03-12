@@ -57,7 +57,14 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     if (url.startsWith("data:")) return url;
     if (url.startsWith("blob:")) return url;
     if (url === "FORCED" || url === "SKIPPED") return "https://upcdn.io/kW2K8hR/raw/public/collar-192.png";
-    if (url.includes("supabase.co/storage")) return url;
+    // Supabase Pro image transformation — serve resized thumbnails instead of full originals
+    if (url.includes("supabase.co/storage")) {
+        // Only transform images — leave video URLs untouched
+        if (/\.(mp4|mov|avi|mkv|webm|m4v|3gp|hevc|wmv|flv)/i.test(url)) return url;
+        // Convert /object/public/ → /render/image/public/ with resize params
+        const transformed = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+        return `${transformed}?width=${width}&quality=80&resize=cover`;
+    }
     if (url.includes("token=")) return url; // Already a signed URL
 
     // 1. CLOUDINARY

@@ -3564,7 +3564,7 @@ export async function loadQueenPosts() {
                     ? `<div style="width:100%;height:100%;background:#080808;display:flex;align-items:center;justify-content:center;"><span style="font-size:4rem;opacity:0.2;">🎬</span></div>`
                     : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(12px) brightness(0.45);pointer-events:none;" />`)
                 : heroIsVideo
-                    ? `<video src="${heroPost.media_url}" muted playsinline preload="metadata" onclick="window.openQkLightbox('video','${heroPost.media_url}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
+                    ? `<video src="${heroPost.media_url}" muted playsinline preload="none" onclick="window.openQkLightbox('video','${heroPost.media_url}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
                     : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="width:100%;height:100%;object-fit:cover;object-position:center top;cursor:pointer;" />`;
         const heroHTML = `
         <div class="qk-hero">
@@ -3614,7 +3614,7 @@ export async function loadQueenPosts() {
                         ? `<div class="qk-card-img qk-card-media" style="background:#080808;display:flex;align-items:center;justify-content:center;"><span style="font-size:2.5rem;opacity:0.25;">🎬</span></div>`
                         : `<div class="qk-card-img qk-card-media qk-blurred"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="" /></div>`)
                     : isVideo
-                        ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')"><video src="${p.media_url}" muted playsinline preload="metadata" class="qk-card-video"></video><div class="qk-play-icon">▶</div></div>`
+                        ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')"><video src="${p.media_url}" muted playsinline preload="none" class="qk-card-video"></video><div class="qk-play-icon">▶</div></div>`
                         : `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('image','${getOptimizedUrl(p.media_url, 1200)}')"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`;
             return `
                     <div class="qk-card${locked ? ' qk-card-locked' : ''}">
