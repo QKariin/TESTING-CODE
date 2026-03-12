@@ -11,54 +11,54 @@ export default function AuthCallbackPage() {
     useEffect(() => {
         const handle = async () => {
             const supabase = createClient();
-            const code = new URLSearchParams(window.location.search).get('code');
+
+            // Twitter OAuth 1.0a — tokens arrive in URL hash, must be set manually
             const hash = new URLSearchParams(window.location.hash.substring(1));
             const accessToken = hash.get('access_token');
-            const refreshToken = hash.get('refresh_token');
-
-            let user: any = null;
-
-            if (code) {
-                // Google OAuth 2.0 — exchange PKCE code
-                setStatus('Authenticating...');
-                const { data } = await supabase.auth.exchangeCodeForSession(code);
-                user = data?.user ?? null;
-            } else if (accessToken) {
-                // Twitter OAuth 1.0a — tokens in URL hash, set session directly
+            if (accessToken) {
                 setStatus('Authenticating...');
                 const { data } = await supabase.auth.setSession({
                     access_token: accessToken,
-                    refresh_token: refreshToken || '',
+                    refresh_token: hash.get('refresh_token') || '',
                 });
-                user = data?.user ?? null;
-            } else {
-                // Fallback — check existing session
-                const { data: { session } } = await supabase.auth.getSession();
-                user = session?.user ?? null;
+                if (data?.user?.email) {
+                    await redirect(data.user.email);
+                    return;
+                }
             }
 
+            // Google OAuth 2.0 — browser client auto-exchanges the ?code= param,
+            // just wait for the session to be established
+            const user = await new Promise<any>((resolve) => {
+                const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+                    if (session?.user) { subscription.unsubscribe(); resolve(session.user); }
+                });
+                supabase.auth.getUser().then(({ data }) => {
+                    if (data.user) { subscription.unsubscribe(); resolve(data.user); }
+                });
+                setTimeout(() => { subscription.unsubscribe(); resolve(null); }, 8000);
+            });
+
             if (!user?.email) {
-                const debugInfo = `search=${window.location.search} hash=${window.location.hash.substring(0, 40) || 'empty'}`;
+                const debugInfo = `search=${window.location.search} hash=${window.location.hash.substring(0, 60) || 'empty'}`;
                 router.replace(`/login?error=auth_failed&info=${encodeURIComponent(debugInfo)}`);
                 return;
             }
 
-            setStatus('Access granted...');
-            const email = user.email.trim().toLowerCase();
+            await redirect(user.email);
+        };
 
-            if (email === 'ceo@qkarin.com' || email === 'liviacechova@gmail.com') {
+        const redirect = async (email: string) => {
+            setStatus('Access granted...');
+            const e = email.trim().toLowerCase();
+            if (e === 'ceo@qkarin.com' || e === 'liviacechova@gmail.com') {
                 router.replace('/dashboard');
                 return;
             }
-
             try {
-                const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email)}&full=true`);
+                const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(e)}&full=true`);
                 const data = await res.json();
-                if (data?.member_id) {
-                    router.replace('/profile');
-                } else {
-                    router.replace('/tribute');
-                }
+                router.replace(data?.member_id ? '/profile' : '/tribute');
             } catch {
                 router.replace('/tribute');
             }
@@ -82,16 +82,17 @@ export default function AuthCallbackPage() {
             letterSpacing: '4px',
             textTransform: 'uppercase',
         }}>
-            <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap');`}</style>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap');
+                @keyframes spin { to { transform: rotate(360deg); } }
+            `}</style>
             <div style={{
-                width: '40px',
-                height: '40px',
+                width: '40px', height: '40px',
                 border: '1px solid rgba(197,160,89,0.3)',
                 borderTopColor: '#c5a059',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite',
             }} />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             <div>{status}</div>
         </div>
     );
