@@ -118,8 +118,8 @@ async function uploadFileDirectly(bucketName: string, folderPath: string, file: 
     const sizeMB = file.size / 1024 / 1024;
     console.log(`[SupabaseStorage] Signed upload: ${file.name} (${sizeMB.toFixed(1)}MB)`);
 
-    // Hard size guard — Supabase free tier default is 50MB per file
-    if (sizeMB > 50) {
+    // Supabase Pro supports up to 5GB per file
+    if (sizeMB > 5000) {
         console.warn(`[SupabaseStorage] File too large: ${sizeMB.toFixed(1)}MB`);
         return `failed:size:${sizeMB.toFixed(0)}MB`;
     }
