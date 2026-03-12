@@ -1,6 +1,7 @@
 // src/scripts/global-view.ts
 import { getState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
+import { getOptimizedUrl } from './media';
 
 let currentPeriod: 'today' | 'alltime' | 'weekly' | 'monthly' = 'today';
 let talkPollInterval: ReturnType<typeof setInterval> | null = null;
@@ -294,7 +295,7 @@ function _buildUpdateCardPreview(u: any): string {
     // photo
     return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
         <div style="width:32px;height:32px;border-radius:4px;overflow:hidden;flex-shrink:0;">
-            <img src="${u.media_url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+            <img src="${getOptimizedUrl(u.media_url, 64)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
         </div>
         <div style="flex:1;min-width:0;">
             <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</div>
@@ -772,7 +773,7 @@ function _buildPhotoCard(u: any): string {
     <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;max-width:320px;width:100%;position:relative;"
          onmouseenter="this.querySelector('.uinfo').style.opacity='1'"
          onmouseleave="this.querySelector('.uinfo').style.opacity='0'">
-        <img src="${u.media_url}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy">
+        <img src="${getOptimizedUrl(u.media_url, 400)}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy">
         <div class="uinfo" style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.88));opacity:0;transition:opacity 0.15s;">
             <div style="font-family:'Cinzel';font-size:0.62rem;color:#fff;">${u.sender_name} <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div>
             ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.55);margin-top:2px;">${u.caption}</div>` : ''}
@@ -970,8 +971,8 @@ async function _loadQueenGallery() {
         const grid = items.map((item: any) => `
             <div class="qk-gal-item" onclick="window.openGalleryLightbox('${item.url}','${item.type}')">
                 ${item.type === 'video'
-                    ? `<video src="${item.url}" preload="metadata" muted playsinline></video>`
-                    : `<img src="${item.url}" alt="" loading="lazy" />`
+                    ? `<video src="${item.url}" preload="none" muted playsinline></video>`
+                    : `<img src="${getOptimizedUrl(item.url, 400)}" alt="" loading="lazy" />`
                 }
                 ${item.caption ? `<div class="qk-gal-caption">${item.caption}</div>` : ''}
             </div>

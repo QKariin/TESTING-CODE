@@ -2211,7 +2211,7 @@ async function _loadMobQueenPosts() {
         }
         container.innerHTML = data.posts.map((p: any) => `
             <div class="mob-qwall-post">
-                ${p.media_url ? `<img src="${p.media_url}" alt="" onerror="this.style.display='none'" />` : ''}
+                ${p.media_url ? `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" onerror="this.style.display='none'" />` : ''}
                 <div class="mob-qwall-post-body">
                     ${p.title ? `<div class="mob-qwall-post-title">${p.title}</div>` : ''}
                     ${p.content ? `<div class="mob-qwall-post-content">${p.content}</div>` : ''}
@@ -2432,7 +2432,7 @@ async function _loadMobGlQueen() {
         }
         container.innerHTML = posts.map((p: any) => `
             <div class="mob-qwall-post">
-                ${p.media_url ? `<img src="${p.media_url}" alt="" onerror="this.style.display='none'" />` : ''}
+                ${p.media_url ? `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" onerror="this.style.display='none'" />` : ''}
                 <div class="mob-qwall-post-body">
                     ${p.title ? `<div class="mob-qwall-post-title">${p.title}</div>` : ''}
                     ${p.content ? `<div class="mob-qwall-post-content">${p.content}</div>` : ''}
@@ -2461,7 +2461,7 @@ async function _loadMobGlUpdates() {
         }
         container.innerHTML = updates.map((u: any) => `
             <div class="mob-gl-update-card">
-                ${u.media_url ? `<img src="${u.media_url}" alt="" onerror="this.style.display='none'" />` : ''}
+                ${u.media_url ? `<img src="${getOptimizedUrl(u.media_url, 600)}" alt="" onerror="this.style.display='none'" />` : ''}
                 ${u.title ? `<div class="mob-gl-update-title">${u.title}</div>` : ''}
                 ${u.content ? `<div class="mob-gl-update-content">${u.content}</div>` : ''}
             </div>
@@ -3829,8 +3829,8 @@ function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLE
         ? `<div class="altar-card-merit">+${t.meritAwarded}</div>`
         : '';
     const media = isVid
-        ? `<video src="${url}" class="altar-card-media" muted playsinline loop></video>`
-        : `<img src="${url}" class="altar-card-media" loading="lazy" />`;
+        ? `<video src="${url}" class="altar-card-media" muted playsinline loop preload="none"></video>`
+        : `<img src="${getOptimizedUrl(url, 400)}" class="altar-card-media" loading="lazy" />`;
     const card = document.createElement('div');
     card.className = 'altar-photo-card';
     if (dimmed) card.style.filter = 'grayscale(0.65)';
@@ -3902,8 +3902,8 @@ function _renderRoutineGrid(containerId: string, routines: any[], resolveUrl: (u
         const isVid = _isVideo(url);
         const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase();
         const media = isVid
-            ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" muted playsinline loop></video>`
-            : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
+            ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" muted playsinline loop preload="none"></video>`
+            : `<img src="${getOptimizedUrl(url, 300)}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
         return `
             <div style="position:relative;overflow:hidden;border-radius:4px;cursor:pointer;" onclick="void(0)">
                 ${media}
@@ -3971,8 +3971,8 @@ function _renderMosaicGrid(tasks: any[], pending: any[], resolveUrl: (u: string)
         const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }).toUpperCase();
         const isVid = _isVideo(url);
         const mediaHTML = isVid
-            ? `<video src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" muted playsinline loop></video>`
-            : `<img src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`;
+            ? `<video src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" muted playsinline loop preload="none"></video>`
+            : `<img src="${getOptimizedUrl(url, 400)}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`;
         const meritBadge = t.meritAwarded ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#c5a059;font-family:Orbitron;font-size:0.38rem;padding:3px 7px;border-radius:3px;letter-spacing:1px;">+${t.meritAwarded}</div>` : '';
 
         card.innerHTML = `
