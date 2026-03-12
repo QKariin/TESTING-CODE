@@ -1588,6 +1588,25 @@ export function initChatSystem() {
     loadChatHistory(memberId);
     subscribeToChat(memberId);
     chatSubscribed = true;
+
+    // Init OneSignal and identify this user so push notifications target them
+    initOneSignal(memberId);
+}
+
+function initOneSignal(memberId: string) {
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
+    if (!appId) return;
+    const w = window as any;
+    w.OneSignalDeferred = w.OneSignalDeferred || [];
+    w.OneSignalDeferred.push(async (OneSignal: any) => {
+        await OneSignal.init({
+            appId,
+            safari_web_id: 'web.onesignal.auto.5f8d50ad-7ec3-4f1c-a2de-134e8949294e',
+            notifyButton: { enable: false },
+            allowLocalhostAsSecureOrigin: true,
+        });
+        await OneSignal.login(memberId);
+    });
 }
 
 export async function loadChatHistory(email: string) {

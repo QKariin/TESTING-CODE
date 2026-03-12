@@ -117,6 +117,23 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: `Failed to store message: ${msgErr.message}` }, { status: 500 });
         }
 
+        // Fire push notification if Queen sent the message
+        if (isQueen && conversationId) {
+            try {
+                await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com'}/api/push`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        externalId: conversationId,
+                        title: 'Queen Karin',
+                        message: typeof content === 'string' ? content.slice(0, 100) : '👑 New message from your Queen',
+                    }),
+                });
+            } catch (pushErr) {
+                console.error('[chat/send] push notification failed (non-critical):', pushErr);
+            }
+        }
+
         return NextResponse.json({
             success: true,
             message: "Message sent successfully.",
