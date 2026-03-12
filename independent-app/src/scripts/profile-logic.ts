@@ -1502,15 +1502,16 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
 
         if (data.success) {
             console.log("Submission successful!");
-            const mockeries = [
-                "Evidence submitted. We will see if it's as disappointing as usual.",
-                "Task uploaded. Hopefully less pathetic than your last attempt.",
-                "Transmission received. We'll judge your meager effort shortly.",
-                "Uploaded. Don't flatter yourself, it still needs approval.",
-                "Evidence sent. Awaiting validation of your so-called hard work."
-            ];
-            const msg = mockeries[Math.floor(Math.random() * mockeries.length)];
-            showTaskFeedback(msg, '#c5a059');
+            if (!isRoutine) {
+                const mockeries = [
+                    "Evidence submitted. We will see if it's as disappointing as usual.",
+                    "Task uploaded. Hopefully less pathetic than your last attempt.",
+                    "Transmission received. We'll judge your meager effort shortly.",
+                    "Uploaded. Don't flatter yourself, it still needs approval.",
+                    "Evidence sent. Awaiting validation of your so-called hard work."
+                ];
+                showTaskFeedback(mockeries[Math.floor(Math.random() * mockeries.length)], '#c5a059');
+            }
             // Refresh gallery so the pending item appears immediately
             refreshTaskGallery(pid);
         } else {
