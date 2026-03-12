@@ -18,7 +18,7 @@ export async function POST(req: Request) {
                 'Authorization': `Key ${process.env.ONESIGNAL_REST_API_KEY}`,
             },
             body: JSON.stringify({
-                app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID,
+                app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0',
                 target_channel: 'push',
                 filters: [{ field: 'external_user_id', value: externalId }],
                 headings: { en: title || 'Queen Karin' },

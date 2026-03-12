@@ -1594,25 +1594,26 @@ export function initChatSystem() {
 }
 
 function initOneSignal(memberId: string) {
-    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
-    if (!appId) return;
     const w = window as any;
     w.OneSignalDeferred = w.OneSignalDeferred || [];
     w.OneSignalDeferred.push(async (OneSignal: any) => {
-        await OneSignal.init({
-            appId,
-            safari_web_id: 'web.onesignal.auto.5f8d50ad-7ec3-4f1c-a2de-134e8949294e',
-            notifyButton: { enable: false },
-            allowLocalhostAsSecureOrigin: true,
-        });
-        await OneSignal.login(memberId);
-        // Request permission if not already granted
-        const permission = await OneSignal.Notifications.permission;
-        if (!permission) {
-            // Small delay so it doesn't fire the moment the page loads
-            setTimeout(() => {
-                OneSignal.Notifications.requestPermission();
-            }, 5000);
+        try {
+            await OneSignal.init({
+                appId: '761d91da-b098-44a7-8d98-75c1cce54dd0',
+                safari_web_id: 'web.onesignal.auto.5f8d50ad-7ec3-4f1c-a2de-134e8949294e',
+                notifyButton: { enable: false },
+                allowLocalhostAsSecureOrigin: true,
+            });
+            await OneSignal.login(memberId);
+            // Request permission if not already granted or denied
+            const state = await OneSignal.Notifications.permissionNative;
+            if (state === 'default') {
+                setTimeout(() => {
+                    OneSignal.Notifications.requestPermission();
+                }, 4000);
+            }
+        } catch (e) {
+            console.error('[OneSignal] init error:', e);
         }
     });
 }
