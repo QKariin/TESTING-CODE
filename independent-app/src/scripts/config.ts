@@ -16,7 +16,7 @@ export const CONFIG = {
 };
 
 export const URLS = {
-    QUEEN_AVATAR: "https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png",
+    QUEEN_AVATAR: "/queen-karin.png",
     DEFAULT_AVATAR: "https://cdn-icons-png.flaticon.com/512/3233/3233508.png"
 };
 

@@ -163,7 +163,7 @@ export default function DashboardPage() {
 
                     return {
                         ...u,
-                        avatar: getOptimizedUrl(u.avatar || u.avatar_url || u.profile_picture_url || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png', 100),
+                        avatar: getOptimizedUrl(u.avatar || u.avatar_url || u.profile_picture_url || '/queen-karin.png', 100),
                         lastMessageTime,
                         lastSeen,
                     };
@@ -505,7 +505,7 @@ export default function DashboardPage() {
                     <div className="qp-header">
                         <div className="qp-cover"></div>
                         <div className="qp-av-con">
-                            <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" className="qp-av" alt="Profile" onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
+                            <img src="/queen-karin.png" className="qp-av" alt="Profile" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
                         </div>
                         <div className="qp-name">QUEEN KARIN</div>
                         <div className="qp-status">SYSTEM ADMINISTRATOR</div>
@@ -671,7 +671,7 @@ export default function DashboardPage() {
                             <div id="apMirrorHeader" className="ap-mirror-header">
                                 <div id="dMirrorHierarchy" className="hierarchy-top">CHEVALIER</div>
                                 <div className="avatar-container">
-                                    <img id="dProfilePic" src="" alt="Profile" onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
+                                    <img id="dProfilePic" src="" alt="Profile" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
                                 </div>
                                 <div id="dMirrorName" className="identity-name" style={{ fontFamily: 'Cinzel', fontSize: '1.5rem', color: '#fff', marginBottom: '10px' }}>NAME</div>
 

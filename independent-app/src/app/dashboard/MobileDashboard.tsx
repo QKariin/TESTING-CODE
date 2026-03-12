@@ -89,7 +89,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 const mapped: DashUser[] = data.users.map((u: any) => ({
                     memberId: u.memberId || u.member_id || '',
                     name: u.name || (u.memberId || '').split('@')[0] || 'Unknown',
-                    avatar: u.avatar || u.avatar_url || 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png',
+                    avatar: u.avatar || u.avatar_url || '/queen-karin.png',
                     rank: u.rank || u.hierarchy || 'Hall Boy',
                     wallet: Number(u.wallet) || 0,
                     score: Number(u.score) || 0,
@@ -304,7 +304,7 @@ function HomeView({ stats, users, dailyCode }: { stats: any; users: DashUser[]; 
                     <div style={S.cardTitle}>RECENT SUBJECTS</div>
                     {recent.map(u => (
                         <div key={u.memberId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                            <img src={u.avatar} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.2)', flexShrink: 0 }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                            <img src={u.avatar} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.2)', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</div>
                                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: rc(u.rank), letterSpacing: '1.5px', marginTop: 2 }}>{u.rank}</div>
@@ -372,7 +372,7 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect 
                 <button key={u.memberId} onClick={() => onSelect(u)}
                     style={{ ...S.userCard, ...(unread ? { border: '1px solid rgba(74,158,255,0.35)', background: 'rgba(74,158,255,0.04)' } : {}) }}>
                     <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <img src={u.avatar} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${unread ? '#4a9eff' : rc(u.rank) + '44'}`, display: 'block' }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                        <img src={u.avatar} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${unread ? '#4a9eff' : rc(u.rank) + '44'}`, display: 'block' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
                         {/* Online status dot */}
                         <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, background: dotC, borderRadius: '50%', border: '2px solid #030303', boxShadow: status === 'online' ? `0 0 6px ${dotC}` : 'none' }} />
                         {/* Pending review badge (top-right of avatar) */}
@@ -437,7 +437,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail }: {
             {/* ── Profile header ── */}
             <div style={{ padding: '14px 14px 18px', background: 'rgba(6,6,6,0.97)', borderBottom: `1px solid ${color}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                 <button onClick={onBack} style={S.backBtn}>← BACK</button>
-                <img src={user.avatar} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${color}55`, boxShadow: `0 0 24px ${color}20`, marginBottom: 8 }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                <img src={user.avatar} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${color}55`, boxShadow: `0 0 24px ${color}20`, marginBottom: 8 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
                 <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.56rem', letterSpacing: '2px', padding: '3px 14px', borderRadius: 100, background: color + '22', color, border: `1px solid ${color}55`, marginBottom: 7 }}>{user.rank}</span>
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.35rem', color: '#fff', letterSpacing: '2px', textAlign: 'center' }}>{user.name}</div>
                 <div style={{ fontSize: '0.66rem', color: '#3a3a3a', marginTop: 3, letterSpacing: '1px' }}>{user.memberId}</div>
@@ -785,7 +785,7 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
     return (
         <div style={S.scroll}>
             <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <img src="https://static.wixstatic.com/media/ce3e5b_1bd27ba758ce465fa89a36d70a68f355~mv2.png" style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.4)', boxShadow: '0 0 40px rgba(197,160,89,0.15)' }} onError={(e) => { (e.target as any).src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'; }} alt="" />
+                <img src="/queen-karin.png" style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.4)', boxShadow: '0 0 40px rgba(197,160,89,0.15)' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.4rem', color: '#c5a059', letterSpacing: '4px', marginTop: 4 }}>QUEEN KARIN</div>
                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#555', letterSpacing: '3px' }}>SYSTEM ADMINISTRATOR</div>
                 <div style={{ fontSize: '0.72rem', color: '#333', letterSpacing: '1px' }}>{userEmail}</div>

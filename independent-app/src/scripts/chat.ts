@@ -203,7 +203,7 @@ export async function renderChat(messages: any[]) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
-        const avatarUrl = "https://static.wixstatic.com/media/ce3e5b_19faff471a434690b7a40aacf5bf42c4~mv2.png";
+        const avatarUrl = "/queen-karin.png";
         if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('http')) {
             contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
                 <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">

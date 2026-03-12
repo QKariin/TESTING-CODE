@@ -139,7 +139,7 @@ export async function POST(req: Request) {
                         name: userEmail.split('@')[0],
                         hierarchy: 'Hall Boy',
                         wallet: 5000,
-                        avatar_url: 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png',
+                        avatar_url: '/queen-karin.png',
                     })
                     .select()
                     .single();

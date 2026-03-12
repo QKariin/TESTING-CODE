@@ -280,7 +280,7 @@ export default function ProfilePage() {
             {/* SOUNDS & INPUTS */}
             <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
             <audio id="coinSound" src="/audio/2019-preview1.mp3"></audio>
-            <audio id="skipSound" src="https://static.wixstatic.com/mp3/ce3e5b_3b5b34d4083847e2b123b6fd9a8551fd.mp3"></audio>
+            <audio id="skipSound" src="/audio/2019-preview.mp3"></audio>
 
             <input type="file" id="profileUploadInput" accept="image/*" className="hidden" />
             <input type="file" id="routineUploadInput" accept="image/*" className="hidden" onChange={(e: any) => handleRoutineUpload(e.target)} />
@@ -301,7 +301,7 @@ export default function ProfilePage() {
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         <div className="big-profile-circle" onClick={() => (window as any).handleProfileUpload?.()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
-                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
+                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
                         </div>
 
                         <div onClick={() => (window as any).openManageProfileModal?.()} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)', cursor: 'pointer', userSelect: 'none' }}>
@@ -431,7 +431,7 @@ export default function ProfilePage() {
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.22)', letterSpacing: '1px', textAlign: 'center', lineHeight: 1.8 }}>LEADERBOARD · TALK · UPDATES</div>
                     </div>
 
-                    <div id="gridHero" className="v-card serve-grid-item" style={{ background: "url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png')", backgroundSize: 'cover', backgroundPosition: 'center', minHeight: 'unset', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                    <div id="gridHero" className="v-card serve-grid-item" style={{ background: "url('/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center', minHeight: 'unset', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(2,5,18,0.9) 0%, rgba(2,5,18,0.4) 100%)' }}></div>
 
                         <div id="kneelRewardOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.96)', zIndex: 5000, backdropFilter: 'blur(24px)', display: 'none', alignItems: 'center', justifyContent: 'center' }}>
@@ -772,12 +772,12 @@ export default function ProfilePage() {
                     <div className="mob-hud-row">
                         <div className="hud-circle slave" onClick={() => (window as any).openLobby()}>
                             <div className="hud-avatar">
-                                <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png", 100)} alt="Your Avatar" onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
+                                <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png", 100)} alt="Your Avatar" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
                             </div>
                             <div className="hud-gear">⚙</div>
                         </div>
                         <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>
-                            <img id="hudSlavePic" src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" alt="Queen Avatar" onError={(e) => { e.currentTarget.src = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png' }} />
+                            <img id="hudSlavePic" src="/queen-karin.png" alt="Queen Avatar" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
                             <div id="hudDomStatus" className="hud-status-dot offline"></div>
                         </div>
                     </div>

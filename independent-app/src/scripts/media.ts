@@ -117,7 +117,7 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
 
     if (url.startsWith("http")) return url;
 
-    return "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+    return "/queen-karin.png";
 }
 
 export async function getSignedUrl(url: string | null | undefined): Promise<string> {

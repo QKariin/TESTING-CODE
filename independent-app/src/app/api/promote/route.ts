@@ -30,7 +30,7 @@ export async function POST(req: Request) {
         //    (mirrors the mapping done in /api/slave-profile/route.ts lines 103-122)
         const profileParams = profile.parameters || {};
 
-        const defaultPic = "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+        const defaultPic = "/queen-karin.png";
         const rawPic = profile.avatar_url || profile.profile_picture_url || "";
         const finalPic = (rawPic && rawPic.length > 5) ? rawPic : defaultPic;
 

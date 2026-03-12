@@ -10,7 +10,7 @@ let realtimeChannel: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let updatesChannel: any = null;
 
-const DEFAULT_AVATAR = 'https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png';
+const DEFAULT_AVATAR = '/queen-karin.png';
 const MEDAL_COLORS = ['#c5a059', '#9ca3af', '#cd7f32'];
 const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -346,7 +346,7 @@ async function _loadQueenPreview() {
         el.innerHTML = `
             <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:12px;text-align:center;gap:8px;">
                 <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid rgba(197,160,89,0.5);box-shadow:0 0 16px rgba(197,160,89,0.2);">
-                    <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" style="width:100%;height:100%;object-fit:cover;">
+                    <img src="/queen-karin.png" style="width:100%;height:100%;object-fit:cover;">
                 </div>
                 <div>
                     <div style="font-family:'Cinzel';font-size:0.8rem;color:#c5a059;font-weight:700;letter-spacing:2px;">Queen Karin</div>
@@ -891,7 +891,7 @@ async function _loadQueenFull() {
             <div style="display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:20px;max-width:480px;margin:0 auto;text-align:center;">
                 <div style="position:relative;">
                     <div style="width:110px;height:110px;border-radius:50%;overflow:hidden;border:3px solid #c5a059;box-shadow:0 0 30px rgba(197,160,89,0.35);">
-                        <img src="https://static.wixstatic.com/media/ce3e5b_e06c7a2254d848a480eb98107c35e246~mv2.png" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="/queen-karin.png" style="width:100%;height:100%;object-fit:cover;">
                     </div>
                     <div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:#c5a059;display:flex;align-items:center;justify-content:center;font-size:0.65rem;">👑</div>
                 </div>

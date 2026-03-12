@@ -561,7 +561,7 @@
     left: 0;
     width: 100%;
     height: 150px;
-    background: url('https://static.wixstatic.com/media/ce3e5b_bd0ea2852b054a42bc963f1681f0d705~mv2.gif');
+    background: none;
     background-size: cover;
     opacity: 0.3;
     z-index: 0;

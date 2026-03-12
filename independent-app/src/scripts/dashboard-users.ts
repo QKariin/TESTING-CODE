@@ -93,7 +93,7 @@ export async function updateDetail(u: any) {
 
     const profPic = document.getElementById('dProfilePic') as HTMLImageElement;
     const headerBg = document.getElementById('apMirrorHeader');
-    const defaultPic = "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+    const defaultPic = "/queen-karin.png";
     const finalPic = u.avatar || u.profilePicture || defaultPic;
 
     if (profPic) {
@@ -254,7 +254,7 @@ async function updateReviewQueue(u: any) {
             const optUrl = getOptimizedUrl(t.proofUrl || '', 400);
             const mediaTag = isVideo
                 ? `<video src="${optUrl}" class="pend-thumb" autoplay loop muted playsinline style="object-fit:cover;"></video>`
-                : `<img src="${optUrl}" class="pend-thumb" onerror="this.src='https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png'">`;
+                : `<img src="${optUrl}" class="pend-thumb" onerror="this.src='/queen-karin.png'">`;
 
             return `
                     <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false)">

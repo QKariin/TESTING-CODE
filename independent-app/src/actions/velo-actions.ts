@@ -103,7 +103,7 @@ function mapUserForDashboard(p: any, t: any) {
         try { history = typeof t.Taskdom_History === 'string' ? JSON.parse(t.Taskdom_History) : t.Taskdom_History } catch (e) { }
     }
 
-    const defaultPic = "https://static.wixstatic.com/media/ce3e5b_78da97e06a3848df84d0b00c9e6dcfdd~mv2.png";
+    const defaultPic = "/queen-karin.png";
     const rawPic = p.avatar_url || p.profile_picture_url || "";
     const finalPic = (rawPic && rawPic.length > 5 && rawPic !== "undefined" && rawPic !== "null") ? rawPic : defaultPic;
 
