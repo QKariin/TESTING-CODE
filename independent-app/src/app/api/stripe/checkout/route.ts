@@ -37,7 +37,7 @@ export async function POST(req: Request) {
                             name: 'Entrance Tribute',
                             description: 'One-time tribute for system access and Hall Boy initialization.',
                         },
-                        unit_amount: 5500, // $55.00
+                        unit_amount: 100, // $1.00 (testing)
                     },
                     quantity: 1,
                 },
