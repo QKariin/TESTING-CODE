@@ -1674,6 +1674,11 @@ function subscribeToChat(email: string) {
                     if (badge) badge.classList.add('active');
                     const ring = document.querySelector('.mob-nav-queen-ring');
                     if (ring) ring.classList.add('has-new-msg');
+                    try {
+                        const snd = new Audio('/audio/message.mp3');
+                        snd.volume = 0.5;
+                        snd.play();
+                    } catch (_) {}
                 }
             }
             const html = renderChatMessage(msg);
