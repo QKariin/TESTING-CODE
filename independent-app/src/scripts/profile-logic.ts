@@ -1408,7 +1408,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
     const taskText = document.getElementById('readyText')?.innerHTML || "Mandatory Task";
     console.log("Task Text for submission:", taskText);
 
-    // UI Feedback - Handle all possible Desktop and Mobile buttons
+    // UI Feedback - routine and task buttons are separate
     const uploadBtn = document.getElementById('uploadBtn');        // Desktop Task
     const mobTaskBtn = document.getElementById('mobBtnUpload');    // Mobile Task
     const mobRoutineBtn = document.getElementById('btnRoutineUpload'); // Mobile Routine
@@ -1417,32 +1417,36 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
     const originalMobTaskText = mobTaskBtn?.innerText;
     const originalMobRoutineText = mobRoutineBtn?.innerText;
 
-    if (uploadBtn) uploadBtn.innerText = "UPLOADING...";
-    if (mobTaskBtn) mobTaskBtn.innerText = "SENDING...";
     if (mobRoutineBtn) mobRoutineBtn.innerText = "SENDING...";
 
-    // ─── STOP TIMER AND SHOW UPLOADING UI IMMEDIATELY ───
-    if (taskInterval) { clearInterval(taskInterval); taskInterval = null; }
+    // Task-only UI — do NOT touch when uploading a routine
+    if (!isRoutine) {
+        if (uploadBtn) uploadBtn.innerText = "UPLOADING...";
+        if (mobTaskBtn) mobTaskBtn.innerText = "SENDING...";
 
-    const activeTimerRow = document.getElementById('activeTimerRow');
-    const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
-    if (activeTimerRow) activeTimerRow.style.display = 'none';
-    if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'none';
+        // Stop timer and show uploading state in task section
+        if (taskInterval) { clearInterval(taskInterval); taskInterval = null; }
 
-    const uploadCont = document.getElementById('uploadBtnContainer');
-    const mobUploadCont = document.getElementById('mobUploadBtnContainer');
-    if (uploadCont) uploadCont.style.display = 'none';
-    if (mobUploadCont) mobUploadCont.style.display = 'none';
+        const activeTimerRow = document.getElementById('activeTimerRow');
+        const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
+        if (activeTimerRow) activeTimerRow.style.display = 'none';
+        if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'none';
 
-    const readyText = document.getElementById('readyText');
-    const mobTaskText = document.getElementById('mobTaskText');
-    if (readyText) {
-        readyText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING EVIDENCE...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
-        readyText.style.color = '#c5a059';
-    }
-    if (mobTaskText) {
-        mobTaskText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING EVIDENCE...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
-        mobTaskText.style.color = '#c5a059';
+        const uploadCont = document.getElementById('uploadBtnContainer');
+        const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+        if (uploadCont) uploadCont.style.display = 'none';
+        if (mobUploadCont) mobUploadCont.style.display = 'none';
+
+        const readyText = document.getElementById('readyText');
+        const mobTaskText = document.getElementById('mobTaskText');
+        if (readyText) {
+            readyText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING EVIDENCE...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
+            readyText.style.color = '#c5a059';
+        }
+        if (mobTaskText) {
+            mobTaskText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING EVIDENCE...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
+            mobTaskText.style.color = '#c5a059';
+        }
     }
 
     try {
@@ -1503,23 +1507,34 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
             refreshTaskGallery(pid);
         } else {
             console.error("Backend submission error:", data.error);
-            // Restore UI on failure
-            if (readyText) { readyText.innerText = "TRANSMISSION FAILED: " + (data.error || "Unknown error"); readyText.style.color = "var(--red)"; }
-            if (mobTaskText) { mobTaskText.innerText = "TRANSMISSION FAILED: " + (data.error || "Unknown error"); mobTaskText.style.color = "var(--red)"; }
-            if (uploadCont) uploadCont.style.display = 'flex';
-            if (mobUploadCont) mobUploadCont.style.display = 'flex';
+            if (!isRoutine) {
+                const readyText = document.getElementById('readyText');
+                const mobTaskText = document.getElementById('mobTaskText');
+                const uploadCont = document.getElementById('uploadBtnContainer');
+                const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+                if (readyText) { readyText.innerText = "TRANSMISSION FAILED: " + (data.error || "Unknown error"); readyText.style.color = "var(--red)"; }
+                if (mobTaskText) { mobTaskText.innerText = "TRANSMISSION FAILED: " + (data.error || "Unknown error"); mobTaskText.style.color = "var(--red)"; }
+                if (uploadCont) uploadCont.style.display = 'flex';
+                if (mobUploadCont) mobUploadCont.style.display = 'flex';
+            }
         }
     } catch (err) {
         console.error("Critical submission error", err);
-        if (readyText) { readyText.innerText = "CONNECTION ERROR DURING TRANSMISSION"; readyText.style.color = "var(--red)"; }
-        if (mobTaskText) { mobTaskText.innerText = "CONNECTION ERROR DURING TRANSMISSION"; mobTaskText.style.color = "var(--red)"; }
-        const uploadCont = document.getElementById('uploadBtnContainer');
-        const mobUploadCont = document.getElementById('mobUploadBtnContainer');
-        if (uploadCont) uploadCont.style.display = 'flex';
-        if (mobUploadCont) mobUploadCont.style.display = 'flex';
+        if (!isRoutine) {
+            const readyText = document.getElementById('readyText');
+            const mobTaskText = document.getElementById('mobTaskText');
+            const uploadCont = document.getElementById('uploadBtnContainer');
+            const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+            if (readyText) { readyText.innerText = "CONNECTION ERROR DURING TRANSMISSION"; readyText.style.color = "var(--red)"; }
+            if (mobTaskText) { mobTaskText.innerText = "CONNECTION ERROR DURING TRANSMISSION"; mobTaskText.style.color = "var(--red)"; }
+            if (uploadCont) uploadCont.style.display = 'flex';
+            if (mobUploadCont) mobUploadCont.style.display = 'flex';
+        }
     } finally {
-        if (uploadBtn && originalText) uploadBtn.innerText = originalText;
-        if (mobTaskBtn && originalMobTaskText) mobTaskBtn.innerText = originalMobTaskText;
+        if (!isRoutine) {
+            if (uploadBtn && originalText) uploadBtn.innerText = originalText;
+            if (mobTaskBtn && originalMobTaskText) mobTaskBtn.innerText = originalMobTaskText;
+        }
         if (mobRoutineBtn && originalMobRoutineText) mobRoutineBtn.innerText = originalMobRoutineText;
     }
 }
