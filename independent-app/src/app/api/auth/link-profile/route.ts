@@ -11,9 +11,12 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        const userEmail = user.email?.trim().toLowerCase();
+        // For Twitter users without email, use twitter_{provider_id} as identifier
+        const userEmail = user.email?.trim().toLowerCase()
+            || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : null);
+
         if (!userEmail) {
-            return NextResponse.json({ success: false, error: 'User has no email' }, { status: 400 });
+            return NextResponse.json({ success: false, error: 'User has no identifier' }, { status: 400 });
         }
 
         // Check for Service Role

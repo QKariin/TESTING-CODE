@@ -49,7 +49,8 @@ export async function POST(req: Request) {
             if (metadata.type === 'ENTRANCE_TRIBUTE') {
                 const userId = metadata.userId;
                 const userEmail = metadata.email;
-                console.log(`📜 Initializing Account for: ${userEmail}`);
+                const userName = metadata.name || userEmail.split('@')[0];
+                console.log(`📜 Initializing Account for: ${userEmail} (${userName})`);
 
                 // Create the profile from scratch
                 await supabaseAdmin
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
                     .insert({
                         id: userId,
                         member_id: userEmail,
-                        name: userEmail.split('@')[0],
+                        name: userName,
                         hierarchy: 'Hall Boy',
                         score: 0,
                         wallet: 0,

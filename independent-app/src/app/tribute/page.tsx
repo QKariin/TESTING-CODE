@@ -16,8 +16,12 @@ export default function TributePage() {
         const fetchUserAndCheck = async () => {
             const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
-            if (user?.email) {
-                setUserEmail(user.email);
+            if (user) {
+                const display = user.email
+                    || (user.user_metadata?.user_name ? `@${user.user_metadata.user_name}` : null)
+                    || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : null)
+                    || 'Unknown';
+                setUserEmail(display);
                 handleRefresh();
             }
         };

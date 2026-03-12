@@ -17,6 +17,15 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid tribute type' }, { status: 400 });
         }
 
+        // Determine identifier — email for Google/email users, twitter_{id} for Twitter users
+        const identifier = user.email
+            || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : user.id);
+
+        // Display name for the created profile
+        const displayName = user.user_metadata?.full_name
+            || user.user_metadata?.user_name
+            || (user.email ? user.email.split('@')[0] : identifier);
+
         // Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -38,7 +47,8 @@ export async function POST(req: Request) {
             cancel_url: `${req.headers.get('origin') || ''}/tribute?status=cancelled`,
             metadata: {
                 userId: user.id,
-                email: user.email || '',
+                email: identifier,
+                name: displayName,
                 type: 'ENTRANCE_TRIBUTE'
             },
         });

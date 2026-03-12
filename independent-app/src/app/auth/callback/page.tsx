@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
+function getTwitterIdentifier(user: any): string | null {
+    const providerId = user?.user_metadata?.provider_id;
+    return providerId ? `twitter_${providerId}` : null;
+}
+
 export default function AuthCallbackPage() {
     const router = useRouter();
     const [status, setStatus] = useState('Verifying identity...');
@@ -21,14 +26,13 @@ export default function AuthCallbackPage() {
                     access_token: accessToken,
                     refresh_token: hash.get('refresh_token') || '',
                 });
-                if (data?.user?.email) {
-                    await redirect(data.user.email);
-                    return;
+                if (data?.user) {
+                    const identifier = data.user.email || getTwitterIdentifier(data.user);
+                    if (identifier) { await routeUser(identifier); return; }
                 }
             }
 
-            // Google OAuth 2.0 — browser client auto-exchanges the ?code= param,
-            // just wait for the session to be established
+            // Google OAuth 2.0 — browser client auto-exchanges the ?code= param
             const user = await new Promise<any>((resolve) => {
                 const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
                     if (session?.user) { subscription.unsubscribe(); resolve(session.user); }
@@ -39,24 +43,29 @@ export default function AuthCallbackPage() {
                 setTimeout(() => { subscription.unsubscribe(); resolve(null); }, 8000);
             });
 
-            if (!user?.email) {
-                const debugInfo = `search=${window.location.search} hash=${window.location.hash.substring(0, 60) || 'empty'}`;
-                router.replace(`/login?error=auth_failed&info=${encodeURIComponent(debugInfo)}`);
+            if (!user) {
+                router.replace('/login?error=auth_failed');
                 return;
             }
 
-            await redirect(user.email);
+            const identifier = user.email || getTwitterIdentifier(user);
+            if (!identifier) {
+                router.replace('/login?error=auth_failed');
+                return;
+            }
+
+            await routeUser(identifier);
         };
 
-        const redirect = async (email: string) => {
+        const routeUser = async (identifier: string) => {
             setStatus('Access granted...');
-            const e = email.trim().toLowerCase();
-            if (e === 'ceo@qkarin.com' || e === 'liviacechova@gmail.com') {
+            const id = identifier.trim().toLowerCase();
+            if (id === 'ceo@qkarin.com' || id === 'liviacechova@gmail.com') {
                 router.replace('/dashboard');
                 return;
             }
             try {
-                const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(e)}&full=true`);
+                const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(id)}&full=true`);
                 const data = await res.json();
                 router.replace(data?.member_id ? '/profile' : '/tribute');
             } catch {
