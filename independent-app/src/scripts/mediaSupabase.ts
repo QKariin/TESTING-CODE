@@ -99,41 +99,18 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
             return await uploadFileDirectly(bucketName, folderPath, file);
         }
 
-        // Images — compress + convert HEIC→JPEG, then proxy through API (supabaseAdmin)
+        // Images — compress first, then upload directly via signed URL (same as video)
         if (isImage(file)) {
-            const { file: processedFile, type: outputType } = await compressImage(file);
-
-            const formData = new FormData();
-            formData.append('file', processedFile);
-            formData.append('bucket', bucketName);
-            formData.append('folder', folderPath);
-            formData.append('ext', safeExt(file, outputType)); // tell server the safe extension
-
-            const response = await fetch('/api/upload', { method: 'POST', body: formData });
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({ error: 'Unknown server error' }));
-                console.error('[SupabaseStorage] Proxy error:', response.status, errData);
-                throw new Error(errData.error || `Upload failed (${response.status})`);
-            }
-
-            const data = await response.json();
-            console.log('[SupabaseStorage] Proxy success:', data.url);
-            return data.url;
+            const { file: processedFile } = await compressImage(file);
+            return await uploadFileDirectly(bucketName, folderPath, processedFile);
         }
 
-        // Unknown file type — try proxy anyway
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('bucket', bucketName);
-        formData.append('folder', folderPath);
-        const response = await fetch('/api/upload', { method: 'POST', body: formData });
-        if (!response.ok) throw new Error(`Upload failed (${response.status})`);
-        return (await response.json()).url;
+        // Unknown file type — direct signed upload
+        return await uploadFileDirectly(bucketName, folderPath, file);
 
     } catch (err: any) {
         console.error('[SupabaseStorage] Upload failed:', err.message);
-        return 'failed';
+        return `failed:${err.message || 'unknown'}`;
     }
 }
 
