@@ -1606,21 +1606,27 @@ function initOneSignal(memberId: string) {
             });
             await OneSignal.login(memberId);
 
-            // Only prompt if permission not yet decided
             const state = OneSignal.Notifications.permissionNative;
-            if (state !== 'granted' && state !== 'denied') {
+            if (state !== 'granted') {
                 const banner = document.getElementById('pushBanner');
                 const allowBtn = document.getElementById('pushAllowBtn');
+                const allowLabel = document.getElementById('pushAllowLabel');
                 const dismissBtn = document.getElementById('pushDismissBtn');
                 if (banner) {
-                    setTimeout(() => { banner.style.display = 'flex'; }, 3000);
-                    allowBtn?.addEventListener('click', async () => {
-                        banner.style.display = 'none';
-                        await OneSignal.Notifications.requestPermission();
-                    });
-                    dismissBtn?.addEventListener('click', () => {
-                        banner.style.display = 'none';
-                    });
+                    if (state === 'denied') {
+                        if (allowLabel) allowLabel.textContent = 'HOW TO ENABLE';
+                        allowBtn?.addEventListener('click', () => {
+                            banner.style.display = 'none';
+                            alert('To enable notifications: open your browser site settings for throne.qkarin.com and set Notifications to Allow.');
+                        });
+                    } else {
+                        allowBtn?.addEventListener('click', async () => {
+                            banner.style.display = 'none';
+                            await OneSignal.Notifications.requestPermission();
+                        });
+                    }
+                    dismissBtn?.addEventListener('click', () => { banner.style.display = 'none'; });
+                    setTimeout(() => { banner.style.display = 'flex'; }, 2000);
                 }
             }
         } catch (e) {
