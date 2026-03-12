@@ -381,28 +381,30 @@ export const DbService = {
         const newHistory = JSON.stringify(history);
 
         // 3. Safe write: update if row exists, insert if not
+        // Routine uploads must NOT touch taskdom_active_task or taskdom_pending_state
         if (row) {
+            const taskUpdates: any = { Status: 'pending', 'Taskdom_History': newHistory };
+            if (!isRoutine) {
+                taskUpdates.taskdom_active_task = null;
+                taskUpdates.taskdom_pending_state = null;
+            }
             const { error } = await supabaseAdmin
                 .from('tasks')
-                .update({
-                    Status: 'pending',
-                    'Taskdom_History': newHistory,
-                    taskdom_active_task: null,
-                    taskdom_pending_state: null
-                })
+                .update(taskUpdates)
                 .eq('member_id', memberId);
             if (error) throw error;
         } else {
-            const { error } = await supabaseAdmin
-                .from('tasks')
-                .insert({
-                    member_id: memberId,
-                    Name: profile?.name || 'Slave',
-                    Status: 'pending',
-                    'Taskdom_History': newHistory,
-                    taskdom_active_task: null,
-                    taskdom_pending_state: null
-                });
+            const insertData: any = {
+                member_id: memberId,
+                Name: profile?.name || 'Slave',
+                Status: 'pending',
+                'Taskdom_History': newHistory,
+            };
+            if (!isRoutine) {
+                insertData.taskdom_active_task = null;
+                insertData.taskdom_pending_state = null;
+            }
+            const { error } = await supabaseAdmin.from('tasks').insert(insertData);
             if (error) throw error;
         }
 
