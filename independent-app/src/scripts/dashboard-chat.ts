@@ -232,7 +232,7 @@ function renderToHtml(m: any) {
     if (m.type === 'photo') {
         bubble = `<div class="${bubbleClass}"><img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" style="cursor:pointer" onclick="openChatPreview('${encodeURIComponent(content)}', false)" /></div>`;
     } else if (m.type === 'video') {
-        bubble = `<div class="${bubbleClass}" style="padding:4px;"><video src="${content}" controls playsinline class="chat-img-attachment"></video></div>`;
+        bubble = `<div class="${bubbleClass}" style="padding:4px;"><video src="${content}" controls playsinline preload="none" class="chat-img-attachment"></video></div>`;
     } else {
         let safeHtml = purifier.sanitize(content);
         safeHtml = safeHtml.replace(/\n/g, '<br>');
