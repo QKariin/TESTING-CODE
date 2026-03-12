@@ -12,18 +12,30 @@ export default function AuthCallbackPage() {
         const handle = async () => {
             const supabase = createClient();
             const code = new URLSearchParams(window.location.search).get('code');
+            const hash = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = hash.get('access_token');
+            const refreshToken = hash.get('refresh_token');
 
-            // Google OAuth 2.0 — exchange code first
+            let user: any = null;
+
             if (code) {
+                // Google OAuth 2.0 — exchange PKCE code
                 setStatus('Authenticating...');
-                try {
-                    await supabase.auth.exchangeCodeForSession(code);
-                } catch { /* handled below */ }
+                const { data } = await supabase.auth.exchangeCodeForSession(code);
+                user = data?.user ?? null;
+            } else if (accessToken) {
+                // Twitter OAuth 1.0a — tokens in URL hash, set session directly
+                setStatus('Authenticating...');
+                const { data } = await supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken || '',
+                });
+                user = data?.user ?? null;
+            } else {
+                // Fallback — check existing session
+                const { data: { session } } = await supabase.auth.getSession();
+                user = session?.user ?? null;
             }
-
-            // Get session — also processes URL hash for Twitter OAuth 1.0a
-            const { data: { session } } = await supabase.auth.getSession();
-            const user = session?.user;
 
             if (!user?.email) {
                 router.replace('/login?error=auth_failed');
