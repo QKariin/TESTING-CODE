@@ -7,15 +7,32 @@ export default function TributeSuccessPage() {
     const [status, setStatus] = useState('Tribute received. Initializing your station...');
 
     useEffect(() => {
+        const sessionId = new URLSearchParams(window.location.search).get('session_id');
         let attempts = 0;
-        const maxAttempts = 20; // 40 seconds total
+        const maxAttempts = 15;
 
         const check = async () => {
             attempts++;
             try {
-                const res = await fetch('/api/auth/link-profile', { method: 'POST' });
-                const data = await res.json();
-                if (data.success && data.linked) {
+                // First try direct verification via Stripe session (most reliable)
+                if (sessionId) {
+                    const res = await fetch('/api/tribute/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sessionId }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        setStatus('Profile confirmed. Entering...');
+                        setTimeout(() => { window.location.href = '/profile'; }, 1000);
+                        return;
+                    }
+                }
+
+                // Fallback: check if webhook already created it
+                const res2 = await fetch('/api/auth/link-profile', { method: 'POST' });
+                const data2 = await res2.json();
+                if (data2.success && data2.linked) {
                     setStatus('Profile confirmed. Entering...');
                     setTimeout(() => { window.location.href = '/profile'; }, 1000);
                     return;
@@ -31,8 +48,7 @@ export default function TributeSuccessPage() {
             setTimeout(check, 2000);
         };
 
-        // Give Stripe webhook a moment to fire before first check
-        setTimeout(check, 3000);
+        setTimeout(check, 2000);
     }, []);
 
     return (
