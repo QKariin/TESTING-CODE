@@ -49,7 +49,7 @@ export async function POST(req: Request) {
                 name: displayName,
                 hierarchy: 'Hall Boy',
                 score: 0,
-                wallet: 0,
+                wallet: 5000,
                 parameters: { devotion: 100 }
             });
 
