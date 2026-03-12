@@ -109,7 +109,7 @@ export default function LoginPage() {
                 <div className="login-crown">✦</div>
                 <h1>Queen Karin</h1>
                 <p className="login-subtitle">
-                    {mode === 'login' ? 'Enter your credentials' : mode === 'register' ? 'Create your account' : 'Recover access'}
+                    {mode === 'login' ? 'Log in to enter' : mode === 'register' ? 'Create your account' : 'Recover access'}
                 </p>
 
                 {/* ── OAuth buttons — shown on login & register ── */}
