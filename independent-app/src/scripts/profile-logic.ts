@@ -1417,7 +1417,16 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
     const originalMobTaskText = mobTaskBtn?.innerText;
     const originalMobRoutineText = mobRoutineBtn?.innerText;
 
-    if (mobRoutineBtn) mobRoutineBtn.innerText = "SENDING...";
+    // Routine UI feedback
+    if (isRoutine) {
+        const deskRoutineBtn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
+        const deskRoutineDisplay = document.getElementById('deskRoutineDisplay');
+        const mobRoutineDisplay = document.getElementById('mobRoutineDisplay');
+        if (mobRoutineBtn) { mobRoutineBtn.innerText = 'Sending...'; mobRoutineBtn.disabled = true; }
+        if (deskRoutineBtn) { deskRoutineBtn.innerText = 'Sending...'; deskRoutineBtn.disabled = true; }
+        if (deskRoutineDisplay) deskRoutineDisplay.textContent = 'UPLOADING...';
+        if (mobRoutineDisplay) mobRoutineDisplay.textContent = 'UPLOADING...';
+    }
 
     // Task-only UI — do NOT touch when uploading a routine
     if (!isRoutine) {
@@ -1544,7 +1553,13 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
             if (uploadBtn && originalText) uploadBtn.innerText = originalText;
             if (mobTaskBtn && originalMobTaskText) mobTaskBtn.innerText = originalMobTaskText;
         }
-        if (mobRoutineBtn && originalMobRoutineText) mobRoutineBtn.innerText = originalMobRoutineText;
+        if (isRoutine) {
+            const deskRoutineBtn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
+            if (mobRoutineBtn) { mobRoutineBtn.innerText = originalMobRoutineText || 'Upload'; mobRoutineBtn.disabled = false; }
+            if (deskRoutineBtn) { deskRoutineBtn.innerText = 'Upload'; deskRoutineBtn.disabled = false; }
+        } else if (mobRoutineBtn && originalMobRoutineText) {
+            mobRoutineBtn.innerText = originalMobRoutineText;
+        }
     }
 }
 export function handleProfileUpload(input?: HTMLInputElement) { _doProfileUpload(); }
