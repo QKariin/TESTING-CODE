@@ -3190,19 +3190,29 @@ export async function loadQueenPosts() {
         // ── Queen Karin card next to Tribute: show latest post ────────────
         const heroCard = document.getElementById('desk_LatestKarinPhoto');
         if (heroCard && latest) {
-            if (latest.media_url) {
-                heroCard.style.backgroundImage = `url('${latest.media_url}')`;
+            const cardLocked = !latest.userHasAccess;
+            const cardHasMedia = latest.media_url && !String(latest.media_url).startsWith('failed');
+            if (cardHasMedia) {
+                heroCard.style.backgroundImage = cardLocked
+                    ? `url('${latest.media_type === 'video' ? '' : latest.media_url}')`
+                    : `url('${latest.media_url}')`;
                 heroCard.style.backgroundSize = 'cover';
                 heroCard.style.backgroundPosition = 'center top';
+                if (cardLocked) heroCard.style.filter = latest.media_type === 'video' ? '' : 'blur(10px) brightness(0.4)';
             }
-            heroCard.innerHTML = `
+            heroCard.innerHTML = cardLocked ? `
+                <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+                    <div style="font-size:1.8rem;">🔒</div>
+                    ${latest.price > 0 ? `<div style="font-family:Orbitron;font-size:0.55rem;color:#c5a059;letter-spacing:2px;">${latest.price} COINS</div>` : ''}
+                    ${latest.min_rank && latest.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.5rem;color:#888;letter-spacing:1.5px;">REQUIRES ${latest.min_rank.toUpperCase()}</div>` : ''}
+                    ${latest.price > 0 ? `<button onclick="window.unlockPost('${latest.id}',${latest.price})" style="margin-top:6px;background:#c5a059;color:#000;border:none;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px;padding:7px 18px;border-radius:3px;cursor:pointer;">UNLOCK</button>` : ''}
+                </div>` : `
                 <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.2) 60%,transparent 100%);z-index:1;"></div>
                 <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;z-index:2;">
                     <div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:2px;margin-bottom:5px;">LATEST DISPATCH</div>
                     ${latest.title ? `<div style="font-family:Cinzel;font-size:0.85rem;color:#fff;line-height:1.3;margin-bottom:3px;">${latest.title}</div>` : ''}
                     ${latest.content ? `<div style="font-family:Rajdhani;font-size:0.75rem;color:rgba(255,255,255,0.55);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.4;">${latest.content}</div>` : ''}
-                </div>
-            `;
+                </div>`;
         }
 
         // ── Build the full-page editorial layout ──────────────────────────
