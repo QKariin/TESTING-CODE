@@ -3534,8 +3534,10 @@ export async function loadQueenPosts() {
             </style>
         `;
 
-        const heroPost = posts[0];
-        const restPosts = posts.slice(1);
+        // Use first post with media as hero; fall back to posts[0] if none have media
+        const heroIdx = posts.findIndex((p: any) => p.media_url);
+        const heroPost = heroIdx >= 0 ? posts[heroIdx] : posts[0];
+        const restPosts = posts.filter((_: any, i: number) => i !== (heroIdx >= 0 ? heroIdx : 0));
 
         const _heroD = new Date(heroPost.created_at);
         const heroDate = isNaN(_heroD.getTime()) ? '' : _heroD.toLocaleDateString('en-GB', {
