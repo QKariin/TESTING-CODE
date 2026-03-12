@@ -398,13 +398,20 @@ export async function loadQueenPostsDashboard() {
                     </div>
                     <button onclick="window.deleteQueenPost('${p.id}')" style="background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:Orbitron;font-size:0.6rem;flex-shrink:0;margin-left:15px;">DEL</button>
                 </div>
-                ${p.media_url ? `<div style="width:100%;max-height:300px;overflow:hidden;border-radius:6px;border:1px solid #222;"><img src="${getOptimizedUrl(p.media_url, 400)}" style="width:100%;object-fit:cover;max-height:300px;display:block;" /></div>` : ''}
+                ${p.media_url ? `
+                    <div style="width:100%;border-radius:6px;border:1px solid #222;overflow:hidden;">
+                        ${p.media_type === 'video'
+                            ? `<video src="${p.media_url}" controls style="width:100%;max-height:300px;display:block;background:#000;"></video>`
+                            : `<img src="${getOptimizedUrl(p.media_url, 400)}" style="width:100%;object-fit:cover;max-height:300px;display:block;" onerror="this.insertAdjacentHTML('afterend','<div style=\\'color:#ff4444;font-family:Orbitron;font-size:0.55rem;padding:8px;\\'>IMG LOAD FAILED — check Supabase bucket is public</div>');this.remove();" />`
+                        }
+                        <div style="font-family:monospace;font-size:0.55rem;color:#444;padding:4px 8px;word-break:break-all;">${p.media_url}</div>
+                    </div>` : ''}
                 <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
                     <div style="font-family:Orbitron;font-size:0.5rem;color:#444;letter-spacing:1px;">${new Date(p.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).toUpperCase()}</div>
                     ${p.min_rank && p.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:1px;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.2);padding:2px 8px;border-radius:3px;">🔒 ${p.min_rank.toUpperCase()}</div>` : ''}
                     ${p.price > 0 ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#888;letter-spacing:1px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:3px;">💰 ${p.price} COINS</div>` : ''}
                     ${p.media_type && p.media_type !== 'text' ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#888;letter-spacing:1px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:3px;">${p.media_type.toUpperCase()}</div>` : ''}
-                    <div style="font-family:Orbitron;font-size:0.45rem;color:#888;letter-spacing:1px;">♥ ${p.like_count || 0}</div>
+                    <div style="font-family:Orbitron;font-size:0.45rem;color:#888;letter-spacing:1px;">♥ ${p.likes || 0}</div>
                     ${p.is_published === false ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#ff6b6b;letter-spacing:1px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);padding:2px 8px;border-radius:3px;">DRAFT</div>` : ''}
                 </div>
             </div>
@@ -438,11 +445,19 @@ export async function submitQueenPost() {
     try {
         let media_url: string | null = null;
 
-        // Upload image if selected
+        // Upload image/video if selected
         if (imageInput?.files?.[0]) {
+            if (submitBtn) submitBtn.innerText = 'UPLOADING...';
             const { uploadToSupabase } = await import('./mediaSupabase');
             const url = await uploadToSupabase('media', 'queen_posts', imageInput.files[0]);
-            if (url !== 'failed') media_url = url;
+            console.log('[Post upload] result:', url);
+            if (url && !url.startsWith('failed')) {
+                media_url = url;
+            } else {
+                alert('Media upload failed: ' + url + '\n\nCheck that the "media" bucket exists and is public in Supabase.');
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'PUBLISH'; }
+                return;
+            }
         }
 
         const min_rank = minRankEl?.value || 'Hall Boy';
