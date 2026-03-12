@@ -392,14 +392,21 @@ export async function loadQueenPostsDashboard() {
         container.innerHTML = data.posts.map((p: any) => `
             <div style="border:1px solid #222;border-radius:8px;padding:20px;background:#0a0a0a;display:flex;flex-direction:column;gap:10px;position:relative;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                    <div>
+                    <div style="flex:1;min-width:0;">
                         ${p.title ? `<div style="font-family:Cinzel;font-size:1rem;color:#c5a059;letter-spacing:2px;margin-bottom:5px;">${p.title}</div>` : ''}
                         ${p.content ? `<div style="font-family:Rajdhani;font-size:0.9rem;color:#ccc;line-height:1.6;">${p.content}</div>` : ''}
                     </div>
                     <button onclick="window.deleteQueenPost('${p.id}')" style="background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:Orbitron;font-size:0.6rem;flex-shrink:0;margin-left:15px;">DEL</button>
                 </div>
                 ${p.media_url ? `<div style="width:100%;max-height:300px;overflow:hidden;border-radius:6px;border:1px solid #222;"><img src="${getOptimizedUrl(p.media_url, 400)}" style="width:100%;object-fit:cover;max-height:300px;display:block;" /></div>` : ''}
-                <div style="font-family:Orbitron;font-size:0.55rem;color:#444;letter-spacing:1px;margin-top:5px;">${new Date(p.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).toUpperCase()}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                    <div style="font-family:Orbitron;font-size:0.5rem;color:#444;letter-spacing:1px;">${new Date(p.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).toUpperCase()}</div>
+                    ${p.min_rank && p.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:1px;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.2);padding:2px 8px;border-radius:3px;">🔒 ${p.min_rank.toUpperCase()}</div>` : ''}
+                    ${p.price > 0 ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#888;letter-spacing:1px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:3px;">💰 ${p.price} COINS</div>` : ''}
+                    ${p.media_type && p.media_type !== 'text' ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#888;letter-spacing:1px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:3px;">${p.media_type.toUpperCase()}</div>` : ''}
+                    <div style="font-family:Orbitron;font-size:0.45rem;color:#888;letter-spacing:1px;">♥ ${p.like_count || 0}</div>
+                    ${p.is_published === false ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#ff6b6b;letter-spacing:1px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);padding:2px 8px;border-radius:3px;">DRAFT</div>` : ''}
+                </div>
             </div>
         `).join('');
     } catch (err) {
@@ -413,6 +420,10 @@ export async function submitQueenPost() {
     const bodyEl = document.getElementById('postBodyInput') as HTMLTextAreaElement;
     const imageInput = document.getElementById('postImageInput') as HTMLInputElement;
     const submitBtn = document.getElementById('postSubmitBtn') as HTMLButtonElement;
+    const minRankEl = document.getElementById('postMinRankInput') as HTMLSelectElement;
+    const priceEl = document.getElementById('postPriceInput') as HTMLInputElement;
+    const mediaTypeEl = document.getElementById('postMediaTypeValue') as HTMLInputElement;
+    const isPublishedEl = document.getElementById('postIsPublished') as HTMLInputElement;
 
     const title = titleEl?.value?.trim();
     const content = bodyEl?.value?.trim();
@@ -434,10 +445,15 @@ export async function submitQueenPost() {
             if (url !== 'failed') media_url = url;
         }
 
+        const min_rank = minRankEl?.value || 'Hall Boy';
+        const price = parseInt(priceEl?.value || '0', 10) || 0;
+        const media_type = mediaTypeEl?.value || 'text';
+        const is_published = isPublishedEl ? isPublishedEl.checked : true;
+
         const res = await fetch('/api/posts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, content, media_url })
+            body: JSON.stringify({ title, content, media_url, min_rank, price, media_type, is_published })
         });
 
         const data = await res.json();
@@ -449,6 +465,10 @@ export async function submitQueenPost() {
             if (imageInput) imageInput.value = '';
             const preview = document.getElementById('postImagePreview') as HTMLImageElement;
             if (preview) { preview.src = ''; preview.style.display = 'none'; }
+            if (minRankEl) minRankEl.value = 'Hall Boy';
+            if (priceEl) priceEl.value = '0';
+            if (mediaTypeEl) mediaTypeEl.value = 'text';
+            if (isPublishedEl) isPublishedEl.checked = true;
 
             loadQueenPostsDashboard();
         } else {

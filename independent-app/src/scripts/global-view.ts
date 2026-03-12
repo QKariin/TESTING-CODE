@@ -919,6 +919,76 @@ async function _loadQueenFull() {
     } catch {}
 }
 
+// ─── QUEEN TAB SWITCHER ───────────────────────────────────────────────────────
+
+export function openQueenTab(tab: string) {
+    const profileEl = document.getElementById('queenProfileContent');
+    const galleryEl = document.getElementById('queenGalleryContent');
+    const profileBtn = document.getElementById('queenTab_profile');
+    const galleryBtn = document.getElementById('queenTab_gallery');
+
+    if (tab === 'gallery') {
+        if (profileEl) profileEl.style.display = 'none';
+        if (galleryEl) galleryEl.style.display = 'block';
+        if (profileBtn) { profileBtn.style.background = 'transparent'; profileBtn.style.color = 'rgba(255,255,255,0.35)'; }
+        if (galleryBtn) { galleryBtn.style.background = 'rgba(197,160,89,0.18)'; galleryBtn.style.color = '#c5a059'; }
+        _loadQueenGallery();
+    } else {
+        if (profileEl) profileEl.style.display = 'block';
+        if (galleryEl) galleryEl.style.display = 'none';
+        if (profileBtn) { profileBtn.style.background = 'rgba(197,160,89,0.18)'; profileBtn.style.color = '#c5a059'; }
+        if (galleryBtn) { galleryBtn.style.background = 'transparent'; galleryBtn.style.color = 'rgba(255,255,255,0.35)'; }
+    }
+}
+
+export function openGalleryLightbox(url: string, type: string) {
+    const lb = document.getElementById('qkGalleryLightbox');
+    const media = document.getElementById('qkLightboxMedia');
+    if (!lb || !media) return;
+    media.innerHTML = type === 'video'
+        ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:6px;"></video>`
+        : `<img src="${url}" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:6px;" />`;
+    lb.style.display = 'flex';
+}
+
+async function _loadQueenGallery() {
+    const el = document.getElementById('queenGalleryContent');
+    if (!el) return;
+    if (el.dataset.loaded === '1') return;
+
+    el.innerHTML = `<div style="text-align:center;padding:40px;font-family:Orbitron;font-size:0.55rem;color:rgba(255,255,255,0.25);letter-spacing:2px;">LOADING...</div>`;
+
+    try {
+        const res = await fetch('/api/global/gallery');
+        const { items } = await res.json();
+
+        if (!items?.length) {
+            el.innerHTML = `<div style="text-align:center;padding:60px;font-family:Orbitron;font-size:0.6rem;color:rgba(255,255,255,0.18);letter-spacing:2px;">NO GALLERY ITEMS YET</div>`;
+            return;
+        }
+
+        const grid = items.map((item: any) => `
+            <div class="qk-gal-item" onclick="window.openGalleryLightbox('${item.url}','${item.type}')">
+                ${item.type === 'video'
+                    ? `<video src="${item.url}" preload="metadata" muted playsinline></video>`
+                    : `<img src="${item.url}" alt="" loading="lazy" />`
+                }
+                ${item.caption ? `<div class="qk-gal-caption">${item.caption}</div>` : ''}
+            </div>
+        `).join('');
+
+        el.innerHTML = `
+            <div class="qk-gal-grid">${grid}</div>
+            <div id="qkGalleryLightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;">
+                <span id="qkLightboxMedia"></span>
+            </div>
+        `;
+        el.dataset.loaded = '1';
+    } catch {
+        el.innerHTML = `<div style="text-align:center;padding:40px;font-family:Orbitron;font-size:0.55rem;color:#ff4444;">FAILED TO LOAD</div>`;
+    }
+}
+
 // ─── PHOTO UPLOAD ─────────────────────────────────────────────────────────────
 
 export async function handleGlobalPhotoUpload(input: HTMLInputElement) {

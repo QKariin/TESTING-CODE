@@ -15,6 +15,8 @@ import {
     handleGlobalQuickKey,
     handleGlobalPhotoUpload,
     loadTalkFull,
+    openQueenTab,
+    openGalleryLightbox,
 } from '@/scripts/global-view';
 import { buyRealCoins, handleSubscribe } from '@/scripts/profile-logic';
 
@@ -67,6 +69,8 @@ export default function GlobalPage() {
         (window as any).handleGlobalQuickKey = handleGlobalQuickKey;
         (window as any).handleGlobalPhotoUpload = handleGlobalPhotoUpload;
         (window as any).loadTalkFull = loadTalkFull;
+        (window as any).openQueenTab = openQueenTab;
+        (window as any).openGalleryLightbox = openGalleryLightbox;
 
         async function init() {
             try {
@@ -258,7 +262,17 @@ export default function GlobalPage() {
                 </div>
 
                 <div id="gPanel_queen" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden', overflowY: 'auto', margin: '0 10px 10px' }}>
-                    <div id="queenFullContent"></div>
+                    {/* Tab bar */}
+                    <div style={{ display: 'flex', gap: 6, padding: '10px 12px 0', flexShrink: 0 }}>
+                        <button id="queenTab_profile" onClick={() => (window as any).openQueenTab('profile')} style={{ background: 'rgba(197,160,89,0.18)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.25)', fontFamily: 'Orbitron', fontSize: '0.5rem', padding: '6px 16px', letterSpacing: '2px', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.15s' }}>PROFILE</button>
+                        <button id="queenTab_gallery" onClick={() => (window as any).openQueenTab('gallery')} style={{ background: 'transparent', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'Orbitron', fontSize: '0.5rem', padding: '6px 16px', letterSpacing: '2px', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.15s' }}>GALLERY</button>
+                    </div>
+                    {/* Profile content */}
+                    <div id="queenProfileContent">
+                        <div id="queenFullContent"></div>
+                    </div>
+                    {/* Gallery content */}
+                    <div id="queenGalleryContent" style={{ display: 'none' }}></div>
                 </div>
 
                 {/* ── EXCHEQUER PANEL ── */}

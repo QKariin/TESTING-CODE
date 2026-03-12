@@ -287,6 +287,15 @@ function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport
     return report;
 }
 
+export function rankMeetsRequirement(userRank: string, requiredRank: string): boolean {
+    const clean = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const userIdx = HIERARCHY_RULES.findIndex(r => clean(r.name) === clean(userRank));
+    const reqIdx  = HIERARCHY_RULES.findIndex(r => clean(r.name) === clean(requiredRank));
+    const safeUser = userIdx === -1 ? HIERARCHY_RULES.length - 1 : userIdx;
+    const safeReq  = reqIdx  === -1 ? HIERARCHY_RULES.length - 1 : reqIdx;
+    return safeUser <= safeReq;
+}
+
 /**
  * Internal streak calculator for backend fallback
  */

@@ -70,6 +70,8 @@ import {
     sendMobGlMessage,
     handleMobGlKey,
     triggerTaskEvidencePick,
+    unlockPost,
+    togglePostLike,
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -145,6 +147,8 @@ export default function ProfilePage() {
             (window as any).handleMobGlKey = handleMobGlKey;
             (window as any).toggleSystemLog = toggleSystemLog;
             (window as any).renderKneelDots = renderKneelDots;
+            (window as any).unlockPost = unlockPost;
+            (window as any).togglePostLike = togglePostLike;
         }
 
         async function loadProfile() {

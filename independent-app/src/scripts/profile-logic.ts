@@ -3170,7 +3170,9 @@ export async function loadQueenPosts() {
     }
 
     try {
-        const res = await fetch('/api/posts', { cache: 'no-store' });
+        const email = getState().memberId || '';
+        const url = email ? `/api/posts?email=${encodeURIComponent(email)}` : '/api/posts';
+        const res = await fetch(url, { cache: 'no-store' });
         const data = await res.json();
 
         if (!data.success || !data.posts || data.posts.length === 0) {
@@ -3481,16 +3483,30 @@ export async function loadQueenPosts() {
             const d = isNaN(_pD.getTime()) ? '' : _pD.toLocaleDateString('en-GB', {
                 day: 'numeric', month: 'short', year: 'numeric'
             }).toUpperCase();
+            const locked = !p.userHasAccess;
+            const likeCount = p.like_count || 0;
+            const liked = p.userHasLiked || false;
             return `
-                    <div class="qk-card">
+                    <div class="qk-card${locked ? ' qk-card-locked' : ''}">
                         ${p.media_url
-                    ? `<div class="qk-card-img"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`
+                    ? `<div class="qk-card-img qk-card-media"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`
                     : `<div class="qk-card-img-placeholder">👑</div>`
                 }
+                        ${locked ? `
+                        <div class="qk-lock-overlay">
+                            <div class="qk-lock-icon">🔒</div>
+                            ${p.price > 0 ? `<div class="qk-lock-price">${p.price} COINS</div>` : ''}
+                            ${p.min_rank && p.min_rank !== 'Hall Boy' ? `<div class="qk-lock-rank">REQUIRES ${(p.min_rank || '').toUpperCase()}</div>` : ''}
+                            ${p.price > 0 ? `<button class="qk-unlock-btn" onclick="window.unlockPost('${p.id}', ${p.price})">UNLOCK</button>` : ''}
+                        </div>` : ''}
                         <div class="qk-card-body">
                             <div class="qk-card-date">${d}</div>
                             ${p.title ? `<div class="qk-card-title">${p.title}</div>` : ''}
-                            ${p.content ? `<div class="qk-card-content">${p.content}</div>` : ''}
+                            ${!locked && p.content ? `<div class="qk-card-content">${p.content}</div>` : ''}
+                        </div>
+                        <div class="qk-like-bar">
+                            <button class="qk-like-btn${liked ? ' liked' : ''}" onclick="window.togglePostLike('${p.id}', this)">${liked ? '♥' : '♡'}</button>
+                            <span class="qk-like-count" id="likeCount_${p.id}">${likeCount}</span>
                         </div>
                     </div>
                     `;
@@ -3893,4 +3909,49 @@ function _openHistoryModal(items: any[], idx: number, resolveUrl: (u: string) =>
     document.getElementById('__altarClose')?.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); });
     document.getElementById('__altarPrev')?.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); _openHistoryModal(items, idx - 1, resolveUrl); });
     document.getElementById('__altarNext')?.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); _openHistoryModal(items, idx + 1, resolveUrl); });
+}
+
+export async function unlockPost(postId: string, price: number) {
+    const email = getState().memberId;
+    if (!email) return;
+    if (!confirm(`Unlock this post for ${price} coins?`)) return;
+
+    const res = await fetch(`/api/posts/${postId}/unlock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+        if (data.newWallet !== undefined) setState({ wallet: data.newWallet });
+        loadQueenPosts();
+    } else if (data.error === 'INSUFFICIENT_FUNDS') {
+        const pm = document.getElementById('povertyModal');
+        if (pm) pm.style.display = 'flex';
+    } else {
+        alert(data.error || 'Unlock failed');
+    }
+}
+
+export async function togglePostLike(postId: string, btnEl: HTMLButtonElement) {
+    const email = getState().memberId;
+    if (!email) return;
+
+    const res = await fetch(`/api/posts/${postId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!data.success) return;
+
+    const liked = data.liked;
+    btnEl.textContent = liked ? '♥' : '♡';
+    btnEl.classList.toggle('liked', liked);
+    const countEl = document.getElementById(`likeCount_${postId}`);
+    if (countEl) {
+        const current = parseInt(countEl.textContent || '0');
+        countEl.textContent = String(liked ? current + 1 : Math.max(current - 1, 0));
+    }
 }

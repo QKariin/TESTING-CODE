@@ -487,6 +487,51 @@ export default function DashboardPage() {
                             <span style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: '#555' }}>Optional — image or video attachment</span>
                         </div>
                         <img id="postImagePreview" src="" alt="preview" style={{ display: 'none', maxHeight: '180px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #333' }} />
+
+                        {/* Min rank + price */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                <label style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#555', letterSpacing: '2px' }}>MIN RANK</label>
+                                <select id="postMinRankInput" style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.85rem', padding: '8px 12px', borderRadius: '4px', outline: 'none' }}>
+                                    <option value="Hall Boy">Hall Boy</option>
+                                    <option value="Footman">Footman</option>
+                                    <option value="Silverman">Silverman</option>
+                                    <option value="Butler">Butler</option>
+                                    <option value="Chamberlain">Chamberlain</option>
+                                    <option value="Secretary">Secretary</option>
+                                    <option value="Queen&apos;s Champion">Queen&apos;s Champion</option>
+                                </select>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                <label style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#555', letterSpacing: '2px' }}>PRICE (COINS)</label>
+                                <input id="postPriceInput" type="number" min="0" defaultValue={0} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.85rem', padding: '8px 12px', borderRadius: '4px', outline: 'none', width: '120px' }} />
+                            </div>
+                        </div>
+
+                        {/* Media type */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                            <label style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#555', letterSpacing: '2px' }}>MEDIA TYPE</label>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {['text', 'photo', 'video'].map(t => (
+                                    <button key={t} id={`postMediaType_${t}`} onClick={() => {
+                                        ['text','photo','video'].forEach(x => {
+                                            const b = document.getElementById(`postMediaType_${x}`) as HTMLButtonElement;
+                                            if (b) { b.style.background = x === t ? 'rgba(197,160,89,0.2)' : '#111'; b.style.color = x === t ? '#c5a059' : '#666'; b.style.borderColor = x === t ? 'rgba(197,160,89,0.4)' : '#333'; }
+                                        });
+                                        const inp = document.getElementById('postMediaTypeValue') as HTMLInputElement;
+                                        if (inp) inp.value = t;
+                                    }} style={{ background: t === 'text' ? 'rgba(197,160,89,0.2)' : '#111', border: `1px solid ${t === 'text' ? 'rgba(197,160,89,0.4)' : '#333'}`, color: t === 'text' ? '#c5a059' : '#666', fontFamily: 'Orbitron', fontSize: '0.5rem', padding: '6px 14px', letterSpacing: '2px', cursor: 'pointer', borderRadius: '4px', textTransform: 'uppercase' }}>{t}</button>
+                                ))}
+                            </div>
+                            <input type="hidden" id="postMediaTypeValue" defaultValue="text" />
+                        </div>
+
+                        {/* Published toggle */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <input type="checkbox" id="postIsPublished" defaultChecked style={{ accentColor: '#c5a059', width: '16px', height: '16px', cursor: 'pointer' }} />
+                            <label htmlFor="postIsPublished" style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#888', letterSpacing: '2px', cursor: 'pointer' }}>PUBLISH IMMEDIATELY</label>
+                        </div>
+
                         <button
                             id="postSubmitBtn"
                             onClick={() => (window as any).submitQueenPost()}

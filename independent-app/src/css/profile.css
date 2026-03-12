@@ -4212,3 +4212,32 @@
     background-repeat: no-repeat !important;
     background-color: transparent !important;
 }
+/* =========================================
+   POST LOCK OVERLAY & LIKE BAR
+   ========================================= */
+.qk-card { position: relative; overflow: hidden; border-radius: 12px; background: rgba(10,6,2,0.8); border: 1px solid rgba(197,160,89,0.12); transition: border-color 0.2s, box-shadow 0.2s; }
+.qk-card:hover { border-color: rgba(197,160,89,0.3); box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+.qk-card-locked .qk-card-media img,
+.qk-card-locked .qk-card-media video { filter: blur(14px) brightness(0.35); transform: scale(1.08); }
+.qk-lock-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 3; }
+.qk-lock-icon { font-size: 2rem; color: #c5a059; text-shadow: 0 0 20px rgba(197,160,89,0.6); }
+.qk-lock-price { font-family: Orbitron, sans-serif; font-size: 0.75rem; color: #c5a059; letter-spacing: 3px; font-weight: 700; }
+.qk-lock-rank { font-family: Cinzel, serif; font-size: 0.6rem; color: rgba(255,255,255,0.4); letter-spacing: 2px; }
+.qk-unlock-btn { background: linear-gradient(135deg, #c5a059, #8b6914); color: #000; border: none; font-family: Orbitron, sans-serif; font-size: 0.55rem; padding: 8px 18px; letter-spacing: 2px; cursor: pointer; border-radius: 4px; font-weight: 700; transition: opacity 0.2s; }
+.qk-unlock-btn:hover { opacity: 0.85; }
+.qk-like-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-top: 1px solid rgba(255,255,255,0.05); }
+.qk-like-btn { background: none; border: none; color: #555; font-size: 1.1rem; cursor: pointer; transition: color 0.15s, transform 0.15s; padding: 0; line-height: 1; }
+.qk-like-btn.liked { color: #e85d75; }
+.qk-like-btn:hover { transform: scale(1.2); }
+.qk-like-count { font-family: Orbitron, sans-serif; font-size: 0.5rem; color: #444; letter-spacing: 1px; }
+
+/* =========================================
+   GALLERY GRID
+   ========================================= */
+.qk-gal-grid { column-count: 3; column-gap: 8px; padding: 12px; }
+.qk-gal-item { break-inside: avoid; margin-bottom: 8px; position: relative; border-radius: 8px; overflow: hidden; cursor: zoom-in; background: #0d0d0d; border: 1px solid rgba(197,160,89,0.08); transition: border-color 0.2s; }
+.qk-gal-item:hover { border-color: rgba(197,160,89,0.35); }
+.qk-gal-item img, .qk-gal-item video { width: 100%; display: block; }
+.qk-gal-caption { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); font-family: Rajdhani, sans-serif; font-size: 0.75rem; color: rgba(255,255,255,0.6); opacity: 0; transition: opacity 0.15s; }
+.qk-gal-item:hover .qk-gal-caption { opacity: 1; }
+@media (max-width: 600px) { .qk-gal-grid { column-count: 2; } }
