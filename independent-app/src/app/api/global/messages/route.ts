@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     const { data, error } = await supabaseAdmin
         .from('global_messages')
-        .select('id, sender_email, sender_name, sender_avatar, message, media_url, media_type, created_at')
+        .select('*')
         .order('created_at', { ascending: true })
         .limit(100);
 
