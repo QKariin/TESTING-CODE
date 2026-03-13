@@ -571,13 +571,22 @@ function _buildBubble(msg: any, myEmail: string): string {
     const av = msg.sender_avatar;
     const initial = (name[0] || 'S').toUpperCase();
 
+    // Build media block if present
+    const mediaHtml = msg.media_url ? (
+        msg.media_type === 'video'
+            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:300px;object-fit:cover;display:block;"></video>`
+            : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:300px;object-fit:cover;display:block;" />`
+    ) : '';
+    const hasMedia = !!msg.media_url;
+
     // Queen/admin message — golden bubble, right-aligned if sent by me, left if by another queen
     if (isQueen) {
         if (isMe) {
             return `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
                 <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);margin-bottom:4px;letter-spacing:1px;">QUEEN KARIN · ${time}</div>
-                <div style="max-width:70%;padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:14px 14px 3px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);">
+                <div style="max-width:${hasMedia ? '85%' : '70%'};padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:14px 14px 3px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
                     <div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
+                    ${mediaHtml}
                 </div>
             </div>`;
         }
@@ -589,10 +598,11 @@ function _buildBubble(msg: any, myEmail: string): string {
                 ${avatarHtml}
                 <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">♛</div>
             </div>
-            <div style="max-width:70%;">
+            <div style="max-width:${hasMedia ? '85%' : '70%'};">
                 <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.7);margin-bottom:4px;letter-spacing:1px;">QUEEN KARIN · ${time}</div>
-                <div style="padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:3px 14px 14px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);">
+                <div style="padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:3px 14px 14px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
                     <div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
+                    ${mediaHtml}
                 </div>
             </div>
         </div>`;

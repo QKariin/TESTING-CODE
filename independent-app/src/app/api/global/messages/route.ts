@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     const { data, error } = await supabaseAdmin
         .from('global_messages')
-        .select('id, sender_email, sender_name, sender_avatar, message, created_at')
+        .select('id, sender_email, sender_name, sender_avatar, message, media_url, media_type, created_at')
         .order('created_at', { ascending: true })
         .limit(100);
 
@@ -16,7 +16,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
     const body = await req.json();
-    const { senderEmail, message } = body;
+    const { senderEmail, message, media_url, media_type } = body;
 
     if (!message?.trim()) return NextResponse.json({ error: 'Message required' }, { status: 400 });
     if (!senderEmail) return NextResponse.json({ error: 'Sender required' }, { status: 400 });
@@ -40,6 +40,8 @@ export async function POST(req: Request) {
             sender_name: senderName,
             sender_avatar: senderAvatar,
             message: message.trim(),
+            media_url: media_url || null,
+            media_type: media_type || null,
         })
         .select()
         .single();

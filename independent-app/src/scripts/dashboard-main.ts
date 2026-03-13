@@ -549,18 +549,35 @@ export async function submitQueenPost() {
             setStatus('PUBLISHED');
             dismissIndicator(true);
 
-            // Announce in global chat
-            const typeLabel = media_type === 'video' ? 'NEW VIDEO' : media_type === 'photo' ? 'NEW PHOTO' : 'NEW POST';
-            const priceNote = price > 0 ? ` · ${price} coins to unlock` : '';
-            const rankNote = min_rank && min_rank !== 'Hall Boy' ? ` · ${min_rank}+ only` : '';
-            const announcementMsg = title
-                ? `${typeLabel} — "${title}"${priceNote}${rankNote} · Check the Queen's Feed`
-                : `${typeLabel} published${priceNote}${rankNote} · Check the Queen's Feed`;
-            fetch('/api/global/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: 'ceo@qkarin.com', message: announcementMsg }),
-            }).catch(() => { /* silent — don't block publish on chat failure */ });
+            // Global chat: free Hall Boy content goes directly as media; paid/restricted gets an announcement
+            const isFreeForAll = price === 0 && (!min_rank || min_rank === 'Hall Boy');
+            if (isFreeForAll && media_url && media_type !== 'text') {
+                // Send actual content into global chat
+                const chatMsg = title || content || 'New from Queen Karin';
+                fetch('/api/global/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        senderEmail: 'ceo@qkarin.com',
+                        message: chatMsg,
+                        media_url,
+                        media_type: media_type === 'photo' ? 'image' : media_type,
+                    }),
+                }).catch(() => {});
+            } else {
+                // Send announcement for paid / rank-restricted content
+                const typeLabel = media_type === 'video' ? 'NEW VIDEO' : media_type === 'photo' ? 'NEW PHOTO' : 'NEW POST';
+                const priceNote = price > 0 ? ` · ${price} coins to unlock` : '';
+                const rankNote = min_rank && min_rank !== 'Hall Boy' ? ` · ${min_rank}+ only` : '';
+                const announcementMsg = title
+                    ? `${typeLabel} — "${title}"${priceNote}${rankNote} · Check the Queen's Feed`
+                    : `${typeLabel} published${priceNote}${rankNote} · Check the Queen's Feed`;
+                fetch('/api/global/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senderEmail: 'ceo@qkarin.com', message: announcementMsg }),
+                }).catch(() => {});
+            }
 
             // Reset form
             if (titleEl) titleEl.value = '';
