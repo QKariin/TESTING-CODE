@@ -1589,6 +1589,27 @@ export function initChatSystem() {
     subscribeToChat(memberId);
     chatSubscribed = true;
 
+    // Polling fallback: re-fetch wallet+score every 15s in case realtime misses an event
+    const email = memberId.toLowerCase();
+    setInterval(async () => {
+        try {
+            const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email)}`);
+            const data = await res.json();
+            if (data && (data.wallet !== undefined || data.score !== undefined)) {
+                const s = getState();
+                const walletChanged = data.wallet !== undefined && data.wallet !== s.wallet;
+                const scoreChanged = data.score !== undefined && data.score !== s.score;
+                if (walletChanged || scoreChanged) {
+                    setState({
+                        wallet: data.wallet ?? s.wallet,
+                        score: data.score ?? s.score,
+                    });
+                    updateWalletDisplay();
+                }
+            }
+        } catch (_) {}
+    }, 15000);
+
     // Init OneSignal and identify this user so push notifications target them
     initOneSignal(memberId);
 }
@@ -1756,10 +1777,30 @@ function subscribeToChat(email: string) {
             schema: 'public',
             table: 'tasks',
             filter: `member_id=eq.${cleanEmail}`
-        }, (payload) => {
-            console.log('[REALTIME] Tasks table updated. Refreshing routine widget and gallery...');
+        }, () => {
             updateRoutineWidget();
             refreshTaskGallery(cleanEmail);
+        })
+        .subscribe();
+
+    // Live wallet + score — update instantly when profiles row changes
+    supabase
+        .channel('profile_stats')
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `member_id=eq.${cleanEmail}`
+        }, (payload) => {
+            const fresh = payload.new as any;
+            if (!fresh) return;
+            if (fresh.wallet !== undefined || fresh.score !== undefined) {
+                setState({
+                    wallet: fresh.wallet ?? getState().wallet,
+                    score: fresh.score ?? getState().score,
+                });
+                updateWalletDisplay();
+            }
         })
         .subscribe();
 }
