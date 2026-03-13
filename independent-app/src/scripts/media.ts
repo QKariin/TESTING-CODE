@@ -62,7 +62,7 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     if (url.includes("/storage/v1/object/public/")) {
         if (/\.(mp4|mov|avi|mkv|webm|m4v|3gp|hevc|wmv|flv)/i.test(url)) return url;
         const transformed = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-        return `${transformed}?width=${width}&quality=80&resize=cover`;
+        return `${transformed}?width=${width}&quality=80`;
     }
     // Private/signed Supabase URLs — return as-is
     if (url.includes("supabase.co/storage")) return url;
