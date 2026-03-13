@@ -46,8 +46,8 @@ export function closeListModal() {
     if (modal) modal.classList.remove('active');
 }
 
-export function openModal(taskId: string | null, memberId: string | null, mediaUrl: string | null, mediaType: string | null, taskText: string | null, isHistory: boolean = false, status: string | null = null) {
-    setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: mediaType, text: taskText });
+export function openModal(taskId: string | null, memberId: string | null, mediaUrl: string | null, mediaType: string | null, taskText: string | null, isHistory: boolean = false, status: string | null = null, isRoutine: boolean = false) {
+    setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: mediaType, text: taskText, isRoutine });
     const modal = document.getElementById('reviewModal');
     const mediaBox = document.getElementById('mMediaBox');
     const textEl = document.getElementById('mText');
@@ -70,6 +70,11 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
     if (isHistory) {
         actionsEl.innerHTML = status ? `<div class="hist-status st-${status === 'approve' ? 'app' : 'rej'}">${status.toUpperCase()}</div>` : `<button class="btn-main" onclick="window.closeModal()" style="background:#666;color:white;">CLOSE</button>`;
+    } else if (isRoutine) {
+        actionsEl.innerHTML = `
+            <div style="font-family:Orbitron;font-size:0.6rem;color:#888;letter-spacing:2px;text-align:center;margin-bottom:8px;">DAILY ROUTINE — 50 PTS</div>
+            <button class="btn-main" onclick="window.reviewTask('approve')" style="background:var(--green);color:black;">YES</button>
+            <button class="btn-main" onclick="window.reviewTask('reject')" style="background:#333;color:#888;border:1px solid #444;">NO</button>`;
     } else {
         actionsEl.innerHTML = `<button class="btn-main" onclick="window.reviewTask('approve')" style="background:var(--green);color:black;">APPROVE</button><button class="btn-main" onclick="window.reviewTask('reject')" style="background:var(--red);color:white;">REJECT</button>`;
     }
@@ -101,7 +106,7 @@ export async function openModById(taskId: string, memberId: string, isHistory: b
                 finalUrl = getOptimizedUrl(finalUrl, 1000);
             }
         }
-        openModal(taskId, memberId, finalUrl, t.proofType, t.text, isHistory, t.status);
+        openModal(taskId, memberId, finalUrl, t.proofType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'));
     }
 }
 
@@ -111,6 +116,53 @@ export function reviewTask(decision: 'approve' | 'reject') {
     // Capture state locally to avoid race conditions
     const taskData = { ...currTask };
 
+    // --- ROUTINE: simple YES/NO — no reward protocol, no penalty ---
+    if (taskData.isRoutine) {
+        isConfirming = true;
+
+        const u = users.find(x => x.memberId === taskData.memberId);
+        if (u) u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== taskData.id);
+        setGlobalQueue(globalQueue.filter((x: any) => x.id !== taskData.id));
+
+        if (decision === 'approve') {
+            // Optimistic points update
+            if (u) {
+                u.points = (u.points || 0) + 50;
+                if (u.score !== undefined) u.score = (u.score || 0) + 50;
+            }
+            import('./dashboard-main').then(m => m.renderMainDashboard());
+            closeModal();
+
+            adminApproveTaskAction(taskData.id!, taskData.memberId!, 50, null)
+                .then(res => {
+                    isConfirming = false;
+                    if (!res.success) console.error("Routine approve fail:", res.error);
+                })
+                .catch(err => {
+                    isConfirming = false;
+                    console.error("Routine approval error:", err);
+                });
+        } else {
+            // Reject with no penalty
+            import('./dashboard-main').then(m => m.renderMainDashboard());
+            closeModal();
+
+            adminRejectTaskAction(taskData.id!, taskData.memberId!)
+                .then(res => {
+                    isConfirming = false;
+                    if (!res.success) console.error("Routine reject fail:", res.error);
+                })
+                .catch(err => {
+                    isConfirming = false;
+                    console.error("Routine rejection error:", err);
+                });
+        }
+
+        if (activeListFilter !== null) renderGlobalReview(activeListFilter);
+        return;
+    }
+
+    // --- TASK: full reward protocol ---
     if (decision === 'approve') {
         openRewardProtocol();
     } else {

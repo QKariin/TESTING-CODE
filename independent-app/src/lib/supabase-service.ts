@@ -324,34 +324,44 @@ export const DbService = {
         const history: any[] = this._parseHistory(row);
         const idx = history.findIndex((t: any) => t.id === taskId);
 
+        const isRoutine = idx > -1 ? !!history[idx].isRoutine : false;
+
         if (idx > -1) {
             history[idx].status = 'reject';
             history[idx].completed = false;
         }
 
-        const newWallet = Math.max(0, (row?.Wallet || 0) - 300);
+        // Routines get no penalty — only tasks lose 300 coins
+        const taskUpdates: any = {
+            'Taskdom_History': JSON.stringify(history),
+            'Status': 'reject',
+        };
+        if (!isRoutine) {
+            taskUpdates['Wallet'] = Math.max(0, (row?.Wallet || 0) - 300);
+        }
 
         await supabaseAdmin
             .from('tasks')
-            .update({
-                'Taskdom_History': JSON.stringify(history),
-                'Status': 'reject',
-                'Wallet': newWallet
-            })
+            .update(taskUpdates)
             .eq('member_id', profileId);
 
-        // 2. Sync with profiles table if it exists
-        try {
-            const profile = await this.getProfile(profileId);
-            if (profile && profile.id) {
-                const pWallet = Math.max(0, (profile.wallet || 0) - 300);
-                await this.updateProfile(profile.id, { wallet: pWallet });
-            }
-        } catch (_) { }
+        // 2. Sync wallet with profiles table (only for tasks)
+        if (!isRoutine) {
+            try {
+                const profile = await this.getProfile(profileId);
+                if (profile && profile.id) {
+                    const pWallet = Math.max(0, (profile.wallet || 0) - 300);
+                    await this.updateProfile(profile.id, { wallet: pWallet });
+                }
+            } catch (_) { }
+        }
 
         // 3. Send system chat message
         try {
-            await this.sendMessage(profileId, `TASK REJECTED — 300 <i class="fas fa-coins" style="color:#c5a059;"></i> PENALTY APPLIED`, 'system');
+            const msg = isRoutine
+                ? `ROUTINE REJECTED — NO POINTS AWARDED`
+                : `TASK REJECTED — 300 COINS PENALTY APPLIED`;
+            await this.sendMessage(profileId, msg, 'system');
         } catch (_) { }
     },
 
@@ -375,6 +385,17 @@ export const DbService = {
             isRoutine: isRoutine,
             category: isRoutine ? 'Routine' : undefined
         };
+
+        // Prevent duplicates: remove any existing pending routine for today before adding
+        if (isRoutine) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const dupIdx = history.findIndex((t: any) =>
+                t.isRoutine === true && t.status === 'pending' &&
+                typeof t.timestamp === 'string' && t.timestamp.startsWith(todayStr)
+            );
+            if (dupIdx > -1) history.splice(dupIdx, 1);
+        }
+
         history.unshift(newEntry);
 
         const profile = await this.getProfile(memberId);
