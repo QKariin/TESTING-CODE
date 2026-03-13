@@ -127,27 +127,9 @@ export default function GlobalPage() {
                         <div id="globalBreadcrumb" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', borderLeft: '1px solid rgba(197,160,89,0.2)', paddingLeft: '12px' }}></div>
                         <button id="globalBackBtn" onClick={() => closeGlobalSection()} style={{ display: 'none', background: 'none', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.45rem', padding: '4px 11px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>← BACK</button>
                     </div>
-                    {/* Center: nav links */}
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                        <button onClick={() => { window.location.href = '/profile'; }} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.4rem', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px', transition: 'all 0.15s' }}
-                            onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = 'rgba(197,160,89,0.4)'; (e.target as HTMLElement).style.color = '#c5a059'; }}
-                            onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}>
-                            DASHBOARD
-                        </button>
-                        <button onClick={() => { window.location.href = '/profile?tab=record'; }} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.4rem', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px', transition: 'all 0.15s' }}
-                            onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = 'rgba(197,160,89,0.4)'; (e.target as HTMLElement).style.color = '#c5a059'; }}
-                            onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}>
-                            RECORDS
-                        </button>
-                        <button onClick={() => openGlobalSection('exchequer')} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.35)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.4rem', padding: '4px 12px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px', transition: 'all 0.15s' }}
-                            onMouseEnter={e => { (e.target as HTMLElement).style.background = 'rgba(197,160,89,0.1)'; }}
-                            onMouseLeave={e => { (e.target as HTMLElement).style.background = 'none'; }}>
-                            EXCHEQUER
-                        </button>
-                    </div>
-                    {/* Right: back to profile */}
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button onClick={() => window.location.href = '/profile'} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.5rem', padding: '4px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>← PROFILE</button>
+                    {/* Right: back to dashboard */}
+                    <div>
+                        <button onClick={() => window.location.href = '/dashboard'} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.5rem', padding: '5px 16px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>← DASHBOARD</button>
                     </div>
                 </div>
 
