@@ -123,18 +123,19 @@ export async function extractAndUploadVideoThumbnail(videoFile: File): Promise<s
         const video = document.createElement('video');
         video.muted = true;
         video.playsInline = true;
-        video.preload = 'metadata';
+        video.preload = 'auto';
+        video.crossOrigin = 'anonymous';
 
         const objectUrl = URL.createObjectURL(videoFile);
         video.src = objectUrl;
 
-        const cleanup = () => URL.revokeObjectURL(objectUrl);
+        const cleanup = () => { try { URL.revokeObjectURL(objectUrl); } catch { /* ignore */ } };
 
-        video.onloadedmetadata = () => {
-            video.currentTime = Math.min(1, video.duration * 0.1);
-        };
+        // Timeout safety — give up after 30s
+        const timeout = setTimeout(() => { cleanup(); resolve(null); }, 30000);
 
-        video.onseeked = async () => {
+        const grabFrame = async () => {
+            clearTimeout(timeout);
             try {
                 const maxW = 800;
                 const w = Math.min(video.videoWidth || 800, maxW);
@@ -145,22 +146,45 @@ export async function extractAndUploadVideoThumbnail(videoFile: File): Promise<s
                 const canvas = document.createElement('canvas');
                 canvas.width = w;
                 canvas.height = h;
-                canvas.getContext('2d')?.drawImage(video, 0, 0, w, h);
+                const ctx = canvas.getContext('2d');
+                if (!ctx) { cleanup(); resolve(null); return; }
+                ctx.drawImage(video, 0, 0, w, h);
 
                 canvas.toBlob(async (blob) => {
                     cleanup();
                     if (!blob) { resolve(null); return; }
                     const thumbFile = new File([blob], 'thumb.jpg', { type: 'image/jpeg' });
                     const url = await uploadFileDirectly('media', 'queen_posts_thumbs', thumbFile);
+                    console.log('[Thumbnail upload]', url);
                     resolve(url.startsWith('failed') ? null : url);
                 }, 'image/jpeg', 0.82);
-            } catch {
+            } catch (e) {
+                console.warn('[Thumbnail] frame grab failed:', e);
                 cleanup();
                 resolve(null);
             }
         };
 
-        video.onerror = () => { cleanup(); resolve(null); };
+        video.onseeked = grabFrame;
+
+        video.onloadeddata = () => {
+            // Seek to 1s, or 10% of duration, whichever is less
+            const seekTo = Math.min(1, (video.duration || 0) * 0.1);
+            if (seekTo > 0 && isFinite(seekTo)) {
+                video.currentTime = seekTo;
+            } else {
+                // Duration unknown — try seeking to 0 and grab immediately
+                video.currentTime = 0;
+            }
+        };
+
+        // If onloadeddata never fires, fall back to onloadedmetadata
+        video.onloadedmetadata = () => {
+            if (video.readyState >= 2) return; // onloadeddata already handled it
+            video.currentTime = Math.min(1, (video.duration || 0) * 0.1);
+        };
+
+        video.onerror = () => { clearTimeout(timeout); cleanup(); resolve(null); };
     });
 }
 
