@@ -332,13 +332,13 @@ function renderTributes() {
                 `;
             } else {
                 return `
-                <div class="store-item" style="position:relative; border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; height:240px; padding:0; box-sizing:border-box;"
+                <div class="store-item" style="position:relative; border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; padding:0; box-sizing:border-box;"
                     onmouseover="this.style.boxShadow='0 12px 35px rgba(197,160,89,0.12)'; this.style.borderColor='rgba(197,160,89,0.5)'; this.style.transform='translateY(-4px)';"
                     onmouseout="this.style.boxShadow='0 4px 25px rgba(0,0,0,0.5)'; this.style.borderColor='rgba(197,160,89,0.2)'; this.style.transform='translateY(0)';">
 
-                    <!-- Product image (fixed height) -->
-                    <div style="width:100%; height:150px; background-color:#050510; position:relative; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
-                         <img src="${getOptimizedUrl(t.image, 400)}" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='/queen-karin.png'">
+                    <!-- Product image — square container so all images look consistent -->
+                    <div style="width:100%; aspect-ratio:1; background-color:#050510; position:relative; overflow:hidden; flex-shrink:0;">
+                         <img src="${getOptimizedUrl(t.image, 400)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:12px;box-sizing:border-box;" onerror="this.src='/queen-karin.png'">
                     </div>
 
                     <!-- Price badge -->
@@ -421,8 +421,8 @@ function renderGridMobile(gridEl: HTMLElement) {
 
         return `
         <div style="border-radius:12px; background:#0a0a14; border:1px solid rgba(197,160,89,0.22); display:flex; flex-direction:column; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.4); min-height:180px; overflow:visible;">
-            <div style="width:100%; height:110px; background-color:#111; border-radius:12px 12px 0 0; position:relative; flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-                <img src="${img}" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='/queen-karin.png'">
+            <div style="width:100%; aspect-ratio:1; background-color:#111; border-radius:12px 12px 0 0; position:relative; flex-shrink:0; overflow:hidden;">
+                <img src="${img}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:10px;box-sizing:border-box;" onerror="this.src='/queen-karin.png'">
                 <div style="position:absolute; top:6px; right:6px; background:rgba(5,5,20,0.92); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:2px 8px; display:flex; align-items:center; gap:3px;">
                     <i class="fas fa-coins" style="color:#c5a059; font-size:0.5rem;"></i>
                     <span style="font-family:'Orbitron',sans-serif; font-size:0.55rem; color:#c5a059; font-weight:700;">${t.price.toLocaleString()}</span>
