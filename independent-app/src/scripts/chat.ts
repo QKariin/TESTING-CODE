@@ -139,7 +139,7 @@ export async function renderChat(messages: any[]) {
                     contentHtml = `
                     <div class="msg-wishlist-card" style="margin:0 auto; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.35); border-radius:14px; max-width:220px; width:60vw; box-shadow:0 8px 30px rgba(0,0,0,0.5);">
                         <div style="width:100%; height:130px; overflow:hidden; position:relative; background:#050510;">
-                             <img src="${cardImgUrl}" onload="window.forceBottom()" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                             <img src="${cardImgUrl}" onload="window.forceBottom()" style="width:100%; height:100%; object-fit:contain; padding:8px; box-sizing:border-box;" onerror="this.style.display='none'">
                              <div style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent 50%, rgba(10,10,20,0.8) 100%);"></div>
                              <div style="position:absolute; top:8px; right:8px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:3px 9px; display:flex; align-items:center; gap:4px; backdrop-filter:blur(6px);">
                                  <span style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#c5a059; font-weight:700; letter-spacing:1px;"><i class="fas fa-coins" style="font-size:0.55rem; color:#c5a059;"></i> ${item.price ? Number(item.price).toLocaleString() : ''}</span>
