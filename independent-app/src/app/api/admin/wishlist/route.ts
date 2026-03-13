@@ -51,7 +51,7 @@ export async function PUT(req: Request) {
     const { data, error } = await supabaseAdmin
         .from('Wishlist')
         .update(updates)
-        .eq('ID', id)
+        .eq('id', id)
         .select()
         .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -62,7 +62,7 @@ export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-    const { error } = await supabaseAdmin.from('Wishlist').delete().eq('ID', id);
+    const { error } = await supabaseAdmin.from('Wishlist').delete().eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
 }
