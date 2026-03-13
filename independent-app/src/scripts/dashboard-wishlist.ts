@@ -48,7 +48,7 @@ function renderWishlistPanel() {
             <!-- Image area -->
             <div style="width:100%;aspect-ratio:1;overflow:hidden;background:#050510;">
                 ${img
-                    ? `<img src="${img}" style="width:100%;height:100%;object-fit:contain;display:block;padding:8px;box-sizing:border-box;">`
+                    ? `<img src="${img}" style="width:100%;height:100%;object-fit:cover;display:block;">`
                     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#222;font-size:2rem;">📷</div>`
                 }
             </div>
