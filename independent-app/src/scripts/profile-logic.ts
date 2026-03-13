@@ -338,7 +338,7 @@ function renderTributes() {
 
                     <!-- Product image (fixed height) -->
                     <div style="width:100%; height:120px; background-color:#050510; position:relative; overflow:hidden; flex-shrink:0;">
-                         <img src="${getOptimizedUrl(t.image, 400)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='/queen-karin.png'">
+                         <img src="${getOptimizedUrl(t.image, 400)}" style="width:100%; height:100%; object-fit:contain; padding:6px; box-sizing:border-box;" onerror="this.src='/queen-karin.png'">
                     </div>
 
                     <!-- Price badge -->
