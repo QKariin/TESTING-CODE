@@ -104,7 +104,7 @@ function renderWishlistPanel() {
                     <input type="text" id="wishlistFieldTitle" placeholder="Item name..." style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.2);border-radius:4px;color:#fff;font-family:'Cinzel';font-size:0.8rem;outline:none;">
                 </div>
 
-                <div style="margin-bottom:12px;">
+                <div id="priceRow" style="margin-bottom:12px;">
                     <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:6px;">PRICE (COINS) *</div>
                     <input type="number" id="wishlistFieldPrice" placeholder="e.g. 500" min="0" style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.2);border-radius:4px;color:#c5a059;font-family:'Orbitron';font-size:0.8rem;outline:none;">
                 </div>
@@ -138,12 +138,14 @@ function renderWishlistPanel() {
         </div>
     `;
 
-    // Show/hide goal field based on type selection
+    // Show/hide price vs goal fields based on type selection
     ['wishlistTypeGift', 'wishlistTypeCrowdfund'].forEach(id => {
         document.getElementById(id)?.addEventListener('change', () => {
             const isCrowdfund = (document.getElementById('wishlistTypeCrowdfund') as HTMLInputElement)?.checked;
             const goalRow = document.getElementById('goalAmountRow');
+            const priceRow = document.getElementById('priceRow');
             if (goalRow) goalRow.style.display = isCrowdfund ? 'block' : 'none';
+            if (priceRow) priceRow.style.display = isCrowdfund ? 'none' : 'block';
         });
     });
 }
@@ -177,7 +179,9 @@ export function openWishlistEdit(id: string) {
     (document.getElementById(isCrowdfund ? 'wishlistTypeCrowdfund' : 'wishlistTypeGift') as HTMLInputElement).checked = true;
 
     const goalRow = document.getElementById('goalAmountRow');
+    const priceRow = document.getElementById('priceRow');
     if (goalRow) goalRow.style.display = isCrowdfund ? 'block' : 'none';
+    if (priceRow) priceRow.style.display = isCrowdfund ? 'none' : 'block';
     if (isCrowdfund) {
         (document.getElementById('wishlistFieldGoal') as HTMLInputElement).value = String(item.goal_amount || item.Goal_Amount || '');
     }
@@ -258,14 +262,15 @@ export async function saveWishlistItem() {
 
     const errEl = document.getElementById('wishlistSaveErr');
     if (!title) { if (errEl) { errEl.textContent = 'Name is required.'; errEl.style.display = 'block'; } return; }
-    if (!price || price <= 0) { if (errEl) { errEl.textContent = 'Price must be greater than 0.'; errEl.style.display = 'block'; } return; }
+    if (!isCrowdfund && (!price || price <= 0)) { if (errEl) { errEl.textContent = 'Price must be greater than 0.'; errEl.style.display = 'block'; } return; }
+    if (isCrowdfund && (!goalAmount || goalAmount <= 0)) { if (errEl) { errEl.textContent = 'Goal amount must be greater than 0.'; errEl.style.display = 'block'; } return; }
     if (errEl) errEl.style.display = 'none';
 
     const saveBtn = document.querySelector('#wishlistModal button[onclick="window.saveWishlistItem()"]') as HTMLButtonElement;
     if (saveBtn) { saveBtn.textContent = 'SAVING...'; saveBtn.disabled = true; }
 
     try {
-        const payload: any = { title, price, imageUrl, category, is_crowdfund: isCrowdfund, goal_amount: isCrowdfund ? goalAmount : 0 };
+        const payload: any = { title, price: isCrowdfund ? goalAmount : price, imageUrl, category, is_crowdfund: isCrowdfund, goal_amount: isCrowdfund ? goalAmount : 0 };
         if (editingId) payload.id = editingId;
 
         const res = await fetch('/api/admin/wishlist', {
