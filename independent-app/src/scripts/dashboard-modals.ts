@@ -143,19 +143,10 @@ export function reviewTask(decision: 'approve' | 'reject') {
                     console.error("Routine approval error:", err);
                 });
         } else {
-            // Reject with no penalty
+            // NO on a routine = just dismiss, nothing else
+            isConfirming = false;
             import('./dashboard-main').then(m => m.renderMainDashboard());
             closeModal();
-
-            adminRejectTaskAction(taskData.id!, taskData.memberId!)
-                .then(res => {
-                    isConfirming = false;
-                    if (!res.success) console.error("Routine reject fail:", res.error);
-                })
-                .catch(err => {
-                    isConfirming = false;
-                    console.error("Routine rejection error:", err);
-                });
         }
 
         if (activeListFilter !== null) renderGlobalReview(activeListFilter);
