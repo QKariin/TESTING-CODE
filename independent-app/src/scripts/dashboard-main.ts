@@ -461,7 +461,10 @@ export async function submitQueenPost() {
             if (url && !url.startsWith('failed')) {
                 media_url = url;
             } else {
-                alert('Media upload failed: ' + url + '\n\nCheck that the "media" bucket exists and is public in Supabase.');
+                const sizeMatch = url?.match(/failed:size:(.+)/);
+                alert(sizeMatch
+                    ? `Upload failed — file too large (${sizeMatch[1]}).\n\nGo to Supabase → Storage → media bucket → Edit → raise the file size limit to 5GB.`
+                    : 'Media upload failed: ' + url);
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'PUBLISH'; }
                 return;
             }
