@@ -285,17 +285,17 @@ export const DbService = {
             if (comment) history[idx].adminComment = comment;
         }
 
-        // Recount from history to self-heal any prior corruption (avoids TEXT string-concat bug)
-        const approvedCount = history.filter((t: any) =>
-            t.status === 'approve' && t.type !== 'routine'
-        ).length;
+        // Increment completed task count by 1 — only for real tasks, not routines
+        const isRoutineEntry = idx > -1 ? !!history[idx].isRoutine : false;
+        const currentCount = parseInt(row?.['Taskdom_CompletedTasks'] || '0', 10) || 0;
+        const newCount = isRoutineEntry ? currentCount : currentCount + 1;
 
         await supabaseAdmin
             .from('tasks')
             .update({
                 'Taskdom_History': JSON.stringify(history),
                 'Status': 'approve',
-                'Taskdom_CompletedTasks': String(approvedCount)
+                'Taskdom_CompletedTasks': String(newCount)
             })
             .eq('member_id', profileId);
 
