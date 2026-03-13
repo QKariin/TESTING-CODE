@@ -548,6 +548,20 @@ export async function submitQueenPost() {
         if (data.success) {
             setStatus('PUBLISHED');
             dismissIndicator(true);
+
+            // Announce in global chat
+            const typeLabel = media_type === 'video' ? 'NEW VIDEO' : media_type === 'photo' ? 'NEW PHOTO' : 'NEW POST';
+            const priceNote = price > 0 ? ` · ${price} coins to unlock` : '';
+            const rankNote = min_rank && min_rank !== 'Hall Boy' ? ` · ${min_rank}+ only` : '';
+            const announcementMsg = title
+                ? `${typeLabel} — "${title}"${priceNote}${rankNote} · Check the Queen's Feed`
+                : `${typeLabel} published${priceNote}${rankNote} · Check the Queen's Feed`;
+            fetch('/api/global/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senderEmail: 'ceo@qkarin.com', message: announcementMsg }),
+            }).catch(() => { /* silent — don't block publish on chat failure */ });
+
             // Reset form
             if (titleEl) titleEl.value = '';
             if (bodyEl) bodyEl.value = '';
