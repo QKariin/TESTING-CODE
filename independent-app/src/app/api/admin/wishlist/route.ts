@@ -52,12 +52,14 @@ export async function PUT(req: Request) {
         if (price !== undefined) updates.Price = price;
     }
 
-    const { error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
         .from('Wishlist')
         .update(updates)
-        .eq('ID', id);
+        .eq('ID', id)
+        .select();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ success: true });
+    if (!data || data.length === 0) return NextResponse.json({ error: `No row matched ID="${id}" — check column name or value` }, { status: 404 });
+    return NextResponse.json({ success: true, item: data[0] });
 }
 
 export async function DELETE(req: Request) {
