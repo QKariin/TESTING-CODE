@@ -52,13 +52,17 @@ export async function PUT(req: Request) {
         if (price !== undefined) updates.Price = price;
     }
 
-    const { data, error } = await supabaseAdmin
-        .from('Wishlist')
-        .update(updates)
-        .eq('ID', id)
-        .select();
+    let { data, error } = await supabaseAdmin.from('Wishlist').update(updates).eq('ID', id).select();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    if (!data || data.length === 0) return NextResponse.json({ error: `No row matched ID="${id}" — check column name or value` }, { status: 404 });
+
+    // Fallback: some rows have NULL ID — match by Title instead
+    if (!data || data.length === 0) {
+        const result = await supabaseAdmin.from('Wishlist').update(updates).eq('Title', id).select();
+        if (result.error) return NextResponse.json({ error: result.error.message }, { status: 500 });
+        data = result.data;
+    }
+
+    if (!data || data.length === 0) return NextResponse.json({ error: `Item not found` }, { status: 404 });
     return NextResponse.json({ success: true, item: data[0] });
 }
 
@@ -66,7 +70,10 @@ export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-    const { error } = await supabaseAdmin.from('Wishlist').delete().eq('ID', id);
+    let { error } = await supabaseAdmin.from('Wishlist').delete().eq('ID', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // Fallback for rows with NULL ID
+    const { error: err2 } = await supabaseAdmin.from('Wishlist').delete().eq('Title', id);
+    if (err2) return NextResponse.json({ error: err2.message }, { status: 500 });
     return NextResponse.json({ success: true });
 }
