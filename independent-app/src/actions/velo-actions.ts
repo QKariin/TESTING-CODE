@@ -332,12 +332,22 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
                 proofUrl: "SKIPPED"
             });
             taskUpdates.Taskdom_History = JSON.stringify(history);
-
             taskUpdates.taskdom_active_task = null;
             taskUpdates.taskdom_pending_state = null;
+
+            // Deduct 300 coins from wallet
+            const currentWallet = Number(taskRow?.Wallet || 0);
+            taskUpdates.Wallet = Math.max(0, currentWallet - 300);
+
             needsUpdate = true;
 
-            // Note: Streak reset logic omitted for now to keep focus on simple migration
+            // Sync wallet to profiles table
+            try {
+                const profileWallet = Number(profile.wallet || 0);
+                await supabaseAdmin.from('profiles')
+                    .update({ wallet: Math.max(0, profileWallet - 300) })
+                    .ilike('member_id', memberId);
+            } catch (_) {}
         }
 
         // --- Clear Logic ---
@@ -1275,12 +1285,10 @@ export async function checkExpiredTasks() {
                 // --- PUNISHMENT LOGIC ---
 
                 // Reset Streak
-                // Velo: item.taskdom_current_streak = 0
                 params.taskdom_current_streak = 0;
 
-                // Deduct Points
-                let currentScore = Number(profile.score || 0);
-                currentScore = Math.max(0, currentScore - 10);
+                // Deduct 300 coins from wallet (not points)
+                const expiredWallet = Math.max(0, Number(profile.wallet || 0) - 300);
 
                 // Update History
                 let history: any[] = [];
@@ -1314,13 +1322,12 @@ export async function checkExpiredTasks() {
                 if (activityLog.length > 50) params.activity_log = activityLog.slice(0, 50);
                 else params.activity_log = activityLog;
 
-                // SAVE UPDATES (score deducted via awardPoints with negative value)
+                // SAVE UPDATES — deduct 300 coins, no point change
                 await updateProfile(profile.id, {
                     routine_history: history,
-                    parameters: params
+                    parameters: params,
+                    wallet: expiredWallet
                 });
-                const { DbService } = await import('@/lib/supabase-service');
-                await DbService.awardPoints(profile.member_id, -10);
             }
         }
 

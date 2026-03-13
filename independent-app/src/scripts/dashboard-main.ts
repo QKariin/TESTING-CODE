@@ -684,7 +684,7 @@ export async function reviewTask(submissionId: string, memberId: string) {
 
             // Close overlay and refresh
             document.getElementById('__adminCatOverlay')?.remove();
-            alert(`✓ APPROVED — ${data.pointsAwarded} coins awarded.`);
+            alert(`✓ APPROVED — ${data.pointsAwarded} points awarded.`);
         } else {
             alert('Failed to approve: ' + data.error);
         }
