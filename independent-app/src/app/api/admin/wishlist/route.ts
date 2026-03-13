@@ -42,27 +42,29 @@ export async function PUT(req: Request) {
 
     const updates: any = {};
     if (title !== undefined) updates.Title = title;
-    if (price !== undefined) updates.Price = price;
     if (imageUrl !== undefined) updates.Image = imageUrl;
     if (category !== undefined) updates.Category = category;
     if (is_crowdfund !== undefined) updates.is_crowdfund = is_crowdfund;
-    if (goal_amount !== undefined) updates.goal_amount = goal_amount;
+    if (is_crowdfund) {
+        // For crowdfund items, goal_amount IS the price
+        if (goal_amount !== undefined) { updates.goal_amount = goal_amount; updates.Price = goal_amount; }
+    } else {
+        if (price !== undefined) updates.Price = price;
+    }
 
-    const { data, error } = await supabaseAdmin
+    const { error } = await supabaseAdmin
         .from('Wishlist')
         .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('ID', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ success: true, item: data });
+    return NextResponse.json({ success: true });
 }
 
 export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-    const { error } = await supabaseAdmin.from('Wishlist').delete().eq('id', id);
+    const { error } = await supabaseAdmin.from('Wishlist').delete().eq('ID', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
 }
