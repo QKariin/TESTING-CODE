@@ -567,21 +567,14 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* OVERLAY TRIBUTE MODAL - SCRAPBOOK NOTEBOOK THEME + CROWDFUND FROSTED GLASS */}
-                    <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10000, display: 'none', flexDirection: 'column', padding: '40px 40px 40px 80px', borderRadius: '12px', overflow: 'hidden' }}>
-                        {/* Dynamic Background Image */}
-                        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg-deep)', zIndex: -2 }}></div>
-                        {/* Frosted Glass Effect */}
-                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(15px)', zIndex: -1, border: '1px solid rgba(255,255,255,0.4)', borderRadius: '12px' }}></div>
-
-                        {/* Pink Accent Line */}
-                        <div style={{ position: 'absolute', left: '60px', top: 0, bottom: 0, width: '2px', background: 'rgba(255, 105, 180, 0.4)', zIndex: 0 }}></div>
+                    {/* OVERLAY TRIBUTE MODAL */}
+                    <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10000, display: 'none', flexDirection: 'column', padding: '40px', borderRadius: '16px', overflow: 'hidden' }}>
+                        {/* Dark glass background */}
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(4, 4, 16, 0.88)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', zIndex: -1, borderRadius: '16px', border: '1px solid rgba(197,160,89,0.15)' }}></div>
 
                         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '30px', zIndex: 10, position: 'relative' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <span style={{ fontFamily: "'Cinzel', serif", color: '#fff', fontSize: '1.6rem', letterSpacing: '6px', fontWeight: 700, textTransform: 'uppercase', textShadow: '0 0 30px rgba(197,160,89,0.3)' }}>QUEEN<span style={{ color: '#c5a059', margin: '0 8px' }}>✦</span>WISHLIST</span>
-                            </div>
-                            <button onClick={() => toggleTributeHunt()} style={{ position: 'absolute', right: 0, top: 0, color: '#111', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'Patrick Hand', cursive", fontSize: '2rem', transition: 'all 0.2s', padding: 0, fontWeight: 'bold' }} onMouseOver={(e) => { e.currentTarget.style.color = '#ff4b72'; e.currentTarget.style.transform = 'scale(1.2) rotate(10deg)'; }} onMouseOut={(e) => { e.currentTarget.style.color = '#111'; e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; }}>X</button>
+                            <span style={{ fontFamily: "'Cinzel', serif", color: '#fff', fontSize: '1.4rem', letterSpacing: '6px', fontWeight: 700, textTransform: 'uppercase', textShadow: '0 0 40px rgba(197,160,89,0.25)' }}>QUEEN<span style={{ color: '#c5a059', margin: '0 10px' }}>✦</span>WISHLIST</span>
+                            <button onClick={() => toggleTributeHunt()} style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontFamily: "'Orbitron', sans-serif", fontSize: '0.55rem', letterSpacing: '1px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.color = '#c5a059'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)'; e.currentTarget.style.background = 'rgba(197,160,89,0.08)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'rgba(197,160,89,0.5)'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.15)'; e.currentTarget.style.background = 'transparent'; }}>✕</button>
                         </div>
                         <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '30px', padding: '20px 10px', paddingBottom: '30px', zIndex: 10, position: 'relative' }}></div>
                     </div>
@@ -1286,10 +1279,10 @@ export default function ProfilePage() {
                 {/* CHAT TAB */}
                 <div id="mobChatTabChat" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                     <div id="mob_chatBox" className="chat-body-frame" style={{ flex: 1, minHeight: 0, position: 'relative', overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as any}>
-                        <div id="mob_TributeOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 9999, display: 'none', flexDirection: 'column', padding: '20px' }}>
-                            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                                <span style={{ fontFamily: 'Cinzel', color: '#c5a059' }}>TRIBUTE STORE</span>
-                                <button onClick={() => (window as any).toggleTributeHunt()} style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem' }}>X</button>
+                        <div id="mob_TributeOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(4,4,16,0.96)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 9999, display: 'none', flexDirection: 'column', padding: '20px' }}>
+                            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid rgba(197,160,89,0.12)', paddingBottom: '14px' }}>
+                                <span style={{ fontFamily: "'Cinzel', serif", color: '#c5a059', fontSize: '0.9rem', letterSpacing: '4px', textTransform: 'uppercase' }}>QUEEN<span style={{ margin: '0 6px', opacity: 0.7 }}>✦</span>WISHLIST</span>
+                                <button onClick={() => (window as any).toggleTributeHunt()} style={{ color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', fontSize: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
                             </div>
                             <div id="mob_huntStoreGrid" style={{ width: '100%', overflowY: 'auto', paddingBottom: '30px' }}></div>
                         </div>
