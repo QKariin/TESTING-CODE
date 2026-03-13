@@ -114,6 +114,56 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
     }
 }
 
+/**
+ * Extracts a frame from a video file at ~1s, uploads it as a JPEG thumbnail,
+ * and returns the public URL. Returns null silently on any failure.
+ */
+export async function extractAndUploadVideoThumbnail(videoFile: File): Promise<string | null> {
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+
+        const objectUrl = URL.createObjectURL(videoFile);
+        video.src = objectUrl;
+
+        const cleanup = () => URL.revokeObjectURL(objectUrl);
+
+        video.onloadedmetadata = () => {
+            video.currentTime = Math.min(1, video.duration * 0.1);
+        };
+
+        video.onseeked = async () => {
+            try {
+                const maxW = 800;
+                const w = Math.min(video.videoWidth || 800, maxW);
+                const h = video.videoHeight && video.videoWidth
+                    ? Math.round(w * video.videoHeight / video.videoWidth)
+                    : Math.round(w * 9 / 16);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                canvas.getContext('2d')?.drawImage(video, 0, 0, w, h);
+
+                canvas.toBlob(async (blob) => {
+                    cleanup();
+                    if (!blob) { resolve(null); return; }
+                    const thumbFile = new File([blob], 'thumb.jpg', { type: 'image/jpeg' });
+                    const url = await uploadFileDirectly('media', 'queen_posts_thumbs', thumbFile);
+                    resolve(url.startsWith('failed') ? null : url);
+                }, 'image/jpeg', 0.82);
+            } catch {
+                cleanup();
+                resolve(null);
+            }
+        };
+
+        video.onerror = () => { cleanup(); resolve(null); };
+    });
+}
+
 async function uploadFileDirectly(bucketName: string, folderPath: string, file: File): Promise<string> {
     const sizeMB = file.size / 1024 / 1024;
     console.log(`[SupabaseStorage] Signed upload: ${file.name} (${sizeMB.toFixed(1)}MB)`);

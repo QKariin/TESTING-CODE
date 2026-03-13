@@ -68,7 +68,7 @@ export async function POST(request: Request) {
 
         // 2. Parse body
         const body = await request.json();
-        const { title, content, media_url, external_url, min_rank, price, media_type, is_published } = body;
+        const { title, content, media_url, thumbnail_url, external_url, min_rank, price, media_type, is_published } = body;
 
         if (!title && !content) {
             return NextResponse.json({ success: false, error: 'Title or content required' }, { status: 400 });
@@ -82,6 +82,7 @@ export async function POST(request: Request) {
                 title,
                 content,
                 media_url: media_url || null,
+                thumbnail_url: thumbnail_url || null,
                 external_url: external_url || null,
                 min_rank: min_rank || 'Hall Boy',
                 price: price || 0,

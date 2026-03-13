@@ -449,27 +449,89 @@ export async function submitQueenPost() {
 
     if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'PUBLISHING...'; }
 
+    // Close form immediately + show floating upload indicator
+    const composeForm = document.getElementById('postComposeForm');
+    if (composeForm) composeForm.style.display = 'none';
+
+    const indicator = document.createElement('div');
+    Object.assign(indicator.style, {
+        position: 'fixed', bottom: '30px', right: '30px', zIndex: '99999',
+        background: 'linear-gradient(135deg,#0d0d0d 0%,#111008 100%)',
+        border: '1px solid rgba(197,160,89,0.45)',
+        borderRadius: '6px', padding: '14px 18px',
+        fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px',
+        color: '#c5a059', display: 'flex', alignItems: 'center', gap: '10px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.6)', opacity: '0',
+        transition: 'opacity 0.3s ease, transform 0.3s ease',
+        transform: 'translateY(12px)', minWidth: '220px',
+    });
+
+    const dot = document.createElement('div');
+    Object.assign(dot.style, {
+        width: '7px', height: '7px', borderRadius: '50%',
+        background: '#c5a059', flexShrink: '0',
+        animation: 'uploadPulse 1s ease-in-out infinite alternate',
+    });
+    if (!document.getElementById('uploadPulseStyle')) {
+        const s = document.createElement('style');
+        s.id = 'uploadPulseStyle';
+        s.textContent = '@keyframes uploadPulse{from{opacity:0.3;transform:scale(0.8)}to{opacity:1;transform:scale(1.2)}}';
+        document.head.appendChild(s);
+    }
+
+    const label = document.createElement('span');
+    label.textContent = 'UPLOADING...';
+    indicator.appendChild(dot);
+    indicator.appendChild(label);
+    document.body.appendChild(indicator);
+    requestAnimationFrame(() => {
+        indicator.style.opacity = '1';
+        indicator.style.transform = 'translateY(0)';
+    });
+
+    const setStatus = (text: string) => { label.textContent = text; };
+
+    const dismissIndicator = (success: boolean) => {
+        dot.style.animation = 'none';
+        dot.style.background = success ? '#4caf7d' : '#e05555';
+        indicator.style.borderColor = success ? 'rgba(76,175,125,0.5)' : 'rgba(224,85,85,0.4)';
+        label.style.color = success ? '#4caf7d' : '#e05555';
+        setTimeout(() => {
+            indicator.style.opacity = '0';
+            indicator.style.transform = 'translateY(12px)';
+            setTimeout(() => indicator.remove(), 350);
+        }, success ? 2200 : 4000);
+    };
+
     try {
         let media_url: string | null = null;
+        let thumbnail_url: string | null = null;
 
         // Upload image/video if selected
         if (imageInput?.files?.[0]) {
-            if (submitBtn) submitBtn.innerText = 'UPLOADING...';
-            const { uploadToSupabase } = await import('./mediaSupabase');
-            const url = await uploadToSupabase('media', 'queen_posts', imageInput.files[0]);
+            const { uploadToSupabase, extractAndUploadVideoThumbnail } = await import('./mediaSupabase');
+            const file = imageInput.files[0];
+            const url = await uploadToSupabase('media', 'queen_posts', file);
             console.log('[Post upload] result:', url);
             if (url && !url.startsWith('failed')) {
                 media_url = url;
+                // Auto-generate thumbnail for videos
+                if (file.type.startsWith('video/') || /\.(mp4|mov|avi|mkv|webm|m4v|hevc)$/i.test(file.name)) {
+                    setStatus('GENERATING THUMBNAIL...');
+                    thumbnail_url = await extractAndUploadVideoThumbnail(file);
+                    console.log('[Thumbnail] result:', thumbnail_url);
+                }
             } else {
                 const sizeMatch = url?.match(/failed:size:(.+)/);
-                alert(sizeMatch
-                    ? `Upload failed — file too large (${sizeMatch[1]}).\n\nGo to Supabase → Storage → media bucket → Edit → raise the file size limit to 5GB.`
-                    : 'Media upload failed: ' + url);
+                setStatus(sizeMatch ? `TOO LARGE (${sizeMatch[1]})` : 'UPLOAD FAILED');
+                dismissIndicator(false);
+                if (composeForm) composeForm.style.display = 'flex';
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'PUBLISH'; }
                 return;
             }
         }
 
+        setStatus('PUBLISHING...');
         const min_rank = minRankEl?.value || 'Hall Boy';
         const price = parseInt(priceEl?.value || '0', 10) || 0;
         const media_type = mediaTypeEl?.value || 'text';
@@ -478,12 +540,14 @@ export async function submitQueenPost() {
         const res = await fetch('/api/posts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, content, media_url, min_rank, price, media_type, is_published })
+            body: JSON.stringify({ title, content, media_url, thumbnail_url, min_rank, price, media_type, is_published })
         });
 
         const data = await res.json();
 
         if (data.success) {
+            setStatus('PUBLISHED');
+            dismissIndicator(true);
             // Reset form
             if (titleEl) titleEl.value = '';
             if (bodyEl) bodyEl.value = '';
@@ -494,13 +558,17 @@ export async function submitQueenPost() {
             if (priceEl) priceEl.value = '0';
             if (mediaTypeEl) mediaTypeEl.value = 'text';
             if (isPublishedEl) isPublishedEl.checked = true;
-
+            if (composeForm) composeForm.style.display = 'flex';
             loadQueenPostsDashboard();
         } else {
-            alert('Failed to publish: ' + data.error);
+            setStatus('FAILED: ' + (data.error || 'unknown'));
+            dismissIndicator(false);
+            if (composeForm) composeForm.style.display = 'flex';
         }
     } catch (err) {
-        alert('Network error publishing post.');
+        setStatus('NETWORK ERROR');
+        dismissIndicator(false);
+        if (composeForm) composeForm.style.display = 'flex';
     } finally {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'PUBLISH'; }
     }

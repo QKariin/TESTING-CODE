@@ -3192,22 +3192,69 @@ export async function loadQueenPosts() {
         if (heroCard && latest) {
             const cardLocked = !latest.userHasAccess;
             const cardHasMedia = latest.media_url && !String(latest.media_url).startsWith('failed');
+            // Background setup
+            heroCard.style.backgroundImage = '';
+            heroCard.style.backgroundSize = '';
+            heroCard.style.backgroundPosition = '';
+            heroCard.style.filter = '';
             if (cardHasMedia) {
-                heroCard.style.backgroundImage = cardLocked
-                    ? `url('${latest.media_type === 'video' ? '' : latest.media_url}')`
-                    : `url('${latest.media_url}')`;
-                heroCard.style.backgroundSize = 'cover';
-                heroCard.style.backgroundPosition = 'center top';
-                if (cardLocked) heroCard.style.filter = latest.media_type === 'video' ? '' : 'blur(10px) brightness(0.4)';
+                if (!cardLocked) {
+                    heroCard.style.backgroundImage = `url('${latest.media_url}')`;
+                    heroCard.style.backgroundSize = 'cover';
+                    heroCard.style.backgroundPosition = 'center top';
+                } else {
+                    // Locked: use thumbnail if available, otherwise fall back to media_url (blurred)
+                    const bgUrl = latest.thumbnail_url || (latest.media_type !== 'video' ? latest.media_url : null);
+                    if (bgUrl) {
+                        heroCard.style.backgroundImage = `url('${bgUrl}')`;
+                        heroCard.style.backgroundSize = 'cover';
+                        heroCard.style.backgroundPosition = 'center top';
+                        heroCard.style.filter = 'blur(12px) brightness(0.25)';
+                    }
+                }
             }
+
+            const isVideo = latest.media_type === 'video';
+            const rankLabel = latest.min_rank && latest.min_rank !== 'Hall Boy'
+                ? latest.min_rank.toUpperCase()
+                : null;
+
+            const coinSvg = `<svg width="13" height="13" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;vertical-align:middle;"><circle cx="12" cy="12" r="10" stroke="#c5a059" stroke-width="1.8" fill="none"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 0 1 0 3H10.5a1.5 1.5 0 0 0 0 3H15" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+
             heroCard.innerHTML = cardLocked ? `
-                <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
-                    <div style="font-size:1.8rem;">🔒</div>
-                    ${latest.price > 0 ? `<div style="font-family:Orbitron;font-size:0.55rem;color:#c5a059;letter-spacing:2px;">${latest.price} COINS</div>` : ''}
-                    ${latest.min_rank && latest.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.5rem;color:#888;letter-spacing:1.5px;">REQUIRES ${latest.min_rank.toUpperCase()}</div>` : ''}
-                    ${latest.price > 0 ? `<button onclick="window.unlockPost('${latest.id}',${latest.price})" style="margin-top:6px;background:#c5a059;color:#000;border:none;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px;padding:7px 18px;border-radius:3px;cursor:pointer;">UNLOCK</button>` : ''}
+                <div style="position:absolute;inset:0;overflow:hidden;z-index:1;${isVideo ? 'background:radial-gradient(ellipse at center,#18120a 0%,#0a0808 55%,#060606 100%);' : 'background:rgba(0,0,0,0.72);'}">
+
+                    <!-- NEW VIDEO / NEW POST badge — top right (QUEEN KARIN label sits top-left) -->
+                    <div style="position:absolute;top:48px;right:12px;z-index:4;">
+                        <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.4);padding:3px 9px;border-radius:2px;font-family:Orbitron;font-size:0.35rem;color:#c5a059;letter-spacing:2px;">${isVideo ? '<i class="fas fa-film" style="font-size:0.6rem;"></i> NEW VIDEO' : '<i class="fas fa-image" style="font-size:0.6rem;"></i> NEW POST'}</span>
+                    </div>
+
+                    <!-- Center: play circle + UNLOCK directly below -->
+                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-58%);display:flex;flex-direction:column;align-items:center;gap:16px;z-index:3;">
+                        <div style="width:60px;height:60px;border-radius:50%;border:2px solid rgba(197,160,89,0.5);background:rgba(197,160,89,0.06);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(197,160,89,0.08);">
+                            ${isVideo
+                                ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="6,4 20,12 6,20" fill="rgba(197,160,89,0.75)" stroke="none"/></svg>`
+                                : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="11" width="18" height="11" rx="2" stroke="rgba(197,160,89,0.6)" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(197,160,89,0.6)" stroke-width="1.8" stroke-linecap="round"/></svg>`
+                            }
+                        </div>
+                        ${latest.price > 0 ? `<button onclick="event.stopPropagation();window.unlockPost('${latest.id}',${latest.price})" style="background:#c5a059;color:#000;border:none;font-family:Orbitron;font-size:0.42rem;letter-spacing:2.5px;padding:9px 22px;border-radius:2px;cursor:pointer;font-weight:700;">UNLOCK</button>` : ''}
+                    </div>
+
+                    <!-- Bottom gradient fade -->
+                    <div style="position:absolute;bottom:0;left:0;right:0;height:52%;background:linear-gradient(to top,rgba(0,0,0,0.98) 0%,rgba(0,0,0,0.6) 55%,transparent 100%);pointer-events:none;z-index:2;"></div>
+
+                    <!-- Bottom info -->
+                    <div style="position:absolute;bottom:0;left:0;right:0;padding:14px 14px 16px;z-index:3;">
+                        ${latest.title ? `<div style="font-family:Cinzel;font-size:0.95rem;color:#fff;letter-spacing:0.5px;margin-bottom:4px;line-height:1.3;">${latest.title}</div>` : ''}
+                        ${latest.content ? `<div style="font-family:Rajdhani;font-size:0.68rem;color:rgba(255,255,255,0.28);margin-bottom:9px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.4;">${latest.content}</div>` : '<div style="margin-bottom:9px;"></div>'}
+                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                            ${coinSvg}
+                            <span style="font-family:Orbitron;font-size:0.46rem;color:#c5a059;letter-spacing:1.5px;">${latest.price} COINS</span>
+                        </div>
+                        ${rankLabel ? `<div style="font-family:Orbitron;font-size:0.36rem;color:#4a4a4a;letter-spacing:1.5px;">REQUIRES ${rankLabel}</div>` : ''}
+                    </div>
                 </div>` : `
-                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.2) 60%,transparent 100%);z-index:1;"></div>
+                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.2) 60%,transparent 100%);z-index:1;"></div>
                 <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;z-index:2;">
                     <div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:2px;margin-bottom:5px;">LATEST DISPATCH</div>
                     ${latest.title ? `<div style="font-family:Cinzel;font-size:0.85rem;color:#fff;line-height:1.3;margin-bottom:3px;">${latest.title}</div>` : ''}
@@ -3454,36 +3501,51 @@ export async function loadQueenPosts() {
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                gap: 8px;
-                background: rgba(0,0,0,0.55);
+                gap: 10px;
+                background: rgba(0,0,0,0.62);
                 border-radius: 6px;
+                overflow: hidden;
             }
-            .qk-lock-icon { font-size: 1.6rem; }
+            .qk-lock-icon { display: none; }
             .qk-lock-price {
                 font-family: Orbitron;
-                font-size: 0.55rem;
+                font-size: 0.48rem;
                 color: #c5a059;
-                letter-spacing: 2px;
+                letter-spacing: 1.5px;
+                display: flex;
+                align-items: center;
+                gap: 5px;
             }
             .qk-lock-rank {
                 font-family: Orbitron;
-                font-size: 0.5rem;
-                color: #888;
+                font-size: 0.38rem;
+                color: #555;
                 letter-spacing: 1.5px;
             }
             .qk-unlock-btn {
-                margin-top: 4px;
                 background: #c5a059;
                 color: #000;
                 border: none;
                 font-family: Orbitron;
-                font-size: 0.55rem;
+                font-size: 0.45rem;
                 letter-spacing: 2px;
-                padding: 7px 16px;
-                border-radius: 3px;
+                padding: 8px 18px;
+                border-radius: 2px;
                 cursor: pointer;
+                font-weight: 700;
             }
             .qk-unlock-btn:hover { background: #e0bb70; }
+            .qk-lock-play {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                border: 2px solid rgba(197,160,89,0.5);
+                background: rgba(197,160,89,0.06);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 24px rgba(197,160,89,0.08);
+            }
             .qk-blurred img { filter: blur(10px) brightness(0.45); transform: scale(1.05); }
             /* VIDEO */
             .qk-card-video {
@@ -3560,9 +3622,11 @@ export async function loadQueenPosts() {
         const heroHasMedia = heroPost.media_url && !String(heroPost.media_url).startsWith('failed');
         const heroMediaHTML = !heroHasMedia ? `<div class="qk-hero-img-placeholder">👑</div>` :
             heroLocked
-                ? (heroIsVideo
-                    ? `<div style="width:100%;height:100%;background:#080808;display:flex;align-items:center;justify-content:center;"><span style="font-size:4rem;opacity:0.2;">🎬</span></div>`
-                    : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(12px) brightness(0.45);pointer-events:none;" />`)
+                ? (heroPost.thumbnail_url
+                    ? `<img src="${heroPost.thumbnail_url}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(0.25);pointer-events:none;" />`
+                    : heroIsVideo
+                        ? `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#18120a 0%,#0a0808 55%,#060606 100%);"></div>`
+                        : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(0.25);pointer-events:none;" />`)
                 : heroIsVideo
                     ? `<video src="${heroPost.media_url}" muted playsinline preload="none" onclick="window.openQkLightbox('video','${heroPost.media_url}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
                     : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="width:100%;height:100%;object-fit:cover;object-position:center top;cursor:pointer;" />`;
@@ -3573,9 +3637,12 @@ export async function loadQueenPosts() {
                 ${heroMediaHTML}
                 ${heroLocked ? `
                 <div class="qk-lock-overlay">
-                    <div class="qk-lock-icon">🔒</div>
-                    ${heroPost.price > 0 ? `<div class="qk-lock-price">${heroPost.price} COINS</div>` : ''}
-                    ${heroPost.min_rank && heroPost.min_rank !== 'Hall Boy' ? `<div class="qk-lock-rank">REQUIRES ${(heroPost.min_rank || '').toUpperCase()}</div>` : ''}
+                    <div class="qk-lock-play">
+                        ${heroIsVideo
+                            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="6,4 20,12 6,20" fill="rgba(197,160,89,0.8)"/></svg>`
+                            : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="11" width="18" height="11" rx="2" stroke="rgba(197,160,89,0.7)" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(197,160,89,0.7)" stroke-width="1.8" stroke-linecap="round"/></svg>`
+                        }
+                    </div>
                     ${heroPost.price > 0 ? `<button class="qk-unlock-btn" onclick="window.unlockPost('${heroPost.id}', ${heroPost.price})">UNLOCK</button>` : ''}
                 </div>` : ''}
             </div>
@@ -3583,7 +3650,17 @@ export async function loadQueenPosts() {
                 <div>
                     <div class="qk-hero-date">${heroDate}</div>
                     <div class="qk-hero-title">${heroPost.title || 'Queen\'s Dispatch'}</div>
-                    ${!heroLocked ? `<div class="qk-hero-content">${heroPost.content || ''}</div>` : ''}
+                    ${!heroLocked
+                        ? `<div class="qk-hero-content">${heroPost.content || ''}</div>`
+                        : `<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+                            <div style="font-family:Orbitron;font-size:0.38rem;color:rgba(197,160,89,0.45);letter-spacing:2px;">${heroIsVideo ? 'EXCLUSIVE VIDEO' : 'EXCLUSIVE CONTENT'}</div>
+                            ${heroPost.content ? `<div style="font-family:Rajdhani;font-size:0.82rem;color:rgba(255,255,255,0.28);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${heroPost.content}</div>` : ''}
+                            <div style="margin-top:6px;padding-top:12px;border-top:1px solid rgba(197,160,89,0.1);display:flex;flex-direction:column;gap:5px;">
+                                ${heroPost.price > 0 ? `<div style="display:flex;align-items:center;gap:7px;"><svg width="13" height="13" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#c5a059" stroke-width="1.8" fill="none"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 0 1 0 3H10.5a1.5 1.5 0 0 0 0 3H15" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round"/></svg><span style="font-family:Orbitron;font-size:0.5rem;color:#c5a059;letter-spacing:1.5px;">${heroPost.price} COINS</span></div>` : ''}
+                                ${heroPost.min_rank && heroPost.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.38rem;color:#4a4a4a;letter-spacing:1.5px;">REQUIRES ${(heroPost.min_rank || '').toUpperCase()}</div>` : ''}
+                            </div>
+                           </div>`
+                    }
                 </div>
                 <div class="qk-hero-footer">
                     <div class="qk-queen-sig">👑</div>
@@ -3610,9 +3687,11 @@ export async function loadQueenPosts() {
             const cardHasMedia = p.media_url && !String(p.media_url).startsWith('failed');
             const cardMediaHTML = !cardHasMedia ? `<div class="qk-card-img-placeholder">👑</div>` :
                 locked
-                    ? (isVideo
-                        ? `<div class="qk-card-img qk-card-media" style="background:#080808;display:flex;align-items:center;justify-content:center;"><span style="font-size:2.5rem;opacity:0.25;">🎬</span></div>`
-                        : `<div class="qk-card-img qk-card-media qk-blurred"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="" /></div>`)
+                    ? (p.thumbnail_url
+                        ? `<div class="qk-card-img qk-card-media qk-blurred"><img src="${p.thumbnail_url}" alt="" /></div>`
+                        : isVideo
+                            ? `<div class="qk-card-img qk-card-media" style="background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`
+                            : `<div class="qk-card-img qk-card-media qk-blurred"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="" /></div>`)
                     : isVideo
                         ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')"><video src="${p.media_url}" muted playsinline preload="none" class="qk-card-video"></video><div class="qk-play-icon">▶</div></div>`
                         : `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('image','${getOptimizedUrl(p.media_url, 1200)}')"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`;
@@ -3621,8 +3700,13 @@ export async function loadQueenPosts() {
                         ${cardMediaHTML}
                         ${locked ? `
                         <div class="qk-lock-overlay">
-                            <div class="qk-lock-icon">🔒</div>
-                            ${p.price > 0 ? `<div class="qk-lock-price">${p.price} COINS</div>` : ''}
+                            <div class="qk-lock-play">
+                                ${isVideo
+                                    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="6,4 20,12 6,20" fill="rgba(197,160,89,0.8)"/></svg>`
+                                    : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="11" width="18" height="11" rx="2" stroke="rgba(197,160,89,0.7)" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(197,160,89,0.7)" stroke-width="1.8" stroke-linecap="round"/></svg>`
+                                }
+                            </div>
+                            ${p.price > 0 ? `<div class="qk-lock-price"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#c5a059" stroke-width="1.8" fill="none"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 0 1 0 3H10.5a1.5 1.5 0 0 0 0 3H15" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round"/></svg>${p.price} COINS</div>` : ''}
                             ${p.min_rank && p.min_rank !== 'Hall Boy' ? `<div class="qk-lock-rank">REQUIRES ${(p.min_rank || '').toUpperCase()}</div>` : ''}
                             ${p.price > 0 ? `<button class="qk-unlock-btn" onclick="window.unlockPost('${p.id}', ${p.price})">UNLOCK</button>` : ''}
                         </div>` : ''}
