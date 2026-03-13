@@ -46,7 +46,27 @@ export function initDashboard() {
     console.log('Dashboard initialized. ID:', dayCode);
 }
 
+async function refreshQueueFromServer() {
+    try {
+        const res = await fetch('/api/dashboard-data');
+        const data = await res.json();
+        if (data.globalQueue) {
+            setGlobalQueue(data.globalQueue);
+            users.forEach((u: any) => {
+                const uid = (u.memberId || u.member_id || '').toLowerCase();
+                u.reviewQueue = data.globalQueue.filter(
+                    (t: any) => (t.member_id || '').toLowerCase() === uid
+                );
+            });
+            renderMainDashboard();
+        }
+    } catch (err) {
+        console.warn('[DASHBOARD] Queue refresh failed:', err);
+    }
+}
+
 function subscribeToDashboardTaskUpdates() {
+    // Realtime — fires instantly if Supabase realtime is enabled on tasks table
     const supabase = createClient();
     supabase
         .channel('dashboard_tasks_watch')
@@ -54,27 +74,14 @@ function subscribeToDashboardTaskUpdates() {
             event: '*',
             schema: 'public',
             table: 'tasks',
-        }, async () => {
-            console.log('[DASHBOARD REALTIME] Tasks changed — refreshing review queue...');
-            try {
-                const res = await fetch('/api/dashboard-data');
-                const data = await res.json();
-                if (data.globalQueue) {
-                    setGlobalQueue(data.globalQueue);
-                    // Re-map reviewQueue onto each user object (case-insensitive)
-                    users.forEach((u: any) => {
-                        const uid = (u.memberId || u.member_id || '').toLowerCase();
-                        u.reviewQueue = data.globalQueue.filter(
-                            (t: any) => (t.member_id || '').toLowerCase() === uid
-                        );
-                    });
-                    renderMainDashboard();
-                }
-            } catch (err) {
-                console.warn('[DASHBOARD REALTIME] Queue refresh failed:', err);
-            }
+        }, () => {
+            console.log('[DASHBOARD REALTIME] Tasks changed — refreshing...');
+            refreshQueueFromServer();
         })
         .subscribe();
+
+    // Polling fallback — catches anything the realtime subscription misses
+    setInterval(refreshQueueFromServer, 20000);
 }
 
 // NAVIGATION: BACK TO DASHBOARD

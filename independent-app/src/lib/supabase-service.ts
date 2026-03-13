@@ -285,7 +285,6 @@ export const DbService = {
             if (comment) history[idx].adminComment = comment;
         }
 
-        const newWallet = (row?.Wallet || 0) + bonus;
         // Recount from history to self-heal any prior corruption (avoids TEXT string-concat bug)
         const approvedCount = history.filter((t: any) =>
             t.status === 'approve' && t.type !== 'routine'
@@ -296,25 +295,16 @@ export const DbService = {
             .update({
                 'Taskdom_History': JSON.stringify(history),
                 'Status': 'approve',
-                'Wallet': newWallet,
                 'Taskdom_CompletedTasks': String(approvedCount)
             })
             .eq('member_id', profileId);
 
-        // 2. Award points via centralized function (updates Score + all period scores + profiles.score)
+        // 2. Award points only — no wallet/coins for tasks
         await this.awardPoints(profileId, bonus);
-
-        // 3. Sync wallet with profiles table
-        const profile = await this.getProfile(profileId);
-        if (profile && profile.id) {
-            await this.updateProfile(profile.id, {
-                wallet: (profile.wallet || 0) + bonus,
-            });
-        }
 
         // 3. Send system chat message
         try {
-            await this.sendMessage(profileId, `TASK APPROVED — ${bonus} <i class="fas fa-coins" style="color:#c5a059;"></i> AWARDED`, 'system');
+            await this.sendMessage(profileId, `TASK APPROVED — ${bonus} POINTS AWARDED`, 'system');
         } catch (_) { }
     },
 

@@ -293,7 +293,6 @@ export function confirmReward() {
 
         // 2. Update local points/stats
         u.points = (u.points || 0) + bonus;
-        if (u.wallet !== undefined) u.wallet = (u.wallet || 0) + bonus;
         if (u.score !== undefined) u.score = (u.score || 0) + bonus;
         if (u.parameters) {
             // taskdom_completed_tasks is authoritative in tasks.Taskdom_CompletedTasks — not updated locally
