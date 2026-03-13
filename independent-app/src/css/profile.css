@@ -401,6 +401,7 @@
     height: 140px;
     margin: 0 auto 15px;
     border-radius: 50%;
+    overflow: hidden;
     position: relative;
     padding: 4px;
     background: linear-gradient(135deg, var(--gold), #fff, var(--gold));

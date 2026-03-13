@@ -3623,6 +3623,7 @@ h3,
     padding: 4px;
     box-shadow: 0 0 30px rgba(197, 160, 89, 0.4);
     background: #000;
+    overflow: hidden;
 }
 
 #viewUser .avatar-container img {
@@ -3773,6 +3774,7 @@ h3,
     background: #000 !important;
     border-radius: 50% !important;
     padding: 5px !important;
+    overflow: hidden !important;
 }
 
 #viewUser .identity-name {
