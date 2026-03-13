@@ -2347,13 +2347,20 @@ function _buildMobGlBubble(msg: any): string {
     const name = msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT';
     const content = msg.message || '';
 
+    const mediaHtml = msg.media_url
+        ? (msg.media_type === 'video'
+            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;"></video>`
+            : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;" />`)
+        : '';
+
     if (isQueen) {
-        return `<div style="padding:8px 12px 6px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:10px;box-shadow:0 0 10px rgba(197,160,89,0.12);">
+        return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:10px;box-shadow:0 0 10px rgba(197,160,89,0.12);overflow:hidden;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
                 <span style="font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.8);letter-spacing:1px;">QUEEN KARIN</span>
                 <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);">${time}</span>
             </div>
             <span style="font-family:'Rajdhani';font-size:0.88rem;color:#f0d888;line-height:1.4;">${content}</span>
+            ${mediaHtml}
         </div>`;
     }
 
