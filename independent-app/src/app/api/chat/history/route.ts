@@ -17,12 +17,18 @@ export async function GET(req: Request) {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
 
+        const since = searchParams.get('since'); // ISO timestamp — return only newer messages
+
         // Fetch messages for this specific user
-        const { data, error } = await queryClient
+        let query = queryClient
             .from('chats')
             .select('*')
             .ilike('member_id', email)
             .order('created_at', { ascending: true });
+
+        if (since) query = query.gt('created_at', since);
+
+        const { data, error } = await query;
 
         if (error) {
             console.error("[API/Chat/History] Error:", error.message);

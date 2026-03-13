@@ -10,8 +10,14 @@ import { uploadToSupabase } from './mediaSupabase';
 // Fallback if DOMPurify is not available or needs to be used from global
 const purifier = (typeof window !== 'undefined' && (window as any).DOMPurify) || { sanitize: (s: string) => s };
 
+// Single shared client — realtime subscriptions must stay on the same instance
+const _supabase = createClient();
+
 let chatChannel: any = null;
+let chatPollInterval: ReturnType<typeof setInterval> | null = null;
 let lastChatMsgId: string | null = null;
+let lastChatMsgTimestamp: string | null = null;
+let activeChatEmail: string | null = null;
 
 // ── Service / System message helpers ────────────────────────────────────────
 
@@ -77,43 +83,56 @@ function appendToSystemLog(msg: any) {
  */
 export async function initDashboardChat(slaveEmail: string) {
     const cleanEmail = slaveEmail.toLowerCase();
-    console.log(`[DASHBOARD-CHAT] Initializing for ${cleanEmail}...`);
+    activeChatEmail = cleanEmail;
 
-    // 1. Clean up existing subscription
+    // 1. Clean up existing subscription + poll on the SAME client instance
     if (chatChannel) {
-        console.log(`[DASHBOARD-CHAT] Cleaning up existing subscription.`);
-        const supabase = createClient();
-        supabase.removeChannel(chatChannel);
+        _supabase.removeChannel(chatChannel);
         chatChannel = null;
     }
+    if (chatPollInterval) {
+        clearInterval(chatPollInterval);
+        chatPollInterval = null;
+    }
     lastChatMsgId = null;
+    lastChatMsgTimestamp = null;
 
     const b = document.getElementById('adminChatBox');
     if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
 
-    // 2. Load History
+    // 2. Load history
     await loadDashboardChatHistory(cleanEmail);
 
-    // 3. Subscribe Realtime
-    const supabase = createClient();
-    console.log("[DASHBOARD-CHAT] Initializing Realtime subscription...");
-
-    chatChannel = supabase
-        .channel('chats-' + cleanEmail) // Unique channel per slave to avoid cross-pollination
+    // 3. Realtime subscription on shared client
+    chatChannel = _supabase
+        .channel('dash-chat-' + cleanEmail)
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
             table: 'chats',
             filter: `member_id=eq.${cleanEmail}`
         }, (payload) => {
-            console.log(`[DASHBOARD-CHAT] New message received via Realtime:`, payload.new);
+            if (activeChatEmail !== cleanEmail) return; // switched user
             if (payload.new.id !== lastChatMsgId) {
                 appendChatMessage(payload.new);
             }
         })
-        .subscribe((status) => {
-            // console.log(`[DASHBOARD-CHAT] Subscription status: ${status}`); // Quieted down
-        });
+        .subscribe();
+
+    // 4. Polling fallback — catches messages that realtime misses (RLS / connection issues)
+    chatPollInterval = setInterval(() => pollNewMessages(cleanEmail), 4000);
+}
+
+async function pollNewMessages(email: string) {
+    if (activeChatEmail !== email) return;
+    if (!lastChatMsgTimestamp) return;
+    try {
+        const res = await fetch(`/api/chat/history?email=${encodeURIComponent(email)}&since=${encodeURIComponent(lastChatMsgTimestamp)}`);
+        const data = await res.json();
+        if (!data.success) return;
+        const newMsgs = (data.messages || []).filter((m: any) => m.id !== lastChatMsgId);
+        newMsgs.forEach((m: any) => appendChatMessage(m));
+    } catch (_) {}
 }
 
 async function loadDashboardChatHistory(email: string) {
@@ -137,7 +156,11 @@ async function loadDashboardChatHistory(email: string) {
         if (data.success) {
             const msgs = data.messages || [];
             if (msgs.length > 0) {
-                lastChatMsgId = msgs[msgs.length - 1].id;
+                const last = msgs[msgs.length - 1];
+                lastChatMsgId = last.id;
+                lastChatMsgTimestamp = last.created_at || new Date().toISOString();
+            } else {
+                lastChatMsgTimestamp = new Date().toISOString();
             }
 
             // Split: system messages → log panel, chat messages → chat box
@@ -170,6 +193,7 @@ function appendChatMessage(msg: any) {
     // Prevent duplicates from instant-append + realtime sync
     if (msg.id && msg.id === lastChatMsgId) return;
     lastChatMsgId = msg.id;
+    if (msg.created_at) lastChatMsgTimestamp = msg.created_at;
 
     // System message → route to log panel, update ticker
     if (isSystemMessage(msg)) {
