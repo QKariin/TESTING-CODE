@@ -420,18 +420,18 @@ function renderGridMobile(gridEl: HTMLElement) {
         }
 
         return `
-        <div style="border-radius:12px; background:#0a0a14; border:1px solid rgba(197,160,89,0.22); display:flex; flex-direction:column; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.4); overflow:hidden;">
-            <div style="width:100%; aspect-ratio:1; background-color:#111; position:relative; flex-shrink:0; overflow:hidden;">
-                <img src="${img}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:10px;box-sizing:border-box;" onerror="this.src='/queen-karin.png'">
+        <div style="border-radius:12px; background:#0a0a14; border:1px solid rgba(197,160,89,0.22); box-shadow:0 4px 16px rgba(0,0,0,0.4); overflow:hidden;">
+            <div style="width:100%; height:140px; background-color:#111; position:relative; overflow:hidden;">
+                <img src="${img}" style="width:100%;height:100%;object-fit:contain;padding:10px;box-sizing:border-box;" onerror="this.src='/queen-karin.png'">
                 <div style="position:absolute; top:6px; right:6px; background:rgba(5,5,20,0.92); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:2px 8px; display:flex; align-items:center; gap:3px;">
                     <i class="fas fa-coins" style="color:#c5a059; font-size:0.5rem;"></i>
                     <span style="font-family:'Orbitron',sans-serif; font-size:0.55rem; color:#c5a059; font-weight:700;">${t.price.toLocaleString()}</span>
                 </div>
             </div>
-            <div style="padding:8px 9px 10px; display:flex; flex-direction:column; gap:7px;">
-                <div style="font-family:'Cinzel',serif; font-size:0.62rem; color:#fff; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
+            <div style="padding:8px 10px 10px;">
+                <div style="font-family:'Cinzel',serif; font-size:0.62rem; color:#fff; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3; margin-bottom:8px;">${t.title}</div>
                 <button onclick="event.stopPropagation(); window.buyTribute('${t.id}','${t.title}',${t.price})"
-                    style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:7px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:0.42rem; font-weight:700; letter-spacing:1.5px; cursor:pointer; display:block; flex-shrink:0;">
+                    style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:8px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:0.42rem; font-weight:700; letter-spacing:1.5px; cursor:pointer;">
                     SEND GIFT
                 </button>
             </div>
