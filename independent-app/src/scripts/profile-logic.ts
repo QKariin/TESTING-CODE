@@ -332,29 +332,18 @@ function renderTributes() {
                 `;
             } else {
                 return `
-                <div class="store-item" style="position:relative; border-radius:14px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; padding:0; box-sizing:border-box;"
+                <div class="store-item" style="border-radius:14px; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; padding:16px 14px; gap:10px; box-sizing:border-box;"
                     onmouseover="this.style.boxShadow='0 12px 35px rgba(197,160,89,0.12)'; this.style.borderColor='rgba(197,160,89,0.5)'; this.style.transform='translateY(-4px)';"
                     onmouseout="this.style.boxShadow='0 4px 25px rgba(0,0,0,0.5)'; this.style.borderColor='rgba(197,160,89,0.2)'; this.style.transform='translateY(0)';">
-
-                    <!-- Product image — square container so all images look consistent -->
-                    <div style="width:100%; aspect-ratio:1; background-color:#050510; position:relative; overflow:hidden; flex-shrink:0;">
-                         <img src="${getOptimizedUrl(t.image, 400)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:12px;box-sizing:border-box;" onerror="this.src='/queen-karin.png'">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="fas fa-coins" style="color:#c5a059; font-size:0.65rem;"></i>
+                        <span style="font-family:'Orbitron', sans-serif; font-size:0.7rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${t.price.toLocaleString()}</span>
                     </div>
-
-                    <!-- Price badge -->
-                    <div style="position:absolute; top:8px; right:8px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:3px 9px; display:flex; align-items:center; gap:4px; backdrop-filter:blur(6px);">
-                        <i class="fas fa-coins" style="color:#c5a059; font-size:0.6rem;"></i>
-                        <span style="font-family:'Orbitron', sans-serif; font-size:0.65rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${t.price.toLocaleString()}</span>
-                    </div>
-
-                    <!-- Title + send button (fills remaining space) -->
-                    <div style="padding:12px 14px 14px; display:flex; flex-direction:column; flex:1; min-height:0;">
-                        <div style="font-family:'Cinzel', serif; font-size:0.8rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3; flex:1;">${t.title}</div>
-                        <button onclick="event.stopPropagation(); window.buyTribute('${t.id}', '${t.title}', ${t.price})"
-                            style="width:100%; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:8px 0; border-radius:7px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:2px; cursor:pointer; transition:all 0.2s; flex-shrink:0;"
-                            onmouseover="this.style.opacity='0.85';"
-                            onmouseout="this.style.opacity='1';">SEND GIFT</button>
-                    </div>
+                    <div style="font-family:'Cinzel', serif; font-size:0.8rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3; flex:1;">${t.title}</div>
+                    <button onclick="event.stopPropagation(); window.buyTribute('${t.id}', '${t.title}', ${t.price})"
+                        style="width:100%; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:7px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:2px; cursor:pointer; transition:all 0.2s;"
+                        onmouseover="this.style.opacity='0.85';"
+                        onmouseout="this.style.opacity='1';">SEND GIFT</button>
                 </div>
                 `;
             }
