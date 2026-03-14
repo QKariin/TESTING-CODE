@@ -47,7 +47,7 @@ export async function POST(req: Request) {
                 },
             ],
             mode: 'payment',
-            success_url: `${origin}/profile?exchequer=success&coins=${coins}`,
+            success_url: `${origin}/profile?exchequer=success&coins=${coins}&session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${origin}/profile?exchequer=cancelled`,
             customer_email: user.email,
             metadata: {

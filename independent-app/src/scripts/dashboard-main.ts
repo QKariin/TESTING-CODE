@@ -42,6 +42,7 @@ export function initDashboard() {
     startTimerLoop();
     renderMainDashboard();
     subscribeToDashboardTaskUpdates();
+    loadExchequerLog();
 
     console.log('Dashboard initialized. ID:', dayCode);
 }
@@ -82,6 +83,69 @@ function subscribeToDashboardTaskUpdates() {
 
     // Polling fallback — catches anything the realtime subscription misses
     setInterval(refreshQueueFromServer, 20000);
+
+    // Subscribe to profiles for purchase notifications
+    subscribeToPurchaseNotifications(supabase);
+}
+
+// Tracks the last seen purchase notification sessionId to avoid duplicates
+let _lastSeenPurchaseSession: string | null = null;
+
+function subscribeToPurchaseNotifications(supabase: any) {
+    supabase
+        .channel('dashboard_purchase_watch')
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+        }, (payload: any) => {
+            const params = payload.new?.parameters;
+            if (!params?.latestPurchaseNotification) return;
+
+            const notif = params.latestPurchaseNotification;
+            if (notif.sessionId === _lastSeenPurchaseSession) return;
+            const age = Date.now() - new Date(notif.timestamp).getTime();
+            if (age > 120_000) return;
+
+            _lastSeenPurchaseSession = notif.sessionId;
+            // Refresh the exchequer log to show the new entry
+            loadExchequerLog();
+        })
+        .subscribe();
+}
+
+export async function loadExchequerLog() {
+    const container = document.getElementById('exchequerLog');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/transactions');
+        const data = await res.json();
+        const transactions: any[] = data.transactions || [];
+
+        if (transactions.length === 0) {
+            container.innerHTML = `<div style="padding:20px;text-align:center;font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.15);letter-spacing:2px">NO TRANSACTIONS YET</div>`;
+            return;
+        }
+
+        container.innerHTML = transactions.map(tx => {
+            const date = new Date(tx.timestamp);
+            const timeStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+                + ' · ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="exchequer-row">
+                    <div class="exchequer-row-left">
+                        <div class="exchequer-row-name">${tx.name}</div>
+                        <div class="exchequer-row-time">${timeStr}</div>
+                    </div>
+                    <div class="exchequer-row-coins">+${tx.coins.toLocaleString()}</div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('[exchequer] Failed to load transactions:', err);
+        container.innerHTML = `<div style="padding:20px;text-align:center;font-family:Orbitron;font-size:0.5rem;color:rgba(255,80,80,0.5);letter-spacing:2px">ERROR LOADING</div>`;
+    }
 }
 
 // NAVIGATION: BACK TO DASHBOARD

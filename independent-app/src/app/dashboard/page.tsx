@@ -434,7 +434,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* REVENUE & INTEL STREAM */}
-                        <div className="v-feed-card glass-card span-4">
+                        <div className="v-feed-card glass-card span-2">
                             <div className="vf-header">Revenue & Intel Stream</div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', padding: '12px 14px' }}>
                                 <div onClick={() => (window as any).expandFeedSection('wishlist')} style={{ aspectRatio: '1', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -446,6 +446,17 @@ export default function DashboardPage() {
                                 <div style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>COMING SOON</div>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* EXCHEQUER — COIN TRANSACTION LOG */}
+                        <div className="glass-card span-2" style={{ display: 'flex', flexDirection: 'column', minHeight: '180px', overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>EXCHEQUER LOG</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '1px' }}>COIN PURCHASES</div>
+                            </div>
+                            <div id="exchequerLog" style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+                                <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>
                             </div>
                         </div>
                     </div>
@@ -911,6 +922,9 @@ export default function DashboardPage() {
             {/* SOUND ASSETS */}
             <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
             <audio id="sfx-notify" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
+
+            {/* PURCHASE TOAST CONTAINER */}
+            <div id="purchaseToastContainer"></div>
         </div>
     );
 }

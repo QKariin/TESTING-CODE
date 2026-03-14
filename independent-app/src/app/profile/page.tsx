@@ -214,12 +214,32 @@ export default function ProfilePage() {
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
 
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         renderProfileSidebar(unifiedData);
                         updateKneelingUI();
                         attachKneelListeners();
                         const urlParams = new URLSearchParams(window.location.search);
-                        if (urlParams.get('exchequer') === 'open') {
+
+                        // ── Stripe coin purchase fallback ──────────────────────────
+                        // When Stripe redirects back with session_id, verify + award coins.
+                        // Idempotent — safe to run even if webhook already fired.
+                        if (urlParams.get('exchequer') === 'success' && urlParams.get('session_id')) {
+                            const sid = urlParams.get('session_id')!;
+                            try {
+                                const vRes = await fetch(`/api/stripe/verify-purchase?session_id=${encodeURIComponent(sid)}`);
+                                const vData = await vRes.json();
+                                if (vData.success && !vData.alreadyAwarded) {
+                                    const { setState: setPS } = await import('@/scripts/profile-state');
+                                    setPS({ wallet: vData.wallet });
+                                    const { updateWalletDisplay } = await import('@/scripts/profile-logic');
+                                    updateWalletDisplay();
+                                    console.log(`✅ Coins awarded via fallback: +${vData.coinsAwarded}`);
+                                }
+                            } catch (e) {
+                                console.error('[verify-purchase] fallback error:', e);
+                            }
+                            (window as any).goToExchequer?.();
+                        } else if (urlParams.get('exchequer') === 'open') {
                             (window as any).goToExchequer();
                         } else if (urlParams.get('tab') === 'record') {
                             switchTab('record');

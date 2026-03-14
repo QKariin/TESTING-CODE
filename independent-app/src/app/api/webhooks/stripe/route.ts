@@ -107,9 +107,34 @@ export async function POST(req: Request) {
 
                 if (profile) {
                     const newBalance = (profile.wallet || 0) + coins;
+                    const profileParams = profile.parameters || {};
+                    // Track processed sessions for idempotency
+                    const processedSessions: string[] = profileParams.processedStripeSessions || [];
+                    if (!processedSessions.includes(session.id)) {
+                        processedSessions.push(session.id);
+                    }
+                    profileParams.processedStripeSessions = processedSessions;
+
+                    // Purchase entry — realtime notification + persistent history
+                    const purchaseEntry = {
+                        coins,
+                        name: profile.name || userEmail || userId || 'Unknown',
+                        memberId: profile.member_id || userEmail || '',
+                        timestamp: new Date().toISOString(),
+                        sessionId: session.id,
+                    };
+                    profileParams.latestPurchaseNotification = purchaseEntry;
+
+                    // Append to persistent purchase history (keep last 100)
+                    const purchaseHistory: any[] = profileParams.purchaseHistory || [];
+                    if (!purchaseHistory.some((e: any) => e.sessionId === session.id)) {
+                        purchaseHistory.unshift(purchaseEntry);
+                        if (purchaseHistory.length > 100) purchaseHistory.splice(100);
+                    }
+                    profileParams.purchaseHistory = purchaseHistory;
                     await supabaseAdmin
                         .from('profiles')
-                        .update({ wallet: newBalance })
+                        .update({ wallet: newBalance, parameters: profileParams })
                         .eq('id', profile.id);
                     console.log(`✅ Wallet Updated: ${newBalance} (+${coins})`);
                 } else {
