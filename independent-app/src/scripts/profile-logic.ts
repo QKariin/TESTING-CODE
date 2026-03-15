@@ -3156,36 +3156,6 @@ export function renderProfileSidebar(u: any) {
         document.querySelectorAll('#points, #mobPoints').forEach(el => { (el as HTMLElement).innerText = pStr; });
     }
 }
-// --- DEBUG HELPERS ---
-
-export async function debugBytescale() {
-    console.log("[DEBUG] Starting Bytescale Connection Test...");
-    const { memberId } = getState();
-    if (!memberId) {
-        alert("Debug Error: No member session found.");
-        return;
-    }
-
-    // Create a tiny text file as a blob
-    const debugText = `Supabase Connection Test\nTimestamp: ${new Date().toISOString()}\nMember: ${memberId}`;
-    const blob = new Blob([debugText], { type: 'text/plain' });
-    const file = new File([blob], "debug_test.txt", { type: 'text/plain' });
-
-    try {
-        const res = await uploadToSupabase("media", "debug_tests", file);
-        if (res === "failed") {
-            alert("❌ SUPABASE TEST FAILED\nCheck browser console for detailed status code.");
-            console.error("[DEBUG] Supabase test upload failed.");
-        } else {
-            alert(`✅ SUPABASE TEST SUCCESS!\nFile URL: ${res}`);
-            console.log("[DEBUG] Supabase test success:", res);
-        }
-    } catch (err: any) {
-        alert(`❌ SUPABASE CONNECTION ERROR\n${err.message}`);
-        console.error("[DEBUG] Supabase error:", err);
-    }
-}
-
 // ─── QUEEN KARIN POSTS ───────────────────────────────────────────────────────
 export async function loadQueenPosts() {
     const newsGrid = document.getElementById('newsGrid');

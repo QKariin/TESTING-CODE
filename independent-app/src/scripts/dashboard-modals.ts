@@ -6,11 +6,11 @@ import {
     stickerConfig, availableDailyTasks, currId, users, globalQueue,
     setCurrTask, setPendingApproveTask, setSelectedStickerId, setPendingRewardMedia,
     setMediaRecorder, setAudioChunks, mediaRecorder, audioChunks,
-    ACCOUNT_ID, API_KEY, setDragSrcIndex, dragSrcIndex,
+    setDragSrcIndex, dragSrcIndex,
     armoryTarget, setArmoryTarget, setGlobalQueue
 } from './dashboard-state';
 import { clean, raw, getOptimizedUrl } from './utils';
-import { mediaType as mediaTypeFunction, getSignedUrl } from './media';
+import { mediaType as mediaTypeFunction } from './media';
 import { adminApproveTaskAction, adminRejectTaskAction, adminGetTasksAction, adminAssignTaskAction } from '@/actions/velo-actions';
 
 let pendingDirectiveText = "";
@@ -97,15 +97,7 @@ export async function openModById(taskId: string, memberId: string, isHistory: b
     }
 
     if (t) {
-        let finalUrl = fullSigned || t.proofUrl;
-        if (finalUrl && finalUrl.includes('upcdn.io') && !finalUrl.includes('&sig=')) {
-            try {
-                finalUrl = await getSignedUrl(getOptimizedUrl(finalUrl, 1000));
-            } catch (e) {
-                console.error("Failed to sign modal media:", e);
-                finalUrl = getOptimizedUrl(finalUrl, 1000);
-            }
-        }
+        const finalUrl = fullSigned || getOptimizedUrl(t.proofUrl, 1000);
         openModal(taskId, memberId, finalUrl, t.proofType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'));
     }
 }

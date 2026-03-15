@@ -74,7 +74,7 @@ Static CSS lives in `public/css/` (loaded via HTML `<link>`) and in `src/css/` (
 
 ### Media Uploads
 
-Bytescale is used for file/image uploads. Account constants (`ACCOUNT_ID`, `API_KEY`) are in `src/scripts/dashboard-state.ts`. Upload logic is in `src/scripts/media.ts` and `src/scripts/mediaSupabase.ts`.
+Supabase Storage is used for file/image uploads. Upload logic is in `src/scripts/mediaSupabase.ts`. URL optimization helpers are in `src/scripts/media.ts`.
 
 ### Environment Variables
 

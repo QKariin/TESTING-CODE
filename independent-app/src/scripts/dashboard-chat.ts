@@ -1,7 +1,7 @@
 // src/scripts/dashboard-chat.ts
 // Dashboard Chat Management - Refactored for Supabase Realtime
 
-import { currId, ACCOUNT_ID, API_KEY, users, adminEmail } from './dashboard-state';
+import { currId, users, adminEmail } from './dashboard-state';
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl, mediaType } from './media';
 import { clean } from './utils';

@@ -732,7 +732,7 @@ export async function insertMessage(msgData: any) {
         const msgContent = msgData.message || "";
 
         // --- FIX: BETTER MEDIA DETECTION ---
-        // Detects Cloudinary, Bytescale (upcdn), and standard file extensions
+        // Detects Cloudinary, legacy upcdn, and standard file extensions
         if (msgContent.includes("cloudinary.com") || msgContent.includes("upcdn.io") || msgContent.includes("wix:image") || msgContent.includes("wix:video")) {
             if (msgContent.includes("/video/") || msgContent.endsWith(".mp4") || msgContent.endsWith(".mov") || msgContent.includes("wix:video")) {
                 msgType = 'video';

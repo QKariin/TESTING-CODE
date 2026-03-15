@@ -56,7 +56,7 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     if (url.startsWith("failed")) return ""; // bad upload result stored in DB
     if (url.startsWith("data:")) return url;
     if (url.startsWith("blob:")) return url;
-    if (url === "FORCED" || url === "SKIPPED") return "https://upcdn.io/kW2K8hR/raw/public/collar-192.png";
+    if (url === "FORCED" || url === "SKIPPED") return "/queen-karin.png";
     if (url.includes("token=")) return url; // Already a signed URL
     // Supabase Pro image transformation — only for public bucket URLs, only for images
     if (url.includes("/storage/v1/object/public/")) {
@@ -69,26 +69,10 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
 
     // 1. CLOUDINARY
     if (url.includes("cloudinary.com")) {
-        return "https://upcdn.io/kW2K8hR/raw/public/collar-192.png"; // Placeholder or logic
+        return url;
     }
 
-    // 2. BYTESCALE
-    if (url.includes("upcdn.io")) {
-        if (url.includes("&sig=")) return url;
-        const type = mediaType(url);
-        let baseUrl = url.split('?')[0];
-
-        if (type === "video") {
-            // Serve optimized video stream from Bytescale
-            return baseUrl.replace("/raw/", "/video/");
-        } else {
-            // Standardize image transformation: force format=webp for quota savings
-            let clean = baseUrl.replace("/raw/", "/image/").replace("/thumbnail/", "/image/");
-            return `${clean}?w=${width}&h=${width}&fit=cover&q=80&f=webp`;
-        }
-    }
-
-    // 3. WIX VECTORS
+    // 2. WIX VECTORS
     if (url.startsWith("wix:vector://")) {
         const parts = url.split("/");
         const id = parts[3] ? parts[3].split("#")[0] : "";

@@ -262,7 +262,7 @@ export default function GlobalPage() {
                 <div id="gPanel_exchequer" suppressHydrationWarning style={{ flex: 1, display: 'none', flexDirection: 'column', overflowY: 'auto', margin: '0 10px 10px', position: 'relative' }}>
 
                     {/* BG */}
-                    <div style={{ position: 'fixed', inset: 0, backgroundImage: 'url("https://upcdn.io/kW2K8hR/raw/pictures/kling_20260304_%E4%BD%9C%E5%93%81_make_me_si_1244_0-6V52.png")', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18, pointerEvents: 'none', zIndex: 0 }} />
+                    <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse at center, #18120a 0%, #0a0808 55%, #060606 100%)', opacity: 0.18, pointerEvents: 'none', zIndex: 0 }} />
 
                     <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 20px 80px', width: '100%' }}>
 
@@ -275,7 +275,7 @@ export default function GlobalPage() {
                                         onMouseEnter={() => onSubHover(sub.id)}
                                         onMouseLeave={() => onSubLeave()}
                                         style={{ position: 'relative', width: '26%', flexShrink: 0, marginLeft: i === 0 ? 0 : '-6%', transform: sub.defaultTransform, transition: 'all 0.4s cubic-bezier(0.23,1,0.32,1)', zIndex: sub.defaultZ, cursor: 'pointer', filter: sub.id === 'royal' ? 'brightness(1.0)' : 'brightness(0.85)', transformStyle: 'preserve-3d' }}>
-                                        <img src="https://upcdn.io/kW2K8hR/raw/pictures/unnamed%20(2)%20(1).png" alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', pointerEvents: 'none', userSelect: 'none' }} />
+                                        <div style={{ width: '100%', paddingBottom: '140%', background: 'linear-gradient(160deg,#1a1008,#0d0a04)', display: 'block' }} />
                                         <div style={{ position: 'absolute', top: '19%', left: '8%', right: '8%', display: 'flex', justifyContent: 'center' }}>
                                             <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.5rem,1.2vw,0.9rem)', color: '#d4af37', letterSpacing: 'clamp(2px,0.5vw,6px)', fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.9)', whiteSpace: 'nowrap' }}>{sub.tier}</div>
                                         </div>
@@ -316,7 +316,7 @@ export default function GlobalPage() {
                                         style={{ position: 'relative', cursor: 'pointer', transition: 'transform 0.25s ease', width: 280, flexShrink: 0 }}
                                         onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.04)'; }}
                                         onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; }}>
-                                        <img src="https://upcdn.io/kW2K8hR/raw/pictures/unnamed%20(1).png" alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', userSelect: 'none', pointerEvents: 'none' }} />
+                                        <div style={{ width: '100%', paddingBottom: '120%', background: 'linear-gradient(160deg,#1a1008,#0d0a04)', display: 'block' }} />
                                         <div style={{ position: 'absolute', top: '16%', left: '18%', right: '18%', bottom: '20%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                                             {pkg.badge && <div style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: '#c8960c', letterSpacing: 2, border: '1px solid #c8960c', padding: '2px 6px', borderRadius: 2 }}>{pkg.badge}</div>}
                                             <i className="fas fa-coins" style={{ fontSize: '1.6rem', color: '#c5a059', filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.9))' }}></i>

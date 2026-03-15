@@ -3,8 +3,6 @@
 
 export const CONFIG = {
     CLOUD_NAME: 'dfqvezjlj',
-    ACCOUNT_ID: 'kW2K8hR',
-    API_KEY: 'public_kW2K8hR6YbQXStTvMf5ZDYbVf1fQ',
     UPLOAD_PRESET: 'task_uploads',
     TWITCH_CHANNEL: "qkarin",
     SESSION_VERSION: "v1",

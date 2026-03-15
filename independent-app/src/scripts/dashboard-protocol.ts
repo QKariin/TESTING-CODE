@@ -6,7 +6,6 @@ import {
     protocolProgress, newbieImmunity, users, broadcastMedia, broadcastPresets,
     setExcludedIds, setBroadcastExclusions, setProtocolActive, setProtocolGoal,
     setProtocolProgress, setNewbieImmunity, setBroadcastMedia, setBroadcastPresets,
-    ACCOUNT_ID, API_KEY
 } from './dashboard-state';
 
 export function toggleProtocol() {

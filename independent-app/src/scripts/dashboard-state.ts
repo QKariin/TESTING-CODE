@@ -42,10 +42,6 @@ export let newbieImmunity: boolean = true;
 export let mediaRecorder: any = null;
 export let audioChunks: any[] = [];
 
-// --- CONSTANTS ---
-export const ACCOUNT_ID = "kW2K8hR";
-export const API_KEY = "public_kW2K8hR6YbQXStTvMf5ZDYbVf1fQ";
-
 // --- SETTERS ---
 export function setUsers(newUsers: any[]) { users = newUsers; }
 export function setGlobalQueue(newQueue: any[]) { globalQueue = newQueue; }

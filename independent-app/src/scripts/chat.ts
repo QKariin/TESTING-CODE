@@ -7,7 +7,7 @@ import {
 } from './state';
 import { URLS } from './config';
 import { triggerSound } from './utils';
-import { getSignedUrl, getOptimizedUrl, mediaType } from './media';
+import { getOptimizedUrl, mediaType } from './media';
 
 let lastTickerText = "";
 
@@ -130,10 +130,8 @@ export async function renderChat(messages: any[]) {
                     const item = JSON.parse(jsonStr);
 
                     let cardImgUrl = item.img || item.image || item.itemImage || "";
-                    if (cardImgUrl && cardImgUrl.includes('upcdn.io')) {
-                        const opt = getOptimizedUrl(cardImgUrl, 300);
-                        try { cardImgUrl = await getSignedUrl(opt); }
-                        catch (e) { cardImgUrl = opt; }
+                    if (cardImgUrl) {
+                        cardImgUrl = getOptimizedUrl(cardImgUrl, 300);
                     }
 
                     contentHtml = `
@@ -157,15 +155,11 @@ export async function renderChat(messages: any[]) {
             }
 
             // B. STANDARD MEDIA
-            else if (originalMsg.startsWith('http') || m.mediaUrl || originalMsg.includes('wix:') || originalMsg.includes('upcdn')) {
+            else if (originalMsg.startsWith('http') || m.mediaUrl || originalMsg.includes('wix:')) {
                 const rawUrl = m.mediaUrl || originalMsg;
-                let srcUrl = rawUrl;
+                let srcUrl = getOptimizedUrl(rawUrl, 600);
 
-                if (rawUrl.includes('upcdn.io')) {
-                    const opt = getOptimizedUrl(rawUrl, 600);
-                    try { srcUrl = await getSignedUrl(opt); } catch (e) { srcUrl = opt; }
-                }
-                else if (rawUrl.includes('wix:image')) {
+                if (rawUrl.includes('wix:image')) {
                     const parts = rawUrl.split('/');
                     for (let i = 0; i < parts.length; i++) {
                         if (parts[i] === 'v1' && parts[i + 1]) {
