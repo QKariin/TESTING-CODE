@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
+import { getAdminDashboardData, getUnreadMessageStatus, adminApproveTaskAction, adminRejectTaskAction } from '@/actions/velo-actions';
 
 type Tab = 'home' | 'subjects' | 'posts' | 'queen';
 type ProfileTab = 'info' | 'tasks' | 'chat';
@@ -207,6 +207,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         setProfileTab={setProfileTab}
                         onBack={() => setSelectedUser(null)}
                         adminEmail={userEmail}
+                        onReviewed={() => loadData()}
                     />
                 ) : tab === 'home' ? (
                     <HomeView stats={stats} users={users} dailyCode={dailyCode} />
@@ -411,14 +412,40 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect 
 }
 
 // ─── USER PROFILE ────────────────────────────────────────────────────────────
-function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail }: {
-    user: DashUser; profileTab: ProfileTab; setProfileTab: (t: ProfileTab) => void; onBack: () => void; adminEmail: string | null;
+function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onReviewed }: {
+    user: DashUser; profileTab: ProfileTab; setProfileTab: (t: ProfileTab) => void; onBack: () => void; adminEmail: string | null; onReviewed?: () => void;
 }) {
     const color = rc(user.rank);
     const devotion = user.parameters?.devotion || 0;
     const devPct = Math.min(100, (devotion / 1000) * 100);
     const touchStartX = useRef(0);
     const touchStartY = useRef(0);
+    const [reviewing, setReviewing] = useState<string | null>(null); // taskId being processed
+    const [queue, setQueue] = useState<any[]>(user.reviewQueue);
+
+    const isRoutine = (task: any) => !!(task.isRoutine || task.category === 'Routine' || task.text === 'Daily Routine');
+
+    const handleApprove = async (task: any) => {
+        const taskId = task.id || task.taskId;
+        setReviewing(taskId);
+        try {
+            await adminApproveTaskAction(taskId, user.memberId, task.bonus || 50, null);
+            setQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
+            onReviewed?.();
+        } catch (e) { console.error(e); }
+        setReviewing(null);
+    };
+
+    const handleReject = async (task: any) => {
+        const taskId = task.id || task.taskId;
+        setReviewing(taskId);
+        try {
+            await adminRejectTaskAction(taskId, user.memberId);
+            setQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
+            onReviewed?.();
+        } catch (e) { console.error(e); }
+        setReviewing(null);
+    };
 
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX;
@@ -520,21 +547,53 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail }: {
                     </>)}
 
                     {profileTab === 'tasks' && (<>
-                        {user.reviewQueue.length === 0 ? (
+                        {queue.length === 0 ? (
                             <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#2a2a2a', letterSpacing: '2px' }}>NO PENDING TASKS</div>
-                        ) : user.reviewQueue.map((task: any, i: number) => (
-                            <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: '1px solid rgba(255,140,66,0.15)', borderRadius: 10, padding: '14px' }}>
-                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                                    {task.proof_url && <img src={task.proof_url} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} alt="" />}
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd', marginBottom: 4 }}>{task.taskName || task.task_name || 'Task'}</div>
-                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#444', letterSpacing: '1px' }}>{task.submitted_at ? new Date(task.submitted_at).toLocaleDateString() : ''}</div>
-                                        {task.notes && <div style={{ fontSize: '0.8rem', color: '#777', marginTop: 6, lineHeight: 1.5 }}>{task.notes}</div>}
+                        ) : queue.map((task: any, i: number) => {
+                            const taskId = task.id || task.taskId;
+                            const routine = isRoutine(task);
+                            const busy = reviewing === taskId;
+                            return (
+                                <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: `1px solid ${routine ? 'rgba(197,160,89,0.2)' : 'rgba(255,140,66,0.15)'}`, borderRadius: 10, padding: '14px', marginBottom: 10 }}>
+                                    {/* Header */}
+                                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
+                                        {task.proof_url && <img src={task.proof_url} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222' }} alt="" />}
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', marginBottom: 4, lineHeight: 1.3 }}>{task.taskName || task.task_name || task.text || 'Task'}</div>
+                                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '1.5px', background: 'rgba(197,160,89,0.1)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.3)' }}>ROUTINE</span>}
+                                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#444', letterSpacing: '1px' }}>{task.submitted_at ? new Date(task.submitted_at).toLocaleDateString() : ''}</span>
+                                            </div>
+                                            {task.notes && <div style={{ fontSize: '0.78rem', color: '#666', marginTop: 6, lineHeight: 1.5 }}>{task.notes}</div>}
+                                        </div>
                                     </div>
+                                    {/* Action buttons */}
+                                    {routine ? (
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            <button disabled={busy} onClick={() => handleApprove(task)}
+                                                style={{ flex: 1, padding: '10px 0', background: busy ? '#1a1a1a' : 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '1.5px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 }}>
+                                                {busy ? '...' : 'YES — 50 PTS'}
+                                            </button>
+                                            <button disabled={busy} onClick={() => setQueue(q => q.filter(t => (t.id || t.taskId) !== taskId))}
+                                                style={{ flex: 1, padding: '10px 0', background: 'rgba(255,255,255,0.04)', color: '#888', border: '1px solid #222', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer' }}>
+                                                NO
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            <button disabled={busy} onClick={() => handleApprove(task)}
+                                                style={{ flex: 1, padding: '10px 0', background: busy ? '#1a1a1a' : 'linear-gradient(135deg,#1a4a1a,#2d7a2d)', color: '#6bcb77', border: '1px solid rgba(107,203,119,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '1.5px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 }}>
+                                                {busy ? '...' : '✓ APPROVE'}
+                                            </button>
+                                            <button disabled={busy} onClick={() => handleReject(task)}
+                                                style={{ flex: 1, padding: '10px 0', background: busy ? '#1a1a1a' : 'rgba(255,51,51,0.08)', color: '#ff4444', border: '1px solid rgba(255,51,51,0.25)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '1.5px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 }}>
+                                                {busy ? '...' : '✕ REJECT'}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#ff8c42', letterSpacing: '2px', marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,140,66,0.1)' }}>PENDING REVIEW</div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </>)}
                 </div>
             )}
