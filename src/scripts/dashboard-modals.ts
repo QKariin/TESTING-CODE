@@ -58,7 +58,7 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
     if (mediaUrl) {
         if (isVideo) {
-            mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls muted autoplay loop></video>`;
+            mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls playsinline></video>`;
         } else {
             mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 400)}" class="m-img">`;
         }
@@ -734,11 +734,25 @@ export function renderGlobalReview(filterRoutine: boolean) {
         const isVideo = t.proofType === 'video' || mediaTypeFunction(t.proofUrl) === 'video';
         const optUrl = getOptimizedUrl(t.proofUrl || '', 600);
 
+        // Videos: show thumbnail if available, otherwise placeholder; play only on hover
+        let mediaBg: string;
+        if (isVideo) {
+            if (t.thumbnail_url) {
+                mediaBg = `<img src="${getOptimizedUrl(t.thumbnail_url, 600)}" class="ops-card-bg">
+                    <div class="ops-card-vid-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M8 5v14l11-7z"/></svg></div>`;
+            } else {
+                mediaBg = `<video src="${optUrl}" class="ops-card-bg" muted playsinline preload="none"></video>
+                    <div class="ops-card-vid-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M8 5v14l11-7z"/></svg></div>`;
+            }
+        } else {
+            mediaBg = `<img src="${optUrl}" class="ops-card-bg" onerror="this.style.opacity='0.2'">`;
+        }
+
         return `
-            <div class="ops-card ${filterRoutine ? 'routine' : 'task'}" onclick="window.openModById('${t.id}', '${t.memberId}', false)">
-                ${isVideo ?
-                `<video src="${optUrl}" class="ops-card-bg" autoplay muted loop playsinline></video>` :
-                `<img src="${optUrl}" class="ops-card-bg">`}
+            <div class="ops-card ${filterRoutine ? 'routine' : 'task'}"
+                onclick="window.openModById('${t.id}', '${t.memberId}', false)"
+                ${isVideo && !t.thumbnail_url ? `onmouseenter="var v=this.querySelector('video');if(v){v.play();}" onmouseleave="var v=this.querySelector('video');if(v){v.pause();v.currentTime=0;}"` : ''}>
+                ${mediaBg}
                 <div class="ops-card-overlay">
                     <div class="ops-card-label" style="color:${color}">${filterRoutine ? 'ROUTINE' : 'TASK'}</div>
                     <div class="ops-card-title">${clean(t.memberName)}</div>
