@@ -17,8 +17,10 @@ async function getCallerEmail(): Promise<string | null> {
 function stripSensitive(response: any, isAdmin: boolean): any {
     if (!response || typeof response !== 'object') return response;
 
-    // Strip member_id (email) from API responses — use memberId alias if needed
-    const { member_id, ...rest } = response;
+    // Keep member_id intact — it is needed by the frontend chat system.
+    // initProfileState reads data.member_id to set the memberId used by
+    // loadChatHistory/subscribeToChat. Stripping it makes chat never load.
+    const rest = { ...response };
 
     if (isAdmin) return rest;
 
