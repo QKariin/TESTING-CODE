@@ -177,7 +177,7 @@ export async function updateDetail(u: any) {
         // Add promote button if all requirements met
         if (report.canPromote && !report.isMax) {
             html += `<div style="margin-top:16px;">
-                <button onclick="window.adminPromoteUser('${u.memberId}','${report.nextRank}')" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(170,125,30,0.5),rgba(130,92,15,0.4));color:rgba(240,210,120,0.95);border:1px solid rgba(180,140,50,0.5);border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
+                <button onclick="window.adminPromoteUser('${u.memberId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(170,125,30,0.5),rgba(130,92,15,0.4));color:rgba(240,210,120,0.95);border:1px solid rgba(180,140,50,0.5);border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
                     ✦ PROMOTE TO ${report.nextRank.toUpperCase()}
                 </button>
             </div>`;
@@ -424,23 +424,19 @@ export function updateTaskQueue(u: any) {
     `;
 }
 
-export async function adminPromoteUser(memberId: string, newRank: string) {
-    if (!memberId || !newRank) return;
+export async function adminPromoteUser(memberId: string) {
+    if (!memberId) return;
     try {
         const res = await fetch('/api/promote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberEmail: memberId, newRank })
+            body: JSON.stringify({ memberEmail: memberId })
         });
         const data = await res.json();
-        if (data.promoted) {
+        if (data.success && data.promoted) {
             window.location.reload();
-        } else {
-            console.error('[promote] failed:', data);
         }
-    } catch (e) {
-        console.error('[promote] network error:', e);
-    }
+    } catch (_) {}
 }
 
 if (typeof window !== 'undefined') {
