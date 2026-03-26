@@ -65,13 +65,14 @@ export async function POST(req: Request) {
         .single();
 
     if (error) {
-        if (error.message.includes('sender_email')) {
-            delete insertData.sender_email;
-            const retry = await supabaseAdmin.from('global_messages').insert(insertData).select().single();
-            if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 500 });
-            return NextResponse.json({ success: true, message: retry.data });
-        }
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        // Strip unknown/generated columns and retry
+        const stripped = { ...insertData };
+        if (error.message.includes('reply_to')) delete stripped.reply_to;
+        if (error.message.includes('sender_email')) delete stripped.sender_email;
+        if (error.message.includes('created_at')) delete stripped.created_at;
+        const retry = await supabaseAdmin.from('global_messages').insert(stripped).select().single();
+        if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 500 });
+        return NextResponse.json({ success: true, message: retry.data });
     }
     return NextResponse.json({ success: true, message: data });
 }

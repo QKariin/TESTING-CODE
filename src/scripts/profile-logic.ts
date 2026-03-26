@@ -2645,6 +2645,9 @@ function _buildMobGlBubble(msg: any): string {
     const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const senderEmail = (msg.sender_email || '').toLowerCase();
     const isQueen = MOB_QUEEN_EMAILS.includes(senderEmail);
+    const { memberId, id } = getState();
+    const myEmail = ((memberId || id || '') as string).toLowerCase();
+    const isMe = !isQueen && !!myEmail && senderEmail === myEmail;
     const name = msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT';
     const content = msg.message || '';
     const msgId = msg.id || '';
@@ -2686,17 +2689,24 @@ function _buildMobGlBubble(msg: any): string {
         </div>`;
     }
 
+    const nameEl = isMe
+        ? `<span class="mob-gl-talk-name" style="font-family:'Cinzel',serif;">👑 ${name}</span>`
+        : `<span class="mob-gl-talk-name">${name}</span>`;
+    const contentEl = isMe
+        ? `<span style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;word-break:break-word;overflow-wrap:break-word;">${content}</span>`
+        : `<span class="mob-gl-talk-content">${content}</span>`;
+
     return `<div class="mob-gl-talk-msg">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
             <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;">
                 ${avatarHtml}
-                <span class="mob-gl-talk-name">${name}</span>
+                ${nameEl}
                 <span class="mob-gl-talk-time"> · ${time}</span>
             </div>
             ${replyBtn}
         </div>
         ${quoteHtml ? `<div style="margin-bottom:3px;">${quoteHtml}</div>` : ''}
-        <span class="mob-gl-talk-content">${content}</span>
+        ${contentEl}
     </div>`;
 }
 
