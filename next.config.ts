@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // @ts-ignore - Bypass tight NextConfig typing on older versions to allow ESLint skip
   eslint: {
     ignoreDuringBuilds: true,
   },
