@@ -2648,6 +2648,7 @@ function _buildMobGlBubble(msg: any): string {
     const { memberId, id } = getState();
     const myEmail = ((memberId || id || '') as string).toLowerCase();
     const isMe = !isQueen && !!myEmail && senderEmail === myEmail;
+    void isMe; // reserved for future alignment; queen is sole Cinzel user
     const name = msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT';
     const content = msg.message || '';
     const msgId = msg.id || '';
@@ -2679,28 +2680,23 @@ function _buildMobGlBubble(msg: any): string {
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
                 <div style="display:flex;align-items:center;gap:5px;min-width:0;">
                     ${qAvHtml}
-                    <span style="font-family:'Orbitron';font-size:0.52rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span>
+                    <span style="font-family:'Cinzel',serif;font-size:0.75rem;color:#c5a059;letter-spacing:1px;font-weight:700;">👑 QUEEN KARIN</span>
                     <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);"> · ${time}</span>
                 </div>
                 ${replyBtn}
             </div>
-            ${quoteHtml}<span style="font-family:'Rajdhani';font-size:1rem;color:rgba(255,255,255,0.7);line-height:1.4;">${content}</span>
+            ${quoteHtml}<span style="font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</span>
             ${mediaHtml}
         </div>`;
     }
 
-    const nameEl = isMe
-        ? `<span class="mob-gl-talk-name" style="font-family:'Cinzel',serif;">👑 ${name}</span>`
-        : `<span class="mob-gl-talk-name">${name}</span>`;
-    const contentEl = isMe
-        ? `<span style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;word-break:break-word;overflow-wrap:break-word;">${content}</span>`
-        : `<span class="mob-gl-talk-content">${content}</span>`;
+    const contentEl = `<span class="mob-gl-talk-content">${content}</span>`;
 
     return `<div class="mob-gl-talk-msg">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
             <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;">
                 ${avatarHtml}
-                ${nameEl}
+                <span class="mob-gl-talk-name">${name}</span>
                 <span class="mob-gl-talk-time"> · ${time}</span>
             </div>
             ${replyBtn}

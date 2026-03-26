@@ -579,9 +579,10 @@ function _appendMessage(msg: any) {
     if (!feed) return;
     const raw = getState().raw;
     const myName = raw?.name || raw?.member_id?.split('@')[0] || '';
+    const myEmail = ((raw?.member_id || raw?.email || '') as string).toLowerCase();
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
     const el = document.createElement('div');
-    el.innerHTML = _buildBubble(msg, myName);
+    el.innerHTML = _buildBubble(msg, myName, myEmail);
     feed.appendChild(el.firstElementChild!);
     if (wasNear) feed.scrollTop = feed.scrollHeight;
 }
@@ -593,17 +594,20 @@ function _renderMessages(messages: any[], scrollBottom: boolean) {
     if (!feed) return;
     const raw = getState().raw;
     const myName = raw?.name || raw?.member_id?.split('@')[0] || '';
+    const myEmail = ((raw?.member_id || raw?.email || '') as string).toLowerCase();
     if (!messages.length) {
         feed.innerHTML = `<div style="text-align:center;padding:60px 20px;font-family:'Orbitron';font-size:0.6rem;color:rgba(255,255,255,0.18);letter-spacing:3px;">BE THE FIRST TO SPEAK</div>`;
         return;
     }
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
-    feed.innerHTML = messages.map(m => _buildBubble(m, myName)).join('');
+    feed.innerHTML = messages.map(m => _buildBubble(m, myName, myEmail)).join('');
     if (scrollBottom || wasNear) feed.scrollTop = feed.scrollHeight;
 }
 
-function _buildBubble(msg: any, myName: string): string {
-    const isMe = !!myName && msg.sender_name === myName;
+function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
+    const isMe = msg.is_me === true ||
+        (!!myEmail && (msg.sender_email || '').toLowerCase() === myEmail) ||
+        (!!myName && msg.sender_name === myName);
     const isQueen = msg.is_queen === true || msg.sender_name === 'QUEEN KARIN';
     const content = msg.message || '';
     const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -665,11 +669,11 @@ function _buildBubble(msg: any, myName: string): string {
     if (isQueen) {
         if (isMe) {
             return `<div class="gl-msg-row" style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
-                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);margin-bottom:4px;letter-spacing:1px;">QUEEN KARIN · ${time}</div>
+                <div style="font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(197,160,89,0.8);margin-bottom:4px;letter-spacing:1px;font-weight:700;">👑 QUEEN KARIN · <span style="font-family:'Orbitron';font-size:0.38rem;">${time}</span></div>
                 <div style="display:flex;align-items:center;gap:8px;">
                     ${replyBtn}
                     <div style="max-width:${hasMedia ? '85%' : '70%'};padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:14px 14px 3px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
-                        ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
+                        ${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${msg.message}</div>
                         ${mediaHtml}
                     </div>
                 </div>
@@ -684,10 +688,10 @@ function _buildBubble(msg: any, myName: string): string {
                 <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">♛</div>
             </div>
             <div style="max-width:${hasMedia ? '85%' : '70%'};">
-                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.7);margin-bottom:4px;letter-spacing:1px;">QUEEN KARIN · ${time}</div>
+                <div style="font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(197,160,89,0.8);margin-bottom:4px;letter-spacing:1px;font-weight:700;">👑 QUEEN KARIN · <span style="font-family:'Orbitron';font-size:0.38rem;">${time}</span></div>
                 <div style="display:flex;align-items:center;gap:8px;">
                     <div style="padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:3px 14px 14px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
-                        ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
+                        ${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${msg.message}</div>
                         ${mediaHtml}
                     </div>
                     ${replyBtn}
@@ -783,7 +787,9 @@ export async function sendGlobalMessage() {
     _appendMessage({
         sender_name: senderName,
         sender_avatar: senderAvatar,
+        sender_email: senderEmail,
         is_queen: isQueenLocal,
+        is_me: true,
         message,
         reply_to: replyTo,
         created_at: new Date().toISOString(),
