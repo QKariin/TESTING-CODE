@@ -24,14 +24,15 @@
 .m-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: #111;
+    background: #0a0a0a;
     width: 80%;
     max-width: 1100px;
     height: 70vh;
-    border: 1px solid #444;
+    border: 1px solid rgba(197, 160, 89, 0.35);
     border-radius: 20px;
     overflow: hidden;
     pointer-events: auto;
+    box-shadow: 0 0 60px rgba(197, 160, 89, 0.08), inset 0 0 40px rgba(0,0,0,0.6);
 }
 
 .m-media-box {
@@ -56,9 +57,10 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    border-left: 1px solid #333;
+    border-left: 1px solid rgba(197, 160, 89, 0.2);
     order: 2;
     position: relative;
+    background: linear-gradient(160deg, #0d0d0d 0%, #0a0808 100%);
 }
 
 #reviewNormalContent {
@@ -73,14 +75,16 @@
     display: none;
     position: absolute;
     inset: 0;
-    background: rgba(10, 10, 10, 0.85);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background: linear-gradient(160deg, rgba(8, 6, 2, 0.97) 0%, rgba(15, 10, 3, 0.97) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     z-index: 10;
     flex-direction: column;
-    padding: 40px;
+    padding: 30px 40px;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    border-left: 1px solid rgba(197, 160, 89, 0.15);
 }
 
 .m-text-scroll {
@@ -95,13 +99,27 @@
 
 .btn-main {
     width: 100%;
-    padding: 20px;
+    padding: 18px 20px;
     font-weight: 900;
     text-transform: uppercase;
     margin-top: 0;
     cursor: pointer;
-    border-radius: 8px;
-    letter-spacing: 2px;
+    border-radius: 6px;
+    letter-spacing: 3px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-main:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+}
+
+.btn-main:active {
+    transform: translateY(0);
 }
 
 .hist-status {
@@ -299,19 +317,21 @@
 
 .rw-inp {
     width: 100%;
-    background: #000;
-    border: 1px solid #444;
-    color: var(--green);
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(197, 160, 89, 0.3);
+    color: var(--gold);
     font-family: 'Orbitron';
-    padding: 8px;
+    padding: 8px 10px;
     text-align: left;
     border-radius: 4px;
     font-weight: bold;
     outline: none;
+    transition: border-color 0.2s;
 }
 
 .rw-inp:focus {
-    border-color: var(--green);
+    border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(197, 160, 89, 0.2);
 }
 
 #broadcastModal .m-content {
@@ -817,9 +837,9 @@
 }
 
 .reward-tier-btn.selected {
-    border-color: var(--green);
-    background: rgba(57, 255, 20, 0.1);
-    box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
+    border-color: var(--gold);
+    background: rgba(197, 160, 89, 0.12);
+    box-shadow: 0 0 20px rgba(197, 160, 89, 0.25);
 }
 
 .rt-pts {
@@ -838,9 +858,136 @@
 }
 
 .reward-tier-btn.selected .rt-pts {
-    color: var(--green);
+    color: var(--gold);
+    text-shadow: 0 0 12px rgba(197, 160, 89, 0.6);
 }
 
 .reward-tier-btn.selected .rt-lbl {
-    color: white;
+    color: rgba(197, 160, 89, 0.8);
+}
+
+/* ── LUXURY REVIEW PANEL ─────────────────────────────────────────────── */
+
+.review-note-wrap {
+    width: 100%;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+}
+
+.review-note-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.5rem;
+    color: rgba(197, 160, 89, 0.5);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+#taskQuickNote {
+    width: 100%;
+    min-height: 64px;
+    max-height: 110px;
+    resize: vertical;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(197, 160, 89, 0.18);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 12px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+    display: block;
+}
+
+#taskQuickNote::placeholder {
+    color: rgba(255, 255, 255, 0.18);
+    font-style: italic;
+}
+
+#taskQuickNote:focus {
+    border-color: rgba(197, 160, 89, 0.45);
+    background: rgba(0, 0, 0, 0.7);
+}
+
+/* ── REWARD OVERLAY HEADER ───────────────────────────────────────────── */
+
+.reward-protocol-header {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    color: rgba(197, 160, 89, 0.5);
+    letter-spacing: 4px;
+    text-align: center;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    width: 100%;
+}
+
+.reward-protocol-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-align: center;
+    margin-bottom: 16px;
+    text-shadow: 0 0 30px rgba(197, 160, 89, 0.35);
+    width: 100%;
+}
+
+/* rewardComment is a textarea now */
+#rewardComment {
+    min-height: 64px;
+    resize: vertical;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+#rewardComment::placeholder {
+    color: rgba(255, 255, 255, 0.18);
+    font-style: italic;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+}
+
+/* ── REWARD OVERLAY CONFIRM/CANCEL BUTTONS ───────────────────────────── */
+
+.rw-confirm-btn {
+    flex: 1;
+    padding: 14px 10px;
+    border-radius: 5px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rw-confirm-btn.primary {
+    border: 1px solid rgba(197, 160, 89, 0.6);
+    background: rgba(197, 160, 89, 0.12);
+    color: var(--gold);
+    box-shadow: 0 0 10px rgba(197, 160, 89, 0.12);
+}
+
+.rw-confirm-btn.primary:hover {
+    background: rgba(197, 160, 89, 0.22);
+    box-shadow: 0 0 20px rgba(197, 160, 89, 0.3);
+    transform: translateY(-1px);
+}
+
+.rw-confirm-btn.cancel {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.rw-confirm-btn.cancel:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.55);
 }
