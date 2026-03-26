@@ -427,13 +427,23 @@ export function updateTaskQueue(u: any) {
 export async function adminPromoteUser(memberId: string) {
     if (!memberId) return;
     try {
-        await fetch('/api/promote', {
+        const res = await fetch('/api/promote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ memberEmail: memberId })
         });
-        window.location.reload();
-    } catch (e) { }
+        const data = await res.json();
+        if (data.promoted) {
+            window.location.reload();
+        } else {
+            const errMsg = data.error || data.message || JSON.stringify(data);
+            const btn = document.querySelector(`[onclick*="${memberId}"]`) as HTMLElement;
+            if (btn) { btn.textContent = `✗ ${errMsg}`; btn.style.color = '#ff6b6b'; }
+            console.error('[promote] failed:', data);
+        }
+    } catch (e) {
+        console.error('[promote] network error:', e);
+    }
 }
 
 if (typeof window !== 'undefined') {

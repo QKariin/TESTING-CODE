@@ -27,8 +27,11 @@ export async function POST(req: Request) {
         const nextRank = RANK_ORDER[nextIdx];
 
         const { error: updateError } = await supabaseAdmin
-            .from('profiles').update({ hierarchy: nextRank }).ilike('member_id', memberEmail);
-        if (updateError) return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
+            .from('profiles').update({ hierarchy: nextRank }).eq('id', profile.id);
+        if (updateError) {
+            console.error('[promote] update error:', updateError);
+            return NextResponse.json({ error: updateError.message }, { status: 500 });
+        }
 
         const rawPic = profile.avatar_url || profile.profile_picture_url || "";
         const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
