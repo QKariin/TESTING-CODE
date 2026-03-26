@@ -261,15 +261,14 @@ async function _loadUpdatesPreview() {
 }
 
 function _buildUpdateCardPreview(u: any): string {
+    const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const initial = (u.sender_name || 'S')[0].toUpperCase();
+
     if (u.kind === 'tribute') {
-        const initial = (u.sender_name || 'S')[0].toUpperCase();
-        const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const coverSrc = u.sender_avatar || '';
+        const coverSrc = u.image || u.sender_avatar || '';
         return `<div style="margin:6px 8px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
             <div style="width:100%;height:110px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
-                ${coverSrc
-                    ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                    : ''}
+                ${coverSrc ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
                 <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:2.5rem;color:rgba(197,160,89,0.4);">${initial}</div>
                 <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.85) 100%);"></div>
                 <div style="position:absolute;bottom:8px;left:12px;font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.7);letter-spacing:2px;">✦ GIFT SENT</div>
@@ -283,23 +282,34 @@ function _buildUpdateCardPreview(u: any): string {
             </div>
         </div>`;
     }
+
     if (u.kind === 'points') {
-        return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
-            <div style="font-size:0.75rem;flex-shrink:0;">⚡</div>
-            <div style="flex:1;min-width:0;">
-                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</div>
-                <div style="font-family:'Rajdhani';font-size:0.75rem;color:#a78bfa;">+${u.points} MERIT</div>
+        const avHtml = u.sender_avatar
+            ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            : '';
+        return `<div style="margin:6px 8px;background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.28);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+            <div style="width:44px;height:44px;border-radius:50%;background:rgba(167,139,250,0.12);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
+                ${avHtml}
+                <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.7rem;color:#a78bfa;">${initial}</div>
             </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:3px;">⚡ MERIT EARNED</div>
+                <div style="font-family:'Cinzel';font-size:0.78rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name}</div>
+                <div style="font-family:'Orbitron';font-size:0.82rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${u.points} MERIT</div>
+            </div>
+            <div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);flex-shrink:0;align-self:flex-start;">${time}</div>
         </div>`;
     }
+
     // photo
-    return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
-        <div style="width:32px;height:32px;border-radius:4px;overflow:hidden;flex-shrink:0;">
-            <img src="${getOptimizedUrl(u.media_url, 64)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
-        </div>
-        <div style="flex:1;min-width:0;">
-            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</div>
-            ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.caption}</div>` : ''}
+    return `<div style="margin:6px 8px;background:#0a0a14;border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+        <div style="width:100%;height:110px;overflow:hidden;position:relative;">
+            <img src="${getOptimizedUrl(u.media_url, 400)}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,0.8) 100%);"></div>
+            <div style="position:absolute;bottom:8px;left:12px;right:12px;">
+                <div style="font-family:'Cinzel';font-size:0.65rem;color:#fff;font-weight:600;">${u.sender_name} <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.3);">${time}</span></div>
+                ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.7rem;color:rgba(255,255,255,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.caption}</div>` : ''}
+            </div>
         </div>
     </div>`;
 }
@@ -768,7 +778,7 @@ function _buildUpdateCard(u: any): string {
 
 function _buildTributeCard(u: any): string {
     const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const coverSrc = u.sender_avatar || '';
+    const coverSrc = u.image || u.sender_avatar || '';
     const initial = (u.sender_name || 'S')[0].toUpperCase();
     return `
     <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;max-width:320px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">

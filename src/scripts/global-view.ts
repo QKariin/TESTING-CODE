@@ -264,7 +264,7 @@ function _buildUpdateCardPreview(u: any): string {
     if (u.kind === 'tribute') {
         const initial = (u.sender_name || 'S')[0].toUpperCase();
         const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const coverSrc = u.sender_avatar || '';
+        const coverSrc = u.image || u.sender_avatar || '';
         return `<div style="margin:6px 8px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
             <div style="width:100%;height:110px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
                 ${coverSrc
