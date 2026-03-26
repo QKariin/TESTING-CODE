@@ -94,10 +94,13 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     actionsEl.style.borderTop = '1px solid rgba(197,160,89,0.18)';
     actionsEl.style.paddingTop = '20px';
 
-    // Media: use inline styles so position:absolute/cover work regardless of CSS class order
+    // Media
     if (mediaUrl) {
         if (isVideo) {
-            mediaBox.innerHTML = `<video src="${mediaUrl}" controls playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
+            mediaBox.innerHTML = `<video src="${mediaUrl}" controls playsinline preload="metadata"
+                style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;"
+                onerror="this.outerHTML='<div style=\\'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(197,160,89,0.4);font-family:Orbitron,sans-serif;\\'><div style=\\'font-size:2rem;\\'>⚠</div><div style=\\'font-size:0.45rem;letter-spacing:3px;\\'>VIDEO UNAVAILABLE</div></div>'">
+            </video>`;
         } else {
             mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 1200)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
         }
@@ -105,18 +108,22 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
         mediaBox.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#2a2a2a;font-family:'Orbitron';font-size:0.6rem;letter-spacing:3px;">NO MEDIA</div>`;
     }
 
-    // Member header
+    // Header
     const u = users.find(x => x.memberId === memberId);
     const memberDisplay = u ? u.name?.toUpperCase() : '';
+    const avatarInitial = memberDisplay ? memberDisplay[0] : '?';
     const statusBadge = isHistory && status
-        ? `<span style="font-family:'Orbitron';font-size:0.45rem;letter-spacing:2px;padding:3px 10px;border-radius:20px;border:1px solid ${status === 'approve' ? 'rgba(57,255,20,0.4)' : 'rgba(200,30,30,0.5)'};color:${status === 'approve' ? '#39ff14' : '#e03030'};background:${status === 'approve' ? 'rgba(57,255,20,0.07)' : 'rgba(200,30,30,0.08)'};">${status === 'approve' ? 'APPROVED' : 'REJECTED'}</span>`
+        ? `<span style="font-family:'Orbitron';font-size:0.4rem;letter-spacing:2px;padding:3px 10px;border-radius:20px;border:1px solid ${status === 'approve' ? 'rgba(57,255,20,0.4)' : 'rgba(200,30,30,0.5)'};color:${status === 'approve' ? '#39ff14' : '#e03030'};background:${status === 'approve' ? 'rgba(57,255,20,0.07)' : 'rgba(200,30,30,0.08)'};">${status === 'approve' ? 'APPROVED' : 'REJECTED'}</span>`
         : '';
     if (headerEl) {
         headerEl.innerHTML = `
-            <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.38);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Subject Review</div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                <div style="font-family:'Cinzel',serif;font-size:1.05rem;color:rgba(255,255,255,0.9);font-weight:700;letter-spacing:1px;">${memberDisplay}</div>
-                ${statusBadge}
+            <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(197,160,89,0.32);letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;">Subject Review</div>
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div style="width:42px;height:42px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.35);background:rgba(197,160,89,0.06);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1rem;color:rgba(197,160,89,0.8);flex-shrink:0;">${avatarInitial}</div>
+                <div>
+                    <div style="font-family:'Cinzel',serif;font-size:1.05rem;color:#fff;font-weight:700;letter-spacing:1.5px;line-height:1.2;">${memberDisplay}</div>
+                    ${statusBadge ? `<div style="margin-top:5px;">${statusBadge}</div>` : ''}
+                </div>
             </div>`;
     }
 
@@ -135,47 +142,39 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
             <button class="btn-main" onclick="window.reviewTask('reject')" style="flex:1;background:rgba(160,20,20,0.12);color:rgba(200,60,60,0.9);border:1px solid rgba(160,30,30,0.35);">DISMISS</button>
             <button class="btn-main" onclick="window.reviewTask('approve')" style="flex:1;background:rgba(197,160,89,0.1);color:var(--gold);border:1px solid rgba(197,160,89,0.4);">✓ CONFIRM</button>`;
     } else {
-        // COMBINED PANEL — no separate reward overlay, everything in one place
-        // Pre-set pendingApproveTask so confirmReward() works immediately
         setPendingApproveTask(currTask);
         setSelectedStickerId(null);
 
         actionsEl.innerHTML = `
             <div style="width:100%;">
-                <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.4);letter-spacing:2px;margin-bottom:8px;">MERIT POINTS</div>
+                <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(197,160,89,0.32);letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;">Merit Assessment</div>
                 <div style="display:flex;gap:8px;margin-bottom:14px;">
-                    <div id="tier_50" class="merit-coin reward-tier-btn selected" onclick="window.setRewardTier(50,'tier_50')">
-                        <div class="merit-coin-pts">50</div><div class="merit-coin-lbl">Normal</div>
+                    <div id="tier_50" class="reward-tier-btn selected" onclick="window.setRewardTier(50,'tier_50')">
+                        <div class="rt-pts">50</div><div class="rt-lbl">STANDARD</div>
                     </div>
-                    <div id="tier_70" class="merit-coin reward-tier-btn" onclick="window.setRewardTier(70,'tier_70')">
-                        <div class="merit-coin-pts">70</div><div class="merit-coin-lbl">Impressive</div>
+                    <div id="tier_70" class="reward-tier-btn" onclick="window.setRewardTier(70,'tier_70')">
+                        <div class="rt-pts">70</div><div class="rt-lbl">IMPRESSIVE</div>
                     </div>
-                    <div id="tier_100" class="merit-coin reward-tier-btn" onclick="window.setRewardTier(100,'tier_100')">
-                        <div class="merit-coin-pts">100</div><div class="merit-coin-lbl">Excellent</div>
+                    <div id="tier_100" class="reward-tier-btn" onclick="window.setRewardTier(100,'tier_100')">
+                        <div class="rt-pts">100</div><div class="rt-lbl">EXCELLENT</div>
                     </div>
                 </div>
                 <div style="display:flex;gap:8px;margin-bottom:12px;align-items:flex-end;">
-                    <div style="flex:0 0 90px;">
-                        <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.4);letter-spacing:2px;margin-bottom:4px;">TOTAL POINTS</div>
-                        <input type="number" id="rewardBonus" value="50" style="width:100%;background:rgba(0,0,0,0.6);border:1px solid rgba(197,160,89,0.25);color:var(--gold);font-family:'Orbitron';padding:8px 6px;border-radius:4px;font-size:0.85rem;font-weight:900;text-align:center;outline:none;box-sizing:border-box;">
+                    <div style="flex:0 0 85px;">
+                        <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(197,160,89,0.32);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Points</div>
+                        <input type="number" id="rewardBonus" value="50" style="width:100%;background:rgba(0,0,0,0.7);border:1px solid rgba(197,160,89,0.22);color:var(--gold);font-family:'Orbitron';padding:10px 6px;border-radius:6px;font-size:0.9rem;font-weight:900;text-align:center;outline:none;box-sizing:border-box;">
                     </div>
                     <div style="flex:1;">
-                        <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.4);letter-spacing:2px;margin-bottom:4px;">COMMENT</div>
-                        <input type="text" id="reviewComment" placeholder="Optional note..." style="width:100%;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);font-family:'Rajdhani';padding:8px;border-radius:4px;font-size:0.9rem;outline:none;box-sizing:border-box;">
+                        <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(197,160,89,0.32);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Note</div>
+                        <input type="text" id="reviewComment" placeholder="Optional note..." style="width:100%;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);font-family:'Rajdhani';padding:10px;border-radius:6px;font-size:0.9rem;outline:none;box-sizing:border-box;">
                     </div>
                 </div>
                 <div style="display:flex;gap:8px;">
-                    <button class="btn-main" onclick="window.reviewTask('reject')" style="flex:1;background:rgba(120,8,8,0.25);color:#e04040;border:1px solid rgba(180,20,20,0.5);">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;vertical-align:middle;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                        REJECT
-                    </button>
-                    <button class="btn-main" onclick="window.confirmReward()" style="flex:2;background:linear-gradient(135deg,rgba(90,65,18,0.45),rgba(60,42,10,0.35));color:var(--gold);border:1px solid rgba(197,160,89,0.45);">
-                        CONFIRM REWARD
-                    </button>
+                    <button class="btn-main" onclick="window.reviewTask('reject')" style="flex:1;background:rgba(100,5,5,0.2);color:rgba(220,55,55,0.85);border:1px solid rgba(150,15,15,0.4);border-radius:6px;padding:13px;font-size:0.58rem;letter-spacing:3px;">✕ REJECT</button>
+                    <button class="btn-main" onclick="window.confirmReward()" style="flex:2;background:linear-gradient(135deg,rgba(100,72,18,0.45),rgba(65,46,10,0.38));color:var(--gold);border:1px solid rgba(197,160,89,0.4);border-radius:6px;padding:13px;font-size:0.58rem;letter-spacing:3px;">✓ CONFIRM REWARD</button>
                 </div>
             </div>`;
 
-        // Initialize default tier
         setRewardTier(50, 'tier_50');
     }
     modal.classList.add('active');
