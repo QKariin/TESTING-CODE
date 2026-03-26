@@ -180,13 +180,14 @@ export async function openModById(taskId: string, memberId: string, isHistory: b
     }
 
     if (t) {
-        const finalUrl = fullSigned || getOptimizedUrl(t.proofUrl, 1000);
-        // Normalize type: DB stores MIME ('video/mp4') or short form ('video'), or use URL detection
+        // Resolve type FIRST so we don't corrupt video URLs with image transforms
         const rawType = typeHint || t.proofType || mediaTypeFunction(t.proofUrl) || null;
         const resolvedType = rawType == null ? null
             : (rawType === 'video' || rawType.startsWith('video/') ? 'video'
             : rawType === 'image' || rawType.startsWith('image/') ? 'image'
             : rawType);
+        // Only apply image optimization for non-videos; videos must use raw URL
+        const finalUrl = fullSigned || (resolvedType === 'video' ? (t.proofUrl || '') : getOptimizedUrl(t.proofUrl, 1000));
         openModal(taskId, memberId, finalUrl, resolvedType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'));
     }
 }
