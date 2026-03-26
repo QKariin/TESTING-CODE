@@ -77,7 +77,11 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
     if (!modal || !mediaBox || !textEl || !actionsEl) return;
 
-    // Right panel: fill height with task text, gold separator, actions anchored to bottom
+    // Constrain modal height so right panel doesn't have dead space
+    const mContent = modal.querySelector('.m-content') as HTMLElement;
+    if (mContent) mContent.style.height = 'clamp(500px, 62vh, 720px)';
+
+    // Right panel layout
     const normalContentEl = document.getElementById('reviewNormalContent');
     if (normalContentEl) {
         normalContentEl.style.flex = '1';
@@ -89,18 +93,18 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     textEl.style.minHeight = '50px';
     textEl.style.overflowY = 'auto';
     textEl.style.maxHeight = 'none';
+    textEl.style.fontSize = '1.02rem';
+    textEl.style.lineHeight = '1.7';
     actionsEl.style.marginTop = '0';
     actionsEl.style.flexShrink = '0';
     actionsEl.style.borderTop = '1px solid rgba(197,160,89,0.18)';
-    actionsEl.style.paddingTop = '20px';
+    actionsEl.style.paddingTop = '18px';
 
-    // Media
+    // Media — preload=none: nothing loads until user clicks play (avoids hang on large videos)
     if (mediaUrl) {
         if (isVideo) {
-            mediaBox.innerHTML = `<video src="${mediaUrl}" controls playsinline preload="metadata"
-                style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;"
-                onerror="this.outerHTML='<div style=\\'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(197,160,89,0.4);font-family:Orbitron,sans-serif;\\'><div style=\\'font-size:2rem;\\'>⚠</div><div style=\\'font-size:0.45rem;letter-spacing:3px;\\'>VIDEO UNAVAILABLE</div></div>'">
-            </video>`;
+            mediaBox.innerHTML = `<video src="${mediaUrl}" controls playsinline preload="none"
+                style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
         } else {
             mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 1200)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
         }
