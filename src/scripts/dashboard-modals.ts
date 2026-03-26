@@ -77,13 +77,22 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
     if (!modal || !mediaBox || !textEl || !actionsEl) return;
 
-    // Force layout: prevent reviewNormalContent from stretching to full panel height
+    // Right panel: fill height with task text, gold separator, actions anchored to bottom
     const normalContentEl = document.getElementById('reviewNormalContent');
     if (normalContentEl) {
-        normalContentEl.style.flex = '0 0 auto';
+        normalContentEl.style.flex = '1';
         normalContentEl.style.minHeight = '0';
+        normalContentEl.style.display = 'flex';
+        normalContentEl.style.flexDirection = 'column';
     }
-    actionsEl.style.marginTop = '16px';
+    textEl.style.flex = '1';
+    textEl.style.minHeight = '50px';
+    textEl.style.overflowY = 'auto';
+    textEl.style.maxHeight = 'none';
+    actionsEl.style.marginTop = '0';
+    actionsEl.style.flexShrink = '0';
+    actionsEl.style.borderTop = '1px solid rgba(197,160,89,0.18)';
+    actionsEl.style.paddingTop = '20px';
 
     // Media: use inline styles so position:absolute/cover work regardless of CSS class order
     if (mediaUrl) {
