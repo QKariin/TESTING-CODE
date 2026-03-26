@@ -30,19 +30,21 @@ export async function renderChat(messages: any[]) {
     );
 
     // 2. FILTER STREAMS
-    const systemMessages = sortedMessages.filter(m => {
+    const _isSystem = (m: any) => {
         const s = (m.sender_email || m.sender || "").toLowerCase();
         const txt = (m.content || m.message || "");
-        if (txt.startsWith('WISHLIST::')) return false;
-        return s === 'system' || txt.includes("Task Verified") || txt.includes("Task Rejected");
-    });
+        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::')) return false;
+        if (s === 'system' || m.type === 'system' || m.metadata?.isSystem === true) return true;
+        const up = txt.toUpperCase();
+        return up.includes("TASK VERIFIED") || up.includes("TASK REJECTED") ||
+               up.includes("TASK APPROVED") || up.includes("TASK DENIED") ||
+               up.includes("KNEELING") || up.includes("REWARD CLAIMED") ||
+               up.includes("SESSION COMPLETED") || up.includes("MERIT EARNED") ||
+               up.includes("RANK PROMOTED") || up.includes("COINS AWARDED");
+    };
 
-    const conversationMessages = sortedMessages.filter(m => {
-        const s = (m.sender_email || m.sender || "").toLowerCase();
-        const txt = (m.content || m.message || "");
-        if (txt.startsWith('WISHLIST::')) return true;
-        return s !== 'system' && !txt.includes("Task Verified") && !txt.includes("Task Rejected");
-    });
+    const systemMessages = sortedMessages.filter(m => _isSystem(m));
+    const conversationMessages = sortedMessages.filter(m => !_isSystem(m));
 
     // 3. TICKER & LOGS
 

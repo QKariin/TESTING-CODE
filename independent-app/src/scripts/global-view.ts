@@ -605,6 +605,7 @@ function _renderMessages(messages: any[], scrollBottom: boolean) {
 }
 
 function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const isMe = msg.is_me === true ||
         (!!myEmail && (msg.sender_email || '').toLowerCase() === myEmail) ||
         (!!myName && msg.sender_name === myName);
@@ -612,38 +613,36 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const content = msg.message || '';
     const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const msgId = msg.id || '';
-    const senderNameSafe = (msg.sender_name || 'SUBJECT').replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
+    const name = msg.sender_name || 'SUBJECT';
+    const av = msg.sender_avatar;
+    const senderNameSafe = name.replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
     const contentSafe = content.slice(0, 80).replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, ' ');
     const SVG_REPLY = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>`;
-    const SVG_CROWN = `<svg width="13" height="10" viewBox="0 0 26 20" fill="#c5a059" style="display:inline-block;vertical-align:middle;margin-right:5px;flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
+    const SVG_CROWN = `<svg width="13" height="10" viewBox="0 0 26 20" fill="#c5a059" style="flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
     const replyBtn = msgId ? `<button class="gl-reply-btn" onclick="event.stopPropagation();window.setGlReply('${msgId}','${senderNameSafe}','${contentSafe}')" title="Reply">${SVG_REPLY}</button>` : '';
     const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:5px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;">
-        <div style="display:flex;align-items:center;gap:4px;font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;"><svg width="9" height="9" viewBox="0 0 20 20" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 16 3 11 8 6"></polyline><path d="M17 4v7a4 4 0 0 1-4 4H3"></path></svg>${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</div>
-        <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">${(msg.reply_to.content || '').slice(0, 60).replace(/</g, '&lt;')}</div>
+        <div style="display:flex;align-items:center;gap:4px;font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;"><svg width="9" height="9" viewBox="0 0 20 20" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 16 3 11 8 6"></polyline><path d="M17 4v7a4 4 0 0 1-4 4H3"></path></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</span></div>
+        <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content || '').slice(0, 60).replace(/</g, '&lt;')}</div>
     </div>` : '';
 
     // ── Promotion Card ── centered
     if (content.startsWith('PROMOTION_CARD::')) {
         try {
             const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
-            const photoBlock = d.photo
-                ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'">`
-                : '';
-            return `<div style="display:flex;justify-content:center;padding:8px 14px;margin-bottom:14px;">
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'">` : '';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
                 <div>
                     <div style="width:260px;max-width:72vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
                         <div style="position:relative;width:100%;height:150px;background:#0a0703;overflow:hidden;">
                             ${photoBlock}
                             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
-                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">✦ RANK PROMOTION</span>
-                            </div>
+                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div>
                         </div>
                         <div style="padding:14px 18px 18px;text-align:center;">
                             <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${d.name||''}</div>
                             <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
                                 <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
-                                <span style="color:rgba(197,160,89,0.7);font-size:0.9rem;">→</span>
+                                <span style="color:rgba(197,160,89,0.7);">→</span>
                                 <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span>
                             </div>
                             <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
@@ -654,81 +653,55 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
             </div>`;
         } catch (e) { /* fall through */ }
     }
-    const name = msg.sender_name || 'SUBJECT';
-    const av = msg.sender_avatar;
-    const initial = (name[0] || 'S').toUpperCase();
 
-    // Build media block if present
-    const mediaHtml = msg.media_url ? (
+    const mediaHtml = av && msg.media_url ? (
         msg.media_type === 'video'
-            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:300px;object-fit:cover;display:block;"></video>`
-            : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:300px;object-fit:cover;display:block;" />`
+            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
+            : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
+    ) : msg.media_url ? (
+        msg.media_type === 'video'
+            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
+            : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
     ) : '';
-    const hasMedia = !!msg.media_url;
 
-    // Queen/admin message — golden bubble, right-aligned if sent by me, left if by another queen
+    // ── QUEEN bubble (gold frame, full-width feed style) ──
     if (isQueen) {
-        if (isMe) {
-            return `<div class="gl-msg-row" style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
-                <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(197,160,89,0.8);letter-spacing:1px;font-weight:700;">QUEEN KARIN</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    ${replyBtn}
-                    <div style="max-width:${hasMedia ? '85%' : '70%'};padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:14px 14px 3px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
-                        ${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${msg.message}</div>
-                        ${mediaHtml}
-                    </div>
-                </div>
-            </div>`;
-        }
-        const avatarHtml = av
-            ? `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-            : '';
-        return `<div class="gl-msg-row" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
-            <div style="width:32px;height:32px;border-radius:50%;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.5);overflow:hidden;flex-shrink:0;position:relative;box-shadow:0 0 8px rgba(197,160,89,0.3);">
-                ${avatarHtml}
-                <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">♛</div>
-            </div>
-            <div style="max-width:${hasMedia ? '85%' : '70%'};">
-                <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(197,160,89,0.8);letter-spacing:1px;font-weight:700;">QUEEN KARIN</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <div style="padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:3px 14px 14px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
-                        ${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${msg.message}</div>
-                        ${mediaHtml}
+        const qAv = av
+            ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
+            : `<img src="/queen-karin.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
+        return `<div class="gl-msg-row" style="margin-bottom:8px;">
+            <div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+                        ${qAv}
+                        <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
+                        <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
                     </div>
                     ${replyBtn}
                 </div>
+                ${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>
+                ${mediaHtml}
             </div>
         </div>`;
     }
 
-    if (isMe) {
-        return `<div class="gl-msg-row" style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
-            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.22);margin-bottom:4px;letter-spacing:1px;">YOU · ${time}</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-                ${replyBtn}
-                <div style="max-width:70%;padding:9px 13px;background:rgba(55,55,60,0.85);border:1px solid rgba(100,100,110,0.3);border-radius:14px 14px 3px 14px;">
-                    ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
-                </div>
-            </div>
-        </div>`;
-    }
-
-    const avatarHtml = av
-        ? `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-        : '';
-    return `<div class="gl-msg-row" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
-        <div style="width:32px;height:32px;border-radius:50%;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.25);overflow:hidden;flex-shrink:0;position:relative;">
-            ${avatarHtml}
-            <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">${initial}</div>
-        </div>
-        <div style="max-width:70%;">
-            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.55);margin-bottom:4px;letter-spacing:1px;">${name} · ${time}</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-                <div style="padding:9px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:3px 14px 14px 14px;">
-                    ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
+    // ── Regular user bubble (silver frame, full-width feed style) ──
+    const initial = (name[0] || 'S').toUpperCase();
+    const userAv = av
+        ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.35);flex-shrink:0;" onerror="this.style.display='none'">`
+        : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.42rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
+    return `<div class="gl-msg-row" style="margin-bottom:8px;">
+        <div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
+                    ${userAv}
+                    <span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span>
+                    <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
                 </div>
                 ${replyBtn}
             </div>
+            ${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>
+            ${mediaHtml}
         </div>
     </div>`;
 }
