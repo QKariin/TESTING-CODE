@@ -53,7 +53,7 @@ export function initProfileState(data: any) {
     }
 
     setState({
-        memberId: data.member_id,
+        memberId: data.member_id || data.memberId || data.email || null,  // support both snake_case and camelCase
         id: data.id,
         wallet: data.wallet || 0,
         score: data.score || 0,
