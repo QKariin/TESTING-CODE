@@ -10,11 +10,11 @@ export async function POST(req: Request) {
         const { memberEmail } = await req.json();
         if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
 
-        // 1. Fetch Profile — EXACT original query
+        // 1. Fetch Profile
         const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('*')
-            .eq('member_id', memberEmail)
+            .ilike('member_id', memberEmail)
             .maybeSingle();
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
@@ -42,6 +42,8 @@ export async function POST(req: Request) {
             ...profile,
             ...profileParams,
             ...(taskData || {}),
+            // Pin these explicitly AFTER spreads so taskData cannot overwrite them
+            hierarchy:               profile.hierarchy || "Hall Boy",
             title:                   profile.name || profileParams.title || "",
             image:                   finalPic,
             profilePicture:          finalPic,
@@ -61,11 +63,12 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: true, promoted: false, currentRank: report.currentRank });
         }
 
-        // 5. PROMOTE — no canPromote gate, always apply
+        // 5. PROMOTE — use profile.member_id (exact DB value) to guarantee match
+        const exactEmail = profile.member_id;
         const { error: updateError } = await supabaseAdmin
             .from('profiles')
             .update({ hierarchy: report.nextRank })
-            .eq('member_id', memberEmail);  // EXACT original update query
+            .eq('member_id', exactEmail);
 
         if (updateError) {
             console.error('[promote] Update error:', updateError);
@@ -73,13 +76,13 @@ export async function POST(req: Request) {
         }
 
         // 6. Send promotion card to private + global chat
-        const memberName = profile.name || memberEmail.split('@')[0] || 'SLAVE';
+        const memberName = profile.name || exactEmail.split('@')[0] || 'SLAVE';
         const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
         const cardMsg = `PROMOTION_CARD::${JSON.stringify({
             name: memberName, photo: memberPhoto,
             oldRank: report.currentRank, newRank: report.nextRank
         })}`;
-        try { await DbService.sendMessage(memberEmail, cardMsg, 'system'); } catch (_) {}
+        try { await DbService.sendMessage(exactEmail, cardMsg, 'system'); } catch (_) {}
         try {
             await supabaseAdmin.from('global_messages').insert({
                 sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: cardMsg,

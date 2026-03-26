@@ -174,15 +174,6 @@ export async function updateDetail(u: any) {
             }
         });
 
-        // Auto-promote on dashboard load — same as profile-logic auto-promote
-        if (report.canPromote && !report.isMax && u.memberId) {
-            fetch('/api/promote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberEmail: u.memberId })
-            }).catch(() => {});
-        }
-
         // Always show force-promote button when not at max
         if (!report.isMax) {
             html += `<div style="margin-top:16px;">
