@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createClient } from '@/utils/supabase/server';
 
-const ADMIN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
+const ADMIN_EMAILS = ['ceo@qkarin.com'];
 
 async function getCallerEmail(): Promise<string | null> {
     try {

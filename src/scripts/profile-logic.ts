@@ -2393,7 +2393,7 @@ function _initMobGlRealtime() {
         .subscribe();
 }
 
-const MOB_QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
+const MOB_QUEEN_EMAILS = ['ceo@qkarin.com'];
 
 function _buildMobGlBubble(msg: any): string {
     const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

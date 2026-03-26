@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         const supabase = await createClient();
 
         // 1. Fetch SENDER Profile (to check rank and balance)
-        const isHardcodedAdmin = senderEmail && ["ceo@qkarin.com", "liviacechova@gmail.com"].includes(senderEmail.toLowerCase());
+        const isHardcodedAdmin = senderEmail && ["ceo@qkarin.com"].includes(senderEmail.toLowerCase());
 
         let profile: any = null;
         let isQueen = isHardcodedAdmin;

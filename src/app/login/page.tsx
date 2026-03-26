@@ -19,7 +19,7 @@ export default function LoginPage() {
 
     const checkProfileAndRedirect = async (userEmail: string) => {
         const email_lower = userEmail.trim().toLowerCase();
-        if (email_lower === 'ceo@qkarin.com' || email_lower === 'liviacechova@gmail.com') {
+        if (email_lower === 'ceo@qkarin.com') {
             router.push('/dashboard');
             return;
         }

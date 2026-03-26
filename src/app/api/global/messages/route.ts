@@ -12,7 +12,7 @@ export async function GET() {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
+    const QUEEN_EMAILS = ['ceo@qkarin.com'];
     const safe = (data || []).map(({ sender_email, ...rest }: any) => ({
         ...rest,
         is_queen: QUEEN_EMAILS.includes((sender_email || '').toLowerCase()),
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         .ilike('member_id', senderEmail)
         .maybeSingle();
 
-    const QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
+    const QUEEN_EMAILS = ['ceo@qkarin.com'];
     const isQueenSender = QUEEN_EMAILS.includes(senderEmail.toLowerCase());
     const senderName = profile?.name || (isQueenSender ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
     const senderAvatar = profile?.avatar_url || (isQueenSender ? '/queen-karin.png' : null);

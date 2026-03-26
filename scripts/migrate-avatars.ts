@@ -1,25 +1,19 @@
 /**
  * migrate-avatars.ts
- * Renames existing avatar files from email-based names to profile-id-based names.
- * Uses Supabase Storage copy+remove (not direct SQL rename) so CDN stays consistent.
+ * Downloads each avatar from its email-based public URL and re-uploads it
+ * to a UUID-based path. This bypasses storage metadata inconsistencies.
  *
- * Run with:
- *   cd /Users/liviacechova/antigravity/TESTING-CODE
- *   SUPABASE_SERVICE_ROLE_KEY=... NEXT_PUBLIC_SUPABASE_URL=... npx tsx scripts/migrate-avatars.ts
- *
- * Or just: npx tsx scripts/migrate-avatars.ts  (reads from independent-app/.env.local)
+ * Run: npx tsx scripts/migrate-avatars.ts [--dry-run]
  */
 
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Load env from independent-app/.env.local if not already set
 function loadEnv() {
     const envPath = path.join(__dirname, '../independent-app/.env.local');
     if (fs.existsSync(envPath)) {
-        const lines = fs.readFileSync(envPath, 'utf-8').split('\n');
-        for (const line of lines) {
+        for (const line of fs.readFileSync(envPath, 'utf-8').split('\n')) {
             const [key, ...rest] = line.split('=');
             if (key && rest.length && !process.env[key.trim()]) {
                 process.env[key.trim()] = rest.join('=').trim();
@@ -29,116 +23,134 @@ function loadEnv() {
 }
 loadEnv();
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 
-if (!SUPABASE_URL || !SERVICE_KEY) {
-    console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-    process.exit(1);
-}
+if (!SUPABASE_URL || !SERVICE_KEY) { console.error('Missing env vars'); process.exit(1); }
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 const BUCKET = 'media';
 
 async function main() {
     const dryRun = process.argv.includes('--dry-run');
-    if (dryRun) console.log('--- DRY RUN MODE (no changes will be made) ---\n');
+    if (dryRun) console.log('--- DRY RUN ---\n');
 
-    // Get all profiles that have an email in their avatar_url
+    // Get all profiles that have email in their avatar_url
+    // OR that have a UUID-based avatar_url that returns 404/400 (S3 not there)
     const { data: profiles, error } = await supabase
         .from('profiles')
         .select('id, member_id, avatar_url')
-        .like('avatar_url', '%@%');
+        .not('member_id', 'is', null)
+        .not('avatar_url', 'is', null);
 
-    if (error) {
-        console.error('Failed to fetch profiles:', error.message);
-        process.exit(1);
-    }
+    if (error || !profiles) { console.error('Fetch failed:', error?.message); process.exit(1); }
 
-    if (!profiles || profiles.length === 0) {
-        console.log('No profiles with email-based avatar URLs found. Nothing to do.');
-        return;
-    }
-
-    console.log(`Found ${profiles.length} profiles to migrate.\n`);
-
-    let success = 0;
-    let failed = 0;
+    // For each profile, check if their avatar_url returns a working image
+    // If not, try the email-based URL and migrate
+    let success = 0, skipped = 0, failed = 0;
 
     for (const profile of profiles) {
-        const { id, member_id, avatar_url } = profile;
+        if (!profile.avatar_url || !profile.member_id) { skipped++; continue; }
 
-        // Extract storage path from URL: .../storage/v1/object/public/media/avatars/...
-        const match = avatar_url?.match(/\/storage\/v1\/object\/public\/media\/(.+)$/);
-        if (!match) {
-            console.warn(`[SKIP] ${member_id}: can't parse path from URL: ${avatar_url}`);
+        const currentUrl = profile.avatar_url;
+
+        // Check if current avatar_url actually works
+        let currentWorks = false;
+        try {
+            const check = await fetch(currentUrl, { method: 'HEAD' });
+            currentWorks = check.ok;
+        } catch { /* network error */ }
+
+        if (currentWorks) {
+            // If the URL already works and doesn't contain email, skip
+            if (!currentUrl.includes('@')) {
+                skipped++;
+                continue;
+            }
+            // URL works but has email in it — still needs migration
+        }
+
+        // Extract old email-based path components from whatever URL we have
+        // Try to reconstruct old email-based URL
+        const urlMatch = currentUrl.match(/\/avatars\/(.+)$/);
+        if (!urlMatch) { console.warn(`[SKIP] Can't parse URL: ${currentUrl}`); skipped++; continue; }
+
+        const currentFilename = urlMatch[1];
+        const tsExtMatch = currentFilename.match(/_(\d+\..+)$/);
+        if (!tsExtMatch) { console.warn(`[SKIP] Can't extract timestamp: ${currentFilename}`); skipped++; continue; }
+
+        const tsExt = tsExtMatch[1];
+        const email = profile.member_id.toLowerCase();
+
+        // Construct the email-based URL (what S3 actually has)
+        const emailFilename = `${email}_${tsExt}`;
+        const emailUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/avatars/${emailFilename}`;
+        const newPath = `avatars/${profile.id}_${tsExt}`;
+        const newUrl  = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${newPath}`;
+
+        // Verify email-based URL actually exists
+        let emailWorks = false;
+        try {
+            const check = await fetch(emailUrl, { method: 'HEAD' });
+            emailWorks = check.ok;
+        } catch { /* network error */ }
+
+        if (!emailWorks) {
+            console.warn(`[SKIP] Source file not accessible: ${emailFilename}`);
+            skipped++;
             continue;
         }
 
-        const oldPath = match[1]; // e.g. avatars/email@example.com_1234567890.jpg
+        console.log(`[${dryRun ? 'DRY' : 'MIGRATING'}] ${email}`);
+        console.log(`  src: ${emailFilename}`);
+        console.log(`  dst: ${profile.id}_${tsExt}`);
 
-        // Extract timestamp+extension: everything after the last underscore followed by digits
-        const tsExtMatch = oldPath.match(/_(\d+\..+)$/);
-        if (!tsExtMatch) {
-            console.warn(`[SKIP] ${member_id}: can't extract timestamp from: ${oldPath}`);
-            continue;
+        if (dryRun) { console.log(); continue; }
+
+        // Download the file content
+        let fileBuffer: Buffer;
+        let contentType = 'image/jpeg';
+        try {
+            const res = await fetch(emailUrl);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            contentType = res.headers.get('content-type') || 'image/jpeg';
+            fileBuffer = Buffer.from(await res.arrayBuffer());
+        } catch (e: any) {
+            console.error(`  [FAIL] download: ${e.message}`); failed++; continue;
         }
 
-        const tsExt = tsExtMatch[1]; // e.g. 1234567890.jpg
-        const newPath = `avatars/${id}_${tsExt}`; // e.g. avatars/9e465afb-..._1234567890.jpg
-
-        const newUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${newPath}`;
-
-        console.log(`[${dryRun ? 'DRY' : 'MIGRATING'}] ${member_id}`);
-        console.log(`  old: ${oldPath}`);
-        console.log(`  new: ${newPath}`);
-
-        if (dryRun) {
-            console.log();
-            continue;
-        }
-
-        // 1. Copy file to new path
-        const { error: copyError } = await supabase.storage
+        // Upload to new UUID-based path
+        const { error: uploadErr } = await supabase.storage
             .from(BUCKET)
-            .copy(oldPath, newPath);
+            .upload(newPath, fileBuffer, { contentType, upsert: true });
 
-        if (copyError) {
-            console.error(`  [FAIL] copy failed: ${copyError.message}`);
-            failed++;
-            continue;
+        if (uploadErr) {
+            console.error(`  [FAIL] upload: ${uploadErr.message}`); failed++; continue;
         }
 
-        // 2. Update profiles.avatar_url
-        const { error: updateError } = await supabase
+        // Update profiles.avatar_url
+        const { error: dbErr } = await supabase
             .from('profiles')
             .update({ avatar_url: newUrl })
-            .eq('id', id);
+            .eq('id', profile.id);
 
-        if (updateError) {
-            console.error(`  [FAIL] DB update failed: ${updateError.message}`);
-            // Try to clean up the copy we just made
+        if (dbErr) {
+            console.error(`  [FAIL] db: ${dbErr.message}`);
             await supabase.storage.from(BUCKET).remove([newPath]);
-            failed++;
-            continue;
+            failed++; continue;
         }
 
-        // 3. Delete old file
-        const { error: removeError } = await supabase.storage
-            .from(BUCKET)
-            .remove([oldPath]);
+        // Remove old storage objects (both email-named and any broken UUID-named ones)
+        const oldEmailPath = `avatars/${emailFilename}`;
+        const oldUuidPath  = `avatars/${currentFilename}`;
+        const pathsToDelete = [...new Set([oldEmailPath, oldUuidPath].filter(p => p !== newPath))];
+        await supabase.storage.from(BUCKET).remove(pathsToDelete);
 
-        if (removeError) {
-            // Non-fatal — new file is in place and DB is updated, old file is just orphaned
-            console.warn(`  [WARN] old file not deleted: ${removeError.message}`);
-        }
-
-        console.log(`  [OK]`);
+        console.log(`  [OK]`); console.log();
         success++;
-        console.log();
     }
 
-    console.log(`\nDone. ${success} migrated, ${failed} failed.`);
+    console.log(`Done. ${success} migrated, ${skipped} skipped (already OK), ${failed} failed.`);
 }
 
 main().catch(console.error);

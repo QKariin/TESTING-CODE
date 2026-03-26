@@ -56,7 +56,7 @@ export default function AuthCallbackPage() {
         const routeUser = async (identifier: string) => {
             setStatus('Access granted...');
             const id = identifier.trim().toLowerCase();
-            if (id === 'ceo@qkarin.com' || id === 'liviacechova@gmail.com') {
+            if (id === 'ceo@qkarin.com') {
                 router.replace('/dashboard');
                 return;
             }
