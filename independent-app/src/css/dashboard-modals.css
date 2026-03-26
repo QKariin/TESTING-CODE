@@ -1,12 +1,13 @@
 .modal {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.95);
+    background: rgba(0, 0, 0, 0.92);
     z-index: 9999;
     display: none;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 #reviewModal {
@@ -19,56 +20,93 @@
 
 .modal.active {
     display: flex;
+    animation: modalFadeIn 0.25s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .m-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    background: #0a0a0a;
-    width: 80%;
-    max-width: 1100px;
-    height: 70vh;
-    border: 1px solid rgba(197, 160, 89, 0.35);
-    border-radius: 20px;
+    grid-template-columns: 1.15fr 1fr;
+    background: #070707;
+    width: 82%;
+    max-width: 1120px;
+    height: 75vh;
+    border: 1px solid rgba(197, 160, 89, 0.28);
+    border-radius: 16px;
     overflow: hidden;
     pointer-events: auto;
-    box-shadow: 0 0 60px rgba(197, 160, 89, 0.08), inset 0 0 40px rgba(0,0,0,0.6);
+    box-shadow: 0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(197,160,89,0.06), 0 0 80px rgba(197,160,89,0.04);
 }
 
 .m-media-box {
-    background: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
+    background: #000;
     order: 1;
+    position: relative;
+    overflow: hidden;
+    /* Let grid control the dimensions — no flex, no explicit h/w */
 }
 
+/* Image and video both absolutely fill the media box */
 .m-img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
+    display: block;
+}
+
+/* Subtle vignette on the right edge to blend into info panel */
+.m-media-box::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, transparent 70%, rgba(7,7,7,0.8) 100%),
+                linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.35) 100%);
+    pointer-events: none;
 }
 
 .m-info {
-    padding: 40px;
     display: flex;
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    border-left: 1px solid rgba(197, 160, 89, 0.2);
+    border-left: 1px solid rgba(197, 160, 89, 0.1);
     order: 2;
     position: relative;
-    background: linear-gradient(160deg, #0d0d0d 0%, #0a0808 100%);
+    background: linear-gradient(175deg, #0d0c0b 0%, #090607 100%);
 }
 
 #reviewNormalContent {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    width: 100%;
-    justify-content: center;
+    flex: 1;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+/* Task description text */
+#mText {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.65;
+    letter-spacing: 0.2px;
+}
+
+/* Small cinematic label above the text */
+#mText::before {
+    content: 'TASK DIRECTIVE';
+    display: block;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.42rem;
+    color: rgba(197,160,89,0.4);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
 }
 
 #reviewRewardOverlay {
@@ -90,36 +128,52 @@
 .m-text-scroll {
     flex: 1;
     overflow-y: auto;
-    margin-bottom: 20px;
+    min-height: 0;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    margin-bottom: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(197,160,89,0.15) transparent;
 }
+
+.m-text-scroll::-webkit-scrollbar { width: 3px; }
+.m-text-scroll::-webkit-scrollbar-track { background: transparent; }
+.m-text-scroll::-webkit-scrollbar-thumb { background: rgba(197,160,89,0.2); border-radius: 2px; }
 
 .btn-main {
     width: 100%;
-    padding: 18px 20px;
+    padding: 16px 20px;
     font-weight: 900;
     text-transform: uppercase;
     margin-top: 0;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 5px;
     letter-spacing: 3px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
+    font-size: 0.65rem;
+    transition: all 0.22s ease;
     position: relative;
     overflow: hidden;
 }
 
+.btn-main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.22s;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+}
+
+.btn-main:hover::before { opacity: 1; }
+
 .btn-main:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
 }
 
 .btn-main:active {
     transform: translateY(0);
+    box-shadow: none;
 }
 
 .hist-status {
@@ -148,10 +202,11 @@
 
 #modalActions {
     display: flex;
-    gap: 20px;
+    gap: 8px;
     flex-shrink: 0;
     width: 100%;
-    flex-direction: column;
+    flex-direction: row;
+    margin-top: 4px;
 }
 
 .sticker-grid {
@@ -818,6 +873,49 @@
     transition: 0.2s;
 }
 
+/* ── COIN-STYLE MERIT BUTTONS ─────────────────────────────────────────── */
+.merit-coin {
+    width: 68px !important;
+    height: 68px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    background: radial-gradient(circle at 38% 32%, rgba(255,215,80,0.1), rgba(197,160,89,0.04)) !important;
+    border: 1.5px solid rgba(197,160,89,0.35) !important;
+    flex: 0 0 68px !important;
+}
+
+.merit-coin:hover {
+    border-color: rgba(197,160,89,0.7) !important;
+    background: radial-gradient(circle at 38% 32%, rgba(255,215,80,0.18), rgba(197,160,89,0.1)) !important;
+    box-shadow: 0 0 18px rgba(197,160,89,0.2) !important;
+}
+
+.merit-coin.selected {
+    border-color: rgba(197,160,89,0.9) !important;
+    background: radial-gradient(circle at 38% 32%, rgba(255,215,80,0.25), rgba(197,160,89,0.14)) !important;
+    box-shadow: 0 0 22px rgba(197,160,89,0.3), inset 0 0 12px rgba(197,160,89,0.08) !important;
+}
+
+.merit-coin-pts {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+}
+
+.merit-coin-lbl {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.55rem;
+    color: rgba(197,160,89,0.55);
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+}
+
+.merit-coin.selected .merit-coin-pts {
+    text-shadow: 0 0 10px rgba(197,160,89,0.5);
+}
+
 .reward-tier-btn {
     flex: 1;
     background: rgba(0, 0, 0, 0.5);
@@ -870,14 +968,15 @@
 
 .review-note-wrap {
     width: 100%;
-    margin-bottom: 14px;
     flex-shrink: 0;
+    border-top: 1px solid rgba(197, 160, 89, 0.08);
+    padding-top: 14px;
 }
 
 .review-note-label {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.5rem;
-    color: rgba(197, 160, 89, 0.5);
+    font-size: 0.45rem;
+    color: rgba(197, 160, 89, 0.4);
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 6px;
