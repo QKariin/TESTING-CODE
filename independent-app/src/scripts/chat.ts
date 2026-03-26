@@ -123,8 +123,35 @@ export async function renderChat(messages: any[]) {
         // --- MEDIA HANDLER ---
         if (originalMsg) {
 
-            // A. WISHLIST CARD
-            if (originalMsg.startsWith('WISHLIST::')) {
+            // A. TASK FEEDBACK CARD
+            if (originalMsg.startsWith('TASK_FEEDBACK::')) {
+                try {
+                    const data = JSON.parse(originalMsg.replace('TASK_FEEDBACK::', ''));
+                    const { mediaUrl: fbMedia, mediaType: fbType, note: fbNote, taskId: fbTaskId, memberId: fbMemberId } = data;
+                    const fbSrc = fbMedia ? getOptimizedUrl(fbMedia, 600) : null;
+                    const fbIsVideo = fbType === 'video' || (fbMedia && (fbMedia.includes('.mp4') || fbMedia.includes('.mov') || fbMedia.includes('.webm')));
+
+                    const mediaBlock = fbSrc
+                        ? (fbIsVideo
+                            ? `<video src="${fbSrc}" class="tf-media" preload="metadata" muted playsinline style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="(window.openModById && '${fbTaskId}' && '${fbMemberId}') ? window.openModById('${fbTaskId}','${fbMemberId}',true) : window.openChatPreview('${encodeURIComponent(fbSrc || '')}',true)"></video>`
+                            : `<img src="${fbSrc}" style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onerror="this.style.display='none'" onclick="(window.openModById && '${fbTaskId}' && '${fbMemberId}') ? window.openModById('${fbTaskId}','${fbMemberId}',true) : window.openChatPreview('${encodeURIComponent(fbSrc || '')}',false)">`)
+                        : '';
+
+                    contentHtml = `
+                    <div style="max-width:260px;width:60vw;border-radius:12px;overflow:hidden;background:#0a080a;border:1px solid rgba(197,160,89,0.4);box-shadow:0 8px 30px rgba(0,0,0,0.6);" onclick="window.openModById && '${fbTaskId}' && '${fbMemberId}' ? window.openModById('${fbTaskId}','${fbMemberId}',true) : null">
+                        ${mediaBlock}
+                        <div style="padding:10px 13px 12px;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">✦ Task Feedback</div>
+                            ${fbNote ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.85);line-height:1.4;">${DOMPurify.sanitize(fbNote)}</div>` : ''}
+                        </div>
+                    </div>`;
+                } catch (e) {
+                    contentHtml = `<div class="msg m-queen">📋 Task Feedback</div>`;
+                }
+            }
+
+            // B. WISHLIST CARD
+            else if (originalMsg.startsWith('WISHLIST::')) {
                 try {
                     const jsonStr = originalMsg.replace('WISHLIST::', '');
                     const item = JSON.parse(jsonStr);
@@ -193,12 +220,12 @@ export async function renderChat(messages: any[]) {
             }
         }
 
-        if (originalMsg && originalMsg.startsWith('WISHLIST::')) {
+        if (originalMsg && (originalMsg.startsWith('WISHLIST::') || originalMsg.startsWith('TASK_FEEDBACK::'))) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
         const avatarUrl = "/queen-karin.png";
-        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('http')) {
+        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('http')) {
             contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
                 <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
                 <span>${txt}</span>

@@ -1,0 +1,45 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+    try {
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            { auth: { autoRefreshToken: false, persistSession: false } }
+        );
+
+        // Fetch all profiles that have purchase history
+        const { data: profiles, error } = await supabaseAdmin
+            .from('profiles')
+            .select('name, member_id, parameters')
+            .not('parameters->purchaseHistory', 'is', null);
+
+        if (error) throw error;
+
+        // Flatten all purchase histories into one sorted list
+        const transactions: any[] = [];
+        for (const profile of profiles || []) {
+            const history: any[] = profile.parameters?.purchaseHistory || [];
+            for (const entry of history) {
+                transactions.push({
+                    name: entry.name || profile.name || profile.member_id || 'Unknown',
+                    memberId: entry.memberId || profile.member_id || '',
+                    coins: entry.coins,
+                    timestamp: entry.timestamp,
+                    sessionId: entry.sessionId,
+                });
+            }
+        }
+
+        // Sort newest first
+        transactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+        return NextResponse.json({ transactions });
+    } catch (err: any) {
+        console.error('[transactions] Error:', err);
+        return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+}
