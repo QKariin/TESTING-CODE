@@ -75,7 +75,29 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: 'Failed to update database' }, { status: 500 });
             }
 
-            try { await DbService.sendMessage(memberEmail, `RANK PROMOTED: ${report.nextRank.toUpperCase()}`, 'system'); } catch (_) { }
+            // Build promotion card payload
+            const memberName = profile.name || memberEmail.split('@')[0] || 'SLAVE';
+            const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
+            const cardData = JSON.stringify({
+                name: memberName,
+                photo: memberPhoto,
+                oldRank: report.currentRank,
+                newRank: report.nextRank,
+            });
+            const cardMsg = `PROMOTION_CARD::${cardData}`;
+
+            // Send to private chat
+            try { await DbService.sendMessage(memberEmail, cardMsg, 'system'); } catch (_) { }
+
+            // Send to global chat
+            try {
+                await supabaseAdmin.from('global_messages').insert({
+                    sender_email: 'system',
+                    sender_name: 'SYSTEM',
+                    sender_avatar: null,
+                    message: cardMsg,
+                });
+            } catch (_) { }
 
             return NextResponse.json({
                 success: true,
