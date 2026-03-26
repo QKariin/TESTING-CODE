@@ -1,12 +1,13 @@
 .modal {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.95);
+    background: rgba(0, 0, 0, 0.92);
     z-index: 9999;
     display: none;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 #reviewModal {
@@ -19,48 +20,78 @@
 
 .modal.active {
     display: flex;
+    animation: modalFadeIn 0.25s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .m-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    background: #0a0a0a;
-    width: 80%;
-    max-width: 1100px;
-    height: 70vh;
-    border: 1px solid rgba(197, 160, 89, 0.35);
-    border-radius: 20px;
+    grid-template-columns: 1.15fr 1fr;
+    background: #070707;
+    width: 82%;
+    max-width: 1120px;
+    height: 75vh;
+    border: 1px solid rgba(197, 160, 89, 0.28);
+    border-radius: 16px;
     overflow: hidden;
     pointer-events: auto;
-    box-shadow: 0 0 60px rgba(197, 160, 89, 0.08), inset 0 0 40px rgba(0,0,0,0.6);
+    box-shadow: 0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(197,160,89,0.06), 0 0 80px rgba(197,160,89,0.04);
 }
 
 .m-media-box {
-    background: black;
+    background: #000;
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
     height: 100%;
     order: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.m-media-box::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, transparent 85%, rgba(7,7,7,0.6) 100%);
+    pointer-events: none;
+    z-index: 1;
 }
 
 .m-img {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    position: relative;
+    z-index: 0;
 }
 
 .m-info {
-    padding: 40px;
+    padding: 36px 40px;
     display: flex;
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    border-left: 1px solid rgba(197, 160, 89, 0.2);
+    border-left: 1px solid rgba(197, 160, 89, 0.12);
     order: 2;
     position: relative;
-    background: linear-gradient(160deg, #0d0d0d 0%, #0a0808 100%);
+    background: linear-gradient(175deg, #0c0b0a 0%, #080606 60%, #060408 100%);
+}
+
+.m-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(197,160,89,0.3), transparent);
+    pointer-events: none;
 }
 
 #reviewNormalContent {
@@ -68,7 +99,28 @@
     flex-direction: column;
     height: 100%;
     width: 100%;
-    justify-content: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Task description text */
+#mText {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+}
+
+/* Small cinematic label above the text */
+#mText::before {
+    content: 'TASK DIRECTIVE';
+    display: block;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.45rem;
+    color: rgba(197,160,89,0.45);
+    letter-spacing: 3px;
+    margin-bottom: 10px;
 }
 
 #reviewRewardOverlay {
@@ -90,36 +142,53 @@
 .m-text-scroll {
     flex: 1;
     overflow-y: auto;
-    margin-bottom: 20px;
     width: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(197,160,89,0.2) transparent;
 }
+
+.m-text-scroll::-webkit-scrollbar { width: 3px; }
+.m-text-scroll::-webkit-scrollbar-track { background: transparent; }
+.m-text-scroll::-webkit-scrollbar-thumb { background: rgba(197,160,89,0.2); border-radius: 2px; }
 
 .btn-main {
     width: 100%;
-    padding: 18px 20px;
+    padding: 16px 20px;
     font-weight: 900;
     text-transform: uppercase;
     margin-top: 0;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 5px;
     letter-spacing: 3px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
+    font-size: 0.65rem;
+    transition: all 0.22s ease;
     position: relative;
     overflow: hidden;
 }
 
+.btn-main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.22s;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+}
+
+.btn-main:hover::before { opacity: 1; }
+
 .btn-main:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
 }
 
 .btn-main:active {
     transform: translateY(0);
+    box-shadow: none;
 }
 
 .hist-status {
@@ -148,10 +217,10 @@
 
 #modalActions {
     display: flex;
-    gap: 20px;
+    gap: 10px;
     flex-shrink: 0;
     width: 100%;
-    flex-direction: column;
+    flex-direction: row;
 }
 
 .sticker-grid {
@@ -870,14 +939,15 @@
 
 .review-note-wrap {
     width: 100%;
-    margin-bottom: 14px;
     flex-shrink: 0;
+    border-top: 1px solid rgba(197, 160, 89, 0.08);
+    padding-top: 14px;
 }
 
 .review-note-label {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.5rem;
-    color: rgba(197, 160, 89, 0.5);
+    font-size: 0.45rem;
+    color: rgba(197, 160, 89, 0.4);
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 6px;

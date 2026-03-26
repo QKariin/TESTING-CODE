@@ -27,26 +27,17 @@ function stripHtml(html: string) {
     return tmp.textContent || tmp.innerText || "";
 }
 
-// Sends task media + a text note into the member's chat (both parties see it)
-async function sendChatFeedback(memberId: string, mediaUrl: string | null, mediaType: string | null, note: string): Promise<void> {
+// Sends a single task-feedback card into the member's chat (both parties see it)
+async function sendChatFeedback(memberId: string, mediaUrl: string | null, mediaType: string | null, note: string, taskId?: string | null): Promise<void> {
     const sender = adminEmail || (window as any).adminEmail;
     if (!sender || !memberId) return;
     try {
-        if (mediaUrl) {
-            const msgType = mediaType === 'video' ? 'video' : 'photo';
-            await fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: sender, conversationId: memberId, content: mediaUrl, type: msgType })
-            });
-        }
-        if (note) {
-            await fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: sender, conversationId: memberId, content: note, type: 'text' })
-            });
-        }
+        const payload = JSON.stringify({ mediaUrl, mediaType, note, taskId: taskId || null, memberId });
+        await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senderEmail: sender, conversationId: memberId, content: 'TASK_FEEDBACK::' + payload, type: 'text' })
+        });
     } catch (err) {
         console.error('[sendChatFeedback] non-critical:', err);
     }
@@ -80,16 +71,42 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     const actionsEl = document.getElementById('modalActions');
 
     if (!modal || !mediaBox || !textEl || !actionsEl) return;
-    const isVideo = mediaTypeFunction(mediaUrl) === 'video';
+    // Use the explicit proofType first, then fall back to URL-based detection
+    const isVideo = mediaType === 'video' || mediaTypeFunction(mediaUrl) === 'video';
 
     if (mediaUrl) {
         if (isVideo) {
-            mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls playsinline></video>`;
+            mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls playsinline style="background:#000;"></video>`;
         } else {
-            mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 400)}" class="m-img">`;
+            mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 1200)}" class="m-img">`;
         }
     } else {
-        mediaBox.innerHTML = `<div style="color:#666; font-family:'Rajdhani';">NO MEDIA</div>`;
+        mediaBox.innerHTML = `<div style="color:#333;font-family:'Orbitron';font-size:0.6rem;letter-spacing:3px;">NO MEDIA</div>`;
+    }
+
+    // Show member name if available
+    const u = users.find(x => x.memberId === memberId);
+    const memberDisplay = u ? u.name?.toUpperCase() : (memberId || '');
+    const statusBadge = isHistory && status
+        ? `<span style="font-family:'Orbitron';font-size:0.5rem;letter-spacing:2px;padding:3px 10px;border-radius:20px;border:1px solid ${status === 'approve' ? 'rgba(57,255,20,0.5)' : 'rgba(220,30,30,0.5)'};color:${status === 'approve' ? '#39ff14' : '#dc1e1e'};background:${status === 'approve' ? 'rgba(57,255,20,0.08)' : 'rgba(220,30,30,0.08)'};">${status === 'approve' ? 'APPROVED' : 'REJECTED'}</span>`
+        : '';
+
+    // Insert a cinematic member header into the info panel
+    const infoEl = textEl.closest('.m-info') || textEl.parentElement?.parentElement;
+    let headerEl = document.getElementById('mModalHeader');
+    if (!headerEl && infoEl) {
+        headerEl = document.createElement('div');
+        headerEl.id = 'mModalHeader';
+        headerEl.style.cssText = 'flex-shrink:0;padding-bottom:18px;border-bottom:1px solid rgba(197,160,89,0.1);margin-bottom:16px;width:100%;';
+        infoEl.insertBefore(headerEl, infoEl.querySelector('#reviewNormalContent'));
+    }
+    if (headerEl) {
+        headerEl.innerHTML = `
+            <div style="font-family:'Orbitron';font-size:0.45rem;color:rgba(197,160,89,0.4);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;">Subject Review</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-family:'Cinzel',serif;font-size:1.1rem;color:#fff;font-weight:700;letter-spacing:1px;">${memberDisplay}</div>
+                ${statusBadge}
+            </div>`;
     }
 
     textEl.innerHTML = clean(taskText || 'No description provided.');
@@ -210,7 +227,7 @@ export function reviewTask(decision: 'approve' | 'reject') {
 
         // Send task media + note to member chat
         if (rejectNote) {
-            sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, rejectNote);
+            sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, rejectNote, taskData.id);
         }
 
         import('./dashboard-main').then(m => m.renderMainDashboard());
@@ -370,7 +387,7 @@ export function confirmReward() {
 
     // Send task media + approval comment to member chat
     if (comment) {
-        sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, comment);
+        sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, comment, taskData.id);
     }
 
     closeModal();
@@ -794,14 +811,16 @@ export function renderGlobalReview(filterRoutine: boolean) {
         const isVideo = t.proofType === 'video' || mediaTypeFunction(t.proofUrl) === 'video';
         const optUrl = getOptimizedUrl(t.proofUrl || '', 600);
 
-        // No <video> elements in the grid — only static images or placeholder
-        // Videos play only when you click through to the review modal
+        // Grid cards: images shown directly; videos use preload="metadata" (no autoplay) to show first frame
         let mediaBg: string;
         if (isVideo) {
             const thumbSrc = t.thumbnail_url ? getOptimizedUrl(t.thumbnail_url, 600) : null;
-            mediaBg = thumbSrc
-                ? `<img src="${thumbSrc}" class="ops-card-bg" onerror="this.style.display='none'">`
-                : `<div class="ops-card-bg ops-card-vid-placeholder"></div>`;
+            if (thumbSrc) {
+                mediaBg = `<img src="${thumbSrc}" class="ops-card-bg" onerror="this.style.display='none'">`;
+            } else {
+                // preload="metadata" loads only headers + first frame — not autoplay, not full load
+                mediaBg = `<video src="${optUrl}" class="ops-card-bg" preload="metadata" muted playsinline style="pointer-events:none;" onerror="this.style.display='none'"></video>`;
+            }
             mediaBg += `<div class="ops-card-vid-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)"><path d="M8 5v14l11-7z"/></svg></div>`;
         } else {
             mediaBg = `<img src="${optUrl}" class="ops-card-bg" onerror="this.style.display='none'">`;
