@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getHierarchyReport } from '@/lib/hierarchyRules';
+import { HIERARCHY_RULES } from '@/lib/hierarchyRules';
 import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = "force-dynamic";
+
+const clean = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 export async function POST(req: Request) {
     try {
@@ -14,81 +16,54 @@ export async function POST(req: Request) {
         const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('*')
-            .eq('member_id', memberEmail)
+            .ilike('member_id', memberEmail)
             .maybeSingle();
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
-        // 2. Fetch Tasks
-        const { data: taskData } = await supabaseAdmin
-            .from('tasks')
-            .select('*')
-            .ilike('member_id', memberEmail)
-            .maybeSingle();
+        const exactEmail = profile.member_id;
 
-        // 3. Merge + normalize field names to match getHierarchyReport expectations
-        //    (mirrors the mapping done in /api/slave-profile/route.ts lines 103-122)
-        const profileParams = profile.parameters || {};
+        // 2. Find current rank index — fallback to Hall Boy (last) if unrecognized
+        const currentHierarchy = profile.hierarchy || "Hall Boy";
+        let currentIndex = HIERARCHY_RULES.findIndex(r => clean(r.name) === clean(currentHierarchy));
+        if (currentIndex === -1) currentIndex = HIERARCHY_RULES.length - 1; // unrecognized = treat as lowest
 
-        const defaultPic = "/queen-karin.png";
-        const rawPic = profile.avatar_url || profile.profile_picture_url || "";
-        const finalPic = (rawPic && rawPic.length > 5) ? rawPic : defaultPic;
-
-        let tributeTotal = 0;
-        try {
-            const rawTributes = taskData?.['Tribute History'];
-            const arr: any[] = typeof rawTributes === 'string' ? JSON.parse(rawTributes) : (Array.isArray(rawTributes) ? rawTributes : []);
-            tributeTotal = arr.reduce((s: number, e: any) => s + (e.amount < 0 ? Math.abs(e.amount) : 0), 0);
-        } catch (_) {}
-
-        const unifiedData = {
-            ...profile,
-            ...profileParams,
-            ...(taskData || {}),
-            // identity — getHierarchyReport looks for title / image / profilePicture
-            title:          profile.name || profileParams.title || "",
-            image:          finalPic,
-            profilePicture: finalPic,
-            // stats — normalize column name variants
-            taskdom_completed_tasks: Number(taskData?.['Taskdom_CompletedTasks'] || 0),
-            total_coins_spent:       tributeTotal || Number(profileParams.wishlist_spent || 0),
-            kneelCount:              Number(taskData?.kneelCount || profile.kneelCount || profileParams.kneel_count || 0),
-            score:                   Number(taskData?.Score ?? taskData?.score ?? profile.score ?? 0),
-            bestRoutinestreak:       Number(profile.bestRoutinestreak || profileParams.routine_streak || profileParams.bestRoutinestreak || 0),
-            routinestreak:           Number(profile.routinestreak || profileParams.taskdom_current_streak || 0),
-        };
-
-        // 4. Run Hierarchy Report securely on the backend
-        const report = getHierarchyReport(unifiedData);
-
-        if (!report) return NextResponse.json({ error: 'Failed to generate report' }, { status: 500 });
-
-        if (report.canPromote && report.nextRank && report.nextRank !== report.currentRank) {
-            // PROMOTION TIME!
-            const { error: updateError } = await supabaseAdmin
-                .from('profiles')
-                .update({ hierarchy: report.nextRank })
-                .eq('member_id', memberEmail);
-
-            if (updateError) {
-                console.error('[promote] Update error:', updateError);
-                return NextResponse.json({ error: 'Failed to update database' }, { status: 500 });
-            }
-
-            try { await DbService.sendMessage(memberEmail, `RANK PROMOTED: ${report.nextRank.toUpperCase()}`, 'system'); } catch (_) { }
-
-            return NextResponse.json({
-                success: true,
-                promoted: true,
-                newRank: report.nextRank
-            });
+        // 3. Already at max?
+        if (currentIndex === 0) {
+            return NextResponse.json({ success: true, promoted: false, currentRank: HIERARCHY_RULES[0].name });
         }
 
-        return NextResponse.json({
-            success: true,
-            promoted: false,
-            currentRank: report.currentRank
-        });
+        // 4. Next rank is one step up (lower index = higher rank)
+        const currentRank = HIERARCHY_RULES[currentIndex].name;
+        const nextRank = HIERARCHY_RULES[currentIndex - 1].name;
+
+        // 5. Update DB
+        const { error: updateError } = await supabaseAdmin
+            .from('profiles')
+            .update({ hierarchy: nextRank })
+            .eq('member_id', exactEmail);
+
+        if (updateError) {
+            console.error('[promote] Update error:', updateError);
+            return NextResponse.json({ error: 'Failed to update database' }, { status: 500 });
+        }
+
+        // 6. Send promotion card to private + global chat
+        const rawPic = profile.avatar_url || profile.profile_picture_url || "";
+        const memberName = profile.name || exactEmail.split('@')[0] || 'SLAVE';
+        const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
+        const cardMsg = `PROMOTION_CARD::${JSON.stringify({
+            name: memberName, photo: memberPhoto,
+            oldRank: currentRank, newRank: nextRank
+        })}`;
+        try { await DbService.sendMessage(exactEmail, cardMsg, 'system'); } catch (_) {}
+        try {
+            await supabaseAdmin.from('global_messages').insert({
+                sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: cardMsg,
+            });
+        } catch (_) {}
+
+        return NextResponse.json({ success: true, promoted: true, newRank: nextRank });
 
     } catch (err: any) {
         console.error('[promote] Unexpected error:', err);
