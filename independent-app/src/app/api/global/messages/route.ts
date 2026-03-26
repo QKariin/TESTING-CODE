@@ -12,7 +12,7 @@ export async function GET() {
     const { data, error } = await supabaseAdmin
         .from('global_messages')
         .select('*')
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: true, nullsFirst: true })
         .limit(100);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
