@@ -1235,7 +1235,7 @@ export async function updateRoutineWidget() {
 
     try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}&tz=${encodeURIComponent(tz)}&t=${Date.now()}`);
+        const res = await fetch('/api/routine-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, tz }) });
         if (!res.ok) return;
         const data = await res.json();
 
@@ -1559,44 +1559,171 @@ export function handleChatKey(e: React.KeyboardEvent) {
 }
 
 // ---------------------------------------------------------
-// NEW SUPABASE CHAT LOGIC
+// NEW SUPABASE CHAT LOGIC — mirrors dashboard-chat.ts exactly
 // ---------------------------------------------------------
 
+// Single shared client — realtime subscriptions must stay on the same instance
+// (same pattern as dashboard-chat.ts line 14, but lazy-loaded to fix static builds)
+let _profileChatSupabase: any = null;
+const getChatSupabase = () => {
+    if (!_profileChatSupabase) _profileChatSupabase = createClient();
+    return _profileChatSupabase;
+};
+
+let _chatChannel: any = null;
+let _chatPollInterval: ReturnType<typeof setInterval> | null = null;
+let _lastChatMsgId: string | null = null;
+let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
 
-export function initChatSystem() {
-    if (chatSubscribed) return;
-    const { memberId } = getState();
-    if (!memberId) return;
+export async function initChatSystem() {
+    // 🔑 KEY DIFFERENCE vs old broken code:
+    // Dashboard gets email directly from supabase.auth.getUser() — never from state.
+    // Profile was reading getState().memberId which could be null if initProfileState
+    // hadn't fully run yet. Now we do exactly what dashboard does.
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    loadChatHistory(memberId);
-    subscribeToChat(memberId);
+    let email = user?.email?.toLowerCase();
+
+    // Localhost DEV bypass (same pattern as dashboard)
+    if (!email && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        email = 'pr.finsko@gmail.com';
+    }
+
+    console.log('[CHAT] initChatSystem starting. Auth email:', email);
+
+    if (!email) {
+        console.warn('[CHAT] initChatSystem: no email from auth, skipping');
+        return;
+    }
+
+    // Update state so rest of the app has the email too
+    if (!getState().memberId) {
+        setState({ memberId: email });
+    }
+
+    if (chatSubscribed) return;
     chatSubscribed = true;
 
-    // Polling fallback: re-fetch wallet+score every 15s in case realtime misses an event
-    const email = memberId.toLowerCase();
+    // 1. Load history (same as dashboard's loadDashboardChatHistory)
+    await loadChatHistory(email);
+
+    // 2. Realtime subscription on shared client (same as dashboard line 107-120)
+    if (_chatChannel) {
+        getChatSupabase().removeChannel(_chatChannel);
+        _chatChannel = null;
+    }
+    _chatChannel = getChatSupabase()
+        .channel('profile-chats-' + email)
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chats',
+            filter: `member_id=eq.${email}`
+        }, (payload: any) => {
+            const msg = payload.new;
+            const sender = (msg.sender_email || msg.sender || '').toLowerCase();
+
+            if (isSystemMessage(msg)) {
+                updateSystemTicker(msg);
+                appendSystemLog(msg);
+                if (msg.content && msg.content.includes('DIRECTIVE ASSIGNED')) {
+                    getRandomTask(true);
+                }
+                return;
+            }
+
+            // Queen message: show notification badge + sound
+            if (sender !== email && sender !== 'user' && sender !== 'slave') {
+                _updateQueenStatus(msg.created_at || new Date().toISOString());
+                const chatOverlay = document.getElementById('mobChatOverlay');
+                const isOpen = chatOverlay && (chatOverlay.style.display === 'flex' || chatOverlay.classList.contains('mob-overlay-open'));
+                if (!isOpen) {
+                    const badge = document.getElementById('mobMsgBadge');
+                    if (badge) badge.classList.add('active');
+                    const ring = document.querySelector('.mob-nav-queen-ring');
+                    if (ring) ring.classList.add('has-new-msg');
+                    try { const snd = new Audio('/audio/message.mp3'); snd.volume = 0.5; snd.play(); } catch (_) {}
+                }
+            }
+
+            if (msg.id && msg.id === _lastChatMsgId) return; // dedup
+            _lastChatMsgId = msg.id;
+            if (msg.created_at) _lastChatMsgTimestamp = msg.created_at;
+
+            const html = renderChatMessage(msg);
+            ['chatContent', 'mob_chatContent'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.insertAdjacentHTML('beforeend', html); el.scrollTop = el.scrollHeight; }
+            });
+        })
+        .subscribe();
+
+    // 3. Polling fallback every 4s (same as dashboard line 123)
+    if (_chatPollInterval) clearInterval(_chatPollInterval);
+    _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 4000);
+
+    // 4. Supabase realtime for tasks + profile stats (keep existing logic)
+    getChatSupabase()
+        .channel('tasks_updates_' + email)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks', filter: `member_id=eq.${email}` },
+            () => { updateRoutineWidget(); refreshTaskGallery(email!); })
+        .subscribe();
+
+    getChatSupabase()
+        .channel('profile_stats_' + email)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `member_id=eq.${email}` },
+            (payload: any) => {
+                const fresh = payload.new as any;
+                if (!fresh) return;
+                if (fresh.wallet !== undefined || fresh.score !== undefined) {
+                    setState({ wallet: fresh.wallet ?? getState().wallet, score: fresh.score ?? getState().score });
+                    updateWalletDisplay();
+                }
+            })
+        .subscribe();
+
+    // 5. Wallet/score polling fallback every 15s
+    const walletEmail = email;
     setInterval(async () => {
         try {
-            const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+            const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: walletEmail }) });
             const data = await res.json();
             if (data && (data.wallet !== undefined || data.score !== undefined)) {
                 const s = getState();
-                const walletChanged = data.wallet !== undefined && data.wallet !== s.wallet;
-                const scoreChanged = data.score !== undefined && data.score !== s.score;
-                if (walletChanged || scoreChanged) {
-                    setState({
-                        wallet: data.wallet ?? s.wallet,
-                        score: data.score ?? s.score,
-                    });
+                if ((data.wallet !== undefined && data.wallet !== s.wallet) || (data.score !== undefined && data.score !== s.score)) {
+                    setState({ wallet: data.wallet ?? s.wallet, score: data.score ?? s.score });
                     updateWalletDisplay();
                 }
             }
         } catch (_) {}
     }, 15000);
 
-    // Init OneSignal and identify this user so push notifications target them
-    initOneSignal(memberId);
+    // 6. Push notifications
+    initOneSignal(email);
 }
+
+async function _pollNewChatMessages(email: string) {
+    if (!_lastChatMsgTimestamp) return;
+    try {
+        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: _lastChatMsgTimestamp }) });
+        const data = await res.json();
+        if (!data.success) return;
+        const newMsgs = (data.messages || []).filter((m: any) => m.id !== _lastChatMsgId);
+        newMsgs.forEach((m: any) => {
+            if (_lastChatMsgId && m.id === _lastChatMsgId) return;
+            _lastChatMsgId = m.id;
+            if (m.created_at) _lastChatMsgTimestamp = m.created_at;
+            const html = renderChatMessage(m);
+            ['chatContent', 'mob_chatContent'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.insertAdjacentHTML('beforeend', html); el.scrollTop = el.scrollHeight; }
+            });
+        });
+    } catch (_) {}
+}
+
 
 function initOneSignal(memberId: string) {
     // Init OneSignal in background (for subscription management)
@@ -1652,29 +1779,43 @@ function initOneSignal(memberId: string) {
 export async function loadChatHistory(email: string) {
     try {
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+        console.log('[CHAT] fetch /api/chat/history status:', res.status);
         const data = await res.json();
         if (data.success) {
             const messages = data.messages || [];
+            console.log('[CHAT] Received messages count:', messages.length);
+
+            // Track last msg id+timestamp for polling dedup (same as dashboard-chat.ts lines 154-158)
+            if (messages.length > 0) {
+                const last = messages[messages.length - 1];
+                _lastChatMsgId = last.id;
+                _lastChatMsgTimestamp = last.created_at || new Date().toISOString();
+            } else {
+                _lastChatMsgTimestamp = new Date().toISOString();
+            }
 
             // 3. Render ALL messages to the feed (so it's not empty)
             _lastRenderedChatTs = 0;
             // Display all messages that aren't purely technical/invisible
             const displayMessages = messages.filter((m: any) => m.content && m.content.trim());
-            const html = displayMessages.map((m: any, i: number) => {
+            let html = displayMessages.map((m: any, i: number) => {
                 const prevTs = i === 0 ? 0 : new Date(displayMessages[i - 1].created_at || 0).getTime();
                 return renderChatMessage(m, prevTs);
             }).join('');
 
+            if (displayMessages.length === 0) {
+                html = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO MESSAGES YET</div>`;
+            }
+
             // 4. Update Queen online status from last queen message
-            const myEmail = getState().memberId?.toLowerCase();
+            const myEmail = (getState().memberId || email).toLowerCase();
             const lastQueenMsg = [...messages].reverse().find((m: any) => {
                 const s = (m.sender_email || m.sender || '').toLowerCase();
                 return s !== myEmail && s !== 'user' && s !== 'slave' && !isSystemMessage(m);
             });
             _updateQueenStatus(lastQueenMsg?.created_at || null);
-            const containers = ['chatContent', 'mob_chatContent'];
 
-            containers.forEach(id => {
+            ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = html;
@@ -1684,9 +1825,17 @@ export async function loadChatHistory(email: string) {
         }
     } catch (err) {
         console.error("Failed to load chat history:", err);
+        ['chatContent', 'mob_chatContent'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerHTML = `<div style="text-align:center;padding:40px;color:#ff4d4d;font-family:Orbitron;font-size:0.6rem;letter-spacing:1px">CONNECTION ERROR — REFRESH REQUIRED</div>`;
+            }
+        });
     }
 }
 
+// subscribeToChat is now handled inside initChatSystem using _profileChatSupabase
+// (the shared client pattern from dashboard-chat.ts)
 function subscribeToChat(email: string) {
     const supabase = createClient();
     const cleanEmail = email.toLowerCase();
@@ -1796,6 +1945,7 @@ async function refreshTaskGallery(email: string) {
 
 function isSystemMessage(msg: any) {
     if (!msg) return false;
+    if (msg.type === 'system') return true; // Explicit type check
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const content = (msg.content || msg.message || '').toUpperCase();
 
@@ -1982,11 +2132,15 @@ export async function sendChatMessage() {
 
     if (!msg || !memberId) return;
 
+    // Capture and clear reply before sending
+    const chatReplyTo = _profileChatReply ? { sender_name: _profileChatReply.name, content: _profileChatReply.text } : null;
+    cancelProfileChatReply();
+
     try {
         const res = await fetch('/api/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senderEmail: memberId, content: msg, type: 'text' })
+            body: JSON.stringify({ senderEmail: memberId, content: msg, type: 'text', metadata: chatReplyTo ? { reply_to: chatReplyTo } : {} })
         });
         const data = await res.json();
 
@@ -2277,6 +2431,78 @@ let _mobGlActivePeriod = 'today';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _mobGlRealtimeChannel: any = null;
 
+// ─── REPLY STATE ──────────────────────────────────────────────────────────────
+let _mobGlReply: { id: string; name: string; text: string } | null = null;
+let _profileChatReply: { id: string; name: string; text: string } | null = null;
+
+function _ensureMobGlReplyBar() {
+    if (document.getElementById('mobGlReplyBar')) return;
+    const feed = document.getElementById('mobGlTalkFeed');
+    if (!feed) return;
+    const bar = document.createElement('div');
+    bar.id = 'mobGlReplyBar';
+    bar.style.cssText = 'display:none;align-items:center;gap:10px;padding:7px 12px;background:rgba(197,160,89,0.07);border-top:1px solid rgba(197,160,89,0.18);flex-shrink:0;';
+    bar.innerHTML = `
+        <div style="flex:1;min-width:0;border-left:2px solid rgba(197,160,89,0.6);padding-left:8px;">
+            <div id="mobGlReplyBarName" style="font-family:Orbitron;font-size:0.33rem;color:rgba(197,160,89,0.8);letter-spacing:1px;margin-bottom:2px;"></div>
+            <div id="mobGlReplyBarText" style="font-family:Rajdhani;font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+        <button onclick="window.cancelMobGlReply()" style="background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:1rem;padding:4px 6px;flex-shrink:0;line-height:1;">✕</button>`;
+    feed.insertAdjacentElement('afterend', bar);
+}
+
+export function setMobGlReply(id: string, name: string, text: string) {
+    _mobGlReply = { id, name, text };
+    _ensureMobGlReplyBar();
+    const bar = document.getElementById('mobGlReplyBar');
+    if (bar) bar.style.display = 'flex';
+    const nameEl = document.getElementById('mobGlReplyBarName');
+    const textEl = document.getElementById('mobGlReplyBarText');
+    if (nameEl) nameEl.textContent = '↩ ' + name;
+    if (textEl) textEl.textContent = text.slice(0, 80);
+    document.getElementById('mobGlTalkInput')?.focus();
+}
+
+export function cancelMobGlReply() {
+    _mobGlReply = null;
+    const bar = document.getElementById('mobGlReplyBar');
+    if (bar) bar.style.display = 'none';
+}
+
+function _ensureProfileChatReplyBar() {
+    if (document.getElementById('profileChatReplyBar')) return;
+    const footer = document.querySelector('.chat-footer');
+    if (!footer) return;
+    const bar = document.createElement('div');
+    bar.id = 'profileChatReplyBar';
+    bar.style.cssText = 'display:none;align-items:center;gap:10px;padding:7px 14px;background:rgba(197,160,89,0.07);border-top:1px solid rgba(197,160,89,0.18);flex-shrink:0;';
+    bar.innerHTML = `
+        <div style="flex:1;min-width:0;border-left:2px solid rgba(197,160,89,0.6);padding-left:8px;">
+            <div id="profileChatReplyBarName" style="font-family:Orbitron;font-size:0.33rem;color:rgba(197,160,89,0.8);letter-spacing:1px;margin-bottom:2px;"></div>
+            <div id="profileChatReplyBarText" style="font-family:Rajdhani;font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+        <button onclick="window.cancelProfileChatReply()" style="background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:1rem;padding:4px 6px;flex-shrink:0;line-height:1;">✕</button>`;
+    footer.insertBefore(bar, footer.firstChild);
+}
+
+export function setProfileChatReply(id: string, name: string, text: string) {
+    _profileChatReply = { id, name, text };
+    _ensureProfileChatReplyBar();
+    const bar = document.getElementById('profileChatReplyBar');
+    if (bar) bar.style.display = 'flex';
+    const nameEl = document.getElementById('profileChatReplyBarName');
+    const textEl = document.getElementById('profileChatReplyBarText');
+    if (nameEl) nameEl.textContent = '↩ ' + name;
+    if (textEl) textEl.textContent = text.slice(0, 80);
+    (document.getElementById('chatMsgInput') || document.getElementById('mob_chatMsgInput'))?.focus();
+}
+
+export function cancelProfileChatReply() {
+    _profileChatReply = null;
+    const bar = document.getElementById('profileChatReplyBar');
+    if (bar) bar.style.display = 'none';
+}
+
 export function openMobGlobal() {
     if (_isOverlayOpen('mobGlobalOverlay')) { closeMobGlobal(); return; }
     _closeAllMobOverlays('mobGlobalOverlay');
@@ -2404,7 +2630,7 @@ function _initMobGlRealtime() {
         .subscribe();
 }
 
-const MOB_QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
+const MOB_QUEEN_EMAILS = ['ceo@qkarin.com'];
 
 function _buildMobGlBubble(msg: any): string {
     const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -2412,6 +2638,14 @@ function _buildMobGlBubble(msg: any): string {
     const isQueen = MOB_QUEEN_EMAILS.includes(senderEmail);
     const name = msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT';
     const content = msg.message || '';
+    const msgId = msg.id || '';
+    const nameSafe = name.replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
+    const contentSafe = content.slice(0, 80).replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, ' ');
+    const replyBtn = msgId ? `<button class="mob-gl-reply-btn" onclick="event.stopPropagation();window.setMobGlReply('${msgId}','${nameSafe}','${contentSafe}')" title="Reply">↩</button>` : '';
+    const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:4px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;">
+        <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:1px;">↩ ${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</div>
+        <div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content || '').slice(0, 55).replace(/</g, '&lt;')}</div>
+    </div>` : '';
 
     const mediaHtml = msg.media_url
         ? (msg.media_type === 'video'
@@ -2423,17 +2657,20 @@ function _buildMobGlBubble(msg: any): string {
         return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:10px;box-shadow:0 0 10px rgba(197,160,89,0.12);overflow:hidden;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
                 <span style="font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.8);letter-spacing:1px;">QUEEN KARIN</span>
-                <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);">${time}</span>
+                <div style="display:flex;align-items:center;gap:6px;">${replyBtn}<span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);">${time}</span></div>
             </div>
-            <span style="font-family:'Rajdhani';font-size:0.88rem;color:#f0d888;line-height:1.4;">${content}</span>
+            ${quoteHtml}<span style="font-family:'Rajdhani';font-size:0.88rem;color:#f0d888;line-height:1.4;">${content}</span>
             ${mediaHtml}
         </div>`;
     }
 
-    return `<div class="mob-gl-talk-msg">
-        <span class="mob-gl-talk-name">${name}</span>
+    return `<div class="mob-gl-talk-msg" style="position:relative;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;">
+            <span class="mob-gl-talk-name">${name}</span>
+            <div style="display:flex;align-items:center;gap:6px;">${replyBtn}<span class="mob-gl-talk-time">${time}</span></div>
+        </div>
+        ${quoteHtml ? `<div style="margin-top:2px;">${quoteHtml}</div>` : ''}
         <span class="mob-gl-talk-content">${content}</span>
-        <span class="mob-gl-talk-time">${time}</span>
     </div>`;
 }
 
@@ -2467,11 +2704,16 @@ export async function sendMobGlMessage() {
     const senderEmail = memberId || id;
     if (!senderEmail) return;
 
+    // Capture and clear reply before sending
+    const replyTo = _mobGlReply ? { sender_name: _mobGlReply.name, content: _mobGlReply.text } : null;
+    cancelMobGlReply();
+
     // Optimistic update
     _appendMobGlMessage({
         sender_name: raw?.name || senderEmail.split('@')[0] || 'SUBJECT',
         sender_email: senderEmail,
         message: content,
+        reply_to: replyTo,
         created_at: new Date().toISOString(),
     });
 
@@ -2479,7 +2721,7 @@ export async function sendMobGlMessage() {
         await fetch('/api/global/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: content, senderEmail })
+            body: JSON.stringify({ message: content, senderEmail, reply_to: replyTo })
         });
     } catch {
         console.warn('[MOB_GLOBAL] Failed to send message');
@@ -3262,8 +3504,9 @@ export async function loadQueenPosts() {
 
     try {
         const email = getState().memberId || '';
-        const url = email ? `/api/posts?email=${encodeURIComponent(email)}` : '/api/posts';
-        const res = await fetch(url, { cache: 'no-store' });
+        const res = email
+            ? await fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fetch', email }) })
+            : await fetch('/api/posts', { cache: 'no-store' });
         const data = await res.json();
 
         if (!data.success || !data.posts || data.posts.length === 0) {

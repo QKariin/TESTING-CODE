@@ -17,6 +17,8 @@ import {
     loadTalkFull,
     openQueenTab,
     openGalleryLightbox,
+    setGlReply,
+    cancelGlReply,
 } from '@/scripts/global-view';
 import { buyRealCoins, handleSubscribe } from '@/scripts/profile-logic';
 
@@ -71,6 +73,8 @@ export default function GlobalPage() {
         (window as any).loadTalkFull = loadTalkFull;
         (window as any).openQueenTab = openQueenTab;
         (window as any).openGalleryLightbox = openGalleryLightbox;
+        (window as any).setGlReply = setGlReply;
+        (window as any).cancelGlReply = cancelGlReply;
 
         async function init() {
             try {

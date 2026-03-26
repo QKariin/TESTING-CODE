@@ -2047,8 +2047,10 @@
     .mob-gl-scroll {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
         padding: 12px;
         -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
     }
 
     .mob-gl-period-bar {
@@ -2206,6 +2208,8 @@
         font-size: 0.85rem;
         color: #bbb;
         line-height: 1.4;
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
 
     .mob-gl-talk-time {
@@ -2415,3 +2419,25 @@
         color: rgba(255, 255, 255, 0.6);
     }
 }
+
+/* =========================================
+   MOBILE REPLY BUTTON (global mobile chat)
+   ========================================= */
+.mob-gl-reply-btn {
+    background: rgba(197,160,89,0.12);
+    border: 1px solid rgba(197,160,89,0.2);
+    color: rgba(197,160,89,0.6);
+    cursor: pointer;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+.mob-gl-reply-btn:active { background: rgba(197,160,89,0.3); color: #c5a059; }
