@@ -2197,7 +2197,7 @@
 
     .mob-gl-talk-name {
         font-family: 'Cinzel', serif;
-        font-size: 0.72rem;
+        font-size: 0.9rem;
         color: #c5a059;
         letter-spacing: 1px;
         white-space: nowrap;
@@ -2209,7 +2209,7 @@
     .mob-gl-talk-content {
         font-family: 'Crimson Text', serif;
         font-size: 0.98rem;
-        color: #d4d4d4;
+        color: rgba(255, 255, 255, 0.7);
         line-height: 1.4;
         word-break: break-word;
         overflow-wrap: break-word;
@@ -2217,8 +2217,8 @@
 
     .mob-gl-talk-time {
         font-family: 'Orbitron', sans-serif;
-        font-size: 0.35rem;
-        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.48rem;
+        color: rgba(255, 255, 255, 0.5);
         letter-spacing: 1px;
         white-space: nowrap;
         flex-shrink: 0;

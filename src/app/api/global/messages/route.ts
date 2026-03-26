@@ -52,7 +52,8 @@ export async function POST(req: Request) {
         media_url: media_url || null,
         media_type: media_type || null,
         reply_to: reply_to || null,
-        sender_email: realEmail.toLowerCase()
+        sender_email: realEmail.toLowerCase(),
+        created_at: new Date().toISOString()
     };
 
     // Removed sender_id logic because schema column hasn't been added

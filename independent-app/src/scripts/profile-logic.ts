@@ -2681,7 +2681,7 @@ function _buildMobGlBubble(msg: any): string {
                 </div>
                 ${replyBtn}
             </div>
-            ${quoteHtml}<span style="font-family:'Rajdhani';font-size:1rem;color:#ffe090;line-height:1.4;">${content}</span>
+            ${quoteHtml}<span style="font-family:'Rajdhani';font-size:1rem;color:rgba(255,255,255,0.7);line-height:1.4;">${content}</span>
             ${mediaHtml}
         </div>`;
     }
