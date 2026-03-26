@@ -66,7 +66,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 
     // 5. Re-fetch fresh data so sidebar shows updated kneelCount + kneeling hours
     try {
-        const freshRes = await fetch(`/api/slave-profile?email=${encodeURIComponent(pid)}&full=true`);
+        const freshRes = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: pid, full: true }) });
         const freshData = await freshRes.json();
         setState({ raw: freshData });
         renderProfileSidebar(freshData);
@@ -1577,7 +1577,7 @@ export function initChatSystem() {
     const email = memberId.toLowerCase();
     setInterval(async () => {
         try {
-            const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email)}`);
+            const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
             const data = await res.json();
             if (data && (data.wallet !== undefined || data.score !== undefined)) {
                 const s = getState();
@@ -1651,7 +1651,7 @@ function initOneSignal(memberId: string) {
 
 export async function loadChatHistory(email: string) {
     try {
-        const res = await fetch(`/api/chat/history?email=${encodeURIComponent(email)}`);
+        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
         const data = await res.json();
         if (data.success) {
             const messages = data.messages || [];
@@ -1791,7 +1791,7 @@ function subscribeToChat(email: string) {
 
 async function refreshTaskGallery(email: string) {
     try {
-        const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email)}&full=true`);
+        const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, full: true }) });
         const data = await res.json();
         if (data && !data.error) {
             renderHistoryAndAltar(data);

@@ -127,7 +127,7 @@ async function pollNewMessages(email: string) {
     if (activeChatEmail !== email) return;
     if (!lastChatMsgTimestamp) return;
     try {
-        const res = await fetch(`/api/chat/history?email=${encodeURIComponent(email)}&since=${encodeURIComponent(lastChatMsgTimestamp)}`);
+        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: lastChatMsgTimestamp }) });
         const data = await res.json();
         if (!data.success) return;
         const newMsgs = (data.messages || []).filter((m: any) => m.id !== lastChatMsgId);
@@ -146,12 +146,7 @@ async function loadDashboardChatHistory(email: string) {
             userEmail = 'ceo@qkarin.com';
         }
 
-        let url = `/api/chat/history?email=${encodeURIComponent(email)}`;
-        if (userEmail) {
-            url += `&requester=${encodeURIComponent(userEmail)}`;
-        }
-
-        const res = await fetch(url);
+        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, ...(userEmail ? { requester: userEmail } : {}) }) });
         const data = await res.json();
         if (data.success) {
             const msgs = data.messages || [];
