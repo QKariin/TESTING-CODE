@@ -2234,16 +2234,46 @@ async function _loadMobQueenPosts() {
             container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO TRANSMISSIONS YET</div>`;
             return;
         }
-        container.innerHTML = data.posts.map((p: any) => `
-            <div class="mob-qwall-post">
-                ${p.media_url ? `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" onerror="this.style.display='none'" />` : ''}
+        container.innerHTML = data.posts.map((p: any) => {
+            const locked = !p.userHasAccess;
+            const isVideo = p.media_type === 'video';
+            const d = new Date(p.created_at || p._createdDate || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
+
+            // Media section
+            let mediaHTML = '';
+            if (p.media_url) {
+                if (locked) {
+                    const previewUrl = p.thumbnail_url || (!isVideo ? getOptimizedUrl(p.media_url, 600) : null);
+                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;">
+                        ${previewUrl ? `<img src="${previewUrl}" alt="" style="width:100%;display:block;object-fit:cover;max-height:260px;filter:blur(12px) brightness(0.35);transform:scale(1.06);" onerror="this.style.display='none'" />` : `<div style="width:100%;height:180px;background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`}
+                        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,0.45);">
+                            <div style="width:48px;height:48px;border-radius:50%;border:2px solid rgba(197,160,89,0.5);background:rgba(197,160,89,0.06);display:flex;align-items:center;justify-content:center;">
+                                ${isVideo
+                                    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polygon points="6,4 20,12 6,20" fill="rgba(197,160,89,0.8)"/></svg>`
+                                    : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="rgba(197,160,89,0.7)" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(197,160,89,0.7)" stroke-width="1.8" stroke-linecap="round"/></svg>`
+                                }
+                            </div>
+                            ${p.price > 0 ? `<div style="font-family:Orbitron;font-size:0.48rem;color:#c5a059;letter-spacing:1.5px;display:flex;align-items:center;gap:5px;"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#c5a059" stroke-width="1.8" fill="none"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 0 1 0 3H10.5a1.5 1.5 0 0 0 0 3H15" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round"/></svg>${p.price} COINS</div>` : ''}
+                            ${p.min_rank && p.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.38rem;color:#555;letter-spacing:1.5px;">REQUIRES ${(p.min_rank || '').toUpperCase()}</div>` : ''}
+                            ${p.price > 0 ? `<button onclick="window.unlockPost('${p.id}', ${p.price})" style="background:#c5a059;color:#000;border:none;font-family:Orbitron;font-size:0.45rem;letter-spacing:2px;padding:8px 18px;border-radius:2px;cursor:pointer;font-weight:700;">UNLOCK</button>` : ''}
+                        </div>
+                    </div>`;
+                } else if (isVideo) {
+                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;"><video src="${p.media_url}" controls playsinline preload="metadata" style="width:100%;display:block;max-height:340px;object-fit:cover;"></video></div>`;
+                } else {
+                    mediaHTML = `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" style="width:100%;display:block;object-fit:cover;max-height:340px;" onerror="this.style.display='none'" />`;
+                }
+            }
+
+            return `<div class="mob-qwall-post">
+                ${mediaHTML}
                 <div class="mob-qwall-post-body">
                     ${p.title ? `<div class="mob-qwall-post-title">${p.title}</div>` : ''}
-                    ${p.content ? `<div class="mob-qwall-post-content">${p.content}</div>` : ''}
-                    <div class="mob-qwall-post-date">${new Date(p.created_at || p._createdDate || Date.now()).toLocaleDateString()}</div>
+                    ${!locked && p.content ? `<div class="mob-qwall-post-content">${p.content}</div>` : ''}
+                    <div class="mob-qwall-post-date">${d}</div>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     } catch {
         container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
     }
@@ -2478,6 +2508,60 @@ async function _loadMobGlQueen() {
     }
 }
 
+function _buildMobUpdateCard(u: any): string {
+    const time = new Date(u.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (u.kind === 'tribute') {
+        const coverSrc = u.image || u.sender_avatar || '';
+        const initial = (u.sender_name || 'S')[0].toUpperCase();
+        return `<div style="margin-bottom:16px;background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+            <div style="width:100%;height:140px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
+                ${coverSrc ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:3rem;color:rgba(197,160,89,0.4);">${initial}</div>
+                <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div>
+                <div style="position:absolute;bottom:10px;left:14px;font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div>
+            </div>
+            <div style="padding:12px 14px 14px;">
+                <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title || ''}</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                    <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name || ''}</span>
+                    <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);">${time}</span>
+                </div>
+            </div>
+        </div>`;
+    }
+    if (u.kind === 'points') {
+        const initial = (u.sender_name || 'S')[0].toUpperCase();
+        return `<div style="margin-bottom:16px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;">
+            <div style="width:42px;height:42px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
+                ${u.sender_avatar ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${initial}</div>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:3px;">⚡ MERIT EARNED</div>
+                <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name || ''}</div>
+                <div style="font-family:'Orbitron';font-size:0.85rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${u.points || 0} MERIT</div>
+            </div>
+            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);flex-shrink:0;align-self:flex-start;">${time}</div>
+        </div>`;
+    }
+    // photo / default
+    if (u.media_url) {
+        return `<div style="margin-bottom:16px;background:#0a0a14;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;width:100%;position:relative;">
+            <img src="${getOptimizedUrl(u.media_url, 600)}" style="width:100%;max-height:240px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'">
+            <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.88));">
+                <div style="font-family:'Cinzel';font-size:0.62rem;color:#fff;">${u.sender_name || ''} <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div>
+                ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.55);margin-top:2px;">${u.caption}</div>` : ''}
+            </div>
+        </div>`;
+    }
+    // fallback text card
+    return `<div style="margin-bottom:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(197,160,89,0.12);border-radius:8px;padding:12px 14px;">
+        ${u.title ? `<div style="font-family:'Cinzel';font-size:0.7rem;color:#c5a059;letter-spacing:2px;margin-bottom:4px;">${u.title}</div>` : ''}
+        ${u.content ? `<div style="font-family:'Crimson Text';font-size:0.85rem;color:#999;line-height:1.5;">${u.content}</div>` : ''}
+        <div style="font-family:'Orbitron';font-size:0.38rem;color:#444;margin-top:6px;letter-spacing:1px;">${time}</div>
+    </div>`;
+}
+
 async function _loadMobGlUpdates() {
     if (_mobGlLoaded['updates']) return;
     const container = document.getElementById('mobGlUpdatesFeed');
@@ -2491,13 +2575,7 @@ async function _loadMobGlUpdates() {
             container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO UPDATES YET</div>`;
             return;
         }
-        container.innerHTML = updates.map((u: any) => `
-            <div class="mob-gl-update-card">
-                ${u.media_url ? `<img src="${getOptimizedUrl(u.media_url, 600)}" alt="" onerror="this.style.display='none'" />` : ''}
-                ${u.title ? `<div class="mob-gl-update-title">${u.title}</div>` : ''}
-                ${u.content ? `<div class="mob-gl-update-content">${u.content}</div>` : ''}
-            </div>
-        `).join('');
+        container.innerHTML = updates.map((u: any) => _buildMobUpdateCard(u)).join('');
         _mobGlLoaded['updates'] = true;
     } catch {
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;

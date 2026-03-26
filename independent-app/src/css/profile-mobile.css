@@ -2047,8 +2047,10 @@
     .mob-gl-scroll {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
         padding: 12px;
         -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
     }
 
     .mob-gl-period-bar {
@@ -2166,6 +2168,8 @@
         font-size: 0.85rem;
         color: #bbb;
         line-height: 1.4;
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
 
     .mob-gl-talk-time {
