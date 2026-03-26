@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         
         // System message insertion resilient to schema
         const insertData: any = { sender_email: 'system', sender_name: 'SYSTEM', message: msgText, member_id: realEmail };
-        if (profile.id) insertData.profile_id = profile.id;
+        // Removed profile_id logic to synchronize with live database schema constraint
         
         try { 
             const ins1 = await supabase.from('chats').insert(insertData);

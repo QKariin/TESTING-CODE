@@ -79,11 +79,10 @@ export async function POST(req: Request) {
             metadata: { ...metadata, isQueen }
         };
 
-        if (profile?.id) insertData.sender_id = profile.id;
 
         const isUUIDConv = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationContext);
         const { data: convProfile } = await adminClient.from('profiles').select('id, member_id').or(isUUIDConv ? `id.eq.${conversationContext}` : `member_id.ilike.${conversationContext}`).maybeSingle();
-        if (convProfile?.id) insertData.profile_id = convProfile.id;
+        // Removed profile_id insertion logic due to missing schema
 
         const { data: msgData, error: msgErr } = await adminClient.from('chats').insert(insertData).select().single();
 

@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         sender_email: realEmail.toLowerCase()
     };
 
-    if (profile?.id) insertData.sender_id = profile.id;
+    // Removed sender_id logic because schema column hasn't been added
 
     const { data, error } = await supabaseAdmin
         .from('global_messages')
