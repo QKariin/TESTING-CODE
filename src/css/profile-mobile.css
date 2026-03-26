@@ -1972,10 +1972,10 @@
 
     .mob-qwall-post {
         margin-bottom: 18px;
-        border: 1px solid rgba(197, 160, 89, 0.12);
+        border: 1px solid rgba(197, 160, 89, 0.3);
         border-radius: 12px;
         overflow: hidden;
-        background: rgba(255, 255, 255, 0.015);
+        background: rgba(197, 160, 89, 0.03);
     }
 
     .mob-qwall-post img {
@@ -1999,14 +1999,14 @@
     .mob-qwall-post-content {
         font-family: 'Rajdhani', sans-serif;
         font-size: 0.82rem;
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(255, 255, 255, 0.8);
         line-height: 1.5;
     }
 
     .mob-qwall-post-date {
         font-family: 'Orbitron', sans-serif;
         font-size: 0.38rem;
-        color: #444;
+        color: rgba(255, 255, 255, 0.35);
         margin-top: 8px;
         letter-spacing: 1px;
     }
@@ -2021,12 +2021,12 @@
 
     .mob-gl-tab {
         flex: 1;
-        padding: 12px 4px;
+        padding: 14px 6px;
         background: none;
         border: none;
-        color: #444;
+        color: #666;
         font-family: 'Orbitron', sans-serif;
-        font-size: 0.5rem;
+        font-size: 0.65rem;
         letter-spacing: 2px;
         cursor: pointer;
         transition: color 0.2s, border-bottom 0.2s;
@@ -2154,7 +2154,7 @@
     .mob-gl-rank-name {
         font-family: 'Cinzel', serif;
         font-size: 0.6rem;
-        color: #ccc;
+        color: #ddd;
         letter-spacing: 1px;
         white-space: nowrap;
         overflow: hidden;
@@ -2197,16 +2197,19 @@
 
     .mob-gl-talk-name {
         font-family: 'Cinzel', serif;
-        font-size: 0.5rem;
+        font-size: 0.72rem;
         color: #c5a059;
         letter-spacing: 1px;
-        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 45vw;
     }
 
     .mob-gl-talk-content {
         font-family: 'Crimson Text', serif;
         font-size: 0.98rem;
-        color: #bbb;
+        color: #d4d4d4;
         line-height: 1.4;
         word-break: break-word;
         overflow-wrap: break-word;
@@ -2215,9 +2218,10 @@
     .mob-gl-talk-time {
         font-family: 'Orbitron', sans-serif;
         font-size: 0.35rem;
-        color: #333;
-        margin-top: 5px;
+        color: rgba(255, 255, 255, 0.3);
         letter-spacing: 1px;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
     .mob-gl-talk-footer {

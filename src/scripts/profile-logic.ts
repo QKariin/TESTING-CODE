@@ -2430,6 +2430,7 @@ const _mobGlLoaded: Record<string, boolean> = {};
 let _mobGlActivePeriod = 'today';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _mobGlRealtimeChannel: any = null;
+const _mobGlPendingSent = new Set<string>();
 
 // ─── REPLY STATE ──────────────────────────────────────────────────────────────
 let _mobGlReply: { id: string; name: string; text: string } | null = null;
@@ -2625,7 +2626,15 @@ function _initMobGlRealtime() {
     _mobGlRealtimeChannel = sb
         .channel('mob_global_messages_channel')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' },
-            (payload: any) => { _appendMobGlMessage(payload.new); }
+            (payload: any) => {
+                const msg = payload.new;
+                const msgContent = msg.message || '';
+                if (_mobGlPendingSent.has(msgContent)) {
+                    _mobGlPendingSent.delete(msgContent);
+                    return;
+                }
+                _appendMobGlMessage(msg);
+            }
         )
         .subscribe();
 }
@@ -2654,23 +2663,39 @@ function _buildMobGlBubble(msg: any): string {
             : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;" />`)
         : '';
 
+    const av = msg.sender_avatar || null;
+    const avatarHtml = av
+        ? `<img src="${av}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.4);flex-shrink:0;" onerror="this.style.display='none'">`
+        : `<div style="width:18px;height:18px;border-radius:50%;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:Cinzel;font-size:0.38rem;color:#c5a059;flex-shrink:0;">${(name[0]||'S').toUpperCase()}</div>`;
+
     if (isQueen) {
-        return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:10px;box-shadow:0 0 10px rgba(197,160,89,0.12);overflow:hidden;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-                <span style="font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.8);letter-spacing:1px;">QUEEN KARIN</span>
-                <div style="display:flex;align-items:center;gap:6px;">${replyBtn}<span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);">${time}</span></div>
+        const qAvHtml = av
+            ? `<img src="${av}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
+            : `<img src="/queen-karin.png" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
+        return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;gap:5px;min-width:0;">
+                    ${qAvHtml}
+                    <span style="font-family:'Orbitron';font-size:0.52rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span>
+                    <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);"> · ${time}</span>
+                </div>
+                ${replyBtn}
             </div>
-            ${quoteHtml}<span style="font-family:'Rajdhani';font-size:1rem;color:#f0d888;line-height:1.4;">${content}</span>
+            ${quoteHtml}<span style="font-family:'Rajdhani';font-size:1rem;color:#ffe090;line-height:1.4;">${content}</span>
             ${mediaHtml}
         </div>`;
     }
 
-    return `<div class="mob-gl-talk-msg" style="position:relative;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;">
-            <span class="mob-gl-talk-name">${name}</span>
-            <div style="display:flex;align-items:center;gap:6px;">${replyBtn}<span class="mob-gl-talk-time">${time}</span></div>
+    return `<div class="mob-gl-talk-msg">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;">
+                ${avatarHtml}
+                <span class="mob-gl-talk-name">${name}</span>
+                <span class="mob-gl-talk-time"> · ${time}</span>
+            </div>
+            ${replyBtn}
         </div>
-        ${quoteHtml ? `<div style="margin-top:2px;">${quoteHtml}</div>` : ''}
+        ${quoteHtml ? `<div style="margin-bottom:3px;">${quoteHtml}</div>` : ''}
         <span class="mob-gl-talk-content">${content}</span>
     </div>`;
 }
@@ -2708,6 +2733,9 @@ export async function sendMobGlMessage() {
     // Capture and clear reply before sending
     const replyTo = _mobGlReply ? { sender_name: _mobGlReply.name, content: _mobGlReply.text } : null;
     cancelMobGlReply();
+
+    // Track for dedup — realtime will fire for our own message too
+    _mobGlPendingSent.add(content);
 
     // Optimistic update
     _appendMobGlMessage({
@@ -2777,8 +2805,8 @@ function _buildMobUpdateCard(u: any): string {
             <div style="padding:12px 14px 14px;">
                 <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title || ''}</div>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
-                    <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name || ''}</span>
-                    <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);">${time}</span>
+                    <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.65);letter-spacing:1px;">${u.sender_name || ''}</span>
+                    <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.45);">${time}</span>
                 </div>
             </div>
         </div>`;
@@ -2791,11 +2819,11 @@ function _buildMobUpdateCard(u: any): string {
                 <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${initial}</div>
             </div>
             <div style="flex:1;min-width:0;">
-                <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:3px;">⚡ MERIT EARNED</div>
+                <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.55);letter-spacing:1px;margin-bottom:3px;">⚡ MERIT EARNED</div>
                 <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name || ''}</div>
                 <div style="font-family:'Orbitron';font-size:0.85rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${u.points || 0} MERIT</div>
             </div>
-            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);flex-shrink:0;align-self:flex-start;">${time}</div>
+            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.45);flex-shrink:0;align-self:flex-start;">${time}</div>
         </div>`;
     }
     // photo / default
@@ -2803,7 +2831,7 @@ function _buildMobUpdateCard(u: any): string {
         return `<div style="margin-bottom:16px;background:#0a0a14;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;width:100%;position:relative;">
             <img src="${getOptimizedUrl(u.media_url, 600)}" style="width:100%;max-height:240px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'">
             <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.88));">
-                <div style="font-family:'Cinzel';font-size:0.62rem;color:#fff;">${u.sender_name || ''} <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div>
+                <div style="font-family:'Cinzel';font-size:0.62rem;color:#fff;">${u.sender_name || ''} <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.55);">${time}</span></div>
                 ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.55);margin-top:2px;">${u.caption}</div>` : ''}
             </div>
         </div>`;
@@ -2811,8 +2839,8 @@ function _buildMobUpdateCard(u: any): string {
     // fallback text card
     return `<div style="margin-bottom:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(197,160,89,0.12);border-radius:8px;padding:12px 14px;">
         ${u.title ? `<div style="font-family:'Cinzel';font-size:0.7rem;color:#c5a059;letter-spacing:2px;margin-bottom:4px;">${u.title}</div>` : ''}
-        ${u.content ? `<div style="font-family:'Crimson Text';font-size:0.85rem;color:#999;line-height:1.5;">${u.content}</div>` : ''}
-        <div style="font-family:'Orbitron';font-size:0.38rem;color:#444;margin-top:6px;letter-spacing:1px;">${time}</div>
+        ${u.content ? `<div style="font-family:'Crimson Text';font-size:0.85rem;color:#bbb;line-height:1.5;">${u.content}</div>` : ''}
+        <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);margin-top:6px;letter-spacing:1px;">${time}</div>
     </div>`;
 }
 
