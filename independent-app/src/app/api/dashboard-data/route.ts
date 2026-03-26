@@ -10,8 +10,8 @@ export async function GET(req: Request) {
         const memberId = searchParams.get('memberId');
 
         const users = await getMasterData();
-        const tributes = await DbService.getRecentTributes(50);
-        const reviewQueue = await DbService.getReviewQueue();
+        const tributes = await DbService.getRecentTributes(50).catch(() => []);
+        const reviewQueue = await DbService.getReviewQueue().catch(() => []);
 
         // If memberId is provided, fetch specific profile
         let profile = null;
