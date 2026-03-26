@@ -223,8 +223,16 @@ export const DbService = {
         // Pull all tasks rows that have at least one 'pending' entry in Taskdom_History
         const { data, error } = await supabaseAdmin
             .from('tasks')
-            .select('member_id, "Name", "Status", "Taskdom_History", "Profile pic"');
+            .select('member_id, "Name", "Status", "Taskdom_History"');
         if (error) throw error;
+
+        // Fetch avatar_url from profiles for all members
+        const memberIds = [...new Set((data || []).map((r: any) => r.member_id).filter(Boolean))];
+        const { data: profileData } = await supabaseAdmin
+            .from('profiles')
+            .select('member_id, avatar_url')
+            .in('member_id', memberIds);
+        const avatarMap = new Map((profileData || []).map((p: any) => [p.member_id?.toLowerCase(), p.avatar_url]));
 
         const pending: any[] = [];
         for (const row of (data || [])) {
@@ -265,7 +273,7 @@ export const DbService = {
                     proofUrl: finalUrl,
                     member_id: row.member_id,
                     memberName: row['Name'] || 'Slave',
-                    avatarUrl: row['Profile pic'] || null,
+                    avatarUrl: avatarMap.get(row.member_id?.toLowerCase()) || null,
                 });
             }
         }
