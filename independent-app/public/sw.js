@@ -1,4 +1,4 @@
-const CACHE = 'qk-v3';
+const CACHE = 'qk-v4';
 const SHELL = ['/dashboard', '/profile', '/icons/collar-192.png', '/icons/collar-512.png'];
 
 self.addEventListener('install', e => {
