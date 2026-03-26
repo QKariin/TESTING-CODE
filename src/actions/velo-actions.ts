@@ -8,21 +8,24 @@ import { DbService } from '@/lib/supabase-service';
 
 // --- SUPABASE ADMIN CLIENT (Bypasses RLS) ---
 // Initialize with SERVICE_ROLE_KEY for backend operations
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
-        }
+let _adminInstance: any = null;
+function getAdmin() {
+    if (!_adminInstance) {
+        _adminInstance = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            {
+                auth: { autoRefreshToken: false, persistSession: false }
+            }
+        );
     }
-);
+    return _adminInstance;
+}
 
 // --- HELPER: GET PROFILE ---
 async function getProfile(memberId: string) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-    let query = supabaseAdmin.from('profiles').select('*');
+    let query = getAdmin().from('profiles').select('*');
 
     if (isUuid) {
         query = query.or(`member_id.eq.${memberId},id.eq.${memberId}`);
@@ -41,7 +44,7 @@ async function getProfile(memberId: string) {
 
 // --- HELPER: UPDATE PROFILE ---
 async function updateProfile(id: string, updates: any) {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getAdmin()
         .from('profiles')
         .update(updates)
         .eq('id', id)
@@ -60,7 +63,7 @@ export async function getHierarchyRequirements() {
 // --- 1.b GET UPLOAD URL (Stub for Storage) ---
 export async function getProfileUploadUrl() {
     // TODO: Implement Supabase Storage Presigned URL generation
-    // const { data, error } = await supabaseAdmin.storage.from('uploads').createSignedUrl('folder/file.png', 60);
+    // const { data, error } = await getAdmin().storage.from('uploads').createSignedUrl('folder/file.png', 60);
     return { success: true, url: "" };
 }
 
@@ -163,20 +166,20 @@ function mapUserForDashboard(p: any, t: any) {
 // --- 2.b GET ADMIN DASHBOARD DATA ---
 export async function getAdminDashboardData() {
     try {
-        const { data: profiles, error: pError } = await supabaseAdmin
+        const { data: profiles, error: pError } = await getAdmin()
             .from('profiles')
             .select('*')
             .order('name');
 
-        const { data: dailyTasks, error: tError } = await supabaseAdmin
+        const { data: dailyTasks, error: tError } = await getAdmin()
             .from('daily_tasks')
             .select('*');
 
-        const { data: globalSettings, error: sError } = await supabaseAdmin
+        const { data: globalSettings, error: sError } = await getAdmin()
             .from('system_rules')
             .select('*');
 
-        const { data: tasksData, error: taskErr } = await supabaseAdmin
+        const { data: tasksData, error: taskErr } = await getAdmin()
             .from('tasks')
             .select('member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"');
 
@@ -185,8 +188,8 @@ export async function getAdminDashboardData() {
         if (pError) throw pError;
 
         // Map tasks data to profiles so the dashboard works
-        const finalProfiles = (profiles || []).map(p => {
-            const t = (tasksData || []).find(x => x.member_id === p.member_id || x.member_id === p.id);
+        const finalProfiles = (profiles || []).map((p: any) => {
+            const t = (tasksData || []).find((x: any) => x.member_id === p.member_id || x.member_id === p.id);
             return mapUserForDashboard(p, t);
         });
 
@@ -235,7 +238,7 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
         if (!profile) return { success: false };
 
         // 1. Fetch from tasks table
-        const { data: taskRow, error: taskFetchError } = await supabaseAdmin
+        const { data: taskRow, error: taskFetchError } = await getAdmin()
             .from('tasks')
             .select('*')
             .eq('member_id', profile.member_id || memberId)
@@ -344,7 +347,7 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             // Sync wallet to profiles table
             try {
                 const profileWallet = Number(profile.wallet || 0);
-                await supabaseAdmin.from('profiles')
+                await getAdmin().from('profiles')
                     .update({ wallet: Math.max(0, profileWallet - 300) })
                     .ilike('member_id', memberId);
             } catch (_) {}
@@ -376,9 +379,9 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             const member_id = profile.member_id || memberId;
             let result;
             if (taskRow) {
-                result = await supabaseAdmin.from('tasks').update(taskUpdates).eq('member_id', member_id);
+                result = await getAdmin().from('tasks').update(taskUpdates).eq('member_id', member_id);
             } else {
-                result = await supabaseAdmin.from('tasks').insert({
+                result = await getAdmin().from('tasks').insert({
                     member_id: member_id,
                     Name: profile.name || 'Slave',
                     ...taskUpdates
@@ -388,7 +391,7 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             // Sync with Realtime via Chat System Message if it was forced
             if (updateData.forceActive) {
                 try {
-                    await supabaseAdmin.from('chats').insert({
+                    await getAdmin().from('chats').insert({
                         member_id: member_id,
                         sender: 'system',
                         sender_email: 'system',
@@ -422,7 +425,7 @@ export async function runHierarchyMaintenance() {
         let totalUpdated = 0;
 
         while (hasMore) {
-            const { data: profiles, error } = await supabaseAdmin
+            const { data: profiles, error } = await getAdmin()
                 .from('profiles')
                 .select('*')
                 .range(skip, skip + limit - 1);
@@ -750,7 +753,7 @@ export async function insertMessage(msgData: any) {
             created_at: new Date().toISOString()
         };
 
-        const { data: insertedItem, error } = await supabaseAdmin
+        const { data: insertedItem, error } = await getAdmin()
             .from('messages')
             .insert(toInsert)
             .select()
@@ -789,7 +792,7 @@ export async function insertMessage(msgData: any) {
 
 export async function loadUserMessages(memberId: string) {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getAdmin()
             .from('messages')
             .select('*')
             .eq('member_id', memberId)
@@ -810,7 +813,7 @@ export async function loadUserMessages(memberId: string) {
 // Queries the 'chats' table (same table used by /api/chat/send + /api/chat/history)
 export async function getUnreadMessageStatus(): Promise<Record<string, string>> {
     try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await getAdmin()
             .from('chats')
             .select('member_id, created_at, metadata, type, sender_email')
             .order('created_at', { ascending: false });
@@ -847,12 +850,12 @@ function fixUrl(url: string) {
 // --- 1. GET ALL USERS & TASKS ---
 export async function getMasterData() {
     try {
-        const { data: profiles, error: pError } = await supabaseAdmin
+        const { data: profiles, error: pError } = await getAdmin()
             .from('profiles')
             .select('*')
             .limit(1000);
 
-        const { data: tasks, error: tError } = await supabaseAdmin
+        const { data: tasks, error: tError } = await getAdmin()
             .from('tasks')
             .select('*')
             .limit(1000);
@@ -876,7 +879,7 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
         const profile = await getProfile(userId);
         if (!profile) return false;
 
-        const { data: taskRow } = await supabaseAdmin
+        const { data: taskRow } = await getAdmin()
             .from('tasks')
             .select('*')
             .eq('member_id', profile.member_id || userId)
@@ -929,7 +932,7 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
             taskUpdates.Taskdom_History = JSON.stringify(history);
 
             await updateProfile(profile.id, updates);
-            await supabaseAdmin.from('tasks').update(taskUpdates).eq('member_id', profile.member_id || userId);
+            await getAdmin().from('tasks').update(taskUpdates).eq('member_id', profile.member_id || userId);
             if (decision === 'approve') {
                 const { DbService } = await import('@/lib/supabase-service');
                 await DbService.awardPoints(profile.member_id || userId, 50);
@@ -1032,7 +1035,7 @@ export async function updateDailyTask() {
     try {
         // 1. Check if we already have a task for today
         // Assuming 'daily_tasks' table has a 'selected_date' column (Date/Timestamp)
-        const { data: todayItems, error: todayError } = await supabaseAdmin
+        const { data: todayItems, error: todayError } = await getAdmin()
             .from('daily_tasks')
             .select('*')
             .gte('selected_date', todayIso) // Greater than or equal to midnight today
@@ -1056,21 +1059,21 @@ export async function updateDailyTask() {
         // We'll try a simple approach: Get pool of available tasks and pick random. 
         // For efficiency, maybe just get tasks where selected_date < 6 months first.
 
-        const { data: oldItems, error: oldError } = await supabaseAdmin
+        const { data: oldItems, error: oldError } = await getAdmin()
             .from('daily_tasks')
             .select('*')
             .lt('selected_date', sixMonthsAgoIso); // Only checking strict old dates for now
 
         if (!oldItems || oldItems.length === 0) {
             // Fallback: Check for NULL selected_date (fresh tasks)
-            const { data: freshItems } = await supabaseAdmin
+            const { data: freshItems } = await getAdmin()
                 .from('daily_tasks')
                 .select('*')
                 .is('selected_date', null);
 
             if (freshItems && freshItems.length > 0) {
                 const randomFreshString = freshItems[Math.floor(Math.random() * freshItems.length)];
-                const updatedFresh = await supabaseAdmin
+                const updatedFresh = await getAdmin()
                     .from('daily_tasks')
                     .update({ selected_date: todayIso })
                     .eq('id', randomFreshString.id)
@@ -1087,7 +1090,7 @@ export async function updateDailyTask() {
         const selectedItem = oldItems[randomIndex];
 
         // 3. Update the selected task to today
-        const { data: updatedItem, error: updateError } = await supabaseAdmin
+        const { data: updatedItem, error: updateError } = await getAdmin()
             .from('daily_tasks')
             .update({ selected_date: todayIso })
             .eq('id', selectedItem.id)
@@ -1199,7 +1202,7 @@ export async function updateProfileView(memberId: string) {
         // 🔍 Fetch last 4 point messages
         // Velo: query("SlaveMessages").eq("memberId", memberId).or(.eq("memberId", "All"))
         // Supabase: .or(`member_id.eq.${memberId},member_id.eq.All`)
-        const { data: messageItems } = await supabaseAdmin
+        const { data: messageItems } = await getAdmin()
             .from('messages')
             .select('*')
             .or(`member_id.eq.${memberId},member_id.eq.All`)
@@ -1263,7 +1266,7 @@ export async function checkExpiredTasks() {
         // Or use .not('parameters->taskdom_pending_state', 'is', null) if supported.
         // Let's safe fetch top 1000 and filter.
 
-        const { data: profiles, error } = await supabaseAdmin
+        const { data: profiles, error } = await getAdmin()
             .from('profiles')
             .select('*')
             .not('parameters', 'is', null) // Ensure parameters exist
@@ -1473,7 +1476,7 @@ export async function getAllPushSubscriptionsAction() {
     // We need to scan all profiles and collect 'parameters.push_subscription'
     // Efficient? No. But for <1000 users it works.
     try {
-        const { data: profiles, error } = await supabaseAdmin
+        const { data: profiles, error } = await getAdmin()
             .from('profiles')
             .select('parameters')
             .not('parameters', 'is', null);
@@ -1497,7 +1500,7 @@ export async function ensureProfileExists(user: { id: string, email: string }) {
         if (!user || !user.id || !user.email) return { success: false, error: "Invalid user data" };
 
         // Check if profile exists
-        const { data: existing } = await supabaseAdmin
+        const { data: existing } = await getAdmin()
             .from('profiles')
             .select('id')
             .eq('id', user.id)
@@ -1510,7 +1513,7 @@ export async function ensureProfileExists(user: { id: string, email: string }) {
         console.log(`⚠️ Profile missing for ${user.email}. Creating now...`);
 
         // Create Profile (Fallback if Trigger failed)
-        const { error } = await supabaseAdmin
+        const { error } = await getAdmin()
             .from('profiles')
             .insert({
                 id: user.id,
@@ -1540,7 +1543,7 @@ export async function ensureProfileExists(user: { id: string, email: string }) {
 export async function runDailyScoreReset() {
     try {
         // 1. Get Top 10 by Daily Score
-        const { data: topProfiles, error: fetchError } = await supabaseAdmin
+        const { data: topProfiles, error: fetchError } = await getAdmin()
             .from('profiles')
             .select('id, name, daily_score')
             .order('daily_score', { ascending: false })
@@ -1551,7 +1554,7 @@ export async function runDailyScoreReset() {
         // 2. Update Leaderboard Table
         if (topProfiles && topProfiles.length > 0) {
             // Delete all previous entries
-            await supabaseAdmin.from('daily_leaderboard').delete().neq('rank', -1);
+            await getAdmin().from('daily_leaderboard').delete().neq('rank', -1);
 
             const leaderboardEntries = topProfiles.map((p: any, index: number) => ({
                 rank: index + 1,
@@ -1559,7 +1562,7 @@ export async function runDailyScoreReset() {
                 score: p.daily_score || 0
             }));
 
-            const { error: insertError } = await supabaseAdmin
+            const { error: insertError } = await getAdmin()
                 .from('daily_leaderboard')
                 .insert(leaderboardEntries);
 
@@ -1567,7 +1570,7 @@ export async function runDailyScoreReset() {
         }
 
         // 3. Reset Daily Score for ALL profiles
-        const { error: resetError } = await supabaseAdmin
+        const { error: resetError } = await getAdmin()
             .from('profiles')
             .update({ daily_score: 0 })
             .neq('id', '00000000-0000-0000-0000-000000000000');
@@ -1586,7 +1589,7 @@ export async function runDailyScoreReset() {
 export async function runMonthlyScoreReset() {
     try {
         // 1. Get Top 3 by Monthly Score
-        const { data: topProfiles, error: fetchError } = await supabaseAdmin
+        const { data: topProfiles, error: fetchError } = await getAdmin()
             .from('profiles')
             .select('id, name, monthly_score')
             .order('monthly_score', { ascending: false })
@@ -1605,7 +1608,7 @@ export async function runMonthlyScoreReset() {
                 score3: topProfiles[2]?.monthly_score || 0
             };
 
-            const { error: insertError } = await supabaseAdmin
+            const { error: insertError } = await getAdmin()
                 .from('monthly_leaderboard')
                 .insert(entry);
 
@@ -1613,7 +1616,7 @@ export async function runMonthlyScoreReset() {
         }
 
         // 3. Reset Monthly Score for ALL profiles
-        const { error: resetError } = await supabaseAdmin
+        const { error: resetError } = await getAdmin()
             .from('profiles')
             .update({ monthly_score: 0 })
             .neq('id', '00000000-0000-0000-0000-000000000000');
@@ -1643,7 +1646,7 @@ export async function updateAllLeaderboards() {
 
         for (const t of TABLES) {
             // 1. Get Top Items
-            const { data: topProfiles, error: fetchError } = await supabaseAdmin
+            const { data: topProfiles, error: fetchError } = await getAdmin()
                 .from('profiles')
                 .select(`id, name, ${t.col}`)
                 .order(t.col, { ascending: false })
@@ -1667,7 +1670,7 @@ export async function updateAllLeaderboards() {
             }));
 
             // Upsert (Conflict on 'rank')
-            const { error: upsertError } = await supabaseAdmin
+            const { error: upsertError } = await getAdmin()
                 .from(t.id)
                 .upsert(entries, { onConflict: 'rank' });
 
@@ -1687,7 +1690,7 @@ export async function updateAllLeaderboards() {
 export async function runYearlyScoreReset() {
     try {
         // 1. Get Top 3 by Yearly Score
-        const { data: topProfiles, error: fetchError } = await supabaseAdmin
+        const { data: topProfiles, error: fetchError } = await getAdmin()
             .from('profiles')
             .select('id, name, yearly_score')
             .order('yearly_score', { ascending: false })
@@ -1706,7 +1709,7 @@ export async function runYearlyScoreReset() {
                 score3: topProfiles[2]?.yearly_score || 0
             };
 
-            const { error: insertError } = await supabaseAdmin
+            const { error: insertError } = await getAdmin()
                 .from('yearly_leaderboard')
                 .insert(entry);
 
@@ -1714,7 +1717,7 @@ export async function runYearlyScoreReset() {
         }
 
         // 3. Reset Yearly Score for ALL profiles
-        const { error: resetError } = await supabaseAdmin
+        const { error: resetError } = await getAdmin()
             .from('profiles')
             .update({ yearly_score: 0 })
             .neq('id', '00000000-0000-0000-0000-000000000000');
