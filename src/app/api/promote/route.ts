@@ -12,9 +12,15 @@ export async function POST(req: Request) {
         const { memberEmail, newRank } = await req.json();
         if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
 
-        const { data: profile } = await supabaseAdmin
+        // Look up by member_id (email) first, then by UUID id as fallback
+        let { data: profile } = await supabaseAdmin
             .from('profiles').select('*').ilike('member_id', memberEmail).maybeSingle();
-        if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+        if (!profile) {
+            const { data: byId } = await supabaseAdmin
+                .from('profiles').select('*').eq('id', memberEmail).maybeSingle();
+            profile = byId;
+        }
+        if (!profile) return NextResponse.json({ error: `Profile not found for: ${memberEmail}` }, { status: 404 });
 
         const currentHierarchy = profile.hierarchy || "Hall Boy";
 
