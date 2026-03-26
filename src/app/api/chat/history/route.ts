@@ -11,11 +11,16 @@ export async function GET(req: Request) {
             return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
         }
 
-        // Use admin client to bypass RLS — messages are scoped to the requested email
-        const queryClient = createAdminClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
+        // Robust administrative client initialization
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!supabaseUrl || !supabaseServiceKey) {
+            console.error("[API/Chat/History] GET CRITICAL: Environment variables missing");
+            return NextResponse.json({ success: false, error: "Environment configuration error." }, { status: 500 });
+        }
+
+        const queryClient = createAdminClient(supabaseUrl, supabaseServiceKey);
 
         const since = searchParams.get('since'); // ISO timestamp — return only newer messages
 
@@ -59,11 +64,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
         }
 
-        // Use admin client to bypass RLS — messages are scoped to the requested email
-        const queryClient = createAdminClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
+        // Robust administrative client initialization
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!supabaseUrl || !supabaseServiceKey) {
+            console.error("[API/Chat/History] POST CRITICAL: Environment variables missing");
+            return NextResponse.json({ success: false, error: "Environment configuration error." }, { status: 500 });
+        }
+
+        const queryClient = createAdminClient(supabaseUrl, supabaseServiceKey);
 
         // Fetch messages for this specific user
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
