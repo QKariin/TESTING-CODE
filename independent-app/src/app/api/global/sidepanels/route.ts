@@ -28,7 +28,7 @@ function parseTributeHistory(val: any): number {
 
 export async function GET() {
     const [{ data: tasks }, { data: profiles }] = await Promise.all([
-        supabaseAdmin.from('tasks').select(`member_id, Name, Hierarchy, "Profile pic", kneelCount, "Tribute History", Taskdom_Streak`),
+        supabaseAdmin.from('tasks').select(`member_id, Name, Hierarchy, "kneelCount, "Tribute History", Taskdom_Streak`),
         supabaseAdmin.from('profiles').select('member_id, avatar_url, parameters'),
     ]);
 
@@ -44,7 +44,7 @@ export async function GET() {
         const base = {
             name: t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
             hierarchy: prof.hierarchy || t.Hierarchy || '—',
-            avatar: prof.avatar_url || t['Profile pic'] || '',
+            avatar: prof.avatar_url || '',
         };
 
         const count = parseNum(t.kneelCount);
