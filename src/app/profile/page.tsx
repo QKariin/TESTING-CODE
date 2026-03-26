@@ -73,10 +73,6 @@ import {
     togglePostLike,
     openQkLightbox,
     closeQkLightbox,
-    setMobGlReply,
-    cancelMobGlReply,
-    setProfileChatReply,
-    cancelProfileChatReply,
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -155,10 +151,6 @@ export default function ProfilePage() {
             (window as any).togglePostLike = togglePostLike;
             (window as any).openQkLightbox = openQkLightbox;
             (window as any).closeQkLightbox = closeQkLightbox;
-            (window as any).setMobGlReply = setMobGlReply;
-            (window as any).cancelMobGlReply = cancelMobGlReply;
-            (window as any).setProfileChatReply = setProfileChatReply;
-            (window as any).cancelProfileChatReply = cancelProfileChatReply;
         }
 
         async function loadProfile() {
@@ -212,10 +204,19 @@ export default function ProfilePage() {
                 // Fetch all data via the admin API route (same as dashboard) — bypasses RLS
                 // Uses supabaseAdmin internally, returns merged profiles + tasks + crowdfund
                 const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email, full: true }) });
-                const unifiedData = await res.json();
+                const rawData = await res.json();
 
-                if (unifiedData && !unifiedData.error && (unifiedData.memberId || unifiedData.member_id)) {
-                    console.log("[PROFILE] Loaded Data:", unifiedData);
+                // ── CRITICAL: always inject the auth email as member_id fallback ──
+                // Guarantees memberId is set even if slave-profile strips it or returns 401
+                const unifiedData = {
+                    ...(rawData && !rawData.error ? rawData : {}),
+                    member_id: rawData?.member_id || rawData?.memberId || user.email,
+                    memberId: rawData?.memberId || rawData?.member_id || user.email,
+                    email: user.email,
+                };
+
+                if (unifiedData) {
+                    console.log("[PROFILE] Loaded Data. member_id:", unifiedData.member_id, "memberId:", unifiedData.memberId);
 
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
