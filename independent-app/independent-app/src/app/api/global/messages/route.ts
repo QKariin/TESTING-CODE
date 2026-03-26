@@ -6,13 +6,13 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     const { data, error } = await supabaseAdmin
         .from('global_messages')
-        .select('id, sender_email, sender_name, sender_avatar, message, media_url, media_type, reply_to, created_at')
+        .select('id, sender_email, sender_name, sender_avatar, message, media_url, media_type, created_at')
         .order('created_at', { ascending: true })
         .limit(100);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const QUEEN_EMAILS = ['ceo@qkarin.com'];
+    const QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
     const safe = (data || []).map(({ sender_email, ...rest }: any) => ({
         ...rest,
         is_queen: QUEEN_EMAILS.includes((sender_email || '').toLowerCase()),
@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
     const body = await req.json();
-    const { senderEmail, message, media_url, media_type, reply_to } = body;
+    const { senderEmail, message, media_url, media_type } = body;
 
     if (!message?.trim()) return NextResponse.json({ error: 'Message required' }, { status: 400 });
     if (!senderEmail) return NextResponse.json({ error: 'Sender required' }, { status: 400 });
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         .ilike('member_id', senderEmail)
         .maybeSingle();
 
-    const QUEEN_EMAILS = ['ceo@qkarin.com'];
+    const QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
     const isQueenSender = QUEEN_EMAILS.includes(senderEmail.toLowerCase());
     const senderName = profile?.name || (isQueenSender ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
     const senderAvatar = profile?.avatar_url || (isQueenSender ? '/queen-karin.png' : null);
@@ -48,7 +48,6 @@ export async function POST(req: Request) {
             message: message.trim(),
             media_url: media_url || null,
             media_type: media_type || null,
-            reply_to: reply_to || null,
         })
         .select()
         .single();

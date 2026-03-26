@@ -118,21 +118,7 @@ export async function renderChat(messages: any[]) {
         txt = txt.replace(/\n/g, "<br>");
         const timeStr = new Date(m.created_at || m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const msgClass = isMe ? 'm-slave' : 'm-queen';
-
-        // Quote block for replied-to messages
-        const replyTo = m.metadata?.reply_to;
-        const quoteHtml = replyTo ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:4px 8px;margin-bottom:5px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;">
-            <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;">↩ ${(replyTo.sender_name || '').replace(/</g, '&lt;')}</div>
-            <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">${(replyTo.content || '').slice(0, 60).replace(/</g, '&lt;')}</div>
-        </div>` : '';
-
-        // Reply button
-        const msgId = m.id || m._id || '';
-        const senderNameSafe = (m.sender_name || (isMe ? 'You' : 'Queen Karin')).replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
-        const contentSafe = (originalMsg).slice(0, 80).replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, ' ');
-        const replyBtn = msgId ? `<button class="chat-reply-btn" onclick="event.stopPropagation();window.setProfileChatReply('${msgId}','${senderNameSafe}','${contentSafe}')" title="Reply">↩</button>` : '';
-
-        let contentHtml = `<div class="msg ${msgClass}" style="position:relative;">${quoteHtml}${txt}${replyBtn}</div>`;
+        let contentHtml = `<div class="msg ${msgClass}">${txt}</div>`;
 
         // --- MEDIA HANDLER ---
         if (originalMsg) {
@@ -272,12 +258,9 @@ export async function renderChat(messages: any[]) {
 
         const avatarUrl = "/queen-karin.png";
         if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('http')) {
-            contentHtml = `<div class="msg ${msgClass}" style="position:relative;">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <img src="${avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid #c5a059;flex-shrink:0;">
-                    <div style="flex:1;">${quoteHtml}<span>${txt}</span></div>
-                </div>
-                ${replyBtn}
+            contentHtml = `<div class="msg ${msgClass}" style="display:flex; align-items:center; gap:10px;">
+                <img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid #c5a059;">
+                <span>${txt}</span>
             </div>`;
         }
 

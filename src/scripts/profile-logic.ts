@@ -1591,6 +1591,8 @@ export async function initChatSystem() {
         email = 'pr.finsko@gmail.com';
     }
 
+    console.log('[CHAT] initChatSystem starting. Auth email:', email);
+
     if (!email) {
         console.warn('[CHAT] initChatSystem: no email from auth, skipping');
         return;
@@ -1777,9 +1779,11 @@ function initOneSignal(memberId: string) {
 export async function loadChatHistory(email: string) {
     try {
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+        console.log('[CHAT] fetch /api/chat/history status:', res.status);
         const data = await res.json();
         if (data.success) {
             const messages = data.messages || [];
+            console.log('[CHAT] Received messages count:', messages.length);
 
             // Track last msg id+timestamp for polling dedup (same as dashboard-chat.ts lines 154-158)
             if (messages.length > 0) {
@@ -1949,6 +1953,7 @@ async function refreshTaskGallery(email: string) {
 
 function isSystemMessage(msg: any) {
     if (!msg) return false;
+    if (msg.type === 'system') return true; // Explicit type check
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const content = (msg.content || msg.message || '').toUpperCase();
 

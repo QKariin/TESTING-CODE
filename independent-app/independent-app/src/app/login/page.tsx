@@ -19,12 +19,12 @@ export default function LoginPage() {
 
     const checkProfileAndRedirect = async (userEmail: string) => {
         const email_lower = userEmail.trim().toLowerCase();
-        if (email_lower === 'ceo@qkarin.com') {
+        if (email_lower === 'ceo@qkarin.com' || email_lower === 'liviacechova@gmail.com') {
             router.push('/dashboard');
             return;
         }
         try {
-            const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email_lower, full: true }) });
+            const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email_lower)}&full=true`);
             const data = await res.json();
             if (data && !data.error && (data.memberId || data.member_id)) {
                 router.push('/profile');

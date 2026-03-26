@@ -73,10 +73,6 @@ import {
     togglePostLike,
     openQkLightbox,
     closeQkLightbox,
-    setMobGlReply,
-    cancelMobGlReply,
-    setProfileChatReply,
-    cancelProfileChatReply,
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -155,10 +151,6 @@ export default function ProfilePage() {
             (window as any).togglePostLike = togglePostLike;
             (window as any).openQkLightbox = openQkLightbox;
             (window as any).closeQkLightbox = closeQkLightbox;
-            (window as any).setMobGlReply = setMobGlReply;
-            (window as any).cancelMobGlReply = cancelMobGlReply;
-            (window as any).setProfileChatReply = setProfileChatReply;
-            (window as any).cancelProfileChatReply = cancelProfileChatReply;
         }
 
         async function loadProfile() {

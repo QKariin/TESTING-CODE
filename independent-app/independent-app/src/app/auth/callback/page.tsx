@@ -56,12 +56,12 @@ export default function AuthCallbackPage() {
         const routeUser = async (identifier: string) => {
             setStatus('Access granted...');
             const id = identifier.trim().toLowerCase();
-            if (id === 'ceo@qkarin.com') {
+            if (id === 'ceo@qkarin.com' || id === 'liviacechova@gmail.com') {
                 router.replace('/dashboard');
                 return;
             }
             try {
-                const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: id, full: true }) });
+                const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(id)}&full=true`);
                 const data = await res.json();
                 router.replace((data?.memberId || data?.member_id) ? '/profile' : '/tribute');
             } catch {

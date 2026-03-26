@@ -46,47 +46,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, posts: annotated });
 }
 
-// ── POST: fetch posts with email in body (action:'fetch'), or CEO creates a post ─
+// ── POST: CEO only – create a new post ──────────────────────────────────────
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-
-        // Fetch posts with personalized access — email sent in body instead of URL
-        if (body.action === 'fetch') {
-            const email = (body.email || '').toLowerCase().trim();
-            const { data: posts, error } = await supabaseAdmin
-                .from('social_feed')
-                .select('*')
-                .eq('is_published', true)
-                .order('created_at', { ascending: false });
-
-            if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-            if (!posts?.length) return NextResponse.json({ success: true, posts: [] });
-
-            if (!email) {
-                return NextResponse.json({ success: true, posts: posts.map((p: any) => ({ ...p, userHasAccess: true, userHasLiked: false })) });
-            }
-
-            const [profileRes, unlocksRes, likesRes] = await Promise.all([
-                supabaseAdmin.from('profiles').select('hierarchy').ilike('member_id', email).maybeSingle(),
-                supabaseAdmin.from('post_unlocks').select('post_id').ilike('member_id', email),
-                supabaseAdmin.from('post_likes').select('post_id').ilike('member_id', email),
-            ]);
-
-            const userRank = profileRes.data?.hierarchy || 'Hall Boy';
-            const unlockedIds = new Set((unlocksRes.data || []).map((r: any) => r.post_id));
-            const likedIds    = new Set((likesRes.data  || []).map((r: any) => r.post_id));
-
-            const annotated = posts.map((p: any) => ({
-                ...p,
-                userHasAccess: rankMeetsRequirement(userRank, p.min_rank || 'Hall Boy') || unlockedIds.has(p.id),
-                userHasLiked:  likedIds.has(p.id),
-            }));
-
-            return NextResponse.json({ success: true, posts: annotated });
-        }
-
-        // 1. Verify session (CEO post creation)
+        // 1. Verify session
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         let email = (user?.email || '').toLowerCase().trim();
@@ -103,7 +66,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
         }
 
-        // 2. Parse body (already parsed above)
+        // 2. Parse body
+        const body = await request.json();
         const { title, content, media_url, thumbnail_url, external_url, min_rank, price, media_type, is_published } = body;
 
         if (!title && !content) {
