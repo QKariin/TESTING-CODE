@@ -12,15 +12,16 @@ export async function GET() {
     const { data, error } = await supabaseAdmin
         .from('global_messages')
         .select('*')
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: true, nullsFirst: true })
         .limit(100);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     const QUEEN_EMAILS = ['ceo@qkarin.com'];
-    const safe = (data || []).map(({ sender_email, ...rest }: any) => ({
-        ...rest,
-        is_queen: QUEEN_EMAILS.includes((sender_email || '').toLowerCase()),
+    // Keep sender_email so client can detect own messages; is_queen added for convenience
+    const safe = (data || []).map((row: any) => ({
+        ...row,
+        is_queen: QUEEN_EMAILS.includes((row.sender_email || '').toLowerCase()),
     }));
     return NextResponse.json({ messages: safe });
 }

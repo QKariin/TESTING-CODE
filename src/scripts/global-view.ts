@@ -615,6 +615,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const senderNameSafe = (msg.sender_name || 'SUBJECT').replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
     const contentSafe = content.slice(0, 80).replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, ' ');
     const SVG_REPLY = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>`;
+    const SVG_CROWN = `<svg width="13" height="10" viewBox="0 0 26 20" fill="#c5a059" style="display:inline-block;vertical-align:middle;margin-right:5px;flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
     const replyBtn = msgId ? `<button class="gl-reply-btn" onclick="event.stopPropagation();window.setGlReply('${msgId}','${senderNameSafe}','${contentSafe}')" title="Reply">${SVG_REPLY}</button>` : '';
     const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:5px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;">
         <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;">↩ ${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</div>
@@ -669,7 +670,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     if (isQueen) {
         if (isMe) {
             return `<div class="gl-msg-row" style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
-                <div style="font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(197,160,89,0.8);margin-bottom:4px;letter-spacing:1px;font-weight:700;">👑 QUEEN KARIN · <span style="font-family:'Orbitron';font-size:0.38rem;">${time}</span></div>
+                <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(197,160,89,0.8);letter-spacing:1px;font-weight:700;">QUEEN KARIN</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>
                 <div style="display:flex;align-items:center;gap:8px;">
                     ${replyBtn}
                     <div style="max-width:${hasMedia ? '85%' : '70%'};padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:14px 14px 3px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
@@ -688,7 +689,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                 <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">♛</div>
             </div>
             <div style="max-width:${hasMedia ? '85%' : '70%'};">
-                <div style="font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(197,160,89,0.8);margin-bottom:4px;letter-spacing:1px;font-weight:700;">👑 QUEEN KARIN · <span style="font-family:'Orbitron';font-size:0.38rem;">${time}</span></div>
+                <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(197,160,89,0.8);letter-spacing:1px;font-weight:700;">QUEEN KARIN</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>
                 <div style="display:flex;align-items:center;gap:8px;">
                     <div style="padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:3px 14px 14px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
                         ${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${msg.message}</div>

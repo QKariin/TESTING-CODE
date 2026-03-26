@@ -2655,6 +2655,7 @@ function _buildMobGlBubble(msg: any): string {
     const nameSafe = name.replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
     const contentSafe = content.slice(0, 80).replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, ' ');
     const SVG_REPLY_MOB = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>`;
+    const SVG_CROWN_MOB = `<svg width="11" height="9" viewBox="0 0 26 20" fill="#c5a059" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
     const replyBtn = msgId ? `<button class="mob-gl-reply-btn" onclick="event.stopPropagation();window.setMobGlReply('${msgId}','${nameSafe}','${contentSafe}')" title="Reply">${SVG_REPLY_MOB}</button>` : '';
     const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:4px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;">
         <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:1px;">↩ ${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</div>
@@ -2680,7 +2681,7 @@ function _buildMobGlBubble(msg: any): string {
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
                 <div style="display:flex;align-items:center;gap:5px;min-width:0;">
                     ${qAvHtml}
-                    <span style="font-family:'Cinzel',serif;font-size:0.75rem;color:#c5a059;letter-spacing:1px;font-weight:700;">👑 QUEEN KARIN</span>
+                    <div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.75rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
                     <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);"> · ${time}</span>
                 </div>
                 ${replyBtn}
