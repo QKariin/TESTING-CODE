@@ -26,7 +26,32 @@ export async function GET(req: Request) {
 
         // Fetch messages for this specific user
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
-        const { data: profile } = await queryClient.from('profiles').select('member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
+        let { data: profile } = await queryClient.from('profiles').select('id, member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
+
+        if (!profile && !isUUID) {
+            // 🔄 LEGIACY IDENTITY ADOPTION: If no profile, check the tasks table
+            const { data: legacyTask } = await queryClient
+                .from('tasks')
+                .select('Score')
+                .ilike('MemberID', email)
+                .maybeSingle();
+
+            if (legacyTask) {
+                const { data: newProfile } = await queryClient
+                    .from('profiles')
+                    .insert({
+                        member_id: email.toLowerCase(),
+                        name: email.split('@')[0],
+                        score: Number(legacyTask.Score || 0),
+                        wallet: 0,
+                        hierarchy: 'Hall Boy'
+                    })
+                    .select()
+                    .single();
+                if (newProfile) profile = newProfile;
+            }
+        }
+
         const emailToQuery = profile?.member_id || email;
 
         let query = queryClient
@@ -77,7 +102,32 @@ export async function POST(req: Request) {
 
         // Fetch messages for this specific user
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
-        const { data: profile } = await queryClient.from('profiles').select('member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
+        let { data: profile } = await queryClient.from('profiles').select('id, member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
+
+        if (!profile && !isUUID) {
+            // 🔄 LEGIACY IDENTITY ADOPTION
+            const { data: legacyTask } = await queryClient
+                .from('tasks')
+                .select('Score')
+                .ilike('MemberID', email)
+                .maybeSingle();
+
+            if (legacyTask) {
+                const { data: newProfile } = await queryClient
+                    .from('profiles')
+                    .insert({
+                        member_id: email.toLowerCase(),
+                        name: email.split('@')[0],
+                        score: Number(legacyTask.Score || 0),
+                        wallet: 0,
+                        hierarchy: 'Hall Boy'
+                    })
+                    .select()
+                    .single();
+                if (newProfile) profile = newProfile;
+            }
+        }
+
         const emailToQuery = profile?.member_id || email;
 
         let query = queryClient

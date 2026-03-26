@@ -40,6 +40,35 @@ export async function POST(req: Request) {
             }
 
             if (profileErr || !profile) {
+                // 🔄 LEGIACY IDENTITY ADOPTION: If no profile, check the tasks table (Old DB)
+                const { data: legacyTask } = await adminClient
+                    .from('tasks')
+                    .select('Score')
+                    .ilike('MemberID', senderEmail)
+                    .maybeSingle();
+
+                if (legacyTask) {
+                    // Create new profile from legacy data
+                    const { data: newProfile, error: createErr } = await adminClient
+                        .from('profiles')
+                        .insert({
+                            member_id: senderEmail,
+                            name: senderEmail.split('@')[0],
+                            score: Number(legacyTask.Score || 0),
+                            wallet: 0,
+                            hierarchy: 'Hall Boy'
+                        })
+                        .select()
+                        .single();
+
+                    if (!createErr && newProfile) {
+                        profile = newProfile;
+                        isQueen = false;
+                    }
+                }
+            }
+
+            if (!profile) {
                 const { data: { user: authUser } } = await supabase.auth.getUser();
                 if (authUser?.email?.toLowerCase() === senderEmail) {
                     profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
