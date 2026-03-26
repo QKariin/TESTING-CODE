@@ -63,8 +63,13 @@ export function closeListModal() {
     if (modal) modal.classList.remove('active');
 }
 
-export function openModal(taskId: string | null, memberId: string | null, mediaUrl: string | null, mediaType: string | null, taskText: string | null, isHistory: boolean = false, status: string | null = null, isRoutine: boolean = false) {
-    setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: mediaType, text: taskText, isRoutine });
+export function openModal(taskId: string | null, memberId: string | null, mediaUrl: string | null, mediaType: string | null, taskText: string | null, isHistory: boolean = false, status: string | null = null, isRoutine: boolean = false, displayUrl?: string) {
+    // mediaUrl = raw URL stored in currTask (used for chat feedback)
+    // displayUrl = optimized URL for actual display (images get width transform, videos use raw)
+    const isVideo = mediaType === 'video' || mediaType?.startsWith('video/') || mediaTypeFunction(mediaUrl) === 'video';
+    const normalizedType = isVideo ? 'video' : 'image';
+    setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: normalizedType, text: taskText, isRoutine });
+
     const modal = document.getElementById('reviewModal');
     const mediaBox = document.getElementById('mMediaBox');
     const textEl = document.getElementById('mText');
@@ -73,15 +78,14 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
     if (!modal || !mediaBox || !textEl || !actionsEl) return;
 
-    // Use the explicit proofType first, then URL-based detection
-    const isVideo = mediaType === 'video' || mediaTypeFunction(mediaUrl) === 'video';
+    const srcUrl = displayUrl || (isVideo ? mediaUrl : getOptimizedUrl(mediaUrl, 1200)) || '';
 
     // Media: use inline styles so position:absolute/cover work regardless of CSS class order
-    if (mediaUrl) {
+    if (srcUrl) {
         if (isVideo) {
-            mediaBox.innerHTML = `<video src="${mediaUrl}" controls playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
+            mediaBox.innerHTML = `<video src="${srcUrl}" controls autoplay playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
         } else {
-            mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 1200)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
+            mediaBox.innerHTML = `<img src="${srcUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
         }
     } else {
         mediaBox.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#2a2a2a;font-family:'Orbitron';font-size:0.6rem;letter-spacing:3px;">NO MEDIA</div>`;
@@ -179,10 +183,19 @@ export async function openModById(taskId: string, memberId: string, isHistory: b
     }
 
     if (t) {
-        const finalUrl = fullSigned || getOptimizedUrl(t.proofUrl, 1000);
-        // typeHint (from grid card) > proofType field > URL detection on original URL (has extension)
-        const resolvedType = typeHint || t.proofType || mediaTypeFunction(t.proofUrl) || null;
-        openModal(taskId, memberId, finalUrl, resolvedType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'));
+        // Normalize type: DB stores MIME ('video/mp4') or short form ('video') or null
+        const rawTypeHint = typeHint || t.proofType || mediaTypeFunction(t.proofUrl) || null;
+        const resolvedType = rawTypeHint
+            ? (rawTypeHint.startsWith('video/') || rawTypeHint === 'video' ? 'video'
+               : rawTypeHint.startsWith('image/') || rawTypeHint === 'image' ? 'image'
+               : rawTypeHint)
+            : null;
+
+        const rawUrl = fullSigned || t.proofUrl || '';
+        // Videos: use raw URL — getOptimizedUrl applies image transforms that break video src
+        const displayUrl = resolvedType === 'video' ? rawUrl : getOptimizedUrl(rawUrl, 1000);
+
+        openModal(taskId, memberId, rawUrl, resolvedType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'), displayUrl);
     }
 }
 
@@ -834,8 +847,8 @@ export function renderGlobalReview(filterRoutine: boolean) {
 
     grid.innerHTML = filtered.map((t: any) => {
         const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-        const isVideo = t.proofType === 'video' || mediaTypeFunction(t.proofUrl) === 'video';
-        const optUrl = getOptimizedUrl(t.proofUrl || '', 600);
+        const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
+        const optUrl = isVideo ? (t.proofUrl || '') : getOptimizedUrl(t.proofUrl || '', 600);
 
         // Grid cards: images shown directly; videos use preload="metadata" (no autoplay) to show first frame
         let mediaBg: string;

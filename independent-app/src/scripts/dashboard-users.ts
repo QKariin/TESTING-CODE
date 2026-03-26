@@ -258,7 +258,7 @@ async function updateReviewQueue(u: any) {
             const isRoutine = t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine';
             const actType = isRoutine ? 'DAILY ROUTINE' : 'TASK';
             const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-            const isVideo = t.proofType === 'video' || mediaTypeFunction(t.proofUrl) === 'video';
+            const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
             // Videos: show thumbnail if available, otherwise a static placeholder — no autoplay
             const mediaTag = isVideo
                 ? (t.thumbnail_url
@@ -269,7 +269,7 @@ async function updateReviewQueue(u: any) {
                 : `<img src="${getOptimizedUrl(t.proofUrl || '', 400)}" class="pend-thumb" onerror="this.src='/queen-karin.png'">`;
 
             return `
-                    <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false)">
+                    <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false, null, '${isVideo ? 'video' : 'image'}')">
                         ${mediaTag}
                         <div class="pend-info">
                             <div class="pend-act" style="color:${isRoutine ? '#00ff00' : 'var(--gold)'}">${actType}</div>

@@ -86,7 +86,10 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    overflow-y: auto;
     box-sizing: border-box;
+    justify-content: flex-start;
+    gap: 0;
 }
 
 /* Task description text */
@@ -126,11 +129,12 @@
 }
 
 .m-text-scroll {
-    flex: 1;
+    flex: 0 1 auto;
     overflow-y: auto;
+    max-height: 180px;
     min-height: 0;
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     scrollbar-width: thin;
     scrollbar-color: rgba(197,160,89,0.15) transparent;
 }

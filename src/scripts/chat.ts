@@ -128,8 +128,9 @@ export async function renderChat(messages: any[]) {
                 try {
                     const data = JSON.parse(originalMsg.replace('TASK_FEEDBACK::', ''));
                     const { mediaUrl: fbMedia, mediaType: fbType, note: fbNote, taskId: fbTaskId, memberId: fbMemberId } = data;
-                    const fbSrc = fbMedia ? getOptimizedUrl(fbMedia, 600) : null;
-                    const fbIsVideo = fbType === 'video' || (fbMedia && (fbMedia.includes('.mp4') || fbMedia.includes('.mov') || fbMedia.includes('.webm')));
+                    const fbIsVideo = (fbType && (fbType === 'video' || fbType.startsWith('video/'))) || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
+                    // Videos: use raw URL; images: use optimized URL
+                    const fbSrc = fbMedia ? (fbIsVideo ? fbMedia : getOptimizedUrl(fbMedia, 600)) : null;
 
                     const mediaBlock = fbSrc
                         ? (fbIsVideo

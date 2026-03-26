@@ -251,8 +251,9 @@ function renderToHtml(m: any) {
         try {
             const data = JSON.parse(content.replace('TASK_FEEDBACK::', ''));
             const { mediaUrl: fbMedia, mediaType: fbType, note: fbNote, taskId: fbTaskId, memberId: fbMemberId } = data;
-            const fbSrc = fbMedia ? getOptimizedUrl(fbMedia, 600) : null;
-            const fbIsVideo = fbType === 'video' || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
+            const fbIsVideo = (fbType && (fbType === 'video' || fbType.startsWith('video/'))) || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
+            // Videos: use raw URL; images: use optimized URL
+            const fbSrc = fbMedia ? (fbIsVideo ? fbMedia : getOptimizedUrl(fbMedia, 600)) : null;
             const mediaBlock = fbSrc
                 ? (fbIsVideo
                     ? `<video src="${fbSrc}" preload="metadata" muted playsinline style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0"></video>`
