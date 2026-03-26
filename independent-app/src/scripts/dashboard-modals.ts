@@ -64,10 +64,9 @@ export function closeListModal() {
 }
 
 export function openModal(taskId: string | null, memberId: string | null, mediaUrl: string | null, mediaType: string | null, taskText: string | null, isHistory: boolean = false, status: string | null = null, isRoutine: boolean = false) {
-    // Normalize MIME type (DB may store 'video/mp4') to short form
-    const isVideo = mediaType === 'video' || (mediaType != null && mediaType.startsWith('video/')) || mediaTypeFunction(mediaUrl) === 'video';
-    const normalizedType = isVideo ? 'video' : 'image';
-    setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: normalizedType, text: taskText, isRoutine });
+    // Detect video by URL (original behavior — works reliably for .mp4/.mov/.webm URLs)
+    const isVideo = mediaTypeFunction(mediaUrl) === 'video';
+    setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: mediaType, text: taskText, isRoutine });
 
     const modal = document.getElementById('reviewModal');
     const mediaBox = document.getElementById('mMediaBox');
@@ -77,9 +76,11 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
     if (!modal || !mediaBox || !textEl || !actionsEl) return;
 
-    // Constrain modal height so right panel doesn't have dead space
+    // Modal size + panel warmth
     const mContent = modal.querySelector('.m-content') as HTMLElement;
     if (mContent) mContent.style.height = 'clamp(500px, 62vh, 720px)';
+    const mInfo = modal.querySelector('.m-info') as HTMLElement;
+    if (mInfo) mInfo.style.background = 'linear-gradient(170deg,#0e0b06 0%,#0a0703 55%,#080503 100%)';
 
     // Right panel layout
     const normalContentEl = document.getElementById('reviewNormalContent');
@@ -97,16 +98,19 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     textEl.style.lineHeight = '1.7';
     actionsEl.style.marginTop = '0';
     actionsEl.style.flexShrink = '0';
-    actionsEl.style.borderTop = '1px solid rgba(197,160,89,0.18)';
+    actionsEl.style.borderTop = 'none';
     actionsEl.style.paddingTop = '18px';
+    actionsEl.style.backgroundImage = 'linear-gradient(to right,transparent,rgba(175,135,45,0.25) 30%,rgba(175,135,45,0.25) 70%,transparent)';
+    actionsEl.style.backgroundSize = '100% 1px';
+    actionsEl.style.backgroundRepeat = 'no-repeat';
+    actionsEl.style.backgroundPosition = 'top';
 
-    // Media — preload=none: nothing loads until user clicks play (avoids hang on large videos)
+    // Media — original behavior restored
     if (mediaUrl) {
         if (isVideo) {
-            mediaBox.innerHTML = `<video src="${mediaUrl}" controls playsinline preload="none"
-                style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
+            mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls playsinline></video>`;
         } else {
-            mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 1200)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
+            mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 1200)}" class="m-img">`;
         }
     } else {
         mediaBox.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#2a2a2a;font-family:'Orbitron';font-size:0.6rem;letter-spacing:3px;">NO MEDIA</div>`;
@@ -121,11 +125,11 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
         : '';
     if (headerEl) {
         headerEl.innerHTML = `
-            <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(197,160,89,0.32);letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;">Subject Review</div>
+            <div style="font-family:'Orbitron';font-size:0.33rem;color:rgba(180,140,60,0.4);letter-spacing:5px;text-transform:uppercase;margin-bottom:14px;">Subject Review</div>
             <div style="display:flex;align-items:center;gap:14px;">
-                <div style="width:42px;height:42px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.35);background:rgba(197,160,89,0.06);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1rem;color:rgba(197,160,89,0.8);flex-shrink:0;">${avatarInitial}</div>
+                <div style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(180,140,60,0.3);background:radial-gradient(circle at 40% 35%,rgba(180,140,60,0.12),rgba(0,0,0,0));display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1rem;color:rgba(200,165,85,0.75);flex-shrink:0;box-shadow:0 0 14px rgba(180,140,60,0.08);">${avatarInitial}</div>
                 <div>
-                    <div style="font-family:'Cinzel',serif;font-size:1.05rem;color:#fff;font-weight:700;letter-spacing:1.5px;line-height:1.2;">${memberDisplay}</div>
+                    <div style="font-family:'Cinzel',serif;font-size:1.08rem;color:rgba(240,225,190,0.92);font-weight:700;letter-spacing:2px;line-height:1.2;">${memberDisplay}</div>
                     ${statusBadge ? `<div style="margin-top:5px;">${statusBadge}</div>` : ''}
                 </div>
             </div>`;
@@ -151,31 +155,34 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
         actionsEl.innerHTML = `
             <div style="width:100%;">
-                <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(197,160,89,0.32);letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;">Merit Assessment</div>
-                <div style="display:flex;gap:8px;margin-bottom:14px;">
-                    <div id="tier_50" class="reward-tier-btn selected" onclick="window.setRewardTier(50,'tier_50')">
-                        <div class="rt-pts">50</div><div class="rt-lbl">STANDARD</div>
+                <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(180,140,60,0.35);letter-spacing:5px;text-transform:uppercase;margin-bottom:12px;">Merit Assessment</div>
+                <div style="display:flex;gap:6px;margin-bottom:14px;">
+                    <div id="tier_50" class="reward-tier-btn selected" onclick="window.setRewardTier(50,'tier_50')" style="flex:1;padding:14px 6px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.2s;">
+                        <div class="rt-pts" style="font-size:1.35rem;font-weight:900;letter-spacing:-0.5px;">50</div>
+                        <div class="rt-lbl" style="font-size:0.5rem;letter-spacing:2px;margin-top:4px;">STANDARD</div>
                     </div>
-                    <div id="tier_70" class="reward-tier-btn" onclick="window.setRewardTier(70,'tier_70')">
-                        <div class="rt-pts">70</div><div class="rt-lbl">IMPRESSIVE</div>
+                    <div id="tier_70" class="reward-tier-btn" onclick="window.setRewardTier(70,'tier_70')" style="flex:1;padding:14px 6px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.2s;">
+                        <div class="rt-pts" style="font-size:1.35rem;font-weight:900;letter-spacing:-0.5px;">70</div>
+                        <div class="rt-lbl" style="font-size:0.5rem;letter-spacing:2px;margin-top:4px;">IMPRESSIVE</div>
                     </div>
-                    <div id="tier_100" class="reward-tier-btn" onclick="window.setRewardTier(100,'tier_100')">
-                        <div class="rt-pts">100</div><div class="rt-lbl">EXCELLENT</div>
+                    <div id="tier_100" class="reward-tier-btn" onclick="window.setRewardTier(100,'tier_100')" style="flex:1;padding:14px 6px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.2s;">
+                        <div class="rt-pts" style="font-size:1.35rem;font-weight:900;letter-spacing:-0.5px;">100</div>
+                        <div class="rt-lbl" style="font-size:0.5rem;letter-spacing:2px;margin-top:4px;">EXCELLENT</div>
                     </div>
                 </div>
-                <div style="display:flex;gap:8px;margin-bottom:12px;align-items:flex-end;">
-                    <div style="flex:0 0 85px;">
-                        <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(197,160,89,0.32);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Points</div>
-                        <input type="number" id="rewardBonus" value="50" style="width:100%;background:rgba(0,0,0,0.7);border:1px solid rgba(197,160,89,0.22);color:var(--gold);font-family:'Orbitron';padding:10px 6px;border-radius:6px;font-size:0.9rem;font-weight:900;text-align:center;outline:none;box-sizing:border-box;">
+                <div style="display:flex;gap:8px;margin-bottom:14px;align-items:flex-end;">
+                    <div style="flex:0 0 80px;">
+                        <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(180,140,60,0.35);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Points</div>
+                        <input type="number" id="rewardBonus" value="50" style="width:100%;background:rgba(8,5,2,0.8);border:1px solid rgba(180,140,60,0.18);color:rgba(210,175,90,0.9);font-family:'Orbitron';padding:10px 6px;border-radius:6px;font-size:0.88rem;font-weight:900;text-align:center;outline:none;box-sizing:border-box;">
                     </div>
                     <div style="flex:1;">
-                        <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(197,160,89,0.32);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Note</div>
-                        <input type="text" id="reviewComment" placeholder="Optional note..." style="width:100%;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);font-family:'Rajdhani';padding:10px;border-radius:6px;font-size:0.9rem;outline:none;box-sizing:border-box;">
+                        <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(180,140,60,0.35);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Note</div>
+                        <input type="text" id="reviewComment" placeholder="Optional note..." style="width:100%;background:rgba(8,5,2,0.7);border:1px solid rgba(255,255,255,0.06);color:rgba(220,205,175,0.65);font-family:'Rajdhani';padding:10px;border-radius:6px;font-size:0.88rem;outline:none;box-sizing:border-box;letter-spacing:0.5px;">
                     </div>
                 </div>
                 <div style="display:flex;gap:8px;">
-                    <button class="btn-main" onclick="window.reviewTask('reject')" style="flex:1;background:rgba(100,5,5,0.2);color:rgba(220,55,55,0.85);border:1px solid rgba(150,15,15,0.4);border-radius:6px;padding:13px;font-size:0.58rem;letter-spacing:3px;">✕ REJECT</button>
-                    <button class="btn-main" onclick="window.confirmReward()" style="flex:2;background:linear-gradient(135deg,rgba(100,72,18,0.45),rgba(65,46,10,0.38));color:var(--gold);border:1px solid rgba(197,160,89,0.4);border-radius:6px;padding:13px;font-size:0.58rem;letter-spacing:3px;">✓ CONFIRM REWARD</button>
+                    <button class="btn-main" onclick="window.reviewTask('reject')" style="flex:1;background:rgba(60,4,4,0.35);color:rgba(200,60,60,0.7);border:1px solid rgba(120,10,10,0.35);border-radius:7px;padding:13px;font-size:0.55rem;letter-spacing:3px;font-weight:700;">REJECT</button>
+                    <button class="btn-main" onclick="window.confirmReward()" style="flex:2;background:linear-gradient(135deg,rgba(170,125,30,0.55) 0%,rgba(130,92,15,0.45) 50%,rgba(100,70,10,0.4) 100%);color:rgba(240,210,120,0.95);border:1px solid rgba(180,140,50,0.5);border-radius:7px;padding:13px;font-size:0.55rem;letter-spacing:3px;font-weight:700;box-shadow:0 2px 20px rgba(170,125,30,0.2),inset 0 1px 0 rgba(255,220,100,0.1);">✦ CONFIRM REWARD</button>
                 </div>
             </div>`;
 
@@ -200,15 +207,8 @@ export async function openModById(taskId: string, memberId: string, isHistory: b
     }
 
     if (t) {
-        // Resolve type FIRST so we don't corrupt video URLs with image transforms
-        const rawType = typeHint || t.proofType || mediaTypeFunction(t.proofUrl) || null;
-        const resolvedType = rawType == null ? null
-            : (rawType === 'video' || rawType.startsWith('video/') ? 'video'
-            : rawType === 'image' || rawType.startsWith('image/') ? 'image'
-            : rawType);
-        // Only apply image optimization for non-videos; videos must use raw URL
-        const finalUrl = fullSigned || (resolvedType === 'video' ? (t.proofUrl || '') : getOptimizedUrl(t.proofUrl, 1000));
-        openModal(taskId, memberId, finalUrl, resolvedType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'));
+        const finalUrl = fullSigned || getOptimizedUrl(t.proofUrl, 1000);
+        openModal(taskId, memberId, finalUrl, t.proofType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'));
     }
 }
 
