@@ -812,13 +812,9 @@ export default function DashboardPage() {
                     <span onClick={() => (window as any).closeModal()} style={{ position: 'absolute', top: '15px', right: '20px', fontSize: '2rem', color: 'rgba(197,160,89,0.45)', cursor: 'pointer', zIndex: 1100, lineHeight: 1 }}>&times;</span>
                     <div id="mMediaBox" className="m-media-box"></div>
                     <div className="m-info">
-                        <div id="reviewNormalContent">
+                        <div id="mModalHeader" style={{ flexShrink: 0, padding: '24px 28px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}></div>
+                        <div id="reviewNormalContent" style={{ padding: '14px 28px 24px' }}>
                             <div id="mText" className="m-text-scroll"></div>
-                            {/* Note textarea — always present, read by reviewTask() before modal closes */}
-                            <div className="review-note-wrap">
-                                <div className="review-note-label">Note / Feedback — sent to member</div>
-                                <textarea id="taskQuickNote" placeholder="Optional note sent to member chat..." />
-                            </div>
                             <div id="modalActions"></div>
                         </div>
                         <div id="reviewRewardOverlay" style={{ display: 'none' }}>

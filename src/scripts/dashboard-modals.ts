@@ -27,26 +27,17 @@ function stripHtml(html: string) {
     return tmp.textContent || tmp.innerText || "";
 }
 
-// Sends task media + a text note into the member's chat (both parties see it)
-async function sendChatFeedback(memberId: string, mediaUrl: string | null, mediaType: string | null, note: string): Promise<void> {
+// Sends a single task-feedback card into the member's chat (both parties see it)
+async function sendChatFeedback(memberId: string, mediaUrl: string | null, mediaType: string | null, note: string, taskId?: string | null): Promise<void> {
     const sender = adminEmail || (window as any).adminEmail;
     if (!sender || !memberId) return;
     try {
-        if (mediaUrl) {
-            const msgType = mediaType === 'video' ? 'video' : 'photo';
-            await fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: sender, conversationId: memberId, content: mediaUrl, type: msgType })
-            });
-        }
-        if (note) {
-            await fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: sender, conversationId: memberId, content: note, type: 'text' })
-            });
-        }
+        const payload = JSON.stringify({ mediaUrl, mediaType, note, taskId: taskId || null, memberId });
+        await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senderEmail: sender, conversationId: memberId, content: 'TASK_FEEDBACK::' + payload, type: 'text' })
+        });
     } catch (err) {
         console.error('[sendChatFeedback] non-critical:', err);
     }
@@ -78,54 +69,101 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     const mediaBox = document.getElementById('mMediaBox');
     const textEl = document.getElementById('mText');
     const actionsEl = document.getElementById('modalActions');
+    const headerEl = document.getElementById('mModalHeader');
 
     if (!modal || !mediaBox || !textEl || !actionsEl) return;
-    const isVideo = mediaTypeFunction(mediaUrl) === 'video';
 
+    // Use the explicit proofType first, then URL-based detection
+    const isVideo = mediaType === 'video' || mediaTypeFunction(mediaUrl) === 'video';
+
+    // Media: use inline styles so position:absolute/cover work regardless of CSS class order
     if (mediaUrl) {
         if (isVideo) {
-            mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls playsinline></video>`;
+            mediaBox.innerHTML = `<video src="${mediaUrl}" controls playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;"></video>`;
         } else {
-            mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 400)}" class="m-img">`;
+            mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 1200)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
         }
     } else {
-        mediaBox.innerHTML = `<div style="color:#666; font-family:'Rajdhani';">NO MEDIA</div>`;
+        mediaBox.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#2a2a2a;font-family:'Orbitron';font-size:0.6rem;letter-spacing:3px;">NO MEDIA</div>`;
+    }
+
+    // Member header
+    const u = users.find(x => x.memberId === memberId);
+    const memberDisplay = u ? u.name?.toUpperCase() : '';
+    const statusBadge = isHistory && status
+        ? `<span style="font-family:'Orbitron';font-size:0.45rem;letter-spacing:2px;padding:3px 10px;border-radius:20px;border:1px solid ${status === 'approve' ? 'rgba(57,255,20,0.4)' : 'rgba(200,30,30,0.5)'};color:${status === 'approve' ? '#39ff14' : '#e03030'};background:${status === 'approve' ? 'rgba(57,255,20,0.07)' : 'rgba(200,30,30,0.08)'};">${status === 'approve' ? 'APPROVED' : 'REJECTED'}</span>`
+        : '';
+    if (headerEl) {
+        headerEl.innerHTML = `
+            <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.38);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Subject Review</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <div style="font-family:'Cinzel',serif;font-size:1.05rem;color:rgba(255,255,255,0.9);font-weight:700;letter-spacing:1px;">${memberDisplay}</div>
+                ${statusBadge}
+            </div>`;
     }
 
     textEl.innerHTML = clean(taskText || 'No description provided.');
 
-    // Clear the note field from any previous review session
+    // Clear note from previous session
     const quickNote = document.getElementById('taskQuickNote') as HTMLTextAreaElement;
     if (quickNote) quickNote.value = '';
 
     if (isHistory) {
         actionsEl.innerHTML = status
-            ? `<div class="hist-status st-${status === 'approve' ? 'app' : 'rej'}">${status.toUpperCase()}</div>`
-            : `<button class="btn-main" onclick="window.closeModal()" style="background:#1a1a1a;color:#888;border:1px solid #333;">CLOSE</button>`;
+            ? `<div class="hist-status st-${status === 'approve' ? 'app' : 'rej'}" style="width:100%;text-align:center;">${status.toUpperCase()}</div>`
+            : `<button class="btn-main" onclick="window.closeModal()" style="background:#111;color:#555;border:1px solid #2a2a2a;flex:1;">CLOSE</button>`;
     } else if (isRoutine) {
         actionsEl.innerHTML = `
-            <div style="font-family:'Orbitron';font-size:0.5rem;color:rgba(197,160,89,0.5);letter-spacing:3px;text-align:center;margin-bottom:12px;">DAILY ROUTINE · 50 PTS</div>
-            <div style="display:flex;gap:10px;">
-                <button class="btn-main" onclick="window.reviewTask('reject')" style="background:rgba(180,30,30,0.15);color:#c0392b;border:1px solid rgba(180,30,30,0.4);">DISMISS</button>
-                <button class="btn-main" onclick="window.reviewTask('approve')" style="background:rgba(197,160,89,0.12);color:var(--gold);border:1px solid rgba(197,160,89,0.45);">CONFIRM</button>
-            </div>`;
+            <button class="btn-main" onclick="window.reviewTask('reject')" style="flex:1;background:rgba(160,20,20,0.12);color:rgba(200,60,60,0.9);border:1px solid rgba(160,30,30,0.35);">DISMISS</button>
+            <button class="btn-main" onclick="window.reviewTask('approve')" style="flex:1;background:rgba(197,160,89,0.1);color:var(--gold);border:1px solid rgba(197,160,89,0.4);">✓ CONFIRM</button>`;
     } else {
+        // COMBINED PANEL — no separate reward overlay, everything in one place
+        // Pre-set pendingApproveTask so confirmReward() works immediately
+        setPendingApproveTask(currTask);
+        setSelectedStickerId(null);
+
         actionsEl.innerHTML = `
-            <div style="display:flex;gap:10px;">
-                <button class="btn-main" onclick="window.reviewTask('reject')" style="background:rgba(180,30,30,0.15);color:#c0392b;border:1px solid rgba(180,30,30,0.4);">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:6px;vertical-align:middle;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                    REJECT
-                </button>
-                <button class="btn-main" onclick="window.reviewTask('approve')" style="background:rgba(197,160,89,0.12);color:var(--gold);border:1px solid rgba(197,160,89,0.45);">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:6px;vertical-align:middle;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    APPROVE
-                </button>
+            <div style="width:100%;">
+                <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.4);letter-spacing:2px;margin-bottom:8px;">MERIT POINTS</div>
+                <div style="display:flex;gap:8px;margin-bottom:14px;">
+                    <div id="tier_50" class="merit-coin reward-tier-btn selected" onclick="window.setRewardTier(50,'tier_50')">
+                        <div class="merit-coin-pts">50</div><div class="merit-coin-lbl">Normal</div>
+                    </div>
+                    <div id="tier_70" class="merit-coin reward-tier-btn" onclick="window.setRewardTier(70,'tier_70')">
+                        <div class="merit-coin-pts">70</div><div class="merit-coin-lbl">Impressive</div>
+                    </div>
+                    <div id="tier_100" class="merit-coin reward-tier-btn" onclick="window.setRewardTier(100,'tier_100')">
+                        <div class="merit-coin-pts">100</div><div class="merit-coin-lbl">Excellent</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;margin-bottom:12px;align-items:flex-end;">
+                    <div style="flex:0 0 90px;">
+                        <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.4);letter-spacing:2px;margin-bottom:4px;">TOTAL POINTS</div>
+                        <input type="number" id="rewardBonus" value="50" style="width:100%;background:rgba(0,0,0,0.6);border:1px solid rgba(197,160,89,0.25);color:var(--gold);font-family:'Orbitron';padding:8px 6px;border-radius:4px;font-size:0.85rem;font-weight:900;text-align:center;outline:none;box-sizing:border-box;">
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.4);letter-spacing:2px;margin-bottom:4px;">COMMENT</div>
+                        <input type="text" id="reviewComment" placeholder="Optional note..." style="width:100%;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);font-family:'Rajdhani';padding:8px;border-radius:4px;font-size:0.9rem;outline:none;box-sizing:border-box;">
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn-main" onclick="window.reviewTask('reject')" style="flex:1;background:rgba(120,8,8,0.25);color:#e04040;border:1px solid rgba(180,20,20,0.5);">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;vertical-align:middle;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                        REJECT
+                    </button>
+                    <button class="btn-main" onclick="window.confirmReward()" style="flex:2;background:linear-gradient(135deg,rgba(90,65,18,0.45),rgba(60,42,10,0.35));color:var(--gold);border:1px solid rgba(197,160,89,0.45);">
+                        CONFIRM REWARD
+                    </button>
+                </div>
             </div>`;
+
+        // Initialize default tier
+        setRewardTier(50, 'tier_50');
     }
     modal.classList.add('active');
 }
 
-export async function openModById(taskId: string, memberId: string, isHistory: boolean, fullSigned?: string) {
+export async function openModById(taskId: string, memberId: string, isHistory: boolean, fullSigned?: string, typeHint?: string) {
     const u = users.find(x => x.memberId === memberId);
     if (!u) return;
 
@@ -142,7 +180,9 @@ export async function openModById(taskId: string, memberId: string, isHistory: b
 
     if (t) {
         const finalUrl = fullSigned || getOptimizedUrl(t.proofUrl, 1000);
-        openModal(taskId, memberId, finalUrl, t.proofType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'));
+        // typeHint (from grid card) > proofType field > URL detection on original URL (has extension)
+        const resolvedType = typeHint || t.proofType || mediaTypeFunction(t.proofUrl) || null;
+        openModal(taskId, memberId, finalUrl, resolvedType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'));
     }
 }
 
@@ -195,8 +235,8 @@ export function reviewTask(decision: 'approve' | 'reject') {
     } else {
         console.log("Task rejected:", taskData.id);
 
-        // Read note BEFORE closeModal() is called
-        const quickNoteEl = document.getElementById('taskQuickNote') as HTMLTextAreaElement;
+        // Read note BEFORE closeModal() is called — try new combined field first, fall back to old
+        const quickNoteEl = (document.getElementById('reviewComment') || document.getElementById('taskQuickNote')) as HTMLInputElement | HTMLTextAreaElement;
         const rejectNote = quickNoteEl?.value.trim() || '';
 
         isConfirming = true;
@@ -210,7 +250,7 @@ export function reviewTask(decision: 'approve' | 'reject') {
 
         // Send task media + note to member chat
         if (rejectNote) {
-            sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, rejectNote);
+            sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, rejectNote, taskData.id);
         }
 
         import('./dashboard-main').then(m => m.renderMainDashboard());
@@ -318,12 +358,15 @@ export function toggleRewardRecord() {
 }
 
 export function confirmReward() {
-    if (!pendingApproveTask || isConfirming) return;
+    // Accept either pendingApproveTask (old flow) or currTask (new combined panel)
+    const taskRef = pendingApproveTask || currTask;
+    if (!taskRef || isConfirming) return;
 
     // Capture state locally to avoid race conditions
-    const taskData = { ...pendingApproveTask };
+    const taskData = { ...taskRef };
     const bonusInp = document.getElementById('rewardBonus') as HTMLInputElement;
-    const commentInp = document.getElementById('rewardComment') as HTMLTextAreaElement;
+    // Try #reviewComment (new inline field) then #rewardComment (old overlay field)
+    const commentInp = (document.getElementById('reviewComment') || document.getElementById('rewardComment')) as HTMLInputElement | HTMLTextAreaElement;
     const bonus = parseInt(bonusInp?.value) || 50;
     const comment = commentInp?.value.trim();
 
@@ -370,7 +413,7 @@ export function confirmReward() {
 
     // Send task media + approval comment to member chat
     if (comment) {
-        sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, comment);
+        sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, comment, taskData.id);
     }
 
     closeModal();
@@ -794,21 +837,23 @@ export function renderGlobalReview(filterRoutine: boolean) {
         const isVideo = t.proofType === 'video' || mediaTypeFunction(t.proofUrl) === 'video';
         const optUrl = getOptimizedUrl(t.proofUrl || '', 600);
 
-        // No <video> elements in the grid — only static images or placeholder
-        // Videos play only when you click through to the review modal
+        // Grid cards: images shown directly; videos use preload="metadata" (no autoplay) to show first frame
         let mediaBg: string;
         if (isVideo) {
             const thumbSrc = t.thumbnail_url ? getOptimizedUrl(t.thumbnail_url, 600) : null;
-            mediaBg = thumbSrc
-                ? `<img src="${thumbSrc}" class="ops-card-bg" onerror="this.style.display='none'">`
-                : `<div class="ops-card-bg ops-card-vid-placeholder"></div>`;
+            if (thumbSrc) {
+                mediaBg = `<img src="${thumbSrc}" class="ops-card-bg" onerror="this.style.display='none'">`;
+            } else {
+                // preload="metadata" loads only headers + first frame — not autoplay, not full load
+                mediaBg = `<video src="${optUrl}" class="ops-card-bg" preload="metadata" muted playsinline style="pointer-events:none;" onerror="this.style.display='none'"></video>`;
+            }
             mediaBg += `<div class="ops-card-vid-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)"><path d="M8 5v14l11-7z"/></svg></div>`;
         } else {
             mediaBg = `<img src="${optUrl}" class="ops-card-bg" onerror="this.style.display='none'">`;
         }
 
         return `
-            <div class="ops-card ${filterRoutine ? 'routine' : 'task'}" onclick="window.openModById('${t.id}', '${t.memberId}', false)">
+            <div class="ops-card ${filterRoutine ? 'routine' : 'task'}" onclick="window.openModById('${t.id}', '${t.memberId}', false, null, '${isVideo ? 'video' : 'image'}')">
                 ${mediaBg}
                 <div class="ops-card-overlay">
                     <div class="ops-card-label" style="color:${color}">${filterRoutine ? 'ROUTINE' : 'TASK'}</div>

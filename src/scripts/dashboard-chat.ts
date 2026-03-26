@@ -246,6 +246,35 @@ function renderToHtml(m: any) {
             </div>`;
     }
 
+    // ── Task Feedback Card ── centered, clickable to open history modal
+    if (content.startsWith('TASK_FEEDBACK::')) {
+        try {
+            const data = JSON.parse(content.replace('TASK_FEEDBACK::', ''));
+            const { mediaUrl: fbMedia, mediaType: fbType, note: fbNote, taskId: fbTaskId, memberId: fbMemberId } = data;
+            const fbSrc = fbMedia ? getOptimizedUrl(fbMedia, 600) : null;
+            const fbIsVideo = fbType === 'video' || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
+            const mediaBlock = fbSrc
+                ? (fbIsVideo
+                    ? `<video src="${fbSrc}" preload="metadata" muted playsinline style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0"></video>`
+                    : `<img src="${fbSrc}" style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onerror="this.style.display='none'" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0">`)
+                : '';
+            const cardHtml = `
+                <div class="chat-gift-wrap" style="cursor:pointer;" onclick="window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0">
+                    <div style="max-width:240px;width:55vw;border-radius:12px;overflow:hidden;background:#0a080a;border:1px solid rgba(197,160,89,0.4);box-shadow:0 6px 24px rgba(0,0,0,0.6);">
+                        ${mediaBlock}
+                        <div style="padding:9px 12px 11px;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">✦ Task Feedback</div>
+                            ${fbNote ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.82);line-height:1.4;">${purifier.sanitize(fbNote)}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+            return cardHtml;
+        } catch (e) {
+            // fall through to plain text
+        }
+    }
+
     // ── Build bubble content ──
     // Dashboard perspective: admin (isMe) → RIGHT, slave → LEFT
     const bubbleClass = isMe ? 'cb-queen' : 'cb-slave';
