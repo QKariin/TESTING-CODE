@@ -2088,6 +2088,30 @@
         border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     }
 
+    /* Top 3 rows — bigger, highlighted */
+    .mob-gl-rank-row--top {
+        padding: 14px 10px;
+        gap: 13px;
+    }
+
+    .mob-gl-rank-row--rank1 { background: rgba(255, 215, 0, 0.05); border-bottom: 1px solid rgba(255, 215, 0, 0.1); }
+    .mob-gl-rank-row--rank2 { background: rgba(192, 192, 192, 0.04); border-bottom: 1px solid rgba(192, 192, 192, 0.08); }
+    .mob-gl-rank-row--rank3 { background: rgba(205, 127, 50, 0.04); border-bottom: 1px solid rgba(205, 127, 50, 0.08); }
+
+    .mob-gl-rank-medal {
+        font-size: 1.5rem;
+        line-height: 1;
+        flex-shrink: 0;
+        width: 28px;
+        text-align: center;
+    }
+
+    .mob-gl-rank-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.07);
+        margin: 4px 0;
+    }
+
     .mob-gl-rank-num {
         font-family: 'Orbitron', sans-serif;
         font-size: 0.6rem;
@@ -2103,6 +2127,12 @@
         object-fit: cover;
         border: 1px solid rgba(197, 160, 89, 0.3);
         flex-shrink: 0;
+    }
+
+    .mob-gl-rank-avatar--top {
+        width: 48px;
+        height: 48px;
+        border-width: 2px;
     }
 
     .mob-gl-rank-avatar-placeholder {
@@ -2129,6 +2159,12 @@
         text-overflow: ellipsis;
     }
 
+    .mob-gl-rank-name--top {
+        font-size: 0.82rem;
+        color: #fff;
+        font-weight: 600;
+    }
+
     .mob-gl-rank-tier {
         font-family: 'Orbitron', sans-serif;
         font-size: 0.38rem;
@@ -2143,6 +2179,10 @@
         color: #c5a059;
         font-weight: 700;
         flex-shrink: 0;
+    }
+
+    .mob-gl-rank-score--top {
+        font-size: 0.9rem;
     }
 
     /* Talk */

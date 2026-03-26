@@ -2348,17 +2348,36 @@ async function _loadMobGlLeaderboard(period: string) {
             container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO DATA YET</div>`;
             return;
         }
-        container.innerHTML = entries.map((e: any, i: number) => `
+        const MEDALS_MOB = ['🥇', '🥈', '🥉'];
+        const MEDAL_COLORS_MOB = ['#FFD700', '#C0C0C0', '#CD7F32'];
+        const top3 = entries.slice(0, 3);
+        const rest = entries.slice(3);
+
+        const top3Html = top3.map((e: any, i: number) => `
+            <div class="mob-gl-rank-row mob-gl-rank-row--top mob-gl-rank-row--rank${i + 1}">
+                <div class="mob-gl-rank-medal">${MEDALS_MOB[i]}</div>
+                ${e.avatar ? `<img src="${e.avatar}" class="mob-gl-rank-avatar mob-gl-rank-avatar--top" alt="" onerror="this.style.display='none'"/>` : `<div class="mob-gl-rank-avatar-placeholder mob-gl-rank-avatar--top"></div>`}
+                <div class="mob-gl-rank-info">
+                    <div class="mob-gl-rank-name mob-gl-rank-name--top">${e.name || e.member_id || 'SLAVE'}</div>
+                    ${e.hierarchy ? `<div class="mob-gl-rank-tier" style="color:${MEDAL_COLORS_MOB[i]}">${e.hierarchy}</div>` : ''}
+                </div>
+                <span class="mob-gl-rank-score mob-gl-rank-score--top" style="color:${MEDAL_COLORS_MOB[i]}">${(e.score ?? 0).toLocaleString()}</span>
+            </div>
+        `).join('');
+
+        const restHtml = rest.map((e: any, i: number) => `
             <div class="mob-gl-rank-row">
-                <span class="mob-gl-rank-num">${i + 1}</span>
+                <span class="mob-gl-rank-num">${i + 4}</span>
                 ${e.avatar ? `<img src="${e.avatar}" class="mob-gl-rank-avatar" alt="" onerror="this.style.display='none'"/>` : `<div class="mob-gl-rank-avatar-placeholder"></div>`}
                 <div class="mob-gl-rank-info">
                     <div class="mob-gl-rank-name">${e.name || e.member_id || 'SLAVE'}</div>
                     ${e.hierarchy ? `<div class="mob-gl-rank-tier">${e.hierarchy}</div>` : ''}
                 </div>
-                <span class="mob-gl-rank-score">${e.score ?? 0}</span>
+                <span class="mob-gl-rank-score">${(e.score ?? 0).toLocaleString()}</span>
             </div>
         `).join('');
+
+        container.innerHTML = top3Html + (restHtml ? `<div class="mob-gl-rank-divider"></div>${restHtml}` : '');
         _mobGlLoaded[`rank_${period}`] = true;
     } catch {
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
