@@ -4,7 +4,6 @@ import { DbService } from '@/lib/supabase-service';
 
 export async function POST(request: Request) {
     try {
-
         const body = await request.json();
         const { memberEmail, tributeId, tributeTitle, tributeCost } = body;
 
@@ -12,25 +11,19 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Missing required parameters' }, { status: 400 });
         }
 
-        // 1. Get User Profile and Check Balance
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
         const { data: profile, error: profileErr } = await supabase
             .from('profiles')
-            .select('wallet, score, parameters')
-            .eq('member_id', memberEmail)
+            .select('wallet, score, parameters, member_id, id')
+            .or(isUUID ? `id.eq.${memberEmail}` : `member_id.eq.${memberEmail}`)
             .single();
 
-        if (profileErr || !profile) {
-            return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
-        }
+        if (profileErr || !profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
 
         const currentWallet = profile.wallet || 0;
         const currentScore = profile.score || 0;
+        if (currentWallet < tributeCost) return NextResponse.json({ success: false, error: 'INSUFFICIENT_FUNDS', wallet: currentWallet }, { status: 400 });
 
-        if (currentWallet < tributeCost) {
-            return NextResponse.json({ success: false, error: 'INSUFFICIENT_FUNDS', wallet: currentWallet }, { status: 400 });
-        }
-
-        // 2. Calculate New Balances (Deduct Coins, Add Merit: 1 to 2 ratio)
         const newWallet = currentWallet - tributeCost;
         const meritGain = Math.floor(tributeCost / 2);
         const newScore = currentScore + meritGain;
@@ -41,40 +34,38 @@ export async function POST(request: Request) {
             last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: tributeCost }
         };
 
-        // 3. Update wallet + parameters (score via awardPoints below)
-        const { error: updateErr } = await supabase
-            .from('profiles')
-            .update({ wallet: newWallet, parameters: newParams })
-            .eq('member_id', memberEmail);
+        const realEmail = profile?.member_id || memberEmail;
 
-        if (updateErr) {
-            console.error("Profile update error:", updateErr);
-            return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
-        }
+        const { error: updateErr } = await supabase.from('profiles').update({ wallet: newWallet, parameters: newParams }).eq('member_id', realEmail);
 
-        // Award merit points via centralized function (updates all period scores)
-        await DbService.awardPoints(memberEmail, meritGain);
+        if (updateErr) return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
 
-        // 4. Non-blocking: record last tribute timestamp (fails silently if columns don't exist yet)
+        await DbService.awardPoints(realEmail, meritGain);
+
         supabase.from('profiles').update({
             last_tribute_at: new Date().toISOString(),
             last_tribute_title: tributeTitle,
-        }).eq('member_id', memberEmail).then(({ error: tsErr }: { error: any }) => {
-            if (tsErr) console.warn('[Purchase] last_tribute columns not yet in DB — safe to ignore:', tsErr.message);
+        }).eq('member_id', realEmail).then(({ error: tsErr }: { error: any }) => {
+            if (tsErr) console.warn('[Purchase] col not found:', tsErr.message);
         });
 
-        try { await DbService.sendMessage(memberEmail, `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} <i class="fas fa-coins" style="color:#c5a059;"></i>)`, 'system'); } catch (_) { }
+        const msgText = `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} <i class="fas fa-coins" style="color:#c5a059;"></i>)`;
+        
+        // System message insertion resilient to schema
+        const insertData: any = { sender_email: 'system', sender_name: 'SYSTEM', message: msgText, member_id: realEmail };
+        if (profile.id) insertData.profile_id = profile.id;
+        
+        try { 
+            const ins1 = await supabase.from('chats').insert(insertData);
+            if (ins1.error && (ins1.error.message.includes('sender_email') || ins1.error.message.includes('member_id'))) {
+                delete insertData.sender_email; 
+                delete insertData.member_id;
+                await supabase.from('chats').insert(insertData);
+            }
+        } catch (_) {}
 
-        return NextResponse.json({
-            success: true,
-            newWallet,
-            newScore,
-            meritGained: meritGain,
-            message: `Tribute "${tributeTitle}" purchased successfully.`
-        });
-
+        return NextResponse.json({ success: true, newWallet, newScore, meritGained: meritGain, message: `Tribute "${tributeTitle}" purchased successfully.` });
     } catch (err: any) {
-        console.error("Tribute Purchase API Error:", err);
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });
     }
 }
