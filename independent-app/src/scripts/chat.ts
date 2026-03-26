@@ -214,8 +214,8 @@ export async function renderChat(messages: any[]) {
                 if (isVideo) {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" onloadeddata="window.forceBottom()" controls style="max-width:100%; border-radius:inherit;"></video></div>`;
                 } else {
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; overflow:hidden; width:fit-content;">
-                        <img src="${srcUrl}" onload="window.forceBottom()" style="max-height:300px; width:auto; max-width:100%; display:block; border-radius:inherit;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; overflow:hidden; width:240px; max-width:70vw; border-radius:12px;">
+                        <img src="${srcUrl}" onload="window.forceBottom()" style="width:100%; height:200px; object-fit:cover; display:block; cursor:pointer;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
                     </div>`;
                 }
             }
