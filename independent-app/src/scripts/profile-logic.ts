@@ -1235,7 +1235,7 @@ export async function updateRoutineWidget() {
 
     try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const res = await fetch("/api/routine-status", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, tz }) });
+        const res = await fetch('/api/routine-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, tz }) });
         if (!res.ok) return;
         const data = await res.json();
 
@@ -1990,11 +1990,15 @@ export async function sendChatMessage() {
 
     if (!msg || !memberId) return;
 
+    // Capture and clear reply before sending
+    const chatReplyTo = _profileChatReply ? { sender_name: _profileChatReply.name, content: _profileChatReply.text } : null;
+    cancelProfileChatReply();
+
     try {
         const res = await fetch('/api/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senderEmail: memberId, content: msg, type: 'text' })
+            body: JSON.stringify({ senderEmail: memberId, content: msg, type: 'text', metadata: chatReplyTo ? { reply_to: chatReplyTo } : {} })
         });
         const data = await res.json();
 
@@ -2285,6 +2289,78 @@ let _mobGlActivePeriod = 'today';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _mobGlRealtimeChannel: any = null;
 
+// ─── REPLY STATE ──────────────────────────────────────────────────────────────
+let _mobGlReply: { id: string; name: string; text: string } | null = null;
+let _profileChatReply: { id: string; name: string; text: string } | null = null;
+
+function _ensureMobGlReplyBar() {
+    if (document.getElementById('mobGlReplyBar')) return;
+    const feed = document.getElementById('mobGlTalkFeed');
+    if (!feed) return;
+    const bar = document.createElement('div');
+    bar.id = 'mobGlReplyBar';
+    bar.style.cssText = 'display:none;align-items:center;gap:10px;padding:7px 12px;background:rgba(197,160,89,0.07);border-top:1px solid rgba(197,160,89,0.18);flex-shrink:0;';
+    bar.innerHTML = `
+        <div style="flex:1;min-width:0;border-left:2px solid rgba(197,160,89,0.6);padding-left:8px;">
+            <div id="mobGlReplyBarName" style="font-family:Orbitron;font-size:0.33rem;color:rgba(197,160,89,0.8);letter-spacing:1px;margin-bottom:2px;"></div>
+            <div id="mobGlReplyBarText" style="font-family:Rajdhani;font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+        <button onclick="window.cancelMobGlReply()" style="background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:1rem;padding:4px 6px;flex-shrink:0;line-height:1;">✕</button>`;
+    feed.insertAdjacentElement('afterend', bar);
+}
+
+export function setMobGlReply(id: string, name: string, text: string) {
+    _mobGlReply = { id, name, text };
+    _ensureMobGlReplyBar();
+    const bar = document.getElementById('mobGlReplyBar');
+    if (bar) bar.style.display = 'flex';
+    const nameEl = document.getElementById('mobGlReplyBarName');
+    const textEl = document.getElementById('mobGlReplyBarText');
+    if (nameEl) nameEl.textContent = '↩ ' + name;
+    if (textEl) textEl.textContent = text.slice(0, 80);
+    document.getElementById('mobGlTalkInput')?.focus();
+}
+
+export function cancelMobGlReply() {
+    _mobGlReply = null;
+    const bar = document.getElementById('mobGlReplyBar');
+    if (bar) bar.style.display = 'none';
+}
+
+function _ensureProfileChatReplyBar() {
+    if (document.getElementById('profileChatReplyBar')) return;
+    const footer = document.querySelector('.chat-footer');
+    if (!footer) return;
+    const bar = document.createElement('div');
+    bar.id = 'profileChatReplyBar';
+    bar.style.cssText = 'display:none;align-items:center;gap:10px;padding:7px 14px;background:rgba(197,160,89,0.07);border-top:1px solid rgba(197,160,89,0.18);flex-shrink:0;';
+    bar.innerHTML = `
+        <div style="flex:1;min-width:0;border-left:2px solid rgba(197,160,89,0.6);padding-left:8px;">
+            <div id="profileChatReplyBarName" style="font-family:Orbitron;font-size:0.33rem;color:rgba(197,160,89,0.8);letter-spacing:1px;margin-bottom:2px;"></div>
+            <div id="profileChatReplyBarText" style="font-family:Rajdhani;font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+        <button onclick="window.cancelProfileChatReply()" style="background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:1rem;padding:4px 6px;flex-shrink:0;line-height:1;">✕</button>`;
+    footer.insertBefore(bar, footer.firstChild);
+}
+
+export function setProfileChatReply(id: string, name: string, text: string) {
+    _profileChatReply = { id, name, text };
+    _ensureProfileChatReplyBar();
+    const bar = document.getElementById('profileChatReplyBar');
+    if (bar) bar.style.display = 'flex';
+    const nameEl = document.getElementById('profileChatReplyBarName');
+    const textEl = document.getElementById('profileChatReplyBarText');
+    if (nameEl) nameEl.textContent = '↩ ' + name;
+    if (textEl) textEl.textContent = text.slice(0, 80);
+    (document.getElementById('chatMsgInput') || document.getElementById('mob_chatMsgInput'))?.focus();
+}
+
+export function cancelProfileChatReply() {
+    _profileChatReply = null;
+    const bar = document.getElementById('profileChatReplyBar');
+    if (bar) bar.style.display = 'none';
+}
+
 export function openMobGlobal() {
     if (_isOverlayOpen('mobGlobalOverlay')) { closeMobGlobal(); return; }
     _closeAllMobOverlays('mobGlobalOverlay');
@@ -2420,39 +2496,7 @@ function _buildMobGlBubble(msg: any): string {
     const isQueen = MOB_QUEEN_EMAILS.includes(senderEmail);
     const name = msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT';
     const content = msg.message || '';
-
-    // ── Promotion Card ──
-    if (content.startsWith('PROMOTION_CARD::')) {
-        try {
-            const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
-            const photoBlock = d.photo
-                ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'">`
-                : '';
-            return `<div style="display:flex;justify-content:center;padding:8px 14px;margin-bottom:14px;">
-                <div>
-                    <div style="width:260px;max-width:72vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
-                        <div style="position:relative;width:100%;height:150px;background:#0a0703;overflow:hidden;">
-                            ${photoBlock}
-                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
-                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">✦ RANK PROMOTION</span>
-                            </div>
-                        </div>
-                        <div style="padding:14px 18px 18px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${d.name||''}</div>
-                            <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
-                                <span style="color:rgba(197,160,89,0.7);font-size:0.9rem;">→</span>
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span>
-                            </div>
-                            <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
-                        </div>
-                    </div>
-                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
-                </div>
-            </div>`;
-        } catch (_) { return ''; }
-    }
+    const msgId = (msg.id || '').toString();
 
     const mediaHtml = msg.media_url
         ? (msg.media_type === 'video'
@@ -2460,19 +2504,32 @@ function _buildMobGlBubble(msg: any): string {
             : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;" />`)
         : '';
 
+    const quoteHtml = msg.reply_to ? `
+        <div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:5px;background:rgba(0,0,0,0.2);border-radius:0 5px 5px 0;">
+            <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:1px;">↩ ${(msg.reply_to.sender_name || '').replace(/</g,'&lt;')}</div>
+            <div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content || '').slice(0,55).replace(/</g,'&lt;')}</div>
+        </div>` : '';
+
+    const nameSafe = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const contentSafe = content.slice(0,100).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const replyBtn = `<button class="mob-gl-reply-btn" onclick="event.stopPropagation();window.setMobGlReply('${msgId}','${nameSafe}','${contentSafe}')" title="Reply">↩</button>`;
+
     if (isQueen) {
-        return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:10px;box-shadow:0 0 10px rgba(197,160,89,0.12);overflow:hidden;">
+        return `<div style="position:relative;padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:10px;box-shadow:0 0 10px rgba(197,160,89,0.12);overflow:hidden;">
+            ${replyBtn}
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
                 <span style="font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.8);letter-spacing:1px;">QUEEN KARIN</span>
                 <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);">${time}</span>
             </div>
-            <span style="font-family:'Rajdhani';font-size:0.88rem;color:#f0d888;line-height:1.4;">${content}</span>
+            ${quoteHtml}<span style="font-family:'Rajdhani';font-size:0.88rem;color:#f0d888;line-height:1.4;">${content}</span>
             ${mediaHtml}
         </div>`;
     }
 
-    return `<div class="mob-gl-talk-msg">
+    return `<div class="mob-gl-talk-msg" style="position:relative;">
+        ${replyBtn}
         <span class="mob-gl-talk-name">${name}</span>
+        ${quoteHtml ? `<div style="margin-top:2px;">${quoteHtml}</div>` : ''}
         <span class="mob-gl-talk-content">${content}</span>
         <span class="mob-gl-talk-time">${time}</span>
     </div>`;
@@ -2508,11 +2565,16 @@ export async function sendMobGlMessage() {
     const senderEmail = memberId || id;
     if (!senderEmail) return;
 
+    // Capture and clear reply before sending
+    const replyTo = _mobGlReply ? { sender_name: _mobGlReply.name, content: _mobGlReply.text } : null;
+    cancelMobGlReply();
+
     // Optimistic update
     _appendMobGlMessage({
         sender_name: raw?.name || senderEmail.split('@')[0] || 'SUBJECT',
         sender_email: senderEmail,
         message: content,
+        reply_to: replyTo,
         created_at: new Date().toISOString(),
     });
 
@@ -2520,7 +2582,7 @@ export async function sendMobGlMessage() {
         await fetch('/api/global/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: content, senderEmail })
+            body: JSON.stringify({ message: content, senderEmail, reply_to: replyTo })
         });
     } catch {
         console.warn('[MOB_GLOBAL] Failed to send message');

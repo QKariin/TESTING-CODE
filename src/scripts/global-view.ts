@@ -11,6 +11,43 @@ let realtimeChannel: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let updatesChannel: any = null;
 
+// ─── REPLY STATE ───────────────────────────────────────────────────────────────
+let _glReply: { id: string; name: string; text: string } | null = null;
+
+function _ensureGlReplyBar() {
+    if (document.getElementById('globalReplyBar')) return;
+    const feed = document.getElementById('globalTalkFeed');
+    if (!feed) return;
+    const bar = document.createElement('div');
+    bar.id = 'globalReplyBar';
+    bar.style.cssText = 'display:none;align-items:center;gap:10px;padding:7px 14px;background:rgba(197,160,89,0.07);border-top:1px solid rgba(197,160,89,0.18);flex-shrink:0;';
+    bar.innerHTML = `
+        <div style="flex:1;min-width:0;border-left:2px solid rgba(197,160,89,0.6);padding-left:8px;">
+            <div id="glReplyBarName" style="font-family:Orbitron;font-size:0.33rem;color:rgba(197,160,89,0.8);letter-spacing:1px;margin-bottom:2px;"></div>
+            <div id="glReplyBarText" style="font-family:Rajdhani;font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+        <button onclick="window.cancelGlReply()" style="background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:1rem;padding:4px 6px;flex-shrink:0;line-height:1;">✕</button>`;
+    feed.insertAdjacentElement('afterend', bar);
+}
+
+export function setGlReply(id: string, name: string, text: string) {
+    _glReply = { id, name, text };
+    _ensureGlReplyBar();
+    const bar = document.getElementById('globalReplyBar');
+    if (bar) bar.style.display = 'flex';
+    const nameEl = document.getElementById('glReplyBarName');
+    const textEl = document.getElementById('glReplyBarText');
+    if (nameEl) nameEl.textContent = '↩ ' + name;
+    if (textEl) textEl.textContent = text.slice(0, 80);
+    document.getElementById('globalTalkInput')?.focus();
+}
+
+export function cancelGlReply() {
+    _glReply = null;
+    const bar = document.getElementById('globalReplyBar');
+    if (bar) bar.style.display = 'none';
+}
+
 const DEFAULT_AVATAR = '/queen-karin.png';
 const MEDAL_COLORS = ['#c5a059', '#9ca3af', '#cd7f32'];
 const MEDALS = ['🥇', '🥈', '🥉'];
@@ -570,6 +607,19 @@ function _buildBubble(msg: any, myName: string): string {
     const isQueen = msg.is_queen === true || msg.sender_name === 'QUEEN KARIN';
     const content = msg.message || '';
     const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const msgId = (msg.id || '').toString();
+
+    // Quote block if this message is a reply
+    const quoteHtml = msg.reply_to ? `
+        <div style="border-left:2px solid rgba(197,160,89,0.5);padding:4px 8px;margin-bottom:6px;background:rgba(0,0,0,0.25);border-radius:0 6px 6px 0;">
+            <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;">↩ ${(msg.reply_to.sender_name || '').replace(/</g,'&lt;')}</div>
+            <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">${(msg.reply_to.content || '').slice(0,60).replace(/</g,'&lt;')}</div>
+        </div>` : '';
+
+    // Reply button — shown on hover via CSS class
+    const senderNameSafe = (msg.sender_name || 'SUBJECT').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const contentSafe = content.slice(0,100).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const replyBtn = `<button class="gl-reply-btn" onclick="event.stopPropagation();window.setGlReply('${msgId}','${senderNameSafe}','${contentSafe}')" title="Reply">↩</button>`;
 
     // ── Promotion Card ── centered
     if (content.startsWith('PROMOTION_CARD::')) {
@@ -618,26 +668,30 @@ function _buildBubble(msg: any, myName: string): string {
     // Queen/admin message — golden bubble, right-aligned if sent by me, left if by another queen
     if (isQueen) {
         if (isMe) {
-            return `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
+            return `<div class="gl-bubble-wrap" style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
                 <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);margin-bottom:4px;letter-spacing:1px;">QUEEN KARIN · ${time}</div>
-                <div style="max-width:${hasMedia ? '85%' : '70%'};padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:14px 14px 3px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
-                    <div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
-                    ${mediaHtml}
+                <div style="position:relative;max-width:${hasMedia ? '85%' : '70%'};">
+                    ${replyBtn}
+                    <div style="padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:14px 14px 3px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
+                        ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
+                        ${mediaHtml}
+                    </div>
                 </div>
             </div>`;
         }
         const avatarHtml = av
             ? `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
             : '';
-        return `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
+        return `<div class="gl-bubble-wrap" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
             <div style="width:32px;height:32px;border-radius:50%;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.5);overflow:hidden;flex-shrink:0;position:relative;box-shadow:0 0 8px rgba(197,160,89,0.3);">
                 ${avatarHtml}
                 <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">♛</div>
             </div>
-            <div style="max-width:${hasMedia ? '85%' : '70%'};">
+            <div style="position:relative;max-width:${hasMedia ? '85%' : '70%'};">
+                ${replyBtn}
                 <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.7);margin-bottom:4px;letter-spacing:1px;">QUEEN KARIN · ${time}</div>
                 <div style="padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:3px 14px 14px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
-                    <div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
+                    ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
                     ${mediaHtml}
                 </div>
             </div>
@@ -645,10 +699,13 @@ function _buildBubble(msg: any, myName: string): string {
     }
 
     if (isMe) {
-        return `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
+        return `<div class="gl-bubble-wrap" style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
             <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.22);margin-bottom:4px;letter-spacing:1px;">YOU · ${time}</div>
-            <div style="max-width:70%;padding:9px 13px;background:rgba(55,55,60,0.85);border:1px solid rgba(100,100,110,0.3);border-radius:14px 14px 3px 14px;">
-                <div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
+            <div style="position:relative;max-width:70%;">
+                ${replyBtn}
+                <div style="padding:9px 13px;background:rgba(55,55,60,0.85);border:1px solid rgba(100,100,110,0.3);border-radius:14px 14px 3px 14px;">
+                    ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
+                </div>
             </div>
         </div>`;
     }
@@ -656,15 +713,16 @@ function _buildBubble(msg: any, myName: string): string {
     const avatarHtml = av
         ? `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : '';
-    return `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
+    return `<div class="gl-bubble-wrap" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
         <div style="width:32px;height:32px;border-radius:50%;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.25);overflow:hidden;flex-shrink:0;position:relative;">
             ${avatarHtml}
             <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">${initial}</div>
         </div>
-        <div style="max-width:70%;">
+        <div style="position:relative;max-width:70%;">
+            ${replyBtn}
             <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.55);margin-bottom:4px;letter-spacing:1px;">${name} · ${time}</div>
             <div style="padding:9px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:3px 14px 14px 14px;">
-                <div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
+                ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
             </div>
         </div>
     </div>`;
@@ -713,6 +771,10 @@ export async function sendGlobalMessage() {
     if (!senderEmail) return;
     input.value = '';
 
+    // Capture and clear reply before sending
+    const replyTo = _glReply ? { sender_name: _glReply.name, content: _glReply.text } : null;
+    cancelGlReply();
+
     // Optimistic: show instantly with local profile data
     const QUEEN_EMAILS_LOCAL = ['ceo@qkarin.com'];
     const isQueenLocal = QUEEN_EMAILS_LOCAL.includes(senderEmail.toLowerCase());
@@ -723,6 +785,7 @@ export async function sendGlobalMessage() {
         sender_avatar: senderAvatar,
         is_queen: isQueenLocal,
         message,
+        reply_to: replyTo,
         created_at: new Date().toISOString(),
     });
 
@@ -730,7 +793,7 @@ export async function sendGlobalMessage() {
         await fetch('/api/global/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, senderEmail }),
+            body: JSON.stringify({ message, senderEmail, reply_to: replyTo }),
         });
         // Realtime will NOT duplicate — the optimistic bubble already shows it.
         // On next poll/open the real record loads with correct name/avatar.

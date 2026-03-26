@@ -12,11 +12,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Missing required parameters' }, { status: 400 });
         }
 
-        // 1. Get User Profile and Check Balance
+        // 1. Get User Profile and Check Balance (Dual compatibility)
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
         const { data: profile, error: profileErr } = await supabase
             .from('profiles')
-            .select('wallet, score, parameters')
-            .eq('member_id', memberEmail)
+            .select('wallet, score, parameters, member_id')
+            .or(isUUID ? `id.eq.${memberEmail}` : `member_id.eq.${memberEmail}`)
             .single();
 
         if (profileErr || !profile) {
@@ -41,11 +42,13 @@ export async function POST(request: Request) {
             last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: tributeCost }
         };
 
+        const realEmail = profile?.member_id || memberEmail;
+
         // 3. Update wallet + parameters (score via awardPoints below)
         const { error: updateErr } = await supabase
             .from('profiles')
             .update({ wallet: newWallet, parameters: newParams })
-            .eq('member_id', memberEmail);
+            .eq('member_id', realEmail);
 
         if (updateErr) {
             console.error("Profile update error:", updateErr);
@@ -53,17 +56,17 @@ export async function POST(request: Request) {
         }
 
         // Award merit points via centralized function (updates all period scores)
-        await DbService.awardPoints(memberEmail, meritGain);
+        await DbService.awardPoints(realEmail, meritGain);
 
         // 4. Non-blocking: record last tribute timestamp (fails silently if columns don't exist yet)
         supabase.from('profiles').update({
             last_tribute_at: new Date().toISOString(),
             last_tribute_title: tributeTitle,
-        }).eq('member_id', memberEmail).then(({ error: tsErr }: { error: any }) => {
+        }).eq('member_id', realEmail).then(({ error: tsErr }: { error: any }) => {
             if (tsErr) console.warn('[Purchase] last_tribute columns not yet in DB — safe to ignore:', tsErr.message);
         });
 
-        try { await DbService.sendMessage(memberEmail, `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} <i class="fas fa-coins" style="color:#c5a059;"></i>)`, 'system'); } catch (_) { }
+        try { await DbService.sendMessage(realEmail, `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} <i class="fas fa-coins" style="color:#c5a059;"></i>)`, 'system'); } catch (_) { }
 
         return NextResponse.json({
             success: true,

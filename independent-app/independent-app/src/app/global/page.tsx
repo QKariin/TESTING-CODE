@@ -17,6 +17,8 @@ import {
     loadTalkFull,
     openQueenTab,
     openGalleryLightbox,
+    setGlReply,
+    cancelGlReply,
 } from '@/scripts/global-view';
 import { buyRealCoins, handleSubscribe } from '@/scripts/profile-logic';
 
@@ -71,12 +73,14 @@ export default function GlobalPage() {
         (window as any).loadTalkFull = loadTalkFull;
         (window as any).openQueenTab = openQueenTab;
         (window as any).openGalleryLightbox = openGalleryLightbox;
+        (window as any).setGlReply = setGlReply;
+        (window as any).cancelGlReply = cancelGlReply;
 
         async function init() {
             try {
                 const isLocal = window.location.hostname === 'localhost';
                 if (isLocal) {
-                    const res = await fetch(`/api/slave-profile?email=${encodeURIComponent('pr.finsko@gmail.com')}&full=true`);
+                    const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'pr.finsko@gmail.com', full: true }) });
                     const data = await res.json();
                     initProfileState(data);
                     setLoading(false);
@@ -91,7 +95,7 @@ export default function GlobalPage() {
                 const { data: profileData } = await supabase
                     .from('profiles')
                     .select('*')
-                    .eq('member_id', user.email)
+                    .eq('id', user.id)
                     .maybeSingle();
 
                 // If no profile row (e.g. admin/queen), init with auth email so send + isMe work
