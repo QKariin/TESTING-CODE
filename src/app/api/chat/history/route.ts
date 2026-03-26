@@ -29,26 +29,30 @@ export async function GET(req: Request) {
         let { data: profile } = await queryClient.from('profiles').select('id, member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
 
         if (!profile && !isUUID) {
-            // 🔄 LEGIACY IDENTITY ADOPTION: If no profile, check the tasks table
+            // 🔄 DEFAULT PROFILE CREATION: If no profile exists yet, create one now.
+            // This adoption logic ensures legacy users and new users all have a valid profile.
             const { data: legacyTask } = await queryClient
                 .from('tasks')
                 .select('Score')
                 .ilike('MemberID', email)
                 .maybeSingle();
 
-            if (legacyTask) {
-                const { data: newProfile } = await queryClient
-                    .from('profiles')
-                    .insert({
-                        member_id: email.toLowerCase(),
-                        name: email.split('@')[0],
-                        score: Number(legacyTask.Score || 0),
-                        wallet: 0,
-                        hierarchy: 'Hall Boy'
-                    })
-                    .select()
-                    .single();
-                if (newProfile) profile = newProfile;
+            const { data: newProfile, error: createError } = await queryClient
+                .from('profiles')
+                .insert({
+                    member_id: email.toLowerCase(),
+                    name: email.split('@')[0],
+                    score: Number(legacyTask?.Score || 0),
+                    wallet: 0,
+                    hierarchy: 'Hall Boy'
+                })
+                .select()
+                .single();
+            
+            if (!createError && newProfile) {
+                profile = newProfile;
+            } else if (createError) {
+                console.error("[API/Chat/History] Failed to auto-create profile:", createError.message);
             }
         }
 
