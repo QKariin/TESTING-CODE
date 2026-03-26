@@ -91,7 +91,7 @@ export default function GlobalPage() {
                 const { data: profileData } = await supabase
                     .from('profiles')
                     .select('*')
-                    .eq('member_id', user.email)
+                    .eq('id', user.id)
                     .maybeSingle();
 
                 // If no profile row (e.g. admin/queen), init with auth email so send + isMe work

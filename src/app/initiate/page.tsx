@@ -24,7 +24,7 @@ export default function InitiatePage() {
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('*')
-                    .eq('member_id', user.email)
+                    .eq('id', user.id)
                     .maybeSingle();
 
                 if (profile) {
