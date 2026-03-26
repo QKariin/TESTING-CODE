@@ -197,6 +197,9 @@ function renderTelemetry(u: any) {
 
     // Check both top-level and nested in parameters
     const data = u.tracking_data || u.parameters?.tracking_data || {};
+    const dataJson = JSON.stringify(data);
+    if ((u as any)._lastTelemetryJson === dataJson) return;
+    (u as any)._lastTelemetryJson = dataJson;
     if (Object.keys(data).length === 0) {
         container.innerHTML = '<div style="color:#444; font-size:0.6rem; text-align:center; grid-column:span 2;">NO DATA RECEIVED</div>';
         return;
@@ -243,6 +246,11 @@ async function updateReviewQueue(u: any) {
     if (!qSec) return;
 
     if (u.reviewQueue && u.reviewQueue.length > 0) {
+        // Skip re-render if queue hasn't changed
+        const queueJson = JSON.stringify(u.reviewQueue);
+        if ((u as any)._lastReviewQueueJson === queueJson) return;
+        (u as any)._lastReviewQueueJson = queueJson;
+
         qSec.style.display = 'flex';
         qSec.innerHTML = `
             <div class="pend-list">
@@ -251,10 +259,14 @@ async function updateReviewQueue(u: any) {
             const actType = isRoutine ? 'DAILY ROUTINE' : 'TASK';
             const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
             const isVideo = t.proofType === 'video' || mediaTypeFunction(t.proofUrl) === 'video';
-            const optUrl = getOptimizedUrl(t.proofUrl || '', 400);
+            // Videos: show thumbnail if available, otherwise a static placeholder — no autoplay
             const mediaTag = isVideo
-                ? `<video src="${optUrl}" class="pend-thumb" autoplay loop muted playsinline style="object-fit:cover;"></video>`
-                : `<img src="${optUrl}" class="pend-thumb" onerror="this.src='/queen-karin.png'">`;
+                ? (t.thumbnail_url
+                    ? `<img src="${getOptimizedUrl(t.thumbnail_url, 400)}" class="pend-thumb" onerror="this.src='/queen-karin.png'" style="object-fit:cover;">`
+                    : `<div class="pend-thumb" style="background:#0a0a0a;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;">
+                         <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                       </div>`)
+                : `<img src="${getOptimizedUrl(t.proofUrl || '', 400)}" class="pend-thumb" onerror="this.src='/queen-karin.png'">`;
 
             return `
                     <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false)">
@@ -268,7 +280,10 @@ async function updateReviewQueue(u: any) {
             </div>
         `;
     } else {
-        qSec.style.display = 'none';
+        if ((u as any)._lastReviewQueueJson !== '') {
+            (u as any)._lastReviewQueueJson = '';
+            qSec.style.display = 'none';
+        }
     }
 }
 
@@ -314,32 +329,39 @@ function updateActiveTask(u: any) {
         activeText.innerHTML = rawText; // Support HTML directives
 
         if (resolvedEndTime) {
-            const tick = () => {
-                const diff = resolvedEndTime - Date.now();
-                if (diff <= 0) {
-                    activeTimer.innerText = "00:00";
-                    if (activeStatus && !isPending) {
-                        activeStatus.innerText = "OVERDUE";
-                        activeStatus.style.color = "var(--red)";
+            // Only create a new countdown interval if the endTime has changed
+            if ((u as any)._lastTrackedEndTime !== resolvedEndTime) {
+                if (cooldownInterval) clearInterval(cooldownInterval);
+                (u as any)._lastTrackedEndTime = resolvedEndTime;
+                const tick = () => {
+                    const diff = resolvedEndTime - Date.now();
+                    if (diff <= 0) {
+                        activeTimer.innerText = "00:00";
+                        if (activeStatus && !isPending) {
+                            activeStatus.innerText = "OVERDUE";
+                            activeStatus.style.color = "var(--red)";
+                        }
+                        clearInterval(cooldownInterval);
+                        return;
                     }
-                    clearInterval(cooldownInterval);
-                    return;
-                }
-                activeTimer.innerText = formatTimer(diff);
-            };
-            tick();
-            const interval = setInterval(tick, 1000);
-            setCooldownInterval(interval);
+                    activeTimer.innerText = formatTimer(diff);
+                };
+                tick();
+                setCooldownInterval(setInterval(tick, 1000));
+            }
         } else {
             activeTimer.innerText = "--:--";
         }
     } else {
-        if (idleActions) idleActions.style.display = 'block';
-        const failBtn = activeTaskContent?.querySelector('.at-fail') as HTMLElement;
-        if (failBtn) failBtn.style.display = 'none';
-
-        activeText.innerText = "None";
-        activeTimer.innerText = "--:--";
+        if ((u as any)._lastTrackedEndTime != null) {
+            if (cooldownInterval) clearInterval(cooldownInterval);
+            (u as any)._lastTrackedEndTime = null;
+            if (idleActions) idleActions.style.display = 'block';
+            const failBtn = activeTaskContent?.querySelector('.at-fail') as HTMLElement;
+            if (failBtn) failBtn.style.display = 'none';
+            activeText.innerText = "None";
+            activeTimer.innerText = "--:--";
+        }
     }
 }
 

@@ -809,28 +809,36 @@ export default function DashboardPage() {
             {/* SHARED MODALS */}
             <div id="reviewModal" className="modal">
                 <div className="m-content" style={{ position: 'relative' }}>
-                    <span onClick={() => (window as any).closeModal()} style={{ position: 'absolute', top: '15px', right: '20px', fontSize: '2.5rem', color: '#666', cursor: 'pointer', zIndex: 1100, lineHeight: 1 }}>&times;</span>
+                    <span onClick={() => (window as any).closeModal()} style={{ position: 'absolute', top: '15px', right: '20px', fontSize: '2rem', color: 'rgba(197,160,89,0.45)', cursor: 'pointer', zIndex: 1100, lineHeight: 1 }}>&times;</span>
                     <div id="mMediaBox" className="m-media-box"></div>
                     <div className="m-info">
                         <div id="reviewNormalContent">
                             <div id="mText" className="m-text-scroll"></div>
+                            {/* Note textarea — always present, read by reviewTask() before modal closes */}
+                            <div className="review-note-wrap">
+                                <div className="review-note-label">Note / Feedback — sent to member</div>
+                                <textarea id="taskQuickNote" placeholder="Optional note sent to member chat..." />
+                            </div>
                             <div id="modalActions"></div>
                         </div>
                         <div id="reviewRewardOverlay" style={{ display: 'none' }}>
-                            <h3 style={{ color: 'var(--green)', marginBottom: '15px', textAlign: 'center' }}>REWARD PROTOCOL</h3>
+                            <div className="reward-protocol-header">Sovereign Directive Review</div>
+                            <div className="reward-protocol-title">REWARD PROTOCOL</div>
 
-                            {/* NEW: TASK TEXT VISIBILITY WHILE REWARDING */}
                             <div id="reviewRewardTaskText" className="m-text-scroll" style={{
-                                borderBottom: '1px solid #333',
-                                paddingBottom: '15px',
-                                marginBottom: '15px',
-                                fontSize: '0.85rem',
-                                opacity: 0.8,
-                                maxHeight: '100px',
-                                overflowY: 'auto'
+                                borderBottom: '1px solid rgba(197,160,89,0.15)',
+                                paddingBottom: '12px',
+                                marginBottom: '14px',
+                                fontSize: '0.82rem',
+                                opacity: 0.65,
+                                maxHeight: '80px',
+                                overflowY: 'auto',
+                                flexShrink: 0,
+                                flex: 'none',
+                                width: '100%'
                             }}></div>
 
-                            <div className="rw-tier-row" style={{ display: 'flex', gap: '10px', width: '100%', marginBottom: '20px' }}>
+                            <div className="rw-tier-row" style={{ display: 'flex', gap: '8px', width: '100%', marginBottom: '14px', flexShrink: 0 }}>
                                 <div id="tier_50" className="reward-tier-btn" onClick={() => (window as any).setRewardTier(50, 'tier_50')}>
                                     <div className="rt-pts">50</div>
                                     <div className="rt-lbl">NORMAL</div>
@@ -845,26 +853,29 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            <div id="stickerGrid" className="sticker-grid"></div>
+                            <div id="stickerGrid" className="sticker-grid" style={{ marginBottom: '12px' }}></div>
+
                             <div className="reward-inputs">
                                 <div className="rw-group">
-                                    <div className="rw-label">TOTAL BONUS COINS</div>
+                                    <div className="rw-label">TOTAL MERIT POINTS</div>
                                     <input type="number" id="rewardBonus" className="rw-inp" defaultValue="50" />
                                 </div>
                                 <div className="rw-group">
-                                    <div className="rw-label">COMMENT</div>
-                                    <input type="text" id="rewardComment" className="rw-inp" placeholder="Optional message..." />
+                                    <div className="rw-label">COMMENT — sent to member chat</div>
+                                    <textarea id="rewardComment" className="rw-inp" placeholder="Your verdict... (sent as chat message)" />
                                 </div>
                             </div>
+
                             <div className="rw-media-row">
-                                <label htmlFor="rewardFileUpload" className="rw-icon-btn">📁</label>
-                                <div id="btnRecordReward" className="rw-icon-btn" onClick={() => (window as any).toggleRewardRecord()}>🎤</div>
+                                <label htmlFor="rewardFileUpload" className="rw-icon-btn" title="Attach file">📁</label>
+                                <div id="btnRecordReward" className="rw-icon-btn" onClick={() => (window as any).toggleRewardRecord()} title="Voice note">🎤</div>
                                 <div id="rewardMediaPreview" className="rw-preview-box d-none"></div>
                             </div>
                             <input type="file" id="rewardFileUpload" accept="image/*,video/*,audio/*" onChange={(e) => (window as any).handleRewardFileUpload(e.target)} style={{ display: 'none' }} />
-                            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                                <button onClick={() => (window as any).cancelReward()} style={{ flex: 1, padding: '10px', background: '#666', color: 'white', border: 'none', borderRadius: '4px' }}>CANCEL</button>
-                                <button onClick={() => (window as any).confirmReward()} style={{ flex: 1, padding: '10px', background: 'var(--green)', color: 'black', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>CONFIRM</button>
+
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '16px', width: '100%', flexShrink: 0 }}>
+                                <button onClick={() => (window as any).cancelReward()} className="rw-confirm-btn cancel">CANCEL</button>
+                                <button onClick={() => (window as any).confirmReward()} className="rw-confirm-btn primary">CONFIRM REWARD</button>
                             </div>
                         </div>
                     </div>

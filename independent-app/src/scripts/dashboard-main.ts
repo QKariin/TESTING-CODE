@@ -82,11 +82,15 @@ function subscribeToDashboardTaskUpdates() {
         .subscribe();
 
     // Polling fallback — catches anything the realtime subscription misses
-    setInterval(refreshQueueFromServer, 20000);
+    if (_dashboardPollInterval) clearInterval(_dashboardPollInterval);
+    _dashboardPollInterval = setInterval(refreshQueueFromServer, 20000);
 
     // Subscribe to profiles for purchase notifications
     subscribeToPurchaseNotifications(supabase);
 }
+
+// Polling interval reference so it can be cleared if subscribeToDashboardTaskUpdates is called again
+let _dashboardPollInterval: ReturnType<typeof setInterval> | null = null;
 
 // Tracks the last seen purchase notification sessionId to avoid duplicates
 let _lastSeenPurchaseSession: string | null = null;

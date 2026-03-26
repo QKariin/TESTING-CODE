@@ -7,7 +7,8 @@ import {
     setCurrTask, setPendingApproveTask, setSelectedStickerId, setPendingRewardMedia,
     setMediaRecorder, setAudioChunks, mediaRecorder, audioChunks,
     setDragSrcIndex, dragSrcIndex,
-    armoryTarget, setArmoryTarget, setGlobalQueue
+    armoryTarget, setArmoryTarget, setGlobalQueue,
+    adminEmail
 } from './dashboard-state';
 import { clean, raw, getOptimizedUrl } from './utils';
 import { mediaType as mediaTypeFunction } from './media';
@@ -24,6 +25,31 @@ function stripHtml(html: string) {
     const tmp = document.createElement("DIV");
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || "";
+}
+
+// Sends task media + a text note into the member's chat (both parties see it)
+async function sendChatFeedback(memberId: string, mediaUrl: string | null, mediaType: string | null, note: string): Promise<void> {
+    const sender = adminEmail || (window as any).adminEmail;
+    if (!sender || !memberId) return;
+    try {
+        if (mediaUrl) {
+            const msgType = mediaType === 'video' ? 'video' : 'photo';
+            await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senderEmail: sender, conversationId: memberId, content: mediaUrl, type: msgType })
+            });
+        }
+        if (note) {
+            await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senderEmail: sender, conversationId: memberId, content: note, type: 'text' })
+            });
+        }
+    } catch (err) {
+        console.error('[sendChatFeedback] non-critical:', err);
+    }
 }
 
 export function closeModal() {
@@ -58,7 +84,7 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
     if (mediaUrl) {
         if (isVideo) {
-            mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls muted autoplay loop></video>`;
+            mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls playsinline></video>`;
         } else {
             mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 400)}" class="m-img">`;
         }
@@ -68,15 +94,33 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
     textEl.innerHTML = clean(taskText || 'No description provided.');
 
+    // Clear the note field from any previous review session
+    const quickNote = document.getElementById('taskQuickNote') as HTMLTextAreaElement;
+    if (quickNote) quickNote.value = '';
+
     if (isHistory) {
-        actionsEl.innerHTML = status ? `<div class="hist-status st-${status === 'approve' ? 'app' : 'rej'}">${status.toUpperCase()}</div>` : `<button class="btn-main" onclick="window.closeModal()" style="background:#666;color:white;">CLOSE</button>`;
+        actionsEl.innerHTML = status
+            ? `<div class="hist-status st-${status === 'approve' ? 'app' : 'rej'}">${status.toUpperCase()}</div>`
+            : `<button class="btn-main" onclick="window.closeModal()" style="background:#1a1a1a;color:#888;border:1px solid #333;">CLOSE</button>`;
     } else if (isRoutine) {
         actionsEl.innerHTML = `
-            <div style="font-family:Orbitron;font-size:0.6rem;color:#888;letter-spacing:2px;text-align:center;margin-bottom:8px;">DAILY ROUTINE — 50 PTS</div>
-            <button class="btn-main" onclick="window.reviewTask('approve')" style="background:var(--green);color:black;">YES</button>
-            <button class="btn-main" onclick="window.reviewTask('reject')" style="background:#333;color:#888;border:1px solid #444;">NO</button>`;
+            <div style="font-family:'Orbitron';font-size:0.5rem;color:rgba(197,160,89,0.5);letter-spacing:3px;text-align:center;margin-bottom:12px;">DAILY ROUTINE · 50 PTS</div>
+            <div style="display:flex;gap:10px;">
+                <button class="btn-main" onclick="window.reviewTask('reject')" style="background:rgba(180,30,30,0.15);color:#c0392b;border:1px solid rgba(180,30,30,0.4);">DISMISS</button>
+                <button class="btn-main" onclick="window.reviewTask('approve')" style="background:rgba(197,160,89,0.12);color:var(--gold);border:1px solid rgba(197,160,89,0.45);">CONFIRM</button>
+            </div>`;
     } else {
-        actionsEl.innerHTML = `<button class="btn-main" onclick="window.reviewTask('approve')" style="background:var(--green);color:black;">APPROVE</button><button class="btn-main" onclick="window.reviewTask('reject')" style="background:var(--red);color:white;">REJECT</button>`;
+        actionsEl.innerHTML = `
+            <div style="display:flex;gap:10px;">
+                <button class="btn-main" onclick="window.reviewTask('reject')" style="background:rgba(180,30,30,0.15);color:#c0392b;border:1px solid rgba(180,30,30,0.4);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:6px;vertical-align:middle;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    REJECT
+                </button>
+                <button class="btn-main" onclick="window.reviewTask('approve')" style="background:rgba(197,160,89,0.12);color:var(--gold);border:1px solid rgba(197,160,89,0.45);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:6px;vertical-align:middle;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    APPROVE
+                </button>
+            </div>`;
     }
     modal.classList.add('active');
 }
@@ -150,13 +194,24 @@ export function reviewTask(decision: 'approve' | 'reject') {
         openRewardProtocol();
     } else {
         console.log("Task rejected:", taskData.id);
+
+        // Read note BEFORE closeModal() is called
+        const quickNoteEl = document.getElementById('taskQuickNote') as HTMLTextAreaElement;
+        const rejectNote = quickNoteEl?.value.trim() || '';
+
         isConfirming = true;
+
         // Optimistic update
         const u = users.find(x => x.memberId === taskData.memberId);
         if (u) u.reviewQueue = (u.reviewQueue || []).filter((x: any) => x.id !== taskData.id);
 
         // --- GLOBAL SYNC ---
         setGlobalQueue(globalQueue.filter((x: any) => x.id !== taskData.id));
+
+        // Send task media + note to member chat
+        if (rejectNote) {
+            sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, rejectNote);
+        }
 
         import('./dashboard-main').then(m => m.renderMainDashboard());
         closeModal();
@@ -268,7 +323,7 @@ export function confirmReward() {
     // Capture state locally to avoid race conditions
     const taskData = { ...pendingApproveTask };
     const bonusInp = document.getElementById('rewardBonus') as HTMLInputElement;
-    const commentInp = document.getElementById('rewardComment') as HTMLInputElement;
+    const commentInp = document.getElementById('rewardComment') as HTMLTextAreaElement;
     const bonus = parseInt(bonusInp?.value) || 50;
     const comment = commentInp?.value.trim();
 
@@ -311,6 +366,11 @@ export function confirmReward() {
     // 5. Update selected user detail if we are looking at them
     if (u && currId === taskData.memberId) {
         import('./dashboard-users').then(m => m.updateDetail(u));
+    }
+
+    // Send task media + approval comment to member chat
+    if (comment) {
+        sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, comment);
     }
 
     closeModal();
@@ -734,11 +794,22 @@ export function renderGlobalReview(filterRoutine: boolean) {
         const isVideo = t.proofType === 'video' || mediaTypeFunction(t.proofUrl) === 'video';
         const optUrl = getOptimizedUrl(t.proofUrl || '', 600);
 
+        // No <video> elements in the grid — only static images or placeholder
+        // Videos play only when you click through to the review modal
+        let mediaBg: string;
+        if (isVideo) {
+            const thumbSrc = t.thumbnail_url ? getOptimizedUrl(t.thumbnail_url, 600) : null;
+            mediaBg = thumbSrc
+                ? `<img src="${thumbSrc}" class="ops-card-bg" onerror="this.style.display='none'">`
+                : `<div class="ops-card-bg ops-card-vid-placeholder"></div>`;
+            mediaBg += `<div class="ops-card-vid-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)"><path d="M8 5v14l11-7z"/></svg></div>`;
+        } else {
+            mediaBg = `<img src="${optUrl}" class="ops-card-bg" onerror="this.style.display='none'">`;
+        }
+
         return `
             <div class="ops-card ${filterRoutine ? 'routine' : 'task'}" onclick="window.openModById('${t.id}', '${t.memberId}', false)">
-                ${isVideo ?
-                `<video src="${optUrl}" class="ops-card-bg" autoplay muted loop playsinline></video>` :
-                `<img src="${optUrl}" class="ops-card-bg">`}
+                ${mediaBg}
                 <div class="ops-card-overlay">
                     <div class="ops-card-label" style="color:${color}">${filterRoutine ? 'ROUTINE' : 'TASK'}</div>
                     <div class="ops-card-title">${clean(t.memberName)}</div>
