@@ -174,6 +174,15 @@ export async function updateDetail(u: any) {
             }
         });
 
+        // Add promote button if all requirements met
+        if (report.canPromote && !report.isMax) {
+            html += `<div style="margin-top:16px;">
+                <button onclick="window.adminPromoteUser('${u.memberId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(170,125,30,0.5),rgba(130,92,15,0.4));color:rgba(240,210,120,0.95);border:1px solid rgba(180,140,50,0.5);border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
+                    ✦ PROMOTE TO ${report.nextRank.toUpperCase()}
+                </button>
+            </div>`;
+        }
+
         container.innerHTML = html;
     }
 
@@ -415,8 +424,31 @@ export function updateTaskQueue(u: any) {
     `;
 }
 
+export async function adminPromoteUser(memberId: string) {
+    if (!memberId) return;
+    const u = (await import('./dashboard-state')).users.find((x: any) => x.memberId === memberId);
+    const name = u?.name || memberId;
+    try {
+        const res = await fetch('/api/promote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberEmail: memberId })
+        });
+        const data = await res.json();
+        if (data.promoted) {
+            alert(`✦ ${name.toUpperCase()} promoted to ${data.newRank.toUpperCase()}`);
+            window.location.reload();
+        } else {
+            alert(`Promotion check: ${data.currentRank || 'requirements not met server-side'}`);
+        }
+    } catch (e) {
+        alert('Promotion request failed');
+    }
+}
+
 if (typeof window !== 'undefined') {
     (window as any).updateDetail = updateDetail;
     (window as any).deleteQueueItem = deleteQueueItem;
     (window as any).toggleTaskDrawer = toggleTaskDrawer;
+    (window as any).adminPromoteUser = adminPromoteUser;
 }
