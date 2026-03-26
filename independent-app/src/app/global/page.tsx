@@ -76,7 +76,7 @@ export default function GlobalPage() {
             try {
                 const isLocal = window.location.hostname === 'localhost';
                 if (isLocal) {
-                    const res = await fetch(`/api/slave-profile?email=${encodeURIComponent('pr.finsko@gmail.com')}&full=true`);
+                    const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'pr.finsko@gmail.com', full: true }) });
                     const data = await res.json();
                     initProfileState(data);
                     setLoading(false);

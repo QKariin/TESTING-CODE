@@ -11,7 +11,7 @@ async function syncKneelStatusFromServer() {
 
     try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const res = await fetch(`/api/kneel-status?email=${encodeURIComponent(email)}&tz=${encodeURIComponent(tz)}`);
+        const res = await fetch('/api/kneel-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, tz }) });
         if (!res.ok) return;
         const data = await res.json();
 

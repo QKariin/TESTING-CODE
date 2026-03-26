@@ -627,9 +627,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
     // Same as desktop: GET /api/chat/history?email=memberId&requester=adminEmail
     const fetchMessages = useCallback(async () => {
         try {
-            let url = `/api/chat/history?email=${encodeURIComponent(user.memberId)}`;
-            if (adminEmail) url += `&requester=${encodeURIComponent(adminEmail)}`;
-            const res = await fetch(url);
+            const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.memberId, ...(adminEmail ? { requester: adminEmail } : {}) }) });
             const json = await res.json();
             if (json.success && json.messages) {
                 setMessages(json.messages);

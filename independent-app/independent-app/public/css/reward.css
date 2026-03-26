@@ -1,0 +1,271 @@
+/* --- TACTICAL REVEAL SYSTEM: PROPORTIONAL MAX HEIGHT --- */
+
+/* 1. THE MASTER OVERLAY
+   Trapped inside #chatCard, covers everything from header to footer. */
+#revealSection {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.98) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+    z-index: 5000 !important;
+    display: none; /* Toggled to flex by JS */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+/* 2. THE HEADER LABEL
+   Floats at the top of the glass. */
+#revealLevelLabel {
+    font-family: 'Georgia', serif !important;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 1.1rem !important;
+    color: var(--neon-pink) !important;
+    text-shadow: 0 0 10px rgba(255, 0, 222, 0.5);
+    margin-top: 15px;
+    margin-bottom: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* 3. THE MASTER GRID CONTAINER
+   This is the "Stage" that shrinks to the photo width.
+   HEIGHT is set to 85% to give the photo MAX space while leaving room for the button. */
+#revealGridContainer {
+    position: relative !important;
+
+    /* FIX: prevent collapse */
+    width: 100% !important;          /* replaces fit-content */
+    max-width: 95% !important;
+
+    height: 85% !important;
+    margin: 0 auto !important;
+
+    background: transparent !important;
+    border: 1px solid #222;
+    border-radius: 6px;
+    overflow: hidden;
+
+    /* FIX: flex is fine, but only if width is stable */
+    /*display: flex !important;*/
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 4. THE MEDIA (The Photo)
+   Master of the height. Proportions stay 100% original. */
+.reveal-bg-media {
+    position: relative !important;
+    height: 100% !important; /* Fills the 85% stage */
+    width: auto !important;   /* THE AUTO WIDTH COMMAND */
+    display: block !important;
+    object-fit: contain !important;
+    z-index: 1;
+}
+
+/* 5. THE 3x3 GRID OVERLAY
+   SNAPS ONLY TO MEDIA - NOT THE BOX. */
+.reveal-grid-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-rows: repeat(3, 1fr) !important;
+    z-index: 2;
+    /* --- THE FIX --- */
+    pointer-events: none !important; 
+}
+
+
+/* 6. THE FROSTED GLASS SQUARES */
+.reveal-square {
+    position: relative;
+    box-sizing: border-box;
+    border: 0.5px solid rgba(255, 255, 255, 0.1) !important;
+}
+.reveal-square.frosted {
+    background: rgba(255, 255, 255, 0.03) !important; 
+    backdrop-filter: blur(60px) !important;
+    -webkit-backdrop-filter: blur(60px) !important;
+}
+.reveal-square.clear {
+    background: transparent !important;
+    backdrop-filter: blur(0px) !important;
+    -webkit-backdrop-filter: blur(0px) !important;
+    border: 0.5px solid rgba(255, 255, 255, 0.05) !important;
+    /* This makes the frost vanish fast and clean */
+    transition: backdrop-filter 0.4s ease, background 0.4s ease !important;
+    animation: none !important;
+}
+
+/* 7. THE NUMBERS */
+.sq-num {
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 0.7rem !important;
+    color: rgba(255, 255, 255, 0.1);
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+/* 8. IPHONE STYLE SLIDERS */
+.reward-slider-container { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 400px; padding: 20px; }
+.iphone-slider { position: relative; width: 100%; height: 55px; background: rgba(255, 255, 255, 0.05); border: 1px solid #333; border-radius: 30px; overflow: hidden; }
+.slider-track-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Georgia', serif; font-size: 0.8rem; color: #555; pointer-events: none; z-index: 2; }
+.slider-knob { position: absolute; left: 4px; top: 4px; bottom: 4px; aspect-ratio: 1 / 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 3; background: #222; }
+.slider-pink .slider-knob { background: var(--neon-pink); }
+.slider-gold .slider-knob { background: var(--neon-yellow); }
+.slider-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; z-index: 1; }
+.slider-pink .slider-fill { background: rgba(255, 0, 222, 0.15); }
+.slider-gold .slider-fill { background: rgba(255, 215, 0, 0.15); }
+
+/* 9. THE CLOSE BUTTON */
+.dr-close-glass {
+    margin: 10px 0 20px 0;
+    background: transparent;
+    border: 1px solid #333;
+    color: #444;
+    font-family: 'Rajdhani';
+    font-size: 0.6rem;
+    padding: 5px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    flex-shrink: 0;
+}
+.dr-close-glass:hover { border-color: #666; color: #888; }
+
+
+/* --- TACTICAL SCANNER VISUALS --- */
+
+/* 1. The Jumping Blue Border */
+.reveal-square.is-targeting {
+    /* Thicker border to be seen over the blur */
+    border: 3px solid #00f3ff !important; 
+    background: rgba(0, 243, 255, 0.3) !important;
+    
+    /* Massive z-index to stay ABOVE the photo and the frost */
+    z-index: 9999 !important; 
+    
+    /* Remove any blur from the active scanning square so it's sharp */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    
+    box-shadow: 0 0 20px #00f3ff, inset 0 0 20px #00f3ff !important;
+}
+
+/* --- INTEGRATED COMMAND BLOCK --- */
+/* 1. THE ROW: Covers the photo but lets clicks pass through the empty spaces */
+.reveal-market-row {
+    position: absolute !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    /* THIS IS THE KEY: High Z-index and PASS-THROUGH events */
+    z-index: 5050 !important; 
+    pointer-events: none !important; 
+}
+
+/* 2. THE MENU BOX: This is the solid box that CATCHES the click */
+/* Target the IDs physically present in your HTML */
+#reward-main-menu, #reward-buy-menu {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 220px !important;
+    padding: 20px !important;
+    
+    /* THE VITAL FIX: WAKES UP THE BUTTONS */
+    pointer-events: auto !important; 
+    z-index: 6000 !important;
+
+    /* Styling */
+    background: rgba(0, 0, 0, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 15px !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+
+/* Base style for all buttons in the block */
+.reveal-market-row .dr-enforce-btn {
+    background: rgba(0, 0, 0, 0.6) !important;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem !important; /* Micro font */
+    padding: 6px 20px !important;
+    width: 220px !important; /* Locked width for clean alignment */
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: center;
+}
+
+/* Yellow style for the Buy buttons */
+.market-btn {
+    border: 1px solid var(--neon-yellow) !important;
+    color: var(--neon-yellow) !important;
+}
+
+.market-btn:hover {
+    background: rgba(255, 215, 0, 0.1) !important;
+    box-shadow: 0 0 10px var(--neon-yellow);
+}
+
+/* Grey/White style for the Close button */
+.close-btn {
+    border: 1px solid #444 !important;
+    color: #666 !important;
+    margin-top: 5px;
+}
+
+.close-btn:hover {
+    border-color: #888 !important;
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 2. The Final Lock-In Flash (3 fast pulses) */
+@keyframes lockInPulse {
+    0% { background: #00f3ff; }
+    50% { background: white; }
+    100% { background: transparent; }
+}
+
+.reveal-square.locked-item {
+    /* 0.2s * 3 pulses = 0.6s total (Matches the new JS timeout) */
+    animation: lockInPulse 0.2s ease-out 3 !important;
+    border: 2px solid white !important;
+    z-index: 101 !important;
+}
+
+.market-menu-group .dr-enforce-btn {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    background: transparent !important;
+}
+
+.market-btn { border-color: var(--neon-yellow) !important; color: var(--neon-yellow) !important; }
+.close-btn { border-color: #444 !important; color: #888 !important; }
+.back-btn { border-color: #222 !important; color: #444 !important; font-size: 0.5rem !important; }
+
+/* 3. Smooth Melt for the Winner */
+.reveal-square.clear {
+    transition: backdrop-filter 1.2s ease, background 1.2s ease !important;
+}
+/* 10. NO SPECIAL MEDIA QUERIES - THE ABOVE LOGIC WORKS FOR BOTH */

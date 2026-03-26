@@ -160,7 +160,7 @@ export default function ProfilePage() {
                 const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
                 if (isLocal) {
                     const TEST_EMAIL = 'pr.finsko@gmail.com';
-                    const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(TEST_EMAIL)}&full=true`);
+                    const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: TEST_EMAIL, full: true }) });
                     const unifiedData = await res.json();
                     console.log('[DEV MODE] Loaded real user:', unifiedData);
                     setProfile(unifiedData);
@@ -203,7 +203,7 @@ export default function ProfilePage() {
 
                 // Fetch all data via the admin API route (same as dashboard) — bypasses RLS
                 // Uses supabaseAdmin internally, returns merged profiles + tasks + crowdfund
-                const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(user.email!)}&full=true`);
+                const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email, full: true }) });
                 const unifiedData = await res.json();
 
                 if (unifiedData && !unifiedData.error && unifiedData.member_id) {

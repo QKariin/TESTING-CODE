@@ -1235,7 +1235,7 @@ export async function updateRoutineWidget() {
 
     try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}&tz=${encodeURIComponent(tz)}&t=${Date.now()}`);
+        const res = await fetch('/api/routine-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, tz }) });
         if (!res.ok) return;
         const data = await res.json();
 
@@ -3251,8 +3251,9 @@ export async function loadQueenPosts() {
 
     try {
         const email = getState().memberId || '';
-        const url = email ? `/api/posts?email=${encodeURIComponent(email)}` : '/api/posts';
-        const res = await fetch(url, { cache: 'no-store' });
+        const res = email
+            ? await fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fetch', email }) })
+            : await fetch('/api/posts', { cache: 'no-store' });
         const data = await res.json();
 
         if (!data.success || !data.posts || data.posts.length === 0) {

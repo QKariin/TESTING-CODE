@@ -24,7 +24,7 @@ export default function LoginPage() {
             return;
         }
         try {
-            const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email_lower)}&full=true`);
+            const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email_lower, full: true }) });
             const data = await res.json();
             if (data && !data.error && data.member_id) {
                 router.push('/profile');
