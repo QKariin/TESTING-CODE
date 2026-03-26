@@ -77,6 +77,14 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
     if (!modal || !mediaBox || !textEl || !actionsEl) return;
 
+    // Force layout: prevent reviewNormalContent from stretching to full panel height
+    const normalContentEl = document.getElementById('reviewNormalContent');
+    if (normalContentEl) {
+        normalContentEl.style.flex = '0 0 auto';
+        normalContentEl.style.minHeight = '0';
+    }
+    actionsEl.style.marginTop = '16px';
+
     // Media: use inline styles so position:absolute/cover work regardless of CSS class order
     if (mediaUrl) {
         if (isVideo) {
