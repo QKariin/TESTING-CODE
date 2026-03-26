@@ -6,8 +6,8 @@ import { HIERARCHY_RULES, rankMeetsRequirement } from '@/lib/hierarchyRules';
 export async function POST(req: Request) {
     try {
         const { senderEmail: rawSenderEmail, content, type = 'text', metadata = {}, conversationId: rawConversationId } = await req.json();
-        let senderEmail = rawSenderEmail?.toLowerCase();
-        let conversationId = rawConversationId?.toLowerCase();
+        const senderEmail = rawSenderEmail?.toLowerCase();
+        const conversationId = rawConversationId?.toLowerCase();
 
         if (!senderEmail || !content) {
             return NextResponse.json({ success: false, error: "Missing required fields." }, { status: 400 });
@@ -30,18 +30,12 @@ export async function POST(req: Request) {
                 process.env.NEXT_PUBLIC_SUPABASE_URL!,
                 process.env.SUPABASE_SERVICE_ROLE_KEY!
             );
-            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(senderEmail);
             const { data, error: profileErr } = await adminClient
                 .from('profiles')
                 .select('*')
-                .or(isUUID ? `id.eq.${senderEmail}` : `member_id.ilike.${senderEmail}`)
+                .ilike('member_id', senderEmail)
                 .maybeSingle();
             profile = data;
-
-            // Reassign to true email if UUID caused cross-wiring
-            if (profile && isUUID) {
-                senderEmail = profile.member_id?.toLowerCase() || senderEmail;
-            }
 
             if (profileErr || !profile) {
                 // No slave profile — check if it's the authenticated admin user
