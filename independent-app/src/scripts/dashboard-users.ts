@@ -174,8 +174,17 @@ export async function updateDetail(u: any) {
             }
         });
 
-        // Add promote button if all requirements met
-        if (report.canPromote && !report.isMax) {
+        // Auto-promote on dashboard load — same as profile-logic auto-promote
+        if (report.canPromote && !report.isMax && u.memberId) {
+            fetch('/api/promote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberEmail: u.memberId })
+            }).catch(() => {});
+        }
+
+        // Always show force-promote button when not at max
+        if (!report.isMax) {
             html += `<div style="margin-top:16px;">
                 <button onclick="window.adminPromoteUser('${u.memberId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(170,125,30,0.5),rgba(130,92,15,0.4));color:rgba(240,210,120,0.95);border:1px solid rgba(180,140,50,0.5);border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
                     ✦ PROMOTE TO ${report.nextRank.toUpperCase()}
