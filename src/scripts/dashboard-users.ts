@@ -426,24 +426,14 @@ export function updateTaskQueue(u: any) {
 
 export async function adminPromoteUser(memberId: string) {
     if (!memberId) return;
-    const u = (await import('./dashboard-state')).users.find((x: any) => x.memberId === memberId);
-    const name = u?.name || memberId;
     try {
-        const res = await fetch('/api/promote', {
+        await fetch('/api/promote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberEmail: memberId, adminForce: true })
+            body: JSON.stringify({ memberEmail: memberId })
         });
-        const data = await res.json();
-        if (data.promoted) {
-            alert(`✦ ${name.toUpperCase()} promoted to ${data.newRank.toUpperCase()}`);
-            window.location.reload();
-        } else {
-            alert(`Promotion check: ${data.currentRank || 'requirements not met server-side'}`);
-        }
-    } catch (e) {
-        alert('Promotion request failed');
-    }
+        window.location.reload();
+    } catch (e) { }
 }
 
 if (typeof window !== 'undefined') {
