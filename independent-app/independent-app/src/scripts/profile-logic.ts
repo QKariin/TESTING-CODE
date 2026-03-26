@@ -2658,7 +2658,7 @@ function _buildMobGlBubble(msg: any): string {
     const SVG_CROWN_MOB = `<svg width="11" height="9" viewBox="0 0 26 20" fill="#c5a059" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
     const replyBtn = msgId ? `<button class="mob-gl-reply-btn" onclick="event.stopPropagation();window.setMobGlReply('${msgId}','${nameSafe}','${contentSafe}')" title="Reply">${SVG_REPLY_MOB}</button>` : '';
     const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:4px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;">
-        <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:1px;">↩ ${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</div>
+        <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">↩ ${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</div>
         <div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content || '').slice(0, 55).replace(/</g, '&lt;')}</div>
     </div>` : '';
 
@@ -2678,11 +2678,11 @@ function _buildMobGlBubble(msg: any): string {
             ? `<img src="${av}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
             : `<img src="/queen-karin.png" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
         return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-                <div style="display:flex;align-items:center;gap:5px;min-width:0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
+                <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
                     ${qAvHtml}
-                    <div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.75rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
-                    <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);"> · ${time}</span>
+                    <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.75rem;color:#c5a059;letter-spacing:1px;font-weight:700;white-space:nowrap;">QUEEN KARIN</span></div>
+                    <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
                 </div>
                 ${replyBtn}
             </div>
