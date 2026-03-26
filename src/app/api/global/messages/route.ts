@@ -13,14 +13,10 @@ export async function GET() {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     const QUEEN_EMAILS = ['ceo@qkarin.com'];
-    const safe = (data || []).map((msg: any) => {
-        const emailToUse = msg.sender_email || msg.sender_id || '';
-        return {
-            ...msg,
-            sender_email: emailToUse,
-            is_queen: QUEEN_EMAILS.includes(emailToUse.toLowerCase()),
-        };
-    });
+    const safe = (data || []).map(({ sender_email, ...rest }: any) => ({
+        ...rest,
+        is_queen: QUEEN_EMAILS.includes((sender_email || '').toLowerCase()),
+    }));
     return NextResponse.json({ messages: safe });
 }
 

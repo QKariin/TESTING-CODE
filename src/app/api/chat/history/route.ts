@@ -20,10 +20,14 @@ export async function GET(req: Request) {
         const since = searchParams.get('since'); // ISO timestamp — return only newer messages
 
         // Fetch messages for this specific user
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
+        const { data: profile } = await queryClient.from('profiles').select('member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
+        const emailToQuery = profile?.member_id || email;
+
         let query = queryClient
             .from('chats')
             .select('*')
-            .ilike('member_id', email)
+            .ilike('member_id', emailToQuery)
             .order('created_at', { ascending: true });
 
         if (since) query = query.gt('created_at', since);
@@ -62,10 +66,14 @@ export async function POST(req: Request) {
         );
 
         // Fetch messages for this specific user
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
+        const { data: profile } = await queryClient.from('profiles').select('member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
+        const emailToQuery = profile?.member_id || email;
+
         let query = queryClient
             .from('chats')
             .select('*')
-            .ilike('member_id', email)
+            .ilike('member_id', emailToQuery)
             .order('created_at', { ascending: true });
 
         if (since) query = query.gt('created_at', since);
