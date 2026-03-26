@@ -41,7 +41,7 @@ export async function GET() {
             allEmails.map((email: string) =>
                 supabaseAdmin
                     .from('profiles')
-                    .select('member_id, name, avatar_url')
+                    .select('member_id, id, name, avatar_url')
                     .ilike('member_id', email)
                     .maybeSingle()
             )
@@ -54,8 +54,9 @@ export async function GET() {
     function getProfile(email: string) {
         const p = profileMap.get(email?.toLowerCase());
         return {
-            name: p?.name || email?.split('@')[0] || 'SUBJECT',
+            name: p?.name || 'SUBJECT',
             avatar: p?.avatar_url || null,
+            member_number: p?.id || null,
         };
     }
 
@@ -64,13 +65,14 @@ export async function GET() {
         let parsed: any = {};
         try { parsed = JSON.parse(r.content); } catch { }
         if (!parsed.url) return [];
-        const { name, avatar } = getProfile(r.member_id);
+        const { name, avatar, member_number } = getProfile(r.member_id);
         return [{
             kind: 'photo',
             media_url: parsed.url,
             caption: parsed.caption || '',
             sender_name: name,
             sender_avatar: avatar,
+            member_number,
             created_at: r.created_at,
         }];
     });
@@ -78,7 +80,7 @@ export async function GET() {
     // Tributes (wishlist purchases)
     const tributes = (tributesRes.data || []).map((r: any) => {
         const meta = r.metadata || {};
-        const { name, avatar } = getProfile(r.member_id);
+        const { name, avatar, member_number } = getProfile(r.member_id);
         return {
             kind: 'tribute',
             title: meta.title || r.content || 'Gift',
@@ -86,6 +88,7 @@ export async function GET() {
             price: meta.price || 0,
             sender_name: name,
             sender_avatar: avatar,
+            member_number,
             created_at: r.created_at,
         };
     });
@@ -95,12 +98,13 @@ export async function GET() {
         const match = r.content.match(/\+(\d+)\s*MERIT/i);
         const pts = match ? parseInt(match[1]) : 0;
         if (!pts) return [];
-        const { name, avatar } = getProfile(r.member_id);
+        const { name, avatar, member_number } = getProfile(r.member_id);
         return [{
             kind: 'points',
             points: pts,
             sender_name: name,
             sender_avatar: avatar,
+            member_number,
             created_at: r.created_at,
         }];
     });

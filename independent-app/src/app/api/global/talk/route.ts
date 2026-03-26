@@ -7,13 +7,13 @@ export async function GET() {
     const [messagesRes, onlineRes] = await Promise.all([
         supabaseAdmin
             .from('chats')
-            .select('member_id, content, created_at')
+            .select('id, member_id, content, created_at, type')
             .eq('type', 'global_talk')
             .order('created_at', { ascending: true })
             .limit(100),
         supabaseAdmin
             .from('profiles')
-            .select('member_id, name, avatar_url, profile_picture_url, last_active')
+            .select('member_id, id, name, avatar_url, profile_picture_url, last_active')
             .gte('last_active', new Date(Date.now() - 2 * 60 * 1000).toISOString()),
     ]);
 
@@ -22,20 +22,25 @@ export async function GET() {
     const messages = messagesRes.data || [];
     const emails = [...new Set(messages.map((m: any) => m.member_id))];
     const { data: profiles } = emails.length
-        ? await supabaseAdmin.from('profiles').select('member_id, name').in('member_id', emails)
+        ? await supabaseAdmin.from('profiles').select('member_id, id, name').in('member_id', emails)
         : { data: [] };
 
     const nameMap = new Map((profiles || []).map((p: any) => [p.member_id, p.name]));
+    const idMap = new Map((profiles || []).map((p: any) => [p.member_id, p.id]));
 
     const enriched = messages.map((m: any) => ({
-        ...m,
-        senderName: nameMap.get(m.member_id) || m.member_id?.split('@')[0] || 'SUBJECT',
+        id: m.id,
+        content: m.content,
+        created_at: m.created_at,
+        senderName: nameMap.get(m.member_id) || 'SUBJECT',
+        member_number: idMap.get(m.member_id) || null,
+        type: m.type,
     }));
 
     const online = (onlineRes.data || []).map((p: any) => ({
-        email: p.member_id,
-        name: p.name || p.member_id?.split('@')[0] || 'SUBJECT',
+        name: p.name || 'SUBJECT',
         avatar: p.avatar_url || p.profile_picture_url || null,
+        member_number: p.id || null,
     }));
 
     return NextResponse.json({ messages: enriched, online });

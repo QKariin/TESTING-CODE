@@ -507,10 +507,13 @@ function _initTalkRealtime() {
         .channel('global_messages_channel')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' },
             (payload: any) => {
-                const myEmail = getState().raw?.member_id || getState().raw?.email || '';
+                const raw = getState().raw;
+                const myEmail = (raw?.member_id || raw?.email || '').toLowerCase();
                 // Skip own messages — already shown optimistically on send
-                if ((payload.new?.sender_email || '').toLowerCase() === myEmail.toLowerCase()) return;
-                _appendMessage(payload.new);
+                if (myEmail && (payload.new?.sender_email || '').toLowerCase() === myEmail) return;
+                // Strip email before passing to renderer
+                const { sender_email: _stripped, ...safeMsg } = payload.new || {};
+                _appendMessage(safeMsg);
             }
         )
         .subscribe();
@@ -547,10 +550,11 @@ async function _fetchAndRenderMessages(scrollBottom: boolean) {
 function _appendMessage(msg: any) {
     const feed = document.getElementById('globalTalkFeed');
     if (!feed) return;
-    const myEmail = getState().raw?.member_id || getState().raw?.email || '';
+    const raw = getState().raw;
+    const myName = raw?.name || raw?.member_id?.split('@')[0] || '';
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
     const el = document.createElement('div');
-    el.innerHTML = _buildBubble(msg, myEmail);
+    el.innerHTML = _buildBubble(msg, myName);
     feed.appendChild(el.firstElementChild!);
     if (wasNear) feed.scrollTop = feed.scrollHeight;
 }
@@ -560,22 +564,20 @@ function _appendMessage(msg: any) {
 function _renderMessages(messages: any[], scrollBottom: boolean) {
     const feed = document.getElementById('globalTalkFeed');
     if (!feed) return;
-    const myEmail = getState().raw?.member_id || getState().raw?.email || '';
+    const raw = getState().raw;
+    const myName = raw?.name || raw?.member_id?.split('@')[0] || '';
     if (!messages.length) {
         feed.innerHTML = `<div style="text-align:center;padding:60px 20px;font-family:'Orbitron';font-size:0.6rem;color:rgba(255,255,255,0.18);letter-spacing:3px;">BE THE FIRST TO SPEAK</div>`;
         return;
     }
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
-    feed.innerHTML = messages.map(m => _buildBubble(m, myEmail)).join('');
+    feed.innerHTML = messages.map(m => _buildBubble(m, myName)).join('');
     if (scrollBottom || wasNear) feed.scrollTop = feed.scrollHeight;
 }
 
-const QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
-
-function _buildBubble(msg: any, myEmail: string): string {
-    const senderEmailLower = (msg.sender_email || '').toLowerCase();
-    const isMe = senderEmailLower === myEmail.toLowerCase();
-    const isQueen = QUEEN_EMAILS.includes(senderEmailLower);
+function _buildBubble(msg: any, myName: string): string {
+    const isMe = !!myName && msg.sender_name === myName;
+    const isQueen = msg.is_queen === true || msg.sender_name === 'QUEEN KARIN';
     const content = msg.message || '';
     const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -727,9 +729,9 @@ export async function sendGlobalMessage() {
     const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
     const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
     _appendMessage({
-        sender_email: senderEmail,
         sender_name: senderName,
         sender_avatar: senderAvatar,
+        is_queen: isQueenLocal,
         message,
         created_at: new Date().toISOString(),
     });

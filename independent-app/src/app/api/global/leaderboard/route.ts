@@ -24,7 +24,7 @@ export async function GET(req: Request) {
             .select(`member_id, Name, Hierarchy, "Profile pic", "Daily Score", "Weekly Score", "Monthly Score", Taskdom_Points`),
         supabaseAdmin
             .from('profiles')
-            .select('member_id, hierarchy, avatar_url'),
+            .select('member_id, id, hierarchy, avatar_url'),
     ]);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -33,22 +33,22 @@ export async function GET(req: Request) {
     const profileMap = new Map((profiles || []).map((p: any) => [p.member_id?.toLowerCase(), p]));
 
     interface LeaderboardEntry {
-        email: string;
         name: string;
         hierarchy: string;
         avatar: string;
         score: number;
+        member_number: string | null;
     }
 
     const entries: LeaderboardEntry[] = (tasks || [])
         .map((t: any) => {
             const prof: any = profileMap.get(t.member_id?.toLowerCase()) || {};
             return {
-                email: t.member_id,
                 name: t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
                 hierarchy: prof.hierarchy || t.Hierarchy || '—',
                 avatar: prof.avatar_url || t['Profile pic'] || '',
                 score: parseNum(t[colKey]),
+                member_number: prof.id || null,
             };
         })
         .filter((e: LeaderboardEntry) => e.score > 0)

@@ -6,15 +6,15 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     const { data: profiles, error } = await supabaseAdmin
         .from('profiles')
-        .select('email, name, hierarchy, parameters');
+        .select('id, name, hierarchy, parameters');
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     interface SpenderEntry {
-        email: string;
         name: string;
         hierarchy: string;
         totalSpent: number;
+        member_number: string | null;
     }
 
     const entries: SpenderEntry[] = (profiles || []).map((p: any) => {
@@ -22,10 +22,10 @@ export async function GET() {
         try { params = typeof p.parameters === 'string' ? JSON.parse(p.parameters) : (p.parameters || {}); } catch { }
         const totalSpent = parseInt(params.wishlist_spent || 0);
         return {
-            email: p.email,
-            name: p.name || p.email?.split('@')[0] || 'SUBJECT',
+            name: p.name || 'SUBJECT',
             hierarchy: p.hierarchy || '—',
             totalSpent,
+            member_number: p.id || null,
         };
     }).filter((e: SpenderEntry) => e.totalSpent > 0);
 

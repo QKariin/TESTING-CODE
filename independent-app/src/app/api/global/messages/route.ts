@@ -6,12 +6,18 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     const { data, error } = await supabaseAdmin
         .from('global_messages')
-        .select('*')
+        .select('id, sender_email, sender_name, sender_avatar, message, media_url, media_type, created_at')
         .order('created_at', { ascending: true })
         .limit(100);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ messages: data || [] });
+
+    const QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
+    const safe = (data || []).map(({ sender_email, ...rest }: any) => ({
+        ...rest,
+        is_queen: QUEEN_EMAILS.includes((sender_email || '').toLowerCase()),
+    }));
+    return NextResponse.json({ messages: safe });
 }
 
 export async function POST(req: Request) {
