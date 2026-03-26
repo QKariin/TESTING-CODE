@@ -610,7 +610,8 @@ function _buildBubble(msg: any, myName: string): string {
     const msgId = msg.id || '';
     const senderNameSafe = (msg.sender_name || 'SUBJECT').replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
     const contentSafe = content.slice(0, 80).replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, ' ');
-    const replyBtn = msgId ? `<button class="gl-reply-btn" onclick="event.stopPropagation();window.setGlReply('${msgId}','${senderNameSafe}','${contentSafe}')" title="Reply">↩</button>` : '';
+    const SVG_REPLY = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>`;
+    const replyBtn = msgId ? `<button class="gl-reply-btn" onclick="event.stopPropagation();window.setGlReply('${msgId}','${senderNameSafe}','${contentSafe}')" title="Reply">${SVG_REPLY}</button>` : '';
     const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:5px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;">
         <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;">↩ ${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</div>
         <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">${(msg.reply_to.content || '').slice(0, 60).replace(/</g, '&lt;')}</div>
@@ -663,28 +664,32 @@ function _buildBubble(msg: any, myName: string): string {
     // Queen/admin message — golden bubble, right-aligned if sent by me, left if by another queen
     if (isQueen) {
         if (isMe) {
-            return `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
+            return `<div class="gl-msg-row" style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
                 <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);margin-bottom:4px;letter-spacing:1px;">QUEEN KARIN · ${time}</div>
-                <div style="position:relative;max-width:${hasMedia ? '85%' : '70%'};padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:14px 14px 3px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
-                    ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
-                    ${mediaHtml}
+                <div style="display:flex;align-items:center;gap:8px;">
                     ${replyBtn}
+                    <div style="max-width:${hasMedia ? '85%' : '70%'};padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:14px 14px 3px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
+                        ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
+                        ${mediaHtml}
+                    </div>
                 </div>
             </div>`;
         }
         const avatarHtml = av
             ? `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
             : '';
-        return `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
+        return `<div class="gl-msg-row" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
             <div style="width:32px;height:32px;border-radius:50%;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.5);overflow:hidden;flex-shrink:0;position:relative;box-shadow:0 0 8px rgba(197,160,89,0.3);">
                 ${avatarHtml}
                 <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">♛</div>
             </div>
             <div style="max-width:${hasMedia ? '85%' : '70%'};">
                 <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.7);margin-bottom:4px;letter-spacing:1px;">QUEEN KARIN · ${time}</div>
-                <div style="position:relative;padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:3px 14px 14px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
-                    ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
-                    ${mediaHtml}
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="padding:9px 13px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:3px 14px 14px 14px;box-shadow:0 0 12px rgba(197,160,89,0.15);overflow:hidden;">
+                        ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#f0d888;line-height:1.45;">${msg.message}</div>
+                        ${mediaHtml}
+                    </div>
                     ${replyBtn}
                 </div>
             </div>
@@ -692,11 +697,13 @@ function _buildBubble(msg: any, myName: string): string {
     }
 
     if (isMe) {
-        return `<div style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
+        return `<div class="gl-msg-row" style="display:flex;flex-direction:column;align-items:flex-end;margin-bottom:14px;padding:0 14px;">
             <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.22);margin-bottom:4px;letter-spacing:1px;">YOU · ${time}</div>
-            <div style="position:relative;max-width:70%;padding:9px 13px;background:rgba(55,55,60,0.85);border:1px solid rgba(100,100,110,0.3);border-radius:14px 14px 3px 14px;">
-                ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
                 ${replyBtn}
+                <div style="max-width:70%;padding:9px 13px;background:rgba(55,55,60,0.85);border:1px solid rgba(100,100,110,0.3);border-radius:14px 14px 3px 14px;">
+                    ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
+                </div>
             </div>
         </div>`;
     }
@@ -704,15 +711,17 @@ function _buildBubble(msg: any, myName: string): string {
     const avatarHtml = av
         ? `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : '';
-    return `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
+    return `<div class="gl-msg-row" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:0 14px;">
         <div style="width:32px;height:32px;border-radius:50%;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.25);overflow:hidden;flex-shrink:0;position:relative;">
             ${avatarHtml}
             <div style="display:${av ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#c5a059;">${initial}</div>
         </div>
         <div style="max-width:70%;">
             <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.55);margin-bottom:4px;letter-spacing:1px;">${name} · ${time}</div>
-            <div style="position:relative;padding:9px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:3px 14px 14px 14px;">
-                ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div style="padding:9px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:3px 14px 14px 14px;">
+                    ${quoteHtml}<div style="font-family:'Rajdhani';font-size:0.92rem;color:#e8e8e8;line-height:1.45;">${msg.message}</div>
+                </div>
                 ${replyBtn}
             </div>
         </div>

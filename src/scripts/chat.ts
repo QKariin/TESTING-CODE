@@ -130,9 +130,10 @@ export async function renderChat(messages: any[]) {
         const msgId = m.id || m._id || '';
         const senderNameSafe = (m.sender_name || (isMe ? 'You' : 'Queen Karin')).replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
         const contentSafe = (originalMsg).slice(0, 80).replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, ' ');
-        const replyBtn = msgId ? `<button class="chat-reply-btn" onclick="event.stopPropagation();window.setProfileChatReply('${msgId}','${senderNameSafe}','${contentSafe}')" title="Reply">↩</button>` : '';
+        const SVG_REPLY = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>`;
+        const replyBtn = msgId ? `<button class="chat-reply-btn" onclick="event.stopPropagation();window.setProfileChatReply('${msgId}','${senderNameSafe}','${contentSafe}')" title="Reply">${SVG_REPLY}</button>` : '';
 
-        let contentHtml = `<div class="msg ${msgClass}" style="position:relative;">${quoteHtml}${txt}${replyBtn}</div>`;
+        let contentHtml = `<div class="msg ${msgClass}">${quoteHtml}${txt}</div>`;
 
         // --- MEDIA HANDLER ---
         if (originalMsg) {
@@ -272,18 +273,21 @@ export async function renderChat(messages: any[]) {
 
         const avatarUrl = "/queen-karin.png";
         if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('http')) {
-            contentHtml = `<div class="msg ${msgClass}" style="position:relative;">
+            contentHtml = `<div class="msg ${msgClass}">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <img src="${avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid #c5a059;flex-shrink:0;">
                     <div style="flex:1;">${quoteHtml}<span>${txt}</span></div>
                 </div>
-                ${replyBtn}
             </div>`;
         }
 
-        return `<div class="msg-row ${isMe ? 'mr-out' : 'mr-in'}">
+        return `<div class="msg-row chat-msg-row ${isMe ? 'mr-out' : 'mr-in'}">
             <div class="msg-col" style="align-items:${isMe ? 'flex-end' : 'flex-start'};">
-                ${contentHtml}
+                <div style="display:flex;align-items:center;gap:8px;">
+                    ${isMe ? replyBtn : ''}
+                    ${contentHtml}
+                    ${!isMe ? replyBtn : ''}
+                </div>
                 <div class="msg-time">${timeStr}</div>
             </div>
         </div>`;
