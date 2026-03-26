@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
     try {
-        const { memberEmail } = await req.json();
+        const { memberEmail, adminForce } = await req.json();
         if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
 
         // 1. Fetch Profile
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
 
         if (!report) return NextResponse.json({ error: 'Failed to generate report' }, { status: 500 });
 
-        if (report.canPromote && report.nextRank && report.nextRank !== report.currentRank) {
+        if ((report.canPromote || adminForce) && report.nextRank && report.nextRank !== report.currentRank) {
             // PROMOTION TIME!
             const { error: updateError } = await supabaseAdmin
                 .from('profiles')

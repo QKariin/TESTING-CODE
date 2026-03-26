@@ -432,7 +432,7 @@ export async function adminPromoteUser(memberId: string) {
         const res = await fetch('/api/promote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberEmail: memberId })
+            body: JSON.stringify({ memberEmail: memberId, adminForce: true })
         });
         const data = await res.json();
         if (data.promoted) {
