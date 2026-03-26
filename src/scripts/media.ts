@@ -58,13 +58,7 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     if (url.startsWith("blob:")) return url;
     if (url === "FORCED" || url === "SKIPPED") return "/queen-karin.png";
     if (url.includes("token=")) return url; // Already a signed URL
-    // Supabase Pro image transformation — only for public bucket URLs, only for images
-    if (url.includes("/storage/v1/object/public/")) {
-        if (/\.(mp4|mov|avi|mkv|webm|m4v|3gp|hevc|wmv|flv)/i.test(url)) return url;
-        const transformed = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-        return `${transformed}?width=${width}&quality=80`;
-    }
-    // Private/signed Supabase URLs — return as-is
+    // Supabase storage URLs — return as-is (no server-side transform)
     if (url.includes("supabase.co/storage")) return url;
 
     // 1. CLOUDINARY
