@@ -103,8 +103,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
         }
 
-        // 2. Parse body
-        const body = await request.json();
+        // 2. Parse body (already parsed above)
         const { title, content, media_url, thumbnail_url, external_url, min_rank, price, media_type, is_published } = body;
 
         if (!title && !content) {
