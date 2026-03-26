@@ -1656,20 +1656,12 @@ export async function loadChatHistory(email: string) {
         if (data.success) {
             const messages = data.messages || [];
 
-            // 1. Separate System vs Chat
-            const systemMessages = messages.filter((m: any) => isSystemMessage(m));
-            const chatMessages = messages.filter((m: any) => !isSystemMessage(m));
-
-            // 2. Update Ticker and System Log Window
-            if (systemMessages.length > 0) {
-                updateSystemTicker(systemMessages[systemMessages.length - 1]);
-                renderSystemLogs(systemMessages);
-            }
-
-            // 3. Render Chat (pass prev timestamp for 5-min gap logic)
+            // 3. Render ALL messages to the feed (so it's not empty)
             _lastRenderedChatTs = 0;
-            const html = chatMessages.map((m: any, i: number) => {
-                const prevTs = i === 0 ? 0 : new Date(chatMessages[i - 1].created_at || 0).getTime();
+            // Display all messages that aren't purely technical/invisible
+            const displayMessages = messages.filter((m: any) => m.content && m.content.trim());
+            const html = displayMessages.map((m: any, i: number) => {
+                const prevTs = i === 0 ? 0 : new Date(displayMessages[i - 1].created_at || 0).getTime();
                 return renderChatMessage(m, prevTs);
             }).join('');
 

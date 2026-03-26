@@ -11,19 +11,57 @@ export async function GET(req: Request) {
             return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
         }
 
-        // Use admin client to bypass RLS — messages are scoped to the requested email
-        const queryClient = createAdminClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
+        // Robust administrative client initialization
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!supabaseUrl || !supabaseServiceKey) {
+            console.error("[API/Chat/History] GET CRITICAL: Environment variables missing");
+            return NextResponse.json({ success: false, error: "Environment configuration error." }, { status: 500 });
+        }
+
+        const queryClient = createAdminClient(supabaseUrl, supabaseServiceKey);
 
         const since = searchParams.get('since'); // ISO timestamp — return only newer messages
 
         // Fetch messages for this specific user
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
+        let { data: profile } = await queryClient.from('profiles').select('id, member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
+
+        if (!profile && !isUUID) {
+            // 🔄 DEFAULT PROFILE CREATION: If no profile exists yet, create one now.
+            // This adoption logic ensures legacy users and new users all have a valid profile.
+            const { data: legacyTask } = await queryClient
+                .from('tasks')
+                .select('Score')
+                .ilike('MemberID', email)
+                .maybeSingle();
+
+            const { data: newProfile, error: createError } = await queryClient
+                .from('profiles')
+                .insert({
+                    member_id: email.toLowerCase(),
+                    name: email.split('@')[0],
+                    score: Number(legacyTask?.Score || 0),
+                    wallet: 0,
+                    hierarchy: 'Hall Boy'
+                })
+                .select()
+                .single();
+            
+            if (!createError && newProfile) {
+                profile = newProfile;
+            } else if (createError) {
+                console.error("[API/Chat/History] Failed to auto-create profile:", createError.message);
+            }
+        }
+
+        const emailToQuery = profile?.member_id || email;
+
         let query = queryClient
             .from('chats')
             .select('*')
-            .ilike('member_id', email)
+            .ilike('member_id', emailToQuery)
             .order('created_at', { ascending: true });
 
         if (since) query = query.gt('created_at', since);
@@ -55,17 +93,51 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
         }
 
-        // Use admin client to bypass RLS — messages are scoped to the requested email
-        const queryClient = createAdminClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
+        // Robust administrative client initialization
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!supabaseUrl || !supabaseServiceKey) {
+            console.error("[API/Chat/History] POST CRITICAL: Environment variables missing");
+            return NextResponse.json({ success: false, error: "Environment configuration error." }, { status: 500 });
+        }
+
+        const queryClient = createAdminClient(supabaseUrl, supabaseServiceKey);
 
         // Fetch messages for this specific user
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
+        let { data: profile } = await queryClient.from('profiles').select('id, member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
+
+        if (!profile && !isUUID) {
+            // 🔄 LEGIACY IDENTITY ADOPTION
+            const { data: legacyTask } = await queryClient
+                .from('tasks')
+                .select('Score')
+                .ilike('MemberID', email)
+                .maybeSingle();
+
+            if (legacyTask) {
+                const { data: newProfile } = await queryClient
+                    .from('profiles')
+                    .insert({
+                        member_id: email.toLowerCase(),
+                        name: email.split('@')[0],
+                        score: Number(legacyTask.Score || 0),
+                        wallet: 0,
+                        hierarchy: 'Hall Boy'
+                    })
+                    .select()
+                    .single();
+                if (newProfile) profile = newProfile;
+            }
+        }
+
+        const emailToQuery = profile?.member_id || email;
+
         let query = queryClient
             .from('chats')
             .select('*')
-            .ilike('member_id', email)
+            .ilike('member_id', emailToQuery)
             .order('created_at', { ascending: true });
 
         if (since) query = query.gt('created_at', since);
