@@ -9,7 +9,7 @@ const cr = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 export async function POST(req: Request) {
     try {
-        const { memberEmail } = await req.json();
+        const { memberEmail, newRank } = await req.json();
         if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
 
         const { data: profile } = await supabaseAdmin
@@ -17,17 +17,18 @@ export async function POST(req: Request) {
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
         const currentHierarchy = profile.hierarchy || "Hall Boy";
-        const currentIdx = RANK_ORDER.findIndex(r => cr(r) === cr(currentHierarchy));
-        const nextIdx = currentIdx <= 0 ? -1 : currentIdx - 1;
 
-        if (nextIdx < 0) {
-            return NextResponse.json({ success: true, promoted: false, currentRank: currentHierarchy });
+        // Use client-supplied newRank if valid, otherwise compute from current rank
+        let targetRank = newRank;
+        if (!targetRank || !RANK_ORDER.find(r => cr(r) === cr(targetRank))) {
+            const currentIdx = RANK_ORDER.findIndex(r => cr(r) === cr(currentHierarchy));
+            const nextIdx = (currentIdx <= 0 || currentIdx === -1) ? -1 : currentIdx - 1;
+            if (nextIdx < 0) return NextResponse.json({ success: true, promoted: false, currentRank: currentHierarchy });
+            targetRank = RANK_ORDER[nextIdx];
         }
 
-        const nextRank = RANK_ORDER[nextIdx];
-
         const { error: updateError } = await supabaseAdmin
-            .from('profiles').update({ hierarchy: nextRank }).eq('id', profile.id);
+            .from('profiles').update({ hierarchy: targetRank }).eq('id', profile.id);
         if (updateError) {
             console.error('[promote] update error:', updateError);
             return NextResponse.json({ error: updateError.message }, { status: 500 });
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
         const rawPic = profile.avatar_url || profile.profile_picture_url || "";
         const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
         const memberName = profile.name || memberEmail.split('@')[0] || 'SLAVE';
-        const cardMsg = `PROMOTION_CARD::${JSON.stringify({ name: memberName, photo: memberPhoto, oldRank: currentHierarchy, newRank: nextRank })}`;
+        const cardMsg = `PROMOTION_CARD::${JSON.stringify({ name: memberName, photo: memberPhoto, oldRank: currentHierarchy, newRank: targetRank })}`;
 
         try { await DbService.sendMessage(profile.member_id, cardMsg, 'system'); } catch (_) { }
         try {
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
             });
         } catch (_) { }
 
-        return NextResponse.json({ success: true, promoted: true, newRank: nextRank });
+        return NextResponse.json({ success: true, promoted: true, newRank: targetRank });
 
     } catch (err: any) {
         console.error('[promote] error:', err);
