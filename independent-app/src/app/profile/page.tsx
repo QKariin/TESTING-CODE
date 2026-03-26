@@ -206,7 +206,7 @@ export default function ProfilePage() {
                 const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email, full: true }) });
                 const unifiedData = await res.json();
 
-                if (unifiedData && !unifiedData.error && unifiedData.member_id) {
+                if (unifiedData && !unifiedData.error && (unifiedData.memberId || unifiedData.member_id)) {
                     console.log("[PROFILE] Loaded Data:", unifiedData);
 
                     setProfile(unifiedData);

@@ -63,7 +63,7 @@ export default function AuthCallbackPage() {
             try {
                 const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(id)}&full=true`);
                 const data = await res.json();
-                router.replace(data?.member_id ? '/profile' : '/tribute');
+                router.replace((data?.memberId || data?.member_id) ? '/profile' : '/tribute');
             } catch {
                 router.replace('/tribute');
             }

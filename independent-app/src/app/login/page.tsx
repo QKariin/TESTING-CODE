@@ -26,7 +26,7 @@ export default function LoginPage() {
         try {
             const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email_lower, full: true }) });
             const data = await res.json();
-            if (data && !data.error && data.member_id) {
+            if (data && !data.error && (data.memberId || data.member_id)) {
                 router.push('/profile');
             } else {
                 router.push('/tribute');
