@@ -84,8 +84,7 @@
 #reviewNormalContent {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
     overflow-y: auto;
     box-sizing: border-box;
 }
@@ -208,8 +207,7 @@
     flex-shrink: 0;
     width: 100%;
     flex-direction: row;
-    margin-top: auto;
-    padding-top: 12px;
+    margin-top: 16px;
 }
 
 .sticker-grid {
