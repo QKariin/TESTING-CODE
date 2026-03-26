@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { HIERARCHY_RULES } from '@/lib/hierarchyRules';
+import { HIERARCHY_RULES, rankMeetsRequirement } from '@/lib/hierarchyRules';
 
 export async function POST(req: Request) {
     try {
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
                     return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
                 }
             } else {
-                isQueen = (profile.hierarchy === 'Queen' || profile.hierarchy === 'Secretary');
+                isQueen = rankMeetsRequirement(profile.hierarchy, "Secretary");
             }
         }
 
@@ -60,11 +60,12 @@ export async function POST(req: Request) {
         const userRank = profile.hierarchy || 'Hall Boy';
         const rankRule = HIERARCHY_RULES.find(r => r.name.toLowerCase() === userRank.toLowerCase()) || HIERARCHY_RULES[HIERARCHY_RULES.length - 1];
 
-        // 3. Permission Checks (admin/Queen bypasses all)
-        if (!isQueen && type === 'photo' && !rankRule.benefits.some(b => b.includes('Photos'))) {
+        // 3. Permission Checks — use rank comparison so permissions stack (higher rank = all lower perms included)
+        // Photos unlocked at Silverman, Videos unlocked at Butler
+        if (!isQueen && type === 'photo' && !rankMeetsRequirement(userRank, 'Silverman')) {
             return NextResponse.json({ success: false, error: `Rank "${userRank}" does not have photo permissions.` }, { status: 403 });
         }
-        if (!isQueen && type === 'video' && !rankRule.benefits.some(b => b.includes('Videos'))) {
+        if (!isQueen && type === 'video' && !rankMeetsRequirement(userRank, 'Butler')) {
             return NextResponse.json({ success: false, error: `Rank "${userRank}" does not have video permissions.` }, { status: 403 });
         }
 
