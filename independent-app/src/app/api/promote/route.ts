@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { HIERARCHY_RULES } from '@/lib/hierarchyRules';
-import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +55,16 @@ export async function POST(req: Request) {
             name: memberName, photo: memberPhoto,
             oldRank: currentRank, newRank: nextRank
         })}`;
-        try { await DbService.sendMessage(exactEmail, cardMsg, 'system'); } catch (_) {}
+        // Insert as 'queen' sender so it shows in the chat box (not the system log)
+        try {
+            await supabaseAdmin.from('chats').insert({
+                member_id: exactEmail,
+                sender_email: 'queen',
+                content: cardMsg,
+                type: 'text',
+                metadata: { isQueen: true, mediaUrl: null }
+            });
+        } catch (_) {}
         try {
             await supabaseAdmin.from('global_messages').insert({
                 sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: cardMsg,
