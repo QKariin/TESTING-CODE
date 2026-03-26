@@ -364,8 +364,8 @@ export function expandAdminCategory(category: 'accepted' | 'pending' | 'routine'
             const isVid = /\.(mp4|mov|webm)/i.test(t.proofUrl || '');
             const media = t.proofUrl && t.proofUrl !== 'SKIPPED'
                 ? (isVid
-                    ? `<video src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;" muted playsinline loop preload="none"></video>`
-                    : `<img src="${getOptimizedUrl(t.proofUrl, 300)}" style="width:100%;aspect-ratio:3/4;object-fit:cover;" />`)
+                    ? `<video src="${t.proofUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;" muted playsinline loop preload="none" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}"></video>`
+                    : `<img src="${getOptimizedUrl(t.proofUrl, 300)}" style="width:100%;aspect-ratio:3/4;object-fit:cover;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}" />`)
                 : `<div style="aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:2rem;background:#0a0a0a;">🚫</div>`;
             const date = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
             const statusColor = t.status === 'approve' ? '#c5a059' : t.status === 'pending' ? '#888' : '#8b0000';

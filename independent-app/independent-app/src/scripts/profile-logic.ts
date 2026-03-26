@@ -1715,6 +1715,11 @@ async function _pollNewChatMessages(email: string) {
             if (_lastChatMsgId && m.id === _lastChatMsgId) return;
             _lastChatMsgId = m.id;
             if (m.created_at) _lastChatMsgTimestamp = m.created_at;
+            if (isSystemMessage(m)) {
+                appendSystemLog(m);
+                updateSystemTicker(m);
+                return;
+            }
             const html = renderChatMessage(m);
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
@@ -1794,10 +1799,19 @@ export async function loadChatHistory(email: string) {
                 _lastChatMsgTimestamp = new Date().toISOString();
             }
 
-            // 3. Render ALL messages to the feed (so it's not empty)
+            // 3. Split: system messages → system log, chat messages → chat box
             _lastRenderedChatTs = 0;
-            // Display all messages that aren't purely technical/invisible
-            const displayMessages = messages.filter((m: any) => m.content && m.content.trim());
+            const allDisplay = messages.filter((m: any) => m.content && m.content.trim());
+            const sysDisplay = allDisplay.filter((m: any) => isSystemMessage(m));
+            const chatDisplay = allDisplay.filter((m: any) => !isSystemMessage(m));
+
+            // Populate system log from history
+            if (sysDisplay.length > 0) {
+                renderSystemLogs(sysDisplay);
+                updateSystemTicker(sysDisplay[sysDisplay.length - 1]);
+            }
+
+            const displayMessages = chatDisplay;
             let html = displayMessages.map((m: any, i: number) => {
                 const prevTs = i === 0 ? 0 : new Date(displayMessages[i - 1].created_at || 0).getTime();
                 return renderChatMessage(m, prevTs);
@@ -2051,6 +2065,8 @@ let _lastRenderedChatTs = 0;
 function renderChatMessage(msg: any, prevTs?: number): string {
     const senderEmail = (msg.sender_email || msg.sender || '').toLowerCase();
     const isSys = isSystemMessage(msg);
+    // System messages must never appear in the regular chat — they belong in the system log only
+    if (isSys) return '';
     const myEmail = getState().memberId?.toLowerCase();
     const isMe = !isSys && (senderEmail === 'user' || senderEmail === 'slave' || senderEmail === myEmail);
 
@@ -2405,9 +2421,9 @@ async function _loadMobQueenPosts() {
                         </div>
                     </div>`;
                 } else if (isVideo) {
-                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;"><video src="${p.media_url}" controls playsinline preload="metadata" style="width:100%;display:block;max-height:340px;object-fit:cover;"></video></div>`;
+                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;"><video src="${p.media_url}" controls playsinline preload="metadata" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;display:block;max-height:340px;object-fit:cover;"></video></div>`;
                 } else {
-                    mediaHTML = `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" style="width:100%;display:block;object-fit:cover;max-height:340px;" onerror="this.style.display='none'" />`;
+                    mediaHTML = `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" style="width:100%;display:block;object-fit:cover;max-height:340px;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}else{this.style.display='none';}" />`;
                 }
             }
 
@@ -3994,7 +4010,7 @@ export async function loadQueenPosts() {
                         ? `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#18120a 0%,#0a0808 55%,#060606 100%);"></div>`
                         : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(0.25);pointer-events:none;" />`)
                 : heroIsVideo
-                    ? `<video src="${heroPost.media_url}" muted playsinline preload="none" onclick="window.openQkLightbox('video','${heroPost.media_url}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
+                    ? `<video src="${heroPost.media_url}" muted playsinline preload="none" onclick="window.openQkLightbox('video','${heroPost.media_url}')" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
                     : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="width:100%;height:100%;object-fit:cover;object-position:center top;cursor:pointer;" />`;
         const heroHTML = `
         <div class="qk-hero">

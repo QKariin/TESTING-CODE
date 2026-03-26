@@ -629,12 +629,14 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     if (content.startsWith('PROMOTION_CARD::')) {
         try {
             const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
-            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'">` : '';
+            const initials = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
             return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
-                <div>
-                    <div style="width:260px;max-width:72vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                <div style="width:60%;min-width:240px;max-width:480px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
                         <div style="position:relative;width:100%;height:150px;background:#0a0703;overflow:hidden;">
-                            ${photoBlock}
+                            ${photoBlock}${photoFallback}
                             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
                             <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div>
                         </div>
@@ -654,14 +656,12 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
         } catch (e) { /* fall through */ }
     }
 
-    const mediaHtml = av && msg.media_url ? (
+    const _vidErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}"`;
+    const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
+    const mediaHtml = msg.media_url ? (
         msg.media_type === 'video'
-            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
-            : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
-    ) : msg.media_url ? (
-        msg.media_type === 'video'
-            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
-            : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
+            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" ${_vidErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
+            : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
     ) : '';
 
     // ── QUEEN bubble (gold frame, full-width feed style) ──

@@ -621,7 +621,7 @@ export default function ProfilePage() {
 
                             {/* TOP BOX — tribute card, unchanged */}
                             <div className="v-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                                <div id="desk_QuickTribute" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden', minHeight: 0 }}></div>
+                                <div id="desk_QuickTribute" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden', minHeight: 0, justifyContent: 'center' }}></div>
                                 <button className="action-btn" onClick={() => toggleTributeHunt()} style={{ width: '100%', fontSize: '0.6rem', padding: 6, borderRadius: 8, marginTop: 10, background: 'rgba(255,255,255,0.05)', color: '#888', flexShrink: 0 }}>SPOIL ME ♥</button>
                             </div>
 
