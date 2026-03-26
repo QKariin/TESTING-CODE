@@ -1802,10 +1802,14 @@ export async function loadChatHistory(email: string) {
 
             // 3. Render Chat (pass prev timestamp for 5-min gap logic)
             _lastRenderedChatTs = 0;
-            const html = chatMessages.map((m: any, i: number) => {
+            let html = chatMessages.map((m: any, i: number) => {
                 const prevTs = i === 0 ? 0 : new Date(chatMessages[i - 1].created_at || 0).getTime();
                 return renderChatMessage(m, prevTs);
             }).join('');
+
+            if (chatMessages.length === 0) {
+                html = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO MESSAGES YET</div>`;
+            }
 
             // 4. Update Queen online status from last queen message
             const myEmail = (getState().memberId || email).toLowerCase();
@@ -1817,11 +1821,20 @@ export async function loadChatHistory(email: string) {
 
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) { el.innerHTML = html; el.scrollTop = el.scrollHeight; }
+                if (el) {
+                    el.innerHTML = html;
+                    el.scrollTop = el.scrollHeight;
+                }
             });
         }
     } catch (err) {
         console.error("Failed to load chat history:", err);
+        ['chatContent', 'mob_chatContent'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerHTML = `<div style="text-align:center;padding:40px;color:#ff4d4d;font-family:Orbitron;font-size:0.6rem;letter-spacing:1px">CONNECTION ERROR — REFRESH REQUIRED</div>`;
+            }
+        });
     }
 }
 
