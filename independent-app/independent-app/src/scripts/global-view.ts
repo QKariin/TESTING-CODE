@@ -37,7 +37,7 @@ export function setGlReply(id: string, name: string, text: string) {
     if (bar) bar.style.display = 'flex';
     const nameEl = document.getElementById('glReplyBarName');
     const textEl = document.getElementById('glReplyBarText');
-    if (nameEl) nameEl.textContent = '↩ ' + name;
+    if (nameEl) nameEl.innerHTML = `<svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="rgba(197,160,89,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polyline points="8 16 3 11 8 6"></polyline><path d="M17 4v7a4 4 0 0 1-4 4H3"></path></svg>` + name;
     if (textEl) textEl.textContent = text.slice(0, 80);
     document.getElementById('globalTalkInput')?.focus();
 }
@@ -610,7 +610,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
         (!!myName && msg.sender_name === myName);
     const isQueen = msg.is_queen === true || msg.sender_name === 'QUEEN KARIN';
     const content = msg.message || '';
-    const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const msgId = msg.id || '';
     const senderNameSafe = (msg.sender_name || 'SUBJECT').replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
     const contentSafe = content.slice(0, 80).replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, ' ');
@@ -618,7 +618,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const SVG_CROWN = `<svg width="13" height="10" viewBox="0 0 26 20" fill="#c5a059" style="display:inline-block;vertical-align:middle;margin-right:5px;flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
     const replyBtn = msgId ? `<button class="gl-reply-btn" onclick="event.stopPropagation();window.setGlReply('${msgId}','${senderNameSafe}','${contentSafe}')" title="Reply">${SVG_REPLY}</button>` : '';
     const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:5px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;">
-        <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;">↩ ${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</div>
+        <div style="display:flex;align-items:center;gap:4px;font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;"><svg width="9" height="9" viewBox="0 0 20 20" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 16 3 11 8 6"></polyline><path d="M17 4v7a4 4 0 0 1-4 4H3"></path></svg>${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</div>
         <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">${(msg.reply_to.content || '').slice(0, 60).replace(/</g, '&lt;')}</div>
     </div>` : '';
 
