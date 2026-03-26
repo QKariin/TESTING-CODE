@@ -236,7 +236,7 @@ async function _loadTalkPreview() {
                 <div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.22);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.5rem;color:#c5a059;flex-shrink:0;">${initial}</div>
                 <div style="flex:1;min-width:0;">
                     <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.55);letter-spacing:1px;margin-bottom:2px;">${name}</div>
-                    <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.message}</div>
+                    <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(m.message||'').startsWith('PROMOTION_CARD::') ? '✦ RANK PROMOTION' : m.message}</div>
                 </div>
             </div>`;
         }).join('');
