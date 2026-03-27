@@ -584,7 +584,7 @@ function _appendMessage(msg: any) {
     const el = document.createElement('div');
     el.innerHTML = _buildBubble(msg, myName, myEmail);
     feed.appendChild(el.firstElementChild!);
-    if (wasNear) requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
+    if (wasNear) feed.scrollTop = feed.scrollHeight;
 }
 
 // ─── RENDER ALL MESSAGES ──────────────────────────────────────────────────────

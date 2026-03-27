@@ -719,6 +719,62 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                         const text = msg.content || msg.message || '';
                         const isPhoto = msg.type === 'photo';
                         const isVideo = msg.type === 'video';
+                        const timeStr = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                        // PROMOTION CARD
+                        if (text.startsWith('PROMOTION_CARD::')) {
+                            try {
+                                const d = JSON.parse(text.replace('PROMOTION_CARD::', ''));
+                                return (
+                                    <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0' }}>
+                                        <div style={{ width: '85%', maxWidth: 300, borderRadius: 16, overflow: 'hidden', background: 'linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%)', border: '1px solid rgba(197,160,89,0.5)', boxShadow: '0 12px 40px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ position: 'relative', width: '100%', height: 130, background: '#0a0703', overflow: 'hidden' }}>
+                                                {d.photo && <img src={d.photo} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />}
+                                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom,transparent 40%,#0e0b06 100%)' }} />
+                                                <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', background: 'rgba(10,7,2,0.9)', border: '1px solid rgba(197,160,89,0.5)', borderRadius: 20, padding: '4px 14px', whiteSpace: 'nowrap' }}>
+                                                    <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase' }}>✦ RANK PROMOTION</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ padding: '14px 18px 18px', textAlign: 'center' }}>
+                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.95rem', color: '#fff', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>{d.name || ''}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12 }}>
+                                                    <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.48rem', color: 'rgba(197,160,89,0.4)', letterSpacing: 1, textDecoration: 'line-through' }}>{(d.oldRank || '').toUpperCase()}</span>
+                                                    <span style={{ color: 'rgba(197,160,89,0.7)', fontSize: '0.9rem' }}>→</span>
+                                                    <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: '#c5a059', letterSpacing: 2, fontWeight: 700 }}>{(d.newRank || '').toUpperCase()}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: 'rgba(197,160,89,0.45)', marginTop: 4, letterSpacing: '0.8px' }}>{timeStr}</div>
+                                    </div>
+                                );
+                            } catch { /* fall through */ }
+                        }
+
+                        // TASK FEEDBACK CARD
+                        if (text.startsWith('TASK_FEEDBACK::')) {
+                            try {
+                                const data = JSON.parse(text.replace('TASK_FEEDBACK::', ''));
+                                const { mediaUrl: fbMedia, mediaType: fbType, note: fbNote } = data;
+                                const fbIsVideo = (fbType && (fbType === 'video' || fbType.startsWith('video/'))) || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
+                                return (
+                                    <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0' }}>
+                                        <div style={{ width: '85%', maxWidth: 280, borderRadius: 12, overflow: 'hidden', background: '#0a080a', border: '1px solid rgba(197,160,89,0.4)', boxShadow: '0 6px 24px rgba(0,0,0,0.6)' }}>
+                                            {fbMedia && (
+                                                fbIsVideo
+                                                    ? <video src={fbMedia} controls playsInline style={{ width: '100%', maxHeight: 180, objectFit: 'cover', display: 'block', borderRadius: '10px 10px 0 0' }} />
+                                                    : <img src={fbMedia} style={{ width: '100%', maxHeight: 180, objectFit: 'cover', display: 'block', borderRadius: '10px 10px 0 0' }} alt="" />
+                                            )}
+                                            <div style={{ padding: '9px 12px 11px' }}>
+                                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 5 }}>✦ Task Feedback</div>
+                                                {fbNote && <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.82)', lineHeight: 1.4 }}>{fbNote}</div>}
+                                            </div>
+                                        </div>
+                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: 'rgba(197,160,89,0.45)', marginTop: 4, letterSpacing: '0.8px' }}>{timeStr}</div>
+                                    </div>
+                                );
+                            } catch { /* fall through */ }
+                        }
+
                         return (
                             <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
                                 <div style={{
@@ -743,7 +799,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                                     }
                                 </div>
                                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: isAdmin ? '#444' : 'rgba(197,160,89,0.45)', marginTop: 3, letterSpacing: '0.8px' }}>
-                                    {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                    {timeStr}
                                 </div>
                             </div>
                         );

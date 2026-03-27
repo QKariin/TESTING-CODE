@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +33,7 @@ function parseTributeHistory(val: any): number {
 
 export async function GET() {
     const [{ data: tasks }, { data: profiles }] = await Promise.all([
-        supabaseAdmin.from('tasks').select(`member_id, Name, Hierarchy, "kneelCount, "Tribute History", Taskdom_Streak`),
+        supabaseAdmin.from('tasks').select('member_id, Name, Hierarchy, kneelCount, "Tribute History", Taskdom_Streak'),
         supabaseAdmin.from('profiles').select('member_id, avatar_url, parameters'),
     ]);
 
