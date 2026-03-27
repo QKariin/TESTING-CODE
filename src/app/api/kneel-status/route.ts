@@ -6,11 +6,23 @@ export const dynamic = "force-dynamic";
 const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000;
 
 async function getKneelStatus(memberEmail: string, tz: string) {
+    // Select core fields first — kneel_history is optional (column may not exist yet)
     const { data: taskRow } = await supabaseAdmin
         .from('tasks')
-        .select('lastWorship, kneelCount, "today kneeling", kneel_history')
+        .select('lastWorship, kneelCount, "today kneeling"')
         .ilike('member_id', memberEmail)
         .maybeSingle();
+
+    // Fetch kneel_history separately so a missing column doesn't zero out todayKneeling
+    let rawKneelHistory: any = null;
+    try {
+        const { data: hRow } = await supabaseAdmin
+            .from('tasks')
+            .select('kneel_history')
+            .ilike('member_id', memberEmail)
+            .maybeSingle();
+        rawKneelHistory = hRow?.kneel_history ?? null;
+    } catch (_) { }
 
     const now = Date.now();
     const lastWorshipMs = taskRow?.lastWorship ? new Date(taskRow.lastWorship).getTime() : 0;
@@ -24,7 +36,7 @@ async function getKneelStatus(memberEmail: string, tz: string) {
 
     let kneelHours: number[] = [];
     try {
-        const raw = (taskRow as any)?.kneel_history;
+        const raw = rawKneelHistory;
         const history: string[] = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : []);
         if (history.length) {
             kneelHours = [...new Set(

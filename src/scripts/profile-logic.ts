@@ -1346,9 +1346,9 @@ export function handleRoutineUpload(input: HTMLInputElement) {
             const mobTime = document.getElementById('routineTimeMsg');
             if (display) display.textContent = 'PENDING APPROVAL';
             if (mobDisplay) mobDisplay.textContent = 'PENDING APPROVAL';
-            if (btn) { btn.textContent = '✔ SUBMITTED'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; (window as any).__routineAction = () => { }; }
+            if (btn) { btn.textContent = '✔ SUBMITTED'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; btn.disabled = true; (window as any).__routineAction = () => { }; }
             if (timeMsg) { timeMsg.textContent = 'AWAITING REVIEW'; timeMsg.classList.remove('hidden'); }
-            if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
+            if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; mobBtn.disabled = true; }
             if (mobDone) mobDone.classList.remove('hidden');
             if (mobTime) { mobTime.textContent = 'AWAITING REVIEW'; mobTime.classList.remove('hidden'); }
         });
@@ -1536,14 +1536,9 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         if (!isRoutine) {
             if (uploadBtn && originalText) uploadBtn.innerText = originalText;
             if (mobTaskBtn && originalMobTaskText) mobTaskBtn.innerText = originalMobTaskText;
+            if (mobRoutineBtn && originalMobRoutineText) mobRoutineBtn.innerText = originalMobRoutineText;
         }
-        if (isRoutine) {
-            const deskRoutineBtn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
-            if (mobRoutineBtn) { mobRoutineBtn.innerText = originalMobRoutineText || 'Upload'; mobRoutineBtn.disabled = false; }
-            if (deskRoutineBtn) { deskRoutineBtn.innerText = 'Upload'; deskRoutineBtn.disabled = false; }
-        } else if (mobRoutineBtn && originalMobRoutineText) {
-            mobRoutineBtn.innerText = originalMobRoutineText;
-        }
+        // NOTE: routine button reset intentionally omitted — handleRoutineUpload.then() locks it
     }
 }
 export function handleProfileUpload(input?: HTMLInputElement) { _doProfileUpload(); }
@@ -4488,8 +4483,8 @@ function _openHistoryModal(items: any[], idx: number, resolveUrl: (u: string) =>
         <div style="font-family:Orbitron;font-size:0.48rem;color:#555;letter-spacing:3px;">${dateStr}</div>
         ${verdictHtml}
         ${isVid
-            ? `<video src="${url}" controls autoplay style="max-height:58vh;max-width:88vw;border-radius:8px;"></video>`
-            : `<img src="${url}" style="max-height:58vh;max-width:88vw;object-fit:contain;border-radius:8px;" />`
+            ? `<video src="${url}" controls autoplay playsinline preload="metadata" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="max-height:58vh;max-width:88vw;border-radius:8px;"></video>`
+            : `<img src="${url}" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}" style="max-height:58vh;max-width:88vw;object-fit:contain;border-radius:8px;" />`
         }
         <div style="max-width:580px;text-align:center;">
             ${meritStr}
