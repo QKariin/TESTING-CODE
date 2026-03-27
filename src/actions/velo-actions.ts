@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { mapUserProfile } from '@/lib/mapUserProfile';
 import { stripe } from '@/lib/stripe';
 import { HIERARCHY_RULES, determineRank, getHierarchyReport, HierarchyReport, SlaveRecord } from '@/lib/hierarchyRules';
 import { z } from 'zod';
@@ -79,96 +80,8 @@ export async function secureGetProfile(memberId: string) {
 }
 
 // --- HELPER: MAP USER FOR DASHBOARD ---
-function parseTributeTotal(tributeHistory: any): number {
-    try {
-        const arr = typeof tributeHistory === 'string' ? JSON.parse(tributeHistory) : tributeHistory;
-        if (!Array.isArray(arr)) return 0;
-        return arr.reduce((sum: number, e: any) => sum + (e.amount < 0 ? Math.abs(e.amount) : 0), 0);
-    } catch { return 0; }
-}
-
 function mapUserForDashboard(p: any, t: any) {
-    const params = p.parameters || {};
-
-    let pQueue = [];
-    if (t && t.taskQueue) {
-        try {
-            pQueue = typeof t.taskQueue === 'string' ? JSON.parse(t.taskQueue) : (t.taskQueue || []);
-        } catch (e) { }
-    }
-
-    let activeTask = t?.taskdom_active_task || null;
-    let endTime = null;
-    try {
-        if (typeof activeTask === 'string') {
-            const parsed = JSON.parse(activeTask);
-            endTime = parsed.endTime || null;
-            activeTask = parsed;
-        } else if (activeTask && activeTask.endTime) {
-            endTime = activeTask.endTime;
-        }
-    } catch (e) { }
-
-    let history: any[] = [];
-    if (t && t.Taskdom_History) {
-        try { history = typeof t.Taskdom_History === 'string' ? JSON.parse(t.Taskdom_History) : t.Taskdom_History } catch (e) { }
-    }
-
-    const defaultPic = "/queen-karin.png";
-    const rawPic = p.avatar_url || p.profile_picture_url || "";
-    const finalPic = (rawPic && rawPic.length > 5 && rawPic !== "undefined" && rawPic !== "null") ? rawPic : defaultPic;
-
-    return {
-        ...p,
-        id: p.member_id || p.id,
-        memberId: p.member_id || p.id,
-        name: p.name || p.title || "Unknown",
-        hierarchy: p.hierarchy || "Newbie",
-        score: Number(t?.Score ?? t?.score ?? p.score ?? 0),
-        wallet: Number(p.wallet || 0),
-        queue: pQueue,
-        activeTask: activeTask,
-        endTime: endTime,
-        pendingState: t?.taskdom_pending_state || null,
-        routineHistory: history,
-        routinehistory: history, // Consistency
-        kneelCount: Number(t?.kneelCount || p.kneelCount || p.kneel_count || params.kneel_count || 0),
-        kneelHistory: p.kneel_history || {},
-        joinedDate: p.joined_date,
-        points: Number(t?.Score ?? t?.score ?? p.score ?? 0),
-        routine: p.routine || "None",
-        routineDoneToday: p.routine_done_today || false,
-        strikeCount: p.strike_count || 0,
-        lastSeen: p.last_active,
-
-        // Hierarchy specific mappings
-        taskdom_completed_tasks: Number(t?.Taskdom_CompletedTasks || 0),
-        total_coins_spent: parseTributeTotal(t?.['Tribute History']) || Number(params.wishlist_spent || 0),
-        bestRoutinestreak: (() => {
-            const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
-            return routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0);
-        })(),
-        routinestreak: Number(p.routinestreak || params.taskdom_current_streak || 0),
-
-        // Identity fields for checkmark logic
-        image: finalPic,
-        profilePicture: finalPic,
-        avatar: finalPic,
-        title: p.name || "",
-        limits: p.limits || "",
-        kinks: p.kinks || "",
-
-        // Pass raw item for other fields if needed
-        _raw: { ...p, Taskdom_History: t?.Taskdom_History },
-        lastWorship: t?.lastWorship || null,
-        parameters: {
-            ...params,
-            taskdom_active_task: activeTask,
-            taskdom_end_time: endTime,
-            status: t?.taskdom_pending_state || p.hierarchy,
-            lastMessageTime: params.lastMessageTime || null
-        }
-    };
+    return mapUserProfile(p, t);
 }
 
 // --- 2.b GET ADMIN DASHBOARD DATA ---
