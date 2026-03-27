@@ -2759,7 +2759,7 @@ function _appendMobGlMessage(msg: any) {
     const el = document.createElement('div');
     el.innerHTML = _buildMobGlBubble(msg);
     container.appendChild(el.firstElementChild!);
-    container.scrollTop = container.scrollHeight;
+    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
 }
 
 function _renderMobGlTalk(msgs: any[]) {
@@ -2770,7 +2770,7 @@ function _renderMobGlTalk(msgs: any[]) {
         return;
     }
     container.innerHTML = msgs.map((m: any) => _buildMobGlBubble(m)).join('');
-    container.scrollTop = container.scrollHeight;
+    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
 }
 
 export async function sendMobGlMessage() {
