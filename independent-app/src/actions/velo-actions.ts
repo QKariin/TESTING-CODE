@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { mapUserProfile } from '@/lib/mapUserProfile';
 import { stripe } from '@/lib/stripe';
 import { HIERARCHY_RULES, determineRank, getHierarchyReport, HierarchyReport, SlaveRecord } from '@/lib/hierarchyRules';
 import { z } from 'zod';
@@ -186,8 +187,9 @@ export async function getAdminDashboardData() {
 
         // Map tasks data to profiles so the dashboard works
         const finalProfiles = (profiles || []).map(p => {
-            const t = (tasksData || []).find(x => x.member_id === p.member_id || x.member_id === p.id);
-            return mapUserForDashboard(p, t);
+            const pId = (p.member_id || p.id || '').toLowerCase();
+            const t = (tasksData || []).find(x => (x.member_id || '').toLowerCase() === pId);
+            return mapUserProfile(p, t);
         });
 
         return {
@@ -860,8 +862,9 @@ export async function getMasterData() {
         if (pError) throw pError;
 
         return (profiles || []).map((item: any) => {
-            const uTasks = (tasks || []).find((t: any) => t.member_id === item.member_id || t.member_id === item.id);
-            return mapUserForDashboard(item, uTasks);
+            const pId = (item.member_id || item.id || '').toLowerCase();
+            const uTasks = (tasks || []).find((t: any) => (t.member_id || '').toLowerCase() === pId);
+            return mapUserProfile(item, uTasks);
         });
     } catch (err) {
         console.error("Dashboard Data Error:", err);

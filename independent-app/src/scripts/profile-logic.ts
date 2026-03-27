@@ -2100,6 +2100,40 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         content = `<video src="${content}" class="chat-img-attachment" controls playsinline style="max-width:100%;border-radius:8px;"></video>`;
     }
 
+    // PROMOTION CARD
+    if (content.startsWith('PROMOTION_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
+            const initials = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo
+                ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                : '';
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
+            const cardHtml = `
+            <div style="width:min(85%,340px);min-width:200px;margin:0 auto;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                <div style="position:relative;width:100%;height:140px;background:#0a0703;overflow:hidden;">
+                    ${photoBlock}${photoFallback}
+                    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
+                    <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
+                        <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;text-transform:uppercase;">✦ RANK PROMOTION</span>
+                    </div>
+                </div>
+                <div style="padding:14px 18px 18px;text-align:center;">
+                    <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${d.name || ''}</div>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+                        <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
+                        <span style="color:rgba(197,160,89,0.7);font-size:0.9rem;">→</span>
+                        <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span>
+                    </div>
+                    <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
+                </div>
+            </div>`;
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div></div>`;
+        } catch (_) {
+            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">✦ Rank Promotion</div><div class="chat-ts chat-ts-left">${timeStr}</div></div></div>`;
+        }
+    }
+
     if (isMe) {
         // SLAVE — right, charcoal, no border, no avatar
         return `
@@ -2130,7 +2164,7 @@ function appendChatCard(msg: any) {
         const el = document.getElementById(id);
         if (el) {
             el.insertAdjacentHTML('beforeend', html);
-            el.scrollTop = el.scrollHeight;
+            requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
         }
     });
 }
@@ -2673,6 +2707,39 @@ function _buildMobGlBubble(msg: any): string {
         <div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content || '').slice(0, 55).replace(/</g, '&lt;')}</div>
     </div>` : '';
 
+    // PROMOTION CARD — same card as desktop global chat
+    if (content.startsWith('PROMOTION_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
+            const initials = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo
+                ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                : '';
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="position:relative;width:100%;height:140px;background:#0a0703;overflow:hidden;">
+                            ${photoBlock}${photoFallback}
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
+                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div>
+                        </div>
+                        <div style="padding:14px 18px 18px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${d.name || ''}</div>
+                            <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank || '').toUpperCase()}</span>
+                                <span style="color:rgba(197,160,89,0.7);">→</span>
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank || '').toUpperCase()}</span>
+                            </div>
+                            <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch { /* fall through to plain text */ }
+    }
+
     const mediaHtml = msg.media_url
         ? (msg.media_type === 'video'
             ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;"></video>`
@@ -2724,7 +2791,7 @@ function _appendMobGlMessage(msg: any) {
     const el = document.createElement('div');
     el.innerHTML = _buildMobGlBubble(msg);
     container.appendChild(el.firstElementChild!);
-    container.scrollTop = container.scrollHeight;
+    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
 }
 
 function _renderMobGlTalk(msgs: any[]) {
@@ -2735,7 +2802,7 @@ function _renderMobGlTalk(msgs: any[]) {
         return;
     }
     container.innerHTML = msgs.map((m: any) => _buildMobGlBubble(m)).join('');
-    container.scrollTop = container.scrollHeight;
+    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
 }
 
 export async function sendMobGlMessage() {
@@ -4295,7 +4362,11 @@ function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLE
     const card = document.createElement('div');
     card.className = 'altar-photo-card';
     if (dimmed) card.style.filter = 'grayscale(0.65)';
-    card.innerHTML = `${media}${meritBadge}<div class="altar-card-date">${dateStr}</div>`;
+    const taskText = (t.text || '').replace(/<[^>]+>/g, '');
+    const commentHTML = t.adminComment
+        ? `<div style="font-family:Orbitron;font-size:0.42rem;color:#c5a059;margin-top:4px;font-style:italic;">"${t.adminComment}"</div>`
+        : '';
+    card.innerHTML = `${media}${meritBadge}<div style="padding:8px 10px;"><div class="altar-card-date">${dateStr}</div>${taskText ? `<div style="font-family:Rajdhani;font-size:0.78rem;color:#888;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:3px;">${taskText}</div>` : ''}${commentHTML}</div>`;
     card.onclick = () => _openHistoryModal(list, idx, resolveUrl);
     return card;
 }

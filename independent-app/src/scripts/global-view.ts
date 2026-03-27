@@ -584,7 +584,7 @@ function _appendMessage(msg: any) {
     const el = document.createElement('div');
     el.innerHTML = _buildBubble(msg, myName, myEmail);
     feed.appendChild(el.firstElementChild!);
-    if (wasNear) feed.scrollTop = feed.scrollHeight;
+    if (wasNear) requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
 }
 
 // ─── RENDER ALL MESSAGES ──────────────────────────────────────────────────────
@@ -601,7 +601,7 @@ function _renderMessages(messages: any[], scrollBottom: boolean) {
     }
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
     feed.innerHTML = messages.map(m => _buildBubble(m, myName, myEmail)).join('');
-    if (scrollBottom || wasNear) feed.scrollTop = feed.scrollHeight;
+    if (scrollBottom || wasNear) requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
 }
 
 function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
