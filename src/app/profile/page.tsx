@@ -372,25 +372,25 @@ export default function ProfilePage() {
                                 </svg>
                             </button>
                         </div>
-                        <div id="subEmail" style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', marginBottom: 15, letterSpacing: 1 }}>
-                            {profile?.member_id || ""}
-                        </div>
+                        <div id="subEmail" style={{ display: 'none' }}></div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
-                            <div className="sidebar-stat-block">
-                                <div className="sidebar-stat-value-row">
-                                    <span style={{ color: '#fff', opacity: 0.8 }}><i className="fas fa-award"></i></span>
-                                    <div id="points">{profile?.score || 0}</div>
+                        <div style={{ marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
+                            <div style={{ background: 'rgba(10,10,10,0.7)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, padding: '12px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-around', boxShadow: '0 4px 20px rgba(0,0,0,0.6)', backdropFilter: 'blur(15px)' }}>
+                                <div className="sidebar-stat-block">
+                                    <div className="sidebar-stat-value-row">
+                                        <svg width="18" height="18" viewBox="0 0 512 512" fill="#c5a059" style={{ opacity: 0.8 }}><path d="M256 0c17.7 0 32.5 11.5 37.6 28.5l25.6 85.3 89.6-16.4c16.2-3 32.8 5.7 39.5 20.9s1.3 33-12.7 44.5l-69.8 57.6 44.8 80.1c8.4 15 3.9 34.3-10.3 43.6s-32.5 6.4-44.5-6.7L256 270 156.2 337.4c-12 13.1-30.3 16-44.5 6.7s-18.7-28.6-10.3-43.6l44.8-80.1-69.8-57.6c-14-11.5-19.4-30.6-12.7-44.5s23.3-23.9 39.5-20.9l89.6 16.4 25.6-85.3C223.5 11.5 238.3 0 256 0z"/></svg>
+                                        <div id="points" style={{ fontFamily: 'Orbitron', fontSize: '1.2rem', color: '#fff', fontWeight: 800 }}>{profile?.score || 0}</div>
+                                    </div>
+                                    <div className="sidebar-stat-label">MERIT</div>
                                 </div>
-                                <div className="sidebar-stat-label">MERIT</div>
-                            </div>
-                            <div style={{ height: 30, width: 1, background: 'rgba(255,255,255,0.05)' }}></div>
-                            <div className="sidebar-stat-block">
-                                <div className="sidebar-stat-value-row">
-                                    <span style={{ color: '#c5a059' }}><i className="fas fa-coins"></i></span>
-                                    <div id="coins">{profile?.wallet || 0}</div>
+                                <div style={{ height: 40, width: 1, background: 'rgba(255,255,255,0.08)' }}></div>
+                                <div className="sidebar-stat-block">
+                                    <div className="sidebar-stat-value-row">
+                                        <svg width="18" height="18" viewBox="0 0 512 512" fill="#c5a059"><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 210.6 384 227.2 384 245.6c0 11.4-5.5 22.1-15.2 31.4c-21.2 20.4-66.2 34.1-118.4 34.9c-10.2 .2-20.7 .3-31.3 .3c-62.2 0-117.4-12.3-152.5-31.4C42.7 261.4 28 244.8 28 226.4c0-11.4 5.5-22.1 15.2-31.4c21.2-20.4 66.2-34.1 117.5-33.9zM512 192c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 167.6 448 183.3 512 192zM512 304c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 279.6 448 295.3 512 304zM512 416c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 391.6 448 407.3 512 416zM320 388c0 30.6-55.8 56-128 56S64 418.6 64 388v-43c30.2 18 73.1 29 128 29s97.8-11 128-29v43zM320 276c0 30.6-55.8 56-128 56S64 306.6 64 276v-43c30.2 18 73.1 29 128 29s97.8-11 128-29v43zM192 128c-72.2 0-128 25.4-128 56s55.8 56 128 56s128-25.4 128-56s-55.8-56-128-56z"/></svg>
+                                        <div id="coins" style={{ fontFamily: 'Orbitron', fontSize: '1.2rem', color: '#fff', fontWeight: 800 }}>{profile?.wallet || 0}</div>
+                                    </div>
+                                    <div className="sidebar-stat-label">CAPITAL</div>
                                 </div>
-                                <div className="sidebar-stat-label">CAPITAL</div>
                             </div>
                         </div>
 
@@ -573,6 +573,17 @@ export default function ProfilePage() {
 
                     <div id="viewServingTop" className="v-card serve-grid-item" style={{ display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: 20 }}>
                         <div id="chatCard" className="chat-container" style={{ flex: 1, minHeight: 0, background: 'transparent', margin: 0, border: 'none', borderRadius: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                            {/* Desktop chat header - shows who you're messaging */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)', flexShrink: 0 }}>
+                                <div style={{ position: 'relative', flexShrink: 0 }}>
+                                    <img src="/queen-karin.png" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                                    <div id="deskChatOnlineDot" style={{ position: 'absolute', bottom: 1, right: 1, width: 9, height: 9, borderRadius: '50%', background: '#22c55e', border: '2px solid #000', display: 'none' }}></div>
+                                </div>
+                                <div>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#fff', letterSpacing: 2, fontWeight: 700 }}>QUEEN KARIN</div>
+                                    <div id="deskChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>—</div>
+                                </div>
+                            </div>
                             <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 !important' }}>
                                 <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer', margin: '0 20px 10px 20px', borderRadius: '0 0 12px 12px', borderLeft: '1px solid rgba(197,160,89,0.2)', borderRight: '1px solid rgba(197,160,89,0.2)', borderBottom: '1px solid rgba(197,160,89,0.2)', width: 'auto' }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
                                 <div id="chatContent" className="chat-area" style={{ padding: '0 20px 20px 20px' }}></div>
@@ -825,7 +836,7 @@ export default function ProfilePage() {
                         <div className="hub-header">
                             <div>
                                 <div className="hub-title">SLAVE IDENTITY HUB</div>
-                                <div id="hubEmail" className="hub-subtitle">{profile?.member_id || ""}</div>
+                                <div id="hubEmail" className="hub-subtitle" style={{ display: 'none' }}></div>
                             </div>
                             <button className="hub-close-btn" onClick={() => (window as any).closeLobby()}>✕</button>
                         </div>

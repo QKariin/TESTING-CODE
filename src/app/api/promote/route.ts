@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 
         // 6. Send promotion card to private + global chat
         const rawPic = profile.avatar_url || profile.profile_picture_url || "";
-        const memberName = profile.name || exactEmail.split('@')[0] || 'SLAVE';
+        const memberName = profile.name || 'SLAVE';
         const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
         const cardMsg = `PROMOTION_CARD::${JSON.stringify({
             name: memberName, photo: memberPhoto,
