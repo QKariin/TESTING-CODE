@@ -68,7 +68,10 @@ async function buildFullProfile(email: string) {
     try {
         const rawTributes = t?.['Tribute History'];
         const tributeArr: any[] = typeof rawTributes === 'string' ? JSON.parse(rawTributes) : (Array.isArray(rawTributes) ? rawTributes : []);
-        tributeTotal = tributeArr.reduce((sum: number, e: any) => sum + (e.amount < 0 ? Math.abs(e.amount) : 0), 0);
+        tributeTotal = tributeArr.reduce((sum: number, e: any) => {
+            const raw = typeof e === 'number' ? e : Number(e?.amount ?? e?.coins ?? e?.value ?? 0);
+            return sum + Math.abs(raw);
+        }, 0);
     } catch { }
 
     const rawPic = p.avatar_url || p.profile_picture_url || '';

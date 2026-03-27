@@ -79,6 +79,17 @@ export async function secureGetProfile(memberId: string) {
 }
 
 // --- HELPER: MAP USER FOR DASHBOARD ---
+function parseTributeTotal(tributeHistory: any): number {
+    try {
+        const arr = typeof tributeHistory === 'string' ? JSON.parse(tributeHistory) : tributeHistory;
+        if (!Array.isArray(arr)) return 0;
+        return arr.reduce((sum: number, e: any) => {
+            const raw = typeof e === 'number' ? e : Number(e?.amount ?? e?.coins ?? e?.value ?? 0);
+            return sum + (raw < 0 ? Math.abs(raw) : raw);
+        }, 0);
+    } catch { return 0; }
+}
+
 function mapUserForDashboard(p: any, t: any) {
     const params = p.parameters || {};
 
@@ -135,7 +146,7 @@ function mapUserForDashboard(p: any, t: any) {
 
         // Hierarchy specific mappings
         taskdom_completed_tasks: Number(t?.Taskdom_CompletedTasks || 0),
-        total_coins_spent: Number(params.wishlist_spent || 0),
+        total_coins_spent: parseTributeTotal(t?.['Tribute History']) || Number(params.wishlist_spent || 0),
         bestRoutinestreak: (() => {
             const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
             return routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0);
@@ -189,7 +200,8 @@ export async function getAdminDashboardData() {
 
         // Map tasks data to profiles so the dashboard works
         const finalProfiles = (profiles || []).map((p: any) => {
-            const t = (tasksData || []).find((x: any) => x.member_id === p.member_id || x.member_id === p.id);
+            const pId = (p.member_id || p.id || '').toLowerCase();
+            const t = (tasksData || []).find((x: any) => (x.member_id || '').toLowerCase() === pId);
             return mapUserForDashboard(p, t);
         });
 
@@ -863,7 +875,8 @@ export async function getMasterData() {
         if (pError) throw pError;
 
         return (profiles || []).map((item: any) => {
-            const uTasks = (tasks || []).find((t: any) => t.member_id === item.member_id || t.member_id === item.id);
+            const pId = (item.member_id || item.id || '').toLowerCase();
+            const uTasks = (tasks || []).find((t: any) => (t.member_id || '').toLowerCase() === pId);
             return mapUserForDashboard(item, uTasks);
         });
     } catch (err) {
