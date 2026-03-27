@@ -726,13 +726,14 @@ function _renderOnlineUsers(users: any[]) {
     strip.innerHTML = users.map(u => {
         const initial = (u.name || 'S')[0].toUpperCase();
         const avHtml = u.avatar
-            ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.55rem;color:#c5a059;">${initial}</div>`
-            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.55rem;color:#c5a059;">${initial}</div>`;
-        return `<div title="${u.name}" style="position:relative;flex-shrink:0;">
-            <div style="width:30px;height:30px;border-radius:50%;background:rgba(197,160,89,0.1);border:1.5px solid rgba(74,222,128,0.45);overflow:hidden;position:relative;">
+            ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.7rem;color:#c5a059;">${initial}</div>`
+            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.7rem;color:#c5a059;">${initial}</div>`;
+        return `<div title="${u.name}" style="position:relative;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <div style="width:46px;height:46px;border-radius:50%;background:rgba(140,140,140,0.12);border:2px solid rgba(160,160,160,0.5);overflow:hidden;position:relative;box-shadow:0 0 10px rgba(160,160,160,0.15);">
                 ${avHtml}
             </div>
-            <div style="position:absolute;bottom:0;right:0;width:7px;height:7px;border-radius:50%;background:#4ade80;border:1.5px solid #04040e;box-shadow:0 0 5px #4ade80;"></div>
+            <div style="position:absolute;bottom:16px;right:0;width:10px;height:10px;border-radius:50%;background:#aaa;border:2px solid #04040e;box-shadow:0 0 6px rgba(160,160,160,0.6);"></div>
+            <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(255,255,255,0.35);letter-spacing:0.5px;max-width:52px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;text-align:center;">${u.name || ''}</div>
         </div>`;
     }).join('');
 }
