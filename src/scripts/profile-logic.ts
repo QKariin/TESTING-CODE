@@ -4330,7 +4330,11 @@ function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLE
     const card = document.createElement('div');
     card.className = 'altar-photo-card';
     if (dimmed) card.style.filter = 'grayscale(0.65)';
-    card.innerHTML = `${media}${meritBadge}<div class="altar-card-date">${dateStr}</div>`;
+    const taskText = (t.text || '').replace(/<[^>]+>/g, '');
+    const commentHTML = t.adminComment
+        ? `<div style="font-family:Orbitron;font-size:0.42rem;color:#c5a059;margin-top:4px;font-style:italic;">"${t.adminComment}"</div>`
+        : '';
+    card.innerHTML = `${media}${meritBadge}<div style="padding:8px 10px;"><div class="altar-card-date">${dateStr}</div>${taskText ? `<div style="font-family:Rajdhani;font-size:0.78rem;color:#888;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:3px;">${taskText}</div>` : ''}${commentHTML}</div>`;
     card.onclick = () => _openHistoryModal(list, idx, resolveUrl);
     return card;
 }
