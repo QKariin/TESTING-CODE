@@ -83,10 +83,7 @@ function parseTributeTotal(tributeHistory: any): number {
     try {
         const arr = typeof tributeHistory === 'string' ? JSON.parse(tributeHistory) : tributeHistory;
         if (!Array.isArray(arr)) return 0;
-        return arr.reduce((sum: number, e: any) => {
-            const raw = typeof e === 'number' ? e : Number(e?.amount ?? e?.coins ?? e?.value ?? 0);
-            return sum + (raw < 0 ? Math.abs(raw) : raw);
-        }, 0);
+        return arr.reduce((sum: number, e: any) => sum + (e.amount < 0 ? Math.abs(e.amount) : 0), 0);
     } catch { return 0; }
 }
 
