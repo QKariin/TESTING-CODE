@@ -4732,22 +4732,27 @@ export function _applySilence(active: boolean, reason: string = '') {
     if (typeof window === 'undefined') return;
 
     const OVERLAY_ID = '__silence_lock_overlay__';
-
-    // Remove any existing overlay first
     document.getElementById(OVERLAY_ID)?.remove();
 
     if (active) {
         const el = document.createElement('div');
         el.id = OVERLAY_ID;
-        el.style.cssText = [
-            'position:fixed', 'top:0', 'left:0', 'width:100%', 'height:100%',
-            'z-index:2147483647',
-            'background:rgba(8,2,2,0.97)',
-            'display:flex', 'flex-direction:column',
-            'align-items:center', 'justify-content:center',
-            'padding:24px', 'box-sizing:border-box',
-            '-webkit-transform:translateZ(0)', 'transform:translateZ(0)',
-        ].join(';');
+        // Use px dimensions — avoids iOS % / vh / vw viewport unit bugs entirely
+        el.style.position = 'fixed';
+        el.style.top = '0';
+        el.style.left = '0';
+        el.style.width = window.innerWidth + 'px';
+        el.style.height = window.innerHeight + 'px';
+        el.style.zIndex = '2147483647';
+        el.style.background = 'rgba(8,2,2,0.97)';
+        el.style.display = 'flex';
+        el.style.flexDirection = 'column';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.padding = '24px';
+        el.style.boxSizing = 'border-box';
+        (el.style as any).webkitTransform = 'translateZ(0)';
+        el.style.transform = 'translateZ(0)';
         const safeReason = (reason || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         el.innerHTML = `
             <div style="max-width:420px;width:100%;text-align:center">
@@ -4763,12 +4768,6 @@ export function _applySilence(active: boolean, reason: string = '') {
                 </div>
             </div>`;
         document.body.appendChild(el);
-        // iOS Safari fix: body must have visible overflow for position:fixed to be viewport-relative
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'visible';
-    } else {
-        document.documentElement.style.overflow = '';
-        document.body.style.overflow = '';
     }
 
     // Also update React state if bridge is available

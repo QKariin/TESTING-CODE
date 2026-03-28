@@ -372,23 +372,21 @@ export default function ProfilePage() {
 
         const el = document.createElement('div');
         el.id = OVERLAY_ID;
-        el.style.cssText = [
-            'position:fixed',
-            'top:0', 'left:0', 'right:0', 'bottom:0',
-            'width:100%', 'height:100%',
-            'z-index:2147483647',
-            'background:rgba(8,2,2,0.97)',
-            'backdrop-filter:blur(24px)',
-            '-webkit-backdrop-filter:blur(24px)',
-            'display:flex',
-            'flex-direction:column',
-            'align-items:center',
-            'justify-content:center',
-            'padding:24px',
-            'box-sizing:border-box',
-            '-webkit-transform:translateZ(0)',
-            'transform:translateZ(0)',
-        ].join(';');
+        el.style.position = 'fixed';
+        el.style.top = '0';
+        el.style.left = '0';
+        el.style.width = window.innerWidth + 'px';
+        el.style.height = window.innerHeight + 'px';
+        el.style.zIndex = '2147483647';
+        el.style.background = 'rgba(8,2,2,0.97)';
+        el.style.display = 'flex';
+        el.style.flexDirection = 'column';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.padding = '24px';
+        el.style.boxSizing = 'border-box';
+        (el.style as any).webkitTransform = 'translateZ(0)';
+        el.style.transform = 'translateZ(0)';
 
         const safeReason = (silenceReason || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         el.innerHTML = `
@@ -408,16 +406,8 @@ export default function ProfilePage() {
 
         document.body.appendChild(el);
 
-        // iOS Safari fix: position:fixed breaks when body has overflow-x:hidden.
-        // Set html to overflow:hidden (locks scroll) and clear body overflow so
-        // fixed elements are viewport-relative again.
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'visible';
-
         return () => {
             document.getElementById(OVERLAY_ID)?.remove();
-            document.documentElement.style.overflow = '';
-            document.body.style.overflow = '';
         };
     }, [silenceActive, silenceReason]);
 
