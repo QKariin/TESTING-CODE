@@ -220,6 +220,22 @@ export default function ProfilePage() {
                     return;
                 }
 
+                // ── SILENCE CHECK — runs before anything else ──────────────────
+                // Uses supabaseAdmin server-side, no auth dependency, works on all devices
+                try {
+                    const silenceRes = await fetch('/api/silence-check', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ memberId: user.email }),
+                    });
+                    const silenceData = await silenceRes.json();
+                    if (silenceData.silence === true) {
+                        window.location.href = '/locked?reason=' + encodeURIComponent(silenceData.reason || '');
+                        return;
+                    }
+                } catch {}
+                // ──────────────────────────────────────────────────────────────
+
                 // Fetch all data via the admin API route (same as dashboard) — bypasses RLS
                 // Uses supabaseAdmin internally, returns merged profiles + tasks + crowdfund
                 const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email, full: true }) });
