@@ -1567,6 +1567,7 @@ const getChatSupabase = () => {
 
 let _chatChannel: any = null;
 let _chatPollInterval: ReturnType<typeof setInterval> | null = null;
+let _silenceCheckInterval: ReturnType<typeof setInterval> | null = null;
 let _lastChatMsgId: string | null = null;
 let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
@@ -1597,6 +1598,21 @@ export async function initChatSystem() {
     if (!getState().memberId) {
         setState({ memberId: email });
     }
+
+    // Start silence polling — runs every 3s, uses supabaseAdmin endpoint (no auth dependency)
+    if (_silenceCheckInterval) clearInterval(_silenceCheckInterval);
+    _silenceCheckInterval = setInterval(async () => {
+        try {
+            const r = await fetch('/api/silence-check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: email }),
+            });
+            if (!r.ok) return;
+            const d = await r.json();
+            _applySilence(d.silence === true, d.reason || '');
+        } catch {}
+    }, 3000);
 
     if (chatSubscribed) return;
     chatSubscribed = true;
