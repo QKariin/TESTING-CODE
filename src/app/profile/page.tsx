@@ -344,7 +344,12 @@ export default function ProfilePage() {
 
         const silencePoll = setInterval(async () => {
             try {
-                const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email)}`);
+                // POST avoids GET caching and auth cookie issues on mobile
+                const res = await fetch('/api/slave-profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
                 if (!res.ok) return;
                 const data = await res.json();
                 if (data && !data.error) {
@@ -405,8 +410,16 @@ export default function ProfilePage() {
 
         document.body.appendChild(el);
 
+        // iOS Safari fix: position:fixed breaks when body has overflow-x:hidden.
+        // Set html to overflow:hidden (locks scroll) and clear body overflow so
+        // fixed elements are viewport-relative again.
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'visible';
+
         return () => {
             document.getElementById(OVERLAY_ID)?.remove();
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
         };
     }, [silenceActive, silenceReason]);
 
