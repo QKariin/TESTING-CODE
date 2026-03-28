@@ -344,18 +344,16 @@ export default function ProfilePage() {
 
         const silencePoll = setInterval(async () => {
             try {
-                // POST avoids GET caching and auth cookie issues on mobile
-                const res = await fetch('/api/slave-profile', {
+                // Uses supabaseAdmin — no auth dependency, works on all devices
+                const res = await fetch('/api/silence-check', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email }),
+                    body: JSON.stringify({ memberId: email }),
                 });
                 if (!res.ok) return;
                 const data = await res.json();
-                if (data && !data.error) {
-                    setSilenceActive(data.silence === true);
-                    setSilenceReason(data.parameters?.silence_reason || '');
-                }
+                setSilenceActive(data.silence === true);
+                setSilenceReason(data.reason || '');
             } catch {}
         }, 3000);
 
