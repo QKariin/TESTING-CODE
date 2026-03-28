@@ -20,11 +20,11 @@ export async function POST(req: Request) {
         if (fetchErr || !profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
 
         const params = profile.parameters || {};
-        delete params.silenced;
+        delete params.silence_reason;
 
         const { error: updateErr } = await admin
             .from('profiles')
-            .update({ parameters: params })
+            .update({ silence: false, parameters: params })
             .eq('id', profile.id);
 
         if (updateErr) return NextResponse.json({ success: false, error: updateErr.message }, { status: 500 });

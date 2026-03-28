@@ -203,7 +203,7 @@ export async function updateDetail(u: any) {
     if (typeof window !== 'undefined' && (window as any)._setActiveLocks) {
         (window as any)._setActiveLocks({
             paywall: !!(u.parameters?.paywall?.active),
-            silenced: !!(u.parameters?.silenced?.active),
+            silenced: u.silence === true,
         });
     }
 }

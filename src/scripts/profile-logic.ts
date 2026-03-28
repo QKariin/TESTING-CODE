@@ -1678,7 +1678,7 @@ export async function initChatSystem() {
                 }
                 // Paywall / silence activated or deactivated in realtime
                 _applyPaywall(fresh.parameters?.paywall ?? null, fresh.member_id || email);
-                _applySilence(fresh.parameters?.silenced ?? null);
+                _applySilence(fresh.silence === true, fresh.parameters?.silence_reason || '');
             })
         .subscribe();
 
@@ -4712,12 +4712,12 @@ export function _applyPaywall(paywall: any, memberId: string) {
 
 // ─── SILENCE ──────────────────────────────────────────────────────────────────
 
-export function _applySilence(silenced: any) {
+export function _applySilence(active: boolean, reason: string = '') {
     const overlay = document.getElementById('silenceOverlay');
     if (!overlay) return;
-    if (silenced?.active) {
+    if (active) {
         const reasonEl = document.getElementById('silenceReason');
-        if (reasonEl) reasonEl.textContent = silenced.reason || '';
+        if (reasonEl) reasonEl.textContent = reason;
         overlay.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     } else {

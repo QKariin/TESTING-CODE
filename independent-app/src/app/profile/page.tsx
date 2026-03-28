@@ -233,7 +233,7 @@ export default function ProfilePage() {
 
                     // Check paywall / silence immediately on load
                     _applyPaywall(unifiedData?.parameters?.paywall ?? null, unifiedData.member_id || unifiedData.memberId || '');
-                    _applySilence(unifiedData?.parameters?.silenced ?? null);
+                    _applySilence(unifiedData?.silence === true, unifiedData?.parameters?.silence_reason || '');
 
                     setTimeout(async () => {
                         renderProfileSidebar(unifiedData);

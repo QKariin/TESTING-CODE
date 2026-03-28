@@ -75,6 +75,7 @@ export function mapUserProfile(p: any, t: any, crowdfundTotal: number = 0): any 
         title: p.name || '',
         kinks: p.kinks || '',
         limits: p.limits || '',
+        silence: p.silence === true,
         parameters: {
             ...params,
             taskdom_active_task: activeTask,
