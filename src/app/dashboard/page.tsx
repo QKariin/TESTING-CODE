@@ -23,9 +23,85 @@ import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-ac
 import { getOptimizedUrl } from '@/scripts/media';
 import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
 
+const PAYWALL_PRESETS = [
+    "Monthly tribute not received. Pay now.",
+    "Punishment — pay for your attitude.",
+    "Outstanding debt. You know what you did.",
+    "You've been a disappointment. Pay your dues.",
+    "Access suspended. Tribute required immediately.",
+];
+
+function PaywallModal({ memberId, onClose }: { memberId: string; onClose: () => void }) {
+    const [reason, setReason] = useState(PAYWALL_PRESETS[0]);
+    const [customReason, setCustomReason] = useState('');
+    const [useCustom, setUseCustom] = useState(false);
+    const [amount, setAmount] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const activate = async () => {
+        const finalReason = useCustom ? customReason.trim() : reason;
+        if (!finalReason || !amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+            setError('Fill in a valid reason and amount.'); return;
+        }
+        setLoading(true); setError('');
+        try {
+            const res = await fetch('/api/paywall/lock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId, reason: finalReason, amount: Number(amount) }),
+            });
+            const data = await res.json();
+            if (data.success) onClose();
+            else setError(data.error || 'Failed');
+        } catch { setError('Network error'); }
+        setLoading(false);
+    };
+
+    return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div style={{ background: '#0a0a0a', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 14, padding: '28px 24px', maxWidth: 440, width: '100%' }}>
+                <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 20 }}>⛔ ACTIVATE PAYWALL</div>
+
+                <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#666', letterSpacing: '2px', marginBottom: 8 }}>REASON</div>
+                    {PAYWALL_PRESETS.map((p, i) => (
+                        <button key={i} onClick={() => { setUseCustom(false); setReason(p); }} style={{ display: 'block', width: '100%', textAlign: 'left', background: (!useCustom && reason === p) ? 'rgba(197,160,89,0.12)' : 'transparent', border: `1px solid ${(!useCustom && reason === p) ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 6, padding: '8px 12px', color: (!useCustom && reason === p) ? '#c5a059' : '#888', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', cursor: 'pointer', marginBottom: 4 }}>
+                            {p}
+                        </button>
+                    ))}
+                    <button onClick={() => setUseCustom(true)} style={{ display: 'block', width: '100%', textAlign: 'left', background: useCustom ? 'rgba(197,160,89,0.12)' : 'transparent', border: `1px solid ${useCustom ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 6, padding: '8px 12px', color: useCustom ? '#c5a059' : '#888', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', cursor: 'pointer', marginBottom: useCustom ? 8 : 0 }}>
+                        ✏️ Custom reason...
+                    </button>
+                    {useCustom && (
+                        <textarea value={customReason} onChange={e => setCustomReason(e.target.value)} placeholder="Write your own reason..." style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '8px 12px', resize: 'vertical', minHeight: 70, outline: 'none', boxSizing: 'border-box' }} />
+                    )}
+                </div>
+
+                <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#666', letterSpacing: '2px', marginBottom: 8 }}>AMOUNT (€)</div>
+                    <input type="number" min="1" step="1" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 50" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', padding: '10px 14px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+
+                {error && <div style={{ color: '#ff6666', fontFamily: 'Orbitron', fontSize: '0.4rem', marginBottom: 12 }}>{error}</div>}
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                    <button onClick={activate} disabled={loading} style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '2px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
+                        {loading ? 'ACTIVATING...' : 'ACTIVATE'}
+                    </button>
+                    <button onClick={onClose} style={{ padding: '12px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#666', fontFamily: 'Orbitron', fontSize: '0.48rem', cursor: 'pointer' }}>
+                        CANCEL
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function DashboardPage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [paywallTarget, setPaywallTarget] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -679,6 +755,8 @@ export default function DashboardPage() {
                                                 </div>
                                                 <div id="idleActions" style={{ display: 'none', paddingTop: '10px' }} onClick={(e) => e.stopPropagation()}>
                                                     <button className="at-btn at-send" style={{ background: 'var(--gold)', color: '#000' }} onClick={() => (window as any).openTaskGallery()}>ISSUE NEW COMMAND</button>
+                                                    <button className="at-btn" style={{ background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.35)', color: '#c5a059', marginTop: 6 }} onClick={() => { const id = (window as any).currId; if (id) setPaywallTarget(id); }}>⛔ PAYWALL</button>
+                                                    <button className="at-btn" style={{ background: 'rgba(255,100,100,0.06)', border: '1px solid rgba(255,100,100,0.25)', color: '#ff8888', marginTop: 4 }} onClick={async () => { const id = (window as any).currId; if (!id) return; await fetch('/api/paywall/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id }) }); }}>🔓 UNLOCK</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -932,6 +1010,9 @@ export default function DashboardPage() {
 
             {/* PURCHASE TOAST CONTAINER */}
             <div id="purchaseToastContainer"></div>
+
+            {/* PAYWALL MODAL */}
+            {paywallTarget && <PaywallModal memberId={paywallTarget} onClose={() => setPaywallTarget(null)} />}
         </div>
     );
 }

@@ -1676,6 +1676,8 @@ export async function initChatSystem() {
                     setState({ wallet: fresh.wallet ?? getState().wallet, score: fresh.score ?? getState().score });
                     updateWalletDisplay();
                 }
+                // Paywall activated/deactivated in realtime
+                _applyPaywall(fresh.parameters?.paywall ?? null, fresh.member_id || email);
             })
         .subscribe();
 
@@ -4666,4 +4668,43 @@ export function closeQkLightbox() {
     if (lb) lb.style.display = 'none';
     if (content) content.innerHTML = '';
     document.body.style.overflow = '';
+}
+
+// ─── PAYWALL ──────────────────────────────────────────────────────────────────
+
+export function _applyPaywall(paywall: any, memberId: string) {
+    const overlay = document.getElementById('paywallOverlay');
+    if (!overlay) return;
+    if (paywall?.active) {
+        const reasonEl = document.getElementById('paywallReason');
+        const amountEl = document.getElementById('paywallAmount');
+        const payBtn   = document.getElementById('paywallPayBtn');
+        if (reasonEl) reasonEl.textContent = paywall.reason || '';
+        if (amountEl) amountEl.textContent  = `€${Number(paywall.amount).toFixed(2)}`;
+        if (payBtn) {
+            payBtn.onclick = async () => {
+                payBtn.textContent = 'REDIRECTING...';
+                (payBtn as HTMLButtonElement).disabled = true;
+                try {
+                    const res = await fetch('/api/stripe/paywall-checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ memberId }),
+                    });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                    else throw new Error(data.error || 'Failed');
+                } catch (e: any) {
+                    payBtn.textContent = 'PAY NOW';
+                    (payBtn as HTMLButtonElement).disabled = false;
+                    alert('Payment error: ' + e.message);
+                }
+            };
+        }
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    } else {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
 }

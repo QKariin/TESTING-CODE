@@ -77,6 +77,7 @@ import {
     cancelMobGlReply,
     setProfileChatReply,
     cancelProfileChatReply,
+    _applyPaywall,
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -229,6 +230,9 @@ export default function ProfilePage() {
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
 
+                    // Check paywall immediately on load
+                    _applyPaywall(unifiedData?.parameters?.paywall ?? null, unifiedData.member_id || unifiedData.memberId || '');
+
                     setTimeout(async () => {
                         renderProfileSidebar(unifiedData);
                         updateKneelingUI();
@@ -319,6 +323,24 @@ export default function ProfilePage() {
             width: '100vw',
             overflowX: 'hidden'
         }}>
+
+            {/* ── PAYWALL OVERLAY — blocks all interaction until payment ── */}
+            <div id="paywallOverlay" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+                <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
+                    <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 28 }}>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
+                        <div id="paywallReason" style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}></div>
+                        <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
+                        <div id="paywallAmount" style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}></div>
+                    </div>
+                    <button id="paywallPayBtn" style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)' }}>
+                        PAY NOW
+                    </button>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Secure payment via Stripe</div>
+                </div>
+            </div>
 
             {/* SOUNDS & INPUTS */}
             <audio id="msgSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
