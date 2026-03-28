@@ -198,6 +198,14 @@ export async function updateDetail(u: any) {
     updateReviewQueue(u);
     updateActiveTask(u);
     updateTaskQueue(u);
+
+    // Notify React of lock state for this user
+    if (typeof window !== 'undefined' && (window as any)._setActiveLocks) {
+        (window as any)._setActiveLocks({
+            paywall: !!(u.parameters?.paywall?.active),
+            silenced: !!(u.parameters?.silenced?.active),
+        });
+    }
 }
 
 function renderTelemetry(u: any) {

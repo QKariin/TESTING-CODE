@@ -39,36 +39,36 @@ const SILENCE_PRESETS = [
     "Punishment in effect. No exceptions.",
 ];
 
-const svgLock = <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style={{ marginRight: 6, flexShrink: 0 }}><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>;
-const svgUnlock = <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style={{ marginRight: 6, flexShrink: 0 }}><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg>;
-const svgBlock = <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style={{ marginRight: 6, flexShrink: 0 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>;
-const svgPencil = <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style={{ marginRight: 6, flexShrink: 0 }}><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>;
-
-function ReasonSelector({ presets, reason, setReason, useCustom, setUseCustom, customReason, setCustomReason, accentColor }: {
+function ReasonPicker({ presets, reason, setReason, useCustom, setUseCustom, customReason, setCustomReason, color }: {
     presets: string[]; reason: string; setReason: (v: string) => void;
     useCustom: boolean; setUseCustom: (v: boolean) => void;
     customReason: string; setCustomReason: (v: string) => void;
-    accentColor: string;
+    color: string;
 }) {
     return (
         <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#666', letterSpacing: '2px', marginBottom: 8 }}>REASON</div>
-            {presets.map((p, i) => (
-                <button key={i} onClick={() => { setUseCustom(false); setReason(p); }} style={{ display: 'block', width: '100%', textAlign: 'left', background: (!useCustom && reason === p) ? `rgba(${accentColor},0.12)` : 'transparent', border: `1px solid ${(!useCustom && reason === p) ? `rgba(${accentColor},0.4)` : 'rgba(255,255,255,0.06)'}`, borderRadius: 6, padding: '8px 12px', color: (!useCustom && reason === p) ? `rgb(${accentColor})` : '#888', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', cursor: 'pointer', marginBottom: 4 }}>
-                    {p}
-                </button>
-            ))}
-            <button onClick={() => setUseCustom(true)} style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', background: useCustom ? `rgba(${accentColor},0.12)` : 'transparent', border: `1px solid ${useCustom ? `rgba(${accentColor},0.4)` : 'rgba(255,255,255,0.06)'}`, borderRadius: 6, padding: '8px 12px', color: useCustom ? `rgb(${accentColor})` : '#888', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', cursor: 'pointer', marginBottom: useCustom ? 8 : 0 }}>
-                {svgPencil} Custom reason...
+            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>REASON</div>
+            {presets.map((p, i) => {
+                const active = !useCustom && reason === p;
+                return (
+                    <button key={i} onClick={() => { setUseCustom(false); setReason(p); }} style={{ display: 'block', width: '100%', textAlign: 'left', background: active ? `${color}18` : 'transparent', border: `1px solid ${active ? color + '66' : 'rgba(255,255,255,0.06)'}`, borderRadius: 6, padding: '8px 12px', color: active ? color : '#777', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', cursor: 'pointer', marginBottom: 4 }}>
+                        {p}
+                    </button>
+                );
+            })}
+            <button onClick={() => setUseCustom(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', background: useCustom ? `${color}18` : 'transparent', border: `1px solid ${useCustom ? color + '66' : 'rgba(255,255,255,0.06)'}`, borderRadius: 6, padding: '8px 12px', color: useCustom ? color : '#777', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', cursor: 'pointer', marginBottom: useCustom ? 8 : 0 }}>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                Custom reason...
             </button>
             {useCustom && (
-                <textarea value={customReason} onChange={e => setCustomReason(e.target.value)} placeholder="Write your own reason..." style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(${accentColor},0.25)`, borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '8px 12px', resize: 'vertical', minHeight: 70, outline: 'none', boxSizing: 'border-box' }} />
+                <textarea value={customReason} onChange={e => setCustomReason(e.target.value)} placeholder="Write your own reason..." style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${color}40`, borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '8px 12px', resize: 'vertical', minHeight: 70, outline: 'none', boxSizing: 'border-box' }} />
             )}
         </div>
     );
 }
 
-function PaywallModal({ memberId, onClose }: { memberId: string; onClose: () => void }) {
+function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose: () => void; onLocked: () => void }) {
+    const [tab, setTab] = useState<'paywall' | 'silence'>('paywall');
     const [reason, setReason] = useState(PAYWALL_PRESETS[0]);
     const [customReason, setCustomReason] = useState('');
     const [useCustom, setUseCustom] = useState(false);
@@ -76,90 +76,77 @@ function PaywallModal({ memberId, onClose }: { memberId: string; onClose: () => 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const activate = async () => {
-        const finalReason = useCustom ? customReason.trim() : reason;
-        if (!finalReason || !amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-            setError('Fill in a valid reason and amount.'); return;
-        }
-        setLoading(true); setError('');
-        try {
-            const res = await fetch('/api/paywall/lock', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId, reason: finalReason, amount: Number(amount) }),
-            });
-            const data = await res.json();
-            if (data.success) onClose();
-            else setError(data.error || 'Failed');
-        } catch { setError('Network error'); }
-        setLoading(false);
+    const switchTab = (t: 'paywall' | 'silence') => {
+        setTab(t);
+        setReason(t === 'paywall' ? PAYWALL_PRESETS[0] : SILENCE_PRESETS[0]);
+        setUseCustom(false); setCustomReason(''); setError('');
     };
-
-    return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-            <div style={{ background: '#0a0a0a', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 14, padding: '28px 24px', maxWidth: 440, width: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'center', fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 20 }}>
-                    {svgLock} ACTIVATE PAYWALL
-                </div>
-                <ReasonSelector presets={PAYWALL_PRESETS} reason={reason} setReason={setReason} useCustom={useCustom} setUseCustom={setUseCustom} customReason={customReason} setCustomReason={setCustomReason} accentColor="197,160,89" />
-                <div style={{ marginBottom: 20 }}>
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#666', letterSpacing: '2px', marginBottom: 8 }}>AMOUNT (€)</div>
-                    <input type="number" min="1" step="1" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 50" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', padding: '10px 14px', outline: 'none', boxSizing: 'border-box' }} />
-                </div>
-                {error && <div style={{ color: '#ff6666', fontFamily: 'Orbitron', fontSize: '0.4rem', marginBottom: 12 }}>{error}</div>}
-                <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={activate} disabled={loading} style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '2px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
-                        {loading ? 'ACTIVATING...' : 'ACTIVATE'}
-                    </button>
-                    <button onClick={onClose} style={{ padding: '12px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#666', fontFamily: 'Orbitron', fontSize: '0.48rem', cursor: 'pointer' }}>
-                        CANCEL
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function SilenceModal({ memberId, onClose }: { memberId: string; onClose: () => void }) {
-    const [reason, setReason] = useState(SILENCE_PRESETS[0]);
-    const [customReason, setCustomReason] = useState('');
-    const [useCustom, setUseCustom] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
 
     const activate = async () => {
         const finalReason = useCustom ? customReason.trim() : reason;
         if (!finalReason) { setError('Select or write a reason.'); return; }
+        if (tab === 'paywall' && (!amount || isNaN(Number(amount)) || Number(amount) <= 0)) {
+            setError('Enter a valid amount.'); return;
+        }
         setLoading(true); setError('');
         try {
-            const res = await fetch('/api/silence/lock', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId, reason: finalReason }),
-            });
+            const url = tab === 'paywall' ? '/api/paywall/lock' : '/api/silence/lock';
+            const body = tab === 'paywall'
+                ? { memberId, reason: finalReason, amount: Number(amount) }
+                : { memberId, reason: finalReason };
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
             const data = await res.json();
-            if (data.success) onClose();
+            if (data.success) { onLocked(); onClose(); }
             else setError(data.error || 'Failed');
         } catch { setError('Network error'); }
         setLoading(false);
     };
 
+    const isPaywall = tab === 'paywall';
+    const accentColor = isPaywall ? '#c5a059' : '#e03030';
+    const borderColor = isPaywall ? 'rgba(197,160,89,0.3)' : 'rgba(200,40,40,0.35)';
+
     return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-            <div style={{ background: '#0a0a0a', border: '1px solid rgba(180,40,40,0.4)', borderRadius: 14, padding: '28px 24px', maxWidth: 440, width: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'center', fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#ff5555', letterSpacing: '3px', marginBottom: 20 }}>
-                    {svgBlock} SILENCE USER
+            <div style={{ background: '#0a0a0a', border: `1px solid ${borderColor}`, borderRadius: 14, padding: '24px', maxWidth: 460, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.52rem', color: accentColor, letterSpacing: '3px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                        LOCK USER
+                    </div>
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1 }}>&times;</button>
                 </div>
-                <ReasonSelector presets={SILENCE_PRESETS} reason={reason} setReason={setReason} useCustom={useCustom} setUseCustom={setUseCustom} customReason={customReason} setCustomReason={setCustomReason} accentColor="220,60,60" />
-                {error && <div style={{ color: '#ff6666', fontFamily: 'Orbitron', fontSize: '0.4rem', marginBottom: 12 }}>{error}</div>}
-                <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={activate} disabled={loading} style={{ flex: 1, padding: '12px', background: 'linear-gradient(135deg,#b02020,#7a1010)', border: 'none', borderRadius: 8, color: '#fff', fontFamily: 'Orbitron', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '2px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
-                        {loading ? 'SILENCING...' : 'SILENCE'}
+
+                <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
+                    <button onClick={() => switchTab('paywall')} style={{ flex: 1, padding: '10px', background: isPaywall ? 'rgba(197,160,89,0.12)' : 'transparent', border: `1px solid ${isPaywall ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, color: isPaywall ? '#c5a059' : '#555', fontFamily: 'Orbitron', fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer' }}>
+                        PAYWALL
                     </button>
-                    <button onClick={onClose} style={{ padding: '12px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#666', fontFamily: 'Orbitron', fontSize: '0.48rem', cursor: 'pointer' }}>
-                        CANCEL
+                    <button onClick={() => switchTab('silence')} style={{ flex: 1, padding: '10px', background: !isPaywall ? 'rgba(200,40,40,0.1)' : 'transparent', border: `1px solid ${!isPaywall ? 'rgba(200,40,40,0.45)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, color: !isPaywall ? '#e03030' : '#555', fontFamily: 'Orbitron', fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer' }}>
+                        SILENCE
                     </button>
                 </div>
+
+                <ReasonPicker
+                    presets={isPaywall ? PAYWALL_PRESETS : SILENCE_PRESETS}
+                    reason={reason} setReason={setReason}
+                    useCustom={useCustom} setUseCustom={setUseCustom}
+                    customReason={customReason} setCustomReason={setCustomReason}
+                    color={accentColor}
+                />
+
+                {isPaywall && (
+                    <div style={{ marginBottom: 20 }}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>AMOUNT (€)</div>
+                        <input type="number" min="1" step="1" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 50" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', padding: '10px 14px', outline: 'none', boxSizing: 'border-box' }} />
+                    </div>
+                )}
+
+                {error && <div style={{ color: '#ff5555', fontFamily: 'Orbitron', fontSize: '0.38rem', marginBottom: 12 }}>{error}</div>}
+
+                <button onClick={activate} disabled={loading} style={{ width: '100%', padding: '13px', background: isPaywall ? 'linear-gradient(135deg,#c5a059,#8b6914)' : 'linear-gradient(135deg,#b02020,#7a1010)', border: 'none', borderRadius: 8, color: isPaywall ? '#000' : '#fff', fontFamily: 'Orbitron', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '2px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
+                    {loading ? 'LOCKING...' : (isPaywall ? 'ACTIVATE PAYWALL' : 'SILENCE USER')}
+                </button>
             </div>
         </div>
     );
@@ -168,8 +155,8 @@ function SilenceModal({ memberId, onClose }: { memberId: string; onClose: () => 
 export default function DashboardPage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
-    const [paywallTarget, setPaywallTarget] = useState<string | null>(null);
-    const [silenceTarget, setSilenceTarget] = useState<string | null>(null);
+    const [lockTarget, setLockTarget] = useState<string | null>(null);
+    const [activeLocks, setActiveLocks] = useState<{ paywall: boolean; silenced: boolean }>({ paywall: false, silenced: false });
     const router = useRouter();
 
     useEffect(() => {
@@ -195,6 +182,9 @@ export default function DashboardPage() {
             }
         };
         getCurrUser();
+
+        // Expose lock state setter so vanilla updateDetail can push state into React
+        (window as any)._setActiveLocks = setActiveLocks;
 
         // Inject scripts into window for legacy compatibility (DOM onclick handlers)
         if (typeof window !== 'undefined') {
@@ -823,10 +813,23 @@ export default function DashboardPage() {
                                                 </div>
                                                 <div id="idleActions" style={{ display: 'none', paddingTop: '10px' }} onClick={(e) => e.stopPropagation()}>
                                                     <button className="at-btn at-send" style={{ background: 'var(--gold)', color: '#000' }} onClick={() => (window as any).openTaskGallery()}>ISSUE NEW COMMAND</button>
-                                                    <button className="at-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.35)', color: '#c5a059', marginTop: 6 }} onClick={() => { const id = (window as any).currId; if (id) setPaywallTarget(id); }}><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style={{ marginRight: 6 }}><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg> PAYWALL</button>
-                                                    <button className="at-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,100,100,0.06)', border: '1px solid rgba(255,100,100,0.25)', color: '#ff8888', marginTop: 4 }} onClick={async () => { const id = (window as any).currId; if (!id) return; await fetch('/api/paywall/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id }) }); }}><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style={{ marginRight: 6 }}><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg> UNLOCK PAYWALL</button>
-                                                    <button className="at-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(180,40,40,0.08)', border: '1px solid rgba(180,40,40,0.35)', color: '#ff5555', marginTop: 4 }} onClick={() => { const id = (window as any).currId; if (id) setSilenceTarget(id); }}><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style={{ marginRight: 6 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg> SILENCE</button>
-                                                    <button className="at-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(100,100,100,0.06)', border: '1px solid rgba(100,100,100,0.25)', color: '#888', marginTop: 4 }} onClick={async () => { const id = (window as any).currId; if (!id) return; await fetch('/api/silence/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id }) }); }}><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style={{ marginRight: 6 }}><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg> UNSILENCE</button>
+                                                    {(activeLocks.paywall || activeLocks.silenced) ? (
+                                                        <button className="at-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'rgba(100,100,100,0.08)', border: '1px solid rgba(150,150,150,0.3)', color: '#aaa', marginTop: 6 }} onClick={async () => {
+                                                            const id = (window as any).currId;
+                                                            if (!id) return;
+                                                            if (activeLocks.paywall) await fetch('/api/paywall/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id }) });
+                                                            if (activeLocks.silenced) await fetch('/api/silence/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id }) });
+                                                            setActiveLocks({ paywall: false, silenced: false });
+                                                        }}>
+                                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg>
+                                                            UNLOCK
+                                                        </button>
+                                                    ) : (
+                                                        <button className="at-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.35)', color: '#c5a059', marginTop: 6 }} onClick={() => { const id = (window as any).currId; if (id) setLockTarget(id); }}>
+                                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                                            LOCK
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1081,11 +1084,8 @@ export default function DashboardPage() {
             {/* PURCHASE TOAST CONTAINER */}
             <div id="purchaseToastContainer"></div>
 
-            {/* PAYWALL MODAL */}
-            {paywallTarget && <PaywallModal memberId={paywallTarget} onClose={() => setPaywallTarget(null)} />}
-
-            {/* SILENCE MODAL */}
-            {silenceTarget && <SilenceModal memberId={silenceTarget} onClose={() => setSilenceTarget(null)} />}
+            {/* LOCK MODAL */}
+            {lockTarget && <LockModal memberId={lockTarget} onClose={() => setLockTarget(null)} onLocked={() => setActiveLocks(prev => ({ ...prev, paywall: true }))} />}
         </div>
     );
 }
