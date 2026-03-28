@@ -4730,48 +4730,7 @@ export function _applyPaywall(paywall: any, memberId: string) {
 
 export function _applySilence(active: boolean, reason: string = '') {
     if (typeof window === 'undefined') return;
-
-    const OVERLAY_ID = '__silence_lock_overlay__';
-    document.getElementById(OVERLAY_ID)?.remove();
-
-    if (active) {
-        const el = document.createElement('div');
-        el.id = OVERLAY_ID;
-        // Use px dimensions — avoids iOS % / vh / vw viewport unit bugs entirely
-        el.style.position = 'fixed';
-        el.style.top = '0';
-        el.style.left = '0';
-        el.style.width = window.innerWidth + 'px';
-        el.style.height = window.innerHeight + 'px';
-        el.style.zIndex = '2147483647';
-        el.style.background = 'rgba(8,2,2,0.97)';
-        el.style.display = 'flex';
-        el.style.flexDirection = 'column';
-        el.style.alignItems = 'center';
-        el.style.justifyContent = 'center';
-        el.style.padding = '24px';
-        el.style.boxSizing = 'border-box';
-        (el.style as any).webkitTransform = 'translateZ(0)';
-        el.style.transform = 'translateZ(0)';
-        const safeReason = (reason || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        el.innerHTML = `
-            <div style="max-width:420px;width:100%;text-align:center">
-                <div style="display:flex;justify-content:center;margin-bottom:16px">
-                    <svg viewBox="0 0 24 24" width="48" height="48" fill="rgba(220,60,60,0.7)">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/>
-                    </svg>
-                </div>
-                <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(220,60,60,0.6);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px">ACCESS REVOKED</div>
-                <div style="background:rgba(220,60,60,0.04);border:1px solid rgba(220,60,60,0.2);border-radius:14px;padding:28px 24px">
-                    <div style="font-family:Orbitron,sans-serif;font-size:0.38rem;color:rgba(220,60,60,0.4);letter-spacing:3px;margin-bottom:12px">MESSAGE FROM QUEEN KARIN</div>
-                    <div style="font-family:Cinzel,serif;font-size:1.05rem;color:#fff;line-height:1.6;letter-spacing:0.5px">${safeReason}</div>
-                </div>
-            </div>`;
-        document.body.appendChild(el);
-    }
-
-    // Also update React state if bridge is available
-    if ((window as any)._setSilenceOverlay) {
-        (window as any)._setSilenceOverlay(active, reason);
+    if (active && window.location.pathname !== '/locked') {
+        window.location.href = '/locked?reason=' + encodeURIComponent(reason);
     }
 }
