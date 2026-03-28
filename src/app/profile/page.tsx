@@ -324,6 +324,35 @@ export default function ProfilePage() {
         };
     }, []);
 
+    // ─── SILENCE POLL — standalone, runs every 3s regardless of profile-logic ──
+    useEffect(() => {
+        const supabase = createClient();
+        let email: string | null = null;
+
+        async function pollSilence() {
+            try {
+                if (!email) {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    email = user?.email || null;
+                }
+                if (!email) return;
+                const res = await fetch('/api/silence-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberId: email }),
+                });
+                const data = await res.json();
+                if (data.silence === true && window.location.pathname !== '/locked') {
+                    window.location.href = '/locked?reason=' + encodeURIComponent(data.reason || '');
+                }
+            } catch {}
+        }
+
+        pollSilence();
+        const interval = setInterval(pollSilence, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
     // ─── 2. ATTACH KNEEL LISTENERS + APPLY LOCKS ─────────────────────────
     useEffect(() => {
         if (!loading) {
