@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function LockedPage() {
+function LockedContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const reason = searchParams.get('reason') || '';
@@ -62,5 +62,15 @@ export default function LockedPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function LockedPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(8,2,2,0.97)' }} />
+        }>
+            <LockedContent />
+        </Suspense>
     );
 }
