@@ -324,18 +324,14 @@ export default function ProfilePage() {
         };
     }, []);
 
-    // ─── SILENCE POLL — standalone, runs every 3s regardless of profile-logic ──
+    // ─── SILENCE POLL — fires once profile is loaded, uses email from profile state ──
     useEffect(() => {
-        const supabase = createClient();
-        let email: string | null = null;
+        if (!profile) return;
+        const email = profile.memberId || profile.member_id || profile.email;
+        if (!email) return;
 
         async function pollSilence() {
             try {
-                if (!email) {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    email = user?.email || null;
-                }
-                if (!email) return;
                 const res = await fetch('/api/silence-check', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -351,7 +347,7 @@ export default function ProfilePage() {
         pollSilence();
         const interval = setInterval(pollSilence, 3000);
         return () => clearInterval(interval);
-    }, []);
+    }, [profile]);
 
     // ─── 2. ATTACH KNEEL LISTENERS + APPLY LOCKS ─────────────────────────
     useEffect(() => {
