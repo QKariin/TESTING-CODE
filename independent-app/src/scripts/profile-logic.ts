@@ -4713,15 +4713,10 @@ export function _applyPaywall(paywall: any, memberId: string) {
 // ─── SILENCE ──────────────────────────────────────────────────────────────────
 
 export function _applySilence(active: boolean, reason: string = '') {
-    const overlay = document.getElementById('silenceOverlay');
-    if (!overlay) return;
-    if (active) {
-        const reasonEl = document.getElementById('silenceReason');
-        if (reasonEl) reasonEl.textContent = reason;
-        overlay.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    } else {
-        overlay.style.display = 'none';
-        document.body.style.overflow = '';
+    // Drive via React state setter — survives all re-renders on both desktop and mobile
+    if (typeof window !== 'undefined' && (window as any)._setSilenceOverlay) {
+        (window as any)._setSilenceOverlay(active, reason);
+        if (active) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = '';
     }
 }

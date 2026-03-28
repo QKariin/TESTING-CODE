@@ -85,12 +85,20 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
     const pendingLockRef = useRef<{ silence: boolean; silenceReason: string; paywall: any; memberId: string } | null>(null);
+    const [silenceActive, setSilenceActive] = useState(false);
+    const [silenceReason, setSilenceReason] = useState('');
     const [benefitsOpen, setBenefitsOpen] = useState(false);
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
+        // Expose silence overlay setter so vanilla profile-logic.ts can drive it via React state
+        (window as any)._setSilenceOverlay = (active: boolean, reason: string) => {
+            setSilenceActive(active);
+            setSilenceReason(reason);
+        };
+
         // Legacy Window Assignments
         if (typeof window !== 'undefined') {
             (window as any).claimKneelReward = claimKneelReward;
@@ -303,10 +311,11 @@ export default function ProfilePage() {
     // ─── 2. ATTACH KNEEL LISTENERS + APPLY LOCKS ─────────────────────────
     useEffect(() => {
         if (!loading) {
-            // DOM is now rendered — safe to apply lock overlays
+            // DOM is now rendered — apply locks via React state (prevents re-render resets)
             if (pendingLockRef.current) {
-                const { silence, silenceReason, paywall, memberId } = pendingLockRef.current;
-                _applySilence(silence, silenceReason);
+                const { silence, silenceReason: reason, paywall, memberId } = pendingLockRef.current;
+                setSilenceActive(silence);
+                setSilenceReason(reason);
                 _applyPaywall(paywall, memberId);
                 pendingLockRef.current = null;
             }
@@ -351,19 +360,21 @@ export default function ProfilePage() {
             </div>
         </div>
 
-        {/* ── SILENCE OVERLAY — outside container so position:fixed works on iOS ── */}
-        <div id="silenceOverlay" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(8,2,2,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-            <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                    <svg viewBox="0 0 24 24" width="48" height="48" fill="rgba(220,60,60,0.7)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>
-                </div>
-                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS REVOKED</div>
-                <div style={{ background: 'rgba(220,60,60,0.04)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, padding: '28px 24px' }}>
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(220,60,60,0.4)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
-                    <div id="silenceReason" style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}></div>
+        {/* ── SILENCE OVERLAY — React-state driven, never reset by re-renders ── */}
+        {silenceActive && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(8,2,2,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+                <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                        <svg viewBox="0 0 24 24" width="48" height="48" fill="rgba(220,60,60,0.7)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>
+                    </div>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS REVOKED</div>
+                    <div style={{ background: 'rgba(220,60,60,0.04)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, padding: '28px 24px' }}>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(220,60,60,0.4)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}>{silenceReason}</div>
+                    </div>
                 </div>
             </div>
-        </div>
+        )}
 
         <div id="PROFILE_CONTAINER" style={{
             background: '#020512',
