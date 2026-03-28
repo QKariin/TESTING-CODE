@@ -1676,8 +1676,9 @@ export async function initChatSystem() {
                     setState({ wallet: fresh.wallet ?? getState().wallet, score: fresh.score ?? getState().score });
                     updateWalletDisplay();
                 }
-                // Paywall activated/deactivated in realtime
+                // Paywall / silence activated or deactivated in realtime
                 _applyPaywall(fresh.parameters?.paywall ?? null, fresh.member_id || email);
+                _applySilence(fresh.parameters?.silenced ?? null);
             })
         .subscribe();
 
@@ -4701,6 +4702,22 @@ export function _applyPaywall(paywall: any, memberId: string) {
                 }
             };
         }
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    } else {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+// ─── SILENCE ──────────────────────────────────────────────────────────────────
+
+export function _applySilence(silenced: any) {
+    const overlay = document.getElementById('silenceOverlay');
+    if (!overlay) return;
+    if (silenced?.active) {
+        const reasonEl = document.getElementById('silenceReason');
+        if (reasonEl) reasonEl.textContent = silenced.reason || '';
         overlay.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     } else {
