@@ -67,7 +67,7 @@ function ReasonPicker({ presets, reason, setReason, useCustom, setUseCustom, cus
     );
 }
 
-function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose: () => void; onLocked: () => void }) {
+function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose: () => void; onLocked: (type: 'paywall' | 'silence') => void }) {
     const [tab, setTab] = useState<'paywall' | 'silence'>('paywall');
     const [reason, setReason] = useState(PAYWALL_PRESETS[0]);
     const [customReason, setCustomReason] = useState('');
@@ -96,7 +96,7 @@ function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose:
                 : { memberId, reason: finalReason };
             const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
             const data = await res.json();
-            if (data.success) { onLocked(); onClose(); }
+            if (data.success) { onLocked(tab); onClose(); }
             else setError(data.error || 'Failed');
         } catch { setError('Network error'); }
         setLoading(false);
@@ -351,6 +351,9 @@ export default function DashboardPage() {
                 }, 400);
             }
         };
+
+        // Expose so the lock modal can force an immediate refresh after lock/unlock
+        (window as any)._refreshDashboard = loadLiveAction;
 
         loadLiveAction();
         // Poll every 10 seconds — refreshes lastSeen, tasks, and anything missed by realtime
@@ -1086,7 +1089,10 @@ export default function DashboardPage() {
             <div id="purchaseToastContainer"></div>
 
             {/* LOCK MODAL */}
-            {lockTarget && <LockModal memberId={lockTarget} onClose={() => setLockTarget(null)} onLocked={() => setActiveLocks(prev => ({ ...prev, paywall: true }))} />}
+            {lockTarget && <LockModal memberId={lockTarget} onClose={() => setLockTarget(null)} onLocked={(type: 'paywall' | 'silence') => {
+                setActiveLocks(prev => ({ ...prev, paywall: type === 'paywall' ? true : prev.paywall, silenced: type === 'silence' ? true : prev.silenced }));
+                (window as any)._refreshDashboard?.();
+            }} />}
         </div>
     );
 }

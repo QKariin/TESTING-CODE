@@ -357,6 +357,59 @@ export default function ProfilePage() {
         return () => clearInterval(silencePoll);
     }, [loading, profile]);
 
+    // ─── 4. SILENCE OVERLAY — DOM injection (bypasses iOS overflow:hidden bug) ──
+    // Injects directly into document.body as a vanilla DOM node, outside React's tree.
+    // This avoids iOS Safari's position:fixed breakage caused by overflow-x:hidden on body.
+    useEffect(() => {
+        const OVERLAY_ID = '__silence_lock_overlay__';
+        const existing = document.getElementById(OVERLAY_ID);
+        if (existing) existing.remove();
+
+        if (!silenceActive) return;
+
+        const el = document.createElement('div');
+        el.id = OVERLAY_ID;
+        el.style.cssText = [
+            'position:fixed',
+            'top:0', 'left:0', 'right:0', 'bottom:0',
+            'width:100%', 'height:100%',
+            'z-index:2147483647',
+            'background:rgba(8,2,2,0.97)',
+            'backdrop-filter:blur(24px)',
+            '-webkit-backdrop-filter:blur(24px)',
+            'display:flex',
+            'flex-direction:column',
+            'align-items:center',
+            'justify-content:center',
+            'padding:24px',
+            'box-sizing:border-box',
+            '-webkit-transform:translateZ(0)',
+            'transform:translateZ(0)',
+        ].join(';');
+
+        const safeReason = (silenceReason || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        el.innerHTML = `
+            <div style="max-width:420px;width:100%;text-align:center">
+                <div style="display:flex;justify-content:center;margin-bottom:16px">
+                    <svg viewBox="0 0 24 24" width="48" height="48" fill="rgba(220,60,60,0.7)">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/>
+                    </svg>
+                </div>
+                <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(220,60,60,0.6);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px">ACCESS REVOKED</div>
+                <div style="background:rgba(220,60,60,0.04);border:1px solid rgba(220,60,60,0.2);border-radius:14px;padding:28px 24px">
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.38rem;color:rgba(220,60,60,0.4);letter-spacing:3px;margin-bottom:12px">MESSAGE FROM QUEEN KARIN</div>
+                    <div style="font-family:Cinzel,serif;font-size:1.05rem;color:#fff;line-height:1.6;letter-spacing:0.5px">${safeReason}</div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(el);
+
+        return () => {
+            document.getElementById(OVERLAY_ID)?.remove();
+        };
+    }, [silenceActive, silenceReason]);
+
     if (loading) return (
         <div id="loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: 'var(--gold)', fontFamily: 'Cinzel' }}>
             LOADING COMMAND CONSOLE...
@@ -382,22 +435,6 @@ export default function ProfilePage() {
                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Secure payment via Stripe</div>
             </div>
         </div>
-
-        {/* ── SILENCE OVERLAY — React-state driven, never reset by re-renders ── */}
-        {silenceActive && (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(8,2,2,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-                <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                        <svg viewBox="0 0 24 24" width="48" height="48" fill="rgba(220,60,60,0.7)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>
-                    </div>
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS REVOKED</div>
-                    <div style={{ background: 'rgba(220,60,60,0.04)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, padding: '28px 24px' }}>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(220,60,60,0.4)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}>{silenceReason}</div>
-                    </div>
-                </div>
-            </div>
-        )}
 
         <div id="PROFILE_CONTAINER" style={{
             background: '#020512',
