@@ -362,15 +362,13 @@ function updateActiveTask(u: any) {
             activeTimer.innerText = "--:--";
         }
     } else {
-        if ((u as any)._lastTrackedEndTime != null) {
-            if (cooldownInterval) clearInterval(cooldownInterval);
-            (u as any)._lastTrackedEndTime = null;
-            if (idleActions) idleActions.style.display = 'block';
-            const failBtn = activeTaskContent?.querySelector('.at-fail') as HTMLElement;
-            if (failBtn) failBtn.style.display = 'none';
-            activeText.innerText = "None";
-            activeTimer.innerText = "--:--";
-        }
+        if (cooldownInterval) clearInterval(cooldownInterval);
+        (u as any)._lastTrackedEndTime = null;
+        if (idleActions) idleActions.style.display = 'block';
+        const failBtn = activeTaskContent?.querySelector('.at-fail') as HTMLElement;
+        if (failBtn) failBtn.style.display = 'none';
+        activeText.innerText = "None";
+        activeTimer.innerText = "--:--";
     }
 }
 

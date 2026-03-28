@@ -414,15 +414,16 @@ export async function adminTaskAction(id: string | null, action: 'skip' | 'send'
                 // Manually reset local state to match backend
                 u.activeTask = null;
                 u.endTime = null;
+                u.pendingState = null;
                 if (!u.parameters) u.parameters = {};
                 u.parameters.taskdom_active_task = null;
                 u.parameters.taskdom_end_time = null;
 
-                // Force UI update
-                const statusEl = document.getElementById('dActiveStatus');
-                const textEl = document.getElementById('dActiveText');
-                if (statusEl) { statusEl.innerText = "UNPRODUCTIVE"; statusEl.style.color = "#666"; }
-                if (textEl) textEl.innerText = "None";
+                // Force full UI update (same pattern as forceActiveTask)
+                import('./dashboard-users').then(m => {
+                    m.updateDetail(u);
+                    m.updateTaskQueue(u);
+                });
             }
         } else {
             alert("Failed to skip task.");
