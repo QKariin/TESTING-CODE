@@ -334,6 +334,29 @@ export default function ProfilePage() {
         }
     }, [loading]);
 
+    // ─── 3. SILENCE POLLING FALLBACK ─────────────────────────────────────
+    // Realtime subscription is unreliable on mobile/some networks.
+    // Poll every 3s to guarantee instant lock activation on all devices.
+    useEffect(() => {
+        if (loading || !profile) return;
+        const email = (profile.member_id || profile.memberId || profile.email || '').toLowerCase();
+        if (!email) return;
+
+        const silencePoll = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email)}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data && !data.error) {
+                    setSilenceActive(data.silence === true);
+                    setSilenceReason(data.parameters?.silence_reason || '');
+                }
+            } catch {}
+        }, 3000);
+
+        return () => clearInterval(silencePoll);
+    }, [loading, profile]);
+
     if (loading) return (
         <div id="loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: 'var(--gold)', fontFamily: 'Cinzel' }}>
             LOADING COMMAND CONSOLE...
