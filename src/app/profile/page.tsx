@@ -84,6 +84,7 @@ import {
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
+    const pendingLockRef = useRef<{ silence: boolean; silenceReason: string; paywall: any; memberId: string } | null>(null);
     const [benefitsOpen, setBenefitsOpen] = useState(false);
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -231,9 +232,13 @@ export default function ProfilePage() {
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
 
-                    // Check paywall / silence immediately on load
-                    _applyPaywall(unifiedData?.parameters?.paywall ?? null, unifiedData.member_id || unifiedData.memberId || '');
-                    _applySilence(unifiedData?.silence === true, unifiedData?.parameters?.silence_reason || '');
+                    // Store lock state — applied after loading screen clears (DOM not ready yet)
+                    pendingLockRef.current = {
+                        silence: unifiedData?.silence === true,
+                        silenceReason: unifiedData?.parameters?.silence_reason || '',
+                        paywall: unifiedData?.parameters?.paywall ?? null,
+                        memberId: unifiedData.member_id || unifiedData.memberId || '',
+                    };
 
                     setTimeout(async () => {
                         renderProfileSidebar(unifiedData);
@@ -295,9 +300,17 @@ export default function ProfilePage() {
         };
     }, []);
 
-    // ─── 2. ATTACH KNEEL LISTENERS ────────────────────────────────────────
+    // ─── 2. ATTACH KNEEL LISTENERS + APPLY LOCKS ─────────────────────────
     useEffect(() => {
         if (!loading) {
+            // DOM is now rendered — safe to apply lock overlays
+            if (pendingLockRef.current) {
+                const { silence, silenceReason, paywall, memberId } = pendingLockRef.current;
+                _applySilence(silence, silenceReason);
+                _applyPaywall(paywall, memberId);
+                pendingLockRef.current = null;
+            }
+
             const timer = setTimeout(() => {
                 attachKneelListeners();
                 updateKneelingUI();
