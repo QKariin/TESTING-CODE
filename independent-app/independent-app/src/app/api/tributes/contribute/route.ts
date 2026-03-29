@@ -53,6 +53,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
         }
 
+        // Update tasks['Tribute History'] — primary source for SACRIFICE stat
+        const { data: taskRow } = await supabase.from('tasks').select('"Tribute History"').ilike('member_id', memberEmail).maybeSingle();
+        const existingTH: any[] = (() => { try { const v = taskRow?.['Tribute History']; return Array.isArray(v) ? v : (typeof v === 'string' ? JSON.parse(v) : []); } catch { return []; } })();
+        const newTH = [{ amount: -contributionAmount, title: tributeTitle, date: new Date().toISOString() }, ...existingTH].slice(0, 100);
+        supabase.from('tasks').update({ 'Tribute History': newTH }).ilike('member_id', memberEmail).then(() => {});
+
         // Award merit points via centralized function (updates all period scores)
         await DbService.awardPoints(memberEmail, meritGain);
 
