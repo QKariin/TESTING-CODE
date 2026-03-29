@@ -31,7 +31,7 @@ export async function GET() {
 
     all.sort((a: { online: boolean }, b: { online: boolean }) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
 
-    return NextResponse.json({ online: all.filter(u => u.online), all });
+    return NextResponse.json({ online: all.filter((u: { online: boolean }) => u.online), all });
 }
 
 // POST — heartbeat: upsert into online_users
