@@ -12,12 +12,20 @@ export async function handleLogout() {
 }
 
 // ─── REWARD CLAIMING ───
+let _claiming = false;
 export async function claimKneelReward(type: 'coins' | 'points') {
+    if (_claiming) return;
+    _claiming = true;
+
+    // Hide overlay immediately so user can't double-click
+    document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
+    document.getElementById('mobKneelReward')?.classList.add('hidden');
+
     const currentState = getState();
     const { raw, id, memberId, wallet, score } = currentState;
     const pid = memberId || id;
 
-    if (!pid) return;
+    if (!pid) { _claiming = false; return; }
 
     const amount = type === 'coins' ? 10 : 50;
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
@@ -33,21 +41,22 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         const data = await res.json();
 
         if (res.status === 429) {
-            // Cooldown still active — close overlay silently
+            // Cooldown still active — overlay already hidden above
             console.log(`[REWARD] Cooldown still active (${data.minLeft}m left). Ignoring.`);
-            document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
-            document.getElementById('mobKneelReward')?.classList.add('hidden');
+            _claiming = false;
             return;
         }
 
         if (!data.success) {
             console.error('[REWARD] Server rejected claim:', data.error);
+            _claiming = false;
             return;
         }
 
         loadChatHistory(pid);
     } catch (err) {
         console.error('[REWARD] Save failed', err);
+        _claiming = false;
         return;
     }
 
@@ -58,9 +67,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 
     if (type === 'coins') triggerCoinShower();
 
-    // 4. Hide UI
-    document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
-    document.getElementById('mobKneelReward')?.classList.add('hidden');
+    // 4. Play sound (overlay already hidden at top of function)
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
     if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
@@ -78,6 +85,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         // Fallback: render with current raw if fetch fails
         renderProfileSidebar(raw || {});
     }
+    _claiming = false;
 }
 
 
