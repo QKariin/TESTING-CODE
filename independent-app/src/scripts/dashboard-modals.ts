@@ -259,7 +259,8 @@ export function reviewTask(decision: 'approve' | 'reject') {
             closeModal();
         }
 
-        if (activeListFilter !== null) renderGlobalReview(activeListFilter);
+        _removeTaskCardFromList(taskData.id!);
+        renderGlobalReview(activeListFilter ?? false);
         return;
     }
 
@@ -304,7 +305,8 @@ export function reviewTask(decision: 'approve' | 'reject') {
             });
 
         // Trigger List Refresh if open
-        if (activeListFilter !== null) renderGlobalReview(activeListFilter);
+        _removeTaskCardFromList(taskData.id!);
+        renderGlobalReview(activeListFilter ?? false);
     }
 }
 
@@ -828,6 +830,11 @@ export async function forceActiveTask(taskText: string, queueIdx: number = -1) {
     }
 }
 
+function _removeTaskCardFromList(taskId: string) {
+    const card = document.querySelector(`#mListGrid [data-task-id="${taskId}"]`);
+    if (card) card.remove();
+}
+
 export function renderGlobalReview(filterRoutine: boolean) {
     activeListFilter = filterRoutine;
     const modal = document.getElementById('listModal');
@@ -887,7 +894,7 @@ export function renderGlobalReview(filterRoutine: boolean) {
         }
 
         return `
-            <div class="ops-card ${filterRoutine ? 'routine' : 'task'}" onclick="window.openModById('${t.id}', '${t.memberId}', false, null, '${isVideo ? 'video' : 'image'}')">
+            <div class="ops-card ${filterRoutine ? 'routine' : 'task'}" data-task-id="${t.id}" onclick="window.openModById('${t.id}', '${t.memberId}', false, null, '${isVideo ? 'video' : 'image'}')">
                 ${mediaBg}
                 <div class="ops-card-overlay">
                     <div class="ops-card-label" style="color:${color}">${filterRoutine ? 'ROUTINE' : 'TASK'}</div>
