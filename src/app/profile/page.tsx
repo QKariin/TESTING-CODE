@@ -338,12 +338,7 @@ export default function ProfilePage() {
                     body: JSON.stringify({ memberId: email }),
                 });
                 const data = await res.json();
-                if (data.silence === true) {
-                    setSilenceActive(true);
-                    setSilenceReason(data.reason || '');
-                } else {
-                    setSilenceActive(false);
-                }
+                _applySilence(data.silence === true, data.reason || '');
             } catch {}
         }
 
@@ -383,7 +378,7 @@ export default function ProfilePage() {
     );
 
     if (silenceActive) return (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(8,2,2,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel, serif' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(8,2,2,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2147483647, padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel, serif' }}>
             <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                     <svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)">
