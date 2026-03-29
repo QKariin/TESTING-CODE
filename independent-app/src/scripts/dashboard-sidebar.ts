@@ -153,22 +153,42 @@ export function renderSidebar() {
         if (rawPic === "null" || rawPic === "undefined" || !rawPic) rawPic = defaultPic;
         const finalPic = getOptimizedUrl(rawPic, 80) || defaultPic;
 
-        html += `
-            <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor: pointer;">
-                <div class="u-avatar-main">
-                    <img src="${finalPic}" alt="${clean(u.name)}" onerror="this.onerror=null;this.src='${defaultPic}'">
-                    <div class="notif-dot"></div>
-                    ${online ? '<div class="online-dot"></div>' : ''}
+        const isSilenced = u.silence === true;
+        const isPaywalled = !!(u.parameters?.paywall?.active) || u.paywall === true;
+        const isLocked = isSilenced || isPaywalled;
+        const lockColor = isSilenced ? 'rgba(220,60,60,0.85)' : 'rgba(197,160,89,0.85)';
+        const lockBg = isSilenced ? 'rgba(220,60,60,0.08)' : 'rgba(197,160,89,0.07)';
+        const lockBorder = isSilenced ? 'rgba(220,60,60,0.4)' : 'rgba(197,160,89,0.4)';
+        const lockLabel = isSilenced ? 'SILENCED' : 'PAYWALLED';
+        const lockPath = "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z";
+
+        if (isLocked) {
+            html += `
+                <div class="u-item ${isActive ? 'active' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:${lockBg};border:1px solid ${lockBorder};justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
+                    <img src="${finalPic}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.07;filter:blur(6px);pointer-events:none;" onerror="this.onerror=null;this.src='${defaultPic}'">
+                    <svg viewBox="0 0 24 24" style="width:28px;height:28px;fill:${lockColor};position:relative;z-index:1;flex-shrink:0;"><path d="${lockPath}"/></svg>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:${lockColor};letter-spacing:3px;position:relative;z-index:1;">${lockLabel}</div>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.62rem;color:rgba(255,255,255,0.55);letter-spacing:1px;position:relative;z-index:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${clean(u.name)}</div>
                 </div>
-                <div class="u-info">
-                    <div class="u-name">${clean(u.name)}</div>
-                    <div class="u-seen ${online ? 'online' : ''}">${statusText}</div>
+            `;
+        } else {
+            html += `
+                <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor: pointer;">
+                    <div class="u-avatar-main">
+                        <img src="${finalPic}" alt="${clean(u.name)}" onerror="this.onerror=null;this.src='${defaultPic}'">
+                        <div class="notif-dot"></div>
+                        ${online ? '<div class="online-dot"></div>' : ''}
+                    </div>
+                    <div class="u-info">
+                        <div class="u-name">${clean(u.name)}</div>
+                        <div class="u-seen ${online ? 'online' : ''}">${statusText}</div>
+                    </div>
+                    <div class="u-right-col">
+                        ${renderUserIcons(u)}
+                    </div>
                 </div>
-                <div class="u-right-col">
-                    ${renderUserIcons(u)}
-                </div>
-            </div>
-        `;
+            `;
+        }
     });
 
     list.innerHTML = html;
