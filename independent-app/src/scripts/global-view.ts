@@ -326,7 +326,7 @@ function _buildUpdateCardPreview(u: any): string {
         const avHtml = u.sender_avatar
             ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
             : '';
-        return `<div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;min-width:0;">
+        return `<div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;">
             <div style="width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
                 ${avHtml}
                 <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#a78bfa;">${initial}</div>
@@ -341,7 +341,7 @@ function _buildUpdateCardPreview(u: any): string {
     }
     // photo
     const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    return `<div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.15);border-radius:10px;overflow:hidden;position:relative;"
+    return `<div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.15);border-radius:10px;overflow:hidden;position:relative;width:100%;"
         onmouseenter="this.querySelector('.uinfo').style.opacity='1'"
         onmouseleave="this.querySelector('.uinfo').style.opacity='0'">
         <img src="${getOptimizedUrl(u.media_url, 300)}" style="width:100%;height:90px;object-fit:cover;display:block;" loading="lazy">

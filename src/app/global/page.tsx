@@ -204,7 +204,7 @@ export default function GlobalPage() {
                                 <button onClick={() => openGlobalSection('updates')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.36rem', padding: '3px 8px', cursor: 'pointer', borderRadius: '3px' }}>VIEW ↗</button>
                             </div>
                         </div>
-                        <div id="globalPreview_updates" style={{ flex: 1, overflowY: 'auto', minHeight: 0, display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '8px', alignContent: 'flex-start' }}></div>
+                        <div id="globalPreview_updates" style={{ flex: 1, overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px' }}></div>
                     </div>
 
                     {/* CHALLENGES */}
