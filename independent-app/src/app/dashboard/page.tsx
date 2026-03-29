@@ -71,13 +71,17 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     const [messages, setMessages] = useState<any[]>([]);
     const [text, setText] = useState('');
     const [sending, setSending] = useState(false);
-    const bottomRef = useRef<HTMLDivElement>(null);
 
     async function load() {
         try {
             const res = await fetch('/api/global/messages', { cache: 'no-store' });
             const data = await res.json();
-            if (data.messages) setMessages(data.messages.slice(-30));
+            if (data.messages) {
+                const real = (data.messages as any[]).filter(
+                    m => m.sender_name !== 'SYSTEM' && !String(m.message || '').startsWith('PROMOTION_CARD:')
+                );
+                setMessages(real.slice(-2));
+            }
         } catch {}
     }
 
@@ -86,10 +90,6 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
         const iv = setInterval(load, 5000);
         return () => clearInterval(iv);
     }, []);
-
-    useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
 
     async function send() {
         if (!text.trim() || !userEmail || sending) return;
@@ -112,38 +112,40 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     }
 
     return (
-        <div className="glass-card span-2" style={{ display: 'flex', flexDirection: 'column', height: 320 }}>
-            <div style={{ padding: '14px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
-                <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#c5a059', letterSpacing: '2px' }}>Global Chat</div>
-                <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginTop: 2 }}>Community Feed</div>
+        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="vk-header">
+                <div className="vk-title">Global Chat</div>
+                <div className="vk-sub">Community Feed</div>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ flex: 1, padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {messages.length === 0 && (
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 20, letterSpacing: '2px' }}>NO MESSAGES YET</div>
+                )}
                 {messages.map((m: any, i: number) => {
                     const isQueen = m.is_queen === true;
                     return (
-                        <div key={m.id || i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                            <img src={m.sender_avatar || '/queen-karin.png'} alt="" style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, marginTop: 1 }} onError={(e: any) => { e.target.src = '/queen-karin.png'; }} />
+                        <div key={m.id || i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                            <img src={m.sender_avatar || '/queen-karin.png'} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: isQueen ? '1px solid rgba(197,160,89,0.5)' : '1px solid rgba(255,255,255,0.1)' }} onError={(e: any) => { e.target.src = '/queen-karin.png'; }} />
                             <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
-                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: isQueen ? '#c5a059' : 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>{m.sender_name || 'SUBJECT'}</span>
-                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(255,255,255,0.2)' }}>{m.created_at ? fmt(m.created_at) : ''}</span>
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
+                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: isQueen ? '#c5a059' : 'rgba(255,255,255,0.6)', letterSpacing: '1px' }}>{m.sender_name || 'SUBJECT'}</span>
+                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)' }}>{m.created_at ? fmt(m.created_at) : ''}</span>
                                 </div>
-                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: isQueen ? '#e8d5a0' : 'rgba(255,255,255,0.75)', lineHeight: 1.4, wordBreak: 'break-word' }}>{m.message}</div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: isQueen ? '#e8d5a0' : 'rgba(255,255,255,0.8)', lineHeight: 1.45, wordBreak: 'break-word' }}>{m.message}</div>
                             </div>
                         </div>
                     );
                 })}
-                <div ref={bottomRef} />
             </div>
-            <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8, flexShrink: 0 }}>
+            <div style={{ padding: '12px 20px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8 }}>
                 <input
                     value={text}
                     onChange={e => setText(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && send()}
                     placeholder="Send to global..."
-                    style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '7px 12px', outline: 'none' }}
+                    style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '8px 12px', outline: 'none' }}
                 />
-                <button onClick={send} disabled={sending || !text.trim()} style={{ background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, padding: '7px 14px', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending || !text.trim() ? 0.5 : 1, letterSpacing: '1px' }}>
+                <button onClick={send} disabled={sending || !text.trim()} style={{ background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, padding: '8px 16px', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending || !text.trim() ? 0.5 : 1, letterSpacing: '1px' }}>
                     SEND
                 </button>
             </div>
