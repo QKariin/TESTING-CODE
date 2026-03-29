@@ -36,29 +36,17 @@ export async function GET() {
     return NextResponse.json({ online: all.filter((u: { online: boolean }) => u.online), all });
 }
 
-// POST — heartbeat: upsert into online_users
+// POST — heartbeat: update profiles.last_active (same field dashboard uses for online detection)
 export async function POST(req: Request) {
     const { email } = await req.json();
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 });
 
-    // Get profile info for name + avatar
-    const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('name, avatar_url, profile_picture_url')
-        .ilike('member_id', email)
-        .maybeSingle();
-
-    const name = profile?.name || email.split('@')[0] || 'SUBJECT';
-    const avatar = profile?.avatar_url || profile?.profile_picture_url || null;
     const now = new Date().toISOString();
-    const memberId = emailToId(email.toLowerCase());
 
     const { error } = await supabaseAdmin
-        .from('online_users')
-        .upsert(
-            { member_id: memberId, name, avatar, last_seen: now },
-            { onConflict: 'member_id' }
-        );
+        .from('profiles')
+        .update({ last_active: now })
+        .ilike('member_id', email);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
