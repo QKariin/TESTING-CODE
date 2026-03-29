@@ -2,44 +2,62 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
     const [silenced, setSilenced] = useState(false);
     const [reason, setReason] = useState('');
-    const [email, setEmail] = useState<string | null>(null);
-    const router = useRouter();
 
-    // Get email once on mount
     useEffect(() => {
-        const supabase = createClient();
-        supabase.auth.getUser().then(({ data: { user } }) => {
-            if (!user) { router.push('/login'); return; }
-            setEmail(user.email || null);
-        });
-    }, []);
+        // Restore from sessionStorage immediately (no network delay)
+        if (sessionStorage.getItem('__silenced') === '1') {
+            setSilenced(true);
+            setReason(sessionStorage.getItem('__silenceReason') || '');
+        }
 
-    // Poll silence once we have the email
-    useEffect(() => {
-        if (!email) return;
+        let active = true;
+        let interval: ReturnType<typeof setInterval>;
 
-        async function check() {
+        async function init() {
             try {
-                const res = await fetch('/api/silence-check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ memberId: email }),
-                });
-                const data = await res.json();
-                setSilenced(data.silence === true);
-                if (data.silence === true) setReason(data.reason || '');
+                const supabase = createClient();
+                // getSession reads from local storage — no network call, instant
+                const { data: { session } } = await supabase.auth.getSession();
+                const email = session?.user?.email;
+                if (!email || !active) return;
+
+                async function check() {
+                    try {
+                        const res = await fetch('/api/silence-check', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ memberId: email }),
+                        });
+                        const data = await res.json();
+                        if (!active) return;
+                        if (data.silence === true) {
+                            sessionStorage.setItem('__silenced', '1');
+                            sessionStorage.setItem('__silenceReason', data.reason || '');
+                            setSilenced(true);
+                            setReason(data.reason || '');
+                        } else {
+                            sessionStorage.removeItem('__silenced');
+                            sessionStorage.removeItem('__silenceReason');
+                            setSilenced(false);
+                        }
+                    } catch {}
+                }
+
+                await check();
+                if (active) interval = setInterval(check, 3000);
             } catch {}
         }
 
-        check();
-        const interval = setInterval(check, 3000);
-        return () => clearInterval(interval);
-    }, [email]);
+        init();
+        return () => {
+            active = false;
+            clearInterval(interval);
+        };
+    }, []);
 
     if (silenced) return (
         <div style={{
