@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import '../../css/dashboard.css';
@@ -63,6 +63,90 @@ function ReasonPicker({ presets, reason, setReason, useCustom, setUseCustom, cus
             {useCustom && (
                 <textarea value={customReason} onChange={e => setCustomReason(e.target.value)} placeholder="Write your own reason..." style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${color}40`, borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '8px 12px', resize: 'vertical', minHeight: 70, outline: 'none', boxSizing: 'border-box' }} />
             )}
+        </div>
+    );
+}
+
+function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
+    const [messages, setMessages] = useState<any[]>([]);
+    const [text, setText] = useState('');
+    const [sending, setSending] = useState(false);
+    const bottomRef = useRef<HTMLDivElement>(null);
+
+    async function load() {
+        try {
+            const res = await fetch('/api/global/messages', { cache: 'no-store' });
+            const data = await res.json();
+            if (data.messages) setMessages(data.messages.slice(-30));
+        } catch {}
+    }
+
+    useEffect(() => {
+        load();
+        const iv = setInterval(load, 5000);
+        return () => clearInterval(iv);
+    }, []);
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    async function send() {
+        if (!text.trim() || !userEmail || sending) return;
+        setSending(true);
+        try {
+            await fetch('/api/global/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senderEmail: userEmail, message: text.trim() }),
+            });
+            setText('');
+            await load();
+        } catch {}
+        setSending(false);
+    }
+
+    function fmt(ts: string) {
+        const d = new Date(ts);
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    return (
+        <div className="glass-card span-2" style={{ display: 'flex', flexDirection: 'column', height: 320 }}>
+            <div style={{ padding: '14px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
+                <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#c5a059', letterSpacing: '2px' }}>Global Chat</div>
+                <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginTop: 2 }}>Community Feed</div>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {messages.map((m: any, i: number) => {
+                    const isQueen = m.is_queen === true;
+                    return (
+                        <div key={m.id || i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                            <img src={m.sender_avatar || '/queen-karin.png'} alt="" style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, marginTop: 1 }} onError={(e: any) => { e.target.src = '/queen-karin.png'; }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
+                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: isQueen ? '#c5a059' : 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>{m.sender_name || 'SUBJECT'}</span>
+                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(255,255,255,0.2)' }}>{m.created_at ? fmt(m.created_at) : ''}</span>
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: isQueen ? '#e8d5a0' : 'rgba(255,255,255,0.75)', lineHeight: 1.4, wordBreak: 'break-word' }}>{m.message}</div>
+                            </div>
+                        </div>
+                    );
+                })}
+                <div ref={bottomRef} />
+            </div>
+            <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8, flexShrink: 0 }}>
+                <input
+                    value={text}
+                    onChange={e => setText(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && send()}
+                    placeholder="Send to global..."
+                    style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '7px 12px', outline: 'none' }}
+                />
+                <button onClick={send} disabled={sending || !text.trim()} style={{ background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, padding: '7px 14px', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending || !text.trim() ? 0.5 : 1, letterSpacing: '1px' }}>
+                    SEND
+                </button>
+            </div>
         </div>
     );
 }
@@ -541,27 +625,8 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* ENDURANCE COUNTER */}
-                        <div className="v-kneel-card glass-card span-2">
-                            <div className="vk-header">
-                                <div className="vk-title">Endurance Tracking</div>
-                                <div className="vk-sub">Total Community Kneel</div>
-                            </div>
-                            <div className="vk-counter-box">
-                                <div id="totalKneelMins" className="vk-val">0</div>
-                                <div className="vk-unit">MINUTES</div>
-                            </div>
-                            <div className="vk-footer-stats">
-                                <div className="vk-sub-stat">
-                                    <span className="vks-label">Sessions</span>
-                                    <span id="totalKneelSessions" className="vks-val">0</span>
-                                </div>
-                                <div className="vk-sub-stat">
-                                    <span className="vks-label">Active</span>
-                                    <span id="activeKneelers" className="vks-val">0</span>
-                                </div>
-                            </div>
-                        </div>
+                        {/* GLOBAL CHAT */}
+                        <GlobalChatPanel userEmail={userEmail} />
 
                         {/* OPERATIONS MONITOR */}
                         <div className="v-monitor-card glass-card span-2">
