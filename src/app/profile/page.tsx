@@ -377,7 +377,7 @@ export default function ProfilePage() {
     }, [loading]);
 
     if (silenceActive) return (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(8,2,2,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel, serif', zIndex: 999999 }}>
+        <div style={{ width: '100vw', height: '100vh', background: 'rgba(8,2,2,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel, serif', overflow: 'hidden' }}>
             <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                     <svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)">
