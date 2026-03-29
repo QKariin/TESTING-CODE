@@ -8,7 +8,7 @@ const HEIC_TYPES = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/he
 
 const MAX_VIDEO_SECONDS = 120; // 2 minutes
 
-function getVideoDuration(file: File): Promise<number> {
+export function getVideoDuration(file: File): Promise<number> {
     return new Promise((resolve) => {
         const timeout = setTimeout(() => { URL.revokeObjectURL(url); resolve(0); }, 6000);
         const url = URL.createObjectURL(file);
@@ -21,7 +21,7 @@ function getVideoDuration(file: File): Promise<number> {
 }
 
 /** Detect if a file is a video by MIME type or extension (handles empty type from Android) */
-function isVideo(file: File): boolean {
+export function isVideo(file: File): boolean {
     if (file.type.startsWith('video/')) return true;
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
     return VIDEO_EXTS.includes(ext);

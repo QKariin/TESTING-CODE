@@ -1,7 +1,7 @@
 import { getState, setState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
 import { getHierarchyReport } from '../lib/hierarchyRules';
-import { uploadToSupabase } from './mediaSupabase';
+import { uploadToSupabase, getVideoDuration, isVideo } from './mediaSupabase';
 import { getOptimizedUrl } from './media';
 
 let globalTributes: any[] = [];
@@ -1363,6 +1363,25 @@ export function handleTaskEvidenceUpload(input: HTMLInputElement) {
 }
 
 // iOS-safe task evidence picker — dynamic input avoids hidden-element click restriction
+function showUploadNotice(html: string) {
+    ['uploadNoticeDesk', 'uploadNoticeMob'].forEach(id => document.getElementById(id)?.remove());
+    const makeNotice = (id: string, anchorId: string) => {
+        const el = document.createElement('div');
+        el.id = id;
+        el.style.cssText = 'margin:10px 0;text-align:center;';
+        el.innerHTML = html;
+        const anchor = document.getElementById(anchorId);
+        if (anchor?.parentNode) anchor.parentNode.insertBefore(el, anchor);
+    };
+    makeNotice('uploadNoticeDesk', 'uploadBtnContainer');
+    makeNotice('uploadNoticeMob', 'mobUploadBtnContainer');
+    (window as any)._clearUploadNotice = clearUploadNotice;
+}
+
+function clearUploadNotice() {
+    ['uploadNoticeDesk', 'uploadNoticeMob'].forEach(id => document.getElementById(id)?.remove());
+}
+
 export function triggerTaskEvidencePick() {
     const inp = document.createElement('input');
     inp.type = 'file';
@@ -1370,9 +1389,21 @@ export function triggerTaskEvidencePick() {
     inp.style.position = 'fixed';
     inp.style.top = '-9999px';
     document.body.appendChild(inp);
-    inp.onchange = () => {
+    inp.onchange = async () => {
         document.body.removeChild(inp);
-        if (inp.files?.[0]) submitTaskEvidence(inp.files[0], false);
+        const file = inp.files?.[0];
+        if (!file) return;
+        // Pre-check video duration before wasting time uploading
+        if (isVideo(file)) {
+            const duration = await getVideoDuration(file);
+            if (duration > 120) {
+                const mins = Math.floor(duration / 60);
+                const secs = Math.round(duration % 60);
+                showUploadNotice(`<div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:12px;">Your video is ${mins}m ${secs}s — maximum is 2 minutes.<br>Please trim it and try again.</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button onclick="window.triggerTaskEvidencePick()" style="padding:8px 18px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:'Orbitron';font-size:0.45rem;font-weight:700;cursor:pointer;border-radius:6px;letter-spacing:1px;">TRY AGAIN</button><button onclick="window._clearUploadNotice()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">DISMISS</button></div>`);
+                return;
+            }
+        }
+        submitTaskEvidence(file, false);
     };
     inp.click();
 }
@@ -1412,27 +1443,12 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         if (mobRoutineDisplay) mobRoutineDisplay.textContent = 'UPLOADING...';
     }
 
-    // Task-only UI — do NOT touch when uploading a routine
+    // Task-only UI — do NOT touch task layout (text/timer stay as-is)
     if (!isRoutine) {
-        if (uploadBtn) uploadBtn.innerText = "UPLOADING...";
-        if (mobTaskBtn) mobTaskBtn.innerText = "SENDING...";
-
-        // Hide upload buttons only — timer keeps running
-        const uploadCont = document.getElementById('uploadBtnContainer');
-        const mobUploadCont = document.getElementById('mobUploadBtnContainer');
-        if (uploadCont) uploadCont.style.display = 'none';
-        if (mobUploadCont) mobUploadCont.style.display = 'none';
-
-        const readyText = document.getElementById('readyText');
-        const mobTaskText = document.getElementById('mobTaskText');
-        if (readyText) {
-            readyText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING EVIDENCE...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
-            readyText.style.color = '#c5a059';
-        }
-        if (mobTaskText) {
-            mobTaskText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING EVIDENCE...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
-            mobTaskText.style.color = '#c5a059';
-        }
+        if (uploadBtn) { uploadBtn.innerText = "UPLOADING..."; (uploadBtn as HTMLButtonElement).disabled = true; }
+        if (mobTaskBtn) { mobTaskBtn.innerText = "SENDING..."; (mobTaskBtn as HTMLButtonElement).disabled = true; }
+        clearUploadNotice();
+        showUploadNotice('<div style="font-family:\'Rajdhani\';font-size:0.9rem;color:rgba(255,255,255,0.5);letter-spacing:1px;"><i class="fas fa-circle-notch fa-spin" style="margin-right:6px;color:#c5a059;"></i>TRANSMITTING EVIDENCE...</div>');
     }
 
     try {
@@ -1443,23 +1459,13 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         console.log("Supabase Upload Result:", fileUrl);
 
         if (!fileUrl || fileUrl.startsWith("failed")) {
+            const isTooLong = fileUrl?.includes("VIDEO_TOO_LONG");
             const isSizeError = fileUrl?.startsWith("failed:size");
             const sizeVal = isSizeError ? fileUrl.split(':')[2] : null;
-            const msg = isSizeError
-                ? `Video too large (${sizeVal}). Maximum is 50MB. Please trim or compress the video before uploading.`
-                : "Upload failed — please try again.";
-
-            if (!isRoutine) {
-                const readyText = document.getElementById('readyText');
-                const mobTaskText = document.getElementById('mobTaskText');
-                const uploadCont = document.getElementById('uploadBtnContainer');
-                const mobUploadCont = document.getElementById('mobUploadBtnContainer');
-                if (readyText) { readyText.innerHTML = taskText; readyText.style.color = 'white'; }
-                if (mobTaskText) { mobTaskText.innerHTML = taskText; mobTaskText.style.color = 'white'; }
-                if (uploadCont) uploadCont.style.display = 'flex';
-                if (mobUploadCont) mobUploadCont.style.display = 'flex';
-            }
-            showTaskFeedback(msg, 'var(--red)');
+            const noticeHtml = isTooLong
+                ? `<div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:12px;">Maximum 2 minutes allowed.<br>Please trim your video and try again.</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button onclick="window.triggerTaskEvidencePick()" style="padding:8px 18px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:'Orbitron';font-size:0.45rem;font-weight:700;cursor:pointer;border-radius:6px;letter-spacing:1px;">TRY AGAIN</button><button onclick="window._clearUploadNotice()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">DISMISS</button></div>`
+                : `<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">${isSizeError ? `Video too large (${sizeVal}) — maximum 50MB.` : 'Upload failed — please try again.'}</div>`;
+            if (!isRoutine) showUploadNotice(noticeHtml);
             return;
         }
 
@@ -1485,6 +1491,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         if (data.success) {
             console.log("Submission successful!");
             if (!isRoutine) {
+                clearUploadNotice();
                 const mockeries = [
                     "Evidence submitted. We will see if it's as disappointing as usual.",
                     "Task uploaded. Hopefully less pathetic than your last attempt.",
@@ -1498,41 +1505,15 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
             refreshTaskGallery(pid);
         } else {
             console.error("Backend submission error:", data.error);
-            if (!isRoutine) {
-                const readyText = document.getElementById('readyText');
-                const mobTaskText = document.getElementById('mobTaskText');
-                const uploadCont = document.getElementById('uploadBtnContainer');
-                const mobUploadCont = document.getElementById('mobUploadBtnContainer');
-                if (readyText) { readyText.innerText = "TRANSMISSION FAILED: " + (data.error || "Unknown error"); readyText.style.color = "var(--red)"; }
-                if (mobTaskText) { mobTaskText.innerText = "TRANSMISSION FAILED: " + (data.error || "Unknown error"); mobTaskText.style.color = "var(--red)"; }
-                if (uploadCont) uploadCont.style.display = 'flex';
-                if (mobUploadCont) mobUploadCont.style.display = 'flex';
-            }
+            if (!isRoutine) showUploadNotice(`<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">TRANSMISSION FAILED — ${data.error || 'please try again'}</div>`);
         }
     } catch (err: any) {
         console.error("Critical submission error", err);
-        const isTooLong = err?.message?.startsWith("VIDEO_TOO_LONG:");
+        if (!isRoutine) showUploadNotice(`<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">UPLOAD FAILED — TASK STILL ACTIVE, TRY AGAIN</div>`);
+    } finally {
         if (!isRoutine) {
-            const readyText = document.getElementById("readyText");
-            const mobTaskText = document.getElementById("mobTaskText");
-            const uploadCont = document.getElementById("uploadBtnContainer");
-            const mobUploadCont = document.getElementById("mobUploadBtnContainer");
-            if (isTooLong) {
-                const errorHtml = `<div style="text-align:center;padding:10px 0;"><div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.95rem;color:rgba(255,255,255,0.6);margin-bottom:14px;">Maximum 2 minutes allowed.<br>Please trim your video and try again.</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button onclick="window.triggerTaskEvidencePick()" style="padding:8px 18px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:'Orbitron';font-size:0.45rem;font-weight:700;cursor:pointer;border-radius:6px;letter-spacing:1px;">TRY AGAIN</button><button onclick="window._restoreTaskAfterFail()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">TRY LATER</button></div></div>`;
-                if (readyText) { readyText.innerHTML = errorHtml; readyText.style.color = ""; }
-                if (mobTaskText) { mobTaskText.innerHTML = errorHtml; mobTaskText.style.color = ""; }
-                (window as any)._restoreTaskAfterFail = () => { if (readyText) { readyText.innerHTML = taskText; readyText.style.color = "white"; } if (mobTaskText) { mobTaskText.innerHTML = taskText; mobTaskText.style.color = "white"; } if (uploadCont) uploadCont.style.display = "flex"; if (mobUploadCont) mobUploadCont.style.display = "flex"; };
-            } else {
-                const msg = "UPLOAD FAILED — TASK STILL ACTIVE, TRY AGAIN";
-                if (readyText) { readyText.innerText = msg; readyText.style.color = "var(--red)"; }
-                if (mobTaskText) { mobTaskText.innerText = msg; mobTaskText.style.color = "var(--red)"; }
-                if (uploadCont) uploadCont.style.display = "flex";
-                if (mobUploadCont) mobUploadCont.style.display = "flex";
-            }
-        }    } finally {
-        if (!isRoutine) {
-            if (uploadBtn && originalText) uploadBtn.innerText = originalText;
-            if (mobTaskBtn && originalMobTaskText) mobTaskBtn.innerText = originalMobTaskText;
+            if (uploadBtn && originalText) { uploadBtn.innerText = originalText; (uploadBtn as HTMLButtonElement).disabled = false; }
+            if (mobTaskBtn && originalMobTaskText) { mobTaskBtn.innerText = originalMobTaskText; (mobTaskBtn as HTMLButtonElement).disabled = false; }
             if (mobRoutineBtn && originalMobRoutineText) mobRoutineBtn.innerText = originalMobRoutineText;
         }
         // NOTE: routine button reset intentionally omitted — handleRoutineUpload.then() locks it

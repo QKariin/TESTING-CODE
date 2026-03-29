@@ -9,7 +9,7 @@ const HEIC_TYPES = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/he
 const MAX_VIDEO_SECONDS = 120; // 2 minutes
 
 /** Returns video duration in seconds by loading into a temporary element */
-function getVideoDuration(file: File): Promise<number> {
+export function getVideoDuration(file: File): Promise<number> {
     return new Promise((resolve) => {
         // iOS can take very long to transcode HEVC/MOV — if metadata doesn't load
         // within 6s, resolve with 0 (unknown) so we don't block the upload
@@ -24,7 +24,7 @@ function getVideoDuration(file: File): Promise<number> {
 }
 
 /** Detect if a file is a video by MIME type or extension (handles empty type from Android) */
-function isVideo(file: File): boolean {
+export function isVideo(file: File): boolean {
     if (file.type.startsWith('video/')) return true;
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
     return VIDEO_EXTS.includes(ext);
