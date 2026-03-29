@@ -763,8 +763,10 @@ export function closeLobby() {
 }
 
 let taskInterval: any = null;
+let taskEndTimestamp: number | null = null;
 
 export function startTaskTimer(ms: number) {
+    taskEndTimestamp = Date.now() + ms;
     if (taskInterval) clearInterval(taskInterval);
 
     const updateUI = (totalMs: number) => {
@@ -1426,7 +1428,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         if (mobTaskBtn) mobTaskBtn.innerText = "SENDING...";
 
         // Stop timer and show uploading state in task section
-        const taskEndTime = getState().endTime || getState().raw?.endTime || null;
+        const taskEndTime = taskEndTimestamp ? new Date(taskEndTimestamp).toISOString() : null;
         if (taskInterval) { clearInterval(taskInterval); taskInterval = null; }
 
         const activeTimerRow = document.getElementById('activeTimerRow');
