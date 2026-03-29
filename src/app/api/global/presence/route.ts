@@ -12,22 +12,26 @@ function emailToId(email: string): number {
     return Math.abs(h) || 1;
 }
 
-// GET — return users online in the last 2 minutes
+// GET — return all profiles with online flag (online first)
 export async function GET() {
     const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-    const { data, error } = await supabaseAdmin
-        .from('online_users')
-        .select('name, avatar, last_seen')
-        .gte('last_seen', cutoff);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const [{ data: allProfiles }, { data: onlineRows }] = await Promise.all([
+        supabaseAdmin.from('profiles').select('name, avatar_url, profile_picture_url').not('name', 'is', null).neq('name', ''),
+        supabaseAdmin.from('online_users').select('name').gte('last_seen', cutoff),
+    ]);
 
-    const online = (data || []).map((u: any) => ({
+    const onlineNames = new Set((onlineRows || []).map((r: any) => (r.name || '').toLowerCase()));
+
+    const all = (allProfiles || []).map((u: any) => ({
         name: u.name || 'SUBJECT',
-        avatar: u.avatar || null,
+        avatar: u.avatar_url || u.profile_picture_url || null,
+        online: onlineNames.has((u.name || '').toLowerCase()),
     }));
 
-    return NextResponse.json({ online });
+    all.sort((a, b) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
+
+    return NextResponse.json({ online: all.filter(u => u.online), all });
 }
 
 // POST — heartbeat: upsert into online_users
