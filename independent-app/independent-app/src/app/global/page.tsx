@@ -148,7 +148,7 @@ export default function GlobalPage() {
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px #4ade80', display: 'inline-block', flexShrink: 0 }}></span>
                         </div>
                         {/* Online users strip */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(74,222,128,0.03)', flexShrink: 0, minHeight: '46px', overflowX: 'auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(74,222,128,0.03)', flexShrink: 0, minHeight: '80px', overflowX: 'auto' }}>
                             <div id="globalOnlineStrip" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap' }}></div>
                         </div>
                         <div id="globalTalkFeed" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: '8px' }}></div>

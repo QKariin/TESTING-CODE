@@ -29,7 +29,7 @@ export async function GET() {
         online: onlineNames.has((u.name || '').toLowerCase()),
     }));
 
-    all.sort((a, b) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
+    all.sort((a: { online: boolean }, b: { online: boolean }) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
 
     return NextResponse.json({ online: all.filter(u => u.online), all });
 }
