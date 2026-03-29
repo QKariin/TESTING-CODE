@@ -12,28 +12,23 @@ function emailToId(email: string): number {
     return Math.abs(h) || 1;
 }
 
-// GET — return all profiles with online flag (online first)
+// GET — return all subscribers with online flag (online first)
+// Uses profiles.last_active for online detection — same logic as dashboard sidebar
 export async function GET() {
-    const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
-    const [profilesResult, onlineResult] = await Promise.all([
-        supabaseAdmin.from('profiles').select('name, avatar_url, profile_picture_url'),
-        supabaseAdmin.from('online_users').select('name').gte('last_seen', cutoff),
-    ]);
+    const { data: profiles, error } = await supabaseAdmin
+        .from('profiles')
+        .select('member_id, name, title, avatar_url, profile_picture_url, last_active');
 
-    if (profilesResult.error) return NextResponse.json({ error: profilesResult.error.message, all: [] });
+    if (error) return NextResponse.json({ error: error.message, all: [] });
 
-    const allProfiles = profilesResult.data || [];
-    const onlineRows = onlineResult.data || [];
-
-    const onlineNames = new Set(onlineRows.map((r: any) => (r.name || '').toLowerCase()));
-
-    const all = allProfiles
-        .filter((u: any) => u.name && u.name.trim() !== '')
-        .map((u: any) => ({
-            name: u.name,
-            avatar: u.avatar_url || u.profile_picture_url || null,
-            online: onlineNames.has(u.name.toLowerCase()),
+    const all = (profiles || [])
+        .filter((p: any) => (p.name || p.title || '').trim() !== '')
+        .map((p: any) => ({
+            name: p.name || p.title,
+            avatar: p.avatar_url || p.profile_picture_url || null,
+            online: !!(p.last_active && p.last_active >= cutoff),
         }));
 
     all.sort((a: { online: boolean }, b: { online: boolean }) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
