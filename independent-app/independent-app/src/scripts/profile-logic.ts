@@ -1520,15 +1520,18 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
                 if (mobUploadCont) mobUploadCont.style.display = 'flex';
             }
         }
-    } catch (err) {
+    } catch (err: any) {
         console.error("Critical submission error", err);
+        const msg = err?.message?.startsWith('VIDEO_TOO_LONG:')
+            ? err.message.replace('VIDEO_TOO_LONG:', '')
+            : 'CONNECTION ERROR DURING TRANSMISSION';
         if (!isRoutine) {
             const readyText = document.getElementById('readyText');
             const mobTaskText = document.getElementById('mobTaskText');
             const uploadCont = document.getElementById('uploadBtnContainer');
             const mobUploadCont = document.getElementById('mobUploadBtnContainer');
-            if (readyText) { readyText.innerText = "CONNECTION ERROR DURING TRANSMISSION"; readyText.style.color = "var(--red)"; }
-            if (mobTaskText) { mobTaskText.innerText = "CONNECTION ERROR DURING TRANSMISSION"; mobTaskText.style.color = "var(--red)"; }
+            if (readyText) { readyText.innerText = msg; readyText.style.color = "var(--red)"; }
+            if (mobTaskText) { mobTaskText.innerText = msg; mobTaskText.style.color = "var(--red)"; }
             if (uploadCont) uploadCont.style.display = 'flex';
             if (mobUploadCont) mobUploadCont.style.display = 'flex';
         }

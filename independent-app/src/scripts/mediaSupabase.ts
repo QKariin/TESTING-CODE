@@ -6,6 +6,20 @@ import { createClient } from '@/utils/supabase/client';
 const VIDEO_EXTS = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'hevc', 'm4v', '3gp', 'wmv', 'flv'];
 const HEIC_TYPES = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
 
+const MAX_VIDEO_SECONDS = 120; // 2 minutes
+
+/** Returns video duration in seconds by loading into a temporary element */
+function getVideoDuration(file: File): Promise<number> {
+    return new Promise((resolve) => {
+        const url = URL.createObjectURL(file);
+        const vid = document.createElement('video');
+        vid.preload = 'metadata';
+        vid.onloadedmetadata = () => { URL.revokeObjectURL(url); resolve(vid.duration); };
+        vid.onerror = () => { URL.revokeObjectURL(url); resolve(0); };
+        vid.src = url;
+    });
+}
+
 /** Detect if a file is a video by MIME type or extension (handles empty type from Android) */
 function isVideo(file: File): boolean {
     if (file.type.startsWith('video/')) return true;
@@ -96,6 +110,12 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
     try {
         // Videos (by MIME or extension) — signed URL, bypasses 4.5MB Vercel body limit
         if (isVideo(file)) {
+            const duration = await getVideoDuration(file);
+            if (duration > MAX_VIDEO_SECONDS) {
+                const mins = Math.floor(duration / 60);
+                const secs = Math.round(duration % 60);
+                throw new Error(`VIDEO_TOO_LONG:Your video is ${mins}m ${secs}s — maximum allowed is 2 minutes. Please trim it and try again.`);
+            }
             return await uploadFileDirectly(bucketName, folderPath, file);
         }
 
