@@ -221,7 +221,7 @@ export default function ProfilePage() {
                 }
 
                 // ── SILENCE CHECK — runs before anything else ──────────────────
-                // Uses supabaseAdmin server-side, no auth dependency, works on all devices
+                // Sets React state directly — no redirect, no race condition on mobile
                 try {
                     const silenceRes = await fetch('/api/silence-check', {
                         method: 'POST',
@@ -230,8 +230,8 @@ export default function ProfilePage() {
                     });
                     const silenceData = await silenceRes.json();
                     if (silenceData.silence === true) {
-                        window.location.href = '/locked?reason=' + encodeURIComponent(silenceData.reason || '');
-                        return;
+                        (window as any)._setSilenceOverlay(true, silenceData.reason || '');
+                        // Do NOT return — continue loading profile so polling can detect unlock
                     }
                 } catch {}
                 // ──────────────────────────────────────────────────────────────
