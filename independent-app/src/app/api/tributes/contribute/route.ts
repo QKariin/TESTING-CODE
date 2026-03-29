@@ -35,10 +35,17 @@ export async function POST(request: Request) {
         const meritGain = Math.floor(contributionAmount / 2);
         const newScore = currentScore + meritGain;
         const params = profile.parameters || {};
+        const existingHistory = Array.isArray(params.tributeHistory) ? params.tributeHistory :
+            (typeof params.tributeHistory === 'string' ? JSON.parse(params.tributeHistory) : []);
+        const newHistory = [
+            { amount: -contributionAmount, message: `SACRIFICE: ${tributeTitle}`, date: new Date().toISOString(), type: 'expense' },
+            ...existingHistory
+        ].slice(0, 50);
         const newParams = {
             ...params,
             wishlist_spent: (Number(params.wishlist_spent) || 0) + contributionAmount,
-            last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: contributionAmount }
+            last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: contributionAmount },
+            tributeHistory: newHistory,
         };
 
         // 3. Update wallet + parameters (score via awardPoints below)

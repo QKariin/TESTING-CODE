@@ -31,7 +31,8 @@ export async function POST(request: Request) {
         const newParams = {
             ...params,
             wishlist_spent: (Number(params.wishlist_spent) || 0) + tributeCost,
-            last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: tributeCost }
+            last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: tributeCost },
+            tributeHistory: [{ amount: -tributeCost, message: `SACRIFICE: ${tributeTitle}`, date: new Date().toISOString(), type: 'expense' }, ...(Array.isArray((profile.parameters||{}).tributeHistory) ? (profile.parameters||{}).tributeHistory : [])].slice(0,50),
         };
 
         const realEmail = profile?.member_id || memberEmail;

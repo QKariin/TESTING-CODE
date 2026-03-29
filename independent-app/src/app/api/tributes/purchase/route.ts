@@ -28,10 +28,17 @@ export async function POST(request: Request) {
         const meritGain = Math.floor(tributeCost / 2);
         const newScore = currentScore + meritGain;
         const params = profile.parameters || {};
+        const existingHistory = Array.isArray(params.tributeHistory) ? params.tributeHistory :
+            (typeof params.tributeHistory === 'string' ? JSON.parse(params.tributeHistory) : []);
+        const newHistory = [
+            { amount: -tributeCost, message: `SACRIFICE: ${tributeTitle}`, date: new Date().toISOString(), type: 'expense' },
+            ...existingHistory
+        ].slice(0, 50);
         const newParams = {
             ...params,
             wishlist_spent: (Number(params.wishlist_spent) || 0) + tributeCost,
-            last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: tributeCost }
+            last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: tributeCost },
+            tributeHistory: newHistory,
         };
 
         const realEmail = profile?.member_id || memberEmail;
