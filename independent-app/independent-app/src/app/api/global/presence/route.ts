@@ -16,18 +16,25 @@ function emailToId(email: string): number {
 export async function GET() {
     const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
-    const [{ data: allProfiles }, { data: onlineRows }] = await Promise.all([
-        supabaseAdmin.from('profiles').select('name, avatar_url, profile_picture_url').not('name', 'is', null).neq('name', ''),
+    const [profilesResult, onlineResult] = await Promise.all([
+        supabaseAdmin.from('profiles').select('name, avatar_url, profile_picture_url'),
         supabaseAdmin.from('online_users').select('name').gte('last_seen', cutoff),
     ]);
 
-    const onlineNames = new Set((onlineRows || []).map((r: any) => (r.name || '').toLowerCase()));
+    if (profilesResult.error) return NextResponse.json({ error: profilesResult.error.message, all: [] });
 
-    const all = (allProfiles || []).map((u: any) => ({
-        name: u.name || 'SUBJECT',
-        avatar: u.avatar_url || u.profile_picture_url || null,
-        online: onlineNames.has((u.name || '').toLowerCase()),
-    }));
+    const allProfiles = profilesResult.data || [];
+    const onlineRows = onlineResult.data || [];
+
+    const onlineNames = new Set(onlineRows.map((r: any) => (r.name || '').toLowerCase()));
+
+    const all = allProfiles
+        .filter((u: any) => u.name && u.name.trim() !== '')
+        .map((u: any) => ({
+            name: u.name,
+            avatar: u.avatar_url || u.profile_picture_url || null,
+            online: onlineNames.has(u.name.toLowerCase()),
+        }));
 
     all.sort((a: { online: boolean }, b: { online: boolean }) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
 
