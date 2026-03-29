@@ -26,12 +26,28 @@ export async function GET(req: Request) {
 
         const { data: profile } = await admin
             .from('profiles')
-            .select('id, parameters')
+            .select('id, name, parameters')
             .ilike('member_id', memberId)
             .maybeSingle();
 
         if (profile) {
             const params = profile.parameters || {};
+            const paywallData = params.paywall || {};
+
+            // Log forced payment to purchase history for exchequer
+            const purchaseHistory: any[] = params.purchaseHistory || [];
+            purchaseHistory.unshift({
+                type: 'PAYWALL_TRIBUTE',
+                name: profile.name || memberId,
+                memberId,
+                amount: paywallData.amount || 0,
+                reason: paywallData.reason || '',
+                timestamp: new Date().toISOString(),
+                sessionId,
+            });
+            if (purchaseHistory.length > 100) purchaseHistory.splice(100);
+            params.purchaseHistory = purchaseHistory;
+
             delete params.paywall;
             await admin.from('profiles').update({ paywall: false, parameters: params }).eq('id', profile.id);
         }

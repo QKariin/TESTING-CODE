@@ -28,6 +28,9 @@ export async function GET() {
                     name: entry.name || profile.name || profile.member_id || 'Unknown',
                     memberId: entry.memberId || profile.member_id || '',
                     coins: entry.coins,
+                    amount: entry.amount,
+                    reason: entry.reason,
+                    type: entry.type || 'COIN_PURCHASE',
                     timestamp: entry.timestamp,
                     sessionId: entry.sessionId,
                 });
