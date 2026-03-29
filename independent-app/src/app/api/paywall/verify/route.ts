@@ -33,7 +33,7 @@ export async function GET(req: Request) {
         if (profile) {
             const params = profile.parameters || {};
             delete params.paywall;
-            await admin.from('profiles').update({ parameters: params }).eq('id', profile.id);
+            await admin.from('profiles').update({ paywall: false, parameters: params }).eq('id', profile.id);
         }
 
         return NextResponse.redirect(`${origin}/profile`);
