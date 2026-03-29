@@ -4730,19 +4730,6 @@ export function _applyPaywall(paywall: any, memberId: string) {
 
 export function _applySilence(active: boolean, reason: string = '') {
     if (typeof window === 'undefined') return;
-
-    const desk = document.getElementById('silenceLockDesk');
-    const mob = document.getElementById('silenceLockMob');
-    const deskReason = document.getElementById('silenceLockDeskReason');
-    const mobReason = document.getElementById('silenceLockMobReason');
-
-    if (active) {
-        if (deskReason) deskReason.textContent = reason;
-        if (mobReason) mobReason.textContent = reason;
-        if (desk) { desk.classList.remove('hidden'); desk.style.display = 'flex'; }
-        if (mob) { mob.classList.remove('hidden'); mob.style.display = 'flex'; }
-    } else {
-        if (desk) { desk.classList.add('hidden'); desk.style.display = 'none'; }
-        if (mob) { mob.classList.add('hidden'); mob.style.display = 'none'; }
-    }
+    const setter = (window as any)._setSilenceOverlay;
+    if (setter) setter(active, reason);
 }

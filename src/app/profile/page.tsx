@@ -382,10 +382,8 @@ export default function ProfilePage() {
         </div>
     );
 
-    return (
-        <>
-        {/* ── SILENCE OVERLAY — outside container, same pattern as paywall ── */}
-        <div style={{ display: silenceActive ? 'flex' : 'none', position: 'fixed', inset: 0, zIndex: 9999999, background: 'rgba(8,2,2,0.97)', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel, serif' }}>
+    if (silenceActive) return (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(8,2,2,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel, serif' }}>
             <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                     <svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)">
@@ -399,6 +397,10 @@ export default function ProfilePage() {
                 </div>
             </div>
         </div>
+    );
+
+    return (
+        <>
 
         {/* ── PAYWALL OVERLAY — outside container so position:fixed works on iOS ── */}
         <div id="paywallOverlay" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
@@ -447,19 +449,6 @@ export default function ProfilePage() {
 
             {/* UNIVERSAL DESKTOP APP */}
             <div id="DESKTOP_APP">
-                {/* ── SILENCE LOCK — DESKTOP ── */}
-                <div id="silenceLockDesk" className="hidden" style={{ display: 'none', position: 'fixed', inset: 0, background: 'rgba(8,2,2,0.97)', zIndex: 2147483647, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel,serif' }}>
-                    <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                            <svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>
-                        </div>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS REVOKED</div>
-                        <div style={{ background: 'rgba(220,60,60,0.04)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, padding: '28px 24px' }}>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(220,60,60,0.4)', letterSpacing: '3px', marginBottom: 12, textTransform: 'uppercase' }}>Message from Queen Karin</div>
-                            <div id="silenceLockDeskReason" style={{ fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}></div>
-                        </div>
-                    </div>
-                </div>
                 {/* SIDEBAR */}
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
@@ -936,19 +925,6 @@ export default function ProfilePage() {
 
             <div id="MOBILE_APP" style={{ display: 'none' }}>
                 <div id="viewMobileHome" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', maxWidth: '100vw', height: '100dvh', overflowY: 'auto', overflowX: 'hidden', display: 'block', padding: 0, zIndex: 1, background: 'transparent' }}>
-                    {/* ── SILENCE LOCK — MOBILE ── */}
-                    <div id="silenceLockMob" className="mob-reward-overlay hidden" style={{ display: 'none', background: 'rgba(8,2,2,0.97)', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ maxWidth: 380, width: '100%', padding: '0 24px', textAlign: 'center' }}>
-                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                                <svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>
-                            </div>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS REVOKED</div>
-                            <div style={{ background: 'rgba(220,60,60,0.04)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, padding: '28px 24px' }}>
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(220,60,60,0.4)', letterSpacing: '3px', marginBottom: 12, textTransform: 'uppercase' }}>Message from Queen Karin</div>
-                                <div id="silenceLockMobReason" style={{ fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}></div>
-                            </div>
-                        </div>
-                    </div>
                     <div className="mob-hud-row">
                         <div className="hud-circle slave" onClick={() => (window as any).openLobby()}>
                             <div className="hud-avatar">
