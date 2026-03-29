@@ -711,8 +711,8 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
 async function _fetchAndRenderOnline() {
     try {
         const res = await fetch('/api/global/presence');
-        const { online } = await res.json();
-        _renderOnlineUsers(online || []);
+        const data = await res.json();
+        _renderOnlineUsers(data.all || data.online || []);
     } catch {}
 }
 
@@ -725,14 +725,20 @@ function _renderOnlineUsers(users: any[]) {
     }
     strip.innerHTML = users.map(u => {
         const initial = (u.name || 'S')[0].toUpperCase();
+        const isOnline = u.online === true;
+        const borderColor = isOnline ? 'rgba(100,220,100,0.7)' : 'rgba(80,80,80,0.4)';
+        const dotColor = isOnline ? '#4ade80' : '#444';
+        const imgFilter = isOnline ? '' : 'filter:grayscale(1);opacity:0.45;';
+        const nameColor = isOnline ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.25)';
         const avHtml = u.avatar
-            ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.55rem;color:#c5a059;">${initial}</div>`
-            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.55rem;color:#c5a059;">${initial}</div>`;
-        return `<div title="${u.name}" style="position:relative;flex-shrink:0;">
-            <div style="width:30px;height:30px;border-radius:50%;background:rgba(197,160,89,0.1);border:1.5px solid rgba(74,222,128,0.45);overflow:hidden;position:relative;">
+            ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;${imgFilter}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.8rem;color:#c5a059;">${initial}</div>`
+            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.8rem;color:${isOnline ? '#c5a059' : '#444'};">${initial}</div>`;
+        return `<div title="${u.name}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;">
+            <div style="width:54px;height:54px;border-radius:50%;background:rgba(20,20,20,0.8);border:2px solid ${borderColor};overflow:hidden;position:relative;">
                 ${avHtml}
             </div>
-            <div style="position:absolute;bottom:0;right:0;width:7px;height:7px;border-radius:50%;background:#4ade80;border:1.5px solid #04040e;box-shadow:0 0 5px #4ade80;"></div>
+            <div style="position:absolute;top:38px;right:2px;width:12px;height:12px;border-radius:50%;background:${dotColor};border:2px solid #04040e;"></div>
+            <div style="font-family:'Orbitron';font-size:0.32rem;color:${nameColor};letter-spacing:0.5px;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;">${u.name}</div>
         </div>`;
     }).join('');
 }
