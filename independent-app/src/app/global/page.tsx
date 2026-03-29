@@ -204,7 +204,7 @@ export default function GlobalPage() {
                                 <button onClick={() => openGlobalSection('updates')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.36rem', padding: '3px 8px', cursor: 'pointer', borderRadius: '3px' }}>VIEW ↗</button>
                             </div>
                         </div>
-                        <div id="globalPreview_updates" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
+                        <div id="globalPreview_updates" style={{ flex: 1, overflowY: 'auto', minHeight: 0, display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '8px', alignContent: 'flex-start' }}></div>
                     </div>
 
                     {/* CHALLENGES */}
@@ -240,7 +240,7 @@ export default function GlobalPage() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 0 10px', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                         <button id="globalUploadBtn" onClick={() => document.getElementById('globalPhotoInput')?.click()} style={{ padding: '7px 18px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', color: '#000', fontFamily: 'Orbitron', fontSize: '0.52rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>+ SHARE PHOTO</button>
                     </div>
-                    <div id="globalUpdatesGrid" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px 0' }}></div>
+                    <div id="globalUpdatesGrid" style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', padding: '12px 0', alignContent: 'flex-start' }}></div>
                 </div>
 
                 <div id="gPanel_spenders" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden', margin: '0 10px 10px' }}>

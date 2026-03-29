@@ -321,22 +321,32 @@ function _buildUpdateCardPreview(u: any): string {
         </div>`;
     }
     if (u.kind === 'points') {
-        return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
-            <div style="font-size:0.75rem;flex-shrink:0;">⚡</div>
-            <div style="flex:1;min-width:0;">
-                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</div>
-                <div style="font-family:'Rajdhani';font-size:0.75rem;color:#a78bfa;">+${u.points} MERIT</div>
+        const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const initial = (u.sender_name || 'S')[0].toUpperCase();
+        const avHtml = u.sender_avatar
+            ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            : '';
+        return `<div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;min-width:0;">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
+                ${avHtml}
+                <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#a78bfa;">${initial}</div>
             </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">⚡ MERIT EARNED</div>
+                <div style="font-family:'Cinzel';font-size:0.7rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name}</div>
+                <div style="font-family:'Orbitron';font-size:0.7rem;color:#a78bfa;font-weight:700;">+${u.points} MERIT</div>
+            </div>
+            <div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);flex-shrink:0;align-self:flex-start;">${time}</div>
         </div>`;
     }
     // photo
-    return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
-        <div style="width:32px;height:32px;border-radius:4px;overflow:hidden;flex-shrink:0;">
-            <img src="${getOptimizedUrl(u.media_url, 64)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
-        </div>
-        <div style="flex:1;min-width:0;">
-            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</div>
-            ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.caption}</div>` : ''}
+    const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `<div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.15);border-radius:10px;overflow:hidden;position:relative;"
+        onmouseenter="this.querySelector('.uinfo').style.opacity='1'"
+        onmouseleave="this.querySelector('.uinfo').style.opacity='0'">
+        <img src="${getOptimizedUrl(u.media_url, 300)}" style="width:100%;height:90px;object-fit:cover;display:block;" loading="lazy">
+        <div class="uinfo" style="position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,0.88));opacity:0;transition:opacity 0.15s;">
+            <div style="font-family:'Cinzel';font-size:0.55rem;color:#fff;">${u.sender_name} <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.3);">${time}</span></div>
         </div>
     </div>`;
 }
@@ -817,7 +827,7 @@ function _buildTributeCard(u: any): string {
     const coverSrc = u.sender_avatar || '';
     const initial = (u.sender_name || 'S')[0].toUpperCase();
     return `
-    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;max-width:320px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
         <div style="width:100%;height:140px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
             ${coverSrc
                 ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
@@ -843,7 +853,7 @@ function _buildPointsCard(u: any): string {
         ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : '';
     return `
-    <div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;max-width:320px;width:100%;">
+    <div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
         <div style="width:42px;height:42px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
             ${avHtml}
             <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${initial}</div>
@@ -860,7 +870,7 @@ function _buildPointsCard(u: any): string {
 function _buildPhotoCard(u: any): string {
     const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return `
-    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;max-width:320px;width:100%;position:relative;"
+    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;position:relative;"
          onmouseenter="this.querySelector('.uinfo').style.opacity='1'"
          onmouseleave="this.querySelector('.uinfo').style.opacity='0'">
         <img src="${getOptimizedUrl(u.media_url, 400)}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy">
