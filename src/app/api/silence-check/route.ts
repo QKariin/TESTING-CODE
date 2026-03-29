@@ -10,13 +10,16 @@ export async function POST(req: NextRequest) {
 
         const { data } = await supabaseAdmin
             .from('profiles')
-            .select('silence, parameters')
+            .select('silence, paywall, parameters')
             .ilike('member_id', memberId)
             .maybeSingle();
 
         return NextResponse.json({
             silence: data?.silence === true,
             reason: data?.parameters?.silence_reason || '',
+            paywall: data?.paywall === true,
+            paywallReason: data?.parameters?.paywall?.reason || '',
+            paywallAmount: data?.parameters?.paywall?.amount || 0,
         });
     } catch {
         return NextResponse.json({ silence: false, reason: '' });

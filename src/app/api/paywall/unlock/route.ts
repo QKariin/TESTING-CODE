@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
         const { error: updateErr } = await admin
             .from('profiles')
-            .update({ parameters: params })
+            .update({ paywall: false, parameters: params })
             .eq('id', profile.id);
 
         if (updateErr) return NextResponse.json({ success: false, error: updateErr.message }, { status: 500 });
