@@ -4730,6 +4730,39 @@ export function _applyPaywall(paywall: any, memberId: string) {
 
 export function _applySilence(active: boolean, reason: string = '') {
     if (typeof window === 'undefined') return;
+
+    // 1. Update React state — triggers early return lock screen
     const setter = (window as any)._setSilenceOverlay;
     if (setter) setter(active, reason);
+
+    const OVERLAY_ID = '__silenceLock';
+    const STYLE_ID = '__silenceStyle';
+
+    if (active) {
+        // 2. Inject CSS that forcibly hides #MOBILE_APP and #DESKTOP_APP — overrides
+        //    profile-mobile.css "display:block !important" via later declaration + higher specificity
+        let styleEl = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = STYLE_ID;
+            document.head.appendChild(styleEl);
+        }
+        styleEl.textContent = '#MOBILE_APP{display:none!important;visibility:hidden!important}#DESKTOP_APP{display:none!important;visibility:hidden!important}';
+
+        // 3. Inject full-screen DOM overlay — z-index 2147483647 beats everything
+        if (!document.getElementById(OVERLAY_ID)) {
+            const overlay = document.createElement('div');
+            overlay.id = OVERLAY_ID;
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100dvh;background:rgba(8,2,2,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2147483647;padding:24px;box-sizing:border-box;font-family:Cinzel,serif;';
+            const safeReason = reason.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            overlay.innerHTML = `<div style="max-width:420px;width:100%;text-align:center;"><svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)" style="display:block;margin:0 auto 16px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg><div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(220,60,60,0.6);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px;">ACCESS REVOKED</div><div style="background:rgba(220,60,60,0.04);border:1px solid rgba(220,60,60,0.2);border-radius:14px;padding:28px 24px;"><div style="font-family:Orbitron,sans-serif;font-size:0.38rem;color:rgba(220,60,60,0.4);letter-spacing:3px;margin-bottom:12px;text-transform:uppercase;">Message from Queen Karin</div><div id="__silenceLockReason" style="font-size:1.05rem;color:#fff;line-height:1.6;letter-spacing:0.5px;">${safeReason}</div></div></div>`;
+            document.body.appendChild(overlay);
+        } else {
+            const el = document.getElementById('__silenceLockReason');
+            if (el) el.textContent = reason;
+        }
+    } else {
+        document.getElementById(OVERLAY_ID)?.remove();
+        document.getElementById(STYLE_ID)?.remove();
+    }
 }
