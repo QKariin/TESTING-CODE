@@ -587,7 +587,7 @@ if (typeof window !== 'undefined') {
                     wishlist_spent: (Number(raw?.parameters?.wishlist_spent) || 0) + amount,
                     last_tribute: { at: new Date().toISOString(), title, amount }
                 };
-                const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams };
+                const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + amount };
                 setState({ wallet: data.newWallet, score: data.newScore, raw: updatedRaw });
                 updateWalletDisplay();
                 renderProfileSidebar(updatedRaw);
@@ -655,7 +655,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
                 wishlist_spent: (Number(raw?.parameters?.wishlist_spent) || 0) + cost,
                 last_tribute: { at: new Date().toISOString(), title, amount: cost }
             };
-            const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams };
+            const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + cost };
             setState({ wallet: data.newWallet, score: data.newScore, raw: updatedRaw });
             updateWalletDisplay();
             renderProfileSidebar(updatedRaw);
