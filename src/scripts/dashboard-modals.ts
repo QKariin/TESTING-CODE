@@ -45,7 +45,15 @@ async function sendChatFeedback(memberId: string, mediaUrl: string | null, media
 
 export function closeModal() {
     const modal = document.getElementById('reviewModal');
-    if (modal) modal.classList.remove('active');
+    if (modal) {
+        // Stop any playing video before hiding
+        modal.querySelectorAll('video').forEach(v => {
+            v.pause();
+            v.src = '';
+            v.load();
+        });
+        modal.classList.remove('active');
+    }
 
     const normalContent = document.getElementById('reviewNormalContent');
     const rewardOverlay = document.getElementById('reviewRewardOverlay');
