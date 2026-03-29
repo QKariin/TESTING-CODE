@@ -1523,30 +1523,29 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         }
     } catch (err: any) {
         console.error("Critical submission error", err);
-        const msg = err?.message?.startsWith('VIDEO_TOO_LONG:')
-            ? err.message.replace('VIDEO_TOO_LONG:', '')
-            : 'UPLOAD FAILED — TASK STILL ACTIVE, TRY AGAIN';
+        const isTooLong = err?.message?.startsWith("VIDEO_TOO_LONG:");
         if (!isRoutine) {
-            const readyText = document.getElementById('readyText');
-            const mobTaskText = document.getElementById('mobTaskText');
-            const uploadCont = document.getElementById('uploadBtnContainer');
-            const mobUploadCont = document.getElementById('mobUploadBtnContainer');
-            const activeTimerRow = document.getElementById('activeTimerRow');
-            const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
-            if (readyText) { readyText.innerText = msg; readyText.style.color = "var(--red)"; }
-            if (mobTaskText) { mobTaskText.innerText = msg; mobTaskText.style.color = "var(--red)"; }
-            if (uploadCont) uploadCont.style.display = 'flex';
-            if (mobUploadCont) mobUploadCont.style.display = 'flex';
-            if (taskEndTime) {
-                const msLeft = new Date(taskEndTime).getTime() - Date.now();
-                if (msLeft > 0) {
-                    if (activeTimerRow) activeTimerRow.style.display = '';
-                    if (mobActiveTimerRow) mobActiveTimerRow.style.display = '';
-                    startTaskTimer(msLeft);
-                }
+            const readyText = document.getElementById("readyText");
+            const mobTaskText = document.getElementById("mobTaskText");
+            const uploadCont = document.getElementById("uploadBtnContainer");
+            const mobUploadCont = document.getElementById("mobUploadBtnContainer");
+            const activeTimerRow = document.getElementById("activeTimerRow");
+            const mobActiveTimerRow = document.querySelector("#qm_TaskActive .card-timer-row") as HTMLElement;
+            const restoreTimer = () => { if (taskEndTime) { const msLeft = new Date(taskEndTime).getTime() - Date.now(); if (msLeft > 0) { if (activeTimerRow) activeTimerRow.style.display = ""; if (mobActiveTimerRow) mobActiveTimerRow.style.display = ""; startTaskTimer(msLeft); } } };
+            if (isTooLong) {
+                const errorHtml = `<div style="text-align:center;padding:10px 0;"><div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.95rem;color:rgba(255,255,255,0.6);margin-bottom:14px;">Maximum 2 minutes allowed.<br>Please trim your video and try again.</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button onclick="window.triggerTaskEvidencePick()" style="padding:8px 18px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:'Orbitron';font-size:0.45rem;font-weight:700;cursor:pointer;border-radius:6px;letter-spacing:1px;">TRY AGAIN</button><button onclick="window._restoreTaskAfterFail()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">TRY LATER</button></div></div>`;
+                if (readyText) { readyText.innerHTML = errorHtml; readyText.style.color = ""; }
+                if (mobTaskText) { mobTaskText.innerHTML = errorHtml; mobTaskText.style.color = ""; }
+                (window as any)._restoreTaskAfterFail = () => { if (readyText) { readyText.innerHTML = ""; readyText.style.color = "white"; } if (mobTaskText) { mobTaskText.innerHTML = ""; mobTaskText.style.color = "white"; } if (uploadCont) uploadCont.style.display = "flex"; if (mobUploadCont) mobUploadCont.style.display = "flex"; restoreTimer(); };
+            } else {
+                const msg = "UPLOAD FAILED — TASK STILL ACTIVE, TRY AGAIN";
+                if (readyText) { readyText.innerText = msg; readyText.style.color = "var(--red)"; }
+                if (mobTaskText) { mobTaskText.innerText = msg; mobTaskText.style.color = "var(--red)"; }
+                if (uploadCont) uploadCont.style.display = "flex";
+                if (mobUploadCont) mobUploadCont.style.display = "flex";
+                restoreTimer();
             }
-        }
-    } finally {
+        }    } finally {
         if (!isRoutine) {
             if (uploadBtn && originalText) uploadBtn.innerText = originalText;
             if (mobTaskBtn && originalMobTaskText) mobTaskBtn.innerText = originalMobTaskText;
