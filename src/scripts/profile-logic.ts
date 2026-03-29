@@ -4731,35 +4731,18 @@ export function _applyPaywall(paywall: any, memberId: string) {
 export function _applySilence(active: boolean, reason: string = '') {
     if (typeof window === 'undefined') return;
 
-    const OVERLAY_ID = '__silenceLockOverlay';
-    let overlay = document.getElementById(OVERLAY_ID) as HTMLDivElement | null;
+    const desk = document.getElementById('silenceLockDesk');
+    const mob = document.getElementById('silenceLockMob');
+    const deskReason = document.getElementById('silenceLockDeskReason');
+    const mobReason = document.getElementById('silenceLockMobReason');
 
     if (active) {
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = OVERLAY_ID;
-            document.body.appendChild(overlay);
-        }
-        overlay.style.cssText = [
-            'position:fixed', 'top:0', 'left:0', 'width:100%', 'height:100%',
-            'background:rgba(8,2,2,0.97)', 'display:flex', 'flex-direction:column',
-            'align-items:center', 'justify-content:center', 'z-index:2147483647',
-            'padding:24px', 'box-sizing:border-box', 'font-family:Cinzel,serif',
-        ].join(';');
-        overlay.innerHTML = `
-            <div style="max-width:420px;width:100%;text-align:center;">
-                <div style="display:flex;justify-content:center;margin-bottom:16px;">
-                    <svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/>
-                    </svg>
-                </div>
-                <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(220,60,60,0.6);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px;">ACCESS REVOKED</div>
-                <div style="background:rgba(220,60,60,0.04);border:1px solid rgba(220,60,60,0.2);border-radius:14px;padding:28px 24px;">
-                    <div style="font-family:Orbitron,sans-serif;font-size:0.38rem;color:rgba(220,60,60,0.4);letter-spacing:3px;margin-bottom:12px;text-transform:uppercase;">Message from Queen Karin</div>
-                    <div style="font-size:1.05rem;color:#fff;line-height:1.6;letter-spacing:0.5px;">${reason.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                </div>
-            </div>`;
+        if (deskReason) deskReason.textContent = reason;
+        if (mobReason) mobReason.textContent = reason;
+        if (desk) { desk.classList.remove('hidden'); desk.style.display = 'flex'; }
+        if (mob) { mob.classList.remove('hidden'); mob.style.display = 'flex'; }
     } else {
-        if (overlay) overlay.style.display = 'none';
+        if (desk) { desk.classList.add('hidden'); desk.style.display = 'none'; }
+        if (mob) { mob.classList.add('hidden'); mob.style.display = 'none'; }
     }
 }
