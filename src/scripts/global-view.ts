@@ -720,9 +720,16 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
 
 async function _fetchAndRenderOnline() {
     try {
-        const res = await fetch('/api/global/presence');
+        const res = await fetch('/api/dashboard-data');
         const data = await res.json();
-        _renderOnlineUsers(data.all || data.online || []);
+        const now = Date.now();
+        const users = (data.users || []).map((u: any) => ({
+            name: u.name,
+            avatar: u.avatar || u.image || u.profilePicture || null,
+            online: !!(u.lastSeen && (now - new Date(u.lastSeen).getTime()) / 60000 < 5),
+        }));
+        users.sort((a: { online: boolean }, b: { online: boolean }) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
+        _renderOnlineUsers(users);
     } catch {}
 }
 
