@@ -10,11 +10,12 @@ const MAX_VIDEO_SECONDS = 120; // 2 minutes
 
 function getVideoDuration(file: File): Promise<number> {
     return new Promise((resolve) => {
+        const timeout = setTimeout(() => { URL.revokeObjectURL(url); resolve(0); }, 6000);
         const url = URL.createObjectURL(file);
         const vid = document.createElement('video');
         vid.preload = 'metadata';
-        vid.onloadedmetadata = () => { URL.revokeObjectURL(url); resolve(vid.duration); };
-        vid.onerror = () => { URL.revokeObjectURL(url); resolve(0); };
+        vid.onloadedmetadata = () => { clearTimeout(timeout); URL.revokeObjectURL(url); resolve(vid.duration); };
+        vid.onerror = () => { clearTimeout(timeout); URL.revokeObjectURL(url); resolve(0); };
         vid.src = url;
     });
 }

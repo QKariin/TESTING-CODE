@@ -1426,6 +1426,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         if (mobTaskBtn) mobTaskBtn.innerText = "SENDING...";
 
         // Stop timer and show uploading state in task section
+        const taskEndTime = getState().endTime || getState().raw?.endTime || null;
         if (taskInterval) { clearInterval(taskInterval); taskInterval = null; }
 
         const activeTimerRow = document.getElementById('activeTimerRow');
@@ -1532,16 +1533,27 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         console.error("Critical submission error", err);
         const msg = err?.message?.startsWith('VIDEO_TOO_LONG:')
             ? err.message.replace('VIDEO_TOO_LONG:', '')
-            : 'CONNECTION ERROR DURING TRANSMISSION';
+            : 'UPLOAD FAILED — TASK STILL ACTIVE, TRY AGAIN';
         if (!isRoutine) {
             const readyText = document.getElementById('readyText');
             const mobTaskText = document.getElementById('mobTaskText');
             const uploadCont = document.getElementById('uploadBtnContainer');
             const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+            const activeTimerRow = document.getElementById('activeTimerRow');
+            const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
             if (readyText) { readyText.innerText = msg; readyText.style.color = "var(--red)"; }
             if (mobTaskText) { mobTaskText.innerText = msg; mobTaskText.style.color = "var(--red)"; }
             if (uploadCont) uploadCont.style.display = 'flex';
             if (mobUploadCont) mobUploadCont.style.display = 'flex';
+            // Restart task timer so it doesn't look like the task was cancelled
+            if (taskEndTime) {
+                const msLeft = new Date(taskEndTime).getTime() - Date.now();
+                if (msLeft > 0) {
+                    if (activeTimerRow) activeTimerRow.style.display = '';
+                    if (mobActiveTimerRow) mobActiveTimerRow.style.display = '';
+                    startTaskTimer(msLeft);
+                }
+            }
         }
     } finally {
         if (!isRoutine) {
