@@ -409,7 +409,7 @@ export default function ProfilePage() {
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         {/* HALO CIRCLE — desktop */}
-                        <div onClick={() => (window as any).handleProfileUpload?.()} style={{ width: 180, height: 180, borderRadius: '50%', margin: '0 auto 18px', position: 'relative', cursor: 'pointer', border: '2px solid #c5a059', boxShadow: '0 0 40px rgba(197,160,89,0.4), inset 0 0 20px rgba(197,160,89,0.1)', overflow: 'hidden', transition: 'box-shadow 0.3s ease' }}
+                        <div onClick={() => (window as any).handleProfileUpload?.()} style={{ width: 240, height: 240, borderRadius: '50%', margin: '0 auto 18px', position: 'relative', cursor: 'pointer', border: '2px solid #c5a059', boxShadow: '0 0 40px rgba(197,160,89,0.4), inset 0 0 20px rgba(197,160,89,0.1)', overflow: 'hidden', transition: 'box-shadow 0.3s ease' }}
                             onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 60px rgba(197,160,89,0.7), inset 0 0 20px rgba(197,160,89,0.2)')}
                             onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 0 40px rgba(197,160,89,0.4), inset 0 0 20px rgba(197,160,89,0.1)')}
                         >
