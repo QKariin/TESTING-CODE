@@ -666,15 +666,31 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
         } catch (e) { /* fall through */ }
     }
 
-    const isGif = msg.media_type === 'gif';
+    // ── GIF Card ── same style as promotion card
+    if (msg.media_type === 'gif' && msg.media_url) {
+        const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
+        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
+            <div style="width:60%;min-width:220px;max-width:360px;">
+                <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.35);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                    <div style="width:100%;overflow:hidden;background:#0a0703;">
+                        <img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;max-height:240px;object-fit:contain;" />
+                    </div>
+                    <div style="padding:10px 16px 14px;text-align:center;border-top:1px solid rgba(197,160,89,0.12);">
+                        <div style="font-family:'Cinzel',serif;font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;">${name}</div>
+                    </div>
+                </div>
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+            </div>
+        </div>`;
+    }
+
+    const isGif = false;
     const _vidErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}"`;
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
     const mediaHtml = msg.media_url ? (
         msg.media_type === 'video'
             ? `<video src="${msg.media_url}" controls playsinline preload="metadata" ${_vidErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
-            : isGif
-                ? `<img src="${msg.media_url}" ${_imgErr} style="max-width:220px;width:auto;height:auto;max-height:200px;border-radius:10px;display:block;margin-top:4px;" />`
-                : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
+            : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
     ) : '';
 
     // ── QUEEN bubble (gold frame, full-width feed style) ──
@@ -692,7 +708,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                     </div>
                     ${replyBtn}
                 </div>
-                ${quoteHtml}${isGif ? '' : `<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>`}
+                ${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>
                 ${mediaHtml}
             </div>
         </div>`;
@@ -713,7 +729,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                 </div>
                 ${replyBtn}
             </div>
-            ${quoteHtml}${isGif ? '' : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>`}
+            ${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>
             ${mediaHtml}
         </div>
     </div>`;
