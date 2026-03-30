@@ -18,6 +18,7 @@ let chatPollInterval: ReturnType<typeof setInterval> | null = null;
 let lastChatMsgId: string | null = null;
 let lastChatMsgTimestamp: string | null = null;
 let activeChatEmail: string | null = null;
+let currentSlaveReadAt: string | null = null;
 
 // ── Service / System message helpers ────────────────────────────────────────
 
@@ -102,6 +103,13 @@ export async function initDashboardChat(slaveEmail: string) {
 
     // 2. Load history
     await loadDashboardChatHistory(cleanEmail);
+
+    // 2b. Fetch slave's read timestamp so we can show SEEN on admin messages
+    try {
+        const r = await fetch(`/api/chat/mark-read?type=slave&email=${encodeURIComponent(cleanEmail)}`);
+        const d = await r.json();
+        currentSlaveReadAt = d.slaveReadAt || null;
+    } catch {}
 
     // 3. Realtime subscription on shared client
     chatChannel = _supabase
@@ -322,11 +330,21 @@ function renderToHtml(m: any) {
 
     // Admin (isMe) → RIGHT, no avatar
     if (isMe) {
+        // Determine seen status
+        let seenHtml = '';
+        if (currentSlaveReadAt && m.created_at) {
+            const msgTime = new Date(m.created_at).getTime();
+            const readTime = new Date(currentSlaveReadAt).getTime();
+            if (msgTime <= readTime) {
+                seenHtml = `<div style="font-size:0.62rem;color:rgba(197,160,89,0.45);text-align:right;margin-top:1px;letter-spacing:1px;">SEEN</div>`;
+            }
+        }
         return `
             <div class="cb-row cb-row-me">
                 <div class="cb-wrap-me">
                     ${bubble}
                     <div class="chat-ts chat-ts-right">${timeStr}</div>
+                    ${seenHtml}
                 </div>
             </div>`;
     } else {

@@ -671,7 +671,9 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const mediaHtml = msg.media_url ? (
         msg.media_type === 'video'
             ? `<video src="${msg.media_url}" controls playsinline preload="metadata" ${_vidErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
-            : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
+            : msg.media_type === 'gif'
+                ? `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:contain;display:block;background:rgba(0,0,0,0.15);" />`
+                : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
     ) : '';
 
     // ── QUEEN bubble (gold frame, full-width feed style) ──
@@ -805,6 +807,124 @@ export async function sendGlobalMessage() {
 
 export function handleGlobalTalkKey(e: KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendGlobalMessage(); }
+}
+
+// ─── GIF PICKER ───────────────────────────────────────────────────────────────
+
+let _gifPickerOpen = false;
+let _gifSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+async function _sendGif(gifUrl: string) {
+    const raw = getState().raw;
+    const senderEmail = raw?.member_id || raw?.email;
+    if (!senderEmail) return;
+
+    const QUEEN_EMAILS_LOCAL = ['ceo@qkarin.com'];
+    const isQueenLocal = QUEEN_EMAILS_LOCAL.includes(senderEmail.toLowerCase());
+    const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
+    const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
+
+    // Optimistic render
+    _appendMessage({
+        sender_name: senderName,
+        sender_avatar: senderAvatar,
+        sender_email: senderEmail,
+        is_queen: isQueenLocal,
+        is_me: true,
+        message: '[GIF]',
+        media_url: gifUrl,
+        media_type: 'gif',
+        created_at: new Date().toISOString(),
+    });
+
+    try {
+        await fetch('/api/global/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: '[GIF]', senderEmail, media_url: gifUrl, media_type: 'gif' }),
+        });
+    } catch {}
+}
+
+export function openGifPicker() {
+    if (_gifPickerOpen) { closeGifPicker(); return; }
+    _gifPickerOpen = true;
+
+    const existing = document.getElementById('gifPickerOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'gifPickerOverlay';
+    overlay.style.cssText = `
+        position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+        width:min(420px, 96vw);max-height:55vh;
+        background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
+        display:flex;flex-direction:column;overflow:hidden;z-index:999;
+        box-shadow:0 8px 40px rgba(0,0,0,0.7);
+    `;
+
+    overlay.innerHTML = `
+        <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:flex;gap:8px;align-items:center;">
+            <input id="gifSearchInput" type="text" placeholder="Search GIFs..." autocomplete="off"
+                style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95rem;padding:7px 11px;border-radius:6px;outline:none;" />
+            <button onclick="window.closeGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;padding:4px 6px;line-height:1;">✕</button>
+        </div>
+        <div id="gifGrid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+            <div style="grid-column:1/-1;text-align:center;padding:30px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">SEARCHING...</div>
+        </div>
+        <div style="padding:5px 10px;text-align:right;flex-shrink:0;">
+            <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const searchInput = overlay.querySelector('#gifSearchInput') as HTMLInputElement;
+    searchInput?.addEventListener('input', () => {
+        if (_gifSearchTimeout) clearTimeout(_gifSearchTimeout);
+        _gifSearchTimeout = setTimeout(() => _searchGifs(searchInput.value || 'funny'), 400);
+    });
+
+    // Load trending on open
+    _searchGifs('funny');
+    setTimeout(() => searchInput?.focus(), 50);
+}
+
+async function _searchGifs(q: string) {
+    const grid = document.getElementById('gifGrid');
+    if (!grid) return;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>`;
+
+    try {
+        const res = await fetch(`/api/global/gifs?q=${encodeURIComponent(q)}`);
+        const { results } = await res.json();
+        if (!results?.length) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">NO RESULTS</div>`;
+            return;
+        }
+        grid.innerHTML = results.map((r: any) => `
+            <div onclick="window._selectGif('${encodeURIComponent(r.url)}')" style="cursor:pointer;border-radius:6px;overflow:hidden;aspect-ratio:1;background:rgba(255,255,255,0.04);">
+                <img src="${r.preview}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'">
+            </div>
+        `).join('');
+    } catch {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">FAILED TO LOAD</div>`;
+    }
+}
+
+export function closeGifPicker() {
+    _gifPickerOpen = false;
+    document.getElementById('gifPickerOverlay')?.remove();
+}
+
+if (typeof window !== 'undefined') {
+    (window as any).openGifPicker = openGifPicker;
+    (window as any).closeGifPicker = closeGifPicker;
+    (window as any)._selectGif = (encodedUrl: string) => {
+        const url = decodeURIComponent(encodedUrl);
+        closeGifPicker();
+        _sendGif(url);
+    };
 }
 
 // ─── FULL UPDATES ─────────────────────────────────────────────────────────────

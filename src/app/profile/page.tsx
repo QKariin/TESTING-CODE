@@ -8,6 +8,7 @@ import { updateKneelingUI, attachKneelListeners, renderKneelDots } from '@/scrip
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
 import { toggleSystemLog } from '@/scripts/chat';
+// import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED — WIP
 import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
 import {
     claimKneelReward,
@@ -207,6 +208,8 @@ export default function ProfilePage() {
                         if (!heartbeatRef.current) {
                             heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
                         }
+
+                        // checkAndShowOnboarding(unifiedData); // DISABLED — WIP
                     }, 150);
                     return;
                 }
@@ -306,6 +309,8 @@ export default function ProfilePage() {
                         if (!heartbeatRef.current) {
                             heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
                         }
+
+                        // checkAndShowOnboarding(unifiedData); // DISABLED — WIP
                     }, 150);
                 }
             } catch (err) {
@@ -323,6 +328,15 @@ export default function ProfilePage() {
             }
         };
     }, []);
+
+    // ONBOARDING DISABLED — WIP
+    // useEffect(() => {
+    //     if (new URLSearchParams(window.location.search).get('onboarding') === '1') {
+    //         import('@/scripts/onboarding').then(({ checkAndShowOnboarding }) => {
+    //             checkAndShowOnboarding({});
+    //         });
+    //     }
+    // }, []);
 
     // ─── SILENCE POLL — fires once profile is loaded, uses email from profile state ──
     useEffect(() => {
@@ -765,7 +779,7 @@ export default function ProfilePage() {
                             <div className="chronicle-section-label">THE SOVEREIGN ALTAR</div>
                             <div className="chronicle-hero">
                                 <div id="altarMain" className="hero-main mosaic-card">
-                                    <img id="imgAltarMain" src="" className="hero-img" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                                    <img id="imgAltarMain" src={undefined} className="hero-img" onError={(e) => { e.currentTarget.style.display = 'none' }} />
                                     <div className="hero-overlay">
                                         <div className="hero-label">SUPREME HIGHLIGHT</div>
                                         <h2 id="titleAltarMain" className="hero-title">...</h2>

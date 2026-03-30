@@ -392,6 +392,22 @@ export default function DashboardPage() {
                 });
 
                 setUsers(mappedUsers);
+
+                // Sync server-side read state to localStorage (so read state survives page reloads/device changes)
+                try {
+                    const readRes = await fetch('/api/chat/mark-read?type=admin');
+                    const readData = await readRes.json();
+                    const serverReadMap = readData.chatRead || {};
+                    Object.entries(serverReadMap).forEach(([email, ts]) => {
+                        const key = 'read_' + email;
+                        const localTs = parseInt(localStorage.getItem(key) || '0');
+                        const serverTs = new Date(ts as string).getTime();
+                        if (serverTs > localTs) {
+                            localStorage.setItem(key, serverTs.toString());
+                        }
+                    });
+                } catch {}
+
                 setAvailableDailyTasks(data.dailyTasks || []);
 
                 // Populate Review Queue correctly mapped to each user
