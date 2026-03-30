@@ -3489,9 +3489,10 @@ export function renderProfileSidebar(u: any) {
     if (toggle) {
         toggle.onclick = () => {
             const list = document.getElementById('desk_CurrentBenefits');
+            const arrow = document.getElementById('desk_BenefitsArrow');
             if (list) {
                 const isHidden = list.classList.toggle('hidden');
-                toggle.querySelector('span:last-child')!.textContent = isHidden ? '▼' : '▲';
+                if (arrow) arrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
             }
         };
     }

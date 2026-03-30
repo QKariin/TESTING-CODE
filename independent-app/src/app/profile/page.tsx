@@ -466,13 +466,11 @@ export default function ProfilePage() {
 
                         <div style={{ marginTop: 25, width: '100%', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: 2, marginBottom: 5 }}>CURRENT CLASSIFICATION</div>
-                            <div id="desk_DashboardRank" style={{ fontFamily: 'Cinzel', fontSize: '1.4rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: 20 }}>...</div>
-
-                            <button id="desk_BenefitsToggle" style={{ background: 'none', border: 'none', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: 1 }}>CURRENT PRIVILEGES</span>
-                                <span style={{ fontSize: '0.6rem', color: '#c5a059' }}>▼</span>
+                            <button id="desk_BenefitsToggle" style={{ background: 'none', border: 'none', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 8, padding: 0 }}>
+                                <span id="desk_DashboardRank" style={{ fontFamily: 'Cinzel', fontSize: '1.4rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold' }}>...</span>
+                                <span id="desk_BenefitsArrow" style={{ fontSize: '0.7rem', color: 'rgba(197,160,89,0.6)', transition: 'transform 0.2s' }}>▼</span>
                             </button>
-                            <ul id="desk_CurrentBenefits" className="hidden" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, marginTop: 10, textAlign: 'left' }}></ul>
+                            <ul id="desk_CurrentBenefits" className="hidden" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, marginTop: 4, textAlign: 'left' }}></ul>
                         </div>
 
                         <button onClick={() => (window as any).handleLogout?.()} style={{ marginTop: 20, width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.55rem', letterSpacing: 2, padding: '10px 0', cursor: 'pointer', borderRadius: 6, transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(197,160,89,0.4)'; e.currentTarget.style.color = '#c5a059'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}>
