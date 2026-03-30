@@ -666,13 +666,14 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
         } catch (e) { /* fall through */ }
     }
 
+    const isGif = msg.media_type === 'gif';
     const _vidErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}"`;
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
     const mediaHtml = msg.media_url ? (
         msg.media_type === 'video'
             ? `<video src="${msg.media_url}" controls playsinline preload="metadata" ${_vidErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
-            : msg.media_type === 'gif'
-                ? `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:contain;display:block;background:rgba(0,0,0,0.15);" />`
+            : isGif
+                ? `<img src="${msg.media_url}" ${_imgErr} style="max-width:220px;width:auto;height:auto;max-height:200px;border-radius:10px;display:block;margin-top:4px;" />`
                 : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
     ) : '';
 
@@ -691,7 +692,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                     </div>
                     ${replyBtn}
                 </div>
-                ${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>
+                ${quoteHtml}${isGif ? '' : `<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>`}
                 ${mediaHtml}
             </div>
         </div>`;
@@ -712,7 +713,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                 </div>
                 ${replyBtn}
             </div>
-            ${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>
+            ${quoteHtml}${isGif ? '' : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>`}
             ${mediaHtml}
         </div>
     </div>`;
