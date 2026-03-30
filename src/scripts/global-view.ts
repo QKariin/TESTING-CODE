@@ -667,7 +667,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     }
 
     // ── GIF Card ── same style as promotion card
-    if (msg.media_type === 'gif' && msg.media_url) {
+    if ((msg.media_type === 'gif' || (msg.message === '[GIF]' && msg.media_url)) && msg.media_url) {
         const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
         return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
             <div style="width:60%;min-width:220px;max-width:360px;">
