@@ -11,6 +11,81 @@ let realtimeChannel: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let updatesChannel: any = null;
 
+// ─── UNREAD BADGE ──────────────────────────────────────────────────────────────
+let _globalUnreadCount = 0;
+let _lastMessageId: string | null = null;
+
+function _updateGlobalBadge(n: number) {
+    _globalUnreadCount = n;
+    const badge = document.getElementById('globalNavBadge');
+    if (!badge) return;
+    if (n <= 0) {
+        badge.style.display = 'none';
+    } else {
+        badge.style.display = 'flex';
+        badge.textContent = n > 99 ? '99+' : String(n);
+    }
+}
+
+export function clearGlobalBadge() {
+    _updateGlobalBadge(0);
+    localStorage.setItem('globalLastRead', new Date().toISOString());
+}
+
+async function _markReadLatest() {
+    if (!_lastMessageId) return;
+    const raw = getState().raw;
+    const userEmail = raw?.member_id || raw?.email;
+    if (!userEmail) return;
+    try {
+        await fetch('/api/global/mark-read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messageId: _lastMessageId, userEmail }),
+        });
+        await _refreshReadReceipts(_lastMessageId);
+    } catch {}
+}
+
+async function _refreshReadReceipts(messageId: string) {
+    try {
+        const res = await fetch(`/api/global/mark-read?messageId=${encodeURIComponent(messageId)}`);
+        const { readers } = await res.json();
+        _renderReadReceipts(readers || []);
+    } catch {}
+}
+
+function _renderReadReceipts(readers: { user_name: string; avatar_url: string | null }[]) {
+    document.getElementById('glReadReceiptsRow')?.remove();
+    const feed = document.getElementById('globalTalkFeed');
+    if (!feed || !readers.length) return;
+
+    const row = document.createElement('div');
+    row.id = 'glReadReceiptsRow';
+    row.style.cssText = 'display:flex;align-items:center;gap:3px;padding:4px 16px 10px;justify-content:flex-end;';
+
+    const maxShow = 6;
+    const shown = readers.slice(0, maxShow);
+    const extra = readers.length - maxShow;
+
+    let html = `<span style="font-family:'Orbitron';font-size:0.3rem;color:rgba(255,255,255,0.2);letter-spacing:1px;margin-right:5px;">SEEN</span>`;
+    shown.forEach((r, i) => {
+        const initials = (r.user_name || '?')[0].toUpperCase();
+        const ml = i > 0 ? 'margin-left:-5px;' : '';
+        if (r.avatar_url) {
+            html += `<img src="${r.avatar_url}" title="${r.user_name}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.4);${ml}flex-shrink:0;" />`;
+        } else {
+            html += `<div title="${r.user_name}" style="width:18px;height:18px;border-radius:50%;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.3);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.45rem;color:#c5a059;${ml}flex-shrink:0;">${initials}</div>`;
+        }
+    });
+    if (extra > 0) {
+        html += `<span style="font-family:'Orbitron';font-size:0.3rem;color:rgba(255,255,255,0.3);margin-left:5px;">+${extra}</span>`;
+    }
+
+    row.innerHTML = html;
+    feed.appendChild(row);
+}
+
 // ─── REPLY STATE ───────────────────────────────────────────────────────────────
 let _glReply: { id: string; name: string; text: string } | null = null;
 
@@ -535,6 +610,8 @@ export async function loadTalkFull(scrollBottom = true) { await _fetchAndRenderM
 // ─── REALTIME INIT ────────────────────────────────────────────────────────────
 
 function _initTalkRealtime() {
+    // Clear unread badge when talk opens
+    clearGlobalBadge();
     // Initial load
     _fetchAndRenderMessages(true);
     _fetchAndRenderOnline();
@@ -591,10 +668,26 @@ function _appendMessage(msg: any) {
     const myName = raw?.name || raw?.member_id?.split('@')[0] || '';
     const myEmail = ((raw?.member_id || raw?.email || '') as string).toLowerCase();
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
+    // Remove old read receipts row before appending new message
+    document.getElementById('glReadReceiptsRow')?.remove();
     const el = document.createElement('div');
     el.innerHTML = _buildBubble(msg, myName, myEmail);
     feed.appendChild(el.firstElementChild!);
     if (wasNear) feed.scrollTop = feed.scrollHeight;
+    // Update last message id + mark read + refresh receipts
+    if (msg.id) _lastMessageId = msg.id;
+    // Badge: increment if global view is not open
+    const overlay = document.getElementById('globalViewOverlay');
+    const globalIsOpen = overlay && overlay.style.display !== 'none';
+    if (!globalIsOpen) {
+        _updateGlobalBadge(_globalUnreadCount + 1);
+        // Also notify dashboard
+        const dashBadge = document.getElementById('globalDashBadge');
+        if (dashBadge) { dashBadge.style.display = 'flex'; dashBadge.textContent = String(_globalUnreadCount); }
+        localStorage.setItem('globalNewMsgAt', new Date().toISOString());
+    } else {
+        _markReadLatest();
+    }
 }
 
 // ─── RENDER ALL MESSAGES ──────────────────────────────────────────────────────
@@ -612,6 +705,9 @@ function _renderMessages(messages: any[], scrollBottom: boolean) {
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
     feed.innerHTML = messages.map(m => _buildBubble(m, myName, myEmail)).join('');
     if (scrollBottom || wasNear) requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
+    // Track last message for read receipts
+    _lastMessageId = messages[messages.length - 1]?.id || null;
+    _markReadLatest();
 }
 
 function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {

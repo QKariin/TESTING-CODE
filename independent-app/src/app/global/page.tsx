@@ -21,6 +21,7 @@ import {
     cancelGlReply,
     openGifPicker,
     closeGifPicker,
+    clearGlobalBadge,
 } from '@/scripts/global-view';
 import { buyRealCoins, handleSubscribe } from '@/scripts/profile-logic';
 
@@ -79,6 +80,7 @@ export default function GlobalPage() {
         (window as any).cancelGlReply = cancelGlReply;
         (window as any).openGifPicker = openGifPicker;
         (window as any).closeGifPicker = closeGifPicker;
+        clearGlobalBadge();
 
         async function init() {
             try {

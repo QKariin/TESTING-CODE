@@ -71,6 +71,7 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     const [messages, setMessages] = useState<any[]>([]);
     const [text, setText] = useState('');
     const [sending, setSending] = useState(false);
+    const [unread, setUnread] = useState(0);
 
     async function load() {
         try {
@@ -80,9 +81,26 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
                 const real = (data.messages as any[]).filter(
                     m => m.sender_name !== 'SYSTEM' && !String(m.message || '').startsWith('PROMOTION_CARD:')
                 );
+                const latest = real[real.length - 1];
+                if (latest?.created_at) {
+                    const lastRead = localStorage.getItem('globalDashLastRead');
+                    const latestTs = new Date(latest.created_at).getTime();
+                    const lastReadTs = lastRead ? new Date(lastRead).getTime() : 0;
+                    if (latestTs > lastReadTs) {
+                        const newCount = real.filter(m => new Date(m.created_at).getTime() > lastReadTs).length;
+                        setUnread(newCount);
+                    } else {
+                        setUnread(0);
+                    }
+                }
                 setMessages(real.slice(-2));
             }
         } catch {}
+    }
+
+    function markRead() {
+        localStorage.setItem('globalDashLastRead', new Date().toISOString());
+        setUnread(0);
     }
 
     useEffect(() => {
@@ -101,6 +119,7 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
                 body: JSON.stringify({ senderEmail: userEmail, message: text.trim() }),
             });
             setText('');
+            markRead();
             await load();
         } catch {}
         setSending(false);
@@ -112,10 +131,18 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     }
 
     return (
-        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column' }}>
-            <div className="vk-header">
-                <div className="vk-title">Global Chat</div>
-                <div className="vk-sub">Community Feed</div>
+        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column' }} onClick={markRead}>
+            <div className="vk-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                    <div className="vk-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        Global Chat
+                        {unread > 0 && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 9, background: '#e04444', color: '#fff', fontSize: '0.38rem', fontFamily: 'Orbitron', fontWeight: 700, padding: '0 4px', letterSpacing: 0 }}>{unread > 99 ? '99+' : unread}</span>
+                        )}
+                    </div>
+                    <div className="vk-sub">Community Feed</div>
+                </div>
+                <a href="/global" style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 1, textDecoration: 'none' }}>OPEN →</a>
             </div>
             <div style={{ flex: 1, padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {messages.length === 0 && (

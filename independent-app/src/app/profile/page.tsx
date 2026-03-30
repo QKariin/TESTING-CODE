@@ -308,6 +308,28 @@ export default function ProfilePage() {
         };
     }, []);
 
+    // ─── GLOBAL UNREAD BADGE CHECK ────────────────────────────────────────
+    useEffect(() => {
+        async function checkGlobalUnread() {
+            try {
+                const res = await fetch('/api/global/messages', { cache: 'no-store' });
+                const { messages } = await res.json();
+                if (!messages?.length) return;
+                const real = (messages as any[]).filter((m: any) => !String(m.message || '').startsWith('PROMOTION_CARD:'));
+                const lastRead = localStorage.getItem('globalLastRead');
+                const lastReadTs = lastRead ? new Date(lastRead).getTime() : 0;
+                const newCount = real.filter((m: any) => new Date(m.created_at).getTime() > lastReadTs).length;
+                if (newCount > 0) {
+                    const badge = document.getElementById('globalNavBadge');
+                    if (badge) { badge.style.display = 'flex'; badge.textContent = newCount > 99 ? '99+' : String(newCount); }
+                }
+            } catch {}
+        }
+        checkGlobalUnread();
+        const iv = setInterval(checkGlobalUnread, 60000);
+        return () => clearInterval(iv);
+    }, []);
+
     // ─── 2. ATTACH KNEEL LISTENERS + APPLY LOCKS ─────────────────────────
     useEffect(() => {
         if (!loading) {
@@ -1524,8 +1546,11 @@ export default function ProfilePage() {
                     <span className="mob-nav-icon">♛</span>
                     <span className="mob-nav-label">QUEEN</span>
                 </button>
-                <button id="mobNavGlobal" className="mob-nav-item" onClick={() => (window as any).openMobGlobal()}>
-                    <span className="mob-nav-icon">◎</span>
+                <button id="mobNavGlobal" className="mob-nav-item" style={{ position: 'relative' }} onClick={() => (window as any).openMobGlobal()}>
+                    <span className="mob-nav-icon" style={{ position: 'relative', display: 'inline-block' }}>
+                        ◎
+                        <span id="globalNavBadge" style={{ display: 'none', position: 'absolute', top: '-4px', right: '-8px', minWidth: '15px', height: '15px', borderRadius: '8px', background: '#e04444', color: '#fff', fontSize: '0.38rem', fontFamily: 'Orbitron', fontWeight: 700, alignItems: 'center', justifyContent: 'center', padding: '0 3px', lineHeight: '15px', textAlign: 'center' }}></span>
+                    </span>
                     <span className="mob-nav-label">GLOBAL</span>
                 </button>
             </nav>
