@@ -7,10 +7,14 @@ import '@/css/login.css';
 export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
+    const [emailOpen, setEmailOpen] = useState(false);
+    const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
     const handleGoogleLogin = async () => {
-        setLoading(true);
-        setError(null);
+        setLoading(true); setError(null);
         const supabase = createClient();
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
@@ -20,14 +24,44 @@ export default function LoginPage() {
     };
 
     const handleTwitterLogin = async () => {
-        setLoading(true);
-        setError(null);
+        setLoading(true); setError(null);
         const supabase = createClient();
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'twitter',
             options: { redirectTo: `${window.location.origin}/auth/callback` }
         });
         if (error) { setError(error.message); setLoading(false); }
+    };
+
+    const handleEmailSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true); setError(null); setSuccess(null);
+        const supabase = createClient();
+
+        if (mode === 'forgot') {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/auth/reset-password`,
+            });
+            if (error) setError(error.message);
+            else setSuccess('Check your email for a reset link.');
+            setLoading(false);
+            return;
+        }
+
+        if (mode === 'signup') {
+            const { error } = await supabase.auth.signUp({
+                email, password,
+                options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+            });
+            if (error) setError(error.message);
+            else setSuccess('Check your email to confirm your account.');
+            setLoading(false);
+            return;
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) { setError(error.message); setLoading(false); }
+        else window.location.href = '/profile';
     };
 
     return (
@@ -57,7 +91,65 @@ export default function LoginPage() {
                     Login with X
                 </button>
 
+                <button
+                    className="email-toggle-btn"
+                    onClick={() => { setEmailOpen(o => !o); setError(null); setSuccess(null); setMode('signin'); }}
+                    disabled={loading}
+                >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                    {emailOpen ? 'Hide Email Login' : 'Login with Email'}
+                </button>
+
+                <div className={`email-form-wrap${emailOpen ? ' open' : ''}`}>
+                    <form className="email-form-inner" onSubmit={handleEmailSubmit}>
+                        <div className="input-group">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                placeholder="your@email.com"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                required
+                                autoComplete="email"
+                            />
+                        </div>
+
+                        {mode !== 'forgot' && (
+                            <div className="input-group">
+                                <label>Password</label>
+                                <input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    required
+                                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                                />
+                                {mode === 'signin' && (
+                                    <button type="button" className="forgot-link" onClick={() => { setMode('forgot'); setError(null); setSuccess(null); }}>
+                                        Forgot password?
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        <button type="submit" className="login-btn" disabled={loading}>
+                            {loading ? <><span className="loading-spinner" />{mode === 'forgot' ? 'Sending...' : mode === 'signup' ? 'Creating...' : 'Entering...'}</> :
+                                mode === 'forgot' ? 'Send Reset Link' : mode === 'signup' ? 'Create Account' : 'Enter'}
+                        </button>
+
+                        <div className="toggle-mode">
+                            {mode === 'signin' && <>No account?<button type="button" className="toggle-link" onClick={() => { setMode('signup'); setError(null); setSuccess(null); }}>Sign up</button></>}
+                            {mode === 'signup' && <>Have an account?<button type="button" className="toggle-link" onClick={() => { setMode('signin'); setError(null); setSuccess(null); }}>Sign in</button></>}
+                            {mode === 'forgot' && <button type="button" className="toggle-link" onClick={() => { setMode('signin'); setError(null); setSuccess(null); }}>Back to sign in</button>}
+                        </div>
+                    </form>
+                </div>
+
                 {error && <div className="error-msg">{error}</div>}
+                {success && <div className="success-msg">{success}</div>}
 
                 <div className="footer-text">Property of Queen Karin &nbsp;·&nbsp; Est. 2024</div>
             </div>
