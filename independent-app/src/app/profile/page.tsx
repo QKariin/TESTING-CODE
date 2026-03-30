@@ -1180,10 +1180,12 @@ export default function ProfilePage() {
                         <div className="halo-hero">
                             {/* Large halo circle */}
                             <div className="halo-circle-lg">
-                                <div id="mob_slaveName" className="halo-name-lg">{profile?.name || "SLAVE"}</div>
-                                <div id="mob_rankStamp" className="halo-rank-lg">{profile?.hierarchy || profile?.rank || "INITIATE"}</div>
-                                <div className="halo-progress-label">DAILY PROGRESS</div>
-                                <div id="mob_kneelDots" className="halo-dots-grid"></div>
+                                <img id="mobHaloPhoto" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png", 400)} alt="" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', zIndex: 0 }} />
+                                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.85) 100%)', zIndex: 1 }} />
+                                <div id="mob_slaveName" className="halo-name-lg" style={{ position: 'relative', zIndex: 2 }}>{profile?.name || "SLAVE"}</div>
+                                <div id="mob_rankStamp" className="halo-rank-lg" style={{ position: 'relative', zIndex: 2 }}>{profile?.hierarchy || profile?.rank || "INITIATE"}</div>
+                                <div className="halo-progress-label" style={{ position: 'relative', zIndex: 2 }}>DAILY PROGRESS</div>
+                                <div id="mob_kneelDots" className="halo-dots-grid" style={{ position: 'relative', zIndex: 2 }}></div>
                             </div>
 
                             {/* Stats pill */}

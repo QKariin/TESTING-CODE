@@ -3459,6 +3459,8 @@ export function renderProfileSidebar(u: any) {
         if (elMobUserPic) elMobUserPic.src = photoSrc;
         const elMobHaloPic = document.getElementById('mob_profilePic') as HTMLImageElement;
         if (elMobHaloPic) elMobHaloPic.src = photoSrc;
+        const elHaloPhoto = document.getElementById('mobHaloPhoto') as HTMLImageElement;
+        if (elHaloPhoto) elHaloPhoto.src = photoSrc;
     }
 
     const elCurBen = document.getElementById('desk_CurrentBenefits');
