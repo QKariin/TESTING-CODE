@@ -2575,7 +2575,7 @@ export function openMobGlobal() {
     el.style.display = 'flex';
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
     _setNavActive('global');
-    _switchMobGlTab('rank');
+    _switchMobGlTab('talk');
 }
 
 export function closeMobGlobal() {
@@ -2668,6 +2668,10 @@ async function _loadMobGlLeaderboard(period: string) {
 
 async function _loadMobGlTalk() {
     if (_mobGlLoaded['talk']) return;
+    // Clear unread badge
+    const badge = document.getElementById('globalNavBadge');
+    if (badge) badge.style.display = 'none';
+    localStorage.setItem('globalLastRead', new Date().toISOString());
     const container = document.getElementById('mobGlTalkFeed');
     if (!container) return;
     container.innerHTML = `<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
