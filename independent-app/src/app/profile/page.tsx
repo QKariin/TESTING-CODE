@@ -408,14 +408,21 @@ export default function ProfilePage() {
                 {/* SIDEBAR */}
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
-                        <div className="big-profile-circle" onClick={() => (window as any).handleProfileUpload?.()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
-                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                        {/* HALO CIRCLE — desktop */}
+                        <div onClick={() => (window as any).handleProfileUpload?.()} style={{ width: 180, height: 180, borderRadius: '50%', margin: '0 auto 18px', position: 'relative', cursor: 'pointer', border: '2px solid #c5a059', boxShadow: '0 0 40px rgba(197,160,89,0.4), inset 0 0 20px rgba(197,160,89,0.1)', overflow: 'hidden', transition: 'box-shadow 0.3s ease' }}
+                            onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 60px rgba(197,160,89,0.7), inset 0 0 20px rgba(197,160,89,0.2)')}
+                            onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 0 40px rgba(197,160,89,0.4), inset 0 0 20px rgba(197,160,89,0.1)')}
+                        >
+                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png"} alt="Avatar" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(0,0,0,0.75) 100%)' }} />
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 8px 14px', textAlign: 'center' }}>
+                                <div id="subName" style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', fontWeight: 700, color: '#fff', letterSpacing: 3, textTransform: 'uppercase', textShadow: '0 1px 6px rgba(0,0,0,0.8)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile?.name || "SLAVE"}</div>
+                                <div id="desk_rankHalo" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginTop: 3 }}>{profile?.hierarchy || profile?.rank || "INITIATE"}</div>
+                            </div>
                         </div>
 
-                        <div onClick={() => (window as any).openManageProfileModal?.()} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)', cursor: 'pointer', userSelect: 'none' }}>
-                            <div id="subName" className="identity-name" style={{ fontSize: '1.5rem', letterSpacing: 5, margin: '0', fontWeight: 'bold', color: '#c5a059', pointerEvents: 'none' }}>
-                                {profile?.name || "SLAVE"}
-                            </div>
+                        <div onClick={() => (window as any).openManageProfileModal?.()} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '8px 16px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)', cursor: 'pointer', userSelect: 'none' }}>
+                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 2, textTransform: 'uppercase' }}>Manage Profile</span>
                             <button
                                 onClick={(e) => { e.stopPropagation(); (window as any).openManageProfileModal?.(); }}
                                 style={{ background: 'none', border: 'none', color: '#c5a059', cursor: 'pointer', padding: 0, display: 'flex' }}

@@ -3445,6 +3445,8 @@ export function renderProfileSidebar(u: any) {
 
     const elSubName = document.getElementById('subName');
     if (elSubName) elSubName.innerText = u.name || 'SLAVE';
+    const elDeskRankHalo = document.getElementById('desk_rankHalo');
+    if (elDeskRankHalo) elDeskRankHalo.innerText = (u.hierarchy || u.rank || 'INITIATE').toUpperCase();
 
     const elCurEmail = document.getElementById('subEmail');
     if (elCurEmail) elCurEmail.style.display = 'none';
