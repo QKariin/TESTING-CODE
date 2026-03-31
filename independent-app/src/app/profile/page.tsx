@@ -964,25 +964,25 @@ export default function ProfilePage() {
                                     </div>
                                     <span className="hub-action-cost">300 ₡</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('kinks')}>
+                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('kinks')} style={profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? { opacity: 0.4, cursor: 'default' } : {}}>
                                     <div className="hub-action-left">
-                                        <div className="hub-action-icon-wrap">⬡</div>
+                                        <div className="hub-action-icon-wrap">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? '🔒' : '⬡'}</div>
                                         <div>
                                             <div className="hub-action-label">KINKS</div>
-                                            <div className="hub-action-desc">Define your preferences</div>
+                                            <div className="hub-action-desc">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? 'Unlocks at Footman' : 'Define your preferences'}</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">50 ₡</span>
+                                    <span className="hub-action-cost">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? '🔒' : '50 ₡'}</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('limits')}>
+                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('limits')} style={profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? { opacity: 0.4, cursor: 'default' } : {}}>
                                     <div className="hub-action-left">
-                                        <div className="hub-action-icon-wrap">⊗</div>
+                                        <div className="hub-action-icon-wrap">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? '🔒' : '⊗'}</div>
                                         <div>
                                             <div className="hub-action-label">LIMITS</div>
-                                            <div className="hub-action-desc">Set your hard boundaries</div>
+                                            <div className="hub-action-desc">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? 'Unlocks at Footman' : 'Set your hard boundaries'}</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">50 ₡</span>
+                                    <span className="hub-action-cost">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? '🔒' : '50 ₡'}</span>
                                 </button>
                                 <div className="hub-logout-row">
                                     <button className="hub-logout-btn" onClick={() => (window as any).handleLogout()}>LOGOUT</button>

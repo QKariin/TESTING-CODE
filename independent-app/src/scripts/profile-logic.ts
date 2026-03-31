@@ -1,6 +1,6 @@
 import { getState, setState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
-import { getHierarchyReport } from '../lib/hierarchyRules';
+import { getHierarchyReport, rankMeetsRequirement } from '../lib/hierarchyRules';
 import { uploadToSupabase, getVideoDuration, isVideo } from './mediaSupabase';
 import { getOptimizedUrl } from './media';
 
@@ -3016,14 +3016,24 @@ export function showLobbyAction(type: string) {
         openTextFieldModal('routine', 'ROUTINE', raw?.routine || '');
         return;
     }
-    if (type === 'kinks') {
-        const existing = Array.isArray(params.kinks) ? params.kinks.join(', ') : (params.kinks || raw?.kinks || '');
-        openTextFieldModal('kinks', 'KINKS', existing);
-        return;
-    }
-    if (type === 'limits') {
-        const existing = Array.isArray(params.limits) ? params.limits.join(', ') : (params.limits || raw?.limits || '');
-        openTextFieldModal('limits', 'LIMITS', existing);
+    if (type === 'kinks' || type === 'limits') {
+        const currentRank = raw?.hierarchy || 'Hall Boy';
+        if (!rankMeetsRequirement(currentRank, 'Footman')) {
+            // Show locked toast
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#1a1207;border:1px solid rgba(197,160,89,0.4);color:#c5a059;font-family:Orbitron;font-size:0.52rem;letter-spacing:2px;padding:12px 20px;border-radius:8px;z-index:9999;text-align:center;';
+            toast.textContent = '🔒 UNLOCKS AT FOOTMAN RANK';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+            return;
+        }
+        if (type === 'kinks') {
+            const existing = Array.isArray(params.kinks) ? params.kinks.join(', ') : (params.kinks || raw?.kinks || '');
+            openTextFieldModal('kinks', 'KINKS', existing);
+        } else {
+            const existing = Array.isArray(params.limits) ? params.limits.join(', ') : (params.limits || raw?.limits || '');
+            openTextFieldModal('limits', 'LIMITS', existing);
+        }
         return;
     }
 }
