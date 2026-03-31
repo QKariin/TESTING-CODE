@@ -58,7 +58,7 @@ export function mapUserProfile(p: any, t: any, crowdfundTotal: number = 0): any 
         lastWorship: t?.lastWorship || p.lastWorship || null,
         kneelHistory: p.kneel_history || t?.kneel_history || {},
         taskdom_completed_tasks: Number(t?.['Taskdom_CompletedTasks'] || 0),
-        total_coins_spent: tributeTotal || Number(params.wishlist_spent || 0),
+        total_coins_spent: Math.max(Number(params.wishlist_spent || 0), tributeTotal),
         bestRoutinestreak: routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0),
         routinestreak: Number(p.routinestreak || params.taskdom_current_streak || 0),
         routineHistory: history,
