@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { getAdminDashboardData, getUnreadMessageStatus, adminApproveTaskAction, adminRejectTaskAction } from '@/actions/velo-actions';
 
@@ -494,7 +494,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
 
             {/* ── Tab content ── */}
             {profileTab === 'chat' ? (
-                <ChatView user={user} adminEmail={adminEmail} />
+                <ChatView key={user.memberId} user={user} adminEmail={adminEmail} />
             ) : (
                 <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: 12, WebkitOverflowScrolling: 'touch' as any }}>
                     {profileTab === 'info' && (<>
@@ -655,7 +655,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
         return () => clearInterval(interval);
     }, [fetchMessages]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!loadingMsgs) forceBottom();
     }, [messages, loadingMsgs, forceBottom]);
 

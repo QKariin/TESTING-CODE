@@ -179,13 +179,23 @@ async function loadDashboardChatHistory(email: string) {
             // Populate dedup set from history
             chatMsgs.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
 
-            // Populate chat
+            // Populate chat — hide first, scroll, then reveal so user never sees wrong position
             const html = chatMsgs.map((m: any) => renderToHtml(m)).join('');
             const b = document.getElementById('adminChatBox');
             if (b) {
+                b.style.visibility = 'hidden';
                 b.innerHTML = html + '<div id="chat-anchor" style="height:1px;"></div>';
                 _attachImgScrollHandlers(b);
-                forceBottom();
+                requestAnimationFrame(() => {
+                    b.scrollTop = b.scrollHeight + 9999;
+                    requestAnimationFrame(() => {
+                        b.scrollTop = b.scrollHeight + 9999;
+                        b.style.visibility = '';
+                        // Keep firing for images that load late
+                        setTimeout(() => { b.scrollTop = b.scrollHeight + 9999; }, 300);
+                        setTimeout(() => { b.scrollTop = b.scrollHeight + 9999; }, 800);
+                    });
+                });
             }
         }
     } catch (err) {
@@ -359,10 +369,14 @@ function forceBottom() {
         const b = document.getElementById('adminChatBox');
         if (b) b.scrollTop = b.scrollHeight + 9999;
     };
-    scroll();
-    setTimeout(scroll, 80);
-    setTimeout(scroll, 350);
-    setTimeout(scroll, 700);
+    // First scroll after layout is calculated
+    requestAnimationFrame(() => {
+        scroll();
+        requestAnimationFrame(scroll); // second frame ensures images with known dimensions are included
+    });
+    setTimeout(scroll, 150);
+    setTimeout(scroll, 500);
+    setTimeout(scroll, 1000);
 }
 
 function _attachImgScrollHandlers(container: HTMLElement) {
