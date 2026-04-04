@@ -166,8 +166,6 @@ export async function updateDetail(u: any) {
             } else if (r.type === 'check') {
                 // Identity and photo are visually obvious — skip them
                 if (r.label === 'IDENTITY' || r.label === 'PHOTO') return;
-                // Kinks/limits have their own section below — skip here too
-                if (r.label === 'KINKS' || r.label === 'LIMITS') return;
 
                 const isDone = r.status === 'VERIFIED';
                 const svgIcon = isDone
