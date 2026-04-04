@@ -1557,6 +1557,21 @@ let _silenceCheckInterval: ReturnType<typeof setInterval> | null = null;
 let _lastChatMsgId: string | null = null;
 let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
+const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
+
+function _scrollChat() {
+    const boxes = [document.getElementById('chatBox'), document.getElementById('mob_chatBox')];
+    boxes.forEach(b => { if (b) b.scrollTop = b.scrollHeight; });
+}
+function _scrollChatDelayed() {
+    _scrollChat();
+    setTimeout(_scrollChat, 80);
+    setTimeout(_scrollChat, 320);
+}
+function _isScrolledToBottom() {
+    const b = document.getElementById('mob_chatBox') || document.getElementById('chatBox');
+    return b ? (b.scrollHeight - b.scrollTop - b.clientHeight < 160) : true;
+}
 
 export async function initChatSystem() {
     // 🔑 KEY DIFFERENCE vs old broken code:
@@ -1600,11 +1615,11 @@ export async function initChatSystem() {
         } catch {}
     }, 3000);
 
-    // Always reload history so fresh messages show on every init
-    await loadChatHistory(email);
-
-    if (chatSubscribed) return; // Realtime channels already set up — don't duplicate
+    if (chatSubscribed) return; // channels already set up — don't duplicate
     chatSubscribed = true;
+
+    // Load history once on first init
+    await loadChatHistory(email);
 
     // 2. Realtime subscription on shared client (same as dashboard line 107-120)
     if (_chatChannel) {
@@ -1645,15 +1660,19 @@ export async function initChatSystem() {
                 }
             }
 
-            if (msg.id && msg.id === _lastChatMsgId) return; // dedup
-            _lastChatMsgId = msg.id;
+            const msgId = msg.id ? String(msg.id) : null;
+            if (msgId && _renderedMsgIds.has(msgId)) return; // already rendered
+            if (msgId) _renderedMsgIds.add(msgId);
+            _lastChatMsgId = msgId;
             if (msg.created_at) _lastChatMsgTimestamp = msg.created_at;
 
+            const wasAtBottom = _isScrolledToBottom();
             const html = renderChatMessage(msg);
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) { el.insertAdjacentHTML('beforeend', html); el.scrollTop = el.scrollHeight; }
+                if (el) el.insertAdjacentHTML('beforeend', html);
             });
+            if (wasAtBottom) _scrollChatDelayed();
         })
         .subscribe();
 
@@ -1710,9 +1729,15 @@ async function _pollNewChatMessages(email: string) {
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: _lastChatMsgTimestamp }) });
         const data = await res.json();
         if (!data.success) return;
-        const newMsgs = (data.messages || []).filter((m: any) => m.id !== _lastChatMsgId);
+        const newMsgs = (data.messages || []).filter((m: any) => {
+            const id = m.id ? String(m.id) : null;
+            return id && !_renderedMsgIds.has(id);
+        });
+        if (newMsgs.length === 0) return;
+        const wasAtBottom = _isScrolledToBottom();
         newMsgs.forEach((m: any) => {
-            if (_lastChatMsgId && m.id === _lastChatMsgId) return;
+            const id = m.id ? String(m.id) : null;
+            if (id) _renderedMsgIds.add(id);
             _lastChatMsgId = m.id;
             if (m.created_at) _lastChatMsgTimestamp = m.created_at;
             if (isSystemMessage(m)) {
@@ -1723,9 +1748,10 @@ async function _pollNewChatMessages(email: string) {
             const html = renderChatMessage(m);
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) { el.insertAdjacentHTML('beforeend', html); el.scrollTop = el.scrollHeight; }
+                if (el) el.insertAdjacentHTML('beforeend', html);
             });
         });
+        if (wasAtBottom) _scrollChatDelayed();
     } catch (_) {}
 }
 
@@ -1790,7 +1816,9 @@ export async function loadChatHistory(email: string) {
             const messages = data.messages || [];
             console.log('[CHAT] Received messages count:', messages.length);
 
-            // Track last msg id+timestamp for polling dedup (same as dashboard-chat.ts lines 154-158)
+            // Seed dedup set + track timestamps for polling
+            _renderedMsgIds.clear();
+            messages.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
             if (messages.length > 0) {
                 const last = messages[messages.length - 1];
                 _lastChatMsgId = last.id;
@@ -1829,20 +1857,15 @@ export async function loadChatHistory(email: string) {
             });
             _updateQueenStatus(lastQueenMsg?.created_at || null);
 
+            // Set content invisibly, then scroll, then reveal — eliminates visual jump
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = html;
             });
-            // Scroll after render + after images load
-            const scrollToBottom = () => {
-                ['chatBox', 'mob_chatBox'].forEach(id => {
-                    const b = document.getElementById(id);
-                    if (b) b.scrollTop = b.scrollHeight;
-                });
-            };
-            scrollToBottom();
-            setTimeout(scrollToBottom, 80);
-            setTimeout(scrollToBottom, 350);
+            // Scroll the container (not the content) to bottom, then reveal
+            _scrollChat();
+            setTimeout(() => { _scrollChat(); }, 60);
+            setTimeout(() => { _scrollChat(); }, 280);
         }
     } catch (err) {
         console.error("Failed to load chat history:", err);
@@ -2381,8 +2404,7 @@ export function switchMobChatTab(tab: 'chat' | 'service') {
         if (svcPanel) svcPanel.style.display = 'none';
         if (chatBtn) chatBtn.classList.add('active');
         if (svcBtn) svcBtn.classList.remove('active');
-        const box = document.getElementById('mob_chatBox');
-        if (box) box.scrollTop = box.scrollHeight;
+        setTimeout(_scrollChat, 60);
     } else {
         if (chatPanel) chatPanel.style.display = 'none';
         if (svcPanel) svcPanel.style.display = 'flex';
@@ -2406,9 +2428,12 @@ export function openMobChatOverlay() {
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
     _setNavActive('');
     switchMobChatTab('chat');
-    // Reload history every time the chat opens to ensure latest messages
+    // If no messages have loaded yet, trigger a load; otherwise just scroll
+    const content = document.getElementById('mob_chatContent');
     const email = getState().memberId;
-    if (email) loadChatHistory(email);
+    if (content && !content.children.length && email) {
+        loadChatHistory(email);
+    }
 
     // Shrink queen avatar button when keyboard opens
     const input = document.getElementById('mob_chatMsgInput');
@@ -2419,13 +2444,8 @@ export function openMobChatOverlay() {
         input.addEventListener('blur', () => queenBtn.classList.remove('mob-nav-queen-shrink'));
     }
 
-    // Wait for slide-up animation then force scroll to bottom
-    setTimeout(() => {
-        const box = document.getElementById('mob_chatBox');
-        if (box) box.scrollTop = box.scrollHeight;
-        const content = document.getElementById('mob_chatContent');
-        if (content) content.scrollTop = content.scrollHeight;
-    }, 380);
+    // Wait for slide-up animation then scroll to bottom
+    setTimeout(_scrollChat, 380);
 }
 
 export function closeMobChatOverlay() {
