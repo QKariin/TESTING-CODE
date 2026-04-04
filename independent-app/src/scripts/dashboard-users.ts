@@ -207,6 +207,49 @@ export async function updateDetail(u: any) {
     const rEl = document.getElementById('dMirrorRoutine');
     if (rEl) rEl.style.color = isRoutineDone ? '#00ff00' : '#666';
 
+    // Routine today proof image
+    const routineProofEl = document.getElementById('admin_RoutineProof');
+    if (routineProofEl) {
+        const today = new Date().toDateString();
+        const history: any[] = u.routineHistory || u.routinehistory || [];
+        const todayEntry = history.slice().reverse().find((h: any) =>
+            h.isRoutine && h.proofUrl && new Date(h.timestamp).toDateString() === today
+        );
+        if (todayEntry) {
+            const isVideo = todayEntry.proofType?.startsWith('video/') || todayEntry.proofUrl?.match(/\.(mp4|mov|webm)/i);
+            routineProofEl.innerHTML = `
+                <div style="font-size:0.55rem; color:#666; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:8px;">TODAY'S ROUTINE PROOF</div>
+                ${isVideo
+                    ? `<video src="${todayEntry.proofUrl}" controls style="width:100%; border-radius:4px; border:1px solid #333; max-height:200px;"></video>`
+                    : `<img src="${todayEntry.proofUrl}" style="width:100%; border-radius:4px; border:1px solid #333; cursor:pointer; max-height:260px; object-fit:cover;" onclick="window.open('${todayEntry.proofUrl}','_blank')" onerror="this.style.display='none'">`
+                }`;
+        } else {
+            routineProofEl.innerHTML = '';
+        }
+    }
+
+    // Kinks & limits
+    const kinksLimitsEl = document.getElementById('admin_KinksLimits');
+    if (kinksLimitsEl) {
+        const kinks = u.kinks || '';
+        const limits = u.limits || '';
+        if (kinks || limits) {
+            kinksLimitsEl.innerHTML = `
+                <div style="border:1px solid rgba(197,160,89,0.15); border-radius:4px; overflow:hidden;">
+                    ${kinks ? `<div style="padding:10px; border-bottom:${limits ? '1px solid rgba(197,160,89,0.1)' : 'none'}">
+                        <div style="font-size:0.5rem; color:#c5a059; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">KINKS</div>
+                        <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${kinks}</div>
+                    </div>` : ''}
+                    ${limits ? `<div style="padding:10px; background:rgba(255,68,68,0.03);">
+                        <div style="font-size:0.5rem; color:#ff6666; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">LIMITS</div>
+                        <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${limits}</div>
+                    </div>` : ''}
+                </div>`;
+        } else {
+            kinksLimitsEl.innerHTML = '';
+        }
+    }
+
     setText('dMirrorSlaveSince', u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "--/--/--");
 
     renderTelemetry(u);

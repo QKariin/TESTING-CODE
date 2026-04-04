@@ -987,6 +987,10 @@ export default function DashboardPage() {
                                     <div id="admin_ProgressContainer"></div>
                                 </div>
 
+                                <div id="admin_RoutineProof" style={{ marginBottom: '20px' }}></div>
+
+                                <div id="admin_KinksLimits" style={{ marginBottom: '20px' }}></div>
+
                                 <div className="kneel-section" style={{ marginBottom: '20px' }}>
                                     <div className="kneel-bar-graphic">
                                         <div className="graphic-fill" id="kneelFill" style={{ width: '0%' }}></div>
