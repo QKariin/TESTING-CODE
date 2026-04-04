@@ -1676,9 +1676,9 @@
         overflow-y: auto;
         overflow-x: hidden;
         overscroll-behavior: contain;
+        overflow-anchor: none;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        /* Override chat.css mobile rule that forces padding-top/bottom: 75px */
         padding-top: 0 !important;
         padding-bottom: 0 !important;
         height: auto !important;

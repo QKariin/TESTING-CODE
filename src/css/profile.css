@@ -2726,6 +2726,7 @@
 .chat-body-frame {
     flex: 1;
     overflow-y: auto;
+    overflow-anchor: none;
     padding: 25px;
     display: flex;
     flex-direction: column;

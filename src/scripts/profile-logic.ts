@@ -1560,13 +1560,31 @@ let chatSubscribed = false;
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
 
 function _scrollChat() {
-    const boxes = [document.getElementById('chatBox'), document.getElementById('mob_chatBox')];
-    boxes.forEach(b => { if (b) b.scrollTop = b.scrollHeight; });
+    ['chatBox', 'mob_chatBox'].forEach(id => {
+        const b = document.getElementById(id);
+        // Skip if element is hidden (display:none) — scrollHeight would be 0
+        if (!b || !b.offsetParent) return;
+        b.scrollTop = b.scrollHeight + 9999;
+    });
 }
 function _scrollChatDelayed() {
     _scrollChat();
     setTimeout(_scrollChat, 80);
-    setTimeout(_scrollChat, 320);
+    setTimeout(_scrollChat, 350);
+    setTimeout(_scrollChat, 700);
+}
+// After setting innerHTML, attach load handlers so images re-trigger scroll as they arrive
+function _attachImgScrollHandlers() {
+    ['chatContent', 'mob_chatContent'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        (el.querySelectorAll('img') as NodeListOf<HTMLImageElement>).forEach(img => {
+            if (!img.complete) {
+                img.addEventListener('load', _scrollChat, { once: true });
+                img.addEventListener('error', _scrollChat, { once: true });
+            }
+        });
+    });
 }
 function _isScrolledToBottom() {
     const b = document.getElementById('mob_chatBox') || document.getElementById('chatBox');
@@ -1672,6 +1690,7 @@ export async function initChatSystem() {
                 const el = document.getElementById(id);
                 if (el) el.insertAdjacentHTML('beforeend', html);
             });
+            _attachImgScrollHandlers();
             if (wasAtBottom) _scrollChatDelayed();
         })
         .subscribe();
@@ -1751,6 +1770,7 @@ async function _pollNewChatMessages(email: string) {
                 if (el) el.insertAdjacentHTML('beforeend', html);
             });
         });
+        _attachImgScrollHandlers();
         if (wasAtBottom) _scrollChatDelayed();
     } catch (_) {}
 }
@@ -1857,15 +1877,12 @@ export async function loadChatHistory(email: string) {
             });
             _updateQueenStatus(lastQueenMsg?.created_at || null);
 
-            // Set content invisibly, then scroll, then reveal — eliminates visual jump
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = html;
             });
-            // Scroll the container (not the content) to bottom, then reveal
-            _scrollChat();
-            setTimeout(() => { _scrollChat(); }, 60);
-            setTimeout(() => { _scrollChat(); }, 280);
+            _scrollChatDelayed();
+            _attachImgScrollHandlers();
         }
     } catch (err) {
         console.error("Failed to load chat history:", err);
