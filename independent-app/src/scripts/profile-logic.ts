@@ -1552,9 +1552,13 @@ const getChatSupabase = () => {
 };
 
 let _chatChannel: any = null;
+let _tasksChannel: any = null;
+let _profileStatsChannel: any = null;
 let _chatPollInterval: ReturnType<typeof setInterval> | null = null;
+let _walletPollInterval: ReturnType<typeof setInterval> | null = null;
 let _lastChatMsgId: string | null = null;
 let _lastChatMsgTimestamp: string | null = null;
+let _seenMsgIds: Set<string> = new Set();
 let chatSubscribed = false;
 
 export async function initChatSystem() {
@@ -1629,7 +1633,8 @@ export async function initChatSystem() {
                 }
             }
 
-            if (msg.id && msg.id === _lastChatMsgId) return; // dedup
+            if (msg.id && _seenMsgIds.has(msg.id)) return; // dedup
+            if (msg.id) _seenMsgIds.add(msg.id);
             _lastChatMsgId = msg.id;
             if (msg.created_at) _lastChatMsgTimestamp = msg.created_at;
 
@@ -1646,13 +1651,15 @@ export async function initChatSystem() {
     _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 4000);
 
     // 4. Supabase realtime for tasks + profile stats (keep existing logic)
-    getChatSupabase()
+    if (_tasksChannel) { getChatSupabase().removeChannel(_tasksChannel); _tasksChannel = null; }
+    _tasksChannel = getChatSupabase()
         .channel('tasks_updates_' + email)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks', filter: `member_id=eq.${email}` },
             () => { updateRoutineWidget(); refreshTaskGallery(email!); })
         .subscribe();
 
-    getChatSupabase()
+    if (_profileStatsChannel) { getChatSupabase().removeChannel(_profileStatsChannel); _profileStatsChannel = null; }
+    _profileStatsChannel = getChatSupabase()
         .channel('profile_stats_' + email)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `member_id=eq.${email}` },
             (payload: any) => {
@@ -1662,15 +1669,15 @@ export async function initChatSystem() {
                     setState({ wallet: fresh.wallet ?? getState().wallet, score: fresh.score ?? getState().score });
                     updateWalletDisplay();
                 }
-                // Paywall / silence activated or deactivated in realtime
                 _applyPaywall(fresh.parameters?.paywall ?? null, fresh.member_id || email);
                 _applySilence(fresh.silence === true, fresh.parameters?.silence_reason || '');
             })
         .subscribe();
 
     // 5. Wallet/score polling fallback every 15s
+    if (_walletPollInterval) clearInterval(_walletPollInterval);
     const walletEmail = email;
-    setInterval(async () => {
+    _walletPollInterval = setInterval(async () => {
         try {
             const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: walletEmail }) });
             const data = await res.json();
@@ -1694,9 +1701,10 @@ async function _pollNewChatMessages(email: string) {
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: _lastChatMsgTimestamp }) });
         const data = await res.json();
         if (!data.success) return;
-        const newMsgs = (data.messages || []).filter((m: any) => m.id !== _lastChatMsgId);
+        const newMsgs = (data.messages || []).filter((m: any) => !m.id || !_seenMsgIds.has(m.id));
         newMsgs.forEach((m: any) => {
-            if (_lastChatMsgId && m.id === _lastChatMsgId) return;
+            if (m.id && _seenMsgIds.has(m.id)) return;
+            if (m.id) _seenMsgIds.add(m.id);
             _lastChatMsgId = m.id;
             if (m.created_at) _lastChatMsgTimestamp = m.created_at;
             if (isSystemMessage(m)) {
