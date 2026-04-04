@@ -1559,19 +1559,25 @@ let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
 
+function _scrollChatEl(b: HTMLElement) {
+    // Use offsetHeight === 0 check: works reliably even inside position:fixed containers
+    // (offsetParent check is unreliable in fixed containers on iOS Safari)
+    if (b.offsetHeight === 0) return;
+    b.scrollTop = b.scrollHeight + 9999;
+}
 function _scrollChat() {
     ['chatBox', 'mob_chatBox'].forEach(id => {
         const b = document.getElementById(id);
-        // Skip if element is hidden (display:none) — scrollHeight would be 0
-        if (!b || !b.offsetParent) return;
-        b.scrollTop = b.scrollHeight + 9999;
+        if (b) _scrollChatEl(b);
     });
 }
 function _scrollChatDelayed() {
+    // Immediate + double-RAF (ensures post-layout) + safety timeouts
     _scrollChat();
-    setTimeout(_scrollChat, 80);
-    setTimeout(_scrollChat, 350);
-    setTimeout(_scrollChat, 700);
+    requestAnimationFrame(() => requestAnimationFrame(_scrollChat));
+    setTimeout(_scrollChat, 150);
+    setTimeout(_scrollChat, 500);
+    setTimeout(_scrollChat, 1000);
 }
 // After setting innerHTML, attach load handlers so images re-trigger scroll as they arrive
 function _attachImgScrollHandlers() {
@@ -2451,7 +2457,7 @@ export function openMobChatOverlay() {
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
 
     _setNavActive('');
-    switchMobChatTab('chat'); // also fires _scrollChat at 60ms
+    switchMobChatTab('chat');
 
     // If no messages loaded yet, load them
     const content = document.getElementById('mob_chatContent');
@@ -2460,14 +2466,17 @@ export function openMobChatOverlay() {
         loadChatHistory(email);
     }
 
-    // Scroll during and after the 350ms slide-up animation
+    // Aggressive scroll: fire at multiple points to catch layout settling + image loads
     const scrollNow = () => {
         const b = document.getElementById('mob_chatBox');
-        if (b) b.scrollTop = b.scrollHeight + 9999;
+        if (b && b.offsetHeight > 0) b.scrollTop = b.scrollHeight + 9999;
     };
-    setTimeout(scrollNow, 80);   // early in animation, layout computed
-    setTimeout(scrollNow, 360);  // animation done
-    setTimeout(scrollNow, 700);  // images loaded
+    // Double-RAF fires after first browser paint (layout is done)
+    requestAnimationFrame(() => requestAnimationFrame(scrollNow));
+    setTimeout(scrollNow, 80);   // early in slide-up animation
+    setTimeout(scrollNow, 200);  // mid animation
+    setTimeout(scrollNow, 400);  // animation done
+    setTimeout(scrollNow, 800);  // images loaded
 
     // Shrink queen avatar button when keyboard opens
     const input = document.getElementById('mob_chatMsgInput');
@@ -2680,7 +2689,15 @@ function _switchMobGlTab(tab: string) {
 
     // Load content if not loaded yet
     if (tab === 'rank') _loadMobGlLeaderboard(_mobGlActivePeriod);
-    else if (tab === 'talk') _loadMobGlTalk();
+    else if (tab === 'talk') {
+        _loadMobGlTalk();
+        // Always scroll to bottom when switching to talk (even if already loaded)
+        const c = document.getElementById('mobGlTalkFeed');
+        if (c) {
+            requestAnimationFrame(() => requestAnimationFrame(() => { c.scrollTop = c.scrollHeight + 9999; }));
+            setTimeout(() => { c.scrollTop = c.scrollHeight + 9999; }, 200);
+        }
+    }
     else if (tab === 'queen') _loadMobGlQueen();
     else if (tab === 'updates') _loadMobGlUpdates();
 }
@@ -2886,7 +2903,7 @@ function _appendMobGlMessage(msg: any) {
     const el = document.createElement('div');
     el.innerHTML = _buildMobGlBubble(msg);
     container.appendChild(el.firstElementChild!);
-    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight + 9999; });
+    requestAnimationFrame(() => requestAnimationFrame(() => { container.scrollTop = container.scrollHeight + 9999; }));
 }
 
 function _renderMobGlTalk(msgs: any[]) {
@@ -2897,9 +2914,18 @@ function _renderMobGlTalk(msgs: any[]) {
         return;
     }
     container.innerHTML = msgs.map((m: any) => _buildMobGlBubble(m)).join('');
-    // Scroll after layout; one extra attempt for images
-    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight + 9999; });
-    setTimeout(() => { container.scrollTop = container.scrollHeight + 9999; }, 300);
+    const scrollBottom = () => { container.scrollTop = container.scrollHeight + 9999; };
+    // Double-RAF: after layout is fully computed
+    requestAnimationFrame(() => requestAnimationFrame(scrollBottom));
+    setTimeout(scrollBottom, 200);
+    setTimeout(scrollBottom, 600);  // catch slow image loads
+    // Attach image load handlers so promo cards / avatars trigger re-scroll
+    (container.querySelectorAll('img') as NodeListOf<HTMLImageElement>).forEach(img => {
+        if (!img.complete) {
+            img.addEventListener('load', scrollBottom, { once: true });
+            img.addEventListener('error', scrollBottom, { once: true });
+        }
+    });
 }
 
 export async function sendMobGlMessage() {
