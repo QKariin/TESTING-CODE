@@ -146,17 +146,12 @@ export async function updateDetail(u: any) {
                 const isDone = current >= target;
                 const color = isDone ? "#00ff00" : "#c5a059";
 
-                // Add icons based on label
-                let icon = "🛠️";
-                if (r.label === "ENDURANCE") icon = "🧎";
-                if (r.label === "MERIT") icon = "✨";
-                if (r.label === "SACRIFICE") icon = "💰";
-                if (r.label === "CONSISTENCY") icon = "📅";
+                // No icons — label only
 
                 html += `
                     <div style="margin-bottom:12px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.65rem; font-family:'Orbitron'; margin-bottom:4px; color:${isDone ? "#fff" : "#888"};">
-                            <span>${icon} ${r.label}</span>
+                        <div style="display:flex; justify-content:space-between; font-size:0.6rem; font-family:'Orbitron'; margin-bottom:4px; color:${isDone ? "#fff" : "#888"}; letter-spacing:1px;">
+                            <span>${r.label}</span>
                             <span style="color:${color}">${current.toLocaleString()} / ${target.toLocaleString()}</span>
                         </div>
                         <div style="width:100%; height:8px; background:#000; border:1px solid #333; border-radius:4px; overflow:hidden; position:relative;">
@@ -318,20 +313,23 @@ function renderKneelSection(u: any) {
         dotsHtml += `<div title="${h}:00" style="height:6px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};transition:all 0.3s;"></div>`;
     }
 
-    const statusColor = isLocked ? '#ff6644' : '#00cc66';
-    const statusText = isLocked ? `🔒 LOCKED — ${minLeft}m` : '✓ AVAILABLE';
+    const statusColor = isLocked ? '#c5603a' : '#3a9c6e';
+    const statusBg = isLocked ? 'rgba(197,96,58,0.12)' : 'rgba(58,156,110,0.12)';
+    const statusBorder = isLocked ? 'rgba(197,96,58,0.3)' : 'rgba(58,156,110,0.3)';
+    const statusText = isLocked ? `LOCKED  ${minLeft}m` : 'AVAILABLE';
 
     el.innerHTML = `
-        <div style="background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.12);border-radius:8px;padding:12px;">
+        <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(197,160,89,0.12);border-radius:6px;padding:12px 14px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                <span style="font-family:'Cinzel';font-size:0.65rem;color:#888;letter-spacing:2px;">KNEELING</span>
-                <span style="font-family:'Orbitron';font-size:0.5rem;color:${statusColor};letter-spacing:1px;">${statusText}</span>
+                <span style="font-family:'Orbitron';font-size:0.45rem;color:#555;letter-spacing:3px;">KNEELING</span>
+                <span style="font-family:'Orbitron';font-size:0.42rem;color:${statusColor};letter-spacing:1px;background:${statusBg};border:1px solid ${statusBorder};padding:3px 8px;border-radius:3px;">${statusText}</span>
             </div>
-            <div style="display:flex;justify-content:space-between;font-size:0.55rem;font-family:'Orbitron';color:#666;margin-bottom:4px;">
-                <span>TODAY</span><span style="color:${isOverGoal ? '#c5a059' : '#888'}">${display}</span>
+            <div style="display:flex;justify-content:space-between;font-size:0.42rem;font-family:'Orbitron';letter-spacing:1px;margin-bottom:5px;">
+                <span style="color:#555;">TODAY</span>
+                <span style="color:${isOverGoal ? '#c5a059' : '#666'}">${display}</span>
             </div>
-            <div style="width:100%;height:6px;background:#111;border:1px solid #222;border-radius:3px;overflow:hidden;margin-bottom:10px;">
-                <div style="width:${pct}%;height:100%;background:${barColor};transition:width 0.5s;"></div>
+            <div style="width:100%;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-bottom:10px;">
+                <div style="width:${pct}%;height:100%;background:${barColor};border-radius:2px;transition:width 0.5s;${isOverGoal ? 'box-shadow:0 0 6px rgba(197,160,89,0.4);' : ''}"></div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;">
                 ${dotsHtml}

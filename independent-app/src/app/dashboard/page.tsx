@@ -953,16 +953,17 @@ export default function DashboardPage() {
                                 </div>
                                 <div id="dMirrorName" className="identity-name" style={{ fontFamily: 'Cinzel', fontSize: '1.5rem', color: '#fff', marginBottom: '10px' }}>NAME</div>
 
-                                <div className="stats-stack-row" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '20px' }}>
+                                <div className="stats-stack-row" style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '16px' }}>
                                     <div className="stat-item">
-                                        <span className="stat-lbl" style={{ color: '#c5a059' }}>MERIT</span>
-                                        <span id="dMirrorPoints" className="stat-val" style={{ fontSize: '1.2rem' }}>0</span>
+                                        <span className="stat-lbl">MERIT</span>
+                                        <span id="dMirrorPoints" className="stat-val">0</span>
                                     </div>
                                     <div className="stat-item">
-                                        <span className="stat-lbl" style={{ color: '#c5a059' }}>CAPITAL</span>
-                                        <span id="dMirrorWallet" className="stat-val" style={{ fontSize: '1.2rem' }}>0</span>
+                                        <span className="stat-lbl">CAPITAL</span>
+                                        <span id="dMirrorWallet" className="stat-val">0</span>
                                     </div>
                                 </div>
+                                <div id="admin_KneelSection" style={{ width: '100%', padding: '0 20px 20px' }}></div>
                             </div>
 
                             <div className="ap-vitals-mirror" style={{ padding: '30px', flex: 1, overflowY: 'auto' }}>
@@ -983,8 +984,6 @@ export default function DashboardPage() {
                                 </div>
 
                                 <div id="admin_KinksLimits" style={{ marginBottom: '30px' }}></div>
-
-                                <div id="admin_KneelSection" style={{ marginBottom: '20px' }}></div>
 
                                 <div className="queue-section" style={{ marginBottom: '30px' }}>
                                     <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: '#888', letterSpacing: '2px', textAlign: 'center', marginBottom: '15px' }}>DIRECTIVE QUEUE</div>
