@@ -194,20 +194,23 @@ export async function updateDetail(u: any) {
             ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
             : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
         const proofStatus = todayEntry?.status;
-        const proofApproveButtons = todayEntry && todayEntry.id
+        const proofOverlay = todayEntry && todayEntry.id
             ? (proofStatus === 'approve'
-                ? `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;">✓ APPROVED</div>`
+                ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;border-radius:0 0 4px 4px;">✓ APPROVED</div>`
                 : proofStatus === 'reject'
-                ? `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;">✗ REJECTED</div>`
-                : `<div style="display:flex;gap:6px;margin-top:6px;">
-                    <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(0,180,0,0.15);color:#00cc00;border:1px solid rgba(0,180,0,0.4);border-radius:4px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;">✓ APPROVE</button>
-                    <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(180,0,0,0.15);color:#ff4444;border:1px solid rgba(180,0,0,0.4);border-radius:4px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;">✗ REJECT</button>
+                ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;border-radius:0 0 4px 4px;">✗ REJECTED</div>`
+                : `<div style="position:absolute;bottom:0;left:0;right:0;display:flex;gap:6px;padding:6px;background:linear-gradient(transparent,rgba(0,0,0,0.7));">
+                    <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(0,150,0,0.6);color:#00ff00;border:1px solid rgba(0,200,0,0.5);border-radius:4px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;backdrop-filter:blur(4px);">✓ APPROVE</button>
+                    <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(150,0,0,0.6);color:#ff4444;border:1px solid rgba(200,0,0,0.5);border-radius:4px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;backdrop-filter:blur(4px);">✗ REJECT</button>
                   </div>`)
             : '';
         const proofHtml = todayEntry
-            ? (todayEntry.proofUrl?.match(/\.(mp4|mov|webm)/i)
-                ? `<video src="${todayEntry.proofUrl}" controls style="width:100%;border-radius:4px;border:1px solid #333;max-height:200px;margin-top:6px;"></video>${proofApproveButtons}`
-                : `<img src="${todayEntry.proofUrl}" style="width:100%;border-radius:4px;border:1px solid #333;cursor:pointer;max-height:260px;object-fit:cover;margin-top:6px;" onclick="window.open('${todayEntry.proofUrl}','_blank')" onerror="this.style.display='none'">${proofApproveButtons}`)
+            ? `<div style="position:relative;margin-top:6px;border-radius:4px;overflow:hidden;">
+                ${todayEntry.proofUrl?.match(/\.(mp4|mov|webm)/i)
+                    ? `<video src="${todayEntry.proofUrl}" controls style="width:100%;display:block;border-radius:4px;border:1px solid #333;max-height:200px;"></video>`
+                    : `<img src="${todayEntry.proofUrl}" style="width:100%;display:block;border-radius:4px;border:1px solid #333;cursor:pointer;max-height:260px;object-fit:cover;" onclick="window.open('${todayEntry.proofUrl}','_blank')" onerror="this.style.display='none'">`}
+                ${proofOverlay}
+              </div>`
             : '';
         html += `
             <div style="margin-bottom:8px;">
@@ -532,8 +535,8 @@ async function approveRoutineFromPanel(taskId: string, memberId: string, btn: HT
         btn.innerText = '...';
         const { adminApproveTaskAction } = await import('@/actions/velo-actions');
         await adminApproveTaskAction(taskId, memberId, 50, null);
-        const row = btn.closest('div[style*="display:flex"]') as HTMLElement;
-        if (row) row.outerHTML = `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;">✓ APPROVED</div>`;
+        const row = btn.closest('div[style*="position:absolute"]') as HTMLElement;
+        if (row) row.outerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;border-radius:0 0 4px 4px;">✓ APPROVED</div>`;
     } catch (err) {
         console.error('approveRoutineFromPanel failed:', err);
         btn.removeAttribute('disabled');
@@ -548,8 +551,8 @@ async function rejectRoutineFromPanel(taskId: string, memberId: string, btn: HTM
         btn.innerText = '...';
         const { adminRejectTaskAction } = await import('@/actions/velo-actions');
         await adminRejectTaskAction(taskId, memberId);
-        const row = btn.closest('div[style*="display:flex"]') as HTMLElement;
-        if (row) row.outerHTML = `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;">✗ REJECTED</div>`;
+        const row = btn.closest('div[style*="position:absolute"]') as HTMLElement;
+        if (row) row.outerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;border-radius:0 0 4px 4px;">✗ REJECTED</div>`;
     } catch (err) {
         console.error('rejectRoutineFromPanel failed:', err);
         btn.removeAttribute('disabled');
