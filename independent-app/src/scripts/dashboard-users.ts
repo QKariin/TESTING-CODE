@@ -165,11 +165,26 @@ export async function updateDetail(u: any) {
                     </div>`;
             } else if (r.type === 'check') {
                 const isDone = r.status === 'VERIFIED';
-                const color = isDone ? "#00ff00" : "#ff4444";
+                const svgIcon = isDone
+                    ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+                    : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+
+                let extraContent = '';
+                if (r.label === 'LIMITS' && u.limits) {
+                    extraContent = `<div style="color:#666; font-size:0.58rem; font-family:'Orbitron'; margin-top:3px; padding:6px 8px; background:#0a0a0a; border-left:2px solid #333; line-height:1.5;">${u.limits}</div>`;
+                } else if (r.label === 'KINKS' && u.kinks) {
+                    extraContent = `<div style="color:#666; font-size:0.58rem; font-family:'Orbitron'; margin-top:3px; padding:6px 8px; background:#0a0a0a; border-left:2px solid #333; line-height:1.5;">${u.kinks}</div>`;
+                } else if (r.label === 'ROUTINE' && u.routine) {
+                    extraContent = `<div style="color:#666; font-size:0.58rem; font-family:'Orbitron'; margin-top:3px; padding:6px 8px; background:#0a0a0a; border-left:2px solid #333; line-height:1.5;">${u.routine}</div>`;
+                }
+
                 html += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.65rem; font-family:'Orbitron';">
-                        <span style="color:#888;">${r.label}</span>
-                        <span style="color:${color}; font-weight:bold;">${r.status}</span>
+                    <div style="margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Orbitron';">
+                            <span style="color:#888;">${r.label}</span>
+                            ${svgIcon}
+                        </div>
+                        ${extraContent}
                     </div>`;
             }
         });
