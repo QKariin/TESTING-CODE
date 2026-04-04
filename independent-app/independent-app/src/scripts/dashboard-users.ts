@@ -164,15 +164,68 @@ export async function updateDetail(u: any) {
                         </div>
                     </div>`;
             } else if (r.type === 'check') {
+                // Identity and photo are visually obvious — skip them
+                if (r.label === 'IDENTITY' || r.label === 'PHOTO') return;
+
                 const isDone = r.status === 'VERIFIED';
-                const color = isDone ? "#00ff00" : "#ff4444";
+                const svgIcon = isDone
+                    ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+                    : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+
                 html += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.65rem; font-family:'Orbitron';">
-                        <span style="color:#888;">${r.label}</span>
-                        <span style="color:${color}; font-weight:bold;">${r.status}</span>
+                    <div style="margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Orbitron';">
+                            <span style="color:#888;">${r.label}</span>
+                            ${svgIcon}
+                        </div>
                     </div>`;
             }
         });
+
+        // Routine row with today's proof image + approve/reject
+        const isDoneToday = u.routineDoneToday === true;
+        const routineRowName = (u.routine || 'NONE').toUpperCase();
+        const todayStr = new Date().toDateString();
+        const history: any[] = u.routineHistory || u.routinehistory || [];
+        const todayEntry = history.slice().reverse().find((h: any) =>
+            h.isRoutine && h.proofUrl && new Date(h.timestamp).toDateString() === todayStr
+        );
+        const routineSvg = isDoneToday
+            ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+            : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+        const proofStatus = todayEntry?.status;
+        const proofApproveButtons = todayEntry && todayEntry.id
+            ? (proofStatus === 'approve'
+                ? `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;">✓ APPROVED</div>`
+                : proofStatus === 'reject'
+                ? `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;">✗ REJECTED</div>`
+                : `<div style="display:flex;gap:6px;margin-top:6px;">
+                    <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(0,180,0,0.15);color:#00cc00;border:1px solid rgba(0,180,0,0.4);border-radius:4px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;">✓ APPROVE</button>
+                    <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(180,0,0,0.15);color:#ff4444;border:1px solid rgba(180,0,0,0.4);border-radius:4px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;">✗ REJECT</button>
+                  </div>`)
+            : '';
+        const proofHtml = todayEntry
+            ? (todayEntry.proofUrl?.match(/\.(mp4|mov|webm)/i)
+                ? `<video src="${todayEntry.proofUrl}" controls style="width:100%;border-radius:4px;border:1px solid #333;max-height:200px;margin-top:6px;"></video>${proofApproveButtons}`
+                : `<img src="${todayEntry.proofUrl}" style="width:100%;border-radius:4px;border:1px solid #333;cursor:pointer;max-height:260px;object-fit:cover;margin-top:6px;" onclick="window.open('${todayEntry.proofUrl}','_blank')" onerror="this.style.display='none'">${proofApproveButtons}`)
+            : '';
+        html += `
+            <div style="margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Orbitron';">
+                    <span style="color:#888;">ROUTINE — ${routineRowName}</span>
+                    ${routineSvg}
+                </div>
+                ${proofHtml}
+            </div>`;
+
+        // Always show force-promote button when not at max
+        if (!report.isMax) {
+            html += `<div style="margin-top:16px;">
+                <button onclick="window.adminPromoteUser('${u.memberId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(170,125,30,0.5),rgba(130,92,15,0.4));color:rgba(240,210,120,0.95);border:1px solid rgba(180,140,50,0.5);border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
+                    ✦ PROMOTE TO ${report.nextRank.toUpperCase()}
+                </button>
+            </div>`;
+        }
 
         container.innerHTML = html;
     }
@@ -183,12 +236,42 @@ export async function updateDetail(u: any) {
     const rEl = document.getElementById('dMirrorRoutine');
     if (rEl) rEl.style.color = isRoutineDone ? '#00ff00' : '#666';
 
+    // Kinks & limits
+    const kinksLimitsEl = document.getElementById('admin_KinksLimits');
+    if (kinksLimitsEl) {
+        const kinks = u.kinks || '';
+        const limits = u.limits || '';
+        if (kinks || limits) {
+            kinksLimitsEl.innerHTML = `
+                <div style="border:1px solid rgba(197,160,89,0.15); border-radius:4px; overflow:hidden;">
+                    ${kinks ? `<div style="padding:10px; border-bottom:${limits ? '1px solid rgba(197,160,89,0.1)' : 'none'}">
+                        <div style="font-size:0.5rem; color:#c5a059; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">KINKS</div>
+                        <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${kinks}</div>
+                    </div>` : ''}
+                    ${limits ? `<div style="padding:10px; background:rgba(255,68,68,0.03);">
+                        <div style="font-size:0.5rem; color:#ff6666; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">LIMITS</div>
+                        <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${limits}</div>
+                    </div>` : ''}
+                </div>`;
+        } else {
+            kinksLimitsEl.innerHTML = '';
+        }
+    }
+
     setText('dMirrorSlaveSince', u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "--/--/--");
 
     renderTelemetry(u);
     updateReviewQueue(u);
     updateActiveTask(u);
     updateTaskQueue(u);
+
+    // Notify React of lock state for this user
+    if (typeof window !== 'undefined' && (window as any)._setActiveLocks) {
+        (window as any)._setActiveLocks({
+            paywall: !!(u.parameters?.paywall?.active),
+            silenced: u.silence === true,
+        });
+    }
 }
 
 function renderTelemetry(u: any) {
@@ -210,13 +293,26 @@ function renderTelemetry(u: any) {
     const network = data.network || {};
     const location = network.location || {};
 
+    const decodeCity = (s: string) => { try { return decodeURIComponent(s); } catch { return s; } };
+    const cityStr = location.city ? decodeCity(location.city) : null;
+    const countryStr = location.country ? decodeCity(location.country) : null;
+    const locationVal = cityStr && countryStr ? `${cityStr}, ${countryStr}` : cityStr || countryStr || '—';
+    const timeVal = data.timezone
+        ? new Date().toLocaleTimeString('en-GB', { timeZone: data.timezone, hour: '2-digit', minute: '2-digit' })
+        : (location.timezone ? new Date().toLocaleTimeString('en-GB', { timeZone: location.timezone, hour: '2-digit', minute: '2-digit' }) : '—');
+    const osStr = device.os || data.os || null;
+    const browserStr = device.browser || data.browser || null;
+    const deviceVal = osStr && browserStr ? `${osStr} / ${browserStr}` : osStr || browserStr || '—';
+    const batteryVal = battery.level !== undefined ? `${battery.level}% ${battery.charging === true ? '⚡' : ''}` : (data.battery?.level !== undefined ? `${data.battery.level}%` : '—');
+    const resolutionVal = device.resolution || data.resolution || '—';
+
     const rows = [
-        { label: '🌍 LOCATION', val: `${location.city || 'Unknown'}, ${location.country || '??'}` },
-        { label: '🕒 LOCAL TIME', val: data.timezone ? new Date().toLocaleTimeString('en-GB', { timeZone: data.timezone, hour: '2-digit', minute: '2-digit' }) : '??:??' },
-        { label: '📱 DEVICE', val: `${device.os || 'OS'} (${device.browser || 'Browser'})` },
-        { label: '🔋 BATTERY', val: battery.level !== undefined ? `${battery.level}% ${battery.charging === true ? '⚡' : ''}` : '??%' },
+        { label: '🌍 LOCATION', val: locationVal },
+        { label: '🕒 LOCAL TIME', val: timeVal },
+        { label: '📱 DEVICE', val: deviceVal },
+        { label: '🔋 BATTERY', val: batteryVal },
         { label: '🏠 PWA', val: device.is_pwa ? 'INSTALLED' : 'BROWSER' },
-        { label: '🖥️ RESOLUTION', val: device.resolution || '??x??' }
+        { label: '🖥️ RESOLUTION', val: resolutionVal }
     ];
 
     container.innerHTML = rows.map(r => `
@@ -225,6 +321,7 @@ function renderTelemetry(u: any) {
             <div style="color:#c5a059; font-size:0.7rem; font-family:'Rajdhani'; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.val}</div>
         </div>
     `).join('');
+    // drawer open/close is controlled by the header click handler only
 
     // Bonus: Low battery highlight
     if (battery.level !== undefined && battery.level < 20 && battery.charging !== true) {
@@ -258,7 +355,7 @@ async function updateReviewQueue(u: any) {
             const isRoutine = t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine';
             const actType = isRoutine ? 'DAILY ROUTINE' : 'TASK';
             const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-            const isVideo = t.proofType === 'video' || mediaTypeFunction(t.proofUrl) === 'video';
+            const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
             // Videos: show thumbnail if available, otherwise a static placeholder — no autoplay
             const mediaTag = isVideo
                 ? (t.thumbnail_url
@@ -269,7 +366,7 @@ async function updateReviewQueue(u: any) {
                 : `<img src="${getOptimizedUrl(t.proofUrl || '', 400)}" class="pend-thumb" onerror="this.src='/queen-karin.png'">`;
 
             return `
-                    <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false)">
+                    <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false, null, '${isVideo ? 'video' : 'image'}')">
                         ${mediaTag}
                         <div class="pend-info">
                             <div class="pend-act" style="color:${isRoutine ? '#00ff00' : 'var(--gold)'}">${actType}</div>
@@ -353,15 +450,13 @@ function updateActiveTask(u: any) {
             activeTimer.innerText = "--:--";
         }
     } else {
-        if ((u as any)._lastTrackedEndTime != null) {
-            if (cooldownInterval) clearInterval(cooldownInterval);
-            (u as any)._lastTrackedEndTime = null;
-            if (idleActions) idleActions.style.display = 'block';
-            const failBtn = activeTaskContent?.querySelector('.at-fail') as HTMLElement;
-            if (failBtn) failBtn.style.display = 'none';
-            activeText.innerText = "None";
-            activeTimer.innerText = "--:--";
-        }
+        if (cooldownInterval) clearInterval(cooldownInterval);
+        (u as any)._lastTrackedEndTime = null;
+        if (idleActions) idleActions.style.display = 'block';
+        const failBtn = activeTaskContent?.querySelector('.at-fail') as HTMLElement;
+        if (failBtn) failBtn.style.display = 'none';
+        activeText.innerText = "None";
+        activeTimer.innerText = "--:--";
     }
 }
 
@@ -415,8 +510,58 @@ export function updateTaskQueue(u: any) {
     `;
 }
 
+export async function adminPromoteUser(memberId: string) {
+    if (!memberId) return;
+    try {
+        const res = await fetch('/api/promote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberEmail: memberId })
+        });
+        const data = await res.json();
+        if (data.success && data.promoted) {
+            window.location.reload();
+        }
+    } catch (_) {}
+}
+
+async function approveRoutineFromPanel(taskId: string, memberId: string, btn: HTMLElement) {
+    if (!taskId || !memberId) return;
+    try {
+        btn.setAttribute('disabled', 'true');
+        btn.innerText = '...';
+        const { adminApproveTaskAction } = await import('@/actions/velo-actions');
+        await adminApproveTaskAction(taskId, memberId, 50, null);
+        const row = btn.closest('div[style*="display:flex"]') as HTMLElement;
+        if (row) row.outerHTML = `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;">✓ APPROVED</div>`;
+    } catch (err) {
+        console.error('approveRoutineFromPanel failed:', err);
+        btn.removeAttribute('disabled');
+        btn.innerText = '✓ APPROVE';
+    }
+}
+
+async function rejectRoutineFromPanel(taskId: string, memberId: string, btn: HTMLElement) {
+    if (!taskId || !memberId) return;
+    try {
+        btn.setAttribute('disabled', 'true');
+        btn.innerText = '...';
+        const { adminRejectTaskAction } = await import('@/actions/velo-actions');
+        await adminRejectTaskAction(taskId, memberId);
+        const row = btn.closest('div[style*="display:flex"]') as HTMLElement;
+        if (row) row.outerHTML = `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;">✗ REJECTED</div>`;
+    } catch (err) {
+        console.error('rejectRoutineFromPanel failed:', err);
+        btn.removeAttribute('disabled');
+        btn.innerText = '✗ REJECT';
+    }
+}
+
 if (typeof window !== 'undefined') {
     (window as any).updateDetail = updateDetail;
     (window as any).deleteQueueItem = deleteQueueItem;
     (window as any).toggleTaskDrawer = toggleTaskDrawer;
+    (window as any).adminPromoteUser = adminPromoteUser;
+    (window as any).approveRoutineFromPanel = approveRoutineFromPanel;
+    (window as any).rejectRoutineFromPanel = rejectRoutineFromPanel;
 }

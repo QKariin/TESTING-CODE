@@ -182,10 +182,9 @@ export async function updateDetail(u: any) {
             }
         });
 
-        // Routine row with today's proof
-        const routineCheck = report.requirements.find((r: any) => r.type === 'check' && r.label === 'ROUTINE');
+        // Routine row with today's proof image + approve/reject
         const isDoneToday = u.routineDoneToday === true;
-        const routineName = (u.routine || 'NONE').toUpperCase();
+        const routineRowName = (u.routine || 'NONE').toUpperCase();
         const todayStr = new Date().toDateString();
         const history: any[] = u.routineHistory || u.routinehistory || [];
         const todayEntry = history.slice().reverse().find((h: any) =>
@@ -196,9 +195,9 @@ export async function updateDetail(u: any) {
             : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
         const proofStatus = todayEntry?.status;
         const proofApproveButtons = todayEntry && todayEntry.id
-            ? (proofStatus === 'approved'
+            ? (proofStatus === 'approve'
                 ? `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;">✓ APPROVED</div>`
-                : proofStatus === 'rejected'
+                : proofStatus === 'reject'
                 ? `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;">✗ REJECTED</div>`
                 : `<div style="display:flex;gap:6px;margin-top:6px;">
                     <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(0,180,0,0.15);color:#00cc00;border:1px solid rgba(0,180,0,0.4);border-radius:4px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;">✓ APPROVE</button>
@@ -213,7 +212,7 @@ export async function updateDetail(u: any) {
         html += `
             <div style="margin-bottom:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Orbitron';">
-                    <span style="color:#888;">ROUTINE — ${routineName}</span>
+                    <span style="color:#888;">ROUTINE — ${routineRowName}</span>
                     ${routineSvg}
                 </div>
                 ${proofHtml}
@@ -236,7 +235,6 @@ export async function updateDetail(u: any) {
     setText('dMirrorRoutine', `${routineName} (${isRoutineDone ? "DONE" : "PENDING"})`);
     const rEl = document.getElementById('dMirrorRoutine');
     if (rEl) rEl.style.color = isRoutineDone ? '#00ff00' : '#666';
-
 
     // Kinks & limits
     const kinksLimitsEl = document.getElementById('admin_KinksLimits');
@@ -298,11 +296,13 @@ function renderTelemetry(u: any) {
     const decodeCity = (s: string) => { try { return decodeURIComponent(s); } catch { return s; } };
     const cityStr = location.city ? decodeCity(location.city) : null;
     const countryStr = location.country ? decodeCity(location.country) : null;
-    const locationVal = cityStr && countryStr ? `${cityStr}, ${countryStr}` : cityStr || countryStr || 'UNKNOWN';
-    const timeVal = data.timezone ? new Date().toLocaleTimeString('en-GB', { timeZone: data.timezone, hour: '2-digit', minute: '2-digit' }) : (location.timezone ? new Date().toLocaleTimeString('en-GB', { timeZone: location.timezone, hour: '2-digit', minute: '2-digit' }) : '—');
+    const locationVal = cityStr && countryStr ? `${cityStr}, ${countryStr}` : cityStr || countryStr || '—';
+    const timeVal = data.timezone
+        ? new Date().toLocaleTimeString('en-GB', { timeZone: data.timezone, hour: '2-digit', minute: '2-digit' })
+        : (location.timezone ? new Date().toLocaleTimeString('en-GB', { timeZone: location.timezone, hour: '2-digit', minute: '2-digit' }) : '—');
     const osStr = device.os || data.os || null;
     const browserStr = device.browser || data.browser || null;
-    const deviceVal = osStr && browserStr ? `${osStr} / ${browserStr}` : osStr || browserStr || 'UNKNOWN';
+    const deviceVal = osStr && browserStr ? `${osStr} / ${browserStr}` : osStr || browserStr || '—';
     const batteryVal = battery.level !== undefined ? `${battery.level}% ${battery.charging === true ? '⚡' : ''}` : (data.battery?.level !== undefined ? `${data.battery.level}%` : '—');
     const resolutionVal = device.resolution || data.resolution || '—';
 
@@ -315,15 +315,13 @@ function renderTelemetry(u: any) {
         { label: '🖥️ RESOLUTION', val: resolutionVal }
     ];
 
-    // Keep drawer closed but update content — drawer opens on user click
     container.innerHTML = rows.map(r => `
         <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; border:1px solid rgba(197,160,89,0.1);">
             <div style="color:#666; font-size:0.5rem; font-family:'Orbitron'; margin-bottom:2px;">${r.label}</div>
             <div style="color:#c5a059; font-size:0.7rem; font-family:'Rajdhani'; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.val}</div>
         </div>
     `).join('');
-    // If drawer is open (user toggled it), keep display:grid
-    if (container.style.display === 'none') { /* leave closed */ } else { container.style.display = 'grid'; }
+    // drawer open/close is controlled by the header click handler only
 
     // Bonus: Low battery highlight
     if (battery.level !== undefined && battery.level < 20 && battery.charging !== true) {
@@ -530,7 +528,7 @@ export async function adminPromoteUser(memberId: string) {
 async function approveRoutineFromPanel(taskId: string, memberId: string, btn: HTMLElement) {
     if (!taskId || !memberId) return;
     try {
-        btn.disabled = true;
+        btn.setAttribute('disabled', 'true');
         btn.innerText = '...';
         const { adminApproveTaskAction } = await import('@/actions/velo-actions');
         await adminApproveTaskAction(taskId, memberId, 50, null);
@@ -538,7 +536,7 @@ async function approveRoutineFromPanel(taskId: string, memberId: string, btn: HT
         if (row) row.outerHTML = `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;">✓ APPROVED</div>`;
     } catch (err) {
         console.error('approveRoutineFromPanel failed:', err);
-        btn.disabled = false;
+        btn.removeAttribute('disabled');
         btn.innerText = '✓ APPROVE';
     }
 }
@@ -546,7 +544,7 @@ async function approveRoutineFromPanel(taskId: string, memberId: string, btn: HT
 async function rejectRoutineFromPanel(taskId: string, memberId: string, btn: HTMLElement) {
     if (!taskId || !memberId) return;
     try {
-        btn.disabled = true;
+        btn.setAttribute('disabled', 'true');
         btn.innerText = '...';
         const { adminRejectTaskAction } = await import('@/actions/velo-actions');
         await adminRejectTaskAction(taskId, memberId);
@@ -554,7 +552,7 @@ async function rejectRoutineFromPanel(taskId: string, memberId: string, btn: HTM
         if (row) row.outerHTML = `<div style="margin-top:6px;text-align:center;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;">✗ REJECTED</div>`;
     } catch (err) {
         console.error('rejectRoutineFromPanel failed:', err);
-        btn.disabled = false;
+        btn.removeAttribute('disabled');
         btn.innerText = '✗ REJECT';
     }
 }

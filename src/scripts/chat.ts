@@ -312,10 +312,16 @@ export async function renderChat(messages: any[]) {
 }
 
 export function forceBottom() {
-    const dBox = document.getElementById('chatBox');
-    const mBox = document.getElementById('mob_chatBox');
-    if (dBox) dBox.scrollTop = dBox.scrollHeight;
-    if (mBox) mBox.scrollTop = mBox.scrollHeight;
+    const scroll = () => {
+        const dBox = document.getElementById('chatBox');
+        const mBox = document.getElementById('mob_chatBox');
+        if (dBox) dBox.scrollTop = dBox.scrollHeight;
+        if (mBox) mBox.scrollTop = mBox.scrollHeight;
+    };
+    // Immediate scroll + delayed scroll after images/media have loaded
+    scroll();
+    setTimeout(scroll, 80);
+    setTimeout(scroll, 300);
 }
 
 export function loadMoreChat() {

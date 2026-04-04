@@ -71,7 +71,6 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     const [messages, setMessages] = useState<any[]>([]);
     const [text, setText] = useState('');
     const [sending, setSending] = useState(false);
-    const [unread, setUnread] = useState(0);
 
     async function load() {
         try {
@@ -81,26 +80,9 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
                 const real = (data.messages as any[]).filter(
                     m => m.sender_name !== 'SYSTEM' && !String(m.message || '').startsWith('PROMOTION_CARD:')
                 );
-                const latest = real[real.length - 1];
-                if (latest?.created_at) {
-                    const lastRead = localStorage.getItem('globalDashLastRead');
-                    const latestTs = new Date(latest.created_at).getTime();
-                    const lastReadTs = lastRead ? new Date(lastRead).getTime() : 0;
-                    if (latestTs > lastReadTs) {
-                        const newCount = real.filter(m => new Date(m.created_at).getTime() > lastReadTs).length;
-                        setUnread(newCount);
-                    } else {
-                        setUnread(0);
-                    }
-                }
                 setMessages(real.slice(-2));
             }
         } catch {}
-    }
-
-    function markRead() {
-        localStorage.setItem('globalDashLastRead', new Date().toISOString());
-        setUnread(0);
     }
 
     useEffect(() => {
@@ -119,7 +101,6 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
                 body: JSON.stringify({ senderEmail: userEmail, message: text.trim() }),
             });
             setText('');
-            markRead();
             await load();
         } catch {}
         setSending(false);
@@ -131,18 +112,10 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     }
 
     return (
-        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column' }} onClick={markRead}>
-            <div className="vk-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                    <div className="vk-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        Global Chat
-                        {unread > 0 && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 9, background: '#e04444', color: '#fff', fontSize: '0.38rem', fontFamily: 'Orbitron', fontWeight: 700, padding: '0 4px', letterSpacing: 0 }}>{unread > 99 ? '99+' : unread}</span>
-                        )}
-                    </div>
-                    <div className="vk-sub">Community Feed</div>
-                </div>
-                <a href="/global" style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 1, textDecoration: 'none' }}>OPEN →</a>
+        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="vk-header">
+                <div className="vk-title">Global Chat</div>
+                <div className="vk-sub">Community Feed</div>
             </div>
             <div style={{ flex: 1, padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {messages.length === 0 && (
@@ -180,7 +153,7 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     );
 }
 
-function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose: () => void; onLocked: () => void }) {
+function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose: () => void; onLocked: (type: 'paywall' | 'silence') => void }) {
     const [tab, setTab] = useState<'paywall' | 'silence'>('paywall');
     const [reason, setReason] = useState(PAYWALL_PRESETS[0]);
     const [customReason, setCustomReason] = useState('');
@@ -209,7 +182,7 @@ function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose:
                 : { memberId, reason: finalReason };
             const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
             const data = await res.json();
-            if (data.success) { onLocked(); onClose(); }
+            if (data.success) { onLocked(tab); onClose(); }
             else setError(data.error || 'Failed');
         } catch { setError('Network error'); }
         setLoading(false);
@@ -419,6 +392,22 @@ export default function DashboardPage() {
                 });
 
                 setUsers(mappedUsers);
+
+                // Sync server-side read state to localStorage (so read state survives page reloads/device changes)
+                try {
+                    const readRes = await fetch('/api/chat/mark-read?type=admin');
+                    const readData = await readRes.json();
+                    const serverReadMap = readData.chatRead || {};
+                    Object.entries(serverReadMap).forEach(([email, ts]) => {
+                        const key = 'read_' + email;
+                        const localTs = parseInt(localStorage.getItem(key) || '0');
+                        const serverTs = new Date(ts as string).getTime();
+                        if (serverTs > localTs) {
+                            localStorage.setItem(key, serverTs.toString());
+                        }
+                    });
+                } catch {}
+
                 setAvailableDailyTasks(data.dailyTasks || []);
 
                 // Populate Review Queue correctly mapped to each user
@@ -466,6 +455,9 @@ export default function DashboardPage() {
                 }, 400);
             }
         };
+
+        // Expose so the lock modal can force an immediate refresh after lock/unlock
+        (window as any)._refreshDashboard = loadLiveAction;
 
         loadLiveAction();
         // Poll every 10 seconds — refreshes lastSeen, tasks, and anything missed by realtime
@@ -975,9 +967,9 @@ export default function DashboardPage() {
 
                             <div className="ap-vitals-mirror" style={{ padding: '30px', flex: 1, overflowY: 'auto' }}>
                                 <div id="telemetry_section" style={{ marginBottom: '30px', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: '8px', overflow: 'hidden' }}>
-                                    <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if(c){ const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if(a) a.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)'; } }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 15px', cursor: 'pointer', userSelect: 'none' }}>
+                                    <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)'; } }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 15px', cursor: 'pointer', userSelect: 'none' as any }}>
                                         <span style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: '#888', letterSpacing: '2px' }}>ACTIVE TELEMETRY</span>
-                                        <span id="telemetry_arrow" style={{ color: '#555', fontSize: '0.7rem', transition: 'transform 0.2s', transform: 'rotate(-90deg)' }}>▾</span>
+                                        <span id="telemetry_arrow" style={{ color: '#555', fontSize: '1rem', transition: 'transform 0.2s', display: 'inline-block', transform: 'rotate(-90deg)' }}>▾</span>
                                     </div>
                                     <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '0 15px 15px' }}>
                                         <div style={{ color: '#444', fontSize: '0.6rem', textAlign: 'center', gridColumn: 'span 2' }}>NO DATA RECEIVED</div>
@@ -990,7 +982,7 @@ export default function DashboardPage() {
                                     <div id="admin_ProgressContainer"></div>
                                 </div>
 
-                                <div id="admin_KinksLimits" style={{ marginBottom: '20px' }}></div>
+                                <div id="admin_KinksLimits" style={{ marginBottom: '30px' }}></div>
 
                                 <div className="kneel-section" style={{ marginBottom: '20px' }}>
                                     <div className="kneel-bar-graphic">
@@ -1187,7 +1179,10 @@ export default function DashboardPage() {
             <div id="purchaseToastContainer"></div>
 
             {/* LOCK MODAL */}
-            {lockTarget && <LockModal memberId={lockTarget} onClose={() => setLockTarget(null)} onLocked={() => setActiveLocks(prev => ({ ...prev, paywall: true }))} />}
+            {lockTarget && <LockModal memberId={lockTarget} onClose={() => setLockTarget(null)} onLocked={(type: 'paywall' | 'silence') => {
+                setActiveLocks(prev => ({ ...prev, paywall: type === 'paywall' ? true : prev.paywall, silenced: type === 'silence' ? true : prev.silenced }));
+                (window as any)._refreshDashboard?.();
+            }} />}
 
             {/* LOCKS LIST MODAL */}
             {showLocksModal && (
