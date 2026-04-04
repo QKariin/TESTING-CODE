@@ -12,12 +12,20 @@ export async function handleLogout() {
 }
 
 // ─── REWARD CLAIMING ───
+let _claiming = false;
 export async function claimKneelReward(type: 'coins' | 'points') {
+    if (_claiming) return;
+    _claiming = true;
+
+    // Hide overlay immediately so user can't double-click
+    document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
+    document.getElementById('mobKneelReward')?.classList.add('hidden');
+
     const currentState = getState();
     const { raw, id, memberId, wallet, score } = currentState;
     const pid = memberId || id;
 
-    if (!pid) return;
+    if (!pid) { _claiming = false; return; }
 
     const amount = type === 'coins' ? 10 : 50;
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
@@ -33,21 +41,22 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         const data = await res.json();
 
         if (res.status === 429) {
-            // Cooldown still active — close overlay silently
+            // Cooldown still active — overlay already hidden above
             console.log(`[REWARD] Cooldown still active (${data.minLeft}m left). Ignoring.`);
-            document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
-            document.getElementById('mobKneelReward')?.classList.add('hidden');
+            _claiming = false;
             return;
         }
 
         if (!data.success) {
             console.error('[REWARD] Server rejected claim:', data.error);
+            _claiming = false;
             return;
         }
 
         loadChatHistory(pid);
     } catch (err) {
         console.error('[REWARD] Save failed', err);
+        _claiming = false;
         return;
     }
 
@@ -58,9 +67,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 
     if (type === 'coins') triggerCoinShower();
 
-    // 4. Hide UI
-    document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
-    document.getElementById('mobKneelReward')?.classList.add('hidden');
+    // 4. Play sound (overlay already hidden at top of function)
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
     if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
@@ -78,6 +85,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         // Fallback: render with current raw if fetch fails
         renderProfileSidebar(raw || {});
     }
+    _claiming = false;
 }
 
 
@@ -579,7 +587,7 @@ if (typeof window !== 'undefined') {
                     wishlist_spent: (Number(raw?.parameters?.wishlist_spent) || 0) + amount,
                     last_tribute: { at: new Date().toISOString(), title, amount }
                 };
-                const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + (cost ?? amount ?? 0) };
+                const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + (amount ?? 0) };
                 setState({ wallet: data.newWallet, score: data.newScore, raw: updatedRaw });
                 updateWalletDisplay();
                 renderProfileSidebar(updatedRaw);
@@ -647,7 +655,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
                 wishlist_spent: (Number(raw?.parameters?.wishlist_spent) || 0) + cost,
                 last_tribute: { at: new Date().toISOString(), title, amount: cost }
             };
-            const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + (cost ?? amount ?? 0) };
+            const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + (cost ?? 0) };
             setState({ wallet: data.newWallet, score: data.newScore, raw: updatedRaw });
             updateWalletDisplay();
             renderProfileSidebar(updatedRaw);
@@ -1545,9 +1553,43 @@ const getChatSupabase = () => {
 
 let _chatChannel: any = null;
 let _chatPollInterval: ReturnType<typeof setInterval> | null = null;
+let _silenceCheckInterval: ReturnType<typeof setInterval> | null = null;
 let _lastChatMsgId: string | null = null;
 let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
+const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
+
+function _scrollChat() {
+    ['chatBox', 'mob_chatBox'].forEach(id => {
+        const b = document.getElementById(id);
+        // Skip if element is hidden (display:none) — scrollHeight would be 0
+        if (!b || !b.offsetParent) return;
+        b.scrollTop = b.scrollHeight + 9999;
+    });
+}
+function _scrollChatDelayed() {
+    _scrollChat();
+    setTimeout(_scrollChat, 80);
+    setTimeout(_scrollChat, 350);
+    setTimeout(_scrollChat, 700);
+}
+// After setting innerHTML, attach load handlers so images re-trigger scroll as they arrive
+function _attachImgScrollHandlers() {
+    ['chatContent', 'mob_chatContent'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        (el.querySelectorAll('img') as NodeListOf<HTMLImageElement>).forEach(img => {
+            if (!img.complete) {
+                img.addEventListener('load', _scrollChat, { once: true });
+                img.addEventListener('error', _scrollChat, { once: true });
+            }
+        });
+    });
+}
+function _isScrolledToBottom() {
+    const b = document.getElementById('mob_chatBox') || document.getElementById('chatBox');
+    return b ? (b.scrollHeight - b.scrollTop - b.clientHeight < 160) : true;
+}
 
 export async function initChatSystem() {
     // 🔑 KEY DIFFERENCE vs old broken code:
@@ -1576,10 +1618,25 @@ export async function initChatSystem() {
         setState({ memberId: email });
     }
 
-    if (chatSubscribed) return;
+    // Start silence polling — runs every 3s, uses supabaseAdmin endpoint (no auth dependency)
+    if (_silenceCheckInterval) clearInterval(_silenceCheckInterval);
+    _silenceCheckInterval = setInterval(async () => {
+        try {
+            const r = await fetch('/api/silence-check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: email }),
+            });
+            if (!r.ok) return;
+            const d = await r.json();
+            _applySilence(d.silence === true, d.reason || '');
+        } catch {}
+    }, 3000);
+
+    if (chatSubscribed) return; // channels already set up — don't duplicate
     chatSubscribed = true;
 
-    // 1. Load history (same as dashboard's loadDashboardChatHistory)
+    // Load history once on first init
     await loadChatHistory(email);
 
     // 2. Realtime subscription on shared client (same as dashboard line 107-120)
@@ -1621,15 +1678,20 @@ export async function initChatSystem() {
                 }
             }
 
-            if (msg.id && msg.id === _lastChatMsgId) return; // dedup
-            _lastChatMsgId = msg.id;
+            const msgId = msg.id ? String(msg.id) : null;
+            if (msgId && _renderedMsgIds.has(msgId)) return; // already rendered
+            if (msgId) _renderedMsgIds.add(msgId);
+            _lastChatMsgId = msgId;
             if (msg.created_at) _lastChatMsgTimestamp = msg.created_at;
 
+            const wasAtBottom = _isScrolledToBottom();
             const html = renderChatMessage(msg);
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) { el.insertAdjacentHTML('beforeend', html); el.scrollTop = el.scrollHeight; }
+                if (el) el.insertAdjacentHTML('beforeend', html);
             });
+            _attachImgScrollHandlers();
+            if (wasAtBottom) _scrollChatDelayed();
         })
         .subscribe();
 
@@ -1654,6 +1716,9 @@ export async function initChatSystem() {
                     setState({ wallet: fresh.wallet ?? getState().wallet, score: fresh.score ?? getState().score });
                     updateWalletDisplay();
                 }
+                // Paywall / silence activated or deactivated in realtime
+                _applyPaywall(fresh.parameters?.paywall ?? null, fresh.member_id || email);
+                _applySilence(fresh.silence === true, fresh.parameters?.silence_reason || '');
             })
         .subscribe();
 
@@ -1683,9 +1748,15 @@ async function _pollNewChatMessages(email: string) {
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: _lastChatMsgTimestamp }) });
         const data = await res.json();
         if (!data.success) return;
-        const newMsgs = (data.messages || []).filter((m: any) => m.id !== _lastChatMsgId);
+        const newMsgs = (data.messages || []).filter((m: any) => {
+            const id = m.id ? String(m.id) : null;
+            return id && !_renderedMsgIds.has(id);
+        });
+        if (newMsgs.length === 0) return;
+        const wasAtBottom = _isScrolledToBottom();
         newMsgs.forEach((m: any) => {
-            if (_lastChatMsgId && m.id === _lastChatMsgId) return;
+            const id = m.id ? String(m.id) : null;
+            if (id) _renderedMsgIds.add(id);
             _lastChatMsgId = m.id;
             if (m.created_at) _lastChatMsgTimestamp = m.created_at;
             if (isSystemMessage(m)) {
@@ -1696,9 +1767,11 @@ async function _pollNewChatMessages(email: string) {
             const html = renderChatMessage(m);
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) { el.insertAdjacentHTML('beforeend', html); el.scrollTop = el.scrollHeight; }
+                if (el) el.insertAdjacentHTML('beforeend', html);
             });
         });
+        _attachImgScrollHandlers();
+        if (wasAtBottom) _scrollChatDelayed();
     } catch (_) {}
 }
 
@@ -1763,7 +1836,9 @@ export async function loadChatHistory(email: string) {
             const messages = data.messages || [];
             console.log('[CHAT] Received messages count:', messages.length);
 
-            // Track last msg id+timestamp for polling dedup (same as dashboard-chat.ts lines 154-158)
+            // Seed dedup set + track timestamps for polling
+            _renderedMsgIds.clear();
+            messages.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
             if (messages.length > 0) {
                 const last = messages[messages.length - 1];
                 _lastChatMsgId = last.id;
@@ -1804,11 +1879,10 @@ export async function loadChatHistory(email: string) {
 
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) {
-                    el.innerHTML = html;
-                    el.scrollTop = el.scrollHeight;
-                }
+                if (el) el.innerHTML = html;
             });
+            _scrollChatDelayed();
+            _attachImgScrollHandlers();
         }
     } catch (err) {
         console.error("Failed to load chat history:", err);
@@ -2072,6 +2146,69 @@ function renderChatMessage(msg: any, prevTs?: number): string {
     }
 
     let content = msg.content || msg.message || '';
+
+    // PROMOTION CARD
+    if (content.startsWith('PROMOTION_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
+            const initials = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo
+                ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                : '';
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
+            const cardHtml = `
+            <div style="width:min(85%,340px);min-width:200px;margin:0 auto;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                <div style="position:relative;width:100%;height:140px;background:#0a0703;overflow:hidden;">
+                    ${photoBlock}${photoFallback}
+                    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
+                    <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
+                        <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;text-transform:uppercase;">✦ RANK PROMOTION</span>
+                    </div>
+                </div>
+                <div style="padding:14px 18px 18px;text-align:center;">
+                    <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${d.name || ''}</div>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+                        <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
+                        <span style="color:rgba(197,160,89,0.7);font-size:0.9rem;">→</span>
+                        <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span>
+                    </div>
+                    <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
+                </div>
+            </div>`;
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div></div>`;
+        } catch (_) {
+            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">✦ Rank Promotion</div><div class="chat-ts chat-ts-left">${timeStr}</div></div></div>`;
+        }
+    }
+
+    // TASK FEEDBACK CARD (comment card)
+    if (content.startsWith('TASK_FEEDBACK::')) {
+        try {
+            const data = JSON.parse(content.replace('TASK_FEEDBACK::', ''));
+            const { mediaUrl: fbMedia, mediaType: fbType, note: fbNote, taskId: fbTaskId, memberId: fbMemberId } = data;
+            const fbIsVideo = (fbType && (fbType === 'video' || fbType.startsWith('video/'))) || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
+            const fbSrc = fbMedia ? (fbIsVideo ? fbMedia : getOptimizedUrl(fbMedia, 600)) : null;
+            const mediaBlock = fbSrc
+                ? (fbIsVideo
+                    ? `<video src="${fbSrc}" preload="metadata" muted playsinline style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0"></video>`
+                    : `<img src="${fbSrc}" style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onerror="this.style.display='none'" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0">`)
+                : '';
+            return `
+                <div class="cb-row" style="justify-content:center;padding:8px 0;">
+                    <div style="max-width:85%;width:280px;border-radius:12px;overflow:hidden;background:#0a080a;border:1px solid rgba(197,160,89,0.4);box-shadow:0 6px 24px rgba(0,0,0,0.6);">
+                        ${mediaBlock}
+                        <div style="padding:9px 12px 11px;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">✦ Task Feedback</div>
+                            ${fbNote ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.82);line-height:1.4;">${fbNote}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch (_) {
+            return `<div class="cb-row cb-row-queen">${`<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`}<div class="cb-wrap-queen"><div class="cb-queen">📋 Task Feedback</div><div class="chat-ts chat-ts-left">${timeStr}</div></div></div>`;
+        }
+    }
+
     if (msg.type === 'photo') {
         content = `<img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" />`;
     } else if (msg.type === 'video') {
@@ -2284,8 +2421,7 @@ export function switchMobChatTab(tab: 'chat' | 'service') {
         if (svcPanel) svcPanel.style.display = 'none';
         if (chatBtn) chatBtn.classList.add('active');
         if (svcBtn) svcBtn.classList.remove('active');
-        const box = document.getElementById('mob_chatBox');
-        if (box) box.scrollTop = box.scrollHeight;
+        setTimeout(_scrollChat, 60);
     } else {
         if (chatPanel) chatPanel.style.display = 'none';
         if (svcPanel) svcPanel.style.display = 'flex';
@@ -2309,6 +2445,12 @@ export function openMobChatOverlay() {
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
     _setNavActive('');
     switchMobChatTab('chat');
+    // If no messages have loaded yet, trigger a load; otherwise just scroll
+    const content = document.getElementById('mob_chatContent');
+    const email = getState().memberId;
+    if (content && !content.children.length && email) {
+        loadChatHistory(email);
+    }
 
     // Shrink queen avatar button when keyboard opens
     const input = document.getElementById('mob_chatMsgInput');
@@ -2319,13 +2461,8 @@ export function openMobChatOverlay() {
         input.addEventListener('blur', () => queenBtn.classList.remove('mob-nav-queen-shrink'));
     }
 
-    // Wait for slide-up animation then force scroll to bottom
-    setTimeout(() => {
-        const box = document.getElementById('mob_chatBox');
-        if (box) box.scrollTop = box.scrollHeight;
-        const content = document.getElementById('mob_chatContent');
-        if (content) content.scrollTop = content.scrollHeight;
-    }, 380);
+    // Wait for slide-up animation then scroll to bottom
+    setTimeout(_scrollChat, 380);
 }
 
 export function closeMobChatOverlay() {
@@ -2651,6 +2788,39 @@ function _buildMobGlBubble(msg: any): string {
         <div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content || '').slice(0, 55).replace(/</g, '&lt;')}</div>
     </div>` : '';
 
+    // PROMOTION CARD — same card as desktop global chat
+    if (content.startsWith('PROMOTION_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
+            const initials = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo
+                ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                : '';
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="position:relative;width:100%;height:140px;background:#0a0703;overflow:hidden;">
+                            ${photoBlock}${photoFallback}
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
+                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div>
+                        </div>
+                        <div style="padding:14px 18px 18px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${d.name || ''}</div>
+                            <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank || '').toUpperCase()}</span>
+                                <span style="color:rgba(197,160,89,0.7);">→</span>
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank || '').toUpperCase()}</span>
+                            </div>
+                            <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch { /* fall through to plain text */ }
+    }
+
     const mediaHtml = msg.media_url
         ? (msg.media_type === 'video'
             ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;"></video>`
@@ -2702,7 +2872,7 @@ function _appendMobGlMessage(msg: any) {
     const el = document.createElement('div');
     el.innerHTML = _buildMobGlBubble(msg);
     container.appendChild(el.firstElementChild!);
-    container.scrollTop = container.scrollHeight;
+    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
 }
 
 function _renderMobGlTalk(msgs: any[]) {
@@ -2713,7 +2883,7 @@ function _renderMobGlTalk(msgs: any[]) {
         return;
     }
     container.innerHTML = msgs.map((m: any) => _buildMobGlBubble(m)).join('');
-    container.scrollTop = container.scrollHeight;
+    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
 }
 
 export async function sendMobGlMessage() {
@@ -3340,9 +3510,9 @@ export function renderProfileSidebar(u: any) {
     if (elSubName) elSubName.innerText = u.name || 'SLAVE';
 
     const elCurEmail = document.getElementById('subEmail');
-    if (elCurEmail) elCurEmail.innerText = u.member_id || '';
+    if (elCurEmail) elCurEmail.style.display = 'none';
     const elMobEmail = document.getElementById('mob_slaveEmail');
-    if (elMobEmail) elMobEmail.innerText = u.member_id || '';
+    if (elMobEmail) elMobEmail.style.display = 'none';
 
     const photoSrc = u.avatar_url || u.profile_picture_url || '';
     if (photoSrc) {
@@ -4273,7 +4443,11 @@ function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLE
     const card = document.createElement('div');
     card.className = 'altar-photo-card';
     if (dimmed) card.style.filter = 'grayscale(0.65)';
-    card.innerHTML = `${media}${meritBadge}<div class="altar-card-date">${dateStr}</div>`;
+    const taskText = (t.text || '').replace(/<[^>]+>/g, '');
+    const commentHTML = t.adminComment
+        ? `<div style="font-family:Orbitron;font-size:0.42rem;color:#c5a059;margin-top:4px;font-style:italic;">"${t.adminComment}"</div>`
+        : '';
+    card.innerHTML = `${media}${meritBadge}<div style="padding:8px 10px;"><div class="altar-card-date">${dateStr}</div>${taskText ? `<div style="font-family:Rajdhani;font-size:0.78rem;color:#888;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:3px;">${taskText}</div>` : ''}${commentHTML}</div>`;
     card.onclick = () => _openHistoryModal(list, idx, resolveUrl);
     return card;
 }
@@ -4544,4 +4718,84 @@ export function closeQkLightbox() {
     if (lb) lb.style.display = 'none';
     if (content) content.innerHTML = '';
     document.body.style.overflow = '';
+}
+
+// ─── PAYWALL ──────────────────────────────────────────────────────────────────
+
+export function _applyPaywall(paywall: any, memberId: string) {
+    const overlay = document.getElementById('paywallOverlay');
+    if (!overlay) return;
+    if (paywall?.active) {
+        const reasonEl = document.getElementById('paywallReason');
+        const amountEl = document.getElementById('paywallAmount');
+        const payBtn   = document.getElementById('paywallPayBtn');
+        if (reasonEl) reasonEl.textContent = paywall.reason || '';
+        if (amountEl) amountEl.textContent  = `€${Number(paywall.amount).toFixed(2)}`;
+        if (payBtn) {
+            payBtn.onclick = async () => {
+                payBtn.textContent = 'REDIRECTING...';
+                (payBtn as HTMLButtonElement).disabled = true;
+                try {
+                    const res = await fetch('/api/stripe/paywall-checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ memberId }),
+                    });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                    else throw new Error(data.error || 'Failed');
+                } catch (e: any) {
+                    payBtn.textContent = 'PAY NOW';
+                    (payBtn as HTMLButtonElement).disabled = false;
+                    alert('Payment error: ' + e.message);
+                }
+            };
+        }
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    } else {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+// ─── SILENCE ──────────────────────────────────────────────────────────────────
+
+export function _applySilence(active: boolean, reason: string = '') {
+    if (typeof window === 'undefined') return;
+
+    // 1. Update React state — triggers early return lock screen
+    const setter = (window as any)._setSilenceOverlay;
+    if (setter) setter(active, reason);
+
+    const OVERLAY_ID = '__silenceLock';
+    const STYLE_ID = '__silenceStyle';
+
+    if (active) {
+        // 2. Inject CSS that forcibly hides #MOBILE_APP and #DESKTOP_APP — overrides
+        //    profile-mobile.css "display:block !important" via later declaration + higher specificity
+        let styleEl = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = STYLE_ID;
+            document.head.appendChild(styleEl);
+        }
+        styleEl.textContent = '#MOBILE_APP{display:none!important;visibility:hidden!important}#DESKTOP_APP{display:none!important;visibility:hidden!important}';
+
+        // 3. Inject full-screen DOM overlay — z-index 2147483647 beats everything
+        if (!document.getElementById(OVERLAY_ID)) {
+            const overlay = document.createElement('div');
+            overlay.id = OVERLAY_ID;
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100dvh;background:rgba(8,2,2,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2147483647;padding:24px;box-sizing:border-box;font-family:Cinzel,serif;';
+            const safeReason = reason.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            overlay.innerHTML = `<div style="max-width:420px;width:100%;text-align:center;"><svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)" style="display:block;margin:0 auto 16px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg><div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(220,60,60,0.6);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px;">ACCESS REVOKED</div><div style="background:rgba(220,60,60,0.04);border:1px solid rgba(220,60,60,0.2);border-radius:14px;padding:28px 24px;"><div style="font-family:Orbitron,sans-serif;font-size:0.38rem;color:rgba(220,60,60,0.4);letter-spacing:3px;margin-bottom:12px;text-transform:uppercase;">Message from Queen Karin</div><div id="__silenceLockReason" style="font-size:1.05rem;color:#fff;line-height:1.6;letter-spacing:0.5px;">${safeReason}</div></div></div>`;
+            document.body.appendChild(overlay);
+        } else {
+            const el = document.getElementById('__silenceLockReason');
+            if (el) el.textContent = reason;
+        }
+    } else {
+        document.getElementById(OVERLAY_ID)?.remove();
+        document.getElementById(STYLE_ID)?.remove();
+    }
 }

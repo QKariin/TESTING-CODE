@@ -4694,6 +4694,7 @@ h3,
     display: flex;
     flex-direction: column;
     gap: 0;
+    overflow-anchor: none;
 }
 
 #adminChatBox .cb-row {

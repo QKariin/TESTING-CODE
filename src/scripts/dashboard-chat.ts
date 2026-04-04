@@ -18,7 +18,7 @@ let chatPollInterval: ReturnType<typeof setInterval> | null = null;
 let lastChatMsgId: string | null = null;
 let lastChatMsgTimestamp: string | null = null;
 let activeChatEmail: string | null = null;
-let currentSlaveReadAt: string | null = null;
+const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
 
 // ── Service / System message helpers ────────────────────────────────────────
 
@@ -97,19 +97,13 @@ export async function initDashboardChat(slaveEmail: string) {
     }
     lastChatMsgId = null;
     lastChatMsgTimestamp = null;
+    _renderedMsgIds.clear();
 
     const b = document.getElementById('adminChatBox');
     if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
 
     // 2. Load history
     await loadDashboardChatHistory(cleanEmail);
-
-    // 2b. Fetch slave's read timestamp so we can show SEEN on admin messages
-    try {
-        const r = await fetch(`/api/chat/mark-read?type=slave&email=${encodeURIComponent(cleanEmail)}`);
-        const d = await r.json();
-        currentSlaveReadAt = d.slaveReadAt || null;
-    } catch {}
 
     // 3. Realtime subscription on shared client
     chatChannel = _supabase
@@ -138,7 +132,10 @@ async function pollNewMessages(email: string) {
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: lastChatMsgTimestamp }) });
         const data = await res.json();
         if (!data.success) return;
-        const newMsgs = (data.messages || []).filter((m: any) => m.id !== lastChatMsgId);
+        const newMsgs = (data.messages || []).filter((m: any) => {
+            const id = m.id ? String(m.id) : null;
+            return id && !_renderedMsgIds.has(id);
+        });
         newMsgs.forEach((m: any) => appendChatMessage(m));
     } catch (_) {}
 }
@@ -179,11 +176,15 @@ async function loadDashboardChatHistory(email: string) {
             // Update ticker with most recent system message
             if (sysMsgs.length > 0) updateSystemTicker(sysMsgs[sysMsgs.length - 1]);
 
+            // Populate dedup set from history
+            chatMsgs.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
+
             // Populate chat
             const html = chatMsgs.map((m: any) => renderToHtml(m)).join('');
             const b = document.getElementById('adminChatBox');
             if (b) {
                 b.innerHTML = html + '<div id="chat-anchor" style="height:1px;"></div>';
+                _attachImgScrollHandlers(b);
                 forceBottom();
             }
         }
@@ -194,7 +195,9 @@ async function loadDashboardChatHistory(email: string) {
 
 function appendChatMessage(msg: any) {
     // Prevent duplicates from instant-append + realtime sync
-    if (msg.id && msg.id === lastChatMsgId) return;
+    const msgId = msg.id ? String(msg.id) : null;
+    if (msgId && _renderedMsgIds.has(msgId)) return;
+    if (msgId) _renderedMsgIds.add(msgId);
     lastChatMsgId = msg.id;
     if (msg.created_at) lastChatMsgTimestamp = msg.created_at;
 
@@ -214,6 +217,7 @@ function appendChatMessage(msg: any) {
     } else {
         b.insertAdjacentHTML('beforeend', html + '<div id="chat-anchor" style="height:1px;"></div>');
     }
+    _attachImgScrollHandlers(b);
     forceBottom();
 }
 
@@ -330,21 +334,11 @@ function renderToHtml(m: any) {
 
     // Admin (isMe) → RIGHT, no avatar
     if (isMe) {
-        // Determine seen status
-        let seenHtml = '';
-        if (currentSlaveReadAt && m.created_at) {
-            const msgTime = new Date(m.created_at).getTime();
-            const readTime = new Date(currentSlaveReadAt).getTime();
-            if (msgTime <= readTime) {
-                seenHtml = `<div style="font-size:0.62rem;color:rgba(197,160,89,0.45);text-align:right;margin-top:1px;letter-spacing:1px;">SEEN</div>`;
-            }
-        }
         return `
             <div class="cb-row cb-row-me">
                 <div class="cb-wrap-me">
                     ${bubble}
                     <div class="chat-ts chat-ts-right">${timeStr}</div>
-                    ${seenHtml}
                 </div>
             </div>`;
     } else {
@@ -361,8 +355,24 @@ function renderToHtml(m: any) {
 }
 
 function forceBottom() {
-    const b = document.getElementById('adminChatBox');
-    if (b) b.scrollTop = b.scrollHeight;
+    const scroll = () => {
+        const b = document.getElementById('adminChatBox');
+        if (b) b.scrollTop = b.scrollHeight + 9999;
+    };
+    scroll();
+    setTimeout(scroll, 80);
+    setTimeout(scroll, 350);
+    setTimeout(scroll, 700);
+}
+
+function _attachImgScrollHandlers(container: HTMLElement) {
+    container.querySelectorAll('img').forEach(img => {
+        if (!(img as any)._dashScrollBound) {
+            (img as any)._dashScrollBound = true;
+            img.addEventListener('load', forceBottom, { once: true });
+            img.addEventListener('error', forceBottom, { once: true });
+        }
+    });
 }
 
 export async function sendMsg() {

@@ -623,6 +623,17 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
     const [sendError, setSendError] = useState('');
     const [loadingMsgs, setLoadingMsgs] = useState(true);
     const bottomRef = useRef<HTMLDivElement>(null);
+    const scrollBoxRef = useRef<HTMLDivElement>(null);
+
+    const forceBottom = useCallback(() => {
+        const scroll = () => {
+            if (scrollBoxRef.current) scrollBoxRef.current.scrollTop = scrollBoxRef.current.scrollHeight + 9999;
+        };
+        scroll();
+        setTimeout(scroll, 80);
+        setTimeout(scroll, 350);
+        setTimeout(scroll, 700);
+    }, []);
 
     // Same as desktop: GET /api/chat/history?email=memberId&requester=adminEmail
     const fetchMessages = useCallback(async () => {
@@ -645,8 +656,8 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
     }, [fetchMessages]);
 
     useEffect(() => {
-        if (!loadingMsgs) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, loadingMsgs]);
+        if (!loadingMsgs) forceBottom();
+    }, [messages, loadingMsgs, forceBottom]);
 
     // Same as desktop: POST /api/chat/send with senderEmail + conversationId + content
     const sendMessage = async () => {
@@ -705,7 +716,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
 
             {/* ── CHAT TAB ── */}
             {chatTab === 'chat' && (
-                <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any }}>
+                <div ref={scrollBoxRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any, overflowAnchor: 'none' as any }}>
                     {loadingMsgs && (
                         <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#2a2a2a', letterSpacing: '2px' }}>LOADING...</div>
                     )}

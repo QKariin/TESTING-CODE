@@ -18,6 +18,7 @@ let chatPollInterval: ReturnType<typeof setInterval> | null = null;
 let lastChatMsgId: string | null = null;
 let lastChatMsgTimestamp: string | null = null;
 let activeChatEmail: string | null = null;
+const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
 
 // ── Service / System message helpers ────────────────────────────────────────
 
@@ -96,6 +97,7 @@ export async function initDashboardChat(slaveEmail: string) {
     }
     lastChatMsgId = null;
     lastChatMsgTimestamp = null;
+    _renderedMsgIds.clear();
 
     const b = document.getElementById('adminChatBox');
     if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
@@ -130,7 +132,10 @@ async function pollNewMessages(email: string) {
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: lastChatMsgTimestamp }) });
         const data = await res.json();
         if (!data.success) return;
-        const newMsgs = (data.messages || []).filter((m: any) => m.id !== lastChatMsgId);
+        const newMsgs = (data.messages || []).filter((m: any) => {
+            const id = m.id ? String(m.id) : null;
+            return id && !_renderedMsgIds.has(id);
+        });
         newMsgs.forEach((m: any) => appendChatMessage(m));
     } catch (_) {}
 }
@@ -171,11 +176,15 @@ async function loadDashboardChatHistory(email: string) {
             // Update ticker with most recent system message
             if (sysMsgs.length > 0) updateSystemTicker(sysMsgs[sysMsgs.length - 1]);
 
+            // Populate dedup set from history
+            chatMsgs.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
+
             // Populate chat
             const html = chatMsgs.map((m: any) => renderToHtml(m)).join('');
             const b = document.getElementById('adminChatBox');
             if (b) {
                 b.innerHTML = html + '<div id="chat-anchor" style="height:1px;"></div>';
+                _attachImgScrollHandlers(b);
                 forceBottom();
             }
         }
@@ -186,7 +195,9 @@ async function loadDashboardChatHistory(email: string) {
 
 function appendChatMessage(msg: any) {
     // Prevent duplicates from instant-append + realtime sync
-    if (msg.id && msg.id === lastChatMsgId) return;
+    const msgId = msg.id ? String(msg.id) : null;
+    if (msgId && _renderedMsgIds.has(msgId)) return;
+    if (msgId) _renderedMsgIds.add(msgId);
     lastChatMsgId = msg.id;
     if (msg.created_at) lastChatMsgTimestamp = msg.created_at;
 
@@ -206,6 +217,7 @@ function appendChatMessage(msg: any) {
     } else {
         b.insertAdjacentHTML('beforeend', html + '<div id="chat-anchor" style="height:1px;"></div>');
     }
+    _attachImgScrollHandlers(b);
     forceBottom();
 }
 
@@ -241,13 +253,46 @@ function renderToHtml(m: any) {
             </div>`;
     }
 
+    // ── Promotion Card ── centered system announcement
+    if (content.startsWith('PROMOTION_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
+            const photoBlock = d.photo
+                ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'">`
+                : '';
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="width:260px;max-width:72vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="position:relative;width:100%;height:150px;background:#0a0703;overflow:hidden;">
+                            ${photoBlock}
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
+                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">✦ RANK PROMOTION</span>
+                            </div>
+                        </div>
+                        <div style="padding:14px 18px 18px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${purifier.sanitize(d.name||'')}</div>
+                            <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
+                                <span style="color:rgba(197,160,89,0.7);font-size:0.9rem;">→</span>
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span>
+                            </div>
+                            <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch (e) { /* fall through */ }
+    }
+
     // ── Task Feedback Card ── centered, clickable to open history modal
     if (content.startsWith('TASK_FEEDBACK::')) {
         try {
             const data = JSON.parse(content.replace('TASK_FEEDBACK::', ''));
             const { mediaUrl: fbMedia, mediaType: fbType, note: fbNote, taskId: fbTaskId, memberId: fbMemberId } = data;
-            const fbSrc = fbMedia ? getOptimizedUrl(fbMedia, 600) : null;
-            const fbIsVideo = fbType === 'video' || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
+            const fbIsVideo = (fbType && (fbType === 'video' || fbType.startsWith('video/'))) || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
+            // Videos: use raw URL; images: use optimized URL
+            const fbSrc = fbMedia ? (fbIsVideo ? fbMedia : getOptimizedUrl(fbMedia, 600)) : null;
             const mediaBlock = fbSrc
                 ? (fbIsVideo
                     ? `<video src="${fbSrc}" preload="metadata" muted playsinline style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0"></video>`
@@ -310,8 +355,24 @@ function renderToHtml(m: any) {
 }
 
 function forceBottom() {
-    const b = document.getElementById('adminChatBox');
-    if (b) b.scrollTop = b.scrollHeight;
+    const scroll = () => {
+        const b = document.getElementById('adminChatBox');
+        if (b) b.scrollTop = b.scrollHeight + 9999;
+    };
+    scroll();
+    setTimeout(scroll, 80);
+    setTimeout(scroll, 350);
+    setTimeout(scroll, 700);
+}
+
+function _attachImgScrollHandlers(container: HTMLElement) {
+    container.querySelectorAll('img').forEach(img => {
+        if (!(img as any)._dashScrollBound) {
+            (img as any)._dashScrollBound = true;
+            img.addEventListener('load', forceBottom, { once: true });
+            img.addEventListener('error', forceBottom, { once: true });
+        }
+    });
 }
 
 export async function sendMsg() {
