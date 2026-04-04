@@ -164,19 +164,15 @@ export async function updateDetail(u: any) {
                         </div>
                     </div>`;
             } else if (r.type === 'check') {
+                // Identity and photo are visually obvious — skip them
+                if (r.label === 'IDENTITY' || r.label === 'PHOTO') return;
+                // Kinks/limits have their own section below — skip here too
+                if (r.label === 'KINKS' || r.label === 'LIMITS') return;
+
                 const isDone = r.status === 'VERIFIED';
                 const svgIcon = isDone
-                    ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-                    : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
-
-                let extraContent = '';
-                if (r.label === 'LIMITS' && u.limits) {
-                    extraContent = `<div style="color:#666; font-size:0.58rem; font-family:'Orbitron'; margin-top:3px; padding:6px 8px; background:#0a0a0a; border-left:2px solid #333; line-height:1.5;">${u.limits}</div>`;
-                } else if (r.label === 'KINKS' && u.kinks) {
-                    extraContent = `<div style="color:#666; font-size:0.58rem; font-family:'Orbitron'; margin-top:3px; padding:6px 8px; background:#0a0a0a; border-left:2px solid #333; line-height:1.5;">${u.kinks}</div>`;
-                } else if (r.label === 'ROUTINE' && u.routine) {
-                    extraContent = `<div style="color:#666; font-size:0.58rem; font-family:'Orbitron'; margin-top:3px; padding:6px 8px; background:#0a0a0a; border-left:2px solid #333; line-height:1.5;">${u.routine}</div>`;
-                }
+                    ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+                    : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 
                 html += `
                     <div style="margin-bottom:8px;">
@@ -184,10 +180,35 @@ export async function updateDetail(u: any) {
                             <span style="color:#888;">${r.label}</span>
                             ${svgIcon}
                         </div>
-                        ${extraContent}
                     </div>`;
             }
         });
+
+        // Routine row with today's proof
+        const routineCheck = report.requirements.find((r: any) => r.type === 'check' && r.label === 'ROUTINE');
+        const isDoneToday = u.routineDoneToday === true;
+        const routineName = (u.routine || 'NONE').toUpperCase();
+        const todayStr = new Date().toDateString();
+        const history: any[] = u.routineHistory || u.routinehistory || [];
+        const todayEntry = history.slice().reverse().find((h: any) =>
+            h.isRoutine && h.proofUrl && new Date(h.timestamp).toDateString() === todayStr
+        );
+        const routineSvg = isDoneToday
+            ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+            : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+        const proofHtml = todayEntry
+            ? (todayEntry.proofUrl?.match(/\.(mp4|mov|webm)/i)
+                ? `<video src="${todayEntry.proofUrl}" controls style="width:100%;border-radius:4px;border:1px solid #333;max-height:200px;margin-top:6px;"></video>`
+                : `<img src="${todayEntry.proofUrl}" style="width:100%;border-radius:4px;border:1px solid #333;cursor:pointer;max-height:260px;object-fit:cover;margin-top:6px;" onclick="window.open('${todayEntry.proofUrl}','_blank')" onerror="this.style.display='none'">`)
+            : '';
+        html += `
+            <div style="margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Orbitron';">
+                    <span style="color:#888;">ROUTINE — ${routineName}</span>
+                    ${routineSvg}
+                </div>
+                ${proofHtml}
+            </div>`;
 
         // Always show force-promote button when not at max
         if (!report.isMax) {
@@ -207,26 +228,6 @@ export async function updateDetail(u: any) {
     const rEl = document.getElementById('dMirrorRoutine');
     if (rEl) rEl.style.color = isRoutineDone ? '#00ff00' : '#666';
 
-    // Routine today proof image
-    const routineProofEl = document.getElementById('admin_RoutineProof');
-    if (routineProofEl) {
-        const today = new Date().toDateString();
-        const history: any[] = u.routineHistory || u.routinehistory || [];
-        const todayEntry = history.slice().reverse().find((h: any) =>
-            h.isRoutine && h.proofUrl && new Date(h.timestamp).toDateString() === today
-        );
-        if (todayEntry) {
-            const isVideo = todayEntry.proofType?.startsWith('video/') || todayEntry.proofUrl?.match(/\.(mp4|mov|webm)/i);
-            routineProofEl.innerHTML = `
-                <div style="font-size:0.55rem; color:#666; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:8px;">TODAY'S ROUTINE PROOF</div>
-                ${isVideo
-                    ? `<video src="${todayEntry.proofUrl}" controls style="width:100%; border-radius:4px; border:1px solid #333; max-height:200px;"></video>`
-                    : `<img src="${todayEntry.proofUrl}" style="width:100%; border-radius:4px; border:1px solid #333; cursor:pointer; max-height:260px; object-fit:cover;" onclick="window.open('${todayEntry.proofUrl}','_blank')" onerror="this.style.display='none'">`
-                }`;
-        } else {
-            routineProofEl.innerHTML = '';
-        }
-    }
 
     // Kinks & limits
     const kinksLimitsEl = document.getElementById('admin_KinksLimits');
