@@ -1559,25 +1559,18 @@ let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
 
-function _scrollChatEl(b: HTMLElement) {
-    // Use offsetHeight === 0 check: works reliably even inside position:fixed containers
-    // (offsetParent check is unreliable in fixed containers on iOS Safari)
-    if (b.offsetHeight === 0) return;
-    b.scrollTop = b.scrollHeight + 9999;
-}
 function _scrollChat() {
     ['chatBox', 'mob_chatBox'].forEach(id => {
         const b = document.getElementById(id);
-        if (b) _scrollChatEl(b);
+        if (!b) return;
+        b.scrollTop = b.scrollHeight + 9999;
     });
 }
 function _scrollChatDelayed() {
-    // Immediate + double-RAF (ensures post-layout) + safety timeouts
-    _scrollChat();
     requestAnimationFrame(() => requestAnimationFrame(_scrollChat));
-    setTimeout(_scrollChat, 150);
-    setTimeout(_scrollChat, 500);
-    setTimeout(_scrollChat, 1000);
+    setTimeout(_scrollChat, 100);
+    setTimeout(_scrollChat, 400);
+    setTimeout(_scrollChat, 900);
 }
 // After setting innerHTML, attach load handlers so images re-trigger scroll as they arrive
 function _attachImgScrollHandlers() {
@@ -2444,7 +2437,7 @@ export function openMobChatOverlay() {
     if (!el) return;
 
     // Make element display:flex — it starts at translateY(100%) so it's off-screen.
-    // User cannot see the scroll-reset that happens on display:none → flex.
+    // Browser resets scrollTop to 0 on display:none→flex, so we scroll AFTER animation.
     el.style.display = 'flex';
 
     // Clear message notification
@@ -2466,17 +2459,22 @@ export function openMobChatOverlay() {
         loadChatHistory(email);
     }
 
-    // Aggressive scroll: fire at multiple points to catch layout settling + image loads
-    const scrollNow = () => {
+    // Core scroll helper
+    const scrollToBottom = () => {
         const b = document.getElementById('mob_chatBox');
-        if (b && b.offsetHeight > 0) b.scrollTop = b.scrollHeight + 9999;
+        if (!b) return;
+        b.scrollTop = b.scrollHeight + 9999;
+        // Backup: scrollIntoView on last message (more reliable on iOS Safari)
+        const last = document.getElementById('mob_chatContent')?.lastElementChild as HTMLElement | null;
+        if (last) last.scrollIntoView(false);
     };
-    // Double-RAF fires after first browser paint (layout is done)
-    requestAnimationFrame(() => requestAnimationFrame(scrollNow));
-    setTimeout(scrollNow, 80);   // early in slide-up animation
-    setTimeout(scrollNow, 200);  // mid animation
-    setTimeout(scrollNow, 400);  // animation done
-    setTimeout(scrollNow, 800);  // images loaded
+
+    // PRIMARY: fire exactly when the CSS transition finishes (most reliable on iOS)
+    el.addEventListener('transitionend', scrollToBottom, { once: true });
+
+    // FALLBACKS: in case transitionend doesn't fire (e.g. transition disabled, reduced motion)
+    setTimeout(scrollToBottom, 370);  // ~transition duration + margin
+    setTimeout(scrollToBottom, 700);  // catch image loads after animation
 
     // Shrink queen avatar button when keyboard opens
     const input = document.getElementById('mob_chatMsgInput');
