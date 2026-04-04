@@ -984,13 +984,7 @@ export default function DashboardPage() {
 
                                 <div id="admin_KinksLimits" style={{ marginBottom: '30px' }}></div>
 
-                                <div className="kneel-section" style={{ marginBottom: '20px' }}>
-                                    <div className="kneel-bar-graphic">
-                                        <div className="graphic-fill" id="kneelFill" style={{ width: '0%' }}></div>
-                                        <span className="graphic-text">KNEEL TIME: <span id="dMirrorKneel">0h</span></span>
-                                    </div>
-                                    <button onClick={() => (window as any).adjustKneel('add')} style={{ width: '100%', marginTop: '10px', background: 'rgba(197,160,89,0.1)', border: '1px solid #c5a059', color: '#c5a059', padding: '8px', cursor: 'pointer', fontFamily: 'Cinzel' }}>LOG KNEELING HOUR</button>
-                                </div>
+                                <div id="admin_KneelSection" style={{ marginBottom: '20px' }}></div>
 
                                 <div className="queue-section" style={{ marginBottom: '30px' }}>
                                     <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: '#888', letterSpacing: '2px', textAlign: 'center', marginBottom: '15px' }}>DIRECTIVE QUEUE</div>

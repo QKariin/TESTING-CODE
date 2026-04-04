@@ -263,6 +263,7 @@ export async function updateDetail(u: any) {
 
     setText('dMirrorSlaveSince', u.joinedDate ? new Date(u.joinedDate).toLocaleDateString() : "--/--/--");
 
+    renderKneelSection(u);
     renderTelemetry(u);
     updateReviewQueue(u);
     updateActiveTask(u);
@@ -275,6 +276,67 @@ export async function updateDetail(u: any) {
             silenced: u.silence === true,
         });
     }
+}
+
+function renderKneelSection(u: any) {
+    const el = document.getElementById('admin_KneelSection');
+    if (!el) return;
+
+    const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+    const lastWorshipMs = u.lastWorship ? new Date(u.lastWorship).getTime() : 0;
+    const now = Date.now();
+    const diffMs = now - lastWorshipMs;
+    const isLocked = lastWorshipMs > 0 && diffMs < COOLDOWN_MS;
+    const minLeft = isLocked ? Math.ceil((COOLDOWN_MS - diffMs) / 60000) : 0;
+
+    const todayCount = parseInt(u['today kneeling'] || u.todayKneeling || '0', 10);
+    const GOAL = 8;
+    const MAX = 24;
+    const isOverGoal = todayCount >= GOAL;
+    const display = isOverGoal ? `${todayCount} / ${MAX}` : `${todayCount} / ${GOAL}`;
+    const pct = Math.min((todayCount / (isOverGoal ? MAX : GOAL)) * 100, 100);
+    const barColor = isOverGoal ? 'linear-gradient(90deg,#c5a059,#f0d080)' : '#c5a059';
+
+    // Build hour dots from kneelHistory timestamps
+    const rawHistory = u.kneelHistory || u.kneel_history;
+    const histArr: string[] = Array.isArray(rawHistory) ? rawHistory : [];
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    const kneelHours = new Set(
+        histArr
+            .filter(ts => { try { return new Date(ts).toLocaleDateString('en-CA') === todayStr; } catch { return false; } })
+            .map(ts => { try { return new Date(ts).getHours(); } catch { return -1; } })
+            .filter(h => h >= 0)
+    );
+    const currentHour = new Date().getHours();
+    let dotsHtml = '';
+    for (let h = 0; h < 24; h++) {
+        const lit = kneelHours.has(h);
+        const dim = !lit && h < currentHour;
+        const bg = lit ? '#c5a059' : dim ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)';
+        const shadow = lit ? '0 0 6px rgba(197,160,89,0.6)' : 'none';
+        const border = lit ? '1px solid #f0d080' : dim ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.06)';
+        dotsHtml += `<div title="${h}:00" style="height:6px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};transition:all 0.3s;"></div>`;
+    }
+
+    const statusColor = isLocked ? '#ff6644' : '#00cc66';
+    const statusText = isLocked ? `🔒 LOCKED — ${minLeft}m` : '✓ AVAILABLE';
+
+    el.innerHTML = `
+        <div style="background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.12);border-radius:8px;padding:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-family:'Cinzel';font-size:0.65rem;color:#888;letter-spacing:2px;">KNEELING</span>
+                <span style="font-family:'Orbitron';font-size:0.5rem;color:${statusColor};letter-spacing:1px;">${statusText}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.55rem;font-family:'Orbitron';color:#666;margin-bottom:4px;">
+                <span>TODAY</span><span style="color:${isOverGoal ? '#c5a059' : '#888'}">${display}</span>
+            </div>
+            <div style="width:100%;height:6px;background:#111;border:1px solid #222;border-radius:3px;overflow:hidden;margin-bottom:10px;">
+                <div style="width:${pct}%;height:100%;background:${barColor};transition:width 0.5s;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;">
+                ${dotsHtml}
+            </div>
+        </div>`;
 }
 
 function renderTelemetry(u: any) {
