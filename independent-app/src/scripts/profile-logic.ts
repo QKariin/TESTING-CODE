@@ -1,6 +1,6 @@
 import { getState, setState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
-import { getHierarchyReport, rankMeetsRequirement } from '../lib/hierarchyRules';
+import { getHierarchyReport } from '../lib/hierarchyRules';
 import { uploadToSupabase, getVideoDuration, isVideo } from './mediaSupabase';
 import { getOptimizedUrl } from './media';
 
@@ -587,7 +587,7 @@ if (typeof window !== 'undefined') {
                     wishlist_spent: (Number(raw?.parameters?.wishlist_spent) || 0) + amount,
                     last_tribute: { at: new Date().toISOString(), title, amount }
                 };
-                const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + amount };
+                const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + (amount ?? 0) };
                 setState({ wallet: data.newWallet, score: data.newScore, raw: updatedRaw });
                 updateWalletDisplay();
                 renderProfileSidebar(updatedRaw);
@@ -655,7 +655,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
                 wishlist_spent: (Number(raw?.parameters?.wishlist_spent) || 0) + cost,
                 last_tribute: { at: new Date().toISOString(), title, amount: cost }
             };
-            const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + cost };
+            const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + (cost ?? 0) };
             setState({ wallet: data.newWallet, score: data.newScore, raw: updatedRaw });
             updateWalletDisplay();
             renderProfileSidebar(updatedRaw);
@@ -1552,13 +1552,10 @@ const getChatSupabase = () => {
 };
 
 let _chatChannel: any = null;
-let _tasksChannel: any = null;
-let _profileStatsChannel: any = null;
 let _chatPollInterval: ReturnType<typeof setInterval> | null = null;
-let _walletPollInterval: ReturnType<typeof setInterval> | null = null;
+let _silenceCheckInterval: ReturnType<typeof setInterval> | null = null;
 let _lastChatMsgId: string | null = null;
 let _lastChatMsgTimestamp: string | null = null;
-let _seenMsgIds: Set<string> = new Set();
 let chatSubscribed = false;
 
 export async function initChatSystem() {
@@ -1588,11 +1585,26 @@ export async function initChatSystem() {
         setState({ memberId: email });
     }
 
-    if (chatSubscribed) return;
-    chatSubscribed = true;
+    // Start silence polling — runs every 3s, uses supabaseAdmin endpoint (no auth dependency)
+    if (_silenceCheckInterval) clearInterval(_silenceCheckInterval);
+    _silenceCheckInterval = setInterval(async () => {
+        try {
+            const r = await fetch('/api/silence-check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: email }),
+            });
+            if (!r.ok) return;
+            const d = await r.json();
+            _applySilence(d.silence === true, d.reason || '');
+        } catch {}
+    }, 3000);
 
-    // 1. Load history (same as dashboard's loadDashboardChatHistory)
+    // Always reload history so fresh messages show on every init
     await loadChatHistory(email);
+
+    if (chatSubscribed) return; // Realtime channels already set up — don't duplicate
+    chatSubscribed = true;
 
     // 2. Realtime subscription on shared client (same as dashboard line 107-120)
     if (_chatChannel) {
@@ -1633,8 +1645,7 @@ export async function initChatSystem() {
                 }
             }
 
-            if (msg.id && _seenMsgIds.has(msg.id)) return; // dedup
-            if (msg.id) _seenMsgIds.add(msg.id);
+            if (msg.id && msg.id === _lastChatMsgId) return; // dedup
             _lastChatMsgId = msg.id;
             if (msg.created_at) _lastChatMsgTimestamp = msg.created_at;
 
@@ -1651,15 +1662,13 @@ export async function initChatSystem() {
     _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 4000);
 
     // 4. Supabase realtime for tasks + profile stats (keep existing logic)
-    if (_tasksChannel) { getChatSupabase().removeChannel(_tasksChannel); _tasksChannel = null; }
-    _tasksChannel = getChatSupabase()
+    getChatSupabase()
         .channel('tasks_updates_' + email)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks', filter: `member_id=eq.${email}` },
             () => { updateRoutineWidget(); refreshTaskGallery(email!); })
         .subscribe();
 
-    if (_profileStatsChannel) { getChatSupabase().removeChannel(_profileStatsChannel); _profileStatsChannel = null; }
-    _profileStatsChannel = getChatSupabase()
+    getChatSupabase()
         .channel('profile_stats_' + email)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `member_id=eq.${email}` },
             (payload: any) => {
@@ -1669,15 +1678,15 @@ export async function initChatSystem() {
                     setState({ wallet: fresh.wallet ?? getState().wallet, score: fresh.score ?? getState().score });
                     updateWalletDisplay();
                 }
+                // Paywall / silence activated or deactivated in realtime
                 _applyPaywall(fresh.parameters?.paywall ?? null, fresh.member_id || email);
                 _applySilence(fresh.silence === true, fresh.parameters?.silence_reason || '');
             })
         .subscribe();
 
     // 5. Wallet/score polling fallback every 15s
-    if (_walletPollInterval) clearInterval(_walletPollInterval);
     const walletEmail = email;
-    _walletPollInterval = setInterval(async () => {
+    setInterval(async () => {
         try {
             const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: walletEmail }) });
             const data = await res.json();
@@ -1701,10 +1710,9 @@ async function _pollNewChatMessages(email: string) {
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: _lastChatMsgTimestamp }) });
         const data = await res.json();
         if (!data.success) return;
-        const newMsgs = (data.messages || []).filter((m: any) => !m.id || !_seenMsgIds.has(m.id));
+        const newMsgs = (data.messages || []).filter((m: any) => m.id !== _lastChatMsgId);
         newMsgs.forEach((m: any) => {
-            if (m.id && _seenMsgIds.has(m.id)) return;
-            if (m.id) _seenMsgIds.add(m.id);
+            if (_lastChatMsgId && m.id === _lastChatMsgId) return;
             _lastChatMsgId = m.id;
             if (m.created_at) _lastChatMsgTimestamp = m.created_at;
             if (isSystemMessage(m)) {
@@ -1823,11 +1831,18 @@ export async function loadChatHistory(email: string) {
 
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) {
-                    el.innerHTML = html;
-                    el.scrollTop = el.scrollHeight;
-                }
+                if (el) el.innerHTML = html;
             });
+            // Scroll after render + after images load
+            const scrollToBottom = () => {
+                ['chatBox', 'mob_chatBox'].forEach(id => {
+                    const b = document.getElementById(id);
+                    if (b) b.scrollTop = b.scrollHeight;
+                });
+            };
+            scrollToBottom();
+            setTimeout(scrollToBottom, 80);
+            setTimeout(scrollToBottom, 350);
         }
     } catch (err) {
         console.error("Failed to load chat history:", err);
@@ -2391,6 +2406,9 @@ export function openMobChatOverlay() {
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
     _setNavActive('');
     switchMobChatTab('chat');
+    // Reload history every time the chat opens to ensure latest messages
+    const email = getState().memberId;
+    if (email) loadChatHistory(email);
 
     // Shrink queen avatar button when keyboard opens
     const input = document.getElementById('mob_chatMsgInput');
@@ -2583,7 +2601,7 @@ export function openMobGlobal() {
     el.style.display = 'flex';
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
     _setNavActive('global');
-    _switchMobGlTab('talk');
+    _switchMobGlTab('rank');
 }
 
 export function closeMobGlobal() {
@@ -2676,10 +2694,6 @@ async function _loadMobGlLeaderboard(period: string) {
 
 async function _loadMobGlTalk() {
     if (_mobGlLoaded['talk']) return;
-    // Clear unread badge
-    const badge = document.getElementById('globalNavBadge');
-    if (badge) badge.style.display = 'none';
-    localStorage.setItem('globalLastRead', new Date().toISOString());
     const container = document.getElementById('mobGlTalkFeed');
     if (!container) return;
     container.innerHTML = `<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
@@ -3024,24 +3038,14 @@ export function showLobbyAction(type: string) {
         openTextFieldModal('routine', 'ROUTINE', raw?.routine || '');
         return;
     }
-    if (type === 'kinks' || type === 'limits') {
-        const currentRank = raw?.hierarchy || 'Hall Boy';
-        if (!rankMeetsRequirement(currentRank, 'Footman')) {
-            // Show locked toast
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#1a1207;border:1px solid rgba(197,160,89,0.4);color:#c5a059;font-family:Orbitron;font-size:0.52rem;letter-spacing:2px;padding:12px 20px;border-radius:8px;z-index:9999;text-align:center;';
-            toast.textContent = '🔒 UNLOCKS AT FOOTMAN RANK';
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2500);
-            return;
-        }
-        if (type === 'kinks') {
-            const existing = Array.isArray(params.kinks) ? params.kinks.join(', ') : (params.kinks || raw?.kinks || '');
-            openTextFieldModal('kinks', 'KINKS', existing);
-        } else {
-            const existing = Array.isArray(params.limits) ? params.limits.join(', ') : (params.limits || raw?.limits || '');
-            openTextFieldModal('limits', 'LIMITS', existing);
-        }
+    if (type === 'kinks') {
+        const existing = Array.isArray(params.kinks) ? params.kinks.join(', ') : (params.kinks || raw?.kinks || '');
+        openTextFieldModal('kinks', 'KINKS', existing);
+        return;
+    }
+    if (type === 'limits') {
+        const existing = Array.isArray(params.limits) ? params.limits.join(', ') : (params.limits || raw?.limits || '');
+        openTextFieldModal('limits', 'LIMITS', existing);
         return;
     }
 }
@@ -3467,8 +3471,6 @@ export function renderProfileSidebar(u: any) {
 
     const elSubName = document.getElementById('subName');
     if (elSubName) elSubName.innerText = u.name || 'SLAVE';
-    const elDeskRankHalo = document.getElementById('desk_rankHalo');
-    if (elDeskRankHalo) elDeskRankHalo.innerText = (u.hierarchy || u.rank || 'INITIATE').toUpperCase();
 
     const elCurEmail = document.getElementById('subEmail');
     if (elCurEmail) elCurEmail.style.display = 'none';
@@ -3483,8 +3485,6 @@ export function renderProfileSidebar(u: any) {
         if (elMobUserPic) elMobUserPic.src = photoSrc;
         const elMobHaloPic = document.getElementById('mob_profilePic') as HTMLImageElement;
         if (elMobHaloPic) elMobHaloPic.src = photoSrc;
-        const elHaloPhoto = document.getElementById('mobHaloPhoto') as HTMLImageElement;
-        if (elHaloPhoto) elHaloPhoto.src = photoSrc;
     }
 
     const elCurBen = document.getElementById('desk_CurrentBenefits');
@@ -3511,10 +3511,9 @@ export function renderProfileSidebar(u: any) {
     if (toggle) {
         toggle.onclick = () => {
             const list = document.getElementById('desk_CurrentBenefits');
-            const arrow = document.getElementById('desk_BenefitsArrow');
             if (list) {
                 const isHidden = list.classList.toggle('hidden');
-                if (arrow) arrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+                toggle.querySelector('span:last-child')!.textContent = isHidden ? '▼' : '▲';
             }
         };
     }
@@ -4726,10 +4725,40 @@ export function _applyPaywall(paywall: any, memberId: string) {
 // ─── SILENCE ──────────────────────────────────────────────────────────────────
 
 export function _applySilence(active: boolean, reason: string = '') {
-    // Drive via React state setter — survives all re-renders on both desktop and mobile
-    if (typeof window !== 'undefined' && (window as any)._setSilenceOverlay) {
-        (window as any)._setSilenceOverlay(active, reason);
-        if (active) document.body.style.overflow = 'hidden';
-        else document.body.style.overflow = '';
+    if (typeof window === 'undefined') return;
+
+    // 1. Update React state — triggers early return lock screen
+    const setter = (window as any)._setSilenceOverlay;
+    if (setter) setter(active, reason);
+
+    const OVERLAY_ID = '__silenceLock';
+    const STYLE_ID = '__silenceStyle';
+
+    if (active) {
+        // 2. Inject CSS that forcibly hides #MOBILE_APP and #DESKTOP_APP — overrides
+        //    profile-mobile.css "display:block !important" via later declaration + higher specificity
+        let styleEl = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = STYLE_ID;
+            document.head.appendChild(styleEl);
+        }
+        styleEl.textContent = '#MOBILE_APP{display:none!important;visibility:hidden!important}#DESKTOP_APP{display:none!important;visibility:hidden!important}';
+
+        // 3. Inject full-screen DOM overlay — z-index 2147483647 beats everything
+        if (!document.getElementById(OVERLAY_ID)) {
+            const overlay = document.createElement('div');
+            overlay.id = OVERLAY_ID;
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100dvh;background:rgba(8,2,2,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2147483647;padding:24px;box-sizing:border-box;font-family:Cinzel,serif;';
+            const safeReason = reason.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            overlay.innerHTML = `<div style="max-width:420px;width:100%;text-align:center;"><svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)" style="display:block;margin:0 auto 16px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg><div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(220,60,60,0.6);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px;">ACCESS REVOKED</div><div style="background:rgba(220,60,60,0.04);border:1px solid rgba(220,60,60,0.2);border-radius:14px;padding:28px 24px;"><div style="font-family:Orbitron,sans-serif;font-size:0.38rem;color:rgba(220,60,60,0.4);letter-spacing:3px;margin-bottom:12px;text-transform:uppercase;">Message from Queen Karin</div><div id="__silenceLockReason" style="font-size:1.05rem;color:#fff;line-height:1.6;letter-spacing:0.5px;">${safeReason}</div></div></div>`;
+            document.body.appendChild(overlay);
+        } else {
+            const el = document.getElementById('__silenceLockReason');
+            if (el) el.textContent = reason;
+        }
+    } else {
+        document.getElementById(OVERLAY_ID)?.remove();
+        document.getElementById(STYLE_ID)?.remove();
     }
 }

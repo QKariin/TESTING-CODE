@@ -1600,11 +1600,11 @@ export async function initChatSystem() {
         } catch {}
     }, 3000);
 
-    if (chatSubscribed) return;
-    chatSubscribed = true;
-
-    // 1. Load history (same as dashboard's loadDashboardChatHistory)
+    // Always reload history so fresh messages show on every init
     await loadChatHistory(email);
+
+    if (chatSubscribed) return; // Realtime channels already set up — don't duplicate
+    chatSubscribed = true;
 
     // 2. Realtime subscription on shared client (same as dashboard line 107-120)
     if (_chatChannel) {
@@ -1831,11 +1831,18 @@ export async function loadChatHistory(email: string) {
 
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) {
-                    el.innerHTML = html;
-                    el.scrollTop = el.scrollHeight;
-                }
+                if (el) el.innerHTML = html;
             });
+            // Scroll after render + after images load
+            const scrollToBottom = () => {
+                ['chatBox', 'mob_chatBox'].forEach(id => {
+                    const b = document.getElementById(id);
+                    if (b) b.scrollTop = b.scrollHeight;
+                });
+            };
+            scrollToBottom();
+            setTimeout(scrollToBottom, 80);
+            setTimeout(scrollToBottom, 350);
         }
     } catch (err) {
         console.error("Failed to load chat history:", err);
@@ -2399,6 +2406,9 @@ export function openMobChatOverlay() {
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
     _setNavActive('');
     switchMobChatTab('chat');
+    // Reload history every time the chat opens to ensure latest messages
+    const email = getState().memberId;
+    if (email) loadChatHistory(email);
 
     // Shrink queen avatar button when keyboard opens
     const input = document.getElementById('mob_chatMsgInput');
