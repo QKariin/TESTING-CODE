@@ -1797,16 +1797,16 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
         .slice(0, 3);
 
     return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9001, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', padding: '0' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000001, background: 'rgba(5,8,18,1)', display: 'flex', flexDirection: 'column', padding: '0' }}>
             <input ref={fileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleUpload} />
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(74,222,128,0.12)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.18)', flexShrink: 0 }}>
                 <div>
-                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', letterSpacing: '3px' }}>⚔ CHALLENGE TASKS</div>
-                    {data?.challenge && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#ddd', marginTop: 3 }}>{data.challenge.name}</div>}
+                    <div className="ribbon-label" style={{ fontSize: '0.5rem', letterSpacing: '3px' }}>⚔ CHALLENGE TASKS</div>
+                    {data?.challenge && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#fff', marginTop: 4 }}>{data.challenge.name}</div>}
                 </div>
-                <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#666', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px' }}>✕</button>
+                <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: 'rgba(197,160,89,0.5)', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px' }}>✕</button>
             </div>
 
             {/* Toast */}
