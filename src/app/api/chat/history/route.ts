@@ -58,13 +58,24 @@ export async function GET(req: Request) {
 
         const emailToQuery = profile?.member_id || email;
 
-        let query = queryClient
-            .from('chats')
-            .select('*')
-            .ilike('member_id', emailToQuery)
-            .order('created_at', { ascending: true });
-
-        if (since) query = query.gt('created_at', since);
+        let query: any;
+        if (since) {
+            // Polling: get all messages newer than timestamp
+            query = queryClient
+                .from('chats')
+                .select('*')
+                .ilike('member_id', emailToQuery)
+                .gt('created_at', since)
+                .order('created_at', { ascending: true });
+        } else {
+            // Initial load: get LAST 300 messages to avoid Supabase's 1000-row default cap
+            query = queryClient
+                .from('chats')
+                .select('*')
+                .ilike('member_id', emailToQuery)
+                .order('created_at', { ascending: false })
+                .limit(300);
+        }
 
         const { data, error } = await query;
 
@@ -73,9 +84,13 @@ export async function GET(req: Request) {
             return NextResponse.json({ success: false, error: error.message }, { status: 500 });
         }
 
+        const messages = (data || []).sort((a: any, b: any) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+
         return NextResponse.json({
             success: true,
-            messages: data || []
+            messages
         });
 
     } catch (err: any) {
@@ -134,13 +149,24 @@ export async function POST(req: Request) {
 
         const emailToQuery = profile?.member_id || email;
 
-        let query = queryClient
-            .from('chats')
-            .select('*')
-            .ilike('member_id', emailToQuery)
-            .order('created_at', { ascending: true });
-
-        if (since) query = query.gt('created_at', since);
+        let query: any;
+        if (since) {
+            // Polling: get all messages newer than timestamp
+            query = queryClient
+                .from('chats')
+                .select('*')
+                .ilike('member_id', emailToQuery)
+                .gt('created_at', since)
+                .order('created_at', { ascending: true });
+        } else {
+            // Initial load: get LAST 300 messages to avoid Supabase's 1000-row default cap
+            query = queryClient
+                .from('chats')
+                .select('*')
+                .ilike('member_id', emailToQuery)
+                .order('created_at', { ascending: false })
+                .limit(300);
+        }
 
         const { data, error } = await query;
 
@@ -149,9 +175,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: error.message }, { status: 500 });
         }
 
+        const messages = (data || []).sort((a: any, b: any) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+
         return NextResponse.json({
             success: true,
-            messages: data || []
+            messages
         });
 
     } catch (err: any) {
