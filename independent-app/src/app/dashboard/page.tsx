@@ -245,6 +245,7 @@ export default function DashboardPage() {
     const [activeLocks, setActiveLocks] = useState<{ paywall: boolean; silenced: boolean }>({ paywall: false, silenced: false });
     const [showLocksModal, setShowLocksModal] = useState(false);
     const [lockedUsers, setLockedUsers] = useState<any[]>([]);
+    const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null } | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -252,6 +253,29 @@ export default function DashboardPage() {
         check();
         window.addEventListener('resize', check);
         return () => window.removeEventListener('resize', check);
+    }, []);
+
+    useEffect(() => {
+        const fetchChallenge = async () => {
+            try {
+                const res = await fetch('/api/challenges');
+                const json = await res.json();
+                const active = (json.challenges || []).find((c: any) => c.status === 'active');
+                if (!active) { setChallengeWidget(null); return; }
+                const det = await fetch(`/api/challenges/${active.id}`);
+                const d = await det.json();
+                const leader = d.leaderboard?.find((p: any) => p.status === 'active' || p.status === 'champion');
+                setChallengeWidget({
+                    name: active.name, theme: active.theme,
+                    activeCount: active.participant_active || 0,
+                    totalCount: active.participant_total || 0,
+                    leader: leader?.name || null,
+                });
+            } catch { /* silent */ }
+        };
+        fetchChallenge();
+        const t = setInterval(fetchChallenge, 30000);
+        return () => clearInterval(t);
     }, []);
 
     const handleLogout = async () => {
@@ -598,37 +622,51 @@ export default function DashboardPage() {
                             <div className="vh-footer">Tap to record →</div>
                         </div>
 
-                        {/* GAUGE CARD */}
-                        <div className="v-gauge-card glass-card span-1" style={{ border: '1px solid rgba(197, 160, 89, 0.2)' }}>
+                        {/* CHALLENGES WIDGET */}
+                        <div className="v-gauge-card glass-card span-1"
+                            onClick={() => window.location.href = '/dashboard/challenges'}
+                            style={{ border: `1px solid ${challengeWidget ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.15)'}`, cursor: 'pointer', transition: 'border-color 0.2s', background: challengeWidget ? 'linear-gradient(135deg,rgba(74,222,128,0.04),rgba(0,0,0,0.3))' : undefined }}
+                            onMouseEnter={e => (e.currentTarget.style.borderColor = challengeWidget ? 'rgba(74,222,128,0.6)' : 'rgba(197,160,89,0.4)')}
+                            onMouseLeave={e => (e.currentTarget.style.borderColor = challengeWidget ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.15)')}>
                             <div className="vg-header">
-                                <div className="vg-title">Silence Protocol</div>
-                                <div className="vg-sub">System Health</div>
+                                <div className="vg-title" style={{ color: challengeWidget ? '#4ade80' : '#c5a059' }}>⚔ Challenges</div>
+                                <div className="vg-sub">{challengeWidget ? 'Live Challenge Active' : 'No Active Challenge'}</div>
                             </div>
-                            <div className="vg-gauge-con">
-                                <div className="vg-circle">
-                                    <div className="vg-val" id="pdPercentage">0%</div>
-                                    <div className="vg-label">of Goal</div>
-                                </div>
-                            </div>
-                            <div className="vg-controls">
-                                <div className="vgc-row">
-                                    <div className="vgc-input-group">
-                                        <span className="vgc-label">GOAL</span>
-                                        <input type="number" id="pdGoal" className="vgc-input" defaultValue="1000" />
+                            {challengeWidget ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '12px 0', gap: 14 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px' }}>
+                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px rgba(74,222,128,0.8)', flexShrink: 0, animation: 'pulse 2s infinite' }} />
+                                        <div style={{ fontFamily: 'Cinzel', fontSize: '0.85rem', color: '#fff', letterSpacing: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{challengeWidget.name}</div>
                                     </div>
-                                    <div className="vgc-switch" onClick={() => (window as any).toggleNewbieImmunity()}>
-                                        <div id="pdImmunity" className="vgc-checkbox checked">✕</div>
-                                        <span>NEWBIE SAFE</span>
+                                    <div style={{ display: 'flex', gap: 0, padding: '0 12px' }}>
+                                        {[
+                                            { val: challengeWidget.activeCount, lbl: 'STILL IN', c: '#4ade80' },
+                                            { val: challengeWidget.totalCount - challengeWidget.activeCount, lbl: 'ELIMINATED', c: '#e03030' },
+                                            { val: challengeWidget.totalCount, lbl: 'TOTAL', c: '#888' },
+                                        ].map(s => (
+                                            <div key={s.lbl} style={{ flex: 1, textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.3rem', fontWeight: 700, color: s.c }}>{s.val}</div>
+                                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.33rem', color: '#444', letterSpacing: '1px', marginTop: 3 }}>{s.lbl}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {challengeWidget.leader && (
+                                        <div style={{ margin: '0 12px', padding: '8px 12px', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>
+                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.33rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>LEADING</div>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#c5a059' }}>♛ {challengeWidget.leader}</div>
+                                        </div>
+                                    )}
+                                    <div style={{ margin: '0 12px', padding: '9px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 6, fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#4ade80', letterSpacing: '2px', textAlign: 'center' }}>
+                                        OPEN CHALLENGE PANEL ↗
                                     </div>
                                 </div>
-                                <div className="vgc-actions">
-                                    <button className="vgc-btn" onClick={() => (window as any).openExclusionModal()} title="Exclusions">EXCLUDE</button>
-                                    <button className="vgc-btn pink" onClick={() => (window as any).openBroadcastModal()}>BROADCAST</button>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: '20px 16px' }}>
+                                    <div style={{ fontSize: '2rem', opacity: 0.3 }}>⚔</div>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#333', letterSpacing: '2px', textAlign: 'center' }}>NO ACTIVE CHALLENGE</div>
+                                    <div style={{ padding: '8px 18px', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '2px' }}>CREATE ONE ↗</div>
                                 </div>
-                            </div>
-                            <div className="vg-stats">
-                                <button id="pdBtn" onClick={() => (window as any).toggleProtocol()} className="vg-action-btn">ENGAGE</button>
-                            </div>
+                            )}
                         </div>
 
                         {/* ENTER GLOBAL */}
