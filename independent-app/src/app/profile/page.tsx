@@ -2106,9 +2106,8 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                     <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'space-between' }}>
                                         {/* Name + status dot */}
                                         <div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                            <div style={{ marginBottom: 6 }}>
                                                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '1px' }}>{c.name}</div>
-                                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
                                             </div>
                                             {c.description && (
                                                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', marginBottom: 10, lineHeight: 1.5, letterSpacing: '0.5px' }}>{c.description}</div>
@@ -2123,7 +2122,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                                 {daysLeft !== null && !startsSoon && (
                                                     <>
                                                         <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
-                                                        <span className="ribbon-label" style={{ fontSize: '0.45rem', color: '#c5a059' }}>{daysLeft}D LEFT</span>
+                                                        <span className="ribbon-label" style={{ fontSize: '0.45rem', color: '#c5a059' }}>{daysLeft} DAYS LEFT</span>
                                                     </>
                                                 )}
                                                 {startsSoon && c.start_date && (
@@ -2150,7 +2149,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                                     { label: 'TOTAL PTS', val: stats.total_points },
                                                 ].map(({ label, val }, idx) => (
                                                     <div key={label} style={{ flex: 1, textAlign: 'center', borderLeft: idx > 0 ? '1px solid rgba(197,160,89,0.1)' : 'none', paddingLeft: idx > 0 ? 12 : 0 }}>
-                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.2rem', color: '#c5a059', lineHeight: 1 }}>{val}</div>
+                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.3rem', color: '#c5a059', lineHeight: 1, fontWeight: 700 }}>{val}</div>
                                                         <div className="ribbon-label" style={{ fontSize: '0.38rem', opacity: 0.5, marginTop: 4 }}>{label}</div>
                                                     </div>
                                                 ))}
