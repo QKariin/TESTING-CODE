@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const { id } = params;
+        const { id } = await params;
 
         const { data: challenge, error: cErr } = await supabaseAdmin
             .from('challenges').select('*').eq('id', id).single();
@@ -75,15 +75,16 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const { id } = await params;
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
         const body = await request.json();
         const { data, error } = await supabaseAdmin
-            .from('challenges').update(body).eq('id', params.id).select().single();
+            .from('challenges').update(body).eq('id', id).select().single();
         if (error) throw error;
         return NextResponse.json({ success: true, challenge: data });
     } catch (err: any) {

@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
+        const { id } = await params;
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -29,7 +30,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
             // Award per-task points
             const { data: challenge } = await supabaseAdmin.from('challenges')
-                .select('points_per_completion').eq('id', params.id).single();
+                .select('points_per_completion').eq('id', id).single();
             if (challenge?.points_per_completion) {
                 const { data: profile } = await supabaseAdmin.from('profiles')
                     .select('score').eq('member_id', completion.member_id).single();
@@ -55,7 +56,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
                     status: 'eliminated',
                     eliminated_on_window_id: window?.id,
                     eliminated_at: new Date().toISOString(),
-                }).eq('challenge_id', params.id).eq('member_id', completion.member_id).eq('status', 'active');
+                }).eq('challenge_id', id).eq('member_id', completion.member_id).eq('status', 'active');
 
                 return NextResponse.json({ success: true, action: 'rejected_eliminated' });
             }

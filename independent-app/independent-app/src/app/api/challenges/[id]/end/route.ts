@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-export async function POST(_req: Request, { params }: { params: { id: string } }) {
+export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-        const { id: challengeId } = params;
+        const { id: challengeId } = await params;
 
         const { data: challenge } = await supabaseAdmin.from('challenges').select('*').eq('id', challengeId).single();
         if (!challenge) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
