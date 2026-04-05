@@ -74,10 +74,12 @@ export async function POST(request: Request) {
         for (let day = 1; day <= Number(duration_days); day++) {
             const dayDate = new Date(startDt);
             dayDate.setDate(dayDate.getDate() + (day - 1));
+            // Support both 1D (same every day) and 2D (per-day) task_times
+            const dayTimes = task_times && Array.isArray(task_times[0]) ? task_times[day - 1] : task_times;
             for (let w = 0; w < tpd; w++) {
                 let opensAt: Date;
-                if (task_times && Array.isArray(task_times) && task_times[w]) {
-                    const [h, m] = (task_times[w] as string).split(':').map(Number);
+                if (dayTimes && Array.isArray(dayTimes) && dayTimes[w]) {
+                    const [h, m] = (dayTimes[w] as string).split(':').map(Number);
                     opensAt = new Date(dayDate);
                     opensAt.setHours(h, m, 0, 0);
                 } else {

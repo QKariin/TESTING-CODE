@@ -14,6 +14,7 @@ import {
     handleGlobalTalkKey,
     handleGlobalQuickKey,
     handleGlobalPhotoUpload,
+    handleGlobalChatPhotoUpload,
     loadTalkFull,
     openQueenTab,
     openGalleryLightbox,
@@ -21,7 +22,6 @@ import {
     cancelGlReply,
     openGifPicker,
     closeGifPicker,
-    clearGlobalBadge,
 } from '@/scripts/global-view';
 import { buyRealCoins, handleSubscribe } from '@/scripts/profile-logic';
 
@@ -73,6 +73,7 @@ export default function GlobalPage() {
         (window as any).handleGlobalTalkKey = handleGlobalTalkKey;
         (window as any).handleGlobalQuickKey = handleGlobalQuickKey;
         (window as any).handleGlobalPhotoUpload = handleGlobalPhotoUpload;
+        (window as any).handleGlobalChatPhotoUpload = handleGlobalChatPhotoUpload;
         (window as any).loadTalkFull = loadTalkFull;
         (window as any).openQueenTab = openQueenTab;
         (window as any).openGalleryLightbox = openGalleryLightbox;
@@ -80,7 +81,6 @@ export default function GlobalPage() {
         (window as any).cancelGlReply = cancelGlReply;
         (window as any).openGifPicker = openGifPicker;
         (window as any).closeGifPicker = closeGifPicker;
-        clearGlobalBadge();
 
         async function init() {
             try {
@@ -159,7 +159,9 @@ export default function GlobalPage() {
                         </div>
                         <div id="globalTalkFeed" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: '8px' }}></div>
                         <div style={{ display: 'flex', gap: '8px', padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, background: 'rgba(0,0,0,0.25)' }}>
+                            <input id="globalTalkPhotoInput" type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => (window as any).handleGlobalChatPhotoUpload?.(e.target)} />
                             <input id="globalTalkInput" type="text" placeholder="Say something to everyone..." onKeyDown={(e) => handleGlobalTalkKey(e as any)} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.9rem', padding: '8px 12px', outline: 'none', borderRadius: '6px', minWidth: 0 }} />
+                            <button onClick={() => document.getElementById('globalTalkPhotoInput')?.click()} title="Send photo" style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', cursor: 'pointer', borderRadius: '6px', flexShrink: 0 }}>📷</button>
                             <button onClick={() => openGifPicker()} title="Send GIF" style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, cursor: 'pointer', borderRadius: '6px', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
                             <button onClick={() => sendGlobalMessage()} style={{ padding: '8px 18px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', color: '#000', fontFamily: 'Orbitron', fontSize: '0.48rem', fontWeight: 700, cursor: 'pointer', borderRadius: '6px', letterSpacing: '1px', flexShrink: 0 }}>SEND</button>
                         </div>
@@ -215,15 +217,15 @@ export default function GlobalPage() {
                     </div>
 
                     {/* CHALLENGES */}
-                    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(197,160,89,0.02)', border: '1px solid rgba(197,160,89,0.14)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid rgba(197,160,89,0.08)', flexShrink: 0 }}>
-                            <div style={{ width: '3px', height: '14px', background: '#c5a059', borderRadius: '2px', marginRight: '8px' }}></div>
-                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>CHALLENGES</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(74,222,128,0.03)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', borderBottom: '1px solid rgba(74,222,128,0.1)', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <div style={{ width: '3px', height: '14px', background: '#4ade80', borderRadius: '2px', marginRight: '8px' }}></div>
+                                <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#4ade80', letterSpacing: '2px', fontWeight: 700 }}>CHALLENGES</span>
+                            </div>
+                            <a href="/dashboard/challenges" style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: 'rgba(74,222,128,0.5)', letterSpacing: '1px', textDecoration: 'none' }}>MANAGE ↗</a>
                         </div>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px', gap: '8px' }}>
-                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.9rem', color: '#c5a059', letterSpacing: '4px', fontWeight: 700 }}>CHALLENGES</span>
-                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', textTransform: 'uppercase' }}>Coming Soon</span>
-                        </div>
+                        <div id="globalPreview_challenges" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
                     </div>
 
                 </div>

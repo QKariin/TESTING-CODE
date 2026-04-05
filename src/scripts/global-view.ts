@@ -134,6 +134,7 @@ function _loadAllPreviews() {
     _initUpdatesRealtime();
     _loadSpendersPreview();
     _loadQueenPreview();
+    _loadChallengesPreview();
 }
 
 // ─── LEADERBOARD PREVIEW ─────────────────────────────────────────────────────
@@ -1238,6 +1239,103 @@ async function _loadQueenGallery() {
         el.dataset.loaded = '1';
     } catch {
         el.innerHTML = `<div style="text-align:center;padding:40px;font-family:Orbitron;font-size:0.55rem;color:#ff4444;">FAILED TO LOAD</div>`;
+    }
+}
+
+// ─── CHAT PHOTO UPLOAD ────────────────────────────────────────────────────────
+
+export async function handleGlobalChatPhotoUpload(input: HTMLInputElement) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const raw = getState().raw;
+    const senderEmail = raw?.member_id || raw?.email;
+    if (!senderEmail) return;
+
+    // Show uploading indicator in input
+    const btn = document.querySelector<HTMLButtonElement>('button[title="Send photo"]');
+    if (btn) btn.textContent = '⏳';
+
+    try {
+        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('bucket', 'media');
+        fd.append('folder', 'global-chat');
+        fd.append('ext', ext);
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
+        const uploadData = await uploadRes.json();
+        if (!uploadData.url) { if (btn) btn.textContent = '📷'; return; }
+
+        const QUEEN_EMAILS = ['ceo@qkarin.com'];
+        const isQueenLocal = QUEEN_EMAILS.includes(senderEmail.toLowerCase());
+        const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
+        const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
+
+        // Optimistic render
+        _appendMessage({
+            sender_name: senderName,
+            sender_avatar: senderAvatar,
+            sender_email: senderEmail,
+            is_queen: isQueenLocal,
+            is_me: true,
+            message: '[PHOTO]',
+            media_url: uploadData.url,
+            media_type: 'image',
+            created_at: new Date().toISOString(),
+        });
+
+        await fetch('/api/global/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: '[PHOTO]', senderEmail, media_url: uploadData.url, media_type: 'image' }),
+        });
+    } finally {
+        input.value = '';
+        if (btn) btn.textContent = '📷';
+    }
+}
+
+// ─── CHALLENGES PREVIEW ───────────────────────────────────────────────────────
+
+async function _loadChallengesPreview() {
+    const el = document.getElementById('globalPreview_challenges');
+    if (!el) return;
+    try {
+        const res = await fetch('/api/challenges');
+        const { challenges } = await res.json();
+        const active = (challenges || []).filter((c: any) => c.status === 'active');
+        const upcoming = (challenges || []).filter((c: any) => c.status === 'draft' &&
+            c.start_date && new Date(c.start_date).getTime() > Date.now());
+
+        if (!active.length && !upcoming.length) {
+            el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;padding:16px;"><span style="font-size:1.4rem;">⚔</span><span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(74,222,128,0.3);letter-spacing:2px;text-align:center;">NO ACTIVE CHALLENGES</span></div>`;
+            return;
+        }
+
+        const renderCard = (c: any, isActive: boolean) => {
+            const startStr = c.start_date ? new Date(c.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+            const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - Date.now()) / 86400000)) : null;
+            return `
+            <div style="padding:10px 12px;border-bottom:1px solid rgba(74,222,128,0.07);display:flex;gap:10px;align-items:center;">
+                ${c.image_url ? `<img src="${c.image_url}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(74,222,128,0.2);">` : `<div style="width:36px;height:36px;border-radius:6px;background:rgba(74,222,128,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem;">⚔</div>`}
+                <div style="flex:1;min-width:0;">
+                    <div style="font-family:'Cinzel';font-size:0.58rem;color:${isActive ? '#4ade80' : '#c5a059'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;">${c.name}</div>
+                    <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.3);letter-spacing:1px;margin-top:2px;">
+                        ${isActive ? `${daysLeft}d left · ${c.participant_active ?? 0} active` : `starts ${startStr} · ${c.tasks_per_day}×/day`}
+                    </div>
+                </div>
+                <div style="font-family:'Orbitron';font-size:0.32rem;letter-spacing:1px;padding:2px 6px;border-radius:4px;flex-shrink:0;background:${isActive ? 'rgba(74,222,128,0.12)' : 'rgba(197,160,89,0.1)'};color:${isActive ? '#4ade80' : '#c5a059'};">
+                    ${isActive ? 'LIVE' : 'SOON'}
+                </div>
+            </div>`;
+        };
+
+        el.innerHTML = [
+            ...active.map((c: any) => renderCard(c, true)),
+            ...upcoming.map((c: any) => renderCard(c, false)),
+        ].join('');
+    } catch {
+        el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.15);">—</div>`;
     }
 }
 

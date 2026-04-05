@@ -134,6 +134,7 @@ function _loadAllPreviews() {
     _initUpdatesRealtime();
     _loadSpendersPreview();
     _loadQueenPreview();
+    _loadChallengesPreview();
 }
 
 // ─── LEADERBOARD PREVIEW ─────────────────────────────────────────────────────
@@ -321,22 +322,32 @@ function _buildUpdateCardPreview(u: any): string {
         </div>`;
     }
     if (u.kind === 'points') {
-        return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
-            <div style="font-size:0.75rem;flex-shrink:0;">⚡</div>
-            <div style="flex:1;min-width:0;">
-                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</div>
-                <div style="font-family:'Rajdhani';font-size:0.75rem;color:#a78bfa;">+${u.points} MERIT</div>
+        const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const initial = (u.sender_name || 'S')[0].toUpperCase();
+        const avHtml = u.sender_avatar
+            ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            : '';
+        return `<div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
+                ${avHtml}
+                <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#a78bfa;">${initial}</div>
             </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">⚡ MERIT EARNED</div>
+                <div style="font-family:'Cinzel';font-size:0.7rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name}</div>
+                <div style="font-family:'Orbitron';font-size:0.7rem;color:#a78bfa;font-weight:700;">+${u.points} MERIT</div>
+            </div>
+            <div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);flex-shrink:0;align-self:flex-start;">${time}</div>
         </div>`;
     }
     // photo
-    return `<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);">
-        <div style="width:32px;height:32px;border-radius:4px;overflow:hidden;flex-shrink:0;">
-            <img src="${getOptimizedUrl(u.media_url, 64)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
-        </div>
-        <div style="flex:1;min-width:0;">
-            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</div>
-            ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.caption}</div>` : ''}
+    const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `<div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.15);border-radius:10px;overflow:hidden;position:relative;width:100%;"
+        onmouseenter="this.querySelector('.uinfo').style.opacity='1'"
+        onmouseleave="this.querySelector('.uinfo').style.opacity='0'">
+        <img src="${getOptimizedUrl(u.media_url, 300)}" style="width:100%;height:90px;object-fit:cover;display:block;" loading="lazy">
+        <div class="uinfo" style="position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,0.88));opacity:0;transition:opacity 0.15s;">
+            <div style="font-family:'Cinzel';font-size:0.55rem;color:#fff;">${u.sender_name} <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.3);">${time}</span></div>
         </div>
     </div>`;
 }
@@ -601,7 +612,7 @@ function _renderMessages(messages: any[], scrollBottom: boolean) {
     }
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
     feed.innerHTML = messages.map(m => _buildBubble(m, myName, myEmail)).join('');
-    if (scrollBottom || wasNear) feed.scrollTop = feed.scrollHeight;
+    if (scrollBottom || wasNear) requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
 }
 
 function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
@@ -656,12 +667,33 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
         } catch (e) { /* fall through */ }
     }
 
+    // ── GIF Card ── same style as promotion card
+    if ((msg.media_type === 'gif' || (msg.message === '[GIF]' && msg.media_url)) && msg.media_url) {
+        const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
+        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
+            <div style="width:60%;min-width:220px;max-width:360px;">
+                <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.35);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                    <div style="width:100%;overflow:hidden;background:#0a0703;">
+                        <img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;max-height:240px;object-fit:contain;" />
+                    </div>
+                    <div style="padding:10px 16px 14px;text-align:center;border-top:1px solid rgba(197,160,89,0.12);">
+                        <div style="font-family:'Cinzel',serif;font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;">${name}</div>
+                    </div>
+                </div>
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+            </div>
+        </div>`;
+    }
+
+    const isGif = false;
     const _vidErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}"`;
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
     const mediaHtml = msg.media_url ? (
         msg.media_type === 'video'
             ? `<video src="${msg.media_url}" controls playsinline preload="metadata" ${_vidErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
-            : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
+            : isGif
+                ? `<img src="${msg.media_url}" ${_imgErr} style="max-width:220px;width:auto;height:auto;max-height:200px;border-radius:10px;display:block;margin-top:4px;" />`
+                : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
     ) : '';
 
     // ── QUEEN bubble (gold frame, full-width feed style) ──
@@ -679,7 +711,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                     </div>
                     ${replyBtn}
                 </div>
-                ${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>
+                ${quoteHtml}${isGif ? '' : `<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>`}
                 ${mediaHtml}
             </div>
         </div>`;
@@ -700,7 +732,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                 </div>
                 ${replyBtn}
             </div>
-            ${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>
+            ${quoteHtml}${isGif ? '' : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>`}
             ${mediaHtml}
         </div>
     </div>`;
@@ -797,6 +829,124 @@ export function handleGlobalTalkKey(e: KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendGlobalMessage(); }
 }
 
+// ─── GIF PICKER ───────────────────────────────────────────────────────────────
+
+let _gifPickerOpen = false;
+let _gifSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+async function _sendGif(gifUrl: string) {
+    const raw = getState().raw;
+    const senderEmail = raw?.member_id || raw?.email;
+    if (!senderEmail) return;
+
+    const QUEEN_EMAILS_LOCAL = ['ceo@qkarin.com'];
+    const isQueenLocal = QUEEN_EMAILS_LOCAL.includes(senderEmail.toLowerCase());
+    const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
+    const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
+
+    // Optimistic render
+    _appendMessage({
+        sender_name: senderName,
+        sender_avatar: senderAvatar,
+        sender_email: senderEmail,
+        is_queen: isQueenLocal,
+        is_me: true,
+        message: '[GIF]',
+        media_url: gifUrl,
+        media_type: 'gif',
+        created_at: new Date().toISOString(),
+    });
+
+    try {
+        await fetch('/api/global/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: '[GIF]', senderEmail, media_url: gifUrl, media_type: 'gif' }),
+        });
+    } catch {}
+}
+
+export function openGifPicker() {
+    if (_gifPickerOpen) { closeGifPicker(); return; }
+    _gifPickerOpen = true;
+
+    const existing = document.getElementById('gifPickerOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'gifPickerOverlay';
+    overlay.style.cssText = `
+        position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+        width:min(420px, 96vw);max-height:55vh;
+        background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
+        display:flex;flex-direction:column;overflow:hidden;z-index:999;
+        box-shadow:0 8px 40px rgba(0,0,0,0.7);
+    `;
+
+    overlay.innerHTML = `
+        <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:flex;gap:8px;align-items:center;">
+            <input id="gifSearchInput" type="text" placeholder="Search GIFs..." autocomplete="off"
+                style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95rem;padding:7px 11px;border-radius:6px;outline:none;" />
+            <button onclick="window.closeGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;padding:4px 6px;line-height:1;">✕</button>
+        </div>
+        <div id="gifGrid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+            <div style="grid-column:1/-1;text-align:center;padding:30px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">SEARCHING...</div>
+        </div>
+        <div style="padding:5px 10px;text-align:right;flex-shrink:0;">
+            <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const searchInput = overlay.querySelector('#gifSearchInput') as HTMLInputElement;
+    searchInput?.addEventListener('input', () => {
+        if (_gifSearchTimeout) clearTimeout(_gifSearchTimeout);
+        _gifSearchTimeout = setTimeout(() => _searchGifs(searchInput.value || 'funny'), 400);
+    });
+
+    // Load trending on open
+    _searchGifs('funny');
+    setTimeout(() => searchInput?.focus(), 50);
+}
+
+async function _searchGifs(q: string) {
+    const grid = document.getElementById('gifGrid');
+    if (!grid) return;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>`;
+
+    try {
+        const res = await fetch(`/api/global/gifs?q=${encodeURIComponent(q)}`);
+        const { results } = await res.json();
+        if (!results?.length) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">NO RESULTS</div>`;
+            return;
+        }
+        grid.innerHTML = results.map((r: any) => `
+            <div onclick="window._selectGif('${encodeURIComponent(r.url)}')" style="cursor:pointer;border-radius:6px;overflow:hidden;aspect-ratio:1;background:rgba(255,255,255,0.04);">
+                <img src="${r.preview}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'">
+            </div>
+        `).join('');
+    } catch {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">FAILED TO LOAD</div>`;
+    }
+}
+
+export function closeGifPicker() {
+    _gifPickerOpen = false;
+    document.getElementById('gifPickerOverlay')?.remove();
+}
+
+if (typeof window !== 'undefined') {
+    (window as any).openGifPicker = openGifPicker;
+    (window as any).closeGifPicker = closeGifPicker;
+    (window as any)._selectGif = (encodedUrl: string) => {
+        const url = decodeURIComponent(encodedUrl);
+        closeGifPicker();
+        _sendGif(url);
+    };
+}
+
 // ─── FULL UPDATES ─────────────────────────────────────────────────────────────
 
 async function _loadUpdatesFull() {
@@ -829,7 +979,7 @@ function _buildTributeCard(u: any): string {
     const coverSrc = u.sender_avatar || '';
     const initial = (u.sender_name || 'S')[0].toUpperCase();
     return `
-    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;max-width:320px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
         <div style="width:100%;height:140px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
             ${coverSrc
                 ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
@@ -855,7 +1005,7 @@ function _buildPointsCard(u: any): string {
         ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : '';
     return `
-    <div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;max-width:320px;width:100%;">
+    <div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
         <div style="width:42px;height:42px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
             ${avHtml}
             <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${initial}</div>
@@ -872,7 +1022,7 @@ function _buildPointsCard(u: any): string {
 function _buildPhotoCard(u: any): string {
     const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return `
-    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;max-width:320px;width:100%;position:relative;"
+    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;position:relative;"
          onmouseenter="this.querySelector('.uinfo').style.opacity='1'"
          onmouseleave="this.querySelector('.uinfo').style.opacity='0'">
         <img src="${getOptimizedUrl(u.media_url, 400)}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy">
@@ -1089,6 +1239,103 @@ async function _loadQueenGallery() {
         el.dataset.loaded = '1';
     } catch {
         el.innerHTML = `<div style="text-align:center;padding:40px;font-family:Orbitron;font-size:0.55rem;color:#ff4444;">FAILED TO LOAD</div>`;
+    }
+}
+
+// ─── CHAT PHOTO UPLOAD ────────────────────────────────────────────────────────
+
+export async function handleGlobalChatPhotoUpload(input: HTMLInputElement) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const raw = getState().raw;
+    const senderEmail = raw?.member_id || raw?.email;
+    if (!senderEmail) return;
+
+    // Show uploading indicator in input
+    const btn = document.querySelector<HTMLButtonElement>('button[title="Send photo"]');
+    if (btn) btn.textContent = '⏳';
+
+    try {
+        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('bucket', 'media');
+        fd.append('folder', 'global-chat');
+        fd.append('ext', ext);
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
+        const uploadData = await uploadRes.json();
+        if (!uploadData.url) { if (btn) btn.textContent = '📷'; return; }
+
+        const QUEEN_EMAILS = ['ceo@qkarin.com'];
+        const isQueenLocal = QUEEN_EMAILS.includes(senderEmail.toLowerCase());
+        const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
+        const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
+
+        // Optimistic render
+        _appendMessage({
+            sender_name: senderName,
+            sender_avatar: senderAvatar,
+            sender_email: senderEmail,
+            is_queen: isQueenLocal,
+            is_me: true,
+            message: '[PHOTO]',
+            media_url: uploadData.url,
+            media_type: 'image',
+            created_at: new Date().toISOString(),
+        });
+
+        await fetch('/api/global/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: '[PHOTO]', senderEmail, media_url: uploadData.url, media_type: 'image' }),
+        });
+    } finally {
+        input.value = '';
+        if (btn) btn.textContent = '📷';
+    }
+}
+
+// ─── CHALLENGES PREVIEW ───────────────────────────────────────────────────────
+
+async function _loadChallengesPreview() {
+    const el = document.getElementById('globalPreview_challenges');
+    if (!el) return;
+    try {
+        const res = await fetch('/api/challenges');
+        const { challenges } = await res.json();
+        const active = (challenges || []).filter((c: any) => c.status === 'active');
+        const upcoming = (challenges || []).filter((c: any) => c.status === 'draft' &&
+            c.start_date && new Date(c.start_date).getTime() > Date.now());
+
+        if (!active.length && !upcoming.length) {
+            el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;padding:16px;"><span style="font-size:1.4rem;">⚔</span><span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(74,222,128,0.3);letter-spacing:2px;text-align:center;">NO ACTIVE CHALLENGES</span></div>`;
+            return;
+        }
+
+        const renderCard = (c: any, isActive: boolean) => {
+            const startStr = c.start_date ? new Date(c.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+            const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - Date.now()) / 86400000)) : null;
+            return `
+            <div style="padding:10px 12px;border-bottom:1px solid rgba(74,222,128,0.07);display:flex;gap:10px;align-items:center;">
+                ${c.image_url ? `<img src="${c.image_url}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(74,222,128,0.2);">` : `<div style="width:36px;height:36px;border-radius:6px;background:rgba(74,222,128,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem;">⚔</div>`}
+                <div style="flex:1;min-width:0;">
+                    <div style="font-family:'Cinzel';font-size:0.58rem;color:${isActive ? '#4ade80' : '#c5a059'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;">${c.name}</div>
+                    <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.3);letter-spacing:1px;margin-top:2px;">
+                        ${isActive ? `${daysLeft}d left · ${c.participant_active ?? 0} active` : `starts ${startStr} · ${c.tasks_per_day}×/day`}
+                    </div>
+                </div>
+                <div style="font-family:'Orbitron';font-size:0.32rem;letter-spacing:1px;padding:2px 6px;border-radius:4px;flex-shrink:0;background:${isActive ? 'rgba(74,222,128,0.12)' : 'rgba(197,160,89,0.1)'};color:${isActive ? '#4ade80' : '#c5a059'};">
+                    ${isActive ? 'LIVE' : 'SOON'}
+                </div>
+            </div>`;
+        };
+
+        el.innerHTML = [
+            ...active.map((c: any) => renderCard(c, true)),
+            ...upcoming.map((c: any) => renderCard(c, false)),
+        ].join('');
+    } catch {
+        el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.15);">—</div>`;
     }
 }
 

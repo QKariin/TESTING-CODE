@@ -13,11 +13,30 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         const [{ data: windows }, { data: completions }, { data: participants }, { data: pending }] = await Promise.all([
             supabaseAdmin.from('challenge_windows').select('*').eq('challenge_id', id).order('opens_at', { ascending: true }),
             supabaseAdmin.from('challenge_completions').select('*').eq('challenge_id', id),
-            supabaseAdmin.from('challenge_participants').select('*, profiles!challenge_participants_member_id_fkey(name, hierarchy, avatar_url, profile_picture_url)').eq('challenge_id', id),
+            supabaseAdmin.from('challenge_participants').select('*').eq('challenge_id', id),
             supabaseAdmin.from('challenge_completions')
-                .select('*, challenge_windows!challenge_completions_window_id_fkey(day_number, window_number, verification_code, opens_at, closes_at), profiles!challenge_completions_member_id_fkey(name, avatar_url, profile_picture_url)')
+                .select('*, challenge_windows(day_number, window_number, verification_code, opens_at, closes_at)')
                 .eq('challenge_id', id).eq('verified', false).not('proof_url', 'is', null).order('completed_at', { ascending: true }),
         ]);
+
+        // Fetch profiles separately (avoids FK join issues)
+        const memberIds = [...new Set([
+            ...(participants || []).map((p: any) => p.member_id),
+            ...(pending || []).map((p: any) => p.member_id),
+        ])];
+        let profileMap = new Map<string, any>();
+        if (memberIds.length) {
+            const { data: profileRows } = await supabaseAdmin
+                .from('profiles').select('member_id, name, hierarchy, avatar_url, profile_picture_url')
+                .in('member_id', memberIds);
+            (profileRows || []).forEach((p: any) => profileMap.set(p.member_id.toLowerCase(), p));
+        }
+
+        // Attach profiles to pending verifications
+        const pendingWithProfiles = (pending || []).map((p: any) => ({
+            ...p,
+            profiles: profileMap.get(p.member_id.toLowerCase()) || null,
+        }));
 
         const now = new Date();
 
@@ -40,7 +59,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
         // Build leaderboard
         const leaderboard = (participants || []).map((p: any) => {
-            const prof = p.profiles || {};
+            const prof = profileMap.get(p.member_id.toLowerCase()) || {};
             const userComps = (completions || []).filter((c: any) => c.member_id === p.member_id);
             const avgSpeed = userComps.length
                 ? Math.round(userComps.reduce((s: number, c: any) => s + (c.response_time_seconds || 0), 0) / userComps.length)
@@ -69,7 +88,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
             return 0;
         });
 
-        return NextResponse.json({ success: true, challenge, leaderboard, windows, completions, pending_verifications: pending || [] });
+        return NextResponse.json({ success: true, challenge, leaderboard, windows, completions, pending_verifications: pendingWithProfiles });
     } catch (err: any) {
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });
     }

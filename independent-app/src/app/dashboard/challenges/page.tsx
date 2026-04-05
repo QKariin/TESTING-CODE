@@ -613,16 +613,35 @@ function CreateTab({ allChallenges, onCreate }: {
     const imageInputRef = useRef<HTMLInputElement>(null);
 
     const DEFAULT_TIMES = ['09:00', '13:00', '18:00', '08:00', '11:00', '15:00', '19:00', '07:00', '12:00', '21:00'];
-    const [taskTimes, setTaskTimes] = useState<string[]>(() => DEFAULT_TIMES.slice(0, 3));
-    const [taskNames, setTaskNames] = useState<string[]>(() => ['', '', '']);
+    const makeDayTimes = (tpd: number) => DEFAULT_TIMES.slice(0, tpd);
+    const makeDayNames = (tpd: number) => Array(tpd).fill('');
+
+    const [taskTimes, setTaskTimes] = useState<string[][]>(() =>
+        Array(7).fill(null).map(() => makeDayTimes(3))
+    );
+    const [taskNames, setTaskNames] = useState<string[][]>(() =>
+        Array(7).fill(null).map(() => makeDayNames(3))
+    );
+    const [expandedDay, setExpandedDay] = useState<number>(0);
 
     const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
-    // Resize taskTimes and taskNames when tasks_per_day changes
+    const handleDurationChange = (n: number) => {
+        set('duration_days', n);
+        setTaskTimes(prev => {
+            if (n > prev.length) return [...prev, ...Array(n - prev.length).fill(null).map(() => makeDayTimes(form.tasks_per_day))];
+            return prev.slice(0, n);
+        });
+        setTaskNames(prev => {
+            if (n > prev.length) return [...prev, ...Array(n - prev.length).fill(null).map(() => makeDayNames(form.tasks_per_day))];
+            return prev.slice(0, n);
+        });
+    };
+
     const handleTasksPerDayChange = (n: number) => {
         set('tasks_per_day', n);
-        setTaskTimes(prev => n > prev.length ? [...prev, ...DEFAULT_TIMES.slice(prev.length, n)] : prev.slice(0, n));
-        setTaskNames(prev => n > prev.length ? [...prev, ...Array(n - prev.length).fill('')] : prev.slice(0, n));
+        setTaskTimes(prev => prev.map(d => n > d.length ? [...d, ...DEFAULT_TIMES.slice(d.length, n)] : d.slice(0, n)));
+        setTaskNames(prev => prev.map(d => n > d.length ? [...d, ...Array(n - d.length).fill('')] : d.slice(0, n)));
     };
 
     const prefill = (c: Challenge) => {
@@ -637,8 +656,12 @@ function CreateTab({ allChallenges, onCreate }: {
         set('second_place_points', c.second_place_points);
         set('third_place_points', c.third_place_points);
         set('image_url', (c as any).image_url || '');
-        setTaskTimes(DEFAULT_TIMES.slice(0, c.tasks_per_day));
-        setTaskNames((c.task_names || []).concat(Array(Math.max(0, c.tasks_per_day - (c.task_names?.length || 0))).fill('')).slice(0, c.tasks_per_day));
+        // Support both 1D (legacy) and 2D (per-day) stored arrays
+        const srcTimes = DEFAULT_TIMES.slice(0, c.tasks_per_day);
+        const srcNames = (c.task_names || []).concat(Array(Math.max(0, c.tasks_per_day - ((c.task_names as any[])?.length || 0))).fill('')).slice(0, c.tasks_per_day) as string[];
+        setTaskTimes(Array(c.duration_days).fill(null).map(() => [...srcTimes]));
+        setTaskNames(Array(c.duration_days).fill(null).map(() => [...srcNames]));
+        setExpandedDay(0);
     };
 
     const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -769,7 +792,7 @@ function CreateTab({ allChallenges, onCreate }: {
                     <div className="ch-form-grid-3">
                         <div className="ch-field">
                             <label className="ch-label">DURATION (DAYS)</label>
-                            <input type="number" className="ch-input" min={1} max={30} value={form.duration_days} onChange={e => set('duration_days', Number(e.target.value))} />
+                            <input type="number" className="ch-input" min={1} max={30} value={form.duration_days} onChange={e => handleDurationChange(Math.min(30, Math.max(1, Number(e.target.value))))} />
                         </div>
                         <div className="ch-field">
                             <label className="ch-label">TASKS PER DAY</label>
@@ -793,37 +816,82 @@ function CreateTab({ allChallenges, onCreate }: {
                         </div>
                     </div>
 
-                    {/* Daily Task Schedule */}
+                    {/* Daily Task Schedule — per day */}
                     <div>
                         <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>DAILY TASK SCHEDULE</label>
                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 12 }}>
-                            Set when each task window opens. Same times repeat every day. Window stays open for {form.window_minutes} minutes.
+                            Set tasks and times for each day individually. Window stays open for {form.window_minutes} minutes.
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            {taskTimes.map((t, i) => {
-                                const [h, m] = t.split(':').map(Number);
-                                const closeH = Math.floor((h * 60 + m + form.window_minutes) / 60) % 24;
-                                const closeM = (m + form.window_minutes) % 60;
-                                const closeStr = `${String(closeH).padStart(2,'0')}:${String(closeM).padStart(2,'0')}`;
-                                return (
-                                    <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '2px' }}>TASK {i + 1}</div>
-                                        <input
-                                            type="text"
-                                            className="ch-input"
-                                            placeholder="Task name (e.g. Morning run, Cold shower...)"
-                                            value={taskNames[i] || ''}
-                                            onChange={e => { const arr = [...taskNames]; arr[i] = e.target.value; setTaskNames(arr); }}
-                                        />
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#555', flexShrink: 0 }}>Opens at</div>
-                                            <input type="time" className="ch-input" style={{ flex: 1 }} value={t}
-                                                onChange={e => { const arr = [...taskTimes]; arr[i] = e.target.value; setTaskTimes(arr); }} />
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#444', flexShrink: 0, letterSpacing: '1px' }}>closes {closeStr}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {taskTimes.map((dayTimes, dayIdx) => (
+                                <div key={dayIdx} style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
+                                    {/* Day header */}
+                                    <button type="button" onClick={() => setExpandedDay(expandedDay === dayIdx ? -1 : dayIdx)}
+                                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', background: expandedDay === dayIdx ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.01)', border: 'none', cursor: 'pointer' }}>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', flexShrink: 0 }}>
+                                            DAY {dayIdx + 1}
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                        {expandedDay !== dayIdx && taskNames[dayIdx]?.some(n => n) && (
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', flex: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', textAlign: 'left' }}>
+                                                {taskNames[dayIdx].filter(n => n).join(' · ')}
+                                            </div>
+                                        )}
+                                        {expandedDay !== dayIdx && dayTimes.some(t => t) && (
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#444', flexShrink: 0 }}>
+                                                {dayTimes.join(' · ')}
+                                            </div>
+                                        )}
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', color: '#444', marginLeft: 'auto', flexShrink: 0 }}>
+                                            {expandedDay === dayIdx ? '▲' : '▼'}
+                                        </div>
+                                    </button>
+                                    {expandedDay === dayIdx && (
+                                        <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                            {dayTimes.map((t, taskIdx) => {
+                                                const [h, m] = t.split(':').map(Number);
+                                                const closeH = Math.floor((h * 60 + m + form.window_minutes) / 60) % 24;
+                                                const closeM = (m + form.window_minutes) % 60;
+                                                const closeStr = `${String(closeH).padStart(2,'0')}:${String(closeM).padStart(2,'0')}`;
+                                                return (
+                                                    <div key={taskIdx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#666', letterSpacing: '2px' }}>TASK {taskIdx + 1}</div>
+                                                        <input type="text" className="ch-input"
+                                                            placeholder="Task name (e.g. Morning run, Cold shower...)"
+                                                            value={taskNames[dayIdx]?.[taskIdx] || ''}
+                                                            onChange={e => setTaskNames(prev => { const n = prev.map(d => [...d]); n[dayIdx][taskIdx] = e.target.value; return n; })}
+                                                        />
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#555', flexShrink: 0 }}>Opens at</div>
+                                                            <input type="time" className="ch-input" style={{ flex: 1 }} value={t}
+                                                                onChange={e => setTaskTimes(prev => { const n = prev.map(d => [...d]); n[dayIdx][taskIdx] = e.target.value; return n; })}
+                                                            />
+                                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#444', flexShrink: 0, letterSpacing: '1px' }}>closes {closeStr}</div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+                                                {dayIdx > 0 && (
+                                                    <button type="button" onClick={() => {
+                                                        setTaskTimes(prev => { const n = prev.map(d => [...d]); n[dayIdx] = [...taskTimes[0]]; return n; });
+                                                        setTaskNames(prev => { const n = prev.map(d => [...d]); n[dayIdx] = [...taskNames[0]]; return n; });
+                                                    }} style={{ padding: '5px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: '#555', fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', letterSpacing: '1px', cursor: 'pointer' }}>
+                                                        COPY FROM DAY 1
+                                                    </button>
+                                                )}
+                                                {dayIdx === 0 && form.duration_days > 1 && (
+                                                    <button type="button" onClick={() => {
+                                                        setTaskTimes(prev => prev.map(() => [...taskTimes[0]]));
+                                                        setTaskNames(prev => prev.map(() => [...taskNames[0]]));
+                                                    }} style={{ padding: '5px 12px', background: 'transparent', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', letterSpacing: '1px', cursor: 'pointer' }}>
+                                                        COPY TO ALL DAYS
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     </div>
 

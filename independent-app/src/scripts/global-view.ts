@@ -11,81 +11,6 @@ let realtimeChannel: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let updatesChannel: any = null;
 
-// ─── UNREAD BADGE ──────────────────────────────────────────────────────────────
-let _globalUnreadCount = 0;
-let _lastMessageId: string | null = null;
-
-function _updateGlobalBadge(n: number) {
-    _globalUnreadCount = n;
-    const badge = document.getElementById('globalNavBadge');
-    if (!badge) return;
-    if (n <= 0) {
-        badge.style.display = 'none';
-    } else {
-        badge.style.display = 'flex';
-        badge.textContent = n > 99 ? '99+' : String(n);
-    }
-}
-
-export function clearGlobalBadge() {
-    _updateGlobalBadge(0);
-    localStorage.setItem('globalLastRead', new Date().toISOString());
-}
-
-async function _markReadLatest() {
-    if (!_lastMessageId) return;
-    const raw = getState().raw;
-    const userEmail = raw?.member_id || raw?.email;
-    if (!userEmail) return;
-    try {
-        await fetch('/api/global/mark-read', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messageId: _lastMessageId, userEmail }),
-        });
-        await _refreshReadReceipts(_lastMessageId);
-    } catch {}
-}
-
-async function _refreshReadReceipts(messageId: string) {
-    try {
-        const res = await fetch(`/api/global/mark-read?messageId=${encodeURIComponent(messageId)}`);
-        const { readers } = await res.json();
-        _renderReadReceipts(readers || []);
-    } catch {}
-}
-
-function _renderReadReceipts(readers: { user_name: string; avatar_url: string | null }[]) {
-    document.getElementById('glReadReceiptsRow')?.remove();
-    const feed = document.getElementById('globalTalkFeed');
-    if (!feed || !readers.length) return;
-
-    const row = document.createElement('div');
-    row.id = 'glReadReceiptsRow';
-    row.style.cssText = 'display:flex;align-items:center;gap:3px;padding:4px 16px 10px;justify-content:flex-end;';
-
-    const maxShow = 6;
-    const shown = readers.slice(0, maxShow);
-    const extra = readers.length - maxShow;
-
-    let html = `<span style="font-family:'Orbitron';font-size:0.3rem;color:rgba(255,255,255,0.2);letter-spacing:1px;margin-right:5px;">SEEN</span>`;
-    shown.forEach((r, i) => {
-        const initials = (r.user_name || '?')[0].toUpperCase();
-        const ml = i > 0 ? 'margin-left:-5px;' : '';
-        if (r.avatar_url) {
-            html += `<img src="${r.avatar_url}" title="${r.user_name}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.4);${ml}flex-shrink:0;" />`;
-        } else {
-            html += `<div title="${r.user_name}" style="width:18px;height:18px;border-radius:50%;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.3);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.45rem;color:#c5a059;${ml}flex-shrink:0;">${initials}</div>`;
-        }
-    });
-    if (extra > 0) {
-        html += `<span style="font-family:'Orbitron';font-size:0.3rem;color:rgba(255,255,255,0.3);margin-left:5px;">+${extra}</span>`;
-    }
-
-    row.innerHTML = html;
-    feed.appendChild(row);
-}
-
 // ─── REPLY STATE ───────────────────────────────────────────────────────────────
 let _glReply: { id: string; name: string; text: string } | null = null;
 
@@ -209,6 +134,7 @@ function _loadAllPreviews() {
     _initUpdatesRealtime();
     _loadSpendersPreview();
     _loadQueenPreview();
+    _loadChallengesPreview();
 }
 
 // ─── LEADERBOARD PREVIEW ─────────────────────────────────────────────────────
@@ -610,8 +536,6 @@ export async function loadTalkFull(scrollBottom = true) { await _fetchAndRenderM
 // ─── REALTIME INIT ────────────────────────────────────────────────────────────
 
 function _initTalkRealtime() {
-    // Clear unread badge when talk opens
-    clearGlobalBadge();
     // Initial load
     _fetchAndRenderMessages(true);
     _fetchAndRenderOnline();
@@ -668,26 +592,10 @@ function _appendMessage(msg: any) {
     const myName = raw?.name || raw?.member_id?.split('@')[0] || '';
     const myEmail = ((raw?.member_id || raw?.email || '') as string).toLowerCase();
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
-    // Remove old read receipts row before appending new message
-    document.getElementById('glReadReceiptsRow')?.remove();
     const el = document.createElement('div');
     el.innerHTML = _buildBubble(msg, myName, myEmail);
     feed.appendChild(el.firstElementChild!);
     if (wasNear) feed.scrollTop = feed.scrollHeight;
-    // Update last message id + mark read + refresh receipts
-    if (msg.id) _lastMessageId = msg.id;
-    // Badge: increment if global view is not open
-    const overlay = document.getElementById('globalViewOverlay');
-    const globalIsOpen = overlay && overlay.style.display !== 'none';
-    if (!globalIsOpen) {
-        _updateGlobalBadge(_globalUnreadCount + 1);
-        // Also notify dashboard
-        const dashBadge = document.getElementById('globalDashBadge');
-        if (dashBadge) { dashBadge.style.display = 'flex'; dashBadge.textContent = String(_globalUnreadCount); }
-        localStorage.setItem('globalNewMsgAt', new Date().toISOString());
-    } else {
-        _markReadLatest();
-    }
 }
 
 // ─── RENDER ALL MESSAGES ──────────────────────────────────────────────────────
@@ -705,9 +613,6 @@ function _renderMessages(messages: any[], scrollBottom: boolean) {
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
     feed.innerHTML = messages.map(m => _buildBubble(m, myName, myEmail)).join('');
     if (scrollBottom || wasNear) requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
-    // Track last message for read receipts
-    _lastMessageId = messages[messages.length - 1]?.id || null;
-    _markReadLatest();
 }
 
 function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
@@ -786,7 +691,9 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const mediaHtml = msg.media_url ? (
         msg.media_type === 'video'
             ? `<video src="${msg.media_url}" controls playsinline preload="metadata" ${_vidErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
-            : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
+            : isGif
+                ? `<img src="${msg.media_url}" ${_imgErr} style="max-width:220px;width:auto;height:auto;max-height:200px;border-radius:10px;display:block;margin-top:4px;" />`
+                : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
     ) : '';
 
     // ── QUEEN bubble (gold frame, full-width feed style) ──
@@ -804,7 +711,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                     </div>
                     ${replyBtn}
                 </div>
-                ${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>
+                ${quoteHtml}${isGif ? '' : `<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>`}
                 ${mediaHtml}
             </div>
         </div>`;
@@ -825,7 +732,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                 </div>
                 ${replyBtn}
             </div>
-            ${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>
+            ${quoteHtml}${isGif ? '' : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>`}
             ${mediaHtml}
         </div>
     </div>`;
@@ -937,6 +844,7 @@ async function _sendGif(gifUrl: string) {
     const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
     const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
 
+    // Optimistic render
     _appendMessage({
         sender_name: senderName,
         sender_avatar: senderAvatar,
@@ -962,7 +870,8 @@ export function openGifPicker() {
     if (_gifPickerOpen) { closeGifPicker(); return; }
     _gifPickerOpen = true;
 
-    document.getElementById('gifPickerOverlay')?.remove();
+    const existing = document.getElementById('gifPickerOverlay');
+    if (existing) existing.remove();
 
     const overlay = document.createElement('div');
     overlay.id = 'gifPickerOverlay';
@@ -973,6 +882,7 @@ export function openGifPicker() {
         display:flex;flex-direction:column;overflow:hidden;z-index:999;
         box-shadow:0 8px 40px rgba(0,0,0,0.7);
     `;
+
     overlay.innerHTML = `
         <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:flex;gap:8px;align-items:center;">
             <input id="gifSearchInput" type="text" placeholder="Search GIFs..." autocomplete="off"
@@ -986,6 +896,7 @@ export function openGifPicker() {
             <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
         </div>
     `;
+
     document.body.appendChild(overlay);
 
     const searchInput = overlay.querySelector('#gifSearchInput') as HTMLInputElement;
@@ -994,6 +905,7 @@ export function openGifPicker() {
         _gifSearchTimeout = setTimeout(() => _searchGifs(searchInput.value || 'funny'), 400);
     });
 
+    // Load trending on open
     _searchGifs('funny');
     setTimeout(() => searchInput?.focus(), 50);
 }
@@ -1002,6 +914,7 @@ async function _searchGifs(q: string) {
     const grid = document.getElementById('gifGrid');
     if (!grid) return;
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>`;
+
     try {
         const res = await fetch(`/api/global/gifs?q=${encodeURIComponent(q)}`);
         const { results } = await res.json();
@@ -1326,6 +1239,103 @@ async function _loadQueenGallery() {
         el.dataset.loaded = '1';
     } catch {
         el.innerHTML = `<div style="text-align:center;padding:40px;font-family:Orbitron;font-size:0.55rem;color:#ff4444;">FAILED TO LOAD</div>`;
+    }
+}
+
+// ─── CHAT PHOTO UPLOAD ────────────────────────────────────────────────────────
+
+export async function handleGlobalChatPhotoUpload(input: HTMLInputElement) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const raw = getState().raw;
+    const senderEmail = raw?.member_id || raw?.email;
+    if (!senderEmail) return;
+
+    // Show uploading indicator in input
+    const btn = document.querySelector<HTMLButtonElement>('button[title="Send photo"]');
+    if (btn) btn.textContent = '⏳';
+
+    try {
+        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('bucket', 'media');
+        fd.append('folder', 'global-chat');
+        fd.append('ext', ext);
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
+        const uploadData = await uploadRes.json();
+        if (!uploadData.url) { if (btn) btn.textContent = '📷'; return; }
+
+        const QUEEN_EMAILS = ['ceo@qkarin.com'];
+        const isQueenLocal = QUEEN_EMAILS.includes(senderEmail.toLowerCase());
+        const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
+        const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
+
+        // Optimistic render
+        _appendMessage({
+            sender_name: senderName,
+            sender_avatar: senderAvatar,
+            sender_email: senderEmail,
+            is_queen: isQueenLocal,
+            is_me: true,
+            message: '[PHOTO]',
+            media_url: uploadData.url,
+            media_type: 'image',
+            created_at: new Date().toISOString(),
+        });
+
+        await fetch('/api/global/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: '[PHOTO]', senderEmail, media_url: uploadData.url, media_type: 'image' }),
+        });
+    } finally {
+        input.value = '';
+        if (btn) btn.textContent = '📷';
+    }
+}
+
+// ─── CHALLENGES PREVIEW ───────────────────────────────────────────────────────
+
+async function _loadChallengesPreview() {
+    const el = document.getElementById('globalPreview_challenges');
+    if (!el) return;
+    try {
+        const res = await fetch('/api/challenges');
+        const { challenges } = await res.json();
+        const active = (challenges || []).filter((c: any) => c.status === 'active');
+        const upcoming = (challenges || []).filter((c: any) => c.status === 'draft' &&
+            c.start_date && new Date(c.start_date).getTime() > Date.now());
+
+        if (!active.length && !upcoming.length) {
+            el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;padding:16px;"><span style="font-size:1.4rem;">⚔</span><span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(74,222,128,0.3);letter-spacing:2px;text-align:center;">NO ACTIVE CHALLENGES</span></div>`;
+            return;
+        }
+
+        const renderCard = (c: any, isActive: boolean) => {
+            const startStr = c.start_date ? new Date(c.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+            const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - Date.now()) / 86400000)) : null;
+            return `
+            <div style="padding:10px 12px;border-bottom:1px solid rgba(74,222,128,0.07);display:flex;gap:10px;align-items:center;">
+                ${c.image_url ? `<img src="${c.image_url}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(74,222,128,0.2);">` : `<div style="width:36px;height:36px;border-radius:6px;background:rgba(74,222,128,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem;">⚔</div>`}
+                <div style="flex:1;min-width:0;">
+                    <div style="font-family:'Cinzel';font-size:0.58rem;color:${isActive ? '#4ade80' : '#c5a059'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;">${c.name}</div>
+                    <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.3);letter-spacing:1px;margin-top:2px;">
+                        ${isActive ? `${daysLeft}d left · ${c.participant_active ?? 0} active` : `starts ${startStr} · ${c.tasks_per_day}×/day`}
+                    </div>
+                </div>
+                <div style="font-family:'Orbitron';font-size:0.32rem;letter-spacing:1px;padding:2px 6px;border-radius:4px;flex-shrink:0;background:${isActive ? 'rgba(74,222,128,0.12)' : 'rgba(197,160,89,0.1)'};color:${isActive ? '#4ade80' : '#c5a059'};">
+                    ${isActive ? 'LIVE' : 'SOON'}
+                </div>
+            </div>`;
+        };
+
+        el.innerHTML = [
+            ...active.map((c: any) => renderCard(c, true)),
+            ...upcoming.map((c: any) => renderCard(c, false)),
+        ].join('');
+    } catch {
+        el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.15);">—</div>`;
     }
 }
 

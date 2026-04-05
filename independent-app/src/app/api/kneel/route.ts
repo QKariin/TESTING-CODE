@@ -86,7 +86,10 @@ export async function POST(req: Request) {
 
         // Return which hours today had a kneel (for dot grid)
         const kneelHours = [...new Set(kneelHistory.map(ts => {
-            try { return new Date(ts).getHours(); } catch { return -1; }
+            try {
+                const h = parseInt(new Date(ts).toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }), 10);
+                return h === 24 ? 0 : h; // midnight edge case
+            } catch { return -1; }
         }).filter(h => h >= 0))];
 
         return NextResponse.json({

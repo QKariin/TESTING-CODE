@@ -42,7 +42,7 @@ async function getKneelStatus(memberEmail: string, tz: string) {
             kneelHours = [...new Set(
                 history
                     .filter(ts => { try { return new Date(ts).toLocaleDateString('en-CA', { timeZone: tz }) === todayStr; } catch { return false; } })
-                    .map(ts => { try { return new Date(ts).getHours(); } catch { return -1; } })
+                    .map(ts => { try { const h = parseInt(new Date(ts).toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }), 10); return h === 24 ? 0 : h; } catch { return -1; } })
                     .filter(h => h >= 0)
             )];
         }
