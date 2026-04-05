@@ -92,7 +92,7 @@ export default function ProfilePage() {
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [challengePanelOpen, setChallengePanelOpen] = useState(false);
-    const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string } | null>(null);
+    const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string; status: string } | null>(null);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -348,8 +348,15 @@ export default function ProfilePage() {
                 const res = await fetch('/api/challenges');
                 const json = await res.json();
                 if (json.success) {
+                    const now = Date.now();
                     const active = (json.challenges || []).find((c: any) => c.status === 'active');
-                    setActiveChallenge(active ? { id: active.id, name: active.name, theme: active.theme } : null);
+                    const upcoming = !active && (json.challenges || []).find((c: any) =>
+                        c.status === 'draft' && c.start_date &&
+                        new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
+                        new Date(c.start_date).getTime() > now
+                    );
+                    const found = active || upcoming || null;
+                    setActiveChallenge(found ? { id: found.id, name: found.name, theme: found.theme, status: found.status } : null);
                 }
             } catch {}
         }
@@ -1617,7 +1624,7 @@ export default function ProfilePage() {
                         <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>⚔</div>
                         <div style={{ flex: 1, textAlign: 'left' }}>
                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#4ade80', letterSpacing: '1px' }}>{activeChallenge.name}</div>
-                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555', letterSpacing: '1.5px', marginTop: 2 }}>CHALLENGE ACTIVE — TAP TO VIEW</div>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555', letterSpacing: '1.5px', marginTop: 2 }}>{activeChallenge?.status === 'active' ? 'CHALLENGE ACTIVE — TAP TO VIEW' : 'STARTING SOON — TAP TO JOIN'}</div>
                         </div>
                         <div style={{ color: '#4ade80', fontSize: '1rem', opacity: 0.6 }}>›</div>
                     </button>
@@ -1793,6 +1800,25 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
                             </div>
                         )}
 
+                        {/* ── UPCOMING COUNTDOWN ──────────────────────── */}
+                        {data.challenge.status === 'draft' && data.challenge.start_date && (
+                            <div style={{ background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 14, padding: '18px 16px', marginBottom: 16, textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>CHALLENGE STARTS IN</div>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1.6rem', fontWeight: 900, color: '#c5a059', letterSpacing: '4px' }}>
+                                    {(() => {
+                                        const diff = Math.max(0, Math.floor((new Date(data.challenge.start_date).getTime() - now) / 1000));
+                                        const h = Math.floor(diff / 3600);
+                                        const m = Math.floor((diff % 3600) / 60);
+                                        const s = diff % 60;
+                                        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                                    })()}
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555', marginTop: 6 }}>
+                                    {new Date(data.challenge.start_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Open windows — upload NOW (only if participant) */}
                         {data.participant && data.participant.status === 'active' && openWindows.length > 0 && (
                             <div style={{ marginBottom: 28 }}>
@@ -1837,7 +1863,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
                         )}
 
                         {/* Upcoming windows (only if participant) */}
-                        {data.participant && data.participant.status === 'active' && upcomingWindows.length > 0 && (
+                        {data.participant && data.participant.status === 'active' && (data.challenge.status === 'active' || data.challenge.status === 'draft') && upcomingWindows.length > 0 && (
                             <div style={{ marginBottom: 24 }}>
                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>UPCOMING</div>
                                 {upcomingWindows.map((w: any) => {

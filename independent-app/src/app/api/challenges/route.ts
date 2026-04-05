@@ -38,7 +38,7 @@ export async function POST(request: Request) {
             duration_days, tasks_per_day, window_minutes,
             points_per_completion = 20,
             first_place_points = 10, second_place_points = 7, third_place_points = 5,
-            start_date, image_url = null,
+            start_date, image_url = null, task_times = null,
         } = body;
 
         if (!name || !duration_days || !tasks_per_day || !window_minutes || !start_date)
@@ -66,23 +66,32 @@ export async function POST(request: Request) {
 
         if (cErr) throw cErr;
 
-        // Auto-generate all windows distributed evenly 08:00–22:00
+        // Generate windows — use provided task_times or distribute evenly 08:00–22:00
         const windows: any[] = [];
+        const tpd = Number(tasks_per_day);
+        const wmin = Number(window_minutes);
         for (let day = 1; day <= Number(duration_days); day++) {
             const dayDate = new Date(startDt);
             dayDate.setDate(dayDate.getDate() + (day - 1));
-            const totalMinutes = 14 * 60; // 08:00 to 22:00
-            const interval = Math.floor(totalMinutes / (Number(tasks_per_day) + 1));
-            for (let w = 1; w <= Number(tasks_per_day); w++) {
-                const opensAt = new Date(dayDate);
-                opensAt.setHours(8, 0, 0, 0);
-                opensAt.setMinutes(opensAt.getMinutes() + interval * w);
+            for (let w = 0; w < tpd; w++) {
+                let opensAt: Date;
+                if (task_times && Array.isArray(task_times) && task_times[w]) {
+                    const [h, m] = (task_times[w] as string).split(':').map(Number);
+                    opensAt = new Date(dayDate);
+                    opensAt.setHours(h, m, 0, 0);
+                } else {
+                    // Fallback: evenly distributed 08:00–22:00
+                    const interval = Math.floor((14 * 60) / (tpd + 1));
+                    opensAt = new Date(dayDate);
+                    opensAt.setHours(8, 0, 0, 0);
+                    opensAt.setMinutes(opensAt.getMinutes() + interval * (w + 1));
+                }
                 const closesAt = new Date(opensAt);
-                closesAt.setMinutes(closesAt.getMinutes() + Number(window_minutes));
+                closesAt.setMinutes(closesAt.getMinutes() + wmin);
                 windows.push({
                     challenge_id: challenge.id,
                     day_number: day,
-                    window_number: w,
+                    window_number: w + 1,
                     opens_at: opensAt.toISOString(),
                     closes_at: closesAt.toISOString(),
                     verification_code: Math.floor(10000 + Math.random() * 90000),

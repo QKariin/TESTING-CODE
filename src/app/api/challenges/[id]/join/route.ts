@@ -13,11 +13,16 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
         // Challenge must exist and be active
         const { data: challenge } = await supabaseAdmin
-            .from('challenges').select('id, name, status').eq('id', challengeId).single();
+            .from('challenges').select('id, name, status, start_date').eq('id', challengeId).single();
 
         if (!challenge) return NextResponse.json({ success: false, error: 'Challenge not found' }, { status: 404 });
-        if (challenge.status !== 'active')
-            return NextResponse.json({ success: false, error: 'Challenge is not active' }, { status: 400 });
+        const isActive = challenge.status === 'active';
+        const isUpcoming = challenge.status === 'draft' &&
+            challenge.start_date &&
+            new Date(challenge.start_date).getTime() - Date.now() <= 24 * 60 * 60 * 1000 &&
+            new Date(challenge.start_date).getTime() > Date.now();
+        if (!isActive && !isUpcoming)
+            return NextResponse.json({ success: false, error: 'Challenge is not open for joining yet' }, { status: 400 });
 
         // Already a participant?
         const { data: existing } = await supabaseAdmin

@@ -612,7 +612,19 @@ function CreateTab({ allChallenges, onCreate }: {
     const [imageError, setImageError] = useState('');
     const imageInputRef = useRef<HTMLInputElement>(null);
 
+    const DEFAULT_TIMES = ['09:00', '13:00', '18:00', '08:00', '11:00', '15:00', '19:00', '07:00', '12:00', '21:00'];
+    const [taskTimes, setTaskTimes] = useState<string[]>(() => DEFAULT_TIMES.slice(0, 3));
+
     const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+
+    // Resize taskTimes when tasks_per_day changes
+    const handleTasksPerDayChange = (n: number) => {
+        set('tasks_per_day', n);
+        setTaskTimes(prev => {
+            if (n > prev.length) return [...prev, ...DEFAULT_TIMES.slice(prev.length, n)];
+            return prev.slice(0, n);
+        });
+    };
 
     const prefill = (c: Challenge) => {
         set('name', c.name);
@@ -626,6 +638,7 @@ function CreateTab({ allChallenges, onCreate }: {
         set('second_place_points', c.second_place_points);
         set('third_place_points', c.third_place_points);
         set('image_url', (c as any).image_url || '');
+        setTaskTimes(DEFAULT_TIMES.slice(0, c.tasks_per_day));
     };
 
     const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -660,7 +673,7 @@ function CreateTab({ allChallenges, onCreate }: {
         setSubmitting(true);
         try {
             const startDt = new Date(`${form.start_date}T${form.start_time}:00`);
-            await onCreate({ ...form, start_date: startDt.toISOString() });
+            await onCreate({ ...form, start_date: startDt.toISOString(), task_times: taskTimes });
         } finally {
             setSubmitting(false);
         }
@@ -760,7 +773,7 @@ function CreateTab({ allChallenges, onCreate }: {
                         </div>
                         <div className="ch-field">
                             <label className="ch-label">TASKS PER DAY</label>
-                            <input type="number" className="ch-input" min={1} max={10} value={form.tasks_per_day} onChange={e => set('tasks_per_day', Number(e.target.value))} />
+                            <input type="number" className="ch-input" min={1} max={10} value={form.tasks_per_day} onChange={e => handleTasksPerDayChange(Math.min(10, Math.max(1, Number(e.target.value))))} />
                         </div>
                         <div className="ch-field">
                             <label className="ch-label">WINDOW DURATION (MIN)</label>
@@ -777,6 +790,30 @@ function CreateTab({ allChallenges, onCreate }: {
                         <div className="ch-field">
                             <label className="ch-label">START TIME</label>
                             <input type="time" className="ch-input" value={form.start_time} onChange={e => set('start_time', e.target.value)} />
+                        </div>
+                    </div>
+
+                    {/* Daily Task Schedule */}
+                    <div>
+                        <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>DAILY TASK SCHEDULE</label>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 12 }}>
+                            Set when each task window opens. Same times repeat every day. Window stays open for {form.window_minutes} minutes.
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {taskTimes.map((t, i) => {
+                                const [h, m] = t.split(':').map(Number);
+                                const closeH = Math.floor((h * 60 + m + form.window_minutes) / 60) % 24;
+                                const closeM = (m + form.window_minutes) % 60;
+                                const closeStr = `${String(closeH).padStart(2,'0')}:${String(closeM).padStart(2,'0')}`;
+                                return (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', width: 52, flexShrink: 0, letterSpacing: '1px' }}>TASK {i + 1}</div>
+                                        <input type="time" className="ch-input" style={{ flex: 1 }} value={t}
+                                            onChange={e => { const arr = [...taskTimes]; arr[i] = e.target.value; setTaskTimes(arr); }} />
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#444', flexShrink: 0, letterSpacing: '1px' }}>→ {closeStr}</div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
