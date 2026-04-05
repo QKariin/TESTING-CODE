@@ -92,6 +92,7 @@ export default function ChallengesPage() {
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
     const [tick, setTick] = useState(0);
+    const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
     const toastTimer = useRef<any>(null);
 
     const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -266,6 +267,7 @@ export default function ChallengesPage() {
                             }}
                             onSelectChallenge={(c) => loadDetail(c.id)}
                             draftChallenges={challenges.filter(c => c.status === 'draft')}
+                            onEdit={(c) => setEditingChallenge(c)}
                         />
                     )}
                     {tab === 'create' && (
@@ -293,18 +295,42 @@ export default function ChallengesPage() {
                         <HistoryTab
                             challenges={endedChallenges}
                             onView={(c) => { loadDetail(c.id); setTab('active'); }}
+                            onEdit={(c) => setEditingChallenge(c)}
                         />
                     )}
                 </div>
             </div>
 
             {toast && <Toast msg={toast.msg} type={toast.type} />}
+
+            {editingChallenge && (
+                <EditChallengeModal
+                    challenge={editingChallenge}
+                    onClose={() => setEditingChallenge(null)}
+                    onSave={async (updates) => {
+                        const res = await fetch(`/api/challenges/${editingChallenge.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updates),
+                        });
+                        const json = await res.json();
+                        if (json.success) {
+                            showToast('Challenge updated');
+                            setEditingChallenge(null);
+                            await loadAll();
+                            if (detail?.challenge.id === editingChallenge.id) loadDetail(editingChallenge.id);
+                        } else {
+                            showToast(json.error || 'Save failed', 'error');
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 }
 
 // ─── ACTIVE TAB ───────────────────────────────────────────────────────────────
-function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch, onEnd, onSelectChallenge, draftChallenges }: {
+function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch, onEnd, onSelectChallenge, draftChallenges, onEdit }: {
     activeChallenge: Challenge | null;
     detail: ChallengeDetail | null;
     loading: boolean;
@@ -314,6 +340,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
     onEnd: () => void;
     onSelectChallenge: (c: Challenge) => void;
     draftChallenges: Challenge[];
+    onEdit: (c: Challenge) => void;
 }) {
     const [verifying, setVerifying] = useState<string | null>(null);
 
@@ -376,6 +403,9 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
+                    <button className="ch-action-btn gold" style={{ padding: '8px 20px', fontSize: '0.45rem', letterSpacing: '2px' }} onClick={() => onEdit(challenge)}>
+                        ✎ EDIT
+                    </button>
                     {challenge.status === 'draft' && (
                         <button className="ch-action-btn green" style={{ padding: '8px 20px', fontSize: '0.45rem', letterSpacing: '2px' }} onClick={onLaunch}>
                             ▶ LAUNCH
@@ -799,9 +829,10 @@ function CreateTab({ allChallenges, onCreate }: {
 }
 
 // ─── HISTORY TAB ──────────────────────────────────────────────────────────────
-function HistoryTab({ challenges, onView }: {
+function HistoryTab({ challenges, onView, onEdit }: {
     challenges: Challenge[];
     onView: (c: Challenge) => void;
+    onEdit: (c: Challenge) => void;
 }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
@@ -849,7 +880,10 @@ function HistoryTab({ challenges, onView }: {
                                             </span>
                                         </td>
                                         <td>
-                                            <button className="ch-action-btn gold" onClick={() => onView(c)}>VIEW →</button>
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <button className="ch-action-btn gold" onClick={() => onView(c)}>VIEW →</button>
+                                                <button className="ch-action-btn" style={{ padding: '6px 12px', fontSize: '0.38rem', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#888' }} onClick={() => onEdit(c)}>✎</button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -858,6 +892,181 @@ function HistoryTab({ challenges, onView }: {
                     </table>
                 </div>
             )}
+        </div>
+    );
+}
+
+// ─── EDIT CHALLENGE MODAL ─────────────────────────────────────────────────────
+function EditChallengeModal({ challenge, onClose, onSave }: {
+    challenge: Challenge;
+    onClose: () => void;
+    onSave: (updates: Record<string, any>) => Promise<void>;
+}) {
+    const [form, setForm] = useState({
+        name: challenge.name,
+        description: challenge.description || '',
+        theme: challenge.theme,
+        image_url: challenge.image_url || '',
+        points_per_completion: challenge.points_per_completion,
+        first_place_points: challenge.first_place_points,
+        second_place_points: challenge.second_place_points,
+        third_place_points: challenge.third_place_points,
+        start_date: challenge.start_date ? challenge.start_date.slice(0, 10) : '',
+        end_date: challenge.end_date ? challenge.end_date.slice(0, 10) : '',
+    });
+    const [saving, setSaving] = useState(false);
+    const [imageUploading, setImageUploading] = useState(false);
+    const [imageError, setImageError] = useState('');
+    const imageInputRef = useRef<HTMLInputElement>(null);
+
+    const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+
+    const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImageUploading(true);
+        setImageError('');
+        try {
+            const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('bucket', 'media');
+            fd.append('folder', 'challenge-covers');
+            fd.append('ext', ext);
+            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+            const json = await res.json();
+            if (json.url) set('image_url', json.url);
+            else setImageError(json.error || 'Upload failed');
+        } catch { setImageError('Upload failed'); }
+        finally {
+            setImageUploading(false);
+            if (imageInputRef.current) imageInputRef.current.value = '';
+        }
+    };
+
+    const handleSave = async () => {
+        if (!form.name) return;
+        setSaving(true);
+        try {
+            await onSave({
+                name: form.name,
+                description: form.description,
+                theme: form.theme,
+                image_url: form.image_url || null,
+                points_per_completion: Number(form.points_per_completion),
+                first_place_points: Number(form.first_place_points),
+                second_place_points: Number(form.second_place_points),
+                third_place_points: Number(form.third_place_points),
+                start_date: form.start_date ? new Date(form.start_date).toISOString() : challenge.start_date,
+                end_date: form.end_date ? new Date(form.end_date).toISOString() : challenge.end_date,
+            });
+        } finally { setSaving(false); }
+    };
+
+    const themes = [
+        { key: 'gold', label: 'GOLD' }, { key: 'red', label: 'RED' },
+        { key: 'purple', label: 'PURPLE' }, { key: 'blue', label: 'BLUE' },
+    ];
+
+    return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div style={{ background: '#0d0d0d', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+                    <div>
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', color: '#c5a059', letterSpacing: '3px' }}>EDIT CHALLENGE</div>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#ddd', marginTop: 3 }}>{challenge.name}</div>
+                    </div>
+                    <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#666', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px' }}>✕</button>
+                </div>
+
+                {/* Form */}
+                <div style={{ overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    <input ref={imageInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagePick} />
+
+                    <div className="ch-field">
+                        <label className="ch-label">CHALLENGE NAME</label>
+                        <input className="ch-input" value={form.name} onChange={e => set('name', e.target.value)} />
+                    </div>
+
+                    <div className="ch-field">
+                        <label className="ch-label">DESCRIPTION</label>
+                        <textarea className="ch-input" value={form.description} onChange={e => set('description', e.target.value)} />
+                    </div>
+
+                    <div className="ch-field">
+                        <label className="ch-label">THEME</label>
+                        <div className="ch-theme-row">
+                            {themes.map(t => (
+                                <button key={t.key} type="button" className={`ch-theme-chip ${form.theme === t.key ? 'active' : ''}`} data-theme={t.key} onClick={() => set('theme', t.key)}>
+                                    <div className="dot" />{t.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="ch-field">
+                        <label className="ch-label">COVER IMAGE</label>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                            {form.image_url && (
+                                <div style={{ position: 'relative', flexShrink: 0 }}>
+                                    <img src={form.image_url} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 10, border: '2px solid rgba(74,222,128,0.4)' }} alt="cover" />
+                                    <button type="button" onClick={() => set('image_url', '')} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#e03030', border: 'none', color: '#fff', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>✕</button>
+                                </div>
+                            )}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                <button type="button" onClick={() => imageInputRef.current?.click()}
+                                    style={{ padding: '9px 16px', background: form.image_url ? 'rgba(74,222,128,0.06)' : 'rgba(197,160,89,0.06)', border: `1px solid ${form.image_url ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: imageUploading ? '#555' : form.image_url ? '#4ade80' : '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', letterSpacing: '1.5px', cursor: imageUploading ? 'default' : 'pointer' }}
+                                    disabled={imageUploading}>
+                                    {imageUploading ? '⏳ UPLOADING...' : form.image_url ? '✓ UPLOADED — CHANGE?' : '⬆ UPLOAD COVER'}
+                                </button>
+                                {imageError && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#e03030' }}>⚠ {imageError}</div>}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="ch-form-grid">
+                        <div className="ch-field">
+                            <label className="ch-label">START DATE</label>
+                            <input type="date" className="ch-input" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
+                        </div>
+                        <div className="ch-field">
+                            <label className="ch-label">END DATE</label>
+                            <input type="date" className="ch-input" value={form.end_date} onChange={e => set('end_date', e.target.value)} />
+                        </div>
+                    </div>
+
+                    <div className="ch-field">
+                        <label className="ch-label">FLAT POINTS PER TASK</label>
+                        <input type="number" className="ch-input" style={{ maxWidth: 120 }} min={0} value={form.points_per_completion} onChange={e => set('points_per_completion', e.target.value)} />
+                    </div>
+
+                    <div>
+                        <label className="ch-label" style={{ display: 'block', marginBottom: 12 }}>SPEED BONUS (1ST / 2ND / 3RD)</label>
+                        <div className="ch-points-row">
+                            {([['🥇', 'first_place_points'], ['🥈', 'second_place_points'], ['🥉', 'third_place_points']] as const).map(([rank, key]) => (
+                                <div key={key} className="ch-points-card">
+                                    <div className="ch-points-rank">{rank}</div>
+                                    <input type="number" className="ch-points-input" min={0}
+                                        value={(form as any)[key]}
+                                        onChange={e => set(key, Number(e.target.value))} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 10, justifyContent: 'flex-end', flexShrink: 0 }}>
+                    <button onClick={onClose} style={{ padding: '10px 20px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#666', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', letterSpacing: '1.5px', cursor: 'pointer' }}>
+                        CANCEL
+                    </button>
+                    <button onClick={handleSave} disabled={saving || !form.name}
+                        style={{ padding: '10px 24px', background: saving ? 'rgba(197,160,89,0.1)' : 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: saving ? '#555' : '#000', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', letterSpacing: '1.5px', cursor: saving ? 'default' : 'pointer', fontWeight: 700 }}>
+                        {saving ? 'SAVING...' : '✓ SAVE CHANGES'}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
