@@ -77,7 +77,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 }
 
-// GET — member checks challenge info, their participant status, and submissions
+// GET — member challenge data: status, stats, windows, gallery
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id: challengeId } = await params;
@@ -87,25 +87,59 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
         const memberEmail = user.email.toLowerCase();
 
-        const [{ data: challenge }, { data: windows }, { data: completions }, { data: participant }] = await Promise.all([
+        const [{ data: challenge }, { data: windows }, { data: myCompletions }, { data: participant }] = await Promise.all([
             supabaseAdmin.from('challenges')
-                .select('id, name, theme, status, description, image_url, tasks_per_day, window_minutes, duration_days, start_date, end_date')
+                .select('id, name, theme, status, description, image_url, tasks_per_day, window_minutes, duration_days, start_date, end_date, points_per_completion, first_place_points, second_place_points, third_place_points')
                 .eq('id', challengeId).single(),
             supabaseAdmin.from('challenge_windows')
                 .select('*').eq('challenge_id', challengeId).order('opens_at', { ascending: true }),
             supabaseAdmin.from('challenge_completions')
-                .select('window_id, verified, completed_at, response_time_seconds')
+                .select('id, window_id, verified, completed_at, response_time_seconds, proof_url')
                 .eq('challenge_id', challengeId).ilike('member_id', memberEmail),
             supabaseAdmin.from('challenge_participants')
                 .select('status, joined_at').eq('challenge_id', challengeId).ilike('member_id', memberEmail).maybeSingle(),
         ]);
 
+        // Compute per-task placement and aggregate stats
+        const verified = (myCompletions || []).filter((c: any) => c.verified);
+        let top3Count = 0;
+        let totalPoints = 0;
+
+        for (const comp of verified) {
+            const { data: others } = await supabaseAdmin
+                .from('challenge_completions')
+                .select('response_time_seconds')
+                .eq('window_id', comp.window_id)
+                .eq('verified', true)
+                .not('member_id', 'ilike', memberEmail);
+
+            const fasterCount = (others || []).filter(
+                (c: any) => (c.response_time_seconds ?? 999999) < (comp.response_time_seconds ?? 999999)
+            ).length;
+
+            if (fasterCount < 3) top3Count++;
+
+            const flat = (challenge as any)?.points_per_completion ?? 20;
+            const bonusMap: Record<number, number> = {
+                0: (challenge as any)?.first_place_points ?? 10,
+                1: (challenge as any)?.second_place_points ?? 7,
+                2: (challenge as any)?.third_place_points ?? 5,
+            };
+            totalPoints += flat + (bonusMap[fasterCount] ?? 0);
+        }
+
         return NextResponse.json({
             success: true,
             challenge,
             windows: windows || [],
-            completions: completions || [],
-            participant: participant || null,  // null = not joined
+            completions: myCompletions || [],
+            participant: participant || null,
+            stats: {
+                tasks_done: verified.length,
+                tasks_submitted: (myCompletions || []).length,
+                top3_count: top3Count,
+                total_points: totalPoints,
+            },
         });
     } catch (err: any) {
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });

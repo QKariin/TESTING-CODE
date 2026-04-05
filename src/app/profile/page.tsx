@@ -92,7 +92,7 @@ export default function ProfilePage() {
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [challengePanelOpen, setChallengePanelOpen] = useState(false);
-    const [activeChallengeId, setActiveChallengeId] = useState<string | null>(null);
+    const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string } | null>(null);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -349,7 +349,7 @@ export default function ProfilePage() {
                 const json = await res.json();
                 if (json.success) {
                     const active = (json.challenges || []).find((c: any) => c.status === 'active');
-                    setActiveChallengeId(active?.id || null);
+                    setActiveChallenge(active ? { id: active.id, name: active.name, theme: active.theme } : null);
                 }
             } catch {}
         }
@@ -1598,20 +1598,33 @@ export default function ProfilePage() {
 
         </div>
 
-        {/* ── CHALLENGE UPLOAD PANEL ── */}
-        {activeChallengeId && (
+        {/* ── CHALLENGE BANNER + PANEL ── */}
+        {activeChallenge && (
             <>
-                {/* Floating button */}
                 {!challengePanelOpen && (
                     <button
                         onClick={() => setChallengePanelOpen(true)}
-                        style={{ position: 'fixed', bottom: 80, right: 18, zIndex: 9000, width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#1a3a1a,#2d6a2d)', border: '1px solid rgba(74,222,128,0.4)', color: '#4ade80', fontSize: '1.3rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(74,222,128,0.25)', animation: 'pulse 2s infinite' }}
-                        title="Challenge Tasks"
-                    >⚔</button>
+                        style={{
+                            position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 8999,
+                            background: 'linear-gradient(135deg, rgba(10,26,10,0.97), rgba(5,20,5,0.97))',
+                            border: '1px solid rgba(74,222,128,0.35)',
+                            borderRadius: 14, padding: '12px 16px',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
+                            boxShadow: '0 4px 24px rgba(74,222,128,0.15)',
+                            backdropFilter: 'blur(10px)',
+                        }}
+                    >
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>⚔</div>
+                        <div style={{ flex: 1, textAlign: 'left' }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#4ade80', letterSpacing: '1px' }}>{activeChallenge.name}</div>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555', letterSpacing: '1.5px', marginTop: 2 }}>CHALLENGE ACTIVE — TAP TO VIEW</div>
+                        </div>
+                        <div style={{ color: '#4ade80', fontSize: '1rem', opacity: 0.6 }}>›</div>
+                    </button>
                 )}
                 {challengePanelOpen && (
                     <ChallengeUploadPanel
-                        challengeId={activeChallengeId}
+                        challengeId={activeChallenge.id}
                         memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
                         onClose={() => setChallengePanelOpen(false)}
                     />
