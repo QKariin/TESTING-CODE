@@ -12,7 +12,7 @@ interface Challenge {
     second_place_points: number; third_place_points: number;
     start_date: string | null; end_date: string | null; created_at: string;
     participant_total?: number; participant_active?: number; participant_eliminated?: number;
-    is_template?: boolean;
+    is_template?: boolean; image_url?: string | null;
 }
 
 interface Window_ {
@@ -230,7 +230,8 @@ export default function ChallengesPage() {
                                 });
                                 const json = await res.json();
                                 if (json.success) {
-                                    showToast(verified ? '✓ Verified — points awarded' : '✕ Rejected', verified ? 'success' : 'error');
+                                    const placeLabel = json.placement === 1 ? ' 🥇 +10 bonus' : json.placement === 2 ? ' 🥈 +7 bonus' : json.placement === 3 ? ' 🥉 +5 bonus' : '';
+                                    showToast(verified ? `✓ Verified — ${json.points_awarded ?? 20}pts awarded${placeLabel}` : '✕ Rejected', verified ? 'success' : 'error');
                                     loadDetail(detail.challenge.id);
                                 } else {
                                     showToast(json.error || 'Error', 'error');
@@ -389,9 +390,16 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
             </div>
 
             {/* BANNER */}
-            <div className="ch-active-banner" style={{ borderColor: `${color}44`, background: `linear-gradient(135deg, ${color}08, rgba(0,0,0,0.3))` }}>
-                {challenge.status === 'active' && <div className="ch-active-dot" style={{ background: color, boxShadow: `0 0 10px ${color}` }} />}
-                <div className="ch-active-info">
+            <div className="ch-active-banner" style={{ borderColor: `${color}44`, background: challenge.image_url ? undefined : `linear-gradient(135deg, ${color}08, rgba(0,0,0,0.3))`, overflow: 'hidden', position: 'relative' }}>
+                {challenge.image_url && (
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${challenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18, zIndex: 0 }} />
+                )}
+                {challenge.status === 'active' && <div className="ch-active-dot" style={{ background: color, boxShadow: `0 0 10px ${color}`, position: 'relative', zIndex: 1 }} />}
+                <div className="ch-active-info" style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                    {challenge.image_url && (
+                        <img src={challenge.image_url} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 10, border: `1px solid ${color}44`, flexShrink: 0 }} alt="" />
+                    )}
+                    <div>
                     <div className="ch-active-name">{challenge.name}</div>
                     {challenge.description && <div className="ch-active-meta">{challenge.description}</div>}
                     {currentWindow && (
@@ -402,6 +410,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                             </span>
                         </div>
                     )}
+                    </div>
                 </div>
                 <div className="ch-stats-row">
                     {[
@@ -563,11 +572,14 @@ function CreateTab({ allChallenges, onCreate }: {
     const [form, setForm] = useState({
         name: '', theme: 'gold', description: '',
         duration_days: 7, tasks_per_day: 3, window_minutes: 30,
-        points_per_completion: 1,
+        points_per_completion: 20,
         first_place_points: 10, second_place_points: 7, third_place_points: 5,
         start_date: '', start_time: '08:00',
+        image_url: '',
     });
     const [submitting, setSubmitting] = useState(false);
+    const [imageUploading, setImageUploading] = useState(false);
+    const imageInputRef = useRef<HTMLInputElement>(null);
 
     const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
@@ -582,6 +594,27 @@ function CreateTab({ allChallenges, onCreate }: {
         set('first_place_points', c.first_place_points);
         set('second_place_points', c.second_place_points);
         set('third_place_points', c.third_place_points);
+        set('image_url', (c as any).image_url || '');
+    };
+
+    const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImageUploading(true);
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('bucket', 'challenge-covers');
+            fd.append('folder', 'covers');
+            const ext = file.name.split('.').pop() || 'jpg';
+            fd.append('ext', ext);
+            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+            const json = await res.json();
+            if (json.url) set('image_url', json.url);
+        } finally {
+            setImageUploading(false);
+            if (imageInputRef.current) imageInputRef.current.value = '';
+        }
     };
 
     const handleSubmit = async () => {
@@ -657,6 +690,25 @@ function CreateTab({ allChallenges, onCreate }: {
                         <textarea className="ch-input" placeholder="What is this challenge about..." value={form.description} onChange={e => set('description', e.target.value)} />
                     </div>
 
+                    {/* Cover Image */}
+                    <div className="ch-field">
+                        <label className="ch-label">COVER IMAGE (OPTIONAL)</label>
+                        <input ref={imageInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagePick} />
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                            {form.image_url ? (
+                                <div style={{ position: 'relative', flexShrink: 0 }}>
+                                    <img src={form.image_url} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(197,160,89,0.3)' }} alt="cover" />
+                                    <button type="button" onClick={() => set('image_url', '')} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#e03030', border: 'none', color: '#fff', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>✕</button>
+                                </div>
+                            ) : null}
+                            <button type="button" onClick={() => imageInputRef.current?.click()}
+                                style={{ padding: '10px 18px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: imageUploading ? '#555' : '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', letterSpacing: '1.5px', cursor: imageUploading ? 'default' : 'pointer' }}
+                                disabled={imageUploading}>
+                                {imageUploading ? 'UPLOADING...' : form.image_url ? '↻ CHANGE IMAGE' : '⬆ UPLOAD COVER'}
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Schedule */}
                     <div className="ch-form-grid-3">
                         <div className="ch-field">
@@ -687,12 +739,14 @@ function CreateTab({ allChallenges, onCreate }: {
 
                     {/* Points */}
                     <div>
-                        <label className="ch-label" style={{ display: 'block', marginBottom: 12 }}>POINTS PER VERIFIED TASK</label>
+                        <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>FLAT POINTS PER VERIFIED TASK</label>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 10 }}>Every participant who gets a task verified earns this. Default: 20.</div>
                         <input type="number" className="ch-input" style={{ maxWidth: 120 }} min={0} value={form.points_per_completion} onChange={e => set('points_per_completion', Number(e.target.value))} />
                     </div>
 
                     <div>
-                        <label className="ch-label" style={{ display: 'block', marginBottom: 12 }}>PLACEMENT POINTS</label>
+                        <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>SPEED BONUS PER TASK (1ST/2ND/3RD)</label>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 10 }}>Bonus points awarded per task to the fastest 3 verified submissions.</div>
                         <div className="ch-points-row">
                             {[
                                 { rank: '🥇', label: '1ST PLACE', key: 'first_place_points' },

@@ -28,19 +28,44 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                 verified: true, verified_at: new Date().toISOString(), verification_note: note || null,
             }).eq('id', completionId);
 
-            // Award per-task points
+            // Per-window placement: count already-verified completions for this window ranked faster
+            const { data: otherVerified } = await supabaseAdmin
+                .from('challenge_completions')
+                .select('response_time_seconds')
+                .eq('window_id', completion.window_id)
+                .eq('verified', true)
+                .neq('id', completionId);
+
+            const thisTime = completion.response_time_seconds ?? 999999;
+            const fasterCount = (otherVerified || []).filter(
+                (c: any) => (c.response_time_seconds ?? 999999) < thisTime
+            ).length;
+
+            // 20 flat + 10/7/5 bonus for 1st/2nd/3rd
             const { data: challenge } = await supabaseAdmin.from('challenges')
-                .select('points_per_completion').eq('id', id).single();
-            if (challenge?.points_per_completion) {
+                .select('points_per_completion, first_place_points, second_place_points, third_place_points')
+                .eq('id', id).single();
+
+            const flat = challenge?.points_per_completion ?? 20;
+            const bonusMap: Record<number, number> = {
+                0: challenge?.first_place_points ?? 10,
+                1: challenge?.second_place_points ?? 7,
+                2: challenge?.third_place_points ?? 5,
+            };
+            const bonus = bonusMap[fasterCount] ?? 0;
+            const totalPoints = flat + bonus;
+
+            if (totalPoints > 0) {
                 const { data: profile } = await supabaseAdmin.from('profiles')
                     .select('score').eq('member_id', completion.member_id).single();
                 if (profile) {
                     await supabaseAdmin.from('profiles')
-                        .update({ score: (profile.score || 0) + challenge.points_per_completion })
+                        .update({ score: (profile.score || 0) + totalPoints })
                         .eq('member_id', completion.member_id);
                 }
             }
-            return NextResponse.json({ success: true, action: 'verified' });
+
+            return NextResponse.json({ success: true, action: 'verified', points_awarded: totalPoints, placement: fasterCount + 1 });
         } else {
             if (windowStillOpen) {
                 // Window still open — delete so they can resubmit

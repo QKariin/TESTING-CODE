@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 import { initProfileState, setState } from '@/scripts/profile-state';
@@ -91,6 +91,8 @@ export default function ProfilePage() {
     const [benefitsOpen, setBenefitsOpen] = useState(false);
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [challengePanelOpen, setChallengePanelOpen] = useState(false);
+    const [activeChallengeId, setActiveChallengeId] = useState<string | null>(null);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -337,6 +339,24 @@ export default function ProfilePage() {
     //         });
     //     }
     // }, []);
+
+    // ─── ACTIVE CHALLENGE POLL ───────────────────────────────────────────────────
+    useEffect(() => {
+        if (!profile) return;
+        async function checkChallenge() {
+            try {
+                const res = await fetch('/api/challenges');
+                const json = await res.json();
+                if (json.success) {
+                    const active = (json.challenges || []).find((c: any) => c.status === 'active');
+                    setActiveChallengeId(active?.id || null);
+                }
+            } catch {}
+        }
+        checkChallenge();
+        const t = setInterval(checkChallenge, 30000);
+        return () => clearInterval(t);
+    }, [profile]);
 
     // ─── SILENCE POLL — fires once profile is loaded, uses email from profile state ──
     useEffect(() => {
@@ -1577,6 +1597,218 @@ export default function ProfilePage() {
             </nav>
 
         </div>
+
+        {/* ── CHALLENGE UPLOAD PANEL ── */}
+        {activeChallengeId && (
+            <>
+                {/* Floating button */}
+                {!challengePanelOpen && (
+                    <button
+                        onClick={() => setChallengePanelOpen(true)}
+                        style={{ position: 'fixed', bottom: 80, right: 18, zIndex: 9000, width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#1a3a1a,#2d6a2d)', border: '1px solid rgba(74,222,128,0.4)', color: '#4ade80', fontSize: '1.3rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(74,222,128,0.25)', animation: 'pulse 2s infinite' }}
+                        title="Challenge Tasks"
+                    >⚔</button>
+                )}
+                {challengePanelOpen && (
+                    <ChallengeUploadPanel
+                        challengeId={activeChallengeId}
+                        memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                        onClose={() => setChallengePanelOpen(false)}
+                    />
+                )}
+            </>
+        )}
         </>
+    );
+}
+
+// ─── CHALLENGE UPLOAD PANEL ───────────────────────────────────────────────────
+function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
+    challengeId: string;
+    memberEmail: string;
+    onClose: () => void;
+}) {
+    const [data, setData] = useState<{ challenge: any; windows: any[]; completions: any[] } | null>(null);
+    const [uploading, setUploading] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const pendingWindowRef = useRef<string | null>(null);
+
+    const load = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/challenges/${challengeId}/submit`);
+            const json = await res.json();
+            if (json.success) setData(json);
+        } catch {}
+    }, [challengeId]);
+
+    useEffect(() => { load(); }, [load]);
+
+    const showToast = (msg: string, ok: boolean) => {
+        setToast({ msg, ok });
+        setTimeout(() => setToast(null), 3500);
+    };
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        const windowId = pendingWindowRef.current;
+        if (!file || !windowId) return;
+        setUploading(windowId);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('bucket', 'challenge-proofs');
+            fd.append('folder', `${challengeId}`);
+            const ext = file.name.split('.').pop() || 'jpg';
+            fd.append('ext', ext);
+            const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
+            const upJson = await upRes.json();
+            if (!upJson.url) { showToast('Upload failed', false); return; }
+
+            const subRes = await fetch(`/api/challenges/${challengeId}/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ windowId, proofUrl: upJson.url }),
+            });
+            const subJson = await subRes.json();
+            if (subJson.success) {
+                showToast(`✓ Submitted! Speed: ${subJson.response_time_seconds}s`, true);
+                load();
+            } else {
+                showToast(subJson.error || 'Submit failed', false);
+            }
+        } finally {
+            setUploading(null);
+            pendingWindowRef.current = null;
+        }
+    };
+
+    const now = Date.now();
+    const submittedWindowIds = new Set((data?.completions || []).map((c: any) => c.window_id));
+
+    const openWindows = (data?.windows || []).filter((w: any) =>
+        now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime()
+    );
+    const upcomingWindows = (data?.windows || [])
+        .filter((w: any) => new Date(w.opens_at).getTime() > now)
+        .slice(0, 3);
+
+    return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9001, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', padding: '0' }}>
+            <input ref={fileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleUpload} />
+
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(74,222,128,0.12)', flexShrink: 0 }}>
+                <div>
+                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', letterSpacing: '3px' }}>⚔ CHALLENGE TASKS</div>
+                    {data?.challenge && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#ddd', marginTop: 3 }}>{data.challenge.name}</div>}
+                </div>
+                <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#666', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px' }}>✕</button>
+            </div>
+
+            {/* Toast */}
+            {toast && (
+                <div style={{ margin: '10px 20px 0', padding: '10px 16px', borderRadius: 8, background: toast.ok ? 'rgba(74,222,128,0.12)' : 'rgba(224,48,48,0.12)', border: `1px solid ${toast.ok ? 'rgba(74,222,128,0.3)' : 'rgba(224,48,48,0.3)'}`, fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: toast.ok ? '#4ade80' : '#e03030', letterSpacing: '1px' }}>
+                    {toast.msg}
+                </div>
+            )}
+
+            {/* Content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+                {!data && <div style={{ textAlign: 'center', color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', letterSpacing: '2px', paddingTop: 40 }}>LOADING...</div>}
+
+                {data && (
+                    <>
+                        {/* Open windows — upload NOW */}
+                        {openWindows.length > 0 && (
+                            <div style={{ marginBottom: 28 }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1.5s infinite' }} />
+                                    WINDOW OPEN NOW — SUBMIT PROOF
+                                </div>
+                                {openWindows.map((w: any) => {
+                                    const done = submittedWindowIds.has(w.id);
+                                    const busy = uploading === w.id;
+                                    const secsLeft = Math.floor((new Date(w.closes_at).getTime() - now) / 1000);
+                                    const minLeft = Math.floor(secsLeft / 60);
+                                    return (
+                                        <div key={w.id} style={{ background: done ? 'rgba(74,222,128,0.04)' : 'rgba(74,222,128,0.08)', border: `1px solid ${done ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.35)'}`, borderRadius: 12, padding: '16px 18px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                                            <div>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', marginBottom: 4 }}>
+                                                    DAY {w.day_number} · TASK {w.window_number}
+                                                </div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555' }}>
+                                                    {done ? '✓ Submitted — awaiting verification' : `Closes in ${minLeft}m ${secsLeft % 60}s`}
+                                                </div>
+                                            </div>
+                                            {!done && (
+                                                <button
+                                                    disabled={busy}
+                                                    onClick={() => { pendingWindowRef.current = w.id; fileInputRef.current?.click(); }}
+                                                    style={{ padding: '10px 18px', background: busy ? 'rgba(74,222,128,0.05)' : 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', flexShrink: 0 }}>
+                                                    {busy ? '...' : '⬆ UPLOAD'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* No open windows */}
+                        {openWindows.length === 0 && (
+                            <div style={{ textAlign: 'center', padding: '24px 0 16px', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#333', letterSpacing: '2px' }}>
+                                NO WINDOW OPEN RIGHT NOW
+                            </div>
+                        )}
+
+                        {/* Upcoming windows */}
+                        {upcomingWindows.length > 0 && (
+                            <div style={{ marginBottom: 24 }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>UPCOMING</div>
+                                {upcomingWindows.map((w: any) => {
+                                    const opensInSecs = Math.floor((new Date(w.opens_at).getTime() - now) / 1000);
+                                    const h = Math.floor(opensInSecs / 3600);
+                                    const m = Math.floor((opensInSecs % 3600) / 60);
+                                    return (
+                                        <div key={w.id} style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 10, padding: '12px 16px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.48rem', color: '#aaa' }}>
+                                                Day {w.day_number} · Task {w.window_number}
+                                            </div>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059' }}>
+                                                in {h > 0 ? `${h}h ` : ''}{m}m
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* My completed tasks */}
+                        {data.completions.length > 0 && (
+                            <div>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>MY SUBMISSIONS</div>
+                                {data.completions.map((c: any, i: number) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#666' }}>
+                                            {new Date(c.completed_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                            {c.response_time_seconds != null && (
+                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4a9eff' }}>{c.response_time_seconds}s</span>
+                                            )}
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', letterSpacing: '1px', color: c.verified ? '#4ade80' : '#666' }}>
+                                                {c.verified ? '✓ VERIFIED' : '⏳ PENDING'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
     );
 }

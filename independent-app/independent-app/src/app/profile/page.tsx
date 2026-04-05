@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 import { initProfileState, setState } from '@/scripts/profile-state';
@@ -8,6 +8,7 @@ import { updateKneelingUI, attachKneelListeners, renderKneelDots } from '@/scrip
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
 import { toggleSystemLog } from '@/scripts/chat';
+// import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED — WIP
 import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
 import {
     claimKneelReward,
@@ -77,17 +78,30 @@ import {
     cancelMobGlReply,
     setProfileChatReply,
     cancelProfileChatReply,
+    _applyPaywall,
+    _applySilence,
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
+    const pendingLockRef = useRef<{ silence: boolean; silenceReason: string; paywall: any; memberId: string } | null>(null);
+    const [silenceActive, setSilenceActive] = useState(false);
+    const [silenceReason, setSilenceReason] = useState('');
     const [benefitsOpen, setBenefitsOpen] = useState(false);
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [challengePanelOpen, setChallengePanelOpen] = useState(false);
+    const [activeChallengeId, setActiveChallengeId] = useState<string | null>(null);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
+        // Expose silence overlay setter so vanilla profile-logic.ts can drive it via React state
+        (window as any)._setSilenceOverlay = (active: boolean, reason: string) => {
+            setSilenceActive(active);
+            setSilenceReason(reason);
+        };
+
         // Legacy Window Assignments
         if (typeof window !== 'undefined') {
             (window as any).claimKneelReward = claimKneelReward;
@@ -196,6 +210,8 @@ export default function ProfilePage() {
                         if (!heartbeatRef.current) {
                             heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
                         }
+
+                        // checkAndShowOnboarding(unifiedData); // DISABLED — WIP
                     }, 150);
                     return;
                 }
@@ -208,6 +224,22 @@ export default function ProfilePage() {
                     window.location.href = '/login';
                     return;
                 }
+
+                // ── SILENCE CHECK — runs before anything else ──────────────────
+                // Sets React state directly — no redirect, no race condition on mobile
+                try {
+                    const silenceRes = await fetch('/api/silence-check', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ memberId: user.email }),
+                    });
+                    const silenceData = await silenceRes.json();
+                    if (silenceData.silence === true) {
+                        (window as any)._setSilenceOverlay(true, silenceData.reason || '');
+                        // Do NOT return — continue loading profile so polling can detect unlock
+                    }
+                } catch {}
+                // ──────────────────────────────────────────────────────────────
 
                 // Fetch all data via the admin API route (same as dashboard) — bypasses RLS
                 // Uses supabaseAdmin internally, returns merged profiles + tasks + crowdfund
@@ -228,6 +260,14 @@ export default function ProfilePage() {
 
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
+
+                    // Store lock state — applied after loading screen clears (DOM not ready yet)
+                    pendingLockRef.current = {
+                        silence: unifiedData?.silence === true,
+                        silenceReason: unifiedData?.parameters?.silence_reason || '',
+                        paywall: unifiedData?.parameters?.paywall ?? null,
+                        memberId: unifiedData.member_id || unifiedData.memberId || '',
+                    };
 
                     setTimeout(async () => {
                         renderProfileSidebar(unifiedData);
@@ -271,6 +311,8 @@ export default function ProfilePage() {
                         if (!heartbeatRef.current) {
                             heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
                         }
+
+                        // checkAndShowOnboarding(unifiedData); // DISABLED — WIP
                     }, 150);
                 }
             } catch (err) {
@@ -289,9 +331,66 @@ export default function ProfilePage() {
         };
     }, []);
 
-    // ─── 2. ATTACH KNEEL LISTENERS ────────────────────────────────────────
+    // ONBOARDING DISABLED — WIP
+    // useEffect(() => {
+    //     if (new URLSearchParams(window.location.search).get('onboarding') === '1') {
+    //         import('@/scripts/onboarding').then(({ checkAndShowOnboarding }) => {
+    //             checkAndShowOnboarding({});
+    //         });
+    //     }
+    // }, []);
+
+    // ─── ACTIVE CHALLENGE POLL ───────────────────────────────────────────────────
+    useEffect(() => {
+        if (!profile) return;
+        async function checkChallenge() {
+            try {
+                const res = await fetch('/api/challenges');
+                const json = await res.json();
+                if (json.success) {
+                    const active = (json.challenges || []).find((c: any) => c.status === 'active');
+                    setActiveChallengeId(active?.id || null);
+                }
+            } catch {}
+        }
+        checkChallenge();
+        const t = setInterval(checkChallenge, 30000);
+        return () => clearInterval(t);
+    }, [profile]);
+
+    // ─── SILENCE POLL — fires once profile is loaded, uses email from profile state ──
+    useEffect(() => {
+        if (!profile) return;
+        const email = profile.memberId || profile.member_id || profile.email;
+        if (!email) return;
+
+        async function pollSilence() {
+            try {
+                const res = await fetch('/api/silence-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberId: email }),
+                });
+                const data = await res.json();
+                _applySilence(data.silence === true, data.reason || '');
+            } catch {}
+        }
+
+        pollSilence();
+        const interval = setInterval(pollSilence, 3000);
+        return () => clearInterval(interval);
+    }, [profile]);
+
+    // ─── 2. ATTACH KNEEL LISTENERS + APPLY LOCKS ─────────────────────────
     useEffect(() => {
         if (!loading) {
+            if (pendingLockRef.current) {
+                const { silence, silenceReason: reason, paywall, memberId } = pendingLockRef.current;
+                if (silence) _applySilence(true, reason);
+                _applyPaywall(paywall, memberId);
+                pendingLockRef.current = null;
+            }
+
             const timer = setTimeout(() => {
                 attachKneelListeners();
                 updateKneelingUI();
@@ -312,7 +411,44 @@ export default function ProfilePage() {
         </div>
     );
 
+    if (silenceActive) return (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(8,2,2,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2147483647, padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel, serif' }}>
+            <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                    <svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/>
+                    </svg>
+                </div>
+                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS REVOKED</div>
+                <div style={{ background: 'rgba(220,60,60,0.04)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, padding: '28px 24px' }}>
+                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(220,60,60,0.4)', letterSpacing: '3px', marginBottom: 12, textTransform: 'uppercase' }}>Message from Queen Karin</div>
+                    <div style={{ fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}>{silenceReason}</div>
+                </div>
+            </div>
+        </div>
+    );
+
     return (
+        <>
+
+        {/* ── PAYWALL OVERLAY — outside container so position:fixed works on iOS ── */}
+        <div id="paywallOverlay" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+            <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
+                <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 28 }}>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
+                    <div id="paywallReason" style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}></div>
+                    <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
+                    <div id="paywallAmount" style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}></div>
+                </div>
+                <button id="paywallPayBtn" style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)' }}>
+                    PAY NOW
+                </button>
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Secure payment via Stripe</div>
+            </div>
+        </div>
+
         <div id="PROFILE_CONTAINER" style={{
             background: '#020512',
             minHeight: '100vh',
@@ -372,25 +508,25 @@ export default function ProfilePage() {
                                 </svg>
                             </button>
                         </div>
-                        <div id="subEmail" style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', marginBottom: 15, letterSpacing: 1 }}>
-                            {profile?.member_id || ""}
-                        </div>
+                        <div id="subEmail" style={{ display: 'none' }}></div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
-                            <div className="sidebar-stat-block">
-                                <div className="sidebar-stat-value-row">
-                                    <span style={{ color: '#fff', opacity: 0.8 }}><i className="fas fa-award"></i></span>
-                                    <div id="points">{profile?.score || 0}</div>
+                        <div style={{ marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
+                            <div style={{ background: 'rgba(10,10,10,0.7)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, padding: '12px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-around', boxShadow: '0 4px 20px rgba(0,0,0,0.6)', backdropFilter: 'blur(15px)' }}>
+                                <div className="sidebar-stat-block">
+                                    <div className="sidebar-stat-value-row">
+                                        <svg width="18" height="18" viewBox="0 0 512 512" fill="#c5a059" style={{ opacity: 0.8 }}><path d="M256 0c17.7 0 32.5 11.5 37.6 28.5l25.6 85.3 89.6-16.4c16.2-3 32.8 5.7 39.5 20.9s1.3 33-12.7 44.5l-69.8 57.6 44.8 80.1c8.4 15 3.9 34.3-10.3 43.6s-32.5 6.4-44.5-6.7L256 270 156.2 337.4c-12 13.1-30.3 16-44.5 6.7s-18.7-28.6-10.3-43.6l44.8-80.1-69.8-57.6c-14-11.5-19.4-30.6-12.7-44.5s23.3-23.9 39.5-20.9l89.6 16.4 25.6-85.3C223.5 11.5 238.3 0 256 0z"/></svg>
+                                        <div id="points" style={{ fontFamily: 'Orbitron', fontSize: '1.2rem', color: '#fff', fontWeight: 800 }}>{profile?.score || 0}</div>
+                                    </div>
+                                    <div className="sidebar-stat-label">MERIT</div>
                                 </div>
-                                <div className="sidebar-stat-label">MERIT</div>
-                            </div>
-                            <div style={{ height: 30, width: 1, background: 'rgba(255,255,255,0.05)' }}></div>
-                            <div className="sidebar-stat-block">
-                                <div className="sidebar-stat-value-row">
-                                    <span style={{ color: '#c5a059' }}><i className="fas fa-coins"></i></span>
-                                    <div id="coins">{profile?.wallet || 0}</div>
+                                <div style={{ height: 40, width: 1, background: 'rgba(255,255,255,0.08)' }}></div>
+                                <div className="sidebar-stat-block">
+                                    <div className="sidebar-stat-value-row">
+                                        <svg width="18" height="18" viewBox="0 0 512 512" fill="#c5a059"><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 210.6 384 227.2 384 245.6c0 11.4-5.5 22.1-15.2 31.4c-21.2 20.4-66.2 34.1-118.4 34.9c-10.2 .2-20.7 .3-31.3 .3c-62.2 0-117.4-12.3-152.5-31.4C42.7 261.4 28 244.8 28 226.4c0-11.4 5.5-22.1 15.2-31.4c21.2-20.4 66.2-34.1 117.5-33.9zM512 192c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 167.6 448 183.3 512 192zM512 304c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 279.6 448 295.3 512 304zM512 416c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 391.6 448 407.3 512 416zM320 388c0 30.6-55.8 56-128 56S64 418.6 64 388v-43c30.2 18 73.1 29 128 29s97.8-11 128-29v43zM320 276c0 30.6-55.8 56-128 56S64 306.6 64 276v-43c30.2 18 73.1 29 128 29s97.8-11 128-29v43zM192 128c-72.2 0-128 25.4-128 56s55.8 56 128 56s128-25.4 128-56s-55.8-56-128-56z"/></svg>
+                                        <div id="coins" style={{ fontFamily: 'Orbitron', fontSize: '1.2rem', color: '#fff', fontWeight: 800 }}>{profile?.wallet || 0}</div>
+                                    </div>
+                                    <div className="sidebar-stat-label">CAPITAL</div>
                                 </div>
-                                <div className="sidebar-stat-label">CAPITAL</div>
                             </div>
                         </div>
 
@@ -573,6 +709,17 @@ export default function ProfilePage() {
 
                     <div id="viewServingTop" className="v-card serve-grid-item" style={{ display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: 20 }}>
                         <div id="chatCard" className="chat-container" style={{ flex: 1, minHeight: 0, background: 'transparent', margin: 0, border: 'none', borderRadius: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                            {/* Desktop chat header - shows who you're messaging */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)', flexShrink: 0 }}>
+                                <div style={{ position: 'relative', flexShrink: 0 }}>
+                                    <img src="/queen-karin.png" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                                    <div id="deskChatOnlineDot" style={{ position: 'absolute', bottom: 1, right: 1, width: 9, height: 9, borderRadius: '50%', background: '#22c55e', border: '2px solid #000', display: 'none' }}></div>
+                                </div>
+                                <div>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#fff', letterSpacing: 2, fontWeight: 700 }}>QUEEN KARIN</div>
+                                    <div id="deskChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>—</div>
+                                </div>
+                            </div>
                             <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 !important' }}>
                                 <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer', margin: '0 20px 10px 20px', borderRadius: '0 0 12px 12px', borderLeft: '1px solid rgba(197,160,89,0.2)', borderRight: '1px solid rgba(197,160,89,0.2)', borderBottom: '1px solid rgba(197,160,89,0.2)', width: 'auto' }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
                                 <div id="chatContent" className="chat-area" style={{ padding: '0 20px 20px 20px' }}></div>
@@ -652,7 +799,7 @@ export default function ProfilePage() {
                             <div className="chronicle-section-label">THE SOVEREIGN ALTAR</div>
                             <div className="chronicle-hero">
                                 <div id="altarMain" className="hero-main mosaic-card">
-                                    <img id="imgAltarMain" src="" className="hero-img" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                                    <img id="imgAltarMain" src={undefined} className="hero-img" onError={(e) => { e.currentTarget.style.display = 'none' }} />
                                     <div className="hero-overlay">
                                         <div className="hero-label">SUPREME HIGHLIGHT</div>
                                         <h2 id="titleAltarMain" className="hero-title">...</h2>
@@ -825,7 +972,7 @@ export default function ProfilePage() {
                         <div className="hub-header">
                             <div>
                                 <div className="hub-title">SLAVE IDENTITY HUB</div>
-                                <div id="hubEmail" className="hub-subtitle">{profile?.member_id || ""}</div>
+                                <div id="hubEmail" className="hub-subtitle" style={{ display: 'none' }}></div>
                             </div>
                             <button className="hub-close-btn" onClick={() => (window as any).closeLobby()}>✕</button>
                         </div>
@@ -1449,6 +1596,219 @@ export default function ProfilePage() {
                 </button>
             </nav>
 
-        </div >
+        </div>
+
+        {/* ── CHALLENGE UPLOAD PANEL ── */}
+        {activeChallengeId && (
+            <>
+                {/* Floating button */}
+                {!challengePanelOpen && (
+                    <button
+                        onClick={() => setChallengePanelOpen(true)}
+                        style={{ position: 'fixed', bottom: 80, right: 18, zIndex: 9000, width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#1a3a1a,#2d6a2d)', border: '1px solid rgba(74,222,128,0.4)', color: '#4ade80', fontSize: '1.3rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(74,222,128,0.25)', animation: 'pulse 2s infinite' }}
+                        title="Challenge Tasks"
+                    >⚔</button>
+                )}
+                {challengePanelOpen && (
+                    <ChallengeUploadPanel
+                        challengeId={activeChallengeId}
+                        memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                        onClose={() => setChallengePanelOpen(false)}
+                    />
+                )}
+            </>
+        )}
+        </>
+    );
+}
+
+// ─── CHALLENGE UPLOAD PANEL ───────────────────────────────────────────────────
+function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
+    challengeId: string;
+    memberEmail: string;
+    onClose: () => void;
+}) {
+    const [data, setData] = useState<{ challenge: any; windows: any[]; completions: any[] } | null>(null);
+    const [uploading, setUploading] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const pendingWindowRef = useRef<string | null>(null);
+
+    const load = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/challenges/${challengeId}/submit`);
+            const json = await res.json();
+            if (json.success) setData(json);
+        } catch {}
+    }, [challengeId]);
+
+    useEffect(() => { load(); }, [load]);
+
+    const showToast = (msg: string, ok: boolean) => {
+        setToast({ msg, ok });
+        setTimeout(() => setToast(null), 3500);
+    };
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        const windowId = pendingWindowRef.current;
+        if (!file || !windowId) return;
+        setUploading(windowId);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('bucket', 'challenge-proofs');
+            fd.append('folder', `${challengeId}`);
+            const ext = file.name.split('.').pop() || 'jpg';
+            fd.append('ext', ext);
+            const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
+            const upJson = await upRes.json();
+            if (!upJson.url) { showToast('Upload failed', false); return; }
+
+            const subRes = await fetch(`/api/challenges/${challengeId}/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ windowId, proofUrl: upJson.url }),
+            });
+            const subJson = await subRes.json();
+            if (subJson.success) {
+                showToast(`✓ Submitted! Speed: ${subJson.response_time_seconds}s`, true);
+                load();
+            } else {
+                showToast(subJson.error || 'Submit failed', false);
+            }
+        } finally {
+            setUploading(null);
+            pendingWindowRef.current = null;
+        }
+    };
+
+    const now = Date.now();
+    const submittedWindowIds = new Set((data?.completions || []).map((c: any) => c.window_id));
+
+    const openWindows = (data?.windows || []).filter((w: any) =>
+        now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime()
+    );
+    const upcomingWindows = (data?.windows || [])
+        .filter((w: any) => new Date(w.opens_at).getTime() > now)
+        .slice(0, 3);
+
+    return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9001, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', padding: '0' }}>
+            <input ref={fileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleUpload} />
+
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(74,222,128,0.12)', flexShrink: 0 }}>
+                <div>
+                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', letterSpacing: '3px' }}>⚔ CHALLENGE TASKS</div>
+                    {data?.challenge && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#ddd', marginTop: 3 }}>{data.challenge.name}</div>}
+                </div>
+                <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#666', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px' }}>✕</button>
+            </div>
+
+            {/* Toast */}
+            {toast && (
+                <div style={{ margin: '10px 20px 0', padding: '10px 16px', borderRadius: 8, background: toast.ok ? 'rgba(74,222,128,0.12)' : 'rgba(224,48,48,0.12)', border: `1px solid ${toast.ok ? 'rgba(74,222,128,0.3)' : 'rgba(224,48,48,0.3)'}`, fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: toast.ok ? '#4ade80' : '#e03030', letterSpacing: '1px' }}>
+                    {toast.msg}
+                </div>
+            )}
+
+            {/* Content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+                {!data && <div style={{ textAlign: 'center', color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', letterSpacing: '2px', paddingTop: 40 }}>LOADING...</div>}
+
+                {data && (
+                    <>
+                        {/* Open windows — upload NOW */}
+                        {openWindows.length > 0 && (
+                            <div style={{ marginBottom: 28 }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1.5s infinite' }} />
+                                    WINDOW OPEN NOW — SUBMIT PROOF
+                                </div>
+                                {openWindows.map((w: any) => {
+                                    const done = submittedWindowIds.has(w.id);
+                                    const busy = uploading === w.id;
+                                    const secsLeft = Math.floor((new Date(w.closes_at).getTime() - now) / 1000);
+                                    const minLeft = Math.floor(secsLeft / 60);
+                                    return (
+                                        <div key={w.id} style={{ background: done ? 'rgba(74,222,128,0.04)' : 'rgba(74,222,128,0.08)', border: `1px solid ${done ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.35)'}`, borderRadius: 12, padding: '16px 18px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                                            <div>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', marginBottom: 4 }}>
+                                                    DAY {w.day_number} · TASK {w.window_number}
+                                                </div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555' }}>
+                                                    {done ? '✓ Submitted — awaiting verification' : `Closes in ${minLeft}m ${secsLeft % 60}s`}
+                                                </div>
+                                            </div>
+                                            {!done && (
+                                                <button
+                                                    disabled={busy}
+                                                    onClick={() => { pendingWindowRef.current = w.id; fileInputRef.current?.click(); }}
+                                                    style={{ padding: '10px 18px', background: busy ? 'rgba(74,222,128,0.05)' : 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', flexShrink: 0 }}>
+                                                    {busy ? '...' : '⬆ UPLOAD'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* No open windows */}
+                        {openWindows.length === 0 && (
+                            <div style={{ textAlign: 'center', padding: '24px 0 16px', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#333', letterSpacing: '2px' }}>
+                                NO WINDOW OPEN RIGHT NOW
+                            </div>
+                        )}
+
+                        {/* Upcoming windows */}
+                        {upcomingWindows.length > 0 && (
+                            <div style={{ marginBottom: 24 }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>UPCOMING</div>
+                                {upcomingWindows.map((w: any) => {
+                                    const opensInSecs = Math.floor((new Date(w.opens_at).getTime() - now) / 1000);
+                                    const h = Math.floor(opensInSecs / 3600);
+                                    const m = Math.floor((opensInSecs % 3600) / 60);
+                                    return (
+                                        <div key={w.id} style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 10, padding: '12px 16px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.48rem', color: '#aaa' }}>
+                                                Day {w.day_number} · Task {w.window_number}
+                                            </div>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059' }}>
+                                                in {h > 0 ? `${h}h ` : ''}{m}m
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* My completed tasks */}
+                        {data.completions.length > 0 && (
+                            <div>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>MY SUBMISSIONS</div>
+                                {data.completions.map((c: any, i: number) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#666' }}>
+                                            {new Date(c.completed_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                            {c.response_time_seconds != null && (
+                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4a9eff' }}>{c.response_time_seconds}s</span>
+                                            )}
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', letterSpacing: '1px', color: c.verified ? '#4ade80' : '#666' }}>
+                                                {c.verified ? '✓ VERIFIED' : '⏳ PENDING'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
     );
 }

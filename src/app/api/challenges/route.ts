@@ -36,9 +36,9 @@ export async function POST(request: Request) {
         const {
             name, theme = 'gold', description = '',
             duration_days, tasks_per_day, window_minutes,
-            points_per_completion = 1,
+            points_per_completion = 20,
             first_place_points = 10, second_place_points = 7, third_place_points = 5,
-            start_date,
+            start_date, image_url = null,
         } = body;
 
         if (!name || !duration_days || !tasks_per_day || !window_minutes || !start_date)
@@ -60,6 +60,7 @@ export async function POST(request: Request) {
                 third_place_points: Number(third_place_points),
                 start_date: startDt.toISOString(),
                 end_date: endDt.toISOString(),
+                image_url: image_url || null,
             })
             .select().single();
 

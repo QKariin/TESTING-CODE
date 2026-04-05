@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 import { initProfileState, setState } from '@/scripts/profile-state';
@@ -8,6 +8,7 @@ import { updateKneelingUI, attachKneelListeners, renderKneelDots } from '@/scrip
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
 import { toggleSystemLog } from '@/scripts/chat';
+// import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED — WIP
 import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
 import {
     claimKneelReward,
@@ -90,6 +91,8 @@ export default function ProfilePage() {
     const [benefitsOpen, setBenefitsOpen] = useState(false);
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [challengePanelOpen, setChallengePanelOpen] = useState(false);
+    const [activeChallengeId, setActiveChallengeId] = useState<string | null>(null);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -207,6 +210,8 @@ export default function ProfilePage() {
                         if (!heartbeatRef.current) {
                             heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
                         }
+
+                        // checkAndShowOnboarding(unifiedData); // DISABLED — WIP
                     }, 150);
                     return;
                 }
@@ -219,6 +224,22 @@ export default function ProfilePage() {
                     window.location.href = '/login';
                     return;
                 }
+
+                // ── SILENCE CHECK — runs before anything else ──────────────────
+                // Sets React state directly — no redirect, no race condition on mobile
+                try {
+                    const silenceRes = await fetch('/api/silence-check', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ memberId: user.email }),
+                    });
+                    const silenceData = await silenceRes.json();
+                    if (silenceData.silence === true) {
+                        (window as any)._setSilenceOverlay(true, silenceData.reason || '');
+                        // Do NOT return — continue loading profile so polling can detect unlock
+                    }
+                } catch {}
+                // ──────────────────────────────────────────────────────────────
 
                 // Fetch all data via the admin API route (same as dashboard) — bypasses RLS
                 // Uses supabaseAdmin internally, returns merged profiles + tasks + crowdfund
@@ -290,6 +311,8 @@ export default function ProfilePage() {
                         if (!heartbeatRef.current) {
                             heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
                         }
+
+                        // checkAndShowOnboarding(unifiedData); // DISABLED — WIP
                     }, 150);
                 }
             } catch (err) {
@@ -308,36 +331,62 @@ export default function ProfilePage() {
         };
     }, []);
 
-    // ─── GLOBAL UNREAD BADGE CHECK ────────────────────────────────────────
+    // ONBOARDING DISABLED — WIP
+    // useEffect(() => {
+    //     if (new URLSearchParams(window.location.search).get('onboarding') === '1') {
+    //         import('@/scripts/onboarding').then(({ checkAndShowOnboarding }) => {
+    //             checkAndShowOnboarding({});
+    //         });
+    //     }
+    // }, []);
+
+    // ─── ACTIVE CHALLENGE POLL ───────────────────────────────────────────────────
     useEffect(() => {
-        async function checkGlobalUnread() {
+        if (!profile) return;
+        async function checkChallenge() {
             try {
-                const res = await fetch('/api/global/messages', { cache: 'no-store' });
-                const { messages } = await res.json();
-                if (!messages?.length) return;
-                const real = (messages as any[]).filter((m: any) => !String(m.message || '').startsWith('PROMOTION_CARD:'));
-                const lastRead = localStorage.getItem('globalLastRead');
-                const lastReadTs = lastRead ? new Date(lastRead).getTime() : 0;
-                const newCount = real.filter((m: any) => new Date(m.created_at).getTime() > lastReadTs).length;
-                if (newCount > 0) {
-                    const badge = document.getElementById('globalNavBadge');
-                    if (badge) { badge.style.display = 'flex'; badge.textContent = newCount > 99 ? '99+' : String(newCount); }
+                const res = await fetch('/api/challenges');
+                const json = await res.json();
+                if (json.success) {
+                    const active = (json.challenges || []).find((c: any) => c.status === 'active');
+                    setActiveChallengeId(active?.id || null);
                 }
             } catch {}
         }
-        checkGlobalUnread();
-        const iv = setInterval(checkGlobalUnread, 60000);
-        return () => clearInterval(iv);
-    }, []);
+        checkChallenge();
+        const t = setInterval(checkChallenge, 30000);
+        return () => clearInterval(t);
+    }, [profile]);
+
+    // ─── SILENCE POLL — fires once profile is loaded, uses email from profile state ──
+    useEffect(() => {
+        if (!profile) return;
+        const email = profile.memberId || profile.member_id || profile.email;
+        if (!email) return;
+
+        async function pollSilence() {
+            try {
+                const res = await fetch('/api/silence-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberId: email }),
+                });
+                const data = await res.json();
+                _applySilence(data.silence === true, data.reason || '');
+            } catch {}
+        }
+
+        pollSilence();
+        const interval = setInterval(pollSilence, 3000);
+        return () => clearInterval(interval);
+    }, [profile]);
 
     // ─── 2. ATTACH KNEEL LISTENERS + APPLY LOCKS ─────────────────────────
     useEffect(() => {
         if (!loading) {
-            // DOM is now rendered — apply locks via React state (prevents re-render resets)
             if (pendingLockRef.current) {
                 const { silence, silenceReason: reason, paywall, memberId } = pendingLockRef.current;
-                setSilenceActive(silence);
-                setSilenceReason(reason);
+                if (silence) _applySilence(true, reason);
                 _applyPaywall(paywall, memberId);
                 pendingLockRef.current = null;
             }
@@ -362,8 +411,26 @@ export default function ProfilePage() {
         </div>
     );
 
+    if (silenceActive) return (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(8,2,2,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2147483647, padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel, serif' }}>
+            <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                    <svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/>
+                    </svg>
+                </div>
+                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS REVOKED</div>
+                <div style={{ background: 'rgba(220,60,60,0.04)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, padding: '28px 24px' }}>
+                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(220,60,60,0.4)', letterSpacing: '3px', marginBottom: 12, textTransform: 'uppercase' }}>Message from Queen Karin</div>
+                    <div style={{ fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}>{silenceReason}</div>
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <>
+
         {/* ── PAYWALL OVERLAY — outside container so position:fixed works on iOS ── */}
         <div id="paywallOverlay" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
             <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
@@ -381,22 +448,6 @@ export default function ProfilePage() {
                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Secure payment via Stripe</div>
             </div>
         </div>
-
-        {/* ── SILENCE OVERLAY — React-state driven, never reset by re-renders ── */}
-        {silenceActive && (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(8,2,2,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-                <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                        <svg viewBox="0 0 24 24" width="48" height="48" fill="rgba(220,60,60,0.7)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>
-                    </div>
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS REVOKED</div>
-                    <div style={{ background: 'rgba(220,60,60,0.04)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, padding: '28px 24px' }}>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(220,60,60,0.4)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}>{silenceReason}</div>
-                    </div>
-                </div>
-            </div>
-        )}
 
         <div id="PROFILE_CONTAINER" style={{
             background: '#020512',
@@ -430,21 +481,14 @@ export default function ProfilePage() {
                 {/* SIDEBAR */}
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
-                        {/* HALO CIRCLE — desktop */}
-                        <div onClick={() => (window as any).handleProfileUpload?.()} style={{ width: 240, height: 240, borderRadius: '50%', margin: '0 auto 18px', position: 'relative', cursor: 'pointer', border: '2px solid #c5a059', boxShadow: '0 0 40px rgba(197,160,89,0.4), inset 0 0 20px rgba(197,160,89,0.1)', overflow: 'hidden', transition: 'box-shadow 0.3s ease' }}
-                            onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 60px rgba(197,160,89,0.7), inset 0 0 20px rgba(197,160,89,0.2)')}
-                            onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 0 40px rgba(197,160,89,0.4), inset 0 0 20px rgba(197,160,89,0.1)')}
-                        >
-                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png"} alt="Avatar" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
-                            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(0,0,0,0.75) 100%)' }} />
-                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 8px 14px', textAlign: 'center' }}>
-                                <div id="subName" style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', fontWeight: 700, color: '#fff', letterSpacing: 3, textTransform: 'uppercase', textShadow: '0 1px 6px rgba(0,0,0,0.8)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile?.name || "SLAVE"}</div>
-                                <div id="desk_rankHalo" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginTop: 3 }}>{profile?.hierarchy || profile?.rank || "INITIATE"}</div>
-                            </div>
+                        <div className="big-profile-circle" onClick={() => (window as any).handleProfileUpload?.()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
+                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
                         </div>
 
-                        <div onClick={() => (window as any).openManageProfileModal?.()} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '8px 16px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)', cursor: 'pointer', userSelect: 'none' }}>
-                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 2, textTransform: 'uppercase' }}>Manage Profile</span>
+                        <div onClick={() => (window as any).openManageProfileModal?.()} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)', cursor: 'pointer', userSelect: 'none' }}>
+                            <div id="subName" className="identity-name" style={{ fontSize: '1.5rem', letterSpacing: 5, margin: '0', fontWeight: 'bold', color: '#c5a059', pointerEvents: 'none' }}>
+                                {profile?.name || "SLAVE"}
+                            </div>
                             <button
                                 onClick={(e) => { e.stopPropagation(); (window as any).openManageProfileModal?.(); }}
                                 style={{ background: 'none', border: 'none', color: '#c5a059', cursor: 'pointer', padding: 0, display: 'flex' }}
@@ -488,11 +532,13 @@ export default function ProfilePage() {
 
                         <div style={{ marginTop: 25, width: '100%', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: 2, marginBottom: 5 }}>CURRENT CLASSIFICATION</div>
-                            <button id="desk_BenefitsToggle" style={{ background: 'none', border: 'none', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 8, padding: 0 }}>
-                                <span id="desk_DashboardRank" style={{ fontFamily: 'Cinzel', fontSize: '1.4rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold' }}>...</span>
-                                <span id="desk_BenefitsArrow" style={{ fontSize: '0.7rem', color: 'rgba(197,160,89,0.6)', transition: 'transform 0.2s' }}>▼</span>
+                            <div id="desk_DashboardRank" style={{ fontFamily: 'Cinzel', fontSize: '1.4rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: 20 }}>...</div>
+
+                            <button id="desk_BenefitsToggle" style={{ background: 'none', border: 'none', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: 1 }}>CURRENT PRIVILEGES</span>
+                                <span style={{ fontSize: '0.6rem', color: '#c5a059' }}>▼</span>
                             </button>
-                            <ul id="desk_CurrentBenefits" className="hidden" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, marginTop: 4, textAlign: 'left' }}></ul>
+                            <ul id="desk_CurrentBenefits" className="hidden" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, marginTop: 10, textAlign: 'left' }}></ul>
                         </div>
 
                         <button onClick={() => (window as any).handleLogout?.()} style={{ marginTop: 20, width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.55rem', letterSpacing: 2, padding: '10px 0', cursor: 'pointer', borderRadius: 6, transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(197,160,89,0.4)'; e.currentTarget.style.color = '#c5a059'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}>
@@ -753,7 +799,7 @@ export default function ProfilePage() {
                             <div className="chronicle-section-label">THE SOVEREIGN ALTAR</div>
                             <div className="chronicle-hero">
                                 <div id="altarMain" className="hero-main mosaic-card">
-                                    <img id="imgAltarMain" src="" className="hero-img" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                                    <img id="imgAltarMain" src={undefined} className="hero-img" onError={(e) => { e.currentTarget.style.display = 'none' }} />
                                     <div className="hero-overlay">
                                         <div className="hero-label">SUPREME HIGHLIGHT</div>
                                         <h2 id="titleAltarMain" className="hero-title">...</h2>
@@ -964,25 +1010,25 @@ export default function ProfilePage() {
                                     </div>
                                     <span className="hub-action-cost">300 ₡</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('kinks')} style={profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? { opacity: 0.4, cursor: 'default' } : {}}>
+                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('kinks')}>
                                     <div className="hub-action-left">
-                                        <div className="hub-action-icon-wrap">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? '🔒' : '⬡'}</div>
+                                        <div className="hub-action-icon-wrap">⬡</div>
                                         <div>
                                             <div className="hub-action-label">KINKS</div>
-                                            <div className="hub-action-desc">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? 'Unlocks at Footman' : 'Define your preferences'}</div>
+                                            <div className="hub-action-desc">Define your preferences</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? '🔒' : '50 ₡'}</span>
+                                    <span className="hub-action-cost">50 ₡</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('limits')} style={profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? { opacity: 0.4, cursor: 'default' } : {}}>
+                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('limits')}>
                                     <div className="hub-action-left">
-                                        <div className="hub-action-icon-wrap">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? '🔒' : '⊗'}</div>
+                                        <div className="hub-action-icon-wrap">⊗</div>
                                         <div>
                                             <div className="hub-action-label">LIMITS</div>
-                                            <div className="hub-action-desc">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? 'Unlocks at Footman' : 'Set your hard boundaries'}</div>
+                                            <div className="hub-action-desc">Set your hard boundaries</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">{profile?.hierarchy === 'Hall Boy' || !profile?.hierarchy ? '🔒' : '50 ₡'}</span>
+                                    <span className="hub-action-cost">50 ₡</span>
                                 </button>
                                 <div className="hub-logout-row">
                                     <button className="hub-logout-btn" onClick={() => (window as any).handleLogout()}>LOGOUT</button>
@@ -1207,12 +1253,10 @@ export default function ProfilePage() {
                         <div className="halo-hero">
                             {/* Large halo circle */}
                             <div className="halo-circle-lg">
-                                <img id="mobHaloPhoto" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png", 400)} alt="" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', zIndex: 0 }} />
-                                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.85) 100%)', zIndex: 1 }} />
-                                <div id="mob_slaveName" className="halo-name-lg" style={{ position: 'relative', zIndex: 2 }}>{profile?.name || "SLAVE"}</div>
-                                <div id="mob_rankStamp" className="halo-rank-lg" style={{ position: 'relative', zIndex: 2 }}>{profile?.hierarchy || profile?.rank || "INITIATE"}</div>
-                                <div className="halo-progress-label" style={{ position: 'relative', zIndex: 2 }}>DAILY PROGRESS</div>
-                                <div id="mob_kneelDots" className="halo-dots-grid" style={{ position: 'relative', zIndex: 2 }}></div>
+                                <div id="mob_slaveName" className="halo-name-lg">{profile?.name || "SLAVE"}</div>
+                                <div id="mob_rankStamp" className="halo-rank-lg">{profile?.hierarchy || profile?.rank || "INITIATE"}</div>
+                                <div className="halo-progress-label">DAILY PROGRESS</div>
+                                <div id="mob_kneelDots" className="halo-dots-grid"></div>
                             </div>
 
                             {/* Stats pill */}
@@ -1546,16 +1590,225 @@ export default function ProfilePage() {
                     <span className="mob-nav-icon">♛</span>
                     <span className="mob-nav-label">QUEEN</span>
                 </button>
-                <button id="mobNavGlobal" className="mob-nav-item" style={{ position: 'relative' }} onClick={() => (window as any).openMobGlobal()}>
-                    <span className="mob-nav-icon" style={{ position: 'relative', display: 'inline-block' }}>
-                        ◎
-                        <span id="globalNavBadge" style={{ display: 'none', position: 'absolute', top: '-4px', right: '-8px', minWidth: '15px', height: '15px', borderRadius: '8px', background: '#e04444', color: '#fff', fontSize: '0.38rem', fontFamily: 'Orbitron', fontWeight: 700, alignItems: 'center', justifyContent: 'center', padding: '0 3px', lineHeight: '15px', textAlign: 'center' }}></span>
-                    </span>
+                <button id="mobNavGlobal" className="mob-nav-item" onClick={() => (window as any).openMobGlobal()}>
+                    <span className="mob-nav-icon">◎</span>
                     <span className="mob-nav-label">GLOBAL</span>
                 </button>
             </nav>
 
         </div>
+
+        {/* ── CHALLENGE UPLOAD PANEL ── */}
+        {activeChallengeId && (
+            <>
+                {/* Floating button */}
+                {!challengePanelOpen && (
+                    <button
+                        onClick={() => setChallengePanelOpen(true)}
+                        style={{ position: 'fixed', bottom: 80, right: 18, zIndex: 9000, width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#1a3a1a,#2d6a2d)', border: '1px solid rgba(74,222,128,0.4)', color: '#4ade80', fontSize: '1.3rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(74,222,128,0.25)', animation: 'pulse 2s infinite' }}
+                        title="Challenge Tasks"
+                    >⚔</button>
+                )}
+                {challengePanelOpen && (
+                    <ChallengeUploadPanel
+                        challengeId={activeChallengeId}
+                        memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                        onClose={() => setChallengePanelOpen(false)}
+                    />
+                )}
+            </>
+        )}
         </>
+    );
+}
+
+// ─── CHALLENGE UPLOAD PANEL ───────────────────────────────────────────────────
+function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
+    challengeId: string;
+    memberEmail: string;
+    onClose: () => void;
+}) {
+    const [data, setData] = useState<{ challenge: any; windows: any[]; completions: any[] } | null>(null);
+    const [uploading, setUploading] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const pendingWindowRef = useRef<string | null>(null);
+
+    const load = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/challenges/${challengeId}/submit`);
+            const json = await res.json();
+            if (json.success) setData(json);
+        } catch {}
+    }, [challengeId]);
+
+    useEffect(() => { load(); }, [load]);
+
+    const showToast = (msg: string, ok: boolean) => {
+        setToast({ msg, ok });
+        setTimeout(() => setToast(null), 3500);
+    };
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        const windowId = pendingWindowRef.current;
+        if (!file || !windowId) return;
+        setUploading(windowId);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('bucket', 'challenge-proofs');
+            fd.append('folder', `${challengeId}`);
+            const ext = file.name.split('.').pop() || 'jpg';
+            fd.append('ext', ext);
+            const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
+            const upJson = await upRes.json();
+            if (!upJson.url) { showToast('Upload failed', false); return; }
+
+            const subRes = await fetch(`/api/challenges/${challengeId}/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ windowId, proofUrl: upJson.url }),
+            });
+            const subJson = await subRes.json();
+            if (subJson.success) {
+                showToast(`✓ Submitted! Speed: ${subJson.response_time_seconds}s`, true);
+                load();
+            } else {
+                showToast(subJson.error || 'Submit failed', false);
+            }
+        } finally {
+            setUploading(null);
+            pendingWindowRef.current = null;
+        }
+    };
+
+    const now = Date.now();
+    const submittedWindowIds = new Set((data?.completions || []).map((c: any) => c.window_id));
+
+    const openWindows = (data?.windows || []).filter((w: any) =>
+        now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime()
+    );
+    const upcomingWindows = (data?.windows || [])
+        .filter((w: any) => new Date(w.opens_at).getTime() > now)
+        .slice(0, 3);
+
+    return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9001, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', padding: '0' }}>
+            <input ref={fileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleUpload} />
+
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(74,222,128,0.12)', flexShrink: 0 }}>
+                <div>
+                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', letterSpacing: '3px' }}>⚔ CHALLENGE TASKS</div>
+                    {data?.challenge && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#ddd', marginTop: 3 }}>{data.challenge.name}</div>}
+                </div>
+                <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#666', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px' }}>✕</button>
+            </div>
+
+            {/* Toast */}
+            {toast && (
+                <div style={{ margin: '10px 20px 0', padding: '10px 16px', borderRadius: 8, background: toast.ok ? 'rgba(74,222,128,0.12)' : 'rgba(224,48,48,0.12)', border: `1px solid ${toast.ok ? 'rgba(74,222,128,0.3)' : 'rgba(224,48,48,0.3)'}`, fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: toast.ok ? '#4ade80' : '#e03030', letterSpacing: '1px' }}>
+                    {toast.msg}
+                </div>
+            )}
+
+            {/* Content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+                {!data && <div style={{ textAlign: 'center', color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', letterSpacing: '2px', paddingTop: 40 }}>LOADING...</div>}
+
+                {data && (
+                    <>
+                        {/* Open windows — upload NOW */}
+                        {openWindows.length > 0 && (
+                            <div style={{ marginBottom: 28 }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1.5s infinite' }} />
+                                    WINDOW OPEN NOW — SUBMIT PROOF
+                                </div>
+                                {openWindows.map((w: any) => {
+                                    const done = submittedWindowIds.has(w.id);
+                                    const busy = uploading === w.id;
+                                    const secsLeft = Math.floor((new Date(w.closes_at).getTime() - now) / 1000);
+                                    const minLeft = Math.floor(secsLeft / 60);
+                                    return (
+                                        <div key={w.id} style={{ background: done ? 'rgba(74,222,128,0.04)' : 'rgba(74,222,128,0.08)', border: `1px solid ${done ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.35)'}`, borderRadius: 12, padding: '16px 18px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                                            <div>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', marginBottom: 4 }}>
+                                                    DAY {w.day_number} · TASK {w.window_number}
+                                                </div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555' }}>
+                                                    {done ? '✓ Submitted — awaiting verification' : `Closes in ${minLeft}m ${secsLeft % 60}s`}
+                                                </div>
+                                            </div>
+                                            {!done && (
+                                                <button
+                                                    disabled={busy}
+                                                    onClick={() => { pendingWindowRef.current = w.id; fileInputRef.current?.click(); }}
+                                                    style={{ padding: '10px 18px', background: busy ? 'rgba(74,222,128,0.05)' : 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', flexShrink: 0 }}>
+                                                    {busy ? '...' : '⬆ UPLOAD'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* No open windows */}
+                        {openWindows.length === 0 && (
+                            <div style={{ textAlign: 'center', padding: '24px 0 16px', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#333', letterSpacing: '2px' }}>
+                                NO WINDOW OPEN RIGHT NOW
+                            </div>
+                        )}
+
+                        {/* Upcoming windows */}
+                        {upcomingWindows.length > 0 && (
+                            <div style={{ marginBottom: 24 }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>UPCOMING</div>
+                                {upcomingWindows.map((w: any) => {
+                                    const opensInSecs = Math.floor((new Date(w.opens_at).getTime() - now) / 1000);
+                                    const h = Math.floor(opensInSecs / 3600);
+                                    const m = Math.floor((opensInSecs % 3600) / 60);
+                                    return (
+                                        <div key={w.id} style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 10, padding: '12px 16px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.48rem', color: '#aaa' }}>
+                                                Day {w.day_number} · Task {w.window_number}
+                                            </div>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059' }}>
+                                                in {h > 0 ? `${h}h ` : ''}{m}m
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* My completed tasks */}
+                        {data.completions.length > 0 && (
+                            <div>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>MY SUBMISSIONS</div>
+                                {data.completions.map((c: any, i: number) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#666' }}>
+                                            {new Date(c.completed_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                            {c.response_time_seconds != null && (
+                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4a9eff' }}>{c.response_time_seconds}s</span>
+                                            )}
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', letterSpacing: '1px', color: c.verified ? '#4ade80' : '#666' }}>
+                                                {c.verified ? '✓ VERIFIED' : '⏳ PENDING'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
     );
 }
