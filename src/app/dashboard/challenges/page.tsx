@@ -579,6 +579,7 @@ function CreateTab({ allChallenges, onCreate }: {
     });
     const [submitting, setSubmitting] = useState(false);
     const [imageUploading, setImageUploading] = useState(false);
+    const [imageError, setImageError] = useState('');
     const imageInputRef = useRef<HTMLInputElement>(null);
 
     const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
@@ -601,16 +602,23 @@ function CreateTab({ allChallenges, onCreate }: {
         const file = e.target.files?.[0];
         if (!file) return;
         setImageUploading(true);
+        setImageError('');
         try {
+            const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
             const fd = new FormData();
             fd.append('file', file);
-            fd.append('bucket', 'challenge-covers');
-            fd.append('folder', 'covers');
-            const ext = file.name.split('.').pop() || 'jpg';
+            fd.append('bucket', 'media');
+            fd.append('folder', 'challenge-covers');
             fd.append('ext', ext);
             const res = await fetch('/api/upload', { method: 'POST', body: fd });
             const json = await res.json();
-            if (json.url) set('image_url', json.url);
+            if (json.url) {
+                set('image_url', json.url);
+            } else {
+                setImageError(json.error || 'Upload failed — try again');
+            }
+        } catch {
+            setImageError('Upload failed — check connection');
         } finally {
             setImageUploading(false);
             if (imageInputRef.current) imageInputRef.current.value = '';
@@ -694,18 +702,23 @@ function CreateTab({ allChallenges, onCreate }: {
                     <div className="ch-field">
                         <label className="ch-label">COVER IMAGE (OPTIONAL)</label>
                         <input ref={imageInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagePick} />
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                             {form.image_url ? (
                                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                                    <img src={form.image_url} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(197,160,89,0.3)' }} alt="cover" />
-                                    <button type="button" onClick={() => set('image_url', '')} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#e03030', border: 'none', color: '#fff', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>✕</button>
+                                    <img src={form.image_url} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '2px solid rgba(74,222,128,0.4)' }} alt="cover" />
+                                    <button type="button" onClick={() => { set('image_url', ''); setImageError(''); }} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#e03030', border: 'none', color: '#fff', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>✕</button>
                                 </div>
                             ) : null}
-                            <button type="button" onClick={() => imageInputRef.current?.click()}
-                                style={{ padding: '10px 18px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: imageUploading ? '#555' : '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', letterSpacing: '1.5px', cursor: imageUploading ? 'default' : 'pointer' }}
-                                disabled={imageUploading}>
-                                {imageUploading ? 'UPLOADING...' : form.image_url ? '↻ CHANGE IMAGE' : '⬆ UPLOAD COVER'}
-                            </button>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                <button type="button" onClick={() => imageInputRef.current?.click()}
+                                    style={{ padding: '10px 18px', background: form.image_url ? 'rgba(74,222,128,0.06)' : 'rgba(197,160,89,0.06)', border: `1px solid ${form.image_url ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: imageUploading ? '#555' : form.image_url ? '#4ade80' : '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', letterSpacing: '1.5px', cursor: imageUploading ? 'default' : 'pointer' }}
+                                    disabled={imageUploading}>
+                                    {imageUploading ? '⏳ UPLOADING...' : form.image_url ? '✓ UPLOADED — CHANGE?' : '⬆ UPLOAD COVER'}
+                                </button>
+                                {imageError && (
+                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#e03030', letterSpacing: '1px' }}>⚠ {imageError}</div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
