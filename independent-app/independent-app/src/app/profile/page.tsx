@@ -1628,8 +1628,9 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
     memberEmail: string;
     onClose: () => void;
 }) {
-    const [data, setData] = useState<{ challenge: any; windows: any[]; completions: any[] } | null>(null);
+    const [data, setData] = useState<{ challenge: any; windows: any[]; completions: any[]; participant: any | null } | null>(null);
     const [uploading, setUploading] = useState<string | null>(null);
+    const [joining, setJoining] = useState(false);
     const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const pendingWindowRef = useRef<string | null>(null);
@@ -1649,6 +1650,20 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
         setTimeout(() => setToast(null), 3500);
     };
 
+    const handleJoin = async () => {
+        setJoining(true);
+        try {
+            const res = await fetch(`/api/challenges/${challengeId}/join`, { method: 'POST' });
+            const json = await res.json();
+            if (json.success) {
+                showToast(json.already_joined ? 'Already enrolled' : '✓ Joined! Good luck.', true);
+                load();
+            } else {
+                showToast(json.error || 'Could not join', false);
+            }
+        } finally { setJoining(false); }
+    };
+
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         const windowId = pendingWindowRef.current;
@@ -1658,8 +1673,8 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
         try {
             const fd = new FormData();
             fd.append('file', file);
-            fd.append('bucket', 'challenge-proofs');
-            fd.append('folder', `${challengeId}`);
+            fd.append('bucket', 'media');
+            fd.append('folder', `challenge-proofs/${challengeId}`);
             const ext = file.name.split('.').pop() || 'jpg';
             fd.append('ext', ext);
             const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
@@ -1720,8 +1735,53 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
 
                 {data && (
                     <>
-                        {/* Open windows — upload NOW */}
-                        {openWindows.length > 0 && (
+                        {/* Challenge banner + join */}
+                        {data.challenge && (
+                            <div style={{ background: data.challenge.image_url ? undefined : 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 14, padding: '18px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+                                {data.challenge.image_url && (
+                                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${data.challenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.12, zIndex: 0 }} />
+                                )}
+                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                    {data.challenge.image_url && (
+                                        <img src={data.challenge.image_url} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(197,160,89,0.3)', float: 'left', marginRight: 12, marginBottom: 4 }} alt="" />
+                                    )}
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', marginBottom: 4 }}>{data.challenge.name}</div>
+                                    {data.challenge.description && (
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: '#666', marginBottom: 10, clear: data.challenge.image_url ? undefined : 'none' }}>{data.challenge.description}</div>
+                                    )}
+                                    <div style={{ clear: 'both', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 14 }}>
+                                        {data.challenge.duration_days}d · {data.challenge.tasks_per_day}×/day · {data.challenge.window_minutes}min windows
+                                    </div>
+
+                                    {/* Not joined → JOIN button */}
+                                    {!data.participant && (
+                                        <div style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                            <div>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 3 }}>CHALLENGE ACTIVE</div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#777' }}>Do you want to participate?</div>
+                                            </div>
+                                            <button onClick={handleJoin} disabled={joining}
+                                                style={{ flexShrink: 0, padding: '10px 20px', background: joining ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.08))', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: joining ? '#444' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: joining ? 'default' : 'pointer', fontWeight: 700 }}>
+                                                {joining ? '...' : '⚔ JOIN'}
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Joined → status pill */}
+                                    {data.participant && (
+                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: data.participant.status === 'active' ? 'rgba(74,222,128,0.1)' : data.participant.status === 'eliminated' ? 'rgba(224,48,48,0.1)' : 'rgba(197,160,89,0.1)', border: `1px solid ${data.participant.status === 'active' ? 'rgba(74,222,128,0.3)' : data.participant.status === 'eliminated' ? 'rgba(224,48,48,0.3)' : 'rgba(197,160,89,0.3)'}` }}>
+                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: data.participant.status === 'active' ? '#4ade80' : data.participant.status === 'eliminated' ? '#e03030' : '#c5a059' }} />
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: data.participant.status === 'active' ? '#4ade80' : data.participant.status === 'eliminated' ? '#e03030' : '#c5a059', letterSpacing: '1.5px' }}>
+                                                {data.participant.status === 'active' ? 'ENROLLED — STILL IN' : data.participant.status === 'eliminated' ? 'ELIMINATED' : data.participant.status.toUpperCase()}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Open windows — upload NOW (only if participant) */}
+                        {data.participant && data.participant.status === 'active' && openWindows.length > 0 && (
                             <div style={{ marginBottom: 28 }}>
                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1.5s infinite' }} />
@@ -1756,15 +1816,15 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
                             </div>
                         )}
 
-                        {/* No open windows */}
-                        {openWindows.length === 0 && (
+                        {/* No open windows (only show if participant) */}
+                        {data.participant && data.participant.status === 'active' && openWindows.length === 0 && (
                             <div style={{ textAlign: 'center', padding: '24px 0 16px', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#333', letterSpacing: '2px' }}>
                                 NO WINDOW OPEN RIGHT NOW
                             </div>
                         )}
 
-                        {/* Upcoming windows */}
-                        {upcomingWindows.length > 0 && (
+                        {/* Upcoming windows (only if participant) */}
+                        {data.participant && data.participant.status === 'active' && upcomingWindows.length > 0 && (
                             <div style={{ marginBottom: 24 }}>
                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>UPCOMING</div>
                                 {upcomingWindows.map((w: any) => {

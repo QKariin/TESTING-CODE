@@ -77,7 +77,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 }
 
-// GET — member checks their own submissions for a challenge
+// GET — member checks challenge info, their participant status, and submissions
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id: challengeId } = await params;
@@ -85,25 +85,28 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user?.email) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-        const { data: completions } = await supabaseAdmin
-            .from('challenge_completions')
-            .select('window_id, verified, completed_at, response_time_seconds')
-            .eq('challenge_id', challengeId)
-            .ilike('member_id', user.email.toLowerCase());
+        const memberEmail = user.email.toLowerCase();
 
-        const { data: challenge } = await supabaseAdmin
-            .from('challenges')
-            .select('id, name, theme, status, description, image_url')
-            .eq('id', challengeId)
-            .single();
+        const [{ data: challenge }, { data: windows }, { data: completions }, { data: participant }] = await Promise.all([
+            supabaseAdmin.from('challenges')
+                .select('id, name, theme, status, description, image_url, tasks_per_day, window_minutes, duration_days, start_date, end_date')
+                .eq('id', challengeId).single(),
+            supabaseAdmin.from('challenge_windows')
+                .select('*').eq('challenge_id', challengeId).order('opens_at', { ascending: true }),
+            supabaseAdmin.from('challenge_completions')
+                .select('window_id, verified, completed_at, response_time_seconds')
+                .eq('challenge_id', challengeId).ilike('member_id', memberEmail),
+            supabaseAdmin.from('challenge_participants')
+                .select('status, joined_at').eq('challenge_id', challengeId).ilike('member_id', memberEmail).maybeSingle(),
+        ]);
 
-        const { data: windows } = await supabaseAdmin
-            .from('challenge_windows')
-            .select('*')
-            .eq('challenge_id', challengeId)
-            .order('opens_at', { ascending: true });
-
-        return NextResponse.json({ success: true, challenge, windows: windows || [], completions: completions || [] });
+        return NextResponse.json({
+            success: true,
+            challenge,
+            windows: windows || [],
+            completions: completions || [],
+            participant: participant || null,  // null = not joined
+        });
     } catch (err: any) {
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });
     }
