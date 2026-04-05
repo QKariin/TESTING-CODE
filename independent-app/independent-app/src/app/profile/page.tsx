@@ -628,21 +628,27 @@ export default function ProfilePage() {
                     </div>
 
                     <div id="gridStat3" className="v-card v-stat-card serve-grid-item"
-                        style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10, cursor: 'pointer', background: 'linear-gradient(135deg, rgba(74,222,128,0.06), rgba(74,222,128,0.02))', border: '1px solid rgba(74,222,128,0.18)' }}
+                        style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6, cursor: 'pointer' }}
                         onClick={() => setDesktopChallengeOpen(true)}>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '3px', textAlign: 'center', color: '#4ade80', textTransform: 'uppercase' }}>Challenges</div>
+                        <div className="ribbon-label" style={{ textAlign: 'center' }}>CHALLENGES</div>
                         <div style={{ display: 'flex', width: '100%', justifyContent: 'space-around', alignItems: 'center', flex: 1 }}>
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '1px', marginBottom: 4 }}>Active</div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.8rem', color: 'white', lineHeight: 1 }}>{challengeCounts.pending}</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: 'white' }}>{challengeCounts.pending}</div>
+                                <div className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.6, marginTop: 3 }}>ACTIVE</div>
                             </div>
-                            <div style={{ height: 30, width: 1, background: 'rgba(74,222,128,0.15)' }}></div>
+                            <div style={{ height: 30, width: 1, background: 'rgba(255,255,255,0.08)' }}></div>
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '1px', marginBottom: 4 }}>Yours</div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.8rem', color: '#4ade80', lineHeight: 1 }}>{challengeCounts.yours}</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#c5a059' }}>{challengeCounts.yours}</div>
+                                <div className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.6, marginTop: 3 }}>YOURS</div>
                             </div>
                         </div>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', color: 'rgba(74,222,128,0.35)', letterSpacing: '1px', textAlign: 'center' }}>tap to manage</div>
+                        <button style={{
+                            width: '100%', padding: '7px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
+                            background: 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
+                            color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700,
+                            letterSpacing: '1px', textTransform: 'uppercase',
+                            boxShadow: '0 4px 15px rgba(197,160,89,0.3)',
+                        }}>VIEW CHALLENGES</button>
                     </div>
 
                     <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', gap: 6 }} onClick={() => window.location.href = '/global'}>
@@ -2038,19 +2044,16 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
             padding: '24px',
         }} onClick={onClose}>
             <div style={{
-                background: 'rgba(8,12,8,0.98)',
-                border: '1px solid rgba(74,222,128,0.2)',
-                borderRadius: 20, padding: '32px',
-                maxWidth: 720, width: '100%', maxHeight: '80vh',
+                background: 'rgba(5,8,18,0.99)',
+                border: '1px solid rgba(197,160,89,0.18)',
+                borderRadius: 16, padding: '28px 32px',
+                maxWidth: 700, width: '100%', maxHeight: '82vh',
                 overflowY: 'auto',
             }} onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-                    <div>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(74,222,128,0.5)', letterSpacing: '2px', marginBottom: 4 }}>Active Challenges</div>
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.6rem', color: '#fff', letterSpacing: '2px' }}>Challenges</div>
-                    </div>
-                    <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#555', width: 36, height: 36, cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                    <div className="ribbon-label" style={{ fontSize: '0.7rem', letterSpacing: '4px' }}>CHALLENGES</div>
+                    <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#555', width: 32, height: 32, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                 </div>
 
                 {/* Challenge cards */}
@@ -2100,87 +2103,81 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                     </div>
 
                                     {/* Info */}
-                                    <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'space-between' }}>
+                                    <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'space-between' }}>
+                                        {/* Name + status dot */}
                                         <div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', fontWeight: 700 }}>{c.name}</div>
-                                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '1px' }}>{c.name}</div>
+                                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
                                             </div>
                                             {c.description && (
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#666', marginBottom: 8, lineHeight: 1.4 }}>{c.description}</div>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', marginBottom: 10, lineHeight: 1.5, letterSpacing: '0.5px' }}>{c.description}</div>
                                             )}
-                                            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#555', letterSpacing: '0.5px' }}>
-                                                    {c.duration_days}d · {c.tasks_per_day}×/day · {c.window_minutes}min windows
-                                                </div>
+                                            {/* Info row */}
+                                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                                                <span className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.7 }}>{c.duration_days} DAYS</span>
+                                                <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
+                                                <span className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.7 }}>{c.tasks_per_day} TASKS/DAY</span>
+                                                <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
+                                                <span className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.7 }}>{c.window_minutes}MIN WINDOWS</span>
                                                 {daysLeft !== null && !startsSoon && (
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#4ade80', fontWeight: 600 }}>
-                                                        {daysLeft} days left
-                                                    </div>
+                                                    <>
+                                                        <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
+                                                        <span className="ribbon-label" style={{ fontSize: '0.45rem', color: '#c5a059' }}>{daysLeft}D LEFT</span>
+                                                    </>
                                                 )}
                                                 {startsSoon && c.start_date && (
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#fbbf24', fontWeight: 600 }}>
-                                                        Starts {new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                    </div>
+                                                    <>
+                                                        <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
+                                                        <span className="ribbon-label" style={{ fontSize: '0.45rem', color: '#c5a059' }}>STARTS {new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}</span>
+                                                    </>
                                                 )}
-                                                {c.participant_total != null && (
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#555' }}>
-                                                        {c.participant_active} active
-                                                    </div>
+                                                {c.participant_active != null && (
+                                                    <>
+                                                        <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
+                                                        <span className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.5 }}>{c.participant_active} COMPETING</span>
+                                                    </>
                                                 )}
                                             </div>
                                         </div>
 
-                                        {/* Points info */}
-                                        <div style={{ display: 'flex', gap: 10 }}>
-                                            {[
-                                                { label: 'TASK', val: `+${c.points_per_completion}` },
-                                                { label: '1ST', val: `+${c.first_place_points}` },
-                                                { label: '2ND', val: `+${c.second_place_points}` },
-                                                { label: '3RD', val: `+${c.third_place_points}` },
-                                            ].map(({ label, val }) => (
-                                                <div key={label} style={{ textAlign: 'center', background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '8px 14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444', letterSpacing: '1px', marginBottom: 2 }}>{label}</div>
-                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: color, fontWeight: 700 }}>{val}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        {/* Stats if joined */}
+                                        {/* Personal stats (if joined) */}
                                         {isThisJoined && stats && (
-                                            <div style={{ display: 'flex', gap: 16, padding: '10px 0', borderTop: '1px solid rgba(74,222,128,0.1)' }}>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: '#4ade80', fontWeight: 600 }}>✓ {stats.tasks_done} tasks</div>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: '#4ade80', fontWeight: 600 }}>🏅 {stats.top3_count} top 3</div>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: '#4ade80', fontWeight: 600 }}>⭐ {stats.total_points} pts</div>
-                                                {participantStatus === 'eliminated' && (
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: '#ef4444', fontWeight: 600 }}>❌ eliminated</div>
-                                                )}
+                                            <div style={{ display: 'flex', gap: 0, borderTop: '1px solid rgba(197,160,89,0.1)', paddingTop: 12 }}>
+                                                {[
+                                                    { label: 'TASKS DONE', val: stats.tasks_done },
+                                                    { label: 'TOP 3 WINS', val: stats.top3_count },
+                                                    { label: 'TOTAL PTS', val: stats.total_points },
+                                                ].map(({ label, val }, idx) => (
+                                                    <div key={label} style={{ flex: 1, textAlign: 'center', borderLeft: idx > 0 ? '1px solid rgba(197,160,89,0.1)' : 'none', paddingLeft: idx > 0 ? 12 : 0 }}>
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.2rem', color: '#c5a059', lineHeight: 1 }}>{val}</div>
+                                                        <div className="ribbon-label" style={{ fontSize: '0.38rem', opacity: 0.5, marginTop: 4 }}>{label}</div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         )}
 
                                         {/* Action button */}
-                                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                            {isThisJoined ? (
-                                                <button onClick={onOpenPanel} style={{
-                                                    padding: '10px 20px', background: 'rgba(74,222,128,0.1)',
-                                                    border: '1px solid rgba(74,222,128,0.3)', borderRadius: 10,
-                                                    color: '#4ade80', fontFamily: 'Rajdhani, sans-serif',
-                                                    fontSize: '1rem', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer',
-                                                }}>View Details & Upload ›</button>
-                                            ) : (
-                                                <>
-                                                    <button onClick={() => handleJoin(c.id)} disabled={joining} style={{
-                                                        padding: '10px 28px',
-                                                        background: joining ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg, rgba(74,222,128,0.25), rgba(74,222,128,0.12))',
-                                                        border: '1px solid rgba(74,222,128,0.5)', borderRadius: 10,
-                                                        color: joining ? '#555' : '#4ade80',
-                                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '1rem',
-                                                        fontWeight: 700, letterSpacing: '1px', cursor: joining ? 'default' : 'pointer',
-                                                    }}>{joining ? 'Joining...' : 'Join Challenge'}</button>
-                                                    {joinError && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: '#ef4444' }}>{joinError}</div>}
-                                                </>
-                                            )}
-                                        </div>
+                                        {isThisJoined ? (
+                                            <button onClick={onOpenPanel} style={{
+                                                width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                                background: 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
+                                                color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700,
+                                                letterSpacing: '1px', textTransform: 'uppercase',
+                                                boxShadow: '0 4px 15px rgba(197,160,89,0.3)',
+                                            }}>VIEW DETAILS & UPLOAD</button>
+                                        ) : (
+                                            <div>
+                                                <button onClick={() => handleJoin(c.id)} disabled={joining} style={{
+                                                    width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: joining ? 'default' : 'pointer',
+                                                    background: joining ? 'rgba(197,160,89,0.1)' : 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
+                                                    color: joining ? '#555' : '#000', fontFamily: 'Orbitron', fontSize: '0.55rem',
+                                                    fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase',
+                                                    boxShadow: joining ? 'none' : '0 4px 15px rgba(197,160,89,0.3)',
+                                                }}>{joining ? 'JOINING...' : 'JOIN CHALLENGE'}</button>
+                                                {joinError && <div className="ribbon-label" style={{ fontSize: '0.42rem', color: 'rgba(197,160,89,0.7)', marginTop: 6, textAlign: 'center' }}>{joinError}</div>}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             );
