@@ -1560,7 +1560,15 @@ let chatSubscribed = false;
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
 
 function _scrollChat() {
+    // Scroll outer containers
     ['chatBox', 'mob_chatBox'].forEach(id => {
+        const b = document.getElementById(id);
+        if (!b) return;
+        b.scrollTop = b.scrollHeight + 9999;
+    });
+    // Also scroll inner content divs — on mobile the flex layout can make
+    // mob_chatContent (overflow-y:auto) be the actual scroll container instead of mob_chatBox
+    ['chatContent', 'mob_chatContent'].forEach(id => {
         const b = document.getElementById(id);
         if (!b) return;
         b.scrollTop = b.scrollHeight + 9999;
@@ -2445,8 +2453,12 @@ export function openMobChatOverlay() {
     // Step 3: Set scroll to bottom NOW — element is off-screen (translateY(100%)) but
     // fully rendered. CSS transform changes do NOT reset scrollTop, so this persists
     // through the slide-up animation.
+    // Scroll both the outer container AND the inner content div — depending on flex
+    // layout constraints, either one may be the actual scroll container on mobile.
     const b = document.getElementById('mob_chatBox');
+    const bc = document.getElementById('mob_chatContent');
     if (b) b.scrollTop = b.scrollHeight + 9999;
+    if (bc) bc.scrollTop = bc.scrollHeight + 9999;
 
     // Clear message notification
     const badge = document.getElementById('mobMsgBadge');
@@ -2469,8 +2481,8 @@ export function openMobChatOverlay() {
 
     // Safety net scrolls — in case content is loaded async after animation
     const scrollToBottom = () => {
-        if (!b) return;
-        b.scrollTop = b.scrollHeight + 9999;
+        if (b) b.scrollTop = b.scrollHeight + 9999;
+        if (bc) bc.scrollTop = bc.scrollHeight + 9999;
     };
     el.addEventListener('transitionend', scrollToBottom, { once: true });
     setTimeout(scrollToBottom, 400);
