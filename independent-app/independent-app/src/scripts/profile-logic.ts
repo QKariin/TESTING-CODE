@@ -2436,9 +2436,17 @@ export function openMobChatOverlay() {
     const el = document.getElementById('mobChatOverlay');
     if (!el) return;
 
-    // Make element display:flex — it starts at translateY(100%) so it's off-screen.
-    // Browser resets scrollTop to 0 on display:none→flex, so we scroll AFTER animation.
+    // Step 1: display:flex — browser resets scrollTop=0 on any child scroll containers.
     el.style.display = 'flex';
+
+    // Step 2: Force sync layout so scrollHeight is computed and scroll reset is done.
+    void (el as any).offsetHeight;
+
+    // Step 3: Set scroll to bottom NOW — element is off-screen (translateY(100%)) but
+    // fully rendered. CSS transform changes do NOT reset scrollTop, so this persists
+    // through the slide-up animation.
+    const b = document.getElementById('mob_chatBox');
+    if (b) b.scrollTop = b.scrollHeight + 9999;
 
     // Clear message notification
     const badge = document.getElementById('mobMsgBadge');
@@ -2446,7 +2454,7 @@ export function openMobChatOverlay() {
     const ring = document.querySelector('.mob-nav-queen-ring');
     if (ring) ring.classList.remove('has-new-msg');
 
-    // Start slide-up animation
+    // Step 4: Start animation AFTER scroll is set.
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
 
     _setNavActive('');
@@ -2459,30 +2467,14 @@ export function openMobChatOverlay() {
         loadChatHistory(email);
     }
 
-    // Core scroll helper
+    // Safety net scrolls — in case content is loaded async after animation
     const scrollToBottom = () => {
-        const b = document.getElementById('mob_chatBox');
         if (!b) return;
         b.scrollTop = b.scrollHeight + 9999;
-        // Use a sentinel that's a DIRECT child of mob_chatBox (not inside mob_chatContent).
-        // scrollIntoView on mob_chatContent children is intercepted by mob_chatContent's own
-        // overflow-y:auto, so it scrolls the wrong element. Sentinel as sibling avoids this.
-        let sentinel = b.querySelector(':scope > .chat-scroll-sentinel') as HTMLElement | null;
-        if (!sentinel) {
-            sentinel = document.createElement('div');
-            sentinel.className = 'chat-scroll-sentinel';
-            sentinel.style.cssText = 'height:1px;min-height:1px;width:1px;flex-shrink:0;pointer-events:none;';
-            b.appendChild(sentinel);
-        }
-        sentinel.scrollIntoView(false);
     };
-
-    // PRIMARY: fire exactly when the CSS transition finishes (most reliable on iOS)
     el.addEventListener('transitionend', scrollToBottom, { once: true });
-
-    // FALLBACKS: in case transitionend doesn't fire (e.g. transition disabled, reduced motion)
-    setTimeout(scrollToBottom, 370);  // ~transition duration + margin
-    setTimeout(scrollToBottom, 700);  // catch image loads after animation
+    setTimeout(scrollToBottom, 400);
+    setTimeout(scrollToBottom, 900);
 
     // Shrink queen avatar button when keyboard opens
     const input = document.getElementById('mob_chatMsgInput');

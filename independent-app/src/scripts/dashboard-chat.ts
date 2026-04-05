@@ -360,8 +360,11 @@ function forceBottom() {
         if (b) b.scrollTop = b.scrollHeight + 9999;
     };
     scroll();
-    requestAnimationFrame(scroll);
-    setTimeout(scroll, 300); // one late retry for images
+    requestAnimationFrame(() => requestAnimationFrame(scroll));
+    setTimeout(scroll, 150);
+    setTimeout(scroll, 400);
+    setTimeout(scroll, 900);
+    setTimeout(scroll, 1800);
 }
 
 function _attachImgScrollHandlers(container: HTMLElement) {
