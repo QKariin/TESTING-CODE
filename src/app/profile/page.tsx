@@ -98,6 +98,7 @@ export default function ProfilePage() {
     const [desktopChallengeOpen, setDesktopChallengeOpen] = useState(false);
     const [allChallenges, setAllChallenges] = useState<any[]>([]);
     const [challengeCounts, setChallengeCounts] = useState({ pending: 0, yours: 0 });
+    const [mobOverlayOpen, setMobOverlayOpen] = useState(false);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -153,17 +154,17 @@ export default function ProfilePage() {
             (window as any).handleLogout = handleLogout;
             (window as any).loadQueenPosts = loadQueenPosts;
             (window as any).renderHistoryAndAltar = renderHistoryAndAltar;
-            (window as any).openAltarDrawer = openAltarDrawer;
-            (window as any).closeAltarDrawer = closeAltarDrawer;
+            (window as any).openAltarDrawer = () => { setMobOverlayOpen(true); openAltarDrawer(); };
+            (window as any).closeAltarDrawer = () => { setMobOverlayOpen(false); closeAltarDrawer(); };
             (window as any).toggleAltarSection = toggleAltarSection;
             (window as any).mobNavTo = mobNavTo;
-            (window as any).openMobChatOverlay = openMobChatOverlay;
-            (window as any).closeMobChatOverlay = closeMobChatOverlay;
+            (window as any).openMobChatOverlay = () => { setMobOverlayOpen(true); openMobChatOverlay(); };
+            (window as any).closeMobChatOverlay = () => { setMobOverlayOpen(false); closeMobChatOverlay(); };
             (window as any).switchMobChatTab = switchMobChatTab;
-            (window as any).openMobQueenWall = openMobQueenWall;
-            (window as any).closeMobQueenWall = closeMobQueenWall;
-            (window as any).openMobGlobal = openMobGlobal;
-            (window as any).closeMobGlobal = closeMobGlobal;
+            (window as any).openMobQueenWall = () => { setMobOverlayOpen(true); openMobQueenWall(); };
+            (window as any).closeMobQueenWall = () => { setMobOverlayOpen(false); closeMobQueenWall(); };
+            (window as any).openMobGlobal = () => { setMobOverlayOpen(true); openMobGlobal(); };
+            (window as any).closeMobGlobal = () => { setMobOverlayOpen(false); closeMobGlobal(); };
             (window as any).switchMobGlTab = switchMobGlTab;
             (window as any).switchMobGlPeriod = switchMobGlPeriod;
             (window as any).sendMobGlMessage = sendMobGlMessage;
@@ -1664,8 +1665,8 @@ export default function ProfilePage() {
         {/* ── CHALLENGE BANNER + PANEL ── */}
         {activeChallenge && (
             <>
-                {/* Mobile banner — only for non-participants, above all overlays (altar/hub = 10000000, nav = 9999999) */}
-                {!isParticipant && !challengePanelOpen && (
+                {/* Mobile banner — only on landing page (no overlay open), only for non-participants */}
+                {!isParticipant && !challengePanelOpen && !mobOverlayOpen && (
                     <button
                         onClick={() => setChallengePanelOpen(true)}
                         style={{
