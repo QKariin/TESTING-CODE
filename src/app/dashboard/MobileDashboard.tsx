@@ -75,6 +75,10 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     const [dailyCode, setDailyCode] = useState('----');
     // unreadMap: memberId -> ISO timestamp of last slave message
     const [unreadMap, setUnreadMap] = useState<Record<string, string>>({});
+    // Tracking refs (same pattern as desktop dashboard-sidebar.ts)
+    const onlineJoinTimeRef = useRef<Record<string, number>>({});
+    const prevOnlineStateRef = useRef<Record<string, boolean>>({});
+    const pendingReadIdRef = useRef<string | null>(null);
 
     const loadData = useCallback(async () => {
         try {
@@ -129,6 +133,42 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     }, [loadData]);
     useEffect(() => { if (tab === 'posts') loadPosts(); }, [tab, loadPosts]);
 
+    // Track online join times (mirrors desktop renderSidebar logic)
+    useEffect(() => {
+        const now = Date.now();
+        users.forEach(u => {
+            const online = getOnlineStatus(u.lastSeen) === 'online';
+            const wasOnline = prevOnlineStateRef.current[u.memberId] ?? false;
+            if (online && !wasOnline) onlineJoinTimeRef.current[u.memberId] = now;
+            if (!online) delete onlineJoinTimeRef.current[u.memberId];
+            prevOnlineStateRef.current[u.memberId] = online;
+        });
+    }, [users]);
+
+    // Migrate old 'chat_read_' ISO keys → 'read_' numeric keys (one-time, on first load)
+    useEffect(() => {
+        if (typeof window === 'undefined' || !users.length) return;
+        users.forEach(u => {
+            const newKey = 'read_' + u.memberId;
+            if (!localStorage.getItem(newKey)) {
+                const oldVal = localStorage.getItem('chat_read_' + u.memberId);
+                if (oldVal) {
+                    const ms = new Date(oldVal).getTime();
+                    if (!isNaN(ms)) localStorage.setItem(newKey, ms.toString());
+                }
+            }
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [users.length > 0]);
+
+    const markPendingRead = useCallback(() => {
+        const id = pendingReadIdRef.current;
+        if (id) {
+            localStorage.setItem('read_' + id, Date.now().toString());
+            pendingReadIdRef.current = null;
+        }
+    }, []);
+
     const handleLogout = async () => {
         const supabase = createClient();
         await supabase.auth.signOut();
@@ -159,8 +199,8 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     const unreadCount = users.filter(u => {
         const lastSlaveMsg = unreadMap[u.memberId];
         if (!lastSlaveMsg) return false;
-        const lastRead = typeof window !== 'undefined' ? localStorage.getItem(`chat_read_${u.memberId}`) : null;
-        return !lastRead || new Date(lastSlaveMsg) > new Date(lastRead);
+        const lastRead = typeof window !== 'undefined' ? localStorage.getItem('read_' + u.memberId) : null;
+        return !lastRead || new Date(lastSlaveMsg).getTime() > parseInt(lastRead);
     }).length;
     const stats = {
         active: users.length,
@@ -205,7 +245,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         user={selectedUser}
                         profileTab={profileTab}
                         setProfileTab={setProfileTab}
-                        onBack={() => setSelectedUser(null)}
+                        onBack={() => { markPendingRead(); setSelectedUser(null); }}
                         adminEmail={userEmail}
                         onReviewed={() => loadData()}
                     />
@@ -216,7 +256,20 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         users={filtered} allCount={users.length}
                         search={search} setSearch={setSearch}
                         unreadMap={unreadMap}
-                        onSelect={(u) => { setSelectedUser(u); setProfileTab('chat'); }}
+                        onlineJoinTime={onlineJoinTimeRef.current}
+                        onSelect={(u) => {
+                            markPendingRead();
+                            const lastSlaveMsg = unreadMap[u.memberId];
+                            if (lastSlaveMsg) {
+                                const readTime = localStorage.getItem('read_' + u.memberId);
+                                const isUnread = readTime
+                                    ? new Date(lastSlaveMsg).getTime() > parseInt(readTime)
+                                    : true;
+                                if (isUnread) pendingReadIdRef.current = u.memberId;
+                            }
+                            setSelectedUser(u);
+                            setProfileTab('chat');
+                        }}
                     />
                 ) : tab === 'posts' ? (
                     <PostsView
@@ -326,27 +379,44 @@ function HomeView({ stats, users, dailyCode }: { stats: any; users: DashUser[]; 
 function hasUnread(memberId: string, unreadMap: Record<string, string>): boolean {
     const lastSlaveMsg = unreadMap[memberId];
     if (!lastSlaveMsg) return false;
-    const lastRead = localStorage.getItem(`chat_read_${memberId}`);
-    if (!lastRead) return true;
-    return new Date(lastSlaveMsg) > new Date(lastRead);
+    const readTime = localStorage.getItem('read_' + memberId);
+    if (!readTime) return true;
+    return new Date(lastSlaveMsg).getTime() > parseInt(readTime);
 }
 
-function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect }: {
+function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect, onlineJoinTime }: {
     users: DashUser[]; allCount: number; search: string; setSearch: (s: string) => void;
     unreadMap: Record<string, string>; onSelect: (u: DashUser) => void;
+    onlineJoinTime: Record<string, number>;
 }) {
-    const statusOrder = { online: 0, recent: 1, away: 2, offline: 3 };
-    const sorted = [...users].sort((a, b) => {
-        // Unread messages first
-        const au = hasUnread(a.memberId, unreadMap) ? 0 : 1;
-        const bu = hasUnread(b.memberId, unreadMap) ? 0 : 1;
-        if (au !== bu) return au - bu;
-        const sa = statusOrder[getOnlineStatus(a.lastSeen)];
-        const sb = statusOrder[getOnlineStatus(b.lastSeen)];
-        if (sa !== sb) return sa - sb;
-        if (b.reviewQueue.length !== a.reviewQueue.length) return b.reviewQueue.length - a.reviewQueue.length;
-        return 0;
-    });
+    const now = Date.now();
+    const getLastSeenMs = (u: DashUser) => {
+        if (!u.lastSeen) return 0;
+        const t = new Date(u.lastSeen).getTime();
+        return isNaN(t) ? 0 : t;
+    };
+
+    // Group 1: unread — FIFO by last message time (earliest = waited longest = top)
+    const withUnread = [...users]
+        .filter(u => hasUnread(u.memberId, unreadMap))
+        .sort((a, b) => {
+            const at = unreadMap[a.memberId] ? new Date(unreadMap[a.memberId]).getTime() : 0;
+            const bt = unreadMap[b.memberId] ? new Date(unreadMap[b.memberId]).getTime() : 0;
+            return at - bt;
+        });
+    const unreadIds = new Set(withUnread.map(u => u.memberId));
+
+    // Group 2: online, no unread — stable by first seen online time
+    const onlineNoUnread = [...users]
+        .filter(u => getOnlineStatus(u.lastSeen) === 'online' && !unreadIds.has(u.memberId))
+        .sort((a, b) => (onlineJoinTime[a.memberId] || now) - (onlineJoinTime[b.memberId] || now));
+
+    // Group 3: offline/away/recent, no unread — most recently seen first
+    const offlineNoUnread = [...users]
+        .filter(u => getOnlineStatus(u.lastSeen) !== 'online' && !unreadIds.has(u.memberId))
+        .sort((a, b) => getLastSeenMs(b) - getLastSeenMs(a));
+
+    const sorted = [...withUnread, ...onlineNoUnread, ...offlineNoUnread];
     return (
         <div style={S.scroll}>
             {/* Search bar */}
@@ -642,7 +712,6 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
             const json = await res.json();
             if (json.success && json.messages) {
                 setMessages(json.messages);
-                localStorage.setItem(`chat_read_${user.memberId}`, new Date().toISOString());
             }
         } finally {
             setLoadingMsgs(false);
@@ -932,6 +1001,9 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
 
             <div style={S.card}>
                 <div style={S.cardTitle}>NAVIGATE</div>
+                <button onClick={() => window.location.href = '/dashboard/challenges'} style={{ display: 'block', width: '100%', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.25)', color: '#4ade80', fontFamily: 'Cinzel,serif', fontSize: '0.75rem', letterSpacing: '3px', padding: '14px', cursor: 'pointer', borderRadius: 8, textAlign: 'center', marginBottom: 10 }}>
+                    ⚔ CHALLENGES ↗
+                </button>
                 <button onClick={() => window.location.href = '/global'} style={{ display: 'block', width: '100%', background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.2)', color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.75rem', letterSpacing: '3px', padding: '14px', cursor: 'pointer', borderRadius: 8, textAlign: 'center', marginBottom: 10 }}>
                     GLOBAL HUB ↗
                 </button>

@@ -527,6 +527,11 @@ export default function DashboardPage() {
                     onClick={() => (window as any).showPosts()}
                     style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.08), transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
                 >✦ POSTS</div>
+                <a
+                    href="/dashboard/challenges"
+                    className="sb-dash-btn"
+                    style={{ display: 'block', textDecoration: 'none', backgroundImage: 'linear-gradient(135deg, rgba(74,222,128,0.06), transparent)', borderBottom: '1px solid rgba(74,222,128,0.15)', color: '#4ade80' }}
+                >⚔ CHALLENGES</a>
                 <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
                     <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: 'Orbitron', fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>

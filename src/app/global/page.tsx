@@ -213,16 +213,20 @@ export default function GlobalPage() {
                     </div>
 
                     {/* CHALLENGES */}
-                    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(197,160,89,0.02)', border: '1px solid rgba(197,160,89,0.14)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid rgba(197,160,89,0.08)', flexShrink: 0 }}>
-                            <div style={{ width: '3px', height: '14px', background: '#c5a059', borderRadius: '2px', marginRight: '8px' }}></div>
-                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>CHALLENGES</span>
+                    <a href="/dashboard/challenges" style={{ display: 'flex', flexDirection: 'column', background: 'rgba(74,222,128,0.03)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: '12px', overflow: 'hidden', minHeight: 0, textDecoration: 'none', cursor: 'pointer', transition: 'border-color 0.2s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', borderBottom: '1px solid rgba(74,222,128,0.1)', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <div style={{ width: '3px', height: '14px', background: '#4ade80', borderRadius: '2px', marginRight: '8px' }}></div>
+                                <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#4ade80', letterSpacing: '2px', fontWeight: 700 }}>CHALLENGES</span>
+                            </div>
+                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: 'rgba(74,222,128,0.5)', letterSpacing: '1px' }}>OPEN ↗</span>
                         </div>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px', gap: '8px' }}>
-                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.9rem', color: '#c5a059', letterSpacing: '4px', fontWeight: 700 }}>CHALLENGES</span>
-                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', textTransform: 'uppercase' }}>Coming Soon</span>
+                            <span style={{ fontSize: '1.4rem' }}>⚔</span>
+                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: '#4ade80', letterSpacing: '3px', fontWeight: 700, textAlign: 'center' }}>MANAGE CHALLENGES</span>
+                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: 'rgba(74,222,128,0.45)', letterSpacing: '2px', textAlign: 'center' }}>CREATE · VERIFY · RANK</span>
                         </div>
-                    </div>
+                    </a>
 
                 </div>
 
