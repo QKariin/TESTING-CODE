@@ -1594,8 +1594,15 @@ function _attachImgScrollHandlers() {
     });
 }
 function _isScrolledToBottom() {
-    const b = document.getElementById('mob_chatBox') || document.getElementById('chatBox');
-    return b ? (b.scrollHeight - b.scrollTop - b.clientHeight < 160) : true;
+    // Check both the outer scroll container and the inner content div.
+    // On mobile, mob_chatContent may be the actual scroll container due to flex layout.
+    const containers = [
+        document.getElementById('mob_chatBox'),
+        document.getElementById('mob_chatContent'),
+        document.getElementById('chatBox'),
+    ].filter(Boolean) as HTMLElement[];
+    // If ANY container is near bottom, treat as "at bottom"
+    return containers.some(b => (b.scrollHeight - b.scrollTop - b.clientHeight) < 160);
 }
 
 export async function initChatSystem() {

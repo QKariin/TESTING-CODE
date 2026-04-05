@@ -357,22 +357,38 @@ function renderToHtml(m: any) {
 function forceBottom() {
     const scroll = () => {
         const b = document.getElementById('adminChatBox');
-        if (b) b.scrollTop = b.scrollHeight + 9999;
+        if (!b) return;
+        b.scrollTop = b.scrollHeight + 9999;
+        // Also try scrollIntoView on anchor — handles cases where scrollTop alone doesn't work
+        const anchor = b.querySelector('#chat-anchor') as HTMLElement | null;
+        if (anchor) anchor.scrollIntoView({ block: 'end' });
     };
     scroll();
     requestAnimationFrame(() => requestAnimationFrame(scroll));
     setTimeout(scroll, 150);
     setTimeout(scroll, 400);
     setTimeout(scroll, 900);
-    setTimeout(scroll, 1800);
+    setTimeout(scroll, 2000);
+    setTimeout(scroll, 4000);
 }
 
 function _attachImgScrollHandlers(container: HTMLElement) {
+    // img elements
     container.querySelectorAll('img').forEach(img => {
         if (!(img as any)._dashScrollBound) {
             (img as any)._dashScrollBound = true;
-            img.addEventListener('load', forceBottom, { once: true });
-            img.addEventListener('error', forceBottom, { once: true });
+            if (!img.complete) {
+                img.addEventListener('load', forceBottom, { once: true });
+                img.addEventListener('error', forceBottom, { once: true });
+            }
+        }
+    });
+    // video elements — bind on loadedmetadata since preload="none" means no load event
+    container.querySelectorAll('video').forEach(vid => {
+        if (!(vid as any)._dashScrollBound) {
+            (vid as any)._dashScrollBound = true;
+            vid.addEventListener('loadedmetadata', forceBottom, { once: true });
+            vid.addEventListener('error', forceBottom, { once: true });
         }
     });
 }
