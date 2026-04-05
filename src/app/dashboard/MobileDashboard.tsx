@@ -352,6 +352,19 @@ function HomeView({ stats, users, dailyCode }: { stats: any; users: DashUser[]; 
                 <div style={{ fontSize: '0.68rem', color: '#3a3a3a', marginTop: 8 }}>Share with subjects to verify</div>
             </div>
 
+            {/* Challenges shortcut */}
+            <button onClick={() => window.location.href = '/dashboard/challenges'}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.22)', borderRadius: 12, padding: '16px 18px', cursor: 'pointer', flexShrink: 0, width: '100%', textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(74,222,128,0.12)', color: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>⚔</div>
+                    <div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#4ade80', letterSpacing: '2px' }}>CHALLENGES</div>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginTop: 2 }}>CREATE · MANAGE · VERIFY</div>
+                    </div>
+                </div>
+                <span style={{ color: '#4ade80', fontSize: '1.2rem', opacity: 0.6 }}>›</span>
+            </button>
+
             {/* Recent subjects */}
             {recent.length > 0 && (
                 <div style={S.card}>

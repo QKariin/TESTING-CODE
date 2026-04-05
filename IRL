@@ -1,0 +1,1580 @@
+< !DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" /><title>Queen Karin — Femdom &amp;
+
+Online Dominance | qkarin.com</title><link rel="canonical" href="https://qkarin.com/" /><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400;1,600&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet" /><style>*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+html {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+body {
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+}
+
+:root {
+    --gold: #d4a843;
+    --gold-hi: #f0c85a;
+    --gold-dim: rgba(212, 168, 67, 0.22);
+    --gold-glow: rgba(212, 168, 67, 0.10);
+    --black: #0a0705;
+    --dark: #110e0a;
+    --dark2: #1c1610;
+    --dark3: #251e16;
+    --text: #d4cfc6;
+    --muted: #8a8078;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    line-height: 1.8;
+}
+
+/* ── 3D REVEAL ── */
+.r3d {
+    opacity: 0;
+    transform: perspective(1200px) rotateX(14deg) translateY(36px) scale(0.975);
+    transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.r3d.in {
+    opacity: 1;
+    transform: perspective(1200px) rotateX(0deg) translateY(0) scale(1);
+}
+
+.r3d.d1 {
+    transition-delay: .1s;
+}
+
+.r3d.d2 {
+    transition-delay: .2s;
+}
+
+.r3d.d3 {
+    transition-delay: .3s;
+}
+
+.r3d.d4 {
+    transition-delay: .4s;
+}
+
+.r3d.d5 {
+    transition-delay: .5s;
+}
+
+/* ── NAV ── */
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 5%;
+    background: rgba(10, 7, 5, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(212, 168, 67, 0.25);
+    transition: padding 0.4s, background 0.4s;
+}
+
+nav.scrolled {
+    padding: 0.7rem 5%;
+    background: rgba(10, 7, 5, 0.98);
+}
+
+.nav-brand {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.08rem;
+}
+
+.nav-brand-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.nav-brand-url {
+    font-size: 0.48rem;
+    letter-spacing: 0.22em;
+    color: var(--muted);
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.58rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    transition: color 0.25s;
+}
+
+.nav-links a:hover {
+    color: var(--gold);
+}
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.nav-toggle span {
+    display: block;
+    width: 22px;
+    height: 1px;
+    background: var(--gold);
+    transition: all 0.3s;
+}
+
+.nav-toggle.open span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+}
+
+.nav-toggle.open span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.open span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+}
+
+.nav-mobile {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 7, 5, 0.99);
+    z-index: 190;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 2rem;
+}
+
+.nav-mobile.open {
+    display: flex;
+}
+
+.nav-mobile a {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    padding: 1.1rem 0;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid rgba(212, 168, 67, 0.1);
+}
+
+.nav-mobile a:first-child {
+    border-top: 1px solid rgba(212, 168, 67, 0.1);
+}
+
+.nav-mobile a:last-child {
+    color: var(--gold);
+    letter-spacing: 0.35em;
+    margin-top: 1.5rem;
+    border: 1px solid rgba(212, 168, 67, 0.35);
+    padding: 1rem 2rem;
+    width: auto;
+}
+
+.nav-mobile a:hover {
+    color: var(--gold);
+}
+
+/* ── HERO ── */
+.hero {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8rem 6% 5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 80% 65% at 50% 45%, rgba(212, 168, 67, 0.18) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 30% at 50% 100%, rgba(212, 168, 67, 0.08) 0%, transparent 60%);
+}
+
+.hero-grid {
+    display: none;
+}
+
+.hero-crown {
+    display: none;
+}
+
+.hero-ornament {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+    margin-bottom: 2.2rem;
+    width: min(340px, 70vw);
+}
+
+.hero-ornament-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 168, 67, 0.6), transparent);
+}
+
+.hero-ornament-dot {
+    width: 4px;
+    height: 4px;
+    background: var(--gold);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+    box-shadow: 0 0 8px rgba(212, 168, 67, 0.6);
+}
+
+.hero-eyebrow {
+    font-size: 0.55rem;
+    letter-spacing: 0.85em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.6rem;
+    font-family: 'Cinzel', serif;
+    opacity: 0.7;
+}
+
+.hero-name {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2.4rem, 7vw, 6.5rem);
+    font-weight: 400;
+    letter-spacing: 0.4em;
+    line-height: 1;
+    color: #fff;
+    text-transform: uppercase;
+    text-shadow: 0 0 60px rgba(212, 168, 67, 0.22);
+    white-space: nowrap;
+}
+
+.hero-name em {
+    display: inline;
+    color: inherit;
+    font-style: normal;
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+}
+
+.hero-rule {
+    width: 1px;
+    height: 80px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    margin: 2.2rem auto;
+}
+
+.hero-sub {
+    font-family: 'Cinzel', serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    margin-bottom: 2.8rem;
+}
+
+.hero-btns {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.95rem 2.6rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.38s ease;
+    z-index: 0;
+}
+
+.btn>* {
+    position: relative;
+    z-index: 1;
+}
+
+.btn:hover {
+    color: var(--black);
+}
+
+.btn:hover::before {
+    transform: scaleX(1);
+}
+
+.btn-ghost {
+    border-color: rgba(201, 168, 76, 0.28);
+    color: var(--muted);
+}
+
+.hero-scroll {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--muted);
+    font-size: 0.5rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+}
+
+.hero-scroll-line {
+    width: 1px;
+    height: 46px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    animation: pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: .8;
+    }
+
+    50% {
+        opacity: .1;
+    }
+}
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+    padding: 1.3rem 5%;
+    background: linear-gradient(90deg, transparent, rgba(212, 168, 67, 0.10), transparent);
+    border-top: 1px solid rgba(212, 168, 67, 0.35);
+    border-bottom: 1px solid rgba(212, 168, 67, 0.35);
+}
+
+.disclaimer-inner {
+    max-width: 880px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.1rem;
+    flex-wrap: wrap;
+}
+
+.disclaimer svg {
+    width: 16px;
+    height: 16px;
+    color: var(--gold);
+    flex-shrink: 0;
+}
+
+.disclaimer p {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    text-align: center;
+}
+
+.disclaimer strong {
+    color: var(--gold);
+    font-weight: 500;
+}
+
+/* ── SHARED ── */
+section {
+    padding: 9rem 5%;
+    scroll-margin-top: 70px;
+}
+
+.eyebrow {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.65em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.1rem;
+    text-align: center;
+    opacity: 0.9;
+}
+
+.s-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+    font-weight: 400;
+    text-align: center;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.s-title em {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--gold);
+    font-size: 1.15em;
+    text-transform: none;
+    letter-spacing: 0.02em;
+}
+
+.s-intro {
+    text-align: center;
+    max-width: 560px;
+    margin: 0 auto 5rem;
+    color: var(--muted);
+    font-size: 0.84rem;
+    line-height: 2.15;
+}
+
+.vline {
+    width: 1px;
+    height: 52px;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    margin: 0 auto 2.2rem;
+}
+
+/* ── ABOUT ── */
+.about {
+    background: var(--dark2);
+    position: relative;
+}
+
+.about::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 168, 67, 0.40), transparent);
+}
+
+.about-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.about-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(1.7rem, 3.8vw, 2.6rem);
+    color: #fff;
+    line-height: 1.5;
+    margin-bottom: 2.2rem;
+    text-shadow: 0 2px 40px rgba(212, 168, 67, 0.08);
+}
+
+.about-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1rem, 1.9vw, 1.3rem);
+    color: var(--text);
+    line-height: 2.3;
+    margin-bottom: 1.4rem;
+}
+
+/* ── ONLINE TEASER ── */
+.online-teaser {
+    background: var(--black);
+    position: relative;
+    overflow: hidden;
+}
+
+.online-teaser::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg, #0a0705 0%, #130f08 50%, #0a0705 100%),
+        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(212, 168, 67, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.online-teaser-inner {
+    position: relative;
+    max-width: 680px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.online-teaser-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+    color: var(--text);
+    line-height: 2.2;
+    margin-bottom: 2.5rem;
+}
+
+.online-teaser-body strong {
+    color: var(--gold);
+    font-style: normal;
+    font-weight: 400;
+}
+
+/* ── SESSION ACCORDION ── */
+.sessions {
+    background: var(--dark2);
+    position: relative;
+}
+
+.sessions::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 168, 67, 0.40), transparent);
+}
+
+.sessions-list {
+    max-width: 860px;
+    margin: 0 auto;
+    border-top: 1px solid var(--gold-dim);
+}
+
+.sess-item {
+    border-bottom: 1px solid var(--gold-dim);
+}
+
+.sess-trigger {
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.8rem 0.5rem;
+    text-align: left;
+    transition: background 0.25s, transform 0.25s;
+    transform-origin: left center;
+}
+
+.sess-trigger:hover {
+    background: rgba(201, 168, 76, 0.025);
+    transform: perspective(600px) translateZ(3px);
+}
+
+.sess-left {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+}
+
+.sess-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--gold);
+    opacity: 0.75;
+    flex-shrink: 0;
+    transition: opacity 0.2s, transform 0.3s;
+}
+
+.sess-trigger:hover .sess-icon,
+.sess-item.open .sess-icon {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.sess-name {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    font-weight: 400;
+    color: #fff;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+}
+
+.sess-item.open .sess-name {
+    color: var(--gold);
+}
+
+.sess-chevron {
+    width: 16px;
+    height: 16px;
+    color: var(--gold);
+    opacity: 0.4;
+    flex-shrink: 0;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+}
+
+.sess-item.open .sess-chevron {
+    transform: rotate(180deg);
+    opacity: 1;
+}
+
+.sess-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sess-body-inner {
+    padding: 0 0.5rem 2.2rem calc(24px + 1.4rem + 0.5rem);
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 2.1;
+    max-width: 560px;
+}
+
+/* ── RATES ── */
+.rates {
+    background: var(--black);
+    border-top: 1px solid rgba(212, 168, 67, 0.18);
+}
+
+.rates-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.rates-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 0.8rem;
+}
+
+.rates-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.rates-table tr {
+    border-bottom: 1px solid var(--gold-dim);
+    transition: background 0.2s, transform 0.2s;
+}
+
+.rates-table tbody tr:hover {
+    background: rgba(201, 168, 76, 0.04);
+    transform: perspective(800px) translateZ(2px);
+}
+
+.rates-table th {
+    font-family: 'Cinzel', serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: var(--gold);
+    padding: 0.9rem 1rem;
+    text-align: left;
+    font-weight: 400;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.28);
+}
+
+.rates-table th:last-child {
+    text-align: right;
+}
+
+.rates-table td {
+    padding: 1.3rem 1rem;
+    font-size: 0.85rem;
+    color: var(--text);
+    vertical-align: middle;
+}
+
+.rates-table td.r-time {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    color: var(--muted);
+    white-space: nowrap;
+    letter-spacing: 0.06em;
+}
+
+.rates-table td.r-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--gold);
+    text-align: right;
+    white-space: nowrap;
+    text-shadow: 0 0 40px rgba(212, 168, 67, 0.45);
+}
+
+.rates-table td.r-price sup {
+    font-size: 0.85rem;
+    vertical-align: super;
+}
+
+.deposit-box {
+    margin-top: 2rem;
+    border: 1px solid rgba(212, 168, 67, 0.35);
+    background: linear-gradient(135deg, rgba(212, 168, 67, 0.09), transparent);
+    padding: 1.8rem 2rem;
+    display: flex;
+    gap: 1.2rem;
+    align-items: flex-start;
+    transition: border-color 0.3s;
+}
+
+.deposit-box:hover {
+    border-color: rgba(212, 168, 67, 0.55);
+}
+
+.deposit-box svg {
+    width: 16px;
+    height: 16px;
+    color: var(--gold);
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+}
+
+.deposit-box p {
+    font-size: 0.79rem;
+    color: var(--text);
+    line-height: 1.95;
+}
+
+.deposit-box strong {
+    color: var(--gold);
+    font-weight: 400;
+}
+
+.online-rates-note {
+    margin-top: 1px;
+    padding: 1.4rem 2rem;
+    background: var(--dark2);
+    border: 1px solid var(--gold-dim);
+    font-size: 0.77rem;
+    color: var(--muted);
+    line-height: 1.9;
+    text-align: center;
+}
+
+.online-rates-note strong {
+    color: var(--gold);
+    font-weight: 400;
+}
+
+/* ── PROCESS ── */
+.process {
+    background: var(--dark2);
+    position: relative;
+}
+
+.process::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 168, 67, 0.40), transparent);
+}
+
+.steps {
+    max-width: 880px;
+    margin: 0 auto;
+}
+
+.step {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 0 2rem;
+    padding: 2.8rem 0;
+    border-bottom: 1px solid var(--gold-dim);
+    align-items: start;
+    transition: transform 0.3s;
+}
+
+.step:last-child {
+    border-bottom: none;
+}
+
+.step:hover {
+    transform: perspective(800px) translateZ(4px);
+}
+
+.step-num {
+    font-family: 'Cinzel', serif;
+    font-size: 3rem;
+    font-weight: 400;
+    color: rgba(212, 168, 67, 0.28);
+    line-height: 1;
+    text-align: right;
+    padding-right: 2rem;
+    border-right: 1px solid var(--gold-dim);
+    letter-spacing: 0.02em;
+}
+
+.step-content {
+    padding-left: 0.5rem;
+}
+
+.step-content svg {
+    width: 20px;
+    height: 20px;
+    color: var(--gold);
+    opacity: 0.65;
+    margin-bottom: 0.9rem;
+    display: block;
+}
+
+.step-content h3 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(0.85rem, 2vw, 1.1rem);
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.step-content p {
+    font-size: 0.79rem;
+    color: var(--muted);
+    line-height: 1.98;
+}
+
+.step-content strong {
+    color: var(--text);
+    font-weight: 300;
+}
+
+/* ── RULES ── */
+.rules {
+    background: var(--black);
+    border-top: 1px solid rgba(212, 168, 67, 0.18);
+}
+
+.rules-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    counter-reset: rc;
+}
+
+.rule {
+    counter-increment: rc;
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: 1.5rem;
+    padding: 1.7rem 0;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.07);
+    align-items: start;
+}
+
+.rule::before {
+    content: counter(rc, decimal-leading-zero);
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    color: rgba(212, 168, 67, 0.45);
+    line-height: 1.5;
+    text-align: right;
+}
+
+.rule p {
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.98;
+}
+
+.rule.hl {
+    background: rgba(212, 168, 67, 0.09);
+    border-left: 3px solid var(--gold);
+    padding-left: 1.2rem;
+    margin-left: -1.2rem;
+}
+
+.rule.hl p {
+    color: #fff;
+}
+
+.rule strong {
+    color: var(--gold);
+    font-weight: 400;
+}
+
+/* ── BOOKING ── */
+.booking {
+    background: var(--dark2);
+    position: relative;
+}
+
+.booking::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 168, 67, 0.40), transparent);
+}
+
+.booking-form {
+    max-width: 660px;
+    margin: 0 auto;
+}
+
+.field {
+    margin-bottom: 1.7rem;
+}
+
+.field label {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.52rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.65rem;
+}
+
+.field input,
+.field select,
+.field textarea {
+    width: 100%;
+    background: var(--dark);
+    border: 1px solid rgba(201, 168, 76, 0.14);
+    color: var(--text);
+    padding: 1rem 1.2rem;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 300;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 0;
+}
+
+.field select option {
+    background: var(--dark);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.12), 0 4px 20px rgba(201, 168, 76, 0.06);
+}
+
+.field textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-note {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 2.5rem;
+    line-height: 2.1;
+}
+
+.form-note strong {
+    color: var(--gold);
+    font-weight: 400;
+}
+
+.btn-submit {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 1.2rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-submit::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.38s ease;
+    z-index: 0;
+}
+
+.btn-submit span {
+    position: relative;
+    z-index: 1;
+}
+
+.btn-submit:hover {
+    color: var(--black);
+}
+
+.btn-submit:hover::before {
+    transform: scaleX(1);
+}
+
+/* ── PARTNER BANNER ── */
+.partner-banner {
+    padding: 2rem 5%;
+    text-align: center;
+    border-top: 1px solid rgba(201, 168, 76, 0.08);
+    background: var(--dark2);
+}
+
+.partner-banner p {
+    font-size: 0.5rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    font-family: 'Cinzel', serif;
+}
+
+.partner-banner a {
+    display: inline-block;
+    opacity: 0.55;
+    transition: opacity 0.3s;
+}
+
+.partner-banner a:hover {
+    opacity: 1;
+}
+
+.partner-banner img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+/* ── FOOTER ── */
+footer {
+    background: var(--black);
+    border-top: 1px solid rgba(212, 168, 67, 0.22);
+    padding: 5rem 5% 3rem;
+    text-align: center;
+}
+
+.footer-crown {
+    width: 34px;
+    height: 34px;
+    color: var(--gold);
+    opacity: 0.35;
+    margin: 0 auto 1.3rem;
+    display: block;
+}
+
+.footer-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--gold);
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+}
+
+.footer-domain {
+    font-size: 0.55rem;
+    letter-spacing: 0.24em;
+    color: var(--muted);
+    margin-top: 0.3rem;
+}
+
+.footer-domain a {
+    color: var(--gold);
+    text-decoration: none;
+}
+
+.footer-divider {
+    width: 50px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 2.2rem auto;
+}
+
+.footer-tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--muted);
+}
+
+.footer-legal {
+    font-size: 0.55rem;
+    color: rgba(104, 100, 96, 0.38);
+    margin-top: 1.5rem;
+    line-height: 2;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width:768px) {
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+        position: relative;
+    }
+
+    section, nav, footer, .disclaimer, .partner-banner {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    img, svg, table, iframe, embed, video {
+        max-width: 100%;
+    }
+
+    .partner-banner img {
+        width: 100%;
+        height: auto;
+    }
+
+    section {
+        padding: 4.5rem 5%;
+    }
+
+    .nav-links {
+        display: none;
+    }
+
+    .nav-toggle {
+        display: flex;
+    }
+
+    .s-intro {
+        margin-bottom: 2.5rem;
+        font-size: 0.8rem;
+    }
+
+    .s-title {
+        font-size: clamp(1.6rem, 5vw, 2.8rem);
+    }
+
+    .hero-name {
+        white-space: normal;
+        letter-spacing: 0.2em;
+        font-size: clamp(1.8rem, 10vw, 3.5rem);
+        word-spacing: 0.2em;
+        text-align: center;
+    }
+
+    .hero-rule {
+        height: 50px;
+    }
+
+    .about-quote {
+        font-size: clamp(1.3rem, 4vw, 1.8rem);
+    }
+
+    .about-body {
+        font-size: 1rem;
+    }
+
+    .online-teaser-body {
+        font-size: clamp(0.95rem, 2vw, 1.2rem);
+    }
+
+    .step {
+        display: block;
+        padding: 1.8rem 0;
+    }
+
+    .step-num {
+        font-size: 0.75rem;
+        font-family: 'Cinzel', serif;
+        color: rgba(212, 168, 67, 0.5);
+        border-right: none;
+        padding-right: 0;
+        text-align: left;
+        margin-bottom: 0.6rem;
+        letter-spacing: 0.15em;
+    }
+
+    .step-content {
+        padding-left: 0;
+    }
+
+    .field-row {
+        grid-template-columns: 1fr;
+    }
+
+    .rule {
+        grid-template-columns: 2rem 1fr;
+        gap: 0 0.9rem;
+        padding: 1.2rem 0;
+    }
+
+    .rule::before {
+        font-size: 0.55rem;
+        color: rgba(212, 168, 67, 0.55);
+        text-align: right;
+        padding-right: 0.9rem;
+        border-right: 1px solid rgba(212, 168, 67, 0.2);
+        line-height: 2;
+        letter-spacing: 0.05em;
+    }
+
+    .rule p {
+        font-size: 0.78rem;
+        line-height: 1.85;
+    }
+
+    .rule.hl {
+        padding-left: 0;
+        margin-left: 0;
+        border-left: none;
+        background: rgba(212, 168, 67, 0.07);
+    }
+
+    .sess-body-inner {
+        padding-left: 0.5rem;
+    }
+
+    .rates-table td.r-price {
+        font-size: 1.4rem;
+    }
+
+    .rates-table td {
+        padding: 1rem 0.6rem;
+    }
+
+    .rates-table th {
+        padding: 0.7rem 0.6rem;
+    }
+}
+
+@media (max-width:480px) {
+    nav {
+        padding: 0.8rem 4%;
+    }
+
+    .nav-brand-name {
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+    }
+
+    .nav-brand-url {
+        font-size: 0.38rem;
+    }
+
+    .hero {
+        padding: 5.5rem 5% 3.5rem;
+    }
+
+    .hero-name {
+        font-size: clamp(1.5rem, 8.5vw, 2.8rem);
+        letter-spacing: 0.14em;
+    }
+
+    .hero-ornament {
+        width: min(260px, 80vw);
+    }
+
+    .hero-sub {
+        font-size: 0.52rem;
+        letter-spacing: 0.3em;
+    }
+
+    .hero-rule {
+        height: 40px;
+        margin: 1.5rem auto;
+    }
+
+    section {
+        padding: 3.5rem 5%;
+    }
+
+    .s-title {
+        font-size: clamp(1.4rem, 5.5vw, 2.2rem);
+    }
+
+    .s-title em {
+        font-size: 1.1em;
+    }
+
+    .about-quote {
+        font-size: clamp(1.15rem, 4vw, 1.5rem);
+    }
+
+    .about-body {
+        font-size: 0.95rem;
+        line-height: 2;
+    }
+
+    .rates-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .rates-label {
+        letter-spacing: 0.15em;
+        font-size: 0.46rem;
+    }
+
+    .rates-table td.r-price {
+        font-size: 1.2rem;
+        white-space: normal;
+    }
+
+    .rates-table td.r-time {
+        font-size: 0.8rem;
+        white-space: normal;
+    }
+
+    .rates-table td {
+        padding: 0.8rem 0.5rem;
+    }
+
+    .rates-table th {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.45rem;
+    }
+
+    .deposit-box {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.9rem 0.8rem;
+    }
+
+    .deposit-box p {
+        font-size: 0.65rem;
+        line-height: 1.7;
+    }
+
+    .deposit-box svg {
+        width: 12px;
+        height: 12px;
+        margin-top: 0.1rem;
+    }
+
+    .online-rates-note {
+        padding: 1rem 0.8rem;
+        font-size: 0.72rem;
+    }
+
+    .disclaimer-inner {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .step-num {
+        font-size: 0.65rem;
+    }
+
+    .footer-name {
+        font-size: 1.1rem;
+        letter-spacing: 0.18em;
+    }
+
+    .btn {
+        padding: 0.8rem 1.6rem;
+        font-size: 0.55rem;
+    }
+}
+
+</style></head><body><nav id="nav"><a href="#" class="nav-brand"><span class="nav-brand-name">Queen Karin</span><span class="nav-brand-url">qkarin.com</span></a><ul class="nav-links"><li><a href="#about">About</a></li><li><a href="#online">Online</a></li><li><a href="#sessions">Sessions</a></li><li><a href="#rates">Rates</a></li><li><a href="#process">Process</a></li><li><a href="#booking">Book Session</a></li></ul><button class="nav-toggle" id="ntoggle" aria-label="Menu"><span></span><span></span><span></span></button></nav><div class="nav-mobile" id="nmobile"><a href="#about" onclick="navTo('about')">About</a><a href="#online" onclick="navTo('online')">Online</a><a href="#sessions" onclick="navTo('sessions')">Sessions</a><a href="#rates" onclick="navTo('rates')">Rates</a><a href="#process" onclick="navTo('process')">Process</a><a href="#booking" onclick="navTo('booking')">Book Session</a></div><section class="hero"><div class="hero-bg" aria-hidden="true"></div><div class="hero-grid" aria-hidden="true"></div><div class="hero-ornament r3d"><div class="hero-ornament-line"></div><div class="hero-ornament-dot"></div><div class="hero-ornament-line"></div></div><p class="hero-eyebrow r3d d1">Official Website</p><h1 class="hero-name r3d d2">Queen <em>Karin</em></h1><div class="hero-rule r3d d3"></div><p class="hero-sub r3d d3">Dominant. Refined. Unapologetically powerful.</p><div class="hero-btns r3d d4"><a href="#booking" class="btn"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="6" cy="6" r="5" /><path d="M4 6 L6 8 L9 4" /></svg><span>Book a Session</span></a><a href="https://qkarin.com" target="_blank" rel="noopener" class="btn btn-ghost"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="6" cy="4" r="2.5" /><path d="M1 11 Q1 8 6 8 Q11 8 11 11" /></svg><span>Serve Online</span></a></div><div class="hero-scroll" aria-hidden="true">Discover <div class="hero-scroll-line"></div></div></section><div class="disclaimer"><div class="disclaimer-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg><p><strong>None of my sessions include sexual services of any kind.</strong>This applies to all IRL and online arrangements,
+without exception.</p><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg></div></div><section class="about" id="about"><div class="about-inner"><span class="eyebrow r3d">About</span><p class="about-quote r3d d1">"Power is not given.<br/>It is taken, earned,<br/>and commanded." </p><div class="vline r3d d2"></div><p class="about-body r3d d2">I'm Queen Karin, a Dominatrix based mostly online, but now also in person. I've been doing this long enough to know what works and what doesn't. Sessions are tailored to you: your desires, your limits, the dynamic we create. No scripts, no surprises. Discretion is guaranteed.</p></div></section><section class="online-teaser" id="online"><div class="online-teaser-inner"><span class="eyebrow r3d">Digital Dominance</span><h2 class="s-title r3d d1">My Online <em>World</em></h2><div class="vline r3d d2"></div><p class="online-teaser-body r3d d2">I have built a <strong>complete and structured online world </strong>for submissive men who wish to serve,
+be controlled,
+and be kept without geographical limits. It is intentional. It is demanding. And it is unlike anything you have experienced before. </p></p><div class="r3d d4"><a href="https://qkarin.com" target="_blank" rel="noopener" class="btn"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 6 L10 6 M7 3 L10 6 L7 9" /></svg><span>Enter My Online World</span></a></div></div></section><section class="sessions" id="sessions"><span class="eyebrow r3d">In Person</span><h2 class="s-title r3d d1">IRL Session <em>Menu</em></h2><p class="s-intro r3d d2">Each session is fully negotiated before we meet. All activities are strictly non-sexual. Tap to explore.</p><div class="sessions-list r3d d2"><div class="sess-item"><button class="sess-trigger" onclick="toggleSess(this)" aria-expanded="false"><div class="sess-left"><svg class="sess-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="24" x2="20" y2="8" /><path d="M20 8 Q25 3 25 8 Q25 13 20 13 L20 8" /><line x1="4" y1="24" x2="4" y2="27" /></svg><span class="sess-name">Corporal Punishment</span></div><svg class="sess-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 5 L8 10 L13 5" /></svg></button><div class="sess-body"><div class="sess-body-inner">Caning,
+cropping,
+paddling,
+and flogging delivered with precision and intent. Discipline is an art — and I have mastered it. Intensity is negotiated in advance and respected throughout.</div></div></div><div class="sess-item"><button class="sess-trigger" onclick="toggleSess(this)" aria-expanded="false"><div class="sess-left"><svg class="sess-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 22 L3 13 L8 18 L14 6 L20 18 L25 13 L25 22 Z" /><line x1="3" y1="25" x2="25" y2="25" /></svg><span class="sess-name">Humiliation &amp;
+Degradation</span></div><svg class="sess-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 5 L8 10 L13 5" /></svg></button><div class="sess-body"><div class="sess-body-inner">Verbal and psychological domination. You will be stripped of ego and reminded exactly where you belong — at my feet. This is not performance. It is precision.</div></div></div><div class="sess-item"><button class="sess-trigger" onclick="toggleSess(this)" aria-expanded="false"><div class="sess-left"><svg class="sess-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><ellipse cx="14" cy="18" rx="6" ry="7" /><ellipse cx="8" cy="8.5" rx="2" ry="2.5" /><ellipse cx="13" cy="7" rx="2" ry="2.5" /><ellipse cx="18" cy="7.5" rx="2" ry="2.5" /><ellipse cx="22" cy="10" rx="1.8" ry="2.2" /></svg><span class="sess-name">Foot &amp;
+Body Worship</span></div><svg class="sess-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 5 L8 10 L13 5" /></svg></button><div class="sess-body"><div class="sess-body-inner">The privilege of worshipping your Queen. Foot,
+leg,
+and body worship for the devoted and deserving submissive. This is not a right — it is earned.</div></div></div><div class="sess-item"><button class="sess-trigger" onclick="toggleSess(this)" aria-expanded="false"><div class="sess-left"><svg class="sess-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><path d="M4 22 Q6 22 8 20 L16 11 Q18 8.5 21 8.5 L25 8.5" /><line x1="25" y1="8.5" x2="25" y2="22" /><line x1="4" y1="22" x2="25" y2="22" /><line x1="25" y1="8.5" x2="25" y2="6.5" /></svg><span class="sess-name">Trampling</span></div><svg class="sess-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 5 L8 10 L13 5" /></svg></button><div class="sess-body"><div class="sess-body-inner">Heeled or barefoot trampling sessions for those who wish to feel the full weight of their Queen's authority — literally. Physical considerations discussed beforehand.</div></div>
+ </div><div class="sess-item"><button class="sess-trigger" onclick="toggleSess(this)" aria-expanded="false"><div class="sess-left"><svg class="sess-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><path d="M14 14 Q7 7 3 11 Q3 18 14 14" /><path d="M14 14 Q21 7 25 11 Q25 18 14 14" /><circle cx="14" cy="14" r="2" fill="currentColor" stroke="none" /><line x1="14" y1="16" x2="14" y2="22" /><path d="M11 20 L14 23 L17 20" /></svg><span class="sess-name">Sissification &amp;
+Feminization</span></div><svg class="sess-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 5 L8 10 L13 5" /></svg></button><div class="sess-body"><div class="sess-body-inner">Transformation,
+dressing,
+makeup,
+and the full sissy experience under my careful and exacting supervision. A deeply personal session that demands honesty during consultation.</div></div></div><div class="sess-item"><button class="sess-trigger" onclick="toggleSess(this)" aria-expanded="false"><div class="sess-left"><svg class="sess-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><rect x="3" y="10" width="22" height="13" rx="2" /><path d="M7 10 L7 7 Q7 4 11 4 L17 4 Q21 4 21 7 L21 10" /><circle cx="20" cy="16" r="2.8" /><line x1="3" y1="14" x2="13" y2="14" /></svg><span class="sess-name">Financial Domination</span></div><svg class="sess-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 5 L8 10 L13 5" /></svg></button><div class="sess-body"><div class="sess-body-inner">The ultimate act of devotion — tribute,
+tasks,
+and financial control for those who express submission through their wallet. Available IRL and online via qkarin.com.</div></div></div><div class="sess-item"><button class="sess-trigger" onclick="toggleSess(this)" aria-expanded="false"><div class="sess-left"><svg class="sess-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><rect x="2" y="10" width="9" height="6" rx="3" /><rect x="17" y="10" width="9" height="6" rx="3" /><line x1="11" y1="13" x2="17" y2="13" /><line x1="7" y1="16" x2="7" y2="21" /><line x1="21" y1="16" x2="21" y2="21" /><line x1="5" y1="21" x2="9" y2="21" /><line x1="19" y1="21" x2="23" y2="21" /></svg><span class="sess-name">Slave Training</span></div><svg class="sess-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 5 L8 10 L13 5" /></svg></button><div class="sess-body"><div class="sess-body-inner">A structured,
+ongoing programme designed to shape you into an obedient,
+attentive,
+and worthy servant. Available as IRL sessions or combined with an online programme. Not for the faint-hearted.</div></div></div><div class="sess-item"><button class="sess-trigger" onclick="toggleSess(this)" aria-expanded="false"><div class="sess-left"><svg class="sess-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><path d="M4 7 Q14 2.5 24 7 L24 16 Q24 24 14 26 Q4 24 4 16 Z" /><path d="M9 13 Q11 11 13 13" /><path d="M15 16 Q18 20 21 16" /><line x1="9" y1="9.5" x2="9" y2="11.5" /><line x1="19" y1="9.5" x2="19" y2="11.5" /></svg><span class="sess-name">Roleplay &amp;
+Fantasy</span></div><svg class="sess-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 5 L8 10 L13 5" /></svg></button><div class="sess-body"><div class="sess-body-inner">From interrogation to teacher/student,
+boss/employee,
+and far beyond — I craft immersive scenarios that blur the line between fantasy and reality. All scenarios discussed and agreed in consultation.</div></div></div><div class="sess-item"><button class="sess-trigger" onclick="toggleSess(this)" aria-expanded="false"><div class="sess-left"><svg class="sess-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><rect x="4" y="13" width="20" height="12" rx="2" /><path d="M8 13 L8 9 Q8 3.5 14 3.5 Q20 3.5 20 9 L20 13" /><circle cx="14" cy="19" r="2.2" /><line x1="14" y1="21.2" x2="14" y2="23" /></svg><span class="sess-name">CBT</span></div><svg class="sess-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 5 L8 10 L13 5" /></svg></button><div class="sess-body"><div class="sess-body-inner">Cock and ball torment for experienced submissives. Intensity calibrated carefully to your discussed limits and tolerance. Experience level and health information required during consultation.</div></div></div><div class="sess-item"><button class="sess-trigger" onclick="toggleSess(this)" aria-expanded="false"><div class="sess-left"><svg class="sess-icon" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="12" r="5.5" /><circle cx="10" cy="12" r="2.2" /><line x1="15.5" y1="16" x2="25" y2="25" /><line x1="20.5" y1="21" x2="20.5" y2="25" /><line x1="23.5" y1="24" x2="23.5" y2="25" /></svg><span class="sess-name">Chastity Keyholding</span></div><svg class="sess-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 5 L8 10 L13 5" /></svg></button><div class="sess-body"><div class="sess-body-inner">Available both IRL and online. I hold the key and I decide the terms of release. This is total control at its most intimate and unrelenting. Remote keyholding available via qkarin.com.</div></div></div></div></section><section class="rates" id="rates"><span class="eyebrow r3d">Investment</span><h2 class="s-title r3d d1">Session <em>Rates</em></h2><p class="s-intro r3d d2">All rates in EUR. A €100 deposit secures your booking and is deducted from the final rate on the day.</p><div class="rates-wrap r3d d2"><span class="rates-label">IRL — Outcall &amp;
+Incall</span><table class="rates-table"><thead><tr><th>Duration</th><th>Rate</th></tr></thead><tbody><tr><td class="r-time">2 Hours</td><td class="r-price"><sup>€</sup>550</td></tr><tr><td class="r-time">6 Hours</td><td class="r-price"><sup>€</sup>900</td></tr><tr><td class="r-time">12 Hours</td><td class="r-price"><sup>€</sup>1,
+500</td></tr><tr><td class="r-time">24 Hours</td><td class="r-price"><sup>€</sup>2,
+000</td></tr><tr><td class="r-time">48 Hours</td><td class="r-price"><sup>€</sup>3,
+000</td></tr></tbody></table><div class="deposit-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><circle cx="12" cy="16" r="0.6" fill="currentColor" /></svg><p>A <strong>€100 non-refundable deposit</strong>is required to confirm any IRL booking. After I approve your requested date and time,
+you receive an email with payment instructions. The deposit is deducted from your final rate on the day. Cancellations or date changes within <strong>48 hours</strong>of the session forfeit the deposit in full — no exceptions. </p></div><div class="online-rates-note">Online arrangements — servitude,
+chastity,
+slave training,
+findom — are <strong>priced on application</strong>. Enquire below or visit <a href="https://qkarin.com" style="color:var(--gold);text-decoration:none;">qkarin.com</a>. </div></div></section><section class="process" id="process"><span class="eyebrow r3d">The Process</span><h2 class="s-title r3d d1">How It <em>Works</em></h2><p class="s-intro r3d d2">Every session follows a clear,
+structured process. No shortcuts. No ambiguity.</p><div class="steps"><div class="step r3d"><div class="step-num">01</div><div class="step-content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><rect x="4" y="3" width="13" height="18" rx="1" /><path d="M4 3 Q4 1 7 1 L14 1 Q17 1 17 3" /><line x1="7" y1="8" x2="14" y2="8" /><line x1="7" y1="11" x2="12" y2="11" /><line x1="7" y1="14" x2="10" y2="14" /></svg><h3>Submit Your Enquiry</h3><p>Complete the application with your preferred <strong>session type,
+date,
+and time</strong>. Be detailed and honest. Vague applications receive no reply.</p></div></div><div class="step r3d d1"><div class="step-num">02</div><div class="step-content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M7 12 L10 15 L17 8" /></svg><h3>Approval &amp;
+Deposit</h3><p>I review your application and confirm availability. Once approved,
+you receive an <strong>email with payment instructions for the €100 deposit</strong>— which secures your slot.</p></div></div><div class="step r3d d2"><div class="step-num">03</div><div class="step-content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2" /><line x1="7" y1="21" x2="17" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /><line x1="6" y1="9" x2="9" y2="9" /><rect x="12" y="7" width="6" height="5" rx="1" /></svg><h3>Access My Online Platform</h3><p>Upon deposit payment,
+you receive <strong>full access to my femdom online app</strong>. The preparation begins here — before you ever arrive.</p></div></div><div class="step r3d d3"><div class="step-num">04</div><div class="step-content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><path d="M3 5 Q3 3 5 3 L19 3 Q21 3 21 5 L21 15 Q21 17 19 17 L13 17 L8 21 L8 17 L5 17 Q3 17 3 15 Z" /><line x1="7" y1="9" x2="17" y2="9" /><line x1="7" y1="13" x2="13" y2="13" /></svg><h3>Pre-Session Consultation</h3><p>A thorough consultation via the app. We discuss your <strong>expectations,
+desires,
+and hard limits</strong>. Mandatory — and it shapes everything that follows.</p></div></div><div class="step r3d d4"><div class="step-num">05</div><div class="step-content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20 L3 13 L8 17 L12 6 L16 17 L21 13 L21 20 Z" /><line x1="3" y1="23" x2="21" y2="23" /></svg><h3>The Session</h3><p>You arrive. The balance is settled. The session begins on my terms. <strong>No surprises. No renegotiating on the day.</strong></p></div></div></div></section><section class="rules" id="rules"><span class="eyebrow r3d">Before You Apply</span><h2 class="s-title r3d d1">My <em>Rules</em></h2><p class="s-intro r3d d2">Non-negotiable. Read carefully before submitting.</p><div class="rules-inner r3d d2"><div class="rule"><p>All sessions are based on SSC principles — Safe,
+Sane and Consensual. Limits are discussed in consultation and honoured without exception.</p></div><div class="rule hl"><p><strong>None of my sessions include sexual services of any kind,
+in any form.</strong>This boundary is absolute. Any request of this nature results in an immediate and permanent ban.</p></div><div class="rule"><p>A <strong>€100 deposit</strong>is required to confirm any IRL booking. Upon approval you receive an email with payment instructions. The deposit is deducted from your final rate on the day.</p></div><div class="rule"><p>The deposit is <strong>non-refundable</strong>if you cancel or request a date change within <strong>48 hours</strong>of the confirmed session time. No exceptions.</p></div><div class="rule"><p>Access to my online app and a pre-session consultation is required before every IRL session. This is not optional — it is part of the process.</p></div><div class="rule"><p>Hygiene is mandatory. Arrive clean and presentable. This is not a request.</p></div><div class="rule"><p>Punctuality is a form of respect. Lateness without prior notice will result in cancellation and forfeiture of your deposit.</p></div><div class="rule"><p>Discretion is mutual. What happens in our dynamic remains confidential on both sides,
+always.</p></div><div class="rule"><p>First-time applicants must complete full screening prior to any session or online arrangement being confirmed.</p></div></div></section><section class="booking" id="booking"><span class="eyebrow r3d">Apply</span><h2 class="s-title r3d d1">Request a <em>Session</em></h2><p class="s-intro r3d d2">Complete this form honestly and in full. I respond to suitable applicants within 48 hours.</p><div style="width:100%;height:500px;" data-fillout-id="8yZHPqEVubus" data-fillout-embed-type="standard" data-fillout-inherit-parameters data-fillout-dynamic-resize></div><script src="https://server.fillout.com/embed/v1/"></script></section><footer><svg class="footer-crown" viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" aria-hidden="true"><path d="M3 28 L3 17 L9 22 L17 7 L25 22 L31 17 L31 28 Z" /><line x1="3" y1="31" x2="31" y2="31" /></svg><p class="footer-name">Queen Karin</p><p class="footer-domain"><a href="https://qkarin.com">qkarin.com</a></p><div class="footer-divider"></div><p class="footer-tagline">Dominant. Refined. Unapologetically powerful.</p><p class="footer-legal">All activities are consensual and between adults aged 18 and over.<br/>This website does not advertise sexual services of any kind. </p></footer><div class="partner-banner"><p>Listed With</p><a href="https://www.eurogirlsescort.com" target="_blank" rel="noopener" title="EuroGirlsEscort.com"><img src="https://www.eurogirlsescort.com/dist/images/banners/468X60.jpg" alt="EuroGirlsEscort.com" width="468" height="60" loading="lazy" /></a></div><script>
+/* NAV SCROLL */
+const nav=document.getElementById('nav');
+
+window.addEventListener('scroll', ()=> nav.classList.toggle('scrolled', window.scrollY > 60), {
+    passive:true
+});
+
+/* MOBILE NAV */
+const toggle=document.getElementById('ntoggle');
+const mob=document.getElementById('nmobile');
+
+toggle.addEventListener('click', ()=> {
+        toggle.classList.toggle('open');
+        mob.classList.toggle('open');
+        document.body.style.overflow=mob.classList.contains('open') ? 'hidden' : '';
+    });
+
+function navTo(id) {
+    toggle.classList.remove('open');
+    mob.classList.remove('open');
+    document.body.style.overflow='';
+
+    setTimeout(()=> {
+            const el=document.getElementById(id);
+
+            if (el) el.scrollIntoView({
+                behavior:'smooth', block:'start'
+            });
+    }
+
+    , 320);
+}
+
+/* DESKTOP NAV — ensure smooth scroll with offset */
+document.querySelectorAll('.nav-links a').forEach(a=> {
+        a.addEventListener('click', e=> {
+                const href=a.getAttribute('href');
+
+                if (href && href.startsWith ('#')) {
+                    e.preventDefault();
+                    const id=href.slice(1);
+                    const el=document.getElementById(id);
+
+                    if (el) el.scrollIntoView({
+                        behavior:'smooth', block:'start'
+                    });
+            }
+        });
+});
+
+/* 3D REVEAL */
+const observer=new IntersectionObserver(entries=> {
+        entries.forEach(e=> {
+                if (e.isIntersecting) {
+                    e.target.classList.add('in'); observer.unobserve(e.target);
+                }
+            });
+    }
+
+    , {
+    threshold: 0.08
+});
+document.querySelectorAll('.r3d').forEach(el=> observer.observe(el));
+
+/* ACCORDION */
+function toggleSess(btn) {
+    const item=btn.closest('.sess-item');
+    const body=item.querySelector('.sess-body');
+    const isOpen=item.classList.contains('open');
+
+    document.querySelectorAll('.sess-item.open').forEach(i=> {
+            i.classList.remove('open');
+            i.querySelector('.sess-body').style.maxHeight=null;
+            i.querySelector('.sess-trigger').setAttribute('aria-expanded', 'false');
+        });
+
+    if ( !isOpen) {
+        item.classList.add('open');
+        body.style.maxHeight=body.scrollHeight+'px';
+        btn.setAttribute('aria-expanded', 'true');
+    }
+}
+
+</script></body></html>
