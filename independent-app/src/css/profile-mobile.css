@@ -1682,6 +1682,9 @@
         padding-top: 0 !important;
         padding-bottom: 0 !important;
         height: auto !important;
+        /* Override .chat-body-frame's -webkit-overflow-scrolling:touch which blocks
+           programmatic scrollTop on iOS Safari */
+        -webkit-overflow-scrolling: auto !important;
     }
     #mob_chatBox::-webkit-scrollbar { display: none; width: 0; }
 

@@ -2464,9 +2464,17 @@ export function openMobChatOverlay() {
         const b = document.getElementById('mob_chatBox');
         if (!b) return;
         b.scrollTop = b.scrollHeight + 9999;
-        // Backup: scrollIntoView on last message (more reliable on iOS Safari)
-        const last = document.getElementById('mob_chatContent')?.lastElementChild as HTMLElement | null;
-        if (last) last.scrollIntoView(false);
+        // Use a sentinel that's a DIRECT child of mob_chatBox (not inside mob_chatContent).
+        // scrollIntoView on mob_chatContent children is intercepted by mob_chatContent's own
+        // overflow-y:auto, so it scrolls the wrong element. Sentinel as sibling avoids this.
+        let sentinel = b.querySelector(':scope > .chat-scroll-sentinel') as HTMLElement | null;
+        if (!sentinel) {
+            sentinel = document.createElement('div');
+            sentinel.className = 'chat-scroll-sentinel';
+            sentinel.style.cssText = 'height:1px;min-height:1px;width:1px;flex-shrink:0;pointer-events:none;';
+            b.appendChild(sentinel);
+        }
+        sentinel.scrollIntoView(false);
     };
 
     // PRIMARY: fire exactly when the CSS transition finishes (most reliable on iOS)
