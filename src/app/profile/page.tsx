@@ -374,7 +374,12 @@ export default function ProfilePage() {
                             const joined = !!pJson.participant;
                             setIsParticipant(joined);
                             setParticipantStatus(pJson.participant?.status || null);
-                            setChallengeCounts({ pending: joined ? 0 : 1, yours: joined ? 1 : 0 });
+                            const activeChallengeCount = challenges.filter((ch: any) => ch.status === 'active' || (
+                                ch.status === 'draft' && ch.start_date &&
+                                new Date(ch.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
+                                new Date(ch.start_date).getTime() > now
+                            )).length;
+                            setChallengeCounts({ pending: activeChallengeCount, yours: joined ? 1 : 0 });
                         }
                     } catch {}
                 } else {
@@ -625,19 +630,19 @@ export default function ProfilePage() {
                     <div id="gridStat3" className="v-card v-stat-card serve-grid-item"
                         style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10, cursor: 'pointer', background: 'linear-gradient(135deg, rgba(74,222,128,0.06), rgba(74,222,128,0.02))', border: '1px solid rgba(74,222,128,0.18)' }}
                         onClick={() => setDesktopChallengeOpen(true)}>
-                        <div className="ribbon-label" style={{ textAlign: 'center', color: '#4ade80' }}>CHALLENGES</div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '3px', textAlign: 'center', color: '#4ade80', textTransform: 'uppercase' }}>Challenges</div>
                         <div style={{ display: 'flex', width: '100%', justifyContent: 'space-around', alignItems: 'center', flex: 1 }}>
                             <div style={{ textAlign: 'center' }}>
-                                <div className="ribbon-label" style={{ fontSize: '0.55rem', opacity: 0.7, marginBottom: 5 }}>PENDING</div>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: 'white' }}>{challengeCounts.pending}</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '1px', marginBottom: 4 }}>Active</div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.8rem', color: 'white', lineHeight: 1 }}>{challengeCounts.pending}</div>
                             </div>
                             <div style={{ height: 30, width: 1, background: 'rgba(74,222,128,0.15)' }}></div>
                             <div style={{ textAlign: 'center' }}>
-                                <div className="ribbon-label" style={{ fontSize: '0.55rem', opacity: 0.7, marginBottom: 5 }}>YOURS</div>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#4ade80' }}>{challengeCounts.yours}</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '1px', marginBottom: 4 }}>Yours</div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.8rem', color: '#4ade80', lineHeight: 1 }}>{challengeCounts.yours}</div>
                             </div>
                         </div>
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(74,222,128,0.35)', letterSpacing: '1.5px', textAlign: 'center' }}>TAP TO MANAGE</div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', color: 'rgba(74,222,128,0.35)', letterSpacing: '1px', textAlign: 'center' }}>tap to manage</div>
                     </div>
 
                     <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', gap: 6 }} onClick={() => window.location.href = '/global'}>
@@ -2042,8 +2047,8 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
                     <div>
-                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: 'rgba(74,222,128,0.5)', letterSpacing: '3px', marginBottom: 4 }}>ACTIVE CHALLENGES</div>
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.4rem', color: '#fff', letterSpacing: '2px' }}>CHALLENGES</div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(74,222,128,0.5)', letterSpacing: '2px', marginBottom: 4 }}>Active Challenges</div>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.6rem', color: '#fff', letterSpacing: '2px' }}>Challenges</div>
                     </div>
                     <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#555', width: 36, height: 36, cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                 </div>
@@ -2054,8 +2059,8 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                     new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
                     new Date(c.start_date).getTime() > now
                 )).length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '48px 24px', color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', letterSpacing: '2px' }}>
-                        NO ACTIVE CHALLENGES
+                    <div style={{ textAlign: 'center', padding: '48px 24px', color: '#333', fontFamily: 'Rajdhani, sans-serif', fontSize: '1rem', letterSpacing: '2px' }}>
+                        No active challenges
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -2105,22 +2110,22 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#666', marginBottom: 8, lineHeight: 1.4 }}>{c.description}</div>
                                             )}
                                             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px' }}>
-                                                    {c.duration_days}d · {c.tasks_per_day}×/day · {c.window_minutes}min
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#555', letterSpacing: '0.5px' }}>
+                                                    {c.duration_days}d · {c.tasks_per_day}×/day · {c.window_minutes}min windows
                                                 </div>
                                                 {daysLeft !== null && !startsSoon && (
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4ade80', letterSpacing: '1px' }}>
-                                                        {daysLeft}d LEFT
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#4ade80', fontWeight: 600 }}>
+                                                        {daysLeft} days left
                                                     </div>
                                                 )}
                                                 {startsSoon && c.start_date && (
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#fbbf24', letterSpacing: '1px' }}>
-                                                        STARTS {new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#fbbf24', fontWeight: 600 }}>
+                                                        Starts {new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                     </div>
                                                 )}
                                                 {c.participant_total != null && (
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px' }}>
-                                                        {c.participant_active} ACTIVE
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#555' }}>
+                                                        {c.participant_active} active
                                                     </div>
                                                 )}
                                             </div>
@@ -2134,9 +2139,9 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                                 { label: '2ND', val: `+${c.second_place_points}` },
                                                 { label: '3RD', val: `+${c.third_place_points}` },
                                             ].map(({ label, val }) => (
-                                                <div key={label} style={{ textAlign: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '6px 10px' }}>
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: '#444', letterSpacing: '1px', marginBottom: 2 }}>{label}</div>
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: color, fontWeight: 700 }}>{val}</div>
+                                                <div key={label} style={{ textAlign: 'center', background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '8px 14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444', letterSpacing: '1px', marginBottom: 2 }}>{label}</div>
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: color, fontWeight: 700 }}>{val}</div>
                                                 </div>
                                             ))}
                                         </div>
@@ -2144,11 +2149,11 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                         {/* Stats if joined */}
                                         {isThisJoined && stats && (
                                             <div style={{ display: 'flex', gap: 16, padding: '10px 0', borderTop: '1px solid rgba(74,222,128,0.1)' }}>
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#4ade80' }}>✓ {stats.tasks_done} TASKS</div>
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#4ade80' }}>🏅 {stats.top3_count} TOP 3</div>
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#4ade80' }}>⭐ {stats.total_points} PTS</div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: '#4ade80', fontWeight: 600 }}>✓ {stats.tasks_done} tasks</div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: '#4ade80', fontWeight: 600 }}>🏅 {stats.top3_count} top 3</div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: '#4ade80', fontWeight: 600 }}>⭐ {stats.total_points} pts</div>
                                                 {participantStatus === 'eliminated' && (
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#ef4444' }}>❌ ELIMINATED</div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: '#ef4444', fontWeight: 600 }}>❌ eliminated</div>
                                                 )}
                                             </div>
                                         )}
@@ -2159,20 +2164,20 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                                 <button onClick={onOpenPanel} style={{
                                                     padding: '10px 20px', background: 'rgba(74,222,128,0.1)',
                                                     border: '1px solid rgba(74,222,128,0.3)', borderRadius: 10,
-                                                    color: '#4ade80', fontFamily: 'Orbitron, monospace',
-                                                    fontSize: '0.42rem', letterSpacing: '1.5px', cursor: 'pointer',
-                                                }}>VIEW DETAILS & UPLOAD ›</button>
+                                                    color: '#4ade80', fontFamily: 'Rajdhani, sans-serif',
+                                                    fontSize: '1rem', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer',
+                                                }}>View Details & Upload ›</button>
                                             ) : (
                                                 <>
                                                     <button onClick={() => handleJoin(c.id)} disabled={joining} style={{
-                                                        padding: '10px 24px',
-                                                        background: joining ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg, rgba(74,222,128,0.2), rgba(74,222,128,0.1))',
-                                                        border: '1px solid rgba(74,222,128,0.4)', borderRadius: 10,
+                                                        padding: '10px 28px',
+                                                        background: joining ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg, rgba(74,222,128,0.25), rgba(74,222,128,0.12))',
+                                                        border: '1px solid rgba(74,222,128,0.5)', borderRadius: 10,
                                                         color: joining ? '#555' : '#4ade80',
-                                                        fontFamily: 'Orbitron, monospace', fontSize: '0.42rem',
-                                                        letterSpacing: '1.5px', cursor: joining ? 'default' : 'pointer',
-                                                    }}>{joining ? 'JOINING...' : 'JOIN CHALLENGE'}</button>
-                                                    {joinError && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#ef4444' }}>{joinError}</div>}
+                                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '1rem',
+                                                        fontWeight: 700, letterSpacing: '1px', cursor: joining ? 'default' : 'pointer',
+                                                    }}>{joining ? 'Joining...' : 'Join Challenge'}</button>
+                                                    {joinError && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: '#ef4444' }}>{joinError}</div>}
                                                 </>
                                             )}
                                         </div>
