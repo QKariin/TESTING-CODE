@@ -342,7 +342,6 @@ export default function ProfilePage() {
 
     // ─── ACTIVE CHALLENGE POLL ───────────────────────────────────────────────────
     useEffect(() => {
-        if (!profile) return;
         async function checkChallenge() {
             try {
                 const res = await fetch('/api/challenges');
@@ -363,7 +362,7 @@ export default function ProfilePage() {
         checkChallenge();
         const t = setInterval(checkChallenge, 30000);
         return () => clearInterval(t);
-    }, [profile]);
+    }, []);
 
     // ─── SILENCE POLL — fires once profile is loaded, uses email from profile state ──
     useEffect(() => {

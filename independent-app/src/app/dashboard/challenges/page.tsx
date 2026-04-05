@@ -12,7 +12,7 @@ interface Challenge {
     second_place_points: number; third_place_points: number;
     start_date: string | null; end_date: string | null; created_at: string;
     participant_total?: number; participant_active?: number; participant_eliminated?: number;
-    is_template?: boolean; image_url?: string | null;
+    is_template?: boolean; image_url?: string | null; task_names?: string[] | null;
 }
 
 interface Window_ {
@@ -614,16 +614,15 @@ function CreateTab({ allChallenges, onCreate }: {
 
     const DEFAULT_TIMES = ['09:00', '13:00', '18:00', '08:00', '11:00', '15:00', '19:00', '07:00', '12:00', '21:00'];
     const [taskTimes, setTaskTimes] = useState<string[]>(() => DEFAULT_TIMES.slice(0, 3));
+    const [taskNames, setTaskNames] = useState<string[]>(() => ['', '', '']);
 
     const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
-    // Resize taskTimes when tasks_per_day changes
+    // Resize taskTimes and taskNames when tasks_per_day changes
     const handleTasksPerDayChange = (n: number) => {
         set('tasks_per_day', n);
-        setTaskTimes(prev => {
-            if (n > prev.length) return [...prev, ...DEFAULT_TIMES.slice(prev.length, n)];
-            return prev.slice(0, n);
-        });
+        setTaskTimes(prev => n > prev.length ? [...prev, ...DEFAULT_TIMES.slice(prev.length, n)] : prev.slice(0, n));
+        setTaskNames(prev => n > prev.length ? [...prev, ...Array(n - prev.length).fill('')] : prev.slice(0, n));
     };
 
     const prefill = (c: Challenge) => {
@@ -639,6 +638,7 @@ function CreateTab({ allChallenges, onCreate }: {
         set('third_place_points', c.third_place_points);
         set('image_url', (c as any).image_url || '');
         setTaskTimes(DEFAULT_TIMES.slice(0, c.tasks_per_day));
+        setTaskNames((c.task_names || []).concat(Array(Math.max(0, c.tasks_per_day - (c.task_names?.length || 0))).fill('')).slice(0, c.tasks_per_day));
     };
 
     const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -673,7 +673,7 @@ function CreateTab({ allChallenges, onCreate }: {
         setSubmitting(true);
         try {
             const startDt = new Date(`${form.start_date}T${form.start_time}:00`);
-            await onCreate({ ...form, start_date: startDt.toISOString(), task_times: taskTimes });
+            await onCreate({ ...form, start_date: startDt.toISOString(), task_times: taskTimes, task_names: taskNames });
         } finally {
             setSubmitting(false);
         }
@@ -799,18 +799,28 @@ function CreateTab({ allChallenges, onCreate }: {
                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 12 }}>
                             Set when each task window opens. Same times repeat every day. Window stays open for {form.window_minutes} minutes.
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             {taskTimes.map((t, i) => {
                                 const [h, m] = t.split(':').map(Number);
                                 const closeH = Math.floor((h * 60 + m + form.window_minutes) / 60) % 24;
                                 const closeM = (m + form.window_minutes) % 60;
                                 const closeStr = `${String(closeH).padStart(2,'0')}:${String(closeM).padStart(2,'0')}`;
                                 return (
-                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', width: 52, flexShrink: 0, letterSpacing: '1px' }}>TASK {i + 1}</div>
-                                        <input type="time" className="ch-input" style={{ flex: 1 }} value={t}
-                                            onChange={e => { const arr = [...taskTimes]; arr[i] = e.target.value; setTaskTimes(arr); }} />
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#444', flexShrink: 0, letterSpacing: '1px' }}>→ {closeStr}</div>
+                                    <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '2px' }}>TASK {i + 1}</div>
+                                        <input
+                                            type="text"
+                                            className="ch-input"
+                                            placeholder="Task name (e.g. Morning run, Cold shower...)"
+                                            value={taskNames[i] || ''}
+                                            onChange={e => { const arr = [...taskNames]; arr[i] = e.target.value; setTaskNames(arr); }}
+                                        />
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#555', flexShrink: 0 }}>Opens at</div>
+                                            <input type="time" className="ch-input" style={{ flex: 1 }} value={t}
+                                                onChange={e => { const arr = [...taskTimes]; arr[i] = e.target.value; setTaskTimes(arr); }} />
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#444', flexShrink: 0, letterSpacing: '1px' }}>closes {closeStr}</div>
+                                        </div>
                                     </div>
                                 );
                             })}

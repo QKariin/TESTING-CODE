@@ -38,7 +38,7 @@ export async function POST(request: Request) {
             duration_days, tasks_per_day, window_minutes,
             points_per_completion = 20,
             first_place_points = 10, second_place_points = 7, third_place_points = 5,
-            start_date, image_url = null, task_times = null,
+            start_date, image_url = null, task_times = null, task_names = null,
         } = body;
 
         if (!name || !duration_days || !tasks_per_day || !window_minutes || !start_date)
@@ -61,6 +61,7 @@ export async function POST(request: Request) {
                 start_date: startDt.toISOString(),
                 end_date: endDt.toISOString(),
                 image_url: image_url || null,
+                task_names: task_names || null,
             })
             .select().single();
 
