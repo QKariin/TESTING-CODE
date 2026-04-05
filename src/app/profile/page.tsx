@@ -93,6 +93,11 @@ export default function ProfilePage() {
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [challengePanelOpen, setChallengePanelOpen] = useState(false);
     const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string; status: string } | null>(null);
+    const [isParticipant, setIsParticipant] = useState(false);
+    const [participantStatus, setParticipantStatus] = useState<string | null>(null);
+    const [desktopChallengeOpen, setDesktopChallengeOpen] = useState(false);
+    const [allChallenges, setAllChallenges] = useState<any[]>([]);
+    const [challengeCounts, setChallengeCounts] = useState({ pending: 0, yours: 0 });
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -346,16 +351,36 @@ export default function ProfilePage() {
             try {
                 const res = await fetch('/api/challenges');
                 const json = await res.json();
-                if (json.success) {
-                    const now = Date.now();
-                    const active = (json.challenges || []).find((c: any) => c.status === 'active');
-                    const upcoming = !active && (json.challenges || []).find((c: any) =>
-                        c.status === 'draft' && c.start_date &&
-                        new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
-                        new Date(c.start_date).getTime() > now
-                    );
-                    const found = active || upcoming || null;
-                    setActiveChallenge(found ? { id: found.id, name: found.name, theme: found.theme, status: found.status } : null);
+                if (!json.success) return;
+                const now = Date.now();
+                const challenges = json.challenges || [];
+                setAllChallenges(challenges);
+
+                const active = challenges.find((c: any) => c.status === 'active');
+                const upcoming = !active && challenges.find((c: any) =>
+                    c.status === 'draft' && c.start_date &&
+                    new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
+                    new Date(c.start_date).getTime() > now
+                );
+                const found = active || upcoming || null;
+                setActiveChallenge(found ? { id: found.id, name: found.name, theme: found.theme, status: found.status } : null);
+
+                // Check participation for the active/upcoming challenge
+                if (found) {
+                    try {
+                        const pRes = await fetch(`/api/challenges/${found.id}/submit`);
+                        const pJson = await pRes.json();
+                        if (pJson.success) {
+                            const joined = !!pJson.participant;
+                            setIsParticipant(joined);
+                            setParticipantStatus(pJson.participant?.status || null);
+                            setChallengeCounts({ pending: joined ? 0 : 1, yours: joined ? 1 : 0 });
+                        }
+                    } catch {}
+                } else {
+                    setIsParticipant(false);
+                    setParticipantStatus(null);
+                    setChallengeCounts({ pending: 0, yours: 0 });
                 }
             } catch {}
         }
@@ -597,19 +622,22 @@ export default function ProfilePage() {
                         <div id="deskRoutineTimeMsg" className="hidden" style={{ color: '#666', fontFamily: 'Orbitron', fontSize: '0.55rem', textAlign: 'center' }}>NEXT UPLOAD 6AM</div>
                     </div>
 
-                    <div id="gridStat3" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
-                        <div className="ribbon-label" style={{ textAlign: 'center' }}>CONSISTENCY</div>
+                    <div id="gridStat3" className="v-card v-stat-card serve-grid-item"
+                        style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10, cursor: 'pointer', background: 'linear-gradient(135deg, rgba(74,222,128,0.06), rgba(74,222,128,0.02))', border: '1px solid rgba(74,222,128,0.18)' }}
+                        onClick={() => setDesktopChallengeOpen(true)}>
+                        <div className="ribbon-label" style={{ textAlign: 'center', color: '#4ade80' }}>CHALLENGES</div>
                         <div style={{ display: 'flex', width: '100%', justifyContent: 'space-around', alignItems: 'center', flex: 1 }}>
                             <div style={{ textAlign: 'center' }}>
-                                <div className="ribbon-label" style={{ fontSize: '0.55rem', opacity: 0.7, marginBottom: 5 }}>STREAK</div>
-                                <div id="deskStreak" style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: 'white' }}>0</div>
+                                <div className="ribbon-label" style={{ fontSize: '0.55rem', opacity: 0.7, marginBottom: 5 }}>PENDING</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: 'white' }}>{challengeCounts.pending}</div>
                             </div>
-                            <div style={{ height: 30, width: 1, background: 'rgba(255,255,255,0.1)' }}></div>
+                            <div style={{ height: 30, width: 1, background: 'rgba(74,222,128,0.15)' }}></div>
                             <div style={{ textAlign: 'center' }}>
-                                <div className="ribbon-label" style={{ fontSize: '0.55rem', opacity: 0.7, marginBottom: 5 }}>TOTAL</div>
-                                <div id="deskTotal" style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#c5a059' }}>0</div>
+                                <div className="ribbon-label" style={{ fontSize: '0.55rem', opacity: 0.7, marginBottom: 5 }}>YOURS</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#4ade80' }}>{challengeCounts.yours}</div>
                             </div>
                         </div>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(74,222,128,0.35)', letterSpacing: '1.5px', textAlign: 'center' }}>TAP TO MANAGE</div>
                     </div>
 
                     <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', gap: 6 }} onClick={() => window.location.href = '/global'}>
@@ -1607,7 +1635,8 @@ export default function ProfilePage() {
         {/* ── CHALLENGE BANNER + PANEL ── */}
         {activeChallenge && (
             <>
-                {!challengePanelOpen && (
+                {/* Mobile banner: only for non-participants (join prompt) */}
+                {!isParticipant && !challengePanelOpen && (
                     <button
                         onClick={() => setChallengePanelOpen(true)}
                         style={{
@@ -1623,29 +1652,68 @@ export default function ProfilePage() {
                         <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>⚔</div>
                         <div style={{ flex: 1, textAlign: 'left' }}>
                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#4ade80', letterSpacing: '1px' }}>{activeChallenge.name}</div>
-                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555', letterSpacing: '1.5px', marginTop: 2 }}>{activeChallenge?.status === 'active' ? 'CHALLENGE ACTIVE — TAP TO VIEW' : 'STARTING SOON — TAP TO JOIN'}</div>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#4ade80', opacity: 0.6, letterSpacing: '1.5px', marginTop: 2 }}>{activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE — TAP TO JOIN' : 'STARTING SOON — TAP TO JOIN'}</div>
                         </div>
-                        <div style={{ color: '#4ade80', fontSize: '1rem', opacity: 0.6 }}>›</div>
+                        <div style={{ background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, padding: '6px 12px', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4ade80', letterSpacing: '1px', flexShrink: 0 }}>JOIN</div>
+                    </button>
+                )}
+                {/* Mobile FAB for participants: always visible to access their challenge */}
+                {isParticipant && !challengePanelOpen && (
+                    <button
+                        onClick={() => setChallengePanelOpen(true)}
+                        style={{
+                            position: 'fixed', bottom: 80, right: 16, zIndex: 8999,
+                            width: 52, height: 52, borderRadius: '50%',
+                            background: participantStatus === 'eliminated'
+                                ? 'linear-gradient(135deg, rgba(60,10,10,0.97), rgba(30,5,5,0.97))'
+                                : 'linear-gradient(135deg, rgba(10,26,10,0.97), rgba(5,20,5,0.97))',
+                            border: participantStatus === 'eliminated'
+                                ? '2px solid rgba(239,68,68,0.5)'
+                                : '2px solid rgba(74,222,128,0.5)',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '1.3rem',
+                            boxShadow: participantStatus === 'eliminated'
+                                ? '0 4px 20px rgba(239,68,68,0.25)'
+                                : '0 4px 20px rgba(74,222,128,0.25)',
+                        }}
+                        title={activeChallenge.name}
+                    >
+                        ⚔
                     </button>
                 )}
                 {challengePanelOpen && (
                     <ChallengeUploadPanel
                         challengeId={activeChallenge.id}
                         memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
-                        onClose={() => setChallengePanelOpen(false)}
+                        onClose={() => { setChallengePanelOpen(false); }}
+                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
                     />
                 )}
             </>
+        )}
+        {/* Desktop Challenge Modal */}
+        {desktopChallengeOpen && (
+            <DesktopChallengeModal
+                challenges={allChallenges}
+                activeChallenge={activeChallenge}
+                isParticipant={isParticipant}
+                participantStatus={participantStatus}
+                memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                onClose={() => setDesktopChallengeOpen(false)}
+                onOpenPanel={() => { setDesktopChallengeOpen(false); setChallengePanelOpen(true); }}
+                onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
+            />
         )}
         </>
     );
 }
 
 // ─── CHALLENGE UPLOAD PANEL ───────────────────────────────────────────────────
-function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
+function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
     challengeId: string;
     memberEmail: string;
     onClose: () => void;
+    onJoined?: () => void;
 }) {
     const [data, setData] = useState<{ challenge: any; windows: any[]; completions: any[]; participant: any | null } | null>(null);
     const [uploading, setUploading] = useState<string | null>(null);
@@ -1677,6 +1745,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
             if (json.success) {
                 showToast(json.already_joined ? 'Already enrolled' : '✓ Joined! Good luck.', true);
                 load();
+                if (!json.already_joined && onJoined) onJoined();
             } else {
                 showToast(json.error || 'Could not join', false);
             }
@@ -1905,6 +1974,213 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose }: {
                             </div>
                         )}
                     </>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ─── DESKTOP CHALLENGE MODAL ─────────────────────────────────────────────────
+function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, participantStatus, memberEmail, onClose, onOpenPanel, onJoined }: {
+    challenges: any[];
+    activeChallenge: { id: string; name: string; theme: string; status: string } | null;
+    isParticipant: boolean;
+    participantStatus: string | null;
+    memberEmail: string;
+    onClose: () => void;
+    onOpenPanel: () => void;
+    onJoined: () => void;
+}) {
+    const [joining, setJoining] = useState(false);
+    const [joinError, setJoinError] = useState('');
+    const [stats, setStats] = useState<any>(null);
+
+    useEffect(() => {
+        if (activeChallenge && isParticipant) {
+            fetch(`/api/challenges/${activeChallenge.id}/submit`)
+                .then(r => r.json())
+                .then(j => { if (j.success) setStats(j.stats); })
+                .catch(() => {});
+        }
+    }, [activeChallenge, isParticipant]);
+
+    const handleJoin = async (challengeId: string) => {
+        setJoining(true);
+        setJoinError('');
+        try {
+            const res = await fetch(`/api/challenges/${challengeId}/join`, { method: 'POST' });
+            const json = await res.json();
+            if (json.success) {
+                onJoined();
+            } else {
+                setJoinError(json.error || 'Failed to join');
+            }
+        } catch {
+            setJoinError('Network error');
+        } finally {
+            setJoining(false);
+        }
+    };
+
+    const themeColor = (t: string) => ({ gold: '#c5a059', red: '#ef4444', purple: '#a855f7', blue: '#3b82f6' }[t] || '#c5a059');
+    const now = Date.now();
+
+    return (
+        <div style={{
+            position: 'fixed', inset: 0, zIndex: 10000,
+            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px',
+        }} onClick={onClose}>
+            <div style={{
+                background: 'rgba(8,12,8,0.98)',
+                border: '1px solid rgba(74,222,128,0.2)',
+                borderRadius: 20, padding: '32px',
+                maxWidth: 720, width: '100%', maxHeight: '80vh',
+                overflowY: 'auto',
+            }} onClick={e => e.stopPropagation()}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+                    <div>
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: 'rgba(74,222,128,0.5)', letterSpacing: '3px', marginBottom: 4 }}>ACTIVE CHALLENGES</div>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.4rem', color: '#fff', letterSpacing: '2px' }}>CHALLENGES</div>
+                    </div>
+                    <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#555', width: 36, height: 36, cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                </div>
+
+                {/* Challenge cards */}
+                {challenges.filter((c: any) => c.status === 'active' || (
+                    c.status === 'draft' && c.start_date &&
+                    new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
+                    new Date(c.start_date).getTime() > now
+                )).length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '48px 24px', color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', letterSpacing: '2px' }}>
+                        NO ACTIVE CHALLENGES
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        {challenges.filter((c: any) => c.status === 'active' || (
+                            c.status === 'draft' && c.start_date &&
+                            new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
+                            new Date(c.start_date).getTime() > now
+                        )).map((c: any) => {
+                            const color = themeColor(c.theme);
+                            const isThisJoined = activeChallenge?.id === c.id && isParticipant;
+                            const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - now) / 86400000)) : null;
+                            const startsSoon = c.status === 'draft';
+
+                            return (
+                                <div key={c.id} style={{
+                                    display: 'flex', gap: 0, borderRadius: 16, overflow: 'hidden',
+                                    border: `1px solid ${isThisJoined ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                                    background: isThisJoined ? 'rgba(74,222,128,0.04)' : 'rgba(255,255,255,0.02)',
+                                }}>
+                                    {/* Image / cover */}
+                                    <div style={{
+                                        width: 200, minHeight: 160, flexShrink: 0, position: 'relative',
+                                        background: c.image_url ? 'transparent' : `linear-gradient(135deg, ${color}22, ${color}08)`,
+                                    }}>
+                                        {c.image_url ? (
+                                            <img src={c.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt={c.name} />
+                                        ) : (
+                                            <div style={{ width: '100%', height: '100%', minHeight: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.3 }}>⚔</div>
+                                        )}
+                                        {/* Status pill */}
+                                        <div style={{
+                                            position: 'absolute', top: 10, left: 10,
+                                            background: startsSoon ? 'rgba(251,191,36,0.9)' : 'rgba(74,222,128,0.9)',
+                                            color: '#000', borderRadius: 6, padding: '3px 8px',
+                                            fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', fontWeight: 700, letterSpacing: '1px',
+                                        }}>{startsSoon ? 'SOON' : 'LIVE'}</div>
+                                    </div>
+
+                                    {/* Info */}
+                                    <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'space-between' }}>
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', fontWeight: 700 }}>{c.name}</div>
+                                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                                            </div>
+                                            {c.description && (
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: '#666', marginBottom: 8, lineHeight: 1.4 }}>{c.description}</div>
+                                            )}
+                                            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px' }}>
+                                                    {c.duration_days}d · {c.tasks_per_day}×/day · {c.window_minutes}min
+                                                </div>
+                                                {daysLeft !== null && !startsSoon && (
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4ade80', letterSpacing: '1px' }}>
+                                                        {daysLeft}d LEFT
+                                                    </div>
+                                                )}
+                                                {startsSoon && c.start_date && (
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#fbbf24', letterSpacing: '1px' }}>
+                                                        STARTS {new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                )}
+                                                {c.participant_total != null && (
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px' }}>
+                                                        {c.participant_active} ACTIVE
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Points info */}
+                                        <div style={{ display: 'flex', gap: 10 }}>
+                                            {[
+                                                { label: 'TASK', val: `+${c.points_per_completion}` },
+                                                { label: '1ST', val: `+${c.first_place_points}` },
+                                                { label: '2ND', val: `+${c.second_place_points}` },
+                                                { label: '3RD', val: `+${c.third_place_points}` },
+                                            ].map(({ label, val }) => (
+                                                <div key={label} style={{ textAlign: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '6px 10px' }}>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: '#444', letterSpacing: '1px', marginBottom: 2 }}>{label}</div>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: color, fontWeight: 700 }}>{val}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Stats if joined */}
+                                        {isThisJoined && stats && (
+                                            <div style={{ display: 'flex', gap: 16, padding: '10px 0', borderTop: '1px solid rgba(74,222,128,0.1)' }}>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#4ade80' }}>✓ {stats.tasks_done} TASKS</div>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#4ade80' }}>🏅 {stats.top3_count} TOP 3</div>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#4ade80' }}>⭐ {stats.total_points} PTS</div>
+                                                {participantStatus === 'eliminated' && (
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#ef4444' }}>❌ ELIMINATED</div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Action button */}
+                                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                            {isThisJoined ? (
+                                                <button onClick={onOpenPanel} style={{
+                                                    padding: '10px 20px', background: 'rgba(74,222,128,0.1)',
+                                                    border: '1px solid rgba(74,222,128,0.3)', borderRadius: 10,
+                                                    color: '#4ade80', fontFamily: 'Orbitron, monospace',
+                                                    fontSize: '0.42rem', letterSpacing: '1.5px', cursor: 'pointer',
+                                                }}>VIEW DETAILS & UPLOAD ›</button>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => handleJoin(c.id)} disabled={joining} style={{
+                                                        padding: '10px 24px',
+                                                        background: joining ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg, rgba(74,222,128,0.2), rgba(74,222,128,0.1))',
+                                                        border: '1px solid rgba(74,222,128,0.4)', borderRadius: 10,
+                                                        color: joining ? '#555' : '#4ade80',
+                                                        fontFamily: 'Orbitron, monospace', fontSize: '0.42rem',
+                                                        letterSpacing: '1.5px', cursor: joining ? 'default' : 'pointer',
+                                                    }}>{joining ? 'JOINING...' : 'JOIN CHALLENGE'}</button>
+                                                    {joinError && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#ef4444' }}>{joinError}</div>}
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 )}
             </div>
         </div>
