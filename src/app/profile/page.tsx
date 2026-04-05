@@ -1646,50 +1646,38 @@ export default function ProfilePage() {
         {/* ── CHALLENGE BANNER + PANEL ── */}
         {activeChallenge && (
             <>
-                {/* Mobile banner: only for non-participants (join prompt) */}
-                {!isParticipant && !challengePanelOpen && (
+                {/* Mobile banner — always visible above the nav, z-index above nav's 9999999 */}
+                {!challengePanelOpen && (
                     <button
                         onClick={() => setChallengePanelOpen(true)}
                         style={{
-                            position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 8999,
-                            background: 'linear-gradient(135deg, rgba(10,26,10,0.97), rgba(5,20,5,0.97))',
-                            border: '1px solid rgba(74,222,128,0.35)',
-                            borderRadius: 14, padding: '12px 16px',
+                            position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000000,
+                            background: 'rgba(5,8,18,0.97)',
+                            border: '1px solid rgba(197,160,89,0.25)',
+                            borderRadius: 14, padding: '10px 14px',
                             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
-                            boxShadow: '0 4px 24px rgba(74,222,128,0.15)',
-                            backdropFilter: 'blur(10px)',
+                            boxShadow: '0 -2px 24px rgba(0,0,0,0.6), 0 4px 20px rgba(197,160,89,0.08)',
+                            backdropFilter: 'blur(16px)',
                         }}
                     >
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>⚔</div>
-                        <div style={{ flex: 1, textAlign: 'left' }}>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#4ade80', letterSpacing: '1px' }}>{activeChallenge.name}</div>
-                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#4ade80', opacity: 0.6, letterSpacing: '1.5px', marginTop: 2 }}>{activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE — TAP TO JOIN' : 'STARTING SOON — TAP TO JOIN'}</div>
+                        <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>⚔</div>
+                        <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
+                            <div className="ribbon-label" style={{ fontSize: '0.38rem', opacity: 0.55, marginTop: 2 }}>
+                                {isParticipant
+                                    ? (activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE — TAP TO VIEW' : 'STARTING SOON — TAP TO VIEW')
+                                    : (activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE — TAP TO JOIN' : 'STARTING SOON — TAP TO JOIN')
+                                }
+                            </div>
                         </div>
-                        <div style={{ background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, padding: '6px 12px', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4ade80', letterSpacing: '1px', flexShrink: 0 }}>JOIN</div>
-                    </button>
-                )}
-                {/* Mobile FAB for participants: always visible to access their challenge */}
-                {isParticipant && !challengePanelOpen && (
-                    <button
-                        onClick={() => setChallengePanelOpen(true)}
-                        style={{
-                            position: 'fixed', bottom: 80, right: 16, zIndex: 8999,
-                            width: 52, height: 52, borderRadius: '50%',
-                            background: participantStatus === 'eliminated'
-                                ? 'linear-gradient(135deg, rgba(60,10,10,0.97), rgba(30,5,5,0.97))'
-                                : 'linear-gradient(135deg, rgba(10,26,10,0.97), rgba(5,20,5,0.97))',
-                            border: participantStatus === 'eliminated'
-                                ? '2px solid rgba(239,68,68,0.5)'
-                                : '2px solid rgba(74,222,128,0.5)',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '1.3rem',
-                            boxShadow: participantStatus === 'eliminated'
-                                ? '0 4px 20px rgba(239,68,68,0.25)'
-                                : '0 4px 20px rgba(74,222,128,0.25)',
-                        }}
-                        title={activeChallenge.name}
-                    >
-                        ⚔
+                        <div style={{
+                            background: isParticipant ? 'rgba(197,160,89,0.1)' : 'linear-gradient(135deg, #c5a059, #8b6914)',
+                            border: isParticipant ? '1px solid rgba(197,160,89,0.3)' : 'none',
+                            borderRadius: 8, padding: '5px 12px',
+                            fontFamily: 'Orbitron', fontSize: '0.38rem',
+                            color: isParticipant ? '#c5a059' : '#000',
+                            fontWeight: 700, letterSpacing: '1px', flexShrink: 0,
+                        }}>{isParticipant ? 'VIEW' : 'JOIN'}</div>
                     </button>
                 )}
                 {challengePanelOpen && (
@@ -1697,7 +1685,7 @@ export default function ProfilePage() {
                         challengeId={activeChallenge.id}
                         memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
                         onClose={() => { setChallengePanelOpen(false); }}
-                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
+                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: 1 })); }}
                     />
                 )}
             </>
@@ -2004,16 +1992,26 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
 }) {
     const [joining, setJoining] = useState(false);
     const [joinError, setJoinError] = useState('');
-    const [stats, setStats] = useState<any>(null);
+    const [fullData, setFullData] = useState<{ stats: any; windows: any[] } | null>(null);
 
     useEffect(() => {
-        if (activeChallenge && isParticipant) {
+        if (activeChallenge) {
             fetch(`/api/challenges/${activeChallenge.id}/submit`)
                 .then(r => r.json())
-                .then(j => { if (j.success) setStats(j.stats); })
+                .then(j => { if (j.success) setFullData({ stats: j.stats, windows: j.windows || [] }); })
                 .catch(() => {});
         }
-    }, [activeChallenge, isParticipant]);
+    }, [activeChallenge]);
+
+    const nextWindow = fullData?.windows
+        ? fullData.windows
+            .filter((w: any) => new Date(w.opens_at).getTime() > Date.now())
+            .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0]
+        : null;
+
+    const nextTaskTime = nextWindow
+        ? new Date(nextWindow.opens_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+        : null;
 
     const handleJoin = async (challengeId: string) => {
         setJoining(true);
@@ -2103,54 +2101,43 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                     </div>
 
                                     {/* Info */}
-                                    <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'space-between' }}>
-                                        {/* Name + status dot */}
+                                    <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'space-between' }}>
+                                        {/* Name + description */}
                                         <div>
-                                            <div style={{ marginBottom: 6 }}>
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '1px' }}>{c.name}</div>
-                                            </div>
+                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 6 }}>{c.name}</div>
                                             {c.description && (
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', marginBottom: 10, lineHeight: 1.5, letterSpacing: '0.5px' }}>{c.description}</div>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, letterSpacing: '0.5px' }}>{c.description}</div>
                                             )}
-                                            {/* Info row */}
-                                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                                                <span className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.7 }}>{c.duration_days} DAYS</span>
-                                                <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
-                                                <span className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.7 }}>{c.tasks_per_day} TASKS/DAY</span>
-                                                <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
-                                                <span className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.7 }}>{c.window_minutes}MIN WINDOWS</span>
-                                                {daysLeft !== null && !startsSoon && (
-                                                    <>
-                                                        <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
-                                                        <span className="ribbon-label" style={{ fontSize: '0.45rem', color: '#c5a059' }}>{daysLeft} DAYS LEFT</span>
-                                                    </>
-                                                )}
-                                                {startsSoon && c.start_date && (
-                                                    <>
-                                                        <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
-                                                        <span className="ribbon-label" style={{ fontSize: '0.45rem', color: '#c5a059' }}>STARTS {new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}</span>
-                                                    </>
-                                                )}
-                                                {c.participant_active != null && (
-                                                    <>
-                                                        <span style={{ color: 'rgba(197,160,89,0.3)', fontSize: '0.5rem' }}>·</span>
-                                                        <span className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.5 }}>{c.participant_active} COMPETING</span>
-                                                    </>
-                                                )}
-                                            </div>
+                                        </div>
+
+                                        {/* Challenge details */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
+                                            {[
+                                                { label: 'DAYS', val: c.duration_days },
+                                                { label: 'TASKS A DAY', val: c.tasks_per_day },
+                                                { label: 'WINDOW', val: `${c.window_minutes} min` },
+                                                { label: 'STILL WORKING', val: c.participant_active ?? '—' },
+                                                ...(daysLeft !== null && !startsSoon ? [{ label: 'DAYS LEFT', val: daysLeft }] : []),
+                                                ...(startsSoon && c.start_date ? [{ label: 'STARTS', val: new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }] : []),
+                                            ].map(({ label, val }) => (
+                                                <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                                                    <span className="ribbon-label" style={{ fontSize: '0.4rem', opacity: 0.45, flexShrink: 0 }}>{label}:</span>
+                                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: 'rgba(197,160,89,0.9)', fontWeight: 700 }}>{val}</span>
+                                                </div>
+                                            ))}
                                         </div>
 
                                         {/* Personal stats (if joined) */}
-                                        {isThisJoined && stats && (
-                                            <div style={{ display: 'flex', gap: 0, borderTop: '1px solid rgba(197,160,89,0.1)', paddingTop: 12 }}>
+                                        {isThisJoined && fullData?.stats && (
+                                            <div style={{ borderTop: '1px solid rgba(197,160,89,0.12)', paddingTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
                                                 {[
-                                                    { label: 'TASKS DONE', val: stats.tasks_done },
-                                                    { label: 'TOP 3 WINS', val: stats.top3_count },
-                                                    { label: 'TOTAL PTS', val: stats.total_points },
-                                                ].map(({ label, val }, idx) => (
-                                                    <div key={label} style={{ flex: 1, textAlign: 'center', borderLeft: idx > 0 ? '1px solid rgba(197,160,89,0.1)' : 'none', paddingLeft: idx > 0 ? 12 : 0 }}>
-                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.3rem', color: '#c5a059', lineHeight: 1, fontWeight: 700 }}>{val}</div>
-                                                        <div className="ribbon-label" style={{ fontSize: '0.38rem', opacity: 0.5, marginTop: 4 }}>{label}</div>
+                                                    { label: 'MY TASKS DONE', val: fullData.stats.tasks_done },
+                                                    { label: 'TOTAL POINTS', val: fullData.stats.total_points },
+                                                    ...(nextTaskTime ? [{ label: 'NEXT TASK AT', val: nextTaskTime }] : [{ label: 'NEXT TASK AT', val: '—' }]),
+                                                ].map(({ label, val }) => (
+                                                    <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                                                        <span className="ribbon-label" style={{ fontSize: '0.4rem', opacity: 0.45, flexShrink: 0 }}>{label}:</span>
+                                                        <span style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', fontWeight: 700 }}>{val}</span>
                                                     </div>
                                                 ))}
                                             </div>
