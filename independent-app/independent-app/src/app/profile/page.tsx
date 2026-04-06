@@ -94,6 +94,9 @@ export default function ProfilePage() {
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [challengePanelOpen, setChallengePanelOpen] = useState(false);
     const [challengePanelId, setChallengePanelId] = useState<string | null>(null);
+    const [challengeBannerDismissed, setChallengeBannerDismissed] = useState(() =>
+        typeof window !== 'undefined' && !!sessionStorage.getItem('challengeBannerDismissed')
+    );
     const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string; status: string; start_date?: string } | null>(null);
     const [isMobile, setIsMobile] = useState(false);
     const [isParticipant, setIsParticipant] = useState(false);
@@ -778,10 +781,9 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                             {/* Challenge notice — full-width prominent banner */}
-                            {activeChallenge && !isParticipant && (
+                            {activeChallenge && !isParticipant && !challengeBannerDismissed && (
                                 <div style={{ flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
                                     <div
-                                        onClick={() => setDesktopChallengeOpen(true)}
                                         style={{
                                             padding: '16px 20px',
                                             background: activeChallenge.status === 'active'
@@ -789,11 +791,10 @@ export default function ProfilePage() {
                                                 : 'linear-gradient(135deg, rgba(197,160,89,0.13), rgba(0,0,0,0.5))',
                                             borderBottom: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.3)'}`,
                                             borderTop: `2px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.5)'}`,
-                                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14,
+                                            display: 'flex', alignItems: 'center', gap: 14,
                                             boxShadow: activeChallenge.status === 'active' ? '0 4px 24px rgba(74,222,128,0.08)' : '0 4px 24px rgba(197,160,89,0.08)',
                                         }}
                                     >
-                                        <div style={{ fontSize: '1.4rem', flexShrink: 0 }}>⚔</div>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', letterSpacing: '2.5px', marginBottom: 4 }}>
                                                 {activeChallenge.status === 'active' ? '⬤ CHALLENGE LIVE' : (() => {
@@ -806,13 +807,28 @@ export default function ProfilePage() {
                                             </div>
                                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: '#fff', letterSpacing: '1px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
                                         </div>
-                                        <div style={{
-                                            fontFamily: 'Orbitron', fontSize: '0.42rem', padding: '8px 18px', borderRadius: 8,
-                                            background: activeChallenge.status === 'active' ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.12)',
-                                            border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.4)'}`,
-                                            color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059',
-                                            letterSpacing: '1.5px', flexShrink: 0, fontWeight: 700,
-                                        }}>JOIN ›</div>
+                                        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                                            <button
+                                                onClick={() => setDesktopChallengeOpen(true)}
+                                                style={{
+                                                    fontFamily: 'Orbitron', fontSize: '0.42rem', padding: '8px 18px', borderRadius: 8,
+                                                    background: activeChallenge.status === 'active' ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.12)',
+                                                    border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.4)'}`,
+                                                    color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059',
+                                                    letterSpacing: '1.5px', fontWeight: 700, cursor: 'pointer',
+                                                }}
+                                            >JOIN</button>
+                                            <button
+                                                onClick={() => { sessionStorage.setItem('challengeBannerDismissed', '1'); setChallengeBannerDismissed(true); }}
+                                                style={{
+                                                    fontFamily: 'Orbitron', fontSize: '0.42rem', padding: '8px 14px', borderRadius: 8,
+                                                    background: 'rgba(255,255,255,0.05)',
+                                                    border: '1px solid rgba(255,255,255,0.15)',
+                                                    color: 'rgba(255,255,255,0.4)',
+                                                    letterSpacing: '1.5px', fontWeight: 700, cursor: 'pointer',
+                                                }}
+                                            >DISMISS</button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -1698,39 +1714,49 @@ export default function ProfilePage() {
         {activeChallenge && (
             <>
                 {/* Mobile banner — only on mobile, landing page (no overlay open), non-participants */}
-                {isMobile && !isParticipant && !challengePanelOpen && !mobOverlayOpen && (
-                    <button
-                        onClick={() => setChallengePanelOpen(true)}
+                {isMobile && !isParticipant && !challengePanelOpen && !mobOverlayOpen && !challengeBannerDismissed && (
+                    <div
                         style={{
                             position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000002,
                             background: 'rgba(5,8,18,0.97)',
                             border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.4)' : 'rgba(197,160,89,0.35)'}`,
                             borderRadius: 14, padding: '10px 14px',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
+                            display: 'flex', alignItems: 'center', gap: 12,
                             boxShadow: `0 -2px 24px rgba(0,0,0,0.6), 0 4px 20px ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.1)' : 'rgba(197,160,89,0.08)'}`,
                             backdropFilter: 'blur(16px)',
                         }}
                     >
-                        <div style={{ width: 38, height: 38, borderRadius: 10, background: activeChallenge.status === 'active' ? 'rgba(74,222,128,0.1)' : 'rgba(197,160,89,0.08)', border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>⚔</div>
                         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
                             <div className="ribbon-label" style={{ fontSize: '0.38rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', opacity: 0.9, marginTop: 2 }}>
-                                {activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE — TAP TO JOIN' : (() => {
-                                    if (!activeChallenge.start_date) return 'STARTING SOON — TAP TO JOIN';
+                                {activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE' : (() => {
+                                    if (!activeChallenge.start_date) return 'STARTING SOON';
                                     const diff = Math.max(0, Math.floor((new Date(activeChallenge.start_date).getTime() - Date.now()) / 1000));
                                     const h = Math.floor(diff / 3600);
                                     const m = Math.floor((diff % 3600) / 60);
-                                    return `STARTS IN ${h}h ${m}m — TAP TO JOIN`;
+                                    return `STARTS IN ${h}h ${m}m`;
                                 })()}
                             </div>
                         </div>
-                        <div style={{
-                            background: activeChallenge.status === 'active' ? 'linear-gradient(135deg, #4ade80, #16a34a)' : 'linear-gradient(135deg, #c5a059, #8b6914)',
-                            borderRadius: 8, padding: '5px 12px',
-                            fontFamily: 'Orbitron', fontSize: '0.38rem',
-                            color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0,
-                        }}>JOIN</div>
-                    </button>
+                        <button
+                            onClick={() => setChallengePanelOpen(true)}
+                            style={{
+                                background: activeChallenge.status === 'active' ? 'linear-gradient(135deg, #4ade80, #16a34a)' : 'linear-gradient(135deg, #c5a059, #8b6914)',
+                                borderRadius: 8, padding: '5px 12px', border: 'none',
+                                fontFamily: 'Orbitron', fontSize: '0.38rem',
+                                color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
+                            }}
+                        >JOIN</button>
+                        <button
+                            onClick={() => { sessionStorage.setItem('challengeBannerDismissed', '1'); setChallengeBannerDismissed(true); }}
+                            style={{
+                                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
+                                borderRadius: 8, padding: '5px 10px',
+                                fontFamily: 'Orbitron', fontSize: '0.38rem',
+                                color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
+                            }}
+                        >DISMISS</button>
+                    </div>
                 )}
                 {challengePanelOpen && (
                     <ChallengeUploadPanel
