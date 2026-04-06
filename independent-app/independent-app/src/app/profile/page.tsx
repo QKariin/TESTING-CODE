@@ -106,6 +106,7 @@ export default function ProfilePage() {
     const [challengeCounts, setChallengeCounts] = useState({ pending: 0, yours: 0 });
     const [challengeWindowAlert, setChallengeWindowAlert] = useState<{ window: any; challenge: any } | null>(null);
     const [mobOverlayOpen, setMobOverlayOpen] = useState(false);
+    const [nextChallengeWindowTs, setNextChallengeWindowTs] = useState<number | null>(null);
 
     // Track mobile viewport
     useEffect(() => {
@@ -404,8 +405,13 @@ export default function ProfilePage() {
                                     now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime() && !submittedIds.has(w.id)
                                 );
                                 setChallengeWindowAlert(openWin ? { window: openWin, challenge: pJson.challenge } : null);
+                                const nextWin = (pJson.windows as any[])
+                                    .filter(w => new Date(w.opens_at).getTime() > now && !submittedIds.has(w.id))
+                                    .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
+                                setNextChallengeWindowTs(nextWin ? new Date(nextWin.opens_at).getTime() : null);
                             } else {
                                 setChallengeWindowAlert(null);
+                                setNextChallengeWindowTs(null);
                             }
                         }
                     } catch {}
@@ -1770,6 +1776,15 @@ export default function ProfilePage() {
                         >DISMISS</button>
                     </div>
                 )}
+                {/* Mobile participant banner — shows for enrolled members with active challenge */}
+                {isMobile && isParticipant && participantStatus === 'active' && !challengePanelOpen && (
+                    <MobileChallengeBanner
+                        challengeName={activeChallenge.name}
+                        hasOpenWindow={!!challengeWindowAlert}
+                        nextWindowTs={challengeWindowAlert ? null : nextChallengeWindowTs}
+                        onOpen={() => { setChallengePanelOpen(true); setChallengePanelId(activeChallenge.id); }}
+                    />
+                )}
                 {challengePanelOpen && (
                     <ChallengeUploadPanel
                         challengeId={challengePanelId || activeChallenge.id}
@@ -1811,7 +1826,7 @@ export default function ProfilePage() {
 
                         {/* Closes in */}
                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#888', marginBottom: 20, textAlign: 'center' }}>
-                            Closes at {new Date(challengeWindowAlert.window.closes_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                            Closes in <CountdownText targetTs={new Date(challengeWindowAlert.window.closes_at).getTime()} prefix="" />
                         </div>
 
                         {/* Buttons */}
@@ -1843,6 +1858,53 @@ export default function ProfilePage() {
             />
         )}
         </>
+    );
+}
+
+// ─── COUNTDOWN TEXT ───────────────────────────────────────────────────────────
+function CountdownText({ targetTs, prefix = 'in ' }: { targetTs: number; prefix?: string }) {
+    const [now, setNow] = useState(Date.now());
+    useEffect(() => {
+        const id = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(id);
+    }, []);
+    const diff = Math.max(0, Math.floor((targetTs - now) / 1000));
+    if (diff === 0) return <span style={{ color: '#4ade80' }}>NOW</span>;
+    const h = Math.floor(diff / 3600);
+    const m = Math.floor((diff % 3600) / 60);
+    const s = diff % 60;
+    const str = h > 0 ? `${h}h ${m}m` : `${m}m ${s.toString().padStart(2, '0')}s`;
+    return <span>{prefix}{str}</span>;
+}
+
+// ─── MOBILE CHALLENGE PARTICIPANT BANNER ─────────────────────────────────────
+function MobileChallengeBanner({ challengeName, hasOpenWindow, nextWindowTs, onOpen }: {
+    challengeName: string; hasOpenWindow: boolean; nextWindowTs: number | null; onOpen: () => void;
+}) {
+    return (
+        <div
+            onClick={onOpen}
+            style={{
+                position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000003,
+                background: hasOpenWindow ? 'rgba(5,18,8,0.97)' : 'rgba(5,8,18,0.97)',
+                border: `1px solid ${hasOpenWindow ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.35)'}`,
+                borderRadius: 14, padding: '10px 16px',
+                display: 'flex', alignItems: 'center', gap: 12,
+                boxShadow: `0 -2px 24px rgba(0,0,0,0.6), 0 4px 20px ${hasOpenWindow ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.08)'}`,
+                backdropFilter: 'blur(16px)', cursor: 'pointer',
+            }}
+        >
+            {hasOpenWindow && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 10px rgba(74,222,128,0.8)', flexShrink: 0, animation: 'pulse 1s infinite' }} />}
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{challengeName}</div>
+                <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', letterSpacing: '1.5px', marginTop: 2, color: hasOpenWindow ? '#4ade80' : '#c5a059' }}>
+                    {hasOpenWindow ? 'TASK WINDOW OPEN — UPLOAD NOW' : nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="NEXT TASK IN " /> : 'CHALLENGE ACTIVE'}
+                </div>
+            </div>
+            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: hasOpenWindow ? '#4ade80' : '#c5a059', fontWeight: 700, flexShrink: 0, border: `1px solid ${hasOpenWindow ? 'rgba(74,222,128,0.4)' : 'rgba(197,160,89,0.3)'}`, borderRadius: 8, padding: '5px 10px' }}>
+                {hasOpenWindow ? 'UPLOAD' : 'VIEW'}
+            </div>
+        </div>
     );
 }
 
@@ -2078,17 +2140,17 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                         {/* Next task (only if participant) */}
                         {data.participant && data.participant.status === 'active' && (data.challenge.status === 'active' || data.challenge.status === 'draft') && upcomingWindows.length > 0 && (() => {
                             const w = upcomingWindows[0];
-                            const opensAt = new Date(w.opens_at);
-                            const timeStr = opensAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
                             return (
                                 <div style={{ marginBottom: 24, background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, padding: '16px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>NEXT TASK</div>
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.48rem', color: '#888' }}>Day {w.day_number} · Task {w.window_number}</div>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1rem', fontWeight: 700, color: '#ccc' }}>Day {w.day_number} · Task {w.window_number}</div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 2 }}>OPENS AT</div>
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1.2rem', fontWeight: 900, color: '#c5a059', letterSpacing: '2px' }}>{timeStr}</div>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 2 }}>OPENS IN</div>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1.2rem', fontWeight: 900, color: '#c5a059', letterSpacing: '2px' }}>
+                                            <CountdownText targetTs={new Date(w.opens_at).getTime()} prefix="" />
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -2152,9 +2214,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
             .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0]
         : null;
 
-    const nextTaskTime = nextWindow
-        ? new Date(nextWindow.opens_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-        : null;
+    const nextWindowTs = nextWindow ? new Date(nextWindow.opens_at).getTime() : null;
 
     const handleJoin = async (challengeId: string) => {
         setJoining(true);
@@ -2276,13 +2336,18 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                                 {[
                                                     { label: 'My tasks done', val: String(fullData.stats.tasks_done) },
                                                     { label: 'Total points', val: String(fullData.stats.total_points) },
-                                                    { label: 'Next task at', val: nextTaskTime || '—' },
                                                 ].map(({ label, val }) => (
                                                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                                                         <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.38)', letterSpacing: '0.5px' }}>{label}</span>
                                                         <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#c5a059', fontWeight: 700 }}>{val}</span>
                                                     </div>
                                                 ))}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.38)', letterSpacing: '0.5px' }}>Next task in</span>
+                                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#c5a059', fontWeight: 700 }}>
+                                                        {nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="" /> : '—'}
+                                                    </span>
+                                                </div>
                                             </div>
                                         )}
 

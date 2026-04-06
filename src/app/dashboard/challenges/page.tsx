@@ -1022,6 +1022,9 @@ function EditChallengeModal({ challenge, onClose, onSave }: {
         description: challenge.description || '',
         theme: challenge.theme,
         image_url: challenge.image_url || '',
+        duration_days: challenge.duration_days,
+        tasks_per_day: challenge.tasks_per_day,
+        window_minutes: challenge.window_minutes,
         points_per_completion: challenge.points_per_completion,
         first_place_points: challenge.first_place_points,
         second_place_points: challenge.second_place_points,
@@ -1068,6 +1071,9 @@ function EditChallengeModal({ challenge, onClose, onSave }: {
                 description: form.description,
                 theme: form.theme,
                 image_url: form.image_url || null,
+                duration_days: Number(form.duration_days),
+                tasks_per_day: Number(form.tasks_per_day),
+                window_minutes: Number(form.window_minutes),
                 points_per_completion: Number(form.points_per_completion),
                 first_place_points: Number(form.first_place_points),
                 second_place_points: Number(form.second_place_points),
@@ -1149,6 +1155,22 @@ function EditChallengeModal({ challenge, onClose, onSave }: {
                             <label className="ch-label">END DATE</label>
                             <input type="date" className="ch-input" value={form.end_date} onChange={e => set('end_date', e.target.value)} />
                         </div>
+                    </div>
+
+                    <div className="ch-form-grid">
+                        <div className="ch-field">
+                            <label className="ch-label">DURATION (DAYS)</label>
+                            <input type="number" className="ch-input" min={1} value={form.duration_days} onChange={e => set('duration_days', e.target.value)} />
+                        </div>
+                        <div className="ch-field">
+                            <label className="ch-label">TASKS PER DAY</label>
+                            <input type="number" className="ch-input" min={1} value={form.tasks_per_day} onChange={e => set('tasks_per_day', e.target.value)} />
+                        </div>
+                    </div>
+
+                    <div className="ch-field">
+                        <label className="ch-label">WINDOW (MINUTES)</label>
+                        <input type="number" className="ch-input" style={{ maxWidth: 120 }} min={1} value={form.window_minutes} onChange={e => set('window_minutes', e.target.value)} />
                     </div>
 
                     <div className="ch-field">
