@@ -1571,13 +1571,15 @@ export default function ProfilePage() {
                         </div>
 
                         {/* MOBILE KNEELING BUTTON */}
-                        <div style={{ width: '100%', padding: '30px 0 40px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                        <div style={{ width: '100%', padding: '28px 0 38px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <div className="mob-kneel-outer">
-                                <div className="mob-kneel-halo" />
                                 <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone"
                                     onContextMenu={(e) => e.preventDefault()}
                                     style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}>
                                     <div id="mob_kneelFill" className="mob-bar-fill"></div>
+                                    {/* 4-point sparkle stars at pill edges */}
+                                    <span className="kneel-sparkle-left" aria-hidden="true" />
+                                    <span className="kneel-sparkle-right" aria-hidden="true" />
                                     <div className="mob-bar-content">
                                         <span className="kneel-icon-sm">♛</span>
                                         <span id="mob_kneelText" className="kneel-text kneel-label">HOLD TO KNEEL</span>

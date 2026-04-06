@@ -218,7 +218,7 @@ export function handleHoldStart(e: Event) {
     if (mobText) mobText.innerText = "SUBMITTING...";
     if (mobBar) {
         mobBar.style.borderColor = "rgba(197,160,89,0.95)";
-        mobBar.style.boxShadow = "inset 0 1px 0 rgba(197,160,89,0.3), inset 0 -1px 0 rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.25), 0 0 50px rgba(197,160,89,0.35), 0 0 100px rgba(197,160,89,0.15), 0 22px 55px rgba(0,0,0,0.9)";
+        mobBar.style.boxShadow = "inset 0 1px 0 rgba(255,248,210,0.18), inset 0 -1px 0 rgba(0,0,0,0.5), 0 12px 40px rgba(0,0,0,0.85)";
     }
 
     // START TIMER
@@ -259,8 +259,8 @@ function resetUI() {
     }
     if (mobText) mobText.innerText = "HOLD TO KNEEL";
     if (mobBar) {
-        mobBar.style.borderColor = "rgba(197,160,89,0.5)";
-        mobBar.style.boxShadow = "inset 0 1px 0 rgba(197,160,89,0.22), inset 0 -1px 0 rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.07), 0 0 36px rgba(197,160,89,0.09), 0 0 70px rgba(197,160,89,0.04), 0 22px 55px rgba(0,0,0,0.9)";
+        mobBar.style.borderColor = "rgba(197,160,89,0.65)";
+        mobBar.style.boxShadow = "inset 0 1px 0 rgba(255,248,210,0.12), inset 0 -1px 0 rgba(0,0,0,0.5), 0 12px 40px rgba(0,0,0,0.85)";
     }
 }
 
@@ -348,7 +348,7 @@ export function updateKneelingUI() {
 
         if (mobText) mobText.innerText = `LOCKED: ${minLeft}m`;
         if (mobFill) { mobFill.style.transition = "none"; mobFill.style.width = `${Math.max(0, progress)}%`; }
-        if (mobBar) { mobBar.style.borderColor = "#ff003c"; }
+        if (mobBar) { mobBar.style.borderColor = "rgba(160,8,8,0.85)"; mobBar.style.boxShadow = "inset 0 1px 0 rgba(255,248,210,0.06), inset 0 -1px 0 rgba(0,0,0,0.5), 0 12px 40px rgba(0,0,0,0.85)"; }
     } else {
         // UNLOCK
         if (isLocked) setState({ isLocked: false });
