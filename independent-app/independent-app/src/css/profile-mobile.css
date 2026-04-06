@@ -451,45 +451,49 @@
     }
 
     .duty-label {
-        font-family: 'Cinzel', serif;
-        font-weight: 700;
-        font-size: 0.7rem;
-        color: #888;
-        letter-spacing: 4px;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 400;
+        font-size: 0.42rem;
+        color: rgba(197, 160, 89, 0.45);
+        letter-spacing: 5px;
         text-transform: uppercase;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        margin-top: 30px;
+        gap: 14px;
+        margin-top: 32px;
     }
 
     .duty-label::before,
     .duty-label::after {
         content: '';
         height: 1px;
-        width: 30px;
-        background: #333;
+        flex: 1;
+        max-width: 60px;
+        background: linear-gradient(to right, transparent, rgba(197, 160, 89, 0.3));
+    }
+
+    .duty-label::after {
+        background: linear-gradient(to left, transparent, rgba(197, 160, 89, 0.3));
     }
 
     #mobTaskText {
         font-family: 'Cinzel', serif;
-        font-size: 0.85rem;
-        color: #e0e0e0;
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.75);
         text-align: center;
-        line-height: 1.4;
-        margin: 5px 0 15px 0;
-        padding: 16px !important;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 4px;
-        margin: 15px 10px !important;
+        line-height: 1.6;
+        padding: 18px 16px !important;
+        background: rgba(197, 160, 89, 0.03);
+        border-radius: 2px;
+        margin: 14px 0 18px !important;
         min-height: 60px !important;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        color: #ddd;
-        font-size: 0.8rem;
+        border: 1px solid rgba(197, 160, 89, 0.1);
+        border-left: 2px solid rgba(197, 160, 89, 0.3);
+        letter-spacing: 0.3px;
     }
 
     .mob-horiz-scroll {
@@ -597,108 +601,134 @@
     }
 
     .luxury-card {
-        background: rgba(4, 4, 14, 0.38);
-        border: 1px solid rgba(197, 160, 89, 0.2);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        border-radius: 2px;
-        padding: 28px 16px;
+        background: linear-gradient(160deg, rgba(6, 4, 18, 0.97) 0%, rgba(3, 2, 12, 0.99) 100%);
+        border: 1px solid rgba(197, 160, 89, 0.18);
+        border-top: 2px solid rgba(197, 160, 89, 0.35);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(197, 160, 89, 0.06);
+        border-radius: 3px;
+        padding: 32px 20px 28px;
         position: relative;
         overflow: hidden;
         width: 95%;
         margin: 10px auto;
         box-sizing: border-box;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+    }
+
+    .luxury-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 20%; right: 20%;
+        height: 1px;
+        background: linear-gradient(to right, transparent, rgba(197, 160, 89, 0.5), transparent);
     }
 
     /* Status text */
     .txt-status-red {
         font-family: 'Orbitron', sans-serif;
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: 7px;
-        color: #ff003c;
+        font-size: 0.42rem;
+        font-weight: 400;
+        letter-spacing: 8px;
+        color: rgba(197, 160, 89, 0.28);
         text-transform: uppercase;
+        text-align: center;
+        margin-bottom: 24px;
     }
 
     .txt-status-green {
         font-family: 'Orbitron', sans-serif;
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: 7px;
-        color: #00ff88;
+        font-size: 0.42rem;
+        font-weight: 400;
+        letter-spacing: 8px;
+        color: rgba(74, 222, 128, 0.7);
         text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 16px;
     }
 
     /* Glassmorphism lobby button */
     .lobby-btn {
         font-family: 'Cinzel', serif;
-        font-size: 0.82rem;
+        font-size: 0.75rem;
         font-weight: 700;
-        letter-spacing: 5px;
+        letter-spacing: 4px;
         text-transform: uppercase;
         cursor: pointer;
-        padding: 20px 30px;
-        border-radius: 0;
-        border: 1px solid #c5a059;
+        padding: 18px 0;
+        border-radius: 2px;
+        border: 1px solid rgba(197, 160, 89, 0.45);
         color: #c5a059;
-        background: rgba(4, 4, 14, 0.45);
+        background: rgba(197, 160, 89, 0.04);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(197, 160, 89, 0.1);
-        transition: background 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+        transition: all 0.25s ease;
         display: block;
         text-align: center;
-        width: 80%;
+        width: 88%;
         margin: 0 auto;
     }
 
     .lobby-btn:active {
-        background: rgba(197, 160, 89, 0.08);
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(197, 160, 89, 0.18);
+        background: rgba(197, 160, 89, 0.1);
+        border-color: rgba(197, 160, 89, 0.7);
+        box-shadow: 0 0 24px rgba(197, 160, 89, 0.15);
     }
 
     .lobby-btn.close {
-        border-color: rgba(255, 255, 255, 0.15);
-        color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: 6px;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.3);
+        background: transparent;
+        border-radius: 2px;
         width: auto;
     }
 
     /* Task Action Buttons */
     .btn-upload-sm {
-        width: 70% !important;
-        /* Upload button 70% width */
+        width: 80% !important;
         margin: 0 auto;
         display: block;
-        background: linear-gradient(to right, #8a6d3b, #c5a059, #8a6d3b);
-        border: 1px solid #c5a059;
+        background: rgba(197, 160, 89, 0.07);
+        border: 1px solid rgba(197, 160, 89, 0.5) !important;
         font-family: 'Cinzel', serif;
-        color: #fff;
-        padding: 14px;
-        font-weight: bold;
-        letter-spacing: 2px;
+        color: #c5a059;
+        padding: 16px;
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 3px;
         text-transform: uppercase;
-        border-radius: 4px;
-        box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
+        border-radius: 2px;
+        box-shadow: none;
+        transition: all 0.25s ease;
+    }
+
+    .btn-upload-sm:active {
+        background: rgba(197, 160, 89, 0.14) !important;
+        box-shadow: 0 0 20px rgba(197, 160, 89, 0.12) !important;
     }
 
     .btn-skip-sm {
         background: none !important;
         border: none !important;
-        color: #666 !important;
+        color: rgba(255, 255, 255, 0.2) !important;
         font-family: 'Orbitron', sans-serif !important;
-        font-size: 0.6rem !important;
-        letter-spacing: 1px !important;
-        padding: 10px 0 !important;
+        font-size: 0.38rem !important;
+        letter-spacing: 2px !important;
+        padding: 12px 0 !important;
         width: 100% !important;
         display: block !important;
         text-align: center !important;
         box-shadow: none !important;
-        margin-top: 10px;
+        margin-top: 8px;
+        transition: color 0.2s !important;
+    }
+
+    .btn-skip-sm:active {
+        color: rgba(255, 255, 255, 0.45) !important;
     }
 
     /* Fix stats pill */
@@ -1391,13 +1421,14 @@
     }
 
     .working-dot {
-        width: 8px;
-        height: 8px;
-        background-color: #00ff6a;
+        width: 7px;
+        height: 7px;
+        background-color: #4ade80;
         border-radius: 50%;
         display: inline-block;
-        box-shadow: 0 0 10px #00ff6a;
+        box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
         animation: pulse-green 2s infinite;
+        flex-shrink: 0;
     }
 
     @keyframes pulse-green {
@@ -1676,9 +1707,9 @@
         overflow-y: auto;
         overflow-x: hidden;
         overscroll-behavior: contain;
+        overflow-anchor: none;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        /* Override chat.css mobile rule that forces padding-top/bottom: 75px */
         padding-top: 0 !important;
         padding-bottom: 0 !important;
         height: auto !important;

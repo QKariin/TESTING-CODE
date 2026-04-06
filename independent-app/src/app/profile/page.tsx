@@ -1451,7 +1451,7 @@ export default function ProfilePage() {
                             <div className="duty-label">CURRENT STATUS</div>
                             <div className="luxury-card">
                                 <div id="qm_TaskIdle" className="hidden" style={{ textAlign: 'center' }}>
-                                    <div className="txt-status-red" style={{ marginBottom: '16px' }}>UNPRODUCTIVE</div>
+                                    <div className="txt-status-red">AWAITING ORDERS</div>
                                     <button id="mobNewTaskBtn" className="lobby-btn" onClick={() => (window as any).mobileRequestTask()}>REQUEST TASK</button>
                                     <div id="mobRequestWarningBox" style={{ display: 'none', flexDirection: 'column', gap: 12, marginTop: '10px', alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(20,0,0,0.8)', padding: '20px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
                                         <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
@@ -1460,8 +1460,8 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                                 <div id="qm_TaskActive" className="hidden" style={{ textAlign: 'center' }}>
-                                    <div className="txt-status-green" style={{ marginBottom: '5px' }}>
-                                        <span className="working-dot"></span> WORKING
+                                    <div className="txt-status-green">
+                                        <span className="working-dot"></span>SERVING
                                     </div>
                                     <div id="mobTaskText" style={{ marginBottom: '10px', minHeight: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', lineHeight: 1.3, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>LOADING ORDER...</div>
                                     <div className="card-timer-row">

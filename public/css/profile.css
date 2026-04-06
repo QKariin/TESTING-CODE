@@ -276,22 +276,24 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
-    margin: 15px 0;
+    gap: 8px;
+    margin: 18px 0 20px;
     width: 100%;
 }
 
 .card-t-box {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(197, 160, 89, 0.2);
+    border-bottom: 1px solid rgba(197, 160, 89, 0.35);
+    border-radius: 3px;
+    padding: 10px 14px;
     font-family: 'Orbitron', monospace;
-    font-size: 1.5rem;
-    color: var(--gold);
-    text-shadow: 0 0 10px rgba(197, 160, 89, 0.3);
-    min-width: 50px;
+    font-size: 1.6rem;
+    color: #c5a059;
+    text-shadow: 0 0 16px rgba(197, 160, 89, 0.25);
+    min-width: 52px;
     text-align: center;
+    letter-spacing: 2px;
 }
 
 .t-sep {
