@@ -217,11 +217,8 @@ export function handleHoldStart(e: Event) {
     }
     if (mobText) mobText.innerText = "SUBMITTING...";
     if (mobBar) {
-        mobBar.style.borderTopColor = "rgba(197,160,89,0.95)";
-        mobBar.style.borderLeftColor = "rgba(197,160,89,0.6)";
-        mobBar.style.borderRightColor = "rgba(197,160,89,0.6)";
-        mobBar.style.borderBottomColor = "rgba(197,160,89,0.4)";
-        mobBar.style.boxShadow = "inset 0 1px 0 rgba(255,248,210,0.14), inset 0 -3px 8px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.6), 0 12px 32px rgba(0,0,0,0.7)";
+        mobBar.style.borderColor = "rgba(197,160,89,0.95)";
+        mobBar.style.boxShadow = "inset 0 1px 0 rgba(255,248,210,0.22), inset 0 -4px 14px rgba(0,0,0,0.65), 0 0 22px rgba(197,160,89,0.28), 0 6px 24px rgba(0,0,0,0.72)";
     }
 
     // START TIMER
@@ -262,11 +259,8 @@ function resetUI() {
     }
     if (mobText) mobText.innerText = "HOLD TO KNEEL";
     if (mobBar) {
-        mobBar.style.borderTopColor = "rgba(197,160,89,0.7)";
-        mobBar.style.borderLeftColor = "rgba(197,160,89,0.38)";
-        mobBar.style.borderRightColor = "rgba(197,160,89,0.38)";
-        mobBar.style.borderBottomColor = "rgba(197,160,89,0.22)";
-        mobBar.style.boxShadow = "inset 0 1px 0 rgba(255,248,210,0.1), inset 0 -3px 8px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.6), 0 12px 32px rgba(0,0,0,0.7)";
+        mobBar.style.borderColor = "rgba(197,160,89,0.88)";
+        mobBar.style.boxShadow = "inset 0 1px 0 rgba(255,248,210,0.18), inset 0 -4px 14px rgba(0,0,0,0.65), 0 0 16px rgba(197,160,89,0.14), 0 6px 24px rgba(0,0,0,0.72)";
     }
 }
 
@@ -354,7 +348,7 @@ export function updateKneelingUI() {
 
         if (mobText) mobText.innerText = `LOCKED: ${minLeft}m`;
         if (mobFill) { mobFill.style.transition = "none"; mobFill.style.width = `${Math.max(0, progress)}%`; }
-        if (mobBar) { mobBar.style.borderColor = "rgba(160,8,8,0.85)"; mobBar.style.boxShadow = "inset 0 1px 0 rgba(255,248,210,0.06), inset 0 -1px 0 rgba(0,0,0,0.5), 0 12px 40px rgba(0,0,0,0.85)"; }
+        if (mobBar) { mobBar.style.borderColor = "rgba(80,3,3,0.9)"; mobBar.style.boxShadow = "inset 0 1px 0 rgba(120,5,5,0.12), inset 0 -4px 14px rgba(0,0,0,0.7), 0 0 14px rgba(60,2,2,0.35), 0 6px 24px rgba(0,0,0,0.85)"; }
     } else {
         // UNLOCK
         if (isLocked) setState({ isLocked: false });

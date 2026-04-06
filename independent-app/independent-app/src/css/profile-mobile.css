@@ -311,7 +311,25 @@
         position: relative;
         width: 88%;
         margin: 0 auto;
+        filter: drop-shadow(0 0 10px rgba(197, 160, 89, 0.18));
     }
+
+    /* Sparkle stars at pill edges */
+    .mob-kneel-outer::before,
+    .mob-kneel-outer::after {
+        content: '✦';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 240, 180, 0.78);
+        font-size: 0.65rem;
+        z-index: 10;
+        pointer-events: none;
+        text-shadow: 0 0 10px rgba(255, 215, 100, 0.95), 0 0 22px rgba(197, 160, 89, 0.7);
+    }
+
+    .mob-kneel-outer::before { left: -8px; }
+    .mob-kneel-outer::after  { right: -8px; }
 
     .mob-kneel-zone {
         width: 100% !important;
@@ -320,6 +338,7 @@
         position: relative;
         z-index: 1;
         overflow: hidden;
+        border-radius: 999px;
     }
 
     .mob-internal-drawer {
@@ -345,35 +364,40 @@
 
     .mob-kneel-bar {
         width: 100%;
-        height: 76px;
-        /* Dark glass with a warm top-light — like a lit panel surface */
-        background:
-            radial-gradient(ellipse 80% 60% at 50% -10%, rgba(197, 160, 89, 0.07) 0%, transparent 65%),
-            linear-gradient(160deg, rgba(18, 14, 36, 0.97) 0%, rgba(7, 5, 18, 0.99) 100%);
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
-        /* Bevel: bright top edge, dimmer sides, darkest bottom */
-        border-top: 1px solid rgba(197, 160, 89, 0.7);
-        border-left: 1px solid rgba(197, 160, 89, 0.38);
-        border-right: 1px solid rgba(197, 160, 89, 0.38);
-        border-bottom: 1px solid rgba(197, 160, 89, 0.22);
-        border-radius: 18px;
+        height: 64px;
+        background: radial-gradient(ellipse 130% 110% at 50% 50%,
+            rgba(60, 3, 3, 0.80) 0%,
+            rgba(6, 3, 12, 0.98) 60%
+        );
+        /* Outer gold frame */
+        border: 1.5px solid rgba(197, 160, 89, 0.88);
+        border-radius: 999px;
         position: relative;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        /* Depth: inset highlight + heavy drop — pressed into the page */
         box-shadow:
-            inset 0 1px 0 rgba(255, 248, 210, 0.1),
-            inset 0 -3px 8px rgba(0, 0, 0, 0.55),
-            0 4px 12px rgba(0, 0, 0, 0.6),
-            0 12px 32px rgba(0, 0, 0, 0.7);
+            inset 0 1px 0 rgba(255, 248, 210, 0.18),
+            inset 0 -4px 14px rgba(0, 0, 0, 0.65),
+            0 0 16px rgba(197, 160, 89, 0.14),
+            0 6px 24px rgba(0, 0, 0, 0.72);
         transition: border-color 0.25s ease, box-shadow 0.25s ease;
         touch-action: none;
         user-select: none;
         -webkit-user-select: none;
         -webkit-touch-callout: none;
+    }
+
+    /* Inner double-frame ring */
+    .mob-kneel-bar::before {
+        content: '';
+        position: absolute;
+        inset: 4px;
+        border-radius: 999px;
+        border: 1px solid rgba(197, 160, 89, 0.3);
+        pointer-events: none;
+        z-index: 3;
     }
 
     /* Prevent text selection / iOS callout on every child element */
@@ -390,11 +414,11 @@
         left: 0;
         width: 0%;
         height: 100%;
-        /* Deep crimson → black, contained — like heat building inside */
+        border-radius: 999px;
         background: linear-gradient(90deg,
-            rgba(100, 4, 4, 0.96) 0%,
-            rgba(60, 2, 2, 0.65) 50%,
-            rgba(10, 0, 0, 0.1) 100%
+            rgba(85, 3, 3, 0.95) 0%,
+            rgba(48, 2, 2, 0.6) 55%,
+            rgba(8, 0, 0, 0.05) 100%
         );
         z-index: 1;
         transition: width 0.1s linear;
@@ -403,15 +427,16 @@
     .mob-bar-content {
         z-index: 2;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
-        gap: 5px;
+        justify-content: center;
+        gap: 10px;
         pointer-events: none;
     }
 
     .kneel-icon-sm {
-        color: rgba(197, 160, 89, 0.6);
-        font-size: 1.0rem;
+        color: rgba(197, 160, 89, 0.72);
+        font-size: 0.9rem;
         line-height: 1;
     }
 
