@@ -68,6 +68,7 @@ import {
     switchMobGlTab,
     switchMobGlPeriod,
     sendMobGlMessage,
+    mobJoinChallenge,
     handleMobGlKey,
     triggerTaskEvidencePick,
     unlockPost,
@@ -92,13 +93,22 @@ export default function ProfilePage() {
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [challengePanelOpen, setChallengePanelOpen] = useState(false);
-    const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string; status: string } | null>(null);
+    const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string; status: string; start_date?: string } | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
     const [isParticipant, setIsParticipant] = useState(false);
     const [participantStatus, setParticipantStatus] = useState<string | null>(null);
     const [desktopChallengeOpen, setDesktopChallengeOpen] = useState(false);
     const [allChallenges, setAllChallenges] = useState<any[]>([]);
     const [challengeCounts, setChallengeCounts] = useState({ pending: 0, yours: 0 });
     const [mobOverlayOpen, setMobOverlayOpen] = useState(false);
+
+    // Track mobile viewport
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
     useEffect(() => {
@@ -168,6 +178,7 @@ export default function ProfilePage() {
             (window as any).switchMobGlTab = switchMobGlTab;
             (window as any).switchMobGlPeriod = switchMobGlPeriod;
             (window as any).sendMobGlMessage = sendMobGlMessage;
+            (window as any)._mobJoinChallenge = mobJoinChallenge;
             (window as any).handleMobGlKey = handleMobGlKey;
             (window as any).toggleSystemLog = toggleSystemLog;
             (window as any).renderKneelDots = renderKneelDots;
@@ -363,7 +374,7 @@ export default function ProfilePage() {
                     new Date(c.start_date).getTime() > now
                 );
                 const found = active || upcoming || null;
-                setActiveChallenge(found ? { id: found.id, name: found.name, theme: found.theme, status: found.status } : null);
+                setActiveChallenge(found ? { id: found.id, name: found.name, theme: found.theme, status: found.status, start_date: found.start_date } : null);
 
                 // Check participation for the active/upcoming challenge
                 if (found) {
@@ -769,17 +780,28 @@ export default function ProfilePage() {
                                 <div
                                     onClick={() => setDesktopChallengeOpen(true)}
                                     style={{
-                                        margin: '10px 16px 0', borderRadius: 10, padding: '10px 14px',
-                                        background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.22)',
-                                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
+                                        borderRadius: 0, padding: '12px 20px',
+                                        background: activeChallenge.status === 'active'
+                                            ? 'linear-gradient(135deg, rgba(74,222,128,0.09), rgba(74,222,128,0.04))'
+                                            : 'linear-gradient(135deg, rgba(197,160,89,0.09), rgba(197,160,89,0.04))',
+                                        borderBottom: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.2)' : 'rgba(197,160,89,0.2)'}`,
+                                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0,
                                     }}
                                 >
-                                    <div style={{ fontSize: '1rem', flexShrink: 0, opacity: 0.7 }}>⚔</div>
+                                    <div style={{ width: 32, height: 32, borderRadius: 8, background: activeChallenge.status === 'active' ? 'rgba(74,222,128,0.12)' : 'rgba(197,160,89,0.1)', border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.25)' : 'rgba(197,160,89,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', flexShrink: 0 }}>⚔</div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div className="ribbon-label" style={{ fontSize: '0.42rem' }}>NEW CHALLENGE</div>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', letterSpacing: '2px', marginBottom: 2 }}>
+                                            {activeChallenge.status === 'active' ? '⬤ CHALLENGE LIVE' : (() => {
+                                                if (!activeChallenge.start_date) return '◎ STARTING SOON';
+                                                const diff = Math.max(0, Math.floor((new Date(activeChallenge.start_date).getTime() - Date.now()) / 1000));
+                                                const h = Math.floor(diff / 3600);
+                                                const m = Math.floor((diff % 3600) / 60);
+                                                return `◎ STARTS IN ${h}h ${m}m`;
+                                            })()}
+                                        </div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
                                     </div>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '1px', flexShrink: 0, opacity: 0.7 }}>VIEW ›</div>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', padding: '5px 14px', borderRadius: 6, border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.35)' : 'rgba(197,160,89,0.3)'}`, color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', letterSpacing: '1px', flexShrink: 0, fontWeight: 700 }}>JOIN ›</div>
                                 </div>
                             )}
                             <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 !important' }}>
@@ -1586,7 +1608,7 @@ export default function ProfilePage() {
                 <div className="mob-gl-tabs">
                     <button id="mobGlTab_rank" className="mob-gl-tab active" onClick={() => (window as any).switchMobGlTab('rank')}>RANK</button>
                     <button id="mobGlTab_talk" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('talk')}>TALK</button>
-                    <button id="mobGlTab_queen" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('queen')}>QUEEN</button>
+                    <button id="mobGlTab_challenges" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('challenges')}>⚔ CHALLENGES</button>
                     <button id="mobGlTab_updates" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('updates')}>NEWS</button>
                 </div>
 
@@ -1616,9 +1638,9 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {/* QUEEN panel */}
-                <div id="mobGlPanel_queen" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
-                    <div id="mobGlQueenFeed" className="mob-gl-scroll"></div>
+                {/* CHALLENGES panel */}
+                <div id="mobGlPanel_challenges" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
+                    <div id="mobGlChallengesFeed" className="mob-gl-scroll"></div>
                 </div>
 
                 {/* UPDATES panel */}
@@ -1663,29 +1685,35 @@ export default function ProfilePage() {
         {/* ── CHALLENGE BANNER + PANEL ── */}
         {activeChallenge && (
             <>
-                {/* Mobile banner — only on landing page (no overlay open), only for non-participants */}
-                {!isParticipant && !challengePanelOpen && !mobOverlayOpen && (
+                {/* Mobile banner — only on mobile, landing page (no overlay open), non-participants */}
+                {isMobile && !isParticipant && !challengePanelOpen && !mobOverlayOpen && (
                     <button
                         onClick={() => setChallengePanelOpen(true)}
                         style={{
                             position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000002,
                             background: 'rgba(5,8,18,0.97)',
-                            border: '1px solid rgba(197,160,89,0.25)',
+                            border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.4)' : 'rgba(197,160,89,0.35)'}`,
                             borderRadius: 14, padding: '10px 14px',
                             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
-                            boxShadow: '0 -2px 24px rgba(0,0,0,0.6), 0 4px 20px rgba(197,160,89,0.08)',
+                            boxShadow: `0 -2px 24px rgba(0,0,0,0.6), 0 4px 20px ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.1)' : 'rgba(197,160,89,0.08)'}`,
                             backdropFilter: 'blur(16px)',
                         }}
                     >
-                        <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>⚔</div>
+                        <div style={{ width: 38, height: 38, borderRadius: 10, background: activeChallenge.status === 'active' ? 'rgba(74,222,128,0.1)' : 'rgba(197,160,89,0.08)', border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>⚔</div>
                         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
-                            <div className="ribbon-label" style={{ fontSize: '0.38rem', opacity: 0.55, marginTop: 2 }}>
-                                {activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE — TAP TO JOIN' : 'STARTING SOON — TAP TO JOIN'}
+                            <div className="ribbon-label" style={{ fontSize: '0.38rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', opacity: 0.9, marginTop: 2 }}>
+                                {activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE — TAP TO JOIN' : (() => {
+                                    if (!activeChallenge.start_date) return 'STARTING SOON — TAP TO JOIN';
+                                    const diff = Math.max(0, Math.floor((new Date(activeChallenge.start_date).getTime() - Date.now()) / 1000));
+                                    const h = Math.floor(diff / 3600);
+                                    const m = Math.floor((diff % 3600) / 60);
+                                    return `STARTS IN ${h}h ${m}m — TAP TO JOIN`;
+                                })()}
                             </div>
                         </div>
                         <div style={{
-                            background: 'linear-gradient(135deg, #c5a059, #8b6914)',
+                            background: activeChallenge.status === 'active' ? 'linear-gradient(135deg, #4ade80, #16a34a)' : 'linear-gradient(135deg, #c5a059, #8b6914)',
                             borderRadius: 8, padding: '5px 12px',
                             fontFamily: 'Orbitron', fontSize: '0.38rem',
                             color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0,
@@ -1888,12 +1916,11 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                                         const diff = Math.max(0, Math.floor((new Date(data.challenge.start_date).getTime() - now) / 1000));
                                         const h = Math.floor(diff / 3600);
                                         const m = Math.floor((diff % 3600) / 60);
-                                        const s = diff % 60;
-                                        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                                        return `${h}h ${m}m`;
                                     })()}
                                 </div>
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555', marginTop: 6 }}>
-                                    {new Date(data.challenge.start_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                    {new Date(data.challenge.start_date).toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
                                 </div>
                             </div>
                         )}
@@ -1941,27 +1968,24 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                             </div>
                         )}
 
-                        {/* Upcoming windows (only if participant) */}
-                        {data.participant && data.participant.status === 'active' && (data.challenge.status === 'active' || data.challenge.status === 'draft') && upcomingWindows.length > 0 && (
-                            <div style={{ marginBottom: 24 }}>
-                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>UPCOMING</div>
-                                {upcomingWindows.map((w: any) => {
-                                    const opensInSecs = Math.floor((new Date(w.opens_at).getTime() - now) / 1000);
-                                    const h = Math.floor(opensInSecs / 3600);
-                                    const m = Math.floor((opensInSecs % 3600) / 60);
-                                    return (
-                                        <div key={w.id} style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 10, padding: '12px 16px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.48rem', color: '#aaa' }}>
-                                                Day {w.day_number} · Task {w.window_number}
-                                            </div>
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059' }}>
-                                                in {h > 0 ? `${h}h ` : ''}{m}m
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
+                        {/* Next task (only if participant) */}
+                        {data.participant && data.participant.status === 'active' && (data.challenge.status === 'active' || data.challenge.status === 'draft') && upcomingWindows.length > 0 && (() => {
+                            const w = upcomingWindows[0];
+                            const opensAt = new Date(w.opens_at);
+                            const timeStr = opensAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                            return (
+                                <div style={{ marginBottom: 24, background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, padding: '16px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>NEXT TASK</div>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.48rem', color: '#888' }}>Day {w.day_number} · Task {w.window_number}</div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 2 }}>OPENS AT</div>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1.2rem', fontWeight: 900, color: '#c5a059', letterSpacing: '2px' }}>{timeStr}</div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
 
                         {/* My completed tasks */}
                         {data.completions.length > 0 && (

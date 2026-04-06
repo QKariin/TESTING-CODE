@@ -245,7 +245,7 @@ export default function DashboardPage() {
     const [activeLocks, setActiveLocks] = useState<{ paywall: boolean; silenced: boolean }>({ paywall: false, silenced: false });
     const [showLocksModal, setShowLocksModal] = useState(false);
     const [lockedUsers, setLockedUsers] = useState<any[]>([]);
-    const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null } | null>(null);
+    const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null; isUpcoming?: boolean; startDate?: string } | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -260,8 +260,26 @@ export default function DashboardPage() {
             try {
                 const res = await fetch('/api/challenges');
                 const json = await res.json();
+                const nowMs = Date.now();
                 const active = (json.challenges || []).find((c: any) => c.status === 'active');
-                if (!active) { setChallengeWidget(null); return; }
+                const upcoming = !active && (json.challenges || []).find((c: any) =>
+                    c.status === 'draft' && c.start_date && new Date(c.start_date).getTime() > nowMs
+                );
+                const found = active || upcoming;
+                if (!found) { setChallengeWidget(null); return; }
+                if (upcoming) {
+                    const diff = Math.max(0, Math.floor((new Date(upcoming.start_date).getTime() - nowMs) / 1000));
+                    const h = Math.floor(diff / 3600);
+                    const m = Math.floor((diff % 3600) / 60);
+                    setChallengeWidget({
+                        name: upcoming.name, theme: upcoming.theme,
+                        activeCount: upcoming.participant_active || 0,
+                        totalCount: upcoming.participant_total || 0,
+                        leader: null, isUpcoming: true,
+                        startDate: `${h}h ${m}m`,
+                    });
+                    return;
+                }
                 const det = await fetch(`/api/challenges/${active.id}`);
                 const d = await det.json();
                 const leader = d.leaderboard?.find((p: any) => p.status === 'active' || p.status === 'champion');
@@ -551,6 +569,11 @@ export default function DashboardPage() {
                     onClick={() => (window as any).showPosts()}
                     style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.08), transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
                 >✦ POSTS</div>
+                <a
+                    href="/dashboard/challenges"
+                    className="sb-dash-btn"
+                    style={{ display: 'block', textDecoration: 'none', backgroundImage: 'linear-gradient(135deg, rgba(74,222,128,0.06), transparent)', borderBottom: '1px solid rgba(74,222,128,0.15)', color: '#4ade80' }}
+                >⚔ CHALLENGES</a>
                 <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
                     <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: 'Orbitron', fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
@@ -625,38 +648,47 @@ export default function DashboardPage() {
                         {/* CHALLENGES WIDGET */}
                         <div className="v-gauge-card glass-card span-1"
                             onClick={() => window.location.href = '/dashboard/challenges'}
-                            style={{ border: `1px solid ${challengeWidget ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.15)'}`, cursor: 'pointer', transition: 'border-color 0.2s', background: challengeWidget ? 'linear-gradient(135deg,rgba(74,222,128,0.04),rgba(0,0,0,0.3))' : undefined }}
-                            onMouseEnter={e => (e.currentTarget.style.borderColor = challengeWidget ? 'rgba(74,222,128,0.6)' : 'rgba(197,160,89,0.4)')}
-                            onMouseLeave={e => (e.currentTarget.style.borderColor = challengeWidget ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.15)')}>
+                            style={{ border: `1px solid ${challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)'}`, cursor: 'pointer', transition: 'border-color 0.2s', background: challengeWidget ? (challengeWidget.isUpcoming ? 'linear-gradient(135deg,rgba(197,160,89,0.05),rgba(0,0,0,0.3))' : 'linear-gradient(135deg,rgba(74,222,128,0.04),rgba(0,0,0,0.3))') : undefined }}
+                            onMouseEnter={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.7)' : 'rgba(74,222,128,0.6)') : 'rgba(197,160,89,0.4)')}
+                            onMouseLeave={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)')}>
                             <div className="vg-header">
-                                <div className="vg-title" style={{ color: challengeWidget ? '#4ade80' : '#c5a059' }}>⚔ Challenges</div>
-                                <div className="vg-sub">{challengeWidget ? 'Live Challenge Active' : 'No Active Challenge'}</div>
+                                <div className="vg-title" style={{ color: challengeWidget ? (challengeWidget.isUpcoming ? '#c5a059' : '#4ade80') : '#c5a059' }}>⚔ Challenges</div>
+                                <div className="vg-sub">{challengeWidget ? (challengeWidget.isUpcoming ? 'Starting Soon' : 'Live Challenge Active') : 'No Active Challenge'}</div>
                             </div>
                             {challengeWidget ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '12px 0', gap: 14 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px' }}>
-                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px rgba(74,222,128,0.8)', flexShrink: 0, animation: 'pulse 2s infinite' }} />
+                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: challengeWidget.isUpcoming ? '#c5a059' : '#4ade80', boxShadow: challengeWidget.isUpcoming ? '0 0 8px rgba(197,160,89,0.8)' : '0 0 8px rgba(74,222,128,0.8)', flexShrink: 0, animation: 'pulse 2s infinite' }} />
                                         <div style={{ fontFamily: 'Cinzel', fontSize: '0.85rem', color: '#fff', letterSpacing: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{challengeWidget.name}</div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: 0, padding: '0 12px' }}>
-                                        {[
-                                            { val: challengeWidget.activeCount, lbl: 'STILL IN', c: '#4ade80' },
-                                            { val: challengeWidget.totalCount - challengeWidget.activeCount, lbl: 'ELIMINATED', c: '#e03030' },
-                                            { val: challengeWidget.totalCount, lbl: 'TOTAL', c: '#888' },
-                                        ].map(s => (
-                                            <div key={s.lbl} style={{ flex: 1, textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.3rem', fontWeight: 700, color: s.c }}>{s.val}</div>
-                                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.33rem', color: '#444', letterSpacing: '1px', marginTop: 3 }}>{s.lbl}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {challengeWidget.leader && (
-                                        <div style={{ margin: '0 12px', padding: '8px 12px', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.33rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>LEADING</div>
-                                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#c5a059' }}>♛ {challengeWidget.leader}</div>
+                                    {challengeWidget.isUpcoming ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 16px', gap: 4 }}>
+                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.33rem', color: '#555', letterSpacing: '2px' }}>STARTS IN</div>
+                                            <div style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', fontWeight: 900, color: '#c5a059', letterSpacing: '3px' }}>{challengeWidget.startDate}</div>
                                         </div>
+                                    ) : (
+                                        <>
+                                            <div style={{ display: 'flex', gap: 0, padding: '0 12px' }}>
+                                                {[
+                                                    { val: challengeWidget.activeCount, lbl: 'STILL IN', c: '#4ade80' },
+                                                    { val: challengeWidget.totalCount - challengeWidget.activeCount, lbl: 'ELIMINATED', c: '#e03030' },
+                                                    { val: challengeWidget.totalCount, lbl: 'TOTAL', c: '#888' },
+                                                ].map(s => (
+                                                    <div key={s.lbl} style={{ flex: 1, textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.3rem', fontWeight: 700, color: s.c }}>{s.val}</div>
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.33rem', color: '#444', letterSpacing: '1px', marginTop: 3 }}>{s.lbl}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {challengeWidget.leader && (
+                                                <div style={{ margin: '0 12px', padding: '8px 12px', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.33rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>LEADING</div>
+                                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#c5a059' }}>♛ {challengeWidget.leader}</div>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
-                                    <div style={{ margin: '0 12px', padding: '9px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 6, fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#4ade80', letterSpacing: '2px', textAlign: 'center' }}>
+                                    <div style={{ margin: '0 12px', padding: '9px', background: challengeWidget.isUpcoming ? 'rgba(197,160,89,0.08)' : 'rgba(74,222,128,0.08)', border: `1px solid ${challengeWidget.isUpcoming ? 'rgba(197,160,89,0.2)' : 'rgba(74,222,128,0.2)'}`, borderRadius: 6, fontFamily: 'Orbitron', fontSize: '0.4rem', color: challengeWidget.isUpcoming ? '#c5a059' : '#4ade80', letterSpacing: '2px', textAlign: 'center' }}>
                                         OPEN CHALLENGE PANEL ↗
                                     </div>
                                 </div>
