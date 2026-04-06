@@ -146,5 +146,23 @@ export async function POST(req: Request) {
     });
 
     if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
+
+    // Also post a card to global chat
+    try {
+        const { data: prof } = await supabaseAdmin
+            .from('profiles').select('name, avatar_url').ilike('member_id', senderEmail).maybeSingle();
+        await supabaseAdmin.from('global_messages').insert({
+            sender_email: 'system',
+            sender_name: 'SYSTEM',
+            sender_avatar: null,
+            message: `UPDATE_PHOTO_CARD::${JSON.stringify({
+                senderName: (prof as any)?.name || senderEmail.split('@')[0],
+                senderAvatar: (prof as any)?.avatar_url || null,
+                mediaUrl: urlData.publicUrl,
+                caption,
+            })}`,
+        });
+    } catch (_) {}
+
     return NextResponse.json({ success: true, url: urlData.publicUrl });
 }

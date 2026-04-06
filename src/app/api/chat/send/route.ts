@@ -127,6 +127,25 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: `Failed to store message: ${msgErr.message}` }, { status: 500 });
         }
 
+        // When a tribute/wishlist is sent, also post a card to global chat
+        if (type === 'wishlist' && !msgErr) {
+            try {
+                const meta = metadata || {};
+                await adminClient.from('global_messages').insert({
+                    sender_email: 'system',
+                    sender_name: 'SYSTEM',
+                    sender_avatar: null,
+                    message: `UPDATE_TRIBUTE_CARD::${JSON.stringify({
+                        senderName: profile?.name || senderEmail.split('@')[0],
+                        senderAvatar: profile?.avatar_url || null,
+                        title: meta.title || content,
+                        image: meta.image || null,
+                        price: meta.price || 0,
+                    })}`,
+                });
+            } catch (_) {}
+        }
+
         if (isQueen && conversationId) {
             try {
                 await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com'}/api/push`, {

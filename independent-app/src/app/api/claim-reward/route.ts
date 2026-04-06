@@ -41,6 +41,24 @@ export async function POST(req: Request) {
         const logMsg = choice === 'coins' ? `REWARD CLAIMED (+${COIN_REWARD} <i class="fas fa-coins" style="color:#c5a059;"></i>)` : `REWARD CLAIMED (+${POINT_REWARD} MERIT)`;
         try { await DbService.sendMessage(memberEmail, logMsg, 'system'); } catch (_) { }
 
+        // Post merit card to global chat
+        if (choice === 'points') {
+            try {
+                const { data: prof } = await supabaseAdmin
+                    .from('profiles').select('name, avatar_url').ilike('member_id', memberEmail).maybeSingle();
+                await supabaseAdmin.from('global_messages').insert({
+                    sender_email: 'system',
+                    sender_name: 'SYSTEM',
+                    sender_avatar: null,
+                    message: `UPDATE_MERIT_CARD::${JSON.stringify({
+                        senderName: (prof as any)?.name || memberEmail.split('@')[0],
+                        senderAvatar: (prof as any)?.avatar_url || null,
+                        points: POINT_REWARD,
+                    })}`,
+                });
+            } catch (_) {}
+        }
+
         return NextResponse.json({ success: true, ...updateData });
 
     } catch (err: any) {

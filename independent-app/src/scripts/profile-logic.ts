@@ -2897,7 +2897,7 @@ function _buildMobGlBubble(msg: any): string {
                             <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(74,222,128,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div>
                             <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:3px 12px;">
                                 <span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span>
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#4ade80;letter-spacing:2px;">ACTIVE USERS: ${d.activeCount||0}</span>
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#4ade80;letter-spacing:2px;">IN CHALLENGE: ${d.activeCount||0}</span>
                             </div>
                         </div>
                     </div>
@@ -2967,6 +2967,79 @@ function _buildMobGlBubble(msg: any): string {
             ${quoteHtml}<span style="font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</span>
             ${mediaHtml}
         </div>`;
+    }
+
+    // UPDATE PHOTO CARD
+    if (content.startsWith('UPDATE_PHOTO_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('UPDATE_PHOTO_CARD::', ''));
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.2);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+                        <img src="${d.mediaUrl}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'">
+                        <div style="padding:10px 14px 12px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;">
+                                <span style="font-family:'Cinzel';font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</span>
+                                <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);">${time}</span>
+                            </div>
+                            ${d.caption ? `<div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:3px;">${d.caption}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
+    // UPDATE TRIBUTE CARD
+    if (content.startsWith('UPDATE_TRIBUTE_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('UPDATE_TRIBUTE_CARD::', ''));
+            const tInitial = (d.senderName || 'S')[0].toUpperCase();
+            const coverSrc = d.image || d.senderAvatar || '';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+                        <div style="width:100%;height:130px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
+                            ${coverSrc ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none'">` : ''}
+                            <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:2.5rem;color:rgba(197,160,89,0.4);">${tInitial}</div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div>
+                            <div style="position:absolute;bottom:10px;left:14px;font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div>
+                        </div>
+                        <div style="padding:10px 14px 12px;">
+                            <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${d.title||''}</div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+                                <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.55);letter-spacing:1px;">${d.senderName||''}</span>
+                                <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);">${time}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
+    // UPDATE MERIT CARD
+    if (content.startsWith('UPDATE_MERIT_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
+            const mInitial = (d.senderName || 'S')[0].toUpperCase();
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-sizing:border-box;">
+                        <div style="width:42px;height:42px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
+                            ${d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : ''}
+                            <div style="display:${d.senderAvatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${mInitial}</div>
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-family:'Orbitron';font-size:0.4rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:2px;">⚡ MERIT EARNED</div>
+                            <div style="font-family:'Cinzel';font-size:0.8rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div>
+                            <div style="font-family:'Orbitron';font-size:0.82rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${d.points||0} MERIT</div>
+                        </div>
+                        <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.35);flex-shrink:0;align-self:flex-start;">${time}</div>
+                    </div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
     }
 
     const contentEl = `<span class="mob-gl-talk-content">${content}</span>`;
