@@ -347,6 +347,9 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
 }) {
     const [verifying, setVerifying] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(true);
+    const [addEmail, setAddEmail] = useState('');
+    const [addingParticipant, setAddingParticipant] = useState(false);
+    const [addMsg, setAddMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
     if (loading && !detail) {
         return <div className="ch-empty">LOADING CHALLENGE DATA...</div>;
@@ -394,6 +397,29 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
     const daysLeft = challenge.end_date
         ? Math.max(0, Math.ceil((new Date(challenge.end_date).getTime() - Date.now()) / 86400000))
         : null;
+
+    const handleAddParticipant = async () => {
+        if (!addEmail.trim()) return;
+        setAddingParticipant(true);
+        try {
+            const res = await fetch(`/api/challenges/${detail.challenge.id}/participants`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: addEmail.trim().toLowerCase(), waive_fee: true }),
+            });
+            const json = await res.json();
+            if (json.success) {
+                setAddMsg({ text: `Added ${addEmail}`, ok: true });
+                setAddEmail('');
+                onRefresh();
+            } else {
+                setAddMsg({ text: json.error || 'Failed', ok: false });
+            }
+        } finally {
+            setAddingParticipant(false);
+            setTimeout(() => setAddMsg(null), 3000);
+        }
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -523,6 +549,23 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                             </div>
                         </div>
                     )}
+
+                    {/* Add Participant */}
+                    <div style={{ marginBottom: 20, display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <input
+                            type="email"
+                            placeholder="Add participant by email..."
+                            value={addEmail}
+                            onChange={e => setAddEmail(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleAddParticipant()}
+                            style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, color: '#ddd', fontFamily: 'Cinzel, serif', fontSize: '0.78rem', padding: '9px 14px', outline: 'none' }}
+                        />
+                        <button onClick={handleAddParticipant} disabled={addingParticipant || !addEmail.trim()}
+                            style={{ padding: '9px 18px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8, color: '#c5a059', fontFamily: 'Cinzel, serif', fontSize: '0.72rem', cursor: 'pointer', flexShrink: 0 }}>
+                            {addingParticipant ? '...' : '+ Add'}
+                        </button>
+                        {addMsg && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: addMsg.ok ? '#4ade80' : '#e03030' }}>{addMsg.text}</span>}
+                    </div>
 
                     {/* TWO-COLUMN: TASKS + LEADERBOARD */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, alignItems: 'start' }}>
@@ -1369,7 +1412,7 @@ function EditChallengeModal({ challenge, onClose, onSave }: {
         if (!form.name) return;
         setSaving(true);
         try {
-            await onSave({
+            const updates: Record<string, any> = {
                 name: form.name,
                 description: form.description,
                 theme: form.theme,
@@ -1381,9 +1424,13 @@ function EditChallengeModal({ challenge, onClose, onSave }: {
                 first_place_points: Number(form.first_place_points),
                 second_place_points: Number(form.second_place_points),
                 third_place_points: Number(form.third_place_points),
-                start_date: form.start_date ? new Date(form.start_date).toISOString() : challenge.start_date,
-                end_date: form.end_date ? new Date(form.end_date).toISOString() : challenge.end_date,
-            });
+            };
+            // Only update dates if challenge is not currently active (prevents disrupting live windows)
+            if (challenge.status !== 'active') {
+                updates.start_date = form.start_date ? new Date(form.start_date).toISOString() : challenge.start_date;
+                updates.end_date = form.end_date ? new Date(form.end_date).toISOString() : challenge.end_date;
+            }
+            await onSave(updates);
         } finally { setSaving(false); }
     };
 

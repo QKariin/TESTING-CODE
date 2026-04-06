@@ -105,6 +105,9 @@ export default function ProfilePage() {
     const [allChallenges, setAllChallenges] = useState<any[]>([]);
     const [challengeCounts, setChallengeCounts] = useState({ pending: 0, yours: 0 });
     const [challengeWindowAlert, setChallengeWindowAlert] = useState<{ window: any; challenge: any } | null>(null);
+    const alertFileInputRef = useRef<HTMLInputElement>(null);
+    const [alertUploading, setAlertUploading] = useState(false);
+    const [alertUploadDone, setAlertUploadDone] = useState(false);
     const [mobOverlayOpen, setMobOverlayOpen] = useState(false);
     const [nextChallengeWindowTs, setNextChallengeWindowTs] = useState<number | null>(null);
 
@@ -423,7 +426,7 @@ export default function ProfilePage() {
             } catch {}
         }
         checkChallenge();
-        const t = setInterval(checkChallenge, 30000);
+        const t = setInterval(checkChallenge, 5000);
         return () => clearInterval(t);
     }, []);
 
@@ -473,6 +476,32 @@ export default function ProfilePage() {
             };
         }
     }, [loading]);
+
+    const handleAlertUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !challengeWindowAlert) return;
+        setAlertUploading(true);
+        if (alertFileInputRef.current) alertFileInputRef.current.value = '';
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('window_id', challengeWindowAlert.window.id);
+            fd.append('member_email', profile?.memberId || profile?.member_id || profile?.email || '');
+            const res = await fetch(`/api/challenges/${challengeWindowAlert.challenge?.id}/submit`, {
+                method: 'POST',
+                body: fd,
+            });
+            const json = await res.json();
+            if (json.success) {
+                setAlertUploadDone(true);
+                setTimeout(() => {
+                    setChallengeWindowAlert(null);
+                    setAlertUploadDone(false);
+                }, 2000);
+            }
+        } catch (_) {}
+        finally { setAlertUploading(false); }
+    };
 
     if (loading) return (
         <div id="loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: 'var(--gold)', fontFamily: 'Cinzel' }}>
@@ -1842,11 +1871,13 @@ export default function ProfilePage() {
                         </div>
 
                         {/* Buttons */}
+                        <input ref={alertFileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleAlertUpload} />
                         <div style={{ display: 'flex', gap: 10 }}>
                             <button
-                                onClick={() => { setChallengeWindowAlert(null); setChallengePanelOpen(true); setChallengePanelId(challengeWindowAlert.challenge?.id || null); }}
-                                style={{ flex: 1, padding: '12px 0', background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.5)', borderRadius: 10, fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, color: '#4ade80', letterSpacing: '1.5px', cursor: 'pointer' }}
-                            >UPLOAD PROOF</button>
+                                onClick={() => alertFileInputRef.current?.click()}
+                                disabled={alertUploading || alertUploadDone}
+                                style={{ flex: 1, padding: '12px 0', background: alertUploadDone ? 'rgba(74,222,128,0.25)' : 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.5)', borderRadius: 10, fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, color: '#4ade80', letterSpacing: '1.5px', cursor: alertUploading || alertUploadDone ? 'default' : 'pointer' }}
+                            >{alertUploadDone ? '✓ SUBMITTED' : alertUploading ? 'UPLOADING...' : '⬆ UPLOAD PROOF'}</button>
                             <button
                                 onClick={() => setChallengeWindowAlert(null)}
                                 style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', cursor: 'pointer' }}
@@ -1930,6 +1961,8 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
     const [data, setData] = useState<{ challenge: any; windows: any[]; completions: any[]; participant: any | null } | null>(null);
     const [uploading, setUploading] = useState<string | null>(null);
     const [joining, setJoining] = useState(false);
+    const [rejoining, setRejoining] = useState(false);
+    const [rejoinMsg, setRejoinMsg] = useState('');
     const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const pendingWindowRef = useRef<string | null>(null);
@@ -1967,6 +2000,27 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                 showToast(json.error || 'Could not join', false);
             }
         } finally { setJoining(false); }
+    };
+
+    const handleRejoin = async () => {
+        setRejoining(true);
+        try {
+            const res = await fetch(`/api/challenges/${challengeId}/rejoin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ member_email: memberEmail }),
+            });
+            const json = await res.json();
+            if (json.success) {
+                setRejoinMsg(json.coins_charged ? `✓ Back in! ${json.coins_charged} coins charged.` : '✓ Rejoined!');
+                load();
+            } else {
+                setRejoinMsg(json.error || 'Could not rejoin');
+            }
+        } finally {
+            setRejoining(false);
+            setTimeout(() => setRejoinMsg(''), 4000);
+        }
     };
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2160,6 +2214,19 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                                         </div>
                                     );
                                 })}
+                            </div>
+                        )}
+
+                        {/* Eliminated — rejoin option */}
+                        {data.participant?.status === 'eliminated' && (
+                            <div style={{ textAlign: 'center', padding: '20px 0 24px' }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#e03030', letterSpacing: '2px', marginBottom: 8 }}>✗ ELIMINATED</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555', marginBottom: 20 }}>Pay 1,000 coins to rejoin the challenge</div>
+                                <button onClick={handleRejoin} disabled={rejoining}
+                                    style={{ padding: '11px 28px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.4)', borderRadius: 10, color: '#c5a059', fontFamily: 'Cinzel, serif', fontSize: '0.75rem', fontWeight: 700, cursor: rejoining ? 'default' : 'pointer', letterSpacing: '1px' }}>
+                                    {rejoining ? 'Processing...' : '↩ Rejoin · 1,000 coins'}
+                                </button>
+                                {rejoinMsg && <div style={{ marginTop: 10, fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: rejoinMsg.startsWith('✓') ? '#4ade80' : '#e03030' }}>{rejoinMsg}</div>}
                             </div>
                         )}
 
