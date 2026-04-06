@@ -20,6 +20,7 @@ interface Window_ {
     day_number: number; window_number: number;
     opens_at: string; closes_at: string;
     verification_code: number;
+    task_name?: string | null;
 }
 
 interface LeaderboardEntry {
@@ -345,6 +346,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
     onRefresh: () => void;
 }) {
     const [verifying, setVerifying] = useState<string | null>(null);
+    const [drawerOpen, setDrawerOpen] = useState(true);
 
     if (loading && !detail) {
         return <div className="ch-empty">LOADING CHALLENGE DATA...</div>;
@@ -389,226 +391,224 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
     const totalCount = leaderboard.length;
     const openWindows = windows.filter(w => windowIsOpen(w));
     const currentWindow = openWindows[0] || null;
-
     const daysLeft = challenge.end_date
         ? Math.max(0, Math.ceil((new Date(challenge.end_date).getTime() - Date.now()) / 86400000))
         : null;
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-            {/* HEADER */}
-            <div className="ch-section-header">
-                <div>
-                    <div className="ch-section-title" style={{ color }}>{challenge.name}</div>
-                    <div className="ch-section-sub">
-                        {challenge.status === 'active' ? `${daysLeft} days remaining · ${challenge.tasks_per_day}×/day · ${challenge.window_minutes}min windows` : challenge.status.toUpperCase()}
-                    </div>
-                </div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                    <button className="ch-action-btn gold" style={{ padding: '8px 20px', fontSize: '0.45rem', letterSpacing: '2px' }} onClick={() => onEdit(challenge)}>
-                        ✎ EDIT
-                    </button>
-                    {challenge.status === 'draft' && (
-                        <button className="ch-action-btn green" style={{ padding: '8px 20px', fontSize: '0.45rem', letterSpacing: '2px' }} onClick={onLaunch}>
-                            ▶ LAUNCH
-                        </button>
-                    )}
-                    {challenge.status === 'active' && (
-                        <button className="ch-action-btn red" style={{ padding: '8px 20px', fontSize: '0.45rem', letterSpacing: '2px' }} onClick={onEnd}>
-                            ■ END CHALLENGE
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* BANNER */}
-            <div className="ch-active-banner" style={{ borderColor: `${color}44`, background: challenge.image_url ? undefined : `linear-gradient(135deg, ${color}08, rgba(0,0,0,0.3))`, overflow: 'hidden', position: 'relative' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* CHALLENGE CARD — clickable to toggle drawer */}
+            <div
+                className="ch-card"
+                onClick={() => setDrawerOpen(o => !o)}
+                style={{
+                    display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px',
+                    cursor: 'pointer', borderColor: `${color}44`,
+                    background: challenge.image_url ? 'rgba(0,0,0,0.6)' : `linear-gradient(135deg, ${color}08, rgba(0,0,0,0.4))`,
+                    position: 'relative', overflow: 'hidden',
+                    transition: 'border-color 0.2s',
+                }}
+            >
                 {challenge.image_url && (
-                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${challenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18, zIndex: 0 }} />
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${challenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.15, zIndex: 0 }} />
                 )}
-                {challenge.status === 'active' && <div className="ch-active-dot" style={{ background: color, boxShadow: `0 0 10px ${color}`, position: 'relative', zIndex: 1 }} />}
-                <div className="ch-active-info" style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
                     {challenge.image_url && (
-                        <img src={challenge.image_url} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 10, border: `1px solid ${color}44`, flexShrink: 0 }} alt="" />
+                        <img src={challenge.image_url} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, border: `1px solid ${color}44`, flexShrink: 0 }} alt="" />
                     )}
-                    <div>
-                    <div className="ch-active-name">{challenge.name}</div>
-                    {challenge.description && <div className="ch-active-meta">{challenge.description}</div>}
-                    {currentWindow && (
-                        <div style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: `${color}15`, border: `1px solid ${color}44`, borderRadius: 20 }}>
-                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, animation: 'pulse 1.5s infinite' }} />
-                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color, letterSpacing: '1px' }}>
-                                WINDOW OPEN · Day {currentWindow.day_number} Task {currentWindow.window_number}
-                            </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                            {challenge.status === 'active' && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 8px ${color}`, flexShrink: 0, animation: 'pulse 1.5s infinite' }} />}
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{challenge.name}</div>
+                            {currentWindow && (
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color, background: `${color}18`, border: `1px solid ${color}44`, borderRadius: 20, padding: '2px 8px', flexShrink: 0 }}>
+                                    WINDOW OPEN · D{currentWindow.day_number}T{currentWindow.window_number}
+                                </span>
+                            )}
                         </div>
-                    )}
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px' }}>
+                            {challenge.status === 'active' ? `${daysLeft}d left · ${challenge.tasks_per_day}×/day · ${challenge.window_minutes}min windows` : challenge.status.toUpperCase()}
+                        </div>
                     </div>
-                </div>
-                <div className="ch-stats-row">
-                    {[
-                        { val: activeCount, lbl: 'STILL IN', color: '#4ade80' },
-                        { val: elimCount, lbl: 'ELIMINATED', color: '#e03030' },
-                        { val: totalCount, lbl: 'TOTAL', color: '#aaa' },
-                    ].map(s => (
-                        <div key={s.lbl} className="ch-stat-item">
-                            <div className="ch-stat-val" style={{ color: s.color }}>{s.val}</div>
-                            <div className="ch-stat-lbl">{s.lbl}</div>
-                        </div>
-                    ))}
+                    <div style={{ display: 'flex', gap: 20, flexShrink: 0, position: 'relative', zIndex: 1 }}>
+                        {[
+                            { val: activeCount, lbl: 'IN', color: '#4ade80' },
+                            { val: elimCount, lbl: 'OUT', color: '#e03030' },
+                            { val: totalCount, lbl: 'TOTAL', color: '#666' },
+                        ].map(s => (
+                            <div key={s.lbl} style={{ textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1.1rem', fontWeight: 700, color: s.color }}>{s.val}</div>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: '#444', letterSpacing: '1px' }}>{s.lbl}</div>
+                            </div>
+                        ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexShrink: 0, position: 'relative', zIndex: 2 }} onClick={e => e.stopPropagation()}>
+                        <button className="ch-action-btn gold" style={{ padding: '6px 14px', fontSize: '0.4rem', letterSpacing: '1.5px' }} onClick={() => onEdit(challenge)}>✎ EDIT</button>
+                        {challenge.status === 'draft' && (
+                            <button className="ch-action-btn green" style={{ padding: '6px 14px', fontSize: '0.4rem' }} onClick={onLaunch}>▶ LAUNCH</button>
+                        )}
+                        {challenge.status === 'active' && (
+                            <button className="ch-action-btn red" style={{ padding: '6px 14px', fontSize: '0.4rem' }} onClick={onEnd}>■ END</button>
+                        )}
+                    </div>
+                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: '#444', flexShrink: 0 }}>{drawerOpen ? '▲' : '▼'}</div>
                 </div>
             </div>
 
-            {/* PENDING VERIFICATIONS */}
-            {pending_verifications.length > 0 && (
-                <div>
-                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#ff8c42', letterSpacing: '2px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff8c42', animation: 'pulse 1.5s infinite' }} />
-                        {pending_verifications.length} PENDING VERIFICATION{pending_verifications.length !== 1 ? 'S' : ''}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                        {pending_verifications.map(pv => {
-                            const w = pv.challenge_windows;
-                            const prof = pv.profiles;
-                            const avatar = prof?.avatar_url || prof?.profile_picture_url;
-                            const isOpen = w ? (Date.now() < new Date(w.closes_at).getTime()) : false;
-                            return (
-                                <div key={pv.id} className="ch-card" style={{ padding: '20px 24px', display: 'flex', gap: 20, alignItems: 'flex-start', borderColor: 'rgba(255,140,66,0.25)' }}>
-                                    {/* User */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, width: 72 }}>
-                                        <img src={avatar || '/queen-karin.png'} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.3)' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: '#ddd', textAlign: 'center', wordBreak: 'break-word' }}>{prof?.name || pv.member_id}</div>
-                                        {pv.response_time_seconds !== null && (
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#4ade80' }}>{fmtSeconds(pv.response_time_seconds)}</div>
-                                        )}
-                                    </div>
-
-                                    {/* Window info + code */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-                                        {w && (
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#666', letterSpacing: '1px' }}>
-                                                DAY {w.day_number} · TASK {w.window_number}
-                                                {!isOpen && <span style={{ marginLeft: 8, color: '#e03030' }}>WINDOW CLOSED</span>}
+            {/* DRAWER CONTENT */}
+            {drawerOpen && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    {/* PENDING VERIFICATIONS */}
+                    {pending_verifications.length > 0 && (
+                        <div>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#ff8c42', letterSpacing: '2px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff8c42', animation: 'pulse 1.5s infinite' }} />
+                                {pending_verifications.length} PENDING VERIFICATION{pending_verifications.length !== 1 ? 'S' : ''}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                {pending_verifications.map(pv => {
+                                    const w = pv.challenge_windows;
+                                    const prof = pv.profiles;
+                                    const avatar = prof?.avatar_url || prof?.profile_picture_url;
+                                    const isOpen = w ? (Date.now() < new Date(w.closes_at).getTime()) : false;
+                                    return (
+                                        <div key={pv.id} className="ch-card" style={{ padding: '20px 24px', display: 'flex', gap: 20, alignItems: 'flex-start', borderColor: 'rgba(255,140,66,0.25)' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, width: 72 }}>
+                                                <img src={avatar || '/queen-karin.png'} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.3)' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: '#ddd', textAlign: 'center', wordBreak: 'break-word' }}>{prof?.name || pv.member_id}</div>
+                                                {pv.response_time_seconds !== null && (
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#4ade80' }}>{fmtSeconds(pv.response_time_seconds)}</div>
+                                                )}
                                             </div>
-                                        )}
-                                        {w && (
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '2.8rem', fontWeight: 900, color, letterSpacing: '8px', lineHeight: 1 }}>
-                                                {w.verification_code}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+                                                {w && (
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#666', letterSpacing: '1px' }}>
+                                                        DAY {w.day_number} · TASK {w.window_number}
+                                                        {!isOpen && <span style={{ marginLeft: 8, color: '#e03030' }}>WINDOW CLOSED</span>}
+                                                    </div>
+                                                )}
+                                                {w && (
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '2.8rem', fontWeight: 900, color, letterSpacing: '8px', lineHeight: 1 }}>
+                                                        {w.verification_code}
+                                                    </div>
+                                                )}
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#555', letterSpacing: '1px' }}>EXPECTED CODE</div>
                                             </div>
-                                        )}
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#555', letterSpacing: '1px' }}>EXPECTED CODE</div>
-                                    </div>
-
-                                    {/* Proof photo */}
-                                    {pv.proof_url && (
-                                        <div style={{ flexShrink: 0 }}>
-                                            <a href={pv.proof_url} target="_blank" rel="noreferrer">
-                                                <img src={pv.proof_url} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', display: 'block' }} alt="proof" />
-                                            </a>
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: '#444', textAlign: 'center', marginTop: 4 }}>TAP TO ENLARGE</div>
+                                            {pv.proof_url && (
+                                                <div style={{ flexShrink: 0 }}>
+                                                    <a href={pv.proof_url} target="_blank" rel="noreferrer">
+                                                        <img src={pv.proof_url} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', display: 'block' }} alt="proof" />
+                                                    </a>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: '#444', textAlign: 'center', marginTop: 4 }}>TAP TO ENLARGE</div>
+                                                </div>
+                                            )}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                                                <button
+                                                    disabled={verifying === pv.id}
+                                                    onClick={async () => { setVerifying(pv.id); await onVerify(pv.id, true); setVerifying(null); }}
+                                                    style={{ padding: '10px 20px', background: verifying === pv.id ? '#1a1a1a' : 'rgba(74,222,128,0.1)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8, fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer', fontWeight: 700 }}>
+                                                    {verifying === pv.id ? '...' : '✓ VERIFY'}
+                                                </button>
+                                                <button
+                                                    disabled={verifying === pv.id}
+                                                    onClick={async () => { setVerifying(pv.id); await onVerify(pv.id, false); setVerifying(null); }}
+                                                    style={{ padding: '10px 20px', background: verifying === pv.id ? '#1a1a1a' : 'rgba(224,48,48,0.08)', color: '#e03030', border: '1px solid rgba(224,48,48,0.25)', borderRadius: 8, fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer', fontWeight: 700 }}>
+                                                    {verifying === pv.id ? '...' : '✕ REJECT'}
+                                                </button>
+                                                {!isOpen && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: '#e03030', textAlign: 'center', letterSpacing: '1px' }}>REJECT = ELIMINATE</div>}
+                                            </div>
                                         </div>
-                                    )}
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
-                                    {/* Actions */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
-                                        <button
-                                            disabled={verifying === pv.id}
-                                            onClick={async () => { setVerifying(pv.id); await onVerify(pv.id, true); setVerifying(null); }}
-                                            style={{ padding: '10px 20px', background: verifying === pv.id ? '#1a1a1a' : 'rgba(74,222,128,0.1)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8, fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer', fontWeight: 700 }}>
-                                            {verifying === pv.id ? '...' : '✓ VERIFY'}
-                                        </button>
-                                        <button
-                                            disabled={verifying === pv.id}
-                                            onClick={async () => { setVerifying(pv.id); await onVerify(pv.id, false); setVerifying(null); }}
-                                            style={{ padding: '10px 20px', background: verifying === pv.id ? '#1a1a1a' : 'rgba(224,48,48,0.08)', color: '#e03030', border: '1px solid rgba(224,48,48,0.25)', borderRadius: 8, fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer', fontWeight: 700 }}>
-                                            {verifying === pv.id ? '...' : '✕ REJECT'}
-                                        </button>
-                                        {!isOpen && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: '#e03030', textAlign: 'center', letterSpacing: '1px' }}>REJECT = ELIMINATE</div>}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                    {/* TWO-COLUMN: TASKS + LEADERBOARD */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, alignItems: 'start' }}>
+                        {/* LEFT — task schedule */}
+                        <WindowsManager
+                            windows={windows}
+                            challengeId={challenge.id}
+                            windowMinutes={challenge.window_minutes}
+                            tasksPerDay={challenge.tasks_per_day}
+                            taskNames={challenge.task_names || []}
+                            onRefresh={onRefresh}
+                        />
+
+                        {/* RIGHT — leaderboard */}
+                        <div>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px', marginBottom: 14 }}>
+                                LEADERBOARD — {leaderboard.length} PARTICIPANTS
+                            </div>
+                            <div className="ch-card" style={{ overflow: 'hidden' }}>
+                                <table className="ch-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>PARTICIPANT</th>
+                                            <th>STATUS</th>
+                                            <th>TASKS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {leaderboard.length === 0 && (
+                                            <tr><td colSpan={4} style={{ textAlign: 'center', color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', letterSpacing: '2px', padding: '32px' }}>NO PARTICIPANTS YET</td></tr>
+                                        )}
+                                        {leaderboard.map((p, i) => {
+                                            const isElim = p.status === 'eliminated';
+                                            const isChamp = p.status === 'champion';
+                                            const rank = isChamp ? 1 : (p.final_rank || (isElim ? null : i + 1));
+                                            return (
+                                                <tr key={p.member_id} style={{
+                                                    opacity: isElim ? 0.35 : 1,
+                                                    background: isChamp ? 'linear-gradient(90deg, rgba(197,160,89,0.12), transparent)' : undefined,
+                                                    borderLeft: isElim ? 'none' : `3px solid ${isChamp ? '#c5a059' : color}`,
+                                                }}>
+                                                    <td>
+                                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.9rem', fontWeight: 700, color: isChamp ? '#c5a059' : '#aaa' }}>
+                                                            {isChamp ? '♛' : (rank || '—')}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                            <img src={p.avatar || '/queen-karin.png'} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: isChamp ? '#c5a059' : '#ddd' }}>{p.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span className={`ch-status ${isElim ? 'ended' : 'active'}`} style={{ background: isChamp ? 'rgba(197,160,89,0.15)' : undefined, color: isChamp ? '#c5a059' : undefined, fontSize: '0.36rem' }}>
+                                                            {isChamp ? '♛' : isElim ? `ELIM D${p.eliminated_day}` : 'ACTIVE'}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ fontFamily: 'Orbitron, monospace', color: '#4ade80' }}>{p.completions_count}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
-
-            {/* TASK SCHEDULE MANAGER */}
-            <WindowsManager windows={windows} challengeId={challenge.id} windowMinutes={challenge.window_minutes} onRefresh={onRefresh} />
-
-            {/* LEADERBOARD */}
-            <div>
-                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px', marginBottom: 14 }}>
-                    LEADERBOARD — {leaderboard.length} PARTICIPANTS
-                </div>
-                <div className="ch-card" style={{ overflow: 'hidden' }}>
-                    <table className="ch-table">
-                        <thead>
-                            <tr>
-                                <th>RANK</th>
-                                <th>PARTICIPANT</th>
-                                <th>STATUS</th>
-                                <th>TASKS</th>
-                                <th>AVG SPEED</th>
-                                <th>ELIMINATED ON</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {leaderboard.length === 0 && (
-                                <tr><td colSpan={6} style={{ textAlign: 'center', color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', letterSpacing: '2px', padding: '32px' }}>NO PARTICIPANTS YET</td></tr>
-                            )}
-                            {leaderboard.map((p, i) => {
-                                const isElim = p.status === 'eliminated';
-                                const isChamp = p.status === 'champion';
-                                const rank = isChamp ? 1 : (p.final_rank || (isElim ? null : i + 1));
-                                return (
-                                    <tr key={p.member_id} style={{
-                                        opacity: isElim ? 0.35 : 1,
-                                        background: isChamp ? 'linear-gradient(90deg, rgba(197,160,89,0.12), transparent)' : undefined,
-                                        borderLeft: isElim ? 'none' : `3px solid ${isChamp ? '#c5a059' : color}`,
-                                    }}>
-                                        <td>
-                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.9rem', fontWeight: 700, color: isChamp ? '#c5a059' : '#aaa' }}>
-                                                {isChamp ? '♛' : (rank || '—')}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                <img src={p.avatar || '/queen-karin.png'} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                                                <span style={{ fontFamily: 'Cinzel, serif', color: isChamp ? '#c5a059' : '#ddd' }}>{p.name}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span className={`ch-status ${isElim ? 'ended' : 'active'}`} style={{ background: isChamp ? 'rgba(197,160,89,0.15)' : undefined, color: isChamp ? '#c5a059' : undefined }}>
-                                                {isChamp ? '♛ CHAMPION' : isElim ? 'ELIMINATED' : 'ACTIVE'}
-                                            </span>
-                                        </td>
-                                        <td style={{ fontFamily: 'Orbitron, monospace', color: '#4ade80' }}>{p.completions_count}</td>
-                                        <td style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: '#aaa' }}>{fmtSeconds(p.avg_response_seconds)}</td>
-                                        <td style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: '#e03030' }}>
-                                            {isElim && p.eliminated_day != null
-                                                ? `Day ${p.eliminated_day} · Task ${p.eliminated_window_num}`
-                                                : '—'}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     );
 }
 
 // ─── WINDOWS MANAGER ─────────────────────────────────────────────────────────
-function WindowsManager({ windows, challengeId, windowMinutes, onRefresh }: {
+function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, taskNames, onRefresh }: {
     windows: Window_[];
     challengeId: string;
     windowMinutes: number;
+    tasksPerDay: number;
+    taskNames: string[];
     onRefresh: () => void;
 }) {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState('');
+    const [editName, setEditName] = useState('');
     const [saving, setSaving] = useState<string | null>(null);
     const [pushing, setPushing] = useState<string | null>(null);
     const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
@@ -621,6 +621,11 @@ function WindowsManager({ windows, challengeId, windowMinutes, onRefresh }: {
         return acc;
     }, {} as Record<number, Window_[]>);
 
+    const getTaskName = (w: Window_) => {
+        const idx = (w.day_number - 1) * tasksPerDay + (w.window_number - 1);
+        return taskNames[idx] || '';
+    };
+
     const showMsg = (text: string, ok: boolean) => {
         setMsg({ text, ok });
         setTimeout(() => setMsg(null), 3000);
@@ -630,12 +635,14 @@ function WindowsManager({ windows, challengeId, windowMinutes, onRefresh }: {
         const d = new Date(w.opens_at);
         setEditDate(d.toISOString().slice(0, 10));
         setEditTime(d.toTimeString().slice(0, 5));
+        setEditName(getTaskName(w));
         setEditingId(w.id);
     };
 
     const saveEdit = async (w: Window_) => {
         setSaving(w.id);
         try {
+            // Save window time
             const opensAt = new Date(`${editDate}T${editTime}`);
             const closesAt = new Date(opensAt.getTime() + windowMinutes * 60 * 1000);
             const res = await fetch(`/api/challenges/windows/${w.id}`, {
@@ -644,13 +651,27 @@ function WindowsManager({ windows, challengeId, windowMinutes, onRefresh }: {
                 body: JSON.stringify({ opens_at: opensAt.toISOString(), closes_at: closesAt.toISOString() }),
             });
             const json = await res.json();
-            if (json.success) { showMsg('Saved', true); setEditingId(null); onRefresh(); }
-            else showMsg(json.error || 'Save failed', false);
+            if (!json.success) { showMsg(json.error || 'Save failed', false); return; }
+
+            // Save task name to challenge.task_names
+            const idx = (w.day_number - 1) * tasksPerDay + (w.window_number - 1);
+            const newNames = [...taskNames];
+            while (newNames.length <= idx) newNames.push('');
+            newNames[idx] = editName;
+            await fetch(`/api/challenges/${challengeId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_names: newNames }),
+            });
+
+            showMsg('Saved', true);
+            setEditingId(null);
+            onRefresh();
         } finally { setSaving(null); }
     };
 
     const pushNow = async (w: Window_) => {
-        if (!confirm(`Push Day ${w.day_number} · Task ${w.window_number} LIVE NOW? It will open immediately for all participants.`)) return;
+        if (!confirm(`Push Day ${w.day_number} · Task ${w.window_number} LIVE NOW?`)) return;
         setPushing(w.id);
         try {
             const res = await fetch(`/api/challenges/windows/${w.id}`, {
@@ -659,7 +680,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, onRefresh }: {
                 body: JSON.stringify({ push_now: true }),
             });
             const json = await res.json();
-            if (json.success) { showMsg(`Day ${w.day_number} · Task ${w.window_number} is NOW LIVE`, true); onRefresh(); }
+            if (json.success) { showMsg(`Day ${w.day_number} · Task ${w.window_number} is LIVE`, true); onRefresh(); }
             else showMsg(json.error || 'Push failed', false);
         } finally { setPushing(null); }
     };
@@ -684,72 +705,81 @@ function WindowsManager({ windows, challengeId, windowMinutes, onRefresh }: {
                             const isPushing = pushing === w.id;
                             const opensDate = new Date(w.opens_at);
                             const closesDate = new Date(w.closes_at);
+                            const taskName = getTaskName(w);
 
                             return (
                                 <div key={w.id} style={{
-                                    display: 'flex', alignItems: 'center', gap: 14, padding: '12px 20px',
                                     borderBottom: '1px solid rgba(255,255,255,0.04)',
                                     background: isOpen ? 'rgba(74,222,128,0.04)' : undefined,
-                                    opacity: isPast && !isOpen ? 0.4 : 1,
+                                    opacity: isPast && !isOpen ? 0.45 : 1,
                                 }}>
-                                    {/* Status dot */}
-                                    <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: isOpen ? '#4ade80' : isPast ? '#333' : '#c5a059', boxShadow: isOpen ? '0 0 8px rgba(74,222,128,0.8)' : 'none' }} />
-
-                                    {/* Task label */}
-                                    <div style={{ flexShrink: 0, minWidth: 60, fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: isOpen ? '#4ade80' : '#888', fontWeight: 700 }}>
-                                        TASK {w.window_number}
-                                    </div>
-
-                                    {/* Code */}
-                                    <div style={{ flexShrink: 0, fontFamily: 'Orbitron, monospace', fontSize: '0.72rem', color: '#c5a059', letterSpacing: '4px', fontWeight: 900, minWidth: 70 }}>
-                                        {w.verification_code}
-                                    </div>
-
-                                    {/* Time display or edit */}
-                                    {isEditing ? (
-                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
-                                            <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
-                                                style={{ background: '#111', border: '1px solid rgba(197,160,89,0.4)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', padding: '6px 10px', width: 140 }} />
-                                            <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)}
-                                                style={{ background: '#111', border: '1px solid rgba(197,160,89,0.4)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', padding: '6px 10px', width: 110 }} />
-                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555' }}>→ closes +{windowMinutes}m</span>
-                                            <button onClick={() => saveEdit(w)} disabled={isSaving}
-                                                style={{ padding: '6px 14px', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 6, color: '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', cursor: 'pointer' }}>
-                                                {isSaving ? '...' : '✓ SAVE'}
-                                            </button>
-                                            <button onClick={() => setEditingId(null)}
-                                                style={{ padding: '6px 12px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#555', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', cursor: 'pointer' }}>
-                                                ✕
-                                            </button>
+                                    {/* Main row */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px' }}>
+                                        <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: isOpen ? '#4ade80' : isPast ? '#333' : '#c5a059', boxShadow: isOpen ? '0 0 8px rgba(74,222,128,0.8)' : 'none' }} />
+                                        <div style={{ flexShrink: 0, width: 56, fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: isOpen ? '#4ade80' : '#777', fontWeight: 700 }}>
+                                            TASK {w.window_number}
                                         </div>
-                                    ) : (
-                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: isOpen ? '#4ade80' : isPast ? '#444' : '#aaa' }}>
+                                        <div style={{ flexShrink: 0, fontFamily: 'Orbitron, monospace', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '3px', fontWeight: 900, minWidth: 62 }}>
+                                            {w.verification_code}
+                                        </div>
+                                        <div style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: taskName ? '#ccc' : '#444', fontStyle: taskName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {taskName || 'no task description'}
+                                        </div>
+                                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: isOpen ? '#4ade80' : isPast ? '#444' : '#888' }}>
                                                 {opensDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} {opensDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
-                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#444' }}>→</span>
-                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555' }}>
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#333' }}>→</span>
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#444' }}>
                                                 {closesDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
-                                            {isOpen && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#4ade80', marginLeft: 4 }}>● LIVE</span>}
+                                            {isOpen && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#4ade80' }}>● LIVE</span>}
                                         </div>
-                                    )}
+                                        {!isEditing && (
+                                            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                                                {!isPast && (
+                                                    <button onClick={() => startEdit(w)}
+                                                        style={{ padding: '5px 12px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', letterSpacing: '1px', cursor: 'pointer' }}>
+                                                        ✎ EDIT
+                                                    </button>
+                                                )}
+                                                {!isOpen && !isPast && (
+                                                    <button onClick={() => pushNow(w)} disabled={isPushing}
+                                                        style={{ padding: '5px 12px', background: isPushing ? 'rgba(255,255,255,0.03)' : 'rgba(74,222,128,0.1)', border: `1px solid ${isPushing ? 'rgba(255,255,255,0.1)' : 'rgba(74,222,128,0.5)'}`, borderRadius: 6, color: isPushing ? '#555' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', fontWeight: 700, letterSpacing: '1px', cursor: isPushing ? 'default' : 'pointer' }}>
+                                                        {isPushing ? '...' : '⚡ NOW'}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
 
-                                    {/* Actions */}
-                                    {!isEditing && (
-                                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                                            {!isPast && (
-                                                <button onClick={() => startEdit(w)}
-                                                    style={{ padding: '6px 12px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', letterSpacing: '1px', cursor: 'pointer' }}>
-                                                    ✎ EDIT
+                                    {/* Edit panel — expands below row */}
+                                    {isEditing && (
+                                        <div style={{ padding: '0 20px 16px 36px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Task description (shown to participants)..."
+                                                    value={editName}
+                                                    onChange={e => setEditName(e.target.value)}
+                                                    style={{ flex: 1, minWidth: 220, background: '#0d0d0d', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 6, color: '#ddd', fontFamily: 'Cinzel, serif', fontSize: '0.8rem', padding: '8px 12px', outline: 'none' }}
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
+                                                    style={{ background: '#0d0d0d', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', padding: '6px 10px' }} />
+                                                <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)}
+                                                    style={{ background: '#0d0d0d', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', padding: '6px 10px' }} />
+                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#444' }}>closes +{windowMinutes}m</span>
+                                                <button onClick={() => saveEdit(w)} disabled={isSaving}
+                                                    style={{ padding: '6px 18px', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 6, color: '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', cursor: 'pointer', fontWeight: 700 }}>
+                                                    {isSaving ? 'SAVING...' : '✓ SAVE'}
                                                 </button>
-                                            )}
-                                            {!isOpen && !isPast && (
-                                                <button onClick={() => pushNow(w)} disabled={isPushing}
-                                                    style={{ padding: '6px 14px', background: isPushing ? 'rgba(255,255,255,0.03)' : 'rgba(74,222,128,0.1)', border: `1px solid ${isPushing ? 'rgba(255,255,255,0.1)' : 'rgba(74,222,128,0.5)'}`, borderRadius: 6, color: isPushing ? '#555' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '1px', cursor: isPushing ? 'default' : 'pointer' }}>
-                                                    {isPushing ? '...' : '⚡ PUSH NOW'}
+                                                <button onClick={() => setEditingId(null)}
+                                                    style={{ padding: '6px 12px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#555', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', cursor: 'pointer' }}>
+                                                    ✕
                                                 </button>
-                                            )}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
