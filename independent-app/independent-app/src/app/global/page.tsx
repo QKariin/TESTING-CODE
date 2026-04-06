@@ -217,7 +217,7 @@ export default function GlobalPage() {
                     </div>
 
                     {/* CHALLENGES */}
-                    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(74,222,128,0.03)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(74,222,128,0.03)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: '12px', overflow: 'hidden', flexShrink: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', borderBottom: '1px solid rgba(74,222,128,0.1)', flexShrink: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                 <div style={{ width: '3px', height: '14px', background: '#4ade80', borderRadius: '2px', marginRight: '8px' }}></div>
@@ -225,7 +225,7 @@ export default function GlobalPage() {
                             </div>
                             <a href="/dashboard/challenges" style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: 'rgba(74,222,128,0.5)', letterSpacing: '1px', textDecoration: 'none' }}>MANAGE ↗</a>
                         </div>
-                        <div id="globalPreview_challenges" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
+                        <div id="globalPreview_challenges"></div>
                     </div>
 
                 </div>
