@@ -775,33 +775,43 @@ export default function ProfilePage() {
                                     <div id="deskChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>—</div>
                                 </div>
                             </div>
-                            {/* Desktop challenge notice — only for non-participants */}
+                            {/* Challenge notice — full-width prominent banner */}
                             {activeChallenge && !isParticipant && (
-                                <div
-                                    onClick={() => setDesktopChallengeOpen(true)}
-                                    style={{
-                                        borderRadius: 0, padding: '12px 20px',
-                                        background: activeChallenge.status === 'active'
-                                            ? 'linear-gradient(135deg, rgba(74,222,128,0.09), rgba(74,222,128,0.04))'
-                                            : 'linear-gradient(135deg, rgba(197,160,89,0.09), rgba(197,160,89,0.04))',
-                                        borderBottom: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.2)' : 'rgba(197,160,89,0.2)'}`,
-                                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0,
-                                    }}
-                                >
-                                    <div style={{ width: 32, height: 32, borderRadius: 8, background: activeChallenge.status === 'active' ? 'rgba(74,222,128,0.12)' : 'rgba(197,160,89,0.1)', border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.25)' : 'rgba(197,160,89,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', flexShrink: 0 }}>⚔</div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', letterSpacing: '2px', marginBottom: 2 }}>
-                                            {activeChallenge.status === 'active' ? '⬤ CHALLENGE LIVE' : (() => {
-                                                if (!activeChallenge.start_date) return '◎ STARTING SOON';
-                                                const diff = Math.max(0, Math.floor((new Date(activeChallenge.start_date).getTime() - Date.now()) / 1000));
-                                                const h = Math.floor(diff / 3600);
-                                                const m = Math.floor((diff % 3600) / 60);
-                                                return `◎ STARTS IN ${h}h ${m}m`;
-                                            })()}
+                                <div style={{ flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                                    <div
+                                        onClick={() => setDesktopChallengeOpen(true)}
+                                        style={{
+                                            padding: '16px 20px',
+                                            background: activeChallenge.status === 'active'
+                                                ? 'linear-gradient(135deg, rgba(74,222,128,0.13), rgba(0,0,0,0.5))'
+                                                : 'linear-gradient(135deg, rgba(197,160,89,0.13), rgba(0,0,0,0.5))',
+                                            borderBottom: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.3)'}`,
+                                            borderTop: `2px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.5)'}`,
+                                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14,
+                                            boxShadow: activeChallenge.status === 'active' ? '0 4px 24px rgba(74,222,128,0.08)' : '0 4px 24px rgba(197,160,89,0.08)',
+                                        }}
+                                    >
+                                        <div style={{ fontSize: '1.4rem', flexShrink: 0 }}>⚔</div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', letterSpacing: '2.5px', marginBottom: 4 }}>
+                                                {activeChallenge.status === 'active' ? '⬤ CHALLENGE LIVE' : (() => {
+                                                    if (!activeChallenge.start_date) return '◎ STARTING SOON';
+                                                    const diff = Math.max(0, Math.floor((new Date(activeChallenge.start_date).getTime() - Date.now()) / 1000));
+                                                    const h = Math.floor(diff / 3600);
+                                                    const m = Math.floor((diff % 3600) / 60);
+                                                    return `◎ STARTS IN ${h}h ${m}m`;
+                                                })()}
+                                            </div>
+                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: '#fff', letterSpacing: '1px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
                                         </div>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
+                                        <div style={{
+                                            fontFamily: 'Orbitron', fontSize: '0.42rem', padding: '8px 18px', borderRadius: 8,
+                                            background: activeChallenge.status === 'active' ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.12)',
+                                            border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.4)'}`,
+                                            color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059',
+                                            letterSpacing: '1.5px', flexShrink: 0, fontWeight: 700,
+                                        }}>JOIN ›</div>
                                     </div>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', padding: '5px 14px', borderRadius: 6, border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.35)' : 'rgba(197,160,89,0.3)'}`, color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', letterSpacing: '1px', flexShrink: 0, fontWeight: 700 }}>JOIN ›</div>
                                 </div>
                             )}
                             <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 !important' }}>

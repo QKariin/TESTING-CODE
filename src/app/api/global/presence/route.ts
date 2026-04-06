@@ -29,6 +29,7 @@ export async function GET() {
             name: p.name || p.title,
             avatar: p.avatar_url || p.profile_picture_url || null,
             online: !!(p.last_active && p.last_active >= cutoff),
+            last_active: p.last_active || null,
         }));
 
     all.sort((a: { online: boolean }, b: { online: boolean }) => (b.online ? 1 : 0) - (a.online ? 1 : 0));

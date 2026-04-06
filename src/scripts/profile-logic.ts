@@ -1713,6 +1713,9 @@ export async function initChatSystem() {
     if (_chatPollInterval) clearInterval(_chatPollInterval);
     _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 4000);
 
+    // Refresh queen presence status every 60s
+    setInterval(() => _fetchQueenStatus(), 60000);
+
     // 4. Supabase realtime for tasks + profile stats (keep existing logic)
     getChatSupabase()
         .channel('tasks_updates_' + email)
@@ -1883,13 +1886,8 @@ export async function loadChatHistory(email: string) {
                 html = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO MESSAGES YET</div>`;
             }
 
-            // 4. Update Queen online status from last queen message
-            const myEmail = (getState().memberId || email).toLowerCase();
-            const lastQueenMsg = [...messages].reverse().find((m: any) => {
-                const s = (m.sender_email || m.sender || '').toLowerCase();
-                return s !== myEmail && s !== 'user' && s !== 'slave' && !isSystemMessage(m);
-            });
-            _updateQueenStatus(lastQueenMsg?.created_at || null);
+            // 4. Update Queen online status from real presence data
+            _fetchQueenStatus();
 
             ['chatContent', 'mob_chatContent'].forEach(id => {
                 const el = document.getElementById(id);
@@ -2083,14 +2081,16 @@ function appendSystemLog(msg: any) {
 }
 
 function _updateQueenStatus(lastSeenIso: string | null) {
-    const dot = document.getElementById('mobChatOnlineDot');
-    const txt = document.getElementById('mobChatStatusText2');
-    if (!txt) return;
+    const dots = [document.getElementById('mobChatOnlineDot'), document.getElementById('deskChatOnlineDot')];
+    const txts = [document.getElementById('mobChatStatusText2'), document.getElementById('deskChatStatusText')];
+
+    const setStatus = (color: string, text: string, showDot: boolean) => {
+        dots.forEach(d => { if (d) d.style.display = showDot ? 'block' : 'none'; });
+        txts.forEach(t => { if (t) { t.style.color = color; t.textContent = text; } });
+    };
 
     if (!lastSeenIso) {
-        if (dot) dot.style.display = 'none';
-        txt.style.color = '#555';
-        txt.textContent = 'OFFLINE';
+        setStatus('#555', '—', false);
         return;
     }
 
@@ -2100,24 +2100,29 @@ function _updateQueenStatus(lastSeenIso: string | null) {
     const days = Math.floor(diff / 86400000);
 
     if (mins < 5) {
-        // Online
-        if (dot) { dot.style.display = 'block'; }
-        txt.style.color = '#22c55e';
-        txt.textContent = 'ONLINE';
+        setStatus('#22c55e', 'ONLINE', true);
+    } else if (days >= 2) {
+        setStatus('#555', `LAST SEEN ${days}d AGO`, false);
+    } else if (days === 1) {
+        setStatus('#555', 'LAST SEEN YESTERDAY', false);
+    } else if (hours >= 1) {
+        setStatus('#555', `LAST SEEN ${hours}h AGO`, false);
     } else {
-        // Offline — show last seen
-        if (dot) dot.style.display = 'none';
-        txt.style.color = '#555';
-        if (days >= 2) {
-            txt.textContent = `${days}d AGO`;
-        } else if (days === 1) {
-            txt.textContent = 'YESTERDAY';
-        } else if (hours >= 1) {
-            txt.textContent = `${hours}h AGO`;
-        } else {
-            txt.textContent = `${mins}m AGO`;
-        }
+        setStatus('#555', `LAST SEEN ${mins}m AGO`, false);
     }
+}
+
+async function _fetchQueenStatus() {
+    try {
+        const res = await fetch('/api/global/presence', { cache: 'no-store' });
+        const data = await res.json();
+        const queenEntry = (data.all || []).find((u: any) =>
+            (u.name || '').toUpperCase().includes('QUEEN') || (u.name || '').toUpperCase().includes('KARIN')
+        );
+        if (queenEntry) {
+            _updateQueenStatus(queenEntry.last_active || null);
+        }
+    } catch {}
 }
 
 // Track timestamp of last rendered chat message for 5-min gap logic
