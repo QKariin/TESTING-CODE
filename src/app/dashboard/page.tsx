@@ -245,7 +245,7 @@ export default function DashboardPage() {
     const [activeLocks, setActiveLocks] = useState<{ paywall: boolean; silenced: boolean }>({ paywall: false, silenced: false });
     const [showLocksModal, setShowLocksModal] = useState(false);
     const [lockedUsers, setLockedUsers] = useState<any[]>([]);
-    const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null; isUpcoming?: boolean; startDate?: string } | null>(null);
+    const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null; isUpcoming?: boolean; startDate?: string; image_url?: string | null; description?: string; duration_days?: number; tasks_per_day?: number; window_minutes?: number; start_date_raw?: string } | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -277,6 +277,12 @@ export default function DashboardPage() {
                         totalCount: upcoming.participant_total || 0,
                         leader: null, isUpcoming: true,
                         startDate: `${h}h ${m}m`,
+                        image_url: upcoming.image_url || null,
+                        description: upcoming.description || '',
+                        duration_days: upcoming.duration_days,
+                        tasks_per_day: upcoming.tasks_per_day,
+                        window_minutes: upcoming.window_minutes,
+                        start_date_raw: upcoming.start_date,
                     });
                     return;
                 }
@@ -288,6 +294,11 @@ export default function DashboardPage() {
                     activeCount: active.participant_active || 0,
                     totalCount: active.participant_total || 0,
                     leader: leader?.name || null,
+                    image_url: active.image_url || null,
+                    description: active.description || '',
+                    duration_days: active.duration_days,
+                    tasks_per_day: active.tasks_per_day,
+                    window_minutes: active.window_minutes,
                 });
             } catch { /* silent */ }
         };
@@ -648,53 +659,54 @@ export default function DashboardPage() {
                         {/* CHALLENGES WIDGET */}
                         <div className="v-gauge-card glass-card span-1"
                             onClick={() => window.location.href = '/dashboard/challenges'}
-                            style={{ border: `1px solid ${challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)'}`, cursor: 'pointer', transition: 'border-color 0.2s', background: challengeWidget ? (challengeWidget.isUpcoming ? 'linear-gradient(135deg,rgba(197,160,89,0.05),rgba(0,0,0,0.3))' : 'linear-gradient(135deg,rgba(74,222,128,0.04),rgba(0,0,0,0.3))') : undefined }}
+                            style={{ border: `1px solid ${challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)'}`, cursor: 'pointer', transition: 'border-color 0.2s', padding: 0, overflow: 'hidden' }}
                             onMouseEnter={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.7)' : 'rgba(74,222,128,0.6)') : 'rgba(197,160,89,0.4)')}
                             onMouseLeave={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)')}>
-                            <div className="vg-header">
-                                <div className="vg-title" style={{ color: challengeWidget ? (challengeWidget.isUpcoming ? '#c5a059' : '#4ade80') : '#c5a059' }}>⚔ Challenges</div>
-                                <div className="vg-sub">{challengeWidget ? (challengeWidget.isUpcoming ? 'Starting Soon' : 'Live Challenge Active') : 'No Active Challenge'}</div>
+                            <div className="vg-header" style={{ padding: '12px 16px 10px' }}>
+                                <div className="vg-title" style={{ color: challengeWidget ? (challengeWidget.isUpcoming ? '#c5a059' : '#4ade80') : '#c5a059' }}>CHALLENGES</div>
+                                <div className="vg-sub" style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); window.location.href = '/dashboard/challenges'; }}>MANAGE ↗</div>
                             </div>
                             {challengeWidget ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '12px 0', gap: 14 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px' }}>
-                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: challengeWidget.isUpcoming ? '#c5a059' : '#4ade80', boxShadow: challengeWidget.isUpcoming ? '0 0 8px rgba(197,160,89,0.8)' : '0 0 8px rgba(74,222,128,0.8)', flexShrink: 0, animation: 'pulse 2s infinite' }} />
-                                        <div style={{ fontFamily: 'Cinzel', fontSize: '0.85rem', color: '#fff', letterSpacing: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{challengeWidget.name}</div>
-                                    </div>
-                                    {challengeWidget.isUpcoming ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 16px', gap: 4 }}>
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.33rem', color: '#555', letterSpacing: '2px' }}>STARTS IN</div>
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', fontWeight: 900, color: '#c5a059', letterSpacing: '3px' }}>{challengeWidget.startDate}</div>
+                                <div style={{ display: 'flex', gap: 0, borderTop: `1px solid ${challengeWidget.isUpcoming ? 'rgba(197,160,89,0.15)' : 'rgba(74,222,128,0.1)'}` }}>
+                                    {/* Image */}
+                                    <div style={{ width: 120, flexShrink: 0, position: 'relative', background: 'rgba(197,160,89,0.04)', minHeight: 200 }}>
+                                        {challengeWidget.image_url
+                                            ? <img src={challengeWidget.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0 }} alt={challengeWidget.name} />
+                                            : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', opacity: 0.15 }}>★</div>
+                                        }
+                                        <div style={{ position: 'absolute', top: 8, left: 8, borderRadius: 6, padding: '3px 8px', fontFamily: 'Orbitron', fontSize: '0.32rem', fontWeight: 700, letterSpacing: '1px', background: challengeWidget.isUpcoming ? 'rgba(251,191,36,0.9)' : 'rgba(74,222,128,0.9)', color: '#000' }}>
+                                            {challengeWidget.isUpcoming ? 'SOON' : 'LIVE'}
                                         </div>
-                                    ) : (
-                                        <>
-                                            <div style={{ display: 'flex', gap: 0, padding: '0 12px' }}>
-                                                {[
-                                                    { val: challengeWidget.activeCount, lbl: 'STILL IN', c: '#4ade80' },
-                                                    { val: challengeWidget.totalCount - challengeWidget.activeCount, lbl: 'ELIMINATED', c: '#e03030' },
-                                                    { val: challengeWidget.totalCount, lbl: 'TOTAL', c: '#888' },
-                                                ].map(s => (
-                                                    <div key={s.lbl} style={{ flex: 1, textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.3rem', fontWeight: 700, color: s.c }}>{s.val}</div>
-                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.33rem', color: '#444', letterSpacing: '1px', marginTop: 3 }}>{s.lbl}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            {challengeWidget.leader && (
-                                                <div style={{ margin: '0 12px', padding: '8px 12px', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.33rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>LEADING</div>
-                                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#c5a059' }}>♛ {challengeWidget.leader}</div>
+                                    </div>
+                                    {/* Info */}
+                                    <div style={{ flex: 1, padding: '14px 14px 12px', display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'space-between', minWidth: 0 }}>
+                                        <div>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.95rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>{challengeWidget.name}</div>
+                                            {challengeWidget.description && <div style={{ fontFamily: 'Cinzel', fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5, letterSpacing: '0.5px' }}>{challengeWidget.description}</div>}
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                            {[
+                                                { label: 'Days', val: String(challengeWidget.duration_days ?? '—') },
+                                                { label: 'Tasks a day', val: String(challengeWidget.tasks_per_day ?? '—') },
+                                                { label: 'Window', val: challengeWidget.window_minutes ? `${challengeWidget.window_minutes} min` : '—' },
+                                                { label: 'Still working', val: String(challengeWidget.activeCount) },
+                                                ...(challengeWidget.isUpcoming && challengeWidget.start_date_raw ? [{ label: 'Starts', val: new Date(challengeWidget.start_date_raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }] : []),
+                                                ...(!challengeWidget.isUpcoming ? [{ label: 'Eliminated', val: String(challengeWidget.totalCount - challengeWidget.activeCount) }] : []),
+                                            ].map(({ label, val }) => (
+                                                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.38)' }}>{label}</span>
+                                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(197,160,89,0.9)', fontWeight: 700 }}>{val}</span>
                                                 </div>
-                                            )}
-                                        </>
-                                    )}
-                                    <div style={{ margin: '0 12px', padding: '9px', background: challengeWidget.isUpcoming ? 'rgba(197,160,89,0.08)' : 'rgba(74,222,128,0.08)', border: `1px solid ${challengeWidget.isUpcoming ? 'rgba(197,160,89,0.2)' : 'rgba(74,222,128,0.2)'}`, borderRadius: 6, fontFamily: 'Orbitron', fontSize: '0.4rem', color: challengeWidget.isUpcoming ? '#c5a059' : '#4ade80', letterSpacing: '2px', textAlign: 'center' }}>
-                                        OPEN CHALLENGE PANEL ↗
+                                            ))}
+                                        </div>
+                                        <div style={{ padding: '7px 0', borderRadius: 8, background: 'linear-gradient(135deg,#c5a059 0%,#8b6914 100%)', color: '#000', fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, letterSpacing: '1px', textAlign: 'center', boxShadow: '0 4px 15px rgba(197,160,89,0.3)' }}>
+                                            {challengeWidget.isUpcoming ? 'VIEW CHALLENGE' : 'MANAGE CHALLENGE'}
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: '20px 16px' }}>
-                                    <div style={{ fontSize: '2rem', opacity: 0.3 }}>⚔</div>
+                                    <div style={{ fontSize: '2rem', opacity: 0.3 }}>★</div>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#333', letterSpacing: '2px', textAlign: 'center' }}>NO ACTIVE CHALLENGE</div>
                                     <div style={{ padding: '8px 18px', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '2px' }}>CREATE ONE ↗</div>
                                 </div>
