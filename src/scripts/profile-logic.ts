@@ -3149,31 +3149,47 @@ async function _loadMobGlChallenges() {
             return;
         }
         container.innerHTML = all.map((c: any) => {
-            const isActive = c.status === 'active';
-            const color = isActive ? '#4ade80' : '#c5a059';
-            const bg = isActive ? 'rgba(74,222,128,0.06)' : 'rgba(197,160,89,0.05)';
-            const border = isActive ? 'rgba(74,222,128,0.2)' : 'rgba(197,160,89,0.2)';
-            let subText = '';
-            if (isActive) {
-                const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - now) / 86400000)) : null;
-                subText = `${daysLeft != null ? daysLeft + 'd left · ' : ''}${c.participant_active ?? 0} still in`;
-            } else {
-                const diff = Math.max(0, Math.floor((new Date(c.start_date).getTime() - now) / 1000));
-                const h = Math.floor(diff / 3600);
-                const m = Math.floor((diff % 3600) / 60);
-                subText = `Starts in ${h}h ${m}m · ${c.tasks_per_day}×/day`;
-            }
-            return `
-            <div onclick="(window._openChallengePanel||function(){})(event,'${c.id}')" style="margin:10px 12px;background:${bg};border:1px solid ${border};border-radius:14px;overflow:hidden;cursor:pointer;transition:opacity 0.15s;" onmousedown="this.style.opacity='0.8'" onmouseup="this.style.opacity='1'" ontouchstart="this.style.opacity='0.8'" ontouchend="this.style.opacity='1'">
-                ${c.image_url ? `<div style="width:100%;height:100px;overflow:hidden;position:relative;"><img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.75))"></div><div style="position:absolute;top:10px;left:12px;font-family:'Orbitron';font-size:0.32rem;color:${color};letter-spacing:2px;background:rgba(0,0,0,0.6);padding:3px 8px;border-radius:4px;border:1px solid ${border};">${isActive ? '⬤ LIVE' : '◎ COMING SOON'}</div></div>` : ''}
-                <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;">
-                    ${!c.image_url ? `<div style="width:44px;height:44px;border-radius:10px;background:${bg};border:1px solid ${border};display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">⚔</div>` : ''}
-                    <div style="flex:1;min-width:0;">
-                        ${!c.image_url ? `<div style="font-family:'Orbitron';font-size:0.35rem;color:${color};letter-spacing:2px;margin-bottom:3px;">${isActive ? '⬤ LIVE' : '◎ COMING SOON'}</div>` : ''}
-                        <div style="font-family:'Cinzel';font-size:0.9rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.name}</div>
-                        <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-top:3px;">${subText}</div>
+            const isLive = c.status === 'active';
+            const startsSoon = !isLive;
+            const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - now) / 86400000)) : null;
+            const startDate = c.start_date ? new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
+            const stats = [
+                { label: 'Days', val: String(c.duration_days) },
+                { label: 'Tasks a day', val: String(c.tasks_per_day) },
+                { label: 'Window', val: `${c.window_minutes} min` },
+                { label: 'Still working', val: String(c.participant_active ?? '—') },
+                ...(daysLeft !== null && isLive ? [{ label: 'Days left', val: String(daysLeft) }] : []),
+                ...(startsSoon && startDate ? [{ label: 'Starts', val: startDate }] : []),
+            ];
+            const statsHtml = stats.map(({ label, val }) =>
+                `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+                    <span style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.38);letter-spacing:0.5px;">${label}</span>
+                    <span style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(197,160,89,0.9);font-weight:700;">${val}</span>
+                </div>`
+            ).join('');
+            const badgeStyle = startsSoon
+                ? 'background:rgba(251,191,36,0.9);color:#000;'
+                : 'background:rgba(74,222,128,0.9);color:#000;';
+            const badgeText = startsSoon ? 'SOON' : 'LIVE';
+            const imgBlock = c.image_url
+                ? `<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'" alt="${c.name}">`
+                : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;opacity:0.2;background:linear-gradient(135deg,rgba(197,160,89,0.1),rgba(197,160,89,0.04));">★</div>`;
+            return `<div style="margin:10px 12px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);">
+                <div style="display:flex;gap:0;">
+                    <!-- Image -->
+                    <div style="width:130px;min-height:180px;flex-shrink:0;position:relative;background:rgba(197,160,89,0.06);">
+                        ${imgBlock}
+                        <div style="position:absolute;top:10px;left:10px;${badgeStyle}border-radius:6px;padding:3px 8px;font-family:'Orbitron',monospace;font-size:0.32rem;font-weight:700;letter-spacing:1px;">${badgeText}</div>
                     </div>
-                    <div style="flex-shrink:0;padding:8px 16px;background:${isActive ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.1)'};border:1px solid ${border};border-radius:8px;color:${color};font-family:'Orbitron';font-size:0.38rem;letter-spacing:1px;font-weight:700;">VIEW ›</div>
+                    <!-- Info -->
+                    <div style="flex:1;padding:16px 16px 14px;display:flex;flex-direction:column;gap:10px;justify-content:space-between;min-width:0;">
+                        <div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:1px;margin-bottom:5px;">${c.name}</div>
+                            ${c.description ? `<div style="font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(255,255,255,0.35);line-height:1.5;letter-spacing:0.5px;">${c.description}</div>` : ''}
+                        </div>
+                        <div style="display:flex;flex-direction:column;">${statsHtml}</div>
+                        <button onclick="(window._openChallengePanel||function(){})(event,'${c.id}');event.stopPropagation();" style="width:100%;padding:9px 0;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#c5a059 0%,#8b6914 100%);color:#000;font-family:'Orbitron';font-size:0.52rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 15px rgba(197,160,89,0.3);">JOIN CHALLENGE</button>
+                    </div>
                 </div>
             </div>`;
         }).join('');
