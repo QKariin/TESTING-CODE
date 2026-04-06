@@ -26,9 +26,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         ])];
         let profileMap = new Map<string, any>();
         if (memberIds.length) {
+            const memberIdsLower = memberIds.map((id: string) => id.toLowerCase());
             const { data: profileRows } = await supabaseAdmin
                 .from('profiles').select('member_id, name, hierarchy, avatar_url, profile_picture_url')
-                .in('member_id', memberIds);
+                .in('member_id', memberIdsLower);
             (profileRows || []).forEach((p: any) => profileMap.set(p.member_id.toLowerCase(), p));
         }
 
@@ -82,7 +83,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
             const eliminatedWindow = (windows || []).find((w: any) => w.id === p.eliminated_on_window_id);
             return {
                 ...p,
-                name: prof.name || p.member_id,
+                name: prof.name || p.member_id?.split('@')[0] || p.member_id,
                 avatar: prof.avatar_url || prof.profile_picture_url || null,
                 hierarchy: prof.hierarchy,
                 completions_count: userComps.length,

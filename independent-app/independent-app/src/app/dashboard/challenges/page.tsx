@@ -475,7 +475,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                                         <div key={pv.id} className="ch-card" style={{ padding: '20px 24px', display: 'flex', gap: 20, alignItems: 'flex-start', borderColor: 'rgba(255,140,66,0.25)' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, width: 72 }}>
                                                 <img src={avatar || '/queen-karin.png'} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.3)' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: '#ddd', textAlign: 'center', wordBreak: 'break-word' }}>{prof?.name || pv.member_id}</div>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: '#ddd', textAlign: 'center', wordBreak: 'break-word' }}>{prof?.name || pv.member_id?.split('@')[0] || pv.member_id}</div>
                                                 {pv.response_time_seconds !== null && (
                                                     <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#4ade80' }}>{fmtSeconds(pv.response_time_seconds)}</div>
                                                 )}
