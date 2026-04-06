@@ -67,21 +67,98 @@ function ReasonPicker({ presets, reason, setReason, useCustom, setUseCustom, cus
     );
 }
 
+function buildGlMsgHtml(m: any): string {
+    const content = m.message || '';
+    const time = new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Card types — render as compact cards
+    const cardPrefixes: Array<[string, (d: any) => string]> = [
+        ['CHALLENGE_JOIN_CARD::', (d) => {
+            const ini = (d.name||'S')[0].toUpperCase();
+            return `<div style="display:flex;align-items:center;gap:10px;background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:10px 12px;margin:2px 0;">
+                <div style="width:32px;height:32px;border-radius:50%;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:Cinzel;font-size:0.6rem;color:#4ade80;">${d.photo?`<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;">`:ini}</div>
+                <div style="flex:1;min-width:0;"><div style="font-family:Orbitron;font-size:0.38rem;color:#4ade80;letter-spacing:1px;">JOINED CHALLENGE</div><div style="font-family:Cinzel;font-size:0.75rem;color:#fff;font-weight:700;">${d.name||''}</div><div style="font-family:Rajdhani;font-size:0.7rem;color:rgba(255,255,255,0.4);">${d.challengeName||''}</div></div>
+                <span style="font-family:Orbitron;font-size:0.34rem;color:rgba(255,255,255,0.3);flex-shrink:0;">${time}</span></div>`;
+        }],
+        ['CHALLENGE_TASK_CARD::', (d) => {
+            const passed = d.passed !== false;
+            const ac = passed ? '#4ade80' : '#e03030';
+            const ini = (d.senderName||'S')[0].toUpperCase();
+            return `<div style="display:flex;align-items:center;gap:10px;background:${passed?'rgba(74,222,128,0.05)':'rgba(224,48,48,0.05)'};border:1px solid ${passed?'rgba(74,222,128,0.2)':'rgba(224,48,48,0.2)'};border-radius:10px;padding:10px 12px;margin:2px 0;">
+                <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid ${passed?'rgba(74,222,128,0.3)':'rgba(224,48,48,0.3)'};">${d.senderAvatar?`<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;">`:ini}</div>
+                <div style="flex:1;min-width:0;"><div style="font-family:Orbitron;font-size:0.38rem;color:${ac};letter-spacing:1px;">${passed?'✓ TASK PASSED':'✕ TASK FAILED'}</div><div style="font-family:Cinzel;font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</div><div style="font-family:Rajdhani;font-size:0.7rem;color:rgba(255,255,255,0.4);">Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'}${passed&&d.taskNum?` — ${d.taskNum}`:''}</div></div>
+                <span style="font-family:Orbitron;font-size:0.34rem;color:rgba(255,255,255,0.3);flex-shrink:0;">${time}</span></div>`;
+        }],
+        ['CHALLENGE_ELIM_CARD::', (d) => {
+            const ini = (d.name||'S')[0].toUpperCase();
+            return `<div style="display:flex;align-items:center;gap:10px;background:rgba(224,48,48,0.05);border:1px solid rgba(224,48,48,0.2);border-radius:10px;padding:10px 12px;margin:2px 0;">
+                <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid rgba(224,48,48,0.3);">${d.photo?`<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;">`:ini}</div>
+                <div style="flex:1;min-width:0;"><div style="font-family:Orbitron;font-size:0.38rem;color:#e03030;letter-spacing:1px;">ELIMINATED</div><div style="font-family:Cinzel;font-size:0.75rem;color:#fff;font-weight:700;">${d.name||''}</div><div style="font-family:Rajdhani;font-size:0.7rem;color:rgba(255,255,255,0.4);">${d.activeCount??'?'} still active</div></div>
+                <span style="font-family:Orbitron;font-size:0.34rem;color:rgba(255,255,255,0.3);flex-shrink:0;">${time}</span></div>`;
+        }],
+        ['UPDATE_PHOTO_CARD::', (d) => {
+            const ini = (d.senderName||'S')[0].toUpperCase();
+            return `<div style="display:flex;align-items:center;gap:10px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:10px;padding:10px 12px;margin:2px 0;">
+                ${d.mediaUrl?`<img src="${d.mediaUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;">`:
+                `<div style="width:44px;height:44px;border-radius:6px;background:rgba(197,160,89,0.1);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:Cinzel;font-size:0.6rem;color:#c5a059;">${ini}</div>`}
+                <div style="flex:1;min-width:0;"><div style="font-family:Orbitron;font-size:0.38rem;color:#c5a059;letter-spacing:1px;">PHOTO SHARED</div><div style="font-family:Cinzel;font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</div>${d.caption?`<div style="font-family:Rajdhani;font-size:0.7rem;color:rgba(255,255,255,0.4);">${d.caption}</div>`:''}</div>
+                <span style="font-family:Orbitron;font-size:0.34rem;color:rgba(255,255,255,0.3);flex-shrink:0;">${time}</span></div>`;
+        }],
+        ['UPDATE_TRIBUTE_CARD::', (d) => {
+            const ini = (d.senderName||'S')[0].toUpperCase();
+            return `<div style="display:flex;align-items:center;gap:10px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:10px;padding:10px 12px;margin:2px 0;">
+                <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid rgba(197,160,89,0.3);">${d.senderAvatar?`<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;">`:ini}</div>
+                <div style="flex:1;min-width:0;"><div style="font-family:Orbitron;font-size:0.38rem;color:#c5a059;letter-spacing:1px;">GIFT SENT</div><div style="font-family:Cinzel;font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</div><div style="font-family:Rajdhani;font-size:0.7rem;color:rgba(255,255,255,0.4);">${d.title||''}</div></div>
+                <span style="font-family:Orbitron;font-size:0.34rem;color:rgba(255,255,255,0.3);flex-shrink:0;">${time}</span></div>`;
+        }],
+        ['PROMOTION_CARD::', (d) => {
+            const ini = (d.name||'S')[0].toUpperCase();
+            return `<div style="display:flex;align-items:center;gap:10px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.2);border-radius:10px;padding:10px 12px;margin:2px 0;">
+                <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid rgba(167,139,250,0.3);">${d.photo?`<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;">`:ini}</div>
+                <div style="flex:1;min-width:0;"><div style="font-family:Orbitron;font-size:0.38rem;color:#a78bfa;letter-spacing:1px;">PROMOTED</div><div style="font-family:Cinzel;font-size:0.75rem;color:#fff;font-weight:700;">${d.name||''}</div><div style="font-family:Rajdhani;font-size:0.7rem;color:rgba(255,255,255,0.4);">${d.newRank||''}</div></div>
+                <span style="font-family:Orbitron;font-size:0.34rem;color:rgba(255,255,255,0.3);flex-shrink:0;">${time}</span></div>`;
+        }],
+    ];
+
+    for (const [prefix, builder] of cardPrefixes) {
+        if (content.startsWith(prefix)) {
+            try { return builder(JSON.parse(content.slice(prefix.length))); } catch { break; }
+        }
+    }
+
+    // Skip any other SYSTEM cards we don't render
+    if (m.sender_name === 'SYSTEM') return '';
+
+    // Regular message
+    const isQueen = m.is_queen === true;
+    const av = m.sender_avatar;
+    const ini = (m.sender_name||'S')[0].toUpperCase();
+    const avatarHtml = av
+        ? `<img src="${av}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid ${isQueen?'rgba(197,160,89,0.5)':'rgba(255,255,255,0.1)'};" onerror="this.style.display='none'">`
+        : `<div style="width:30px;height:30px;border-radius:50%;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-family:Cinzel;font-size:0.55rem;color:rgba(255,255,255,0.4);">${ini}</div>`;
+    return `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;">
+        ${avatarHtml}
+        <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
+                <span style="font-family:Orbitron;font-size:0.42rem;color:${isQueen?'#c5a059':'rgba(255,255,255,0.6)'};letter-spacing:1px;">${m.sender_name||'SUBJECT'}</span>
+                <span style="font-family:Orbitron;font-size:0.34rem;color:rgba(255,255,255,0.2);">${time}</span>
+            </div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:${isQueen?'#e8d5a0':'rgba(255,255,255,0.75)'};line-height:1.45;word-break:break-word;">${content}</div>
+        </div>
+    </div>`;
+}
+
 function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     const [messages, setMessages] = useState<any[]>([]);
     const [text, setText] = useState('');
     const [sending, setSending] = useState(false);
+    const feedRef = useRef<HTMLDivElement>(null);
 
     async function load() {
         try {
             const res = await fetch('/api/global/messages', { cache: 'no-store' });
             const data = await res.json();
-            if (data.messages) {
-                const real = (data.messages as any[]).filter(
-                    m => m.sender_name !== 'SYSTEM' && !String(m.message || '').startsWith('PROMOTION_CARD:')
-                );
-                setMessages(real.slice(-2));
-            }
+            if (data.messages) setMessages((data.messages as any[]).slice(-50));
         } catch {}
     }
 
@@ -90,6 +167,11 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
         const iv = setInterval(load, 5000);
         return () => clearInterval(iv);
     }, []);
+
+    // Auto-scroll to bottom when messages change
+    useEffect(() => {
+        if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
+    }, [messages]);
 
     async function send() {
         if (!text.trim() || !userEmail || sending) return;
@@ -106,38 +188,20 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
         setSending(false);
     }
 
-    function fmt(ts: string) {
-        const d = new Date(ts);
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
+    const renderedHtml = messages.map(m => buildGlMsgHtml(m)).filter(Boolean).join('');
 
     return (
-        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column' }}>
+        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <div className="vk-header">
                 <div className="vk-title">Global Chat</div>
                 <div className="vk-sub">Community Feed</div>
             </div>
-            <div style={{ flex: 1, padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {messages.length === 0 && (
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 20, letterSpacing: '2px' }}>NO MESSAGES YET</div>
-                )}
-                {messages.map((m: any, i: number) => {
-                    const isQueen = m.is_queen === true;
-                    return (
-                        <div key={m.id || i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                            <img src={m.sender_avatar || '/queen-karin.png'} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: isQueen ? '1px solid rgba(197,160,89,0.5)' : '1px solid rgba(255,255,255,0.1)' }} onError={(e: any) => { e.target.src = '/queen-karin.png'; }} />
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
-                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: isQueen ? '#c5a059' : 'rgba(255,255,255,0.6)', letterSpacing: '1px' }}>{m.sender_name || 'SUBJECT'}</span>
-                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)' }}>{m.created_at ? fmt(m.created_at) : ''}</span>
-                                </div>
-                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: isQueen ? '#e8d5a0' : 'rgba(255,255,255,0.8)', lineHeight: 1.45, wordBreak: 'break-word' }}>{m.message}</div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-            <div style={{ padding: '12px 20px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8 }}>
+            <div
+                ref={feedRef}
+                style={{ flex: 1, overflowY: 'auto', padding: '12px 20px 4px', minHeight: 0 }}
+                dangerouslySetInnerHTML={{ __html: renderedHtml || '<div style="font-family:Orbitron;font-size:0.42rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:20px;letter-spacing:2px;">NO MESSAGES YET</div>' }}
+            />
+            <div style={{ padding: '12px 20px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8, flexShrink: 0 }}>
                 <input
                     value={text}
                     onChange={e => setText(e.target.value)}
