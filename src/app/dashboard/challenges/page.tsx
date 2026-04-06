@@ -703,19 +703,24 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
 
     return (
         <div>
-            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span>TASK SCHEDULE — {windows.length} WINDOWS</span>
-                {msg && <span style={{ color: msg.ok ? '#4ade80' : '#e03030', fontSize: '0.38rem' }}>{msg.text}</span>}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Task Schedule <span style={{ color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem' }}>— {windows.length} windows</span>
+                </div>
+                {msg && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: msg.ok ? '#4ade80' : '#e03030', letterSpacing: '1px' }}>{msg.text}</div>}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 {Object.keys(byDay).sort((a, b) => Number(a) - Number(b)).map(day => (
-                    <div key={day} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
-                        {/* Day header */}
-                        <div style={{ padding: '10px 16px', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#888', letterSpacing: '3px', fontWeight: 700 }}>
-                            DAY {day}
+                    <div key={day}>
+                        {/* Day label */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px', fontWeight: 700 }}>DAY {day}</div>
+                            <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, rgba(197,160,89,0.25), transparent)' }} />
                         </div>
+
                         {/* Task cards */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 10 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                             {byDay[Number(day)].map(w => {
                                 const isOpen = now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime();
                                 const isPast = now >= new Date(w.closes_at).getTime();
@@ -726,84 +731,157 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                 const closesDate = new Date(w.closes_at);
                                 const taskName = getTaskName(w);
 
+                                const cardBg = isOpen
+                                    ? 'linear-gradient(135deg, rgba(74,222,128,0.07) 0%, rgba(0,0,0,0.5) 100%)'
+                                    : 'linear-gradient(135deg, rgba(18,14,30,0.95) 0%, rgba(8,6,18,0.98) 100%)';
+                                const cardBorder = isOpen ? 'rgba(74,222,128,0.4)' : 'rgba(197,160,89,0.12)';
+                                const cardShadow = isOpen
+                                    ? '0 0 24px rgba(74,222,128,0.08), 0 4px 20px rgba(0,0,0,0.6)'
+                                    : '0 2px 16px rgba(0,0,0,0.5)';
+
                                 return (
                                     <div key={w.id} style={{
-                                        background: isOpen ? 'rgba(74,222,128,0.06)' : 'rgba(0,0,0,0.25)',
-                                        border: `1px solid ${isOpen ? 'rgba(74,222,128,0.35)' : 'rgba(255,255,255,0.06)'}`,
-                                        borderRadius: 9,
-                                        opacity: isPast && !isOpen ? 0.4 : 1,
+                                        background: cardBg,
+                                        border: `1px solid ${cardBorder}`,
+                                        borderLeft: `3px solid ${isOpen ? '#4ade80' : isPast ? '#222' : 'rgba(197,160,89,0.45)'}`,
+                                        borderRadius: 10,
+                                        boxShadow: cardShadow,
+                                        opacity: isPast && !isOpen ? 0.38 : 1,
                                         overflow: 'hidden',
+                                        transition: 'opacity 0.2s',
                                     }}>
-                                        {/* Top row: label + code + time + buttons */}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', flexWrap: 'nowrap' }}>
-                                            <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: isOpen ? '#4ade80' : isPast ? '#333' : '#c5a059', boxShadow: isOpen ? '0 0 8px rgba(74,222,128,0.8)' : 'none' }} />
-                                            <div style={{ flexShrink: 0, fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: isOpen ? '#4ade80' : '#666', fontWeight: 700, letterSpacing: '1px', width: 48 }}>
+                                        {/* Card header */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px 0' }}>
+                                            {/* Task number badge */}
+                                            <div style={{
+                                                flexShrink: 0,
+                                                background: isOpen ? 'rgba(74,222,128,0.12)' : 'rgba(197,160,89,0.07)',
+                                                border: `1px solid ${isOpen ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`,
+                                                borderRadius: 6,
+                                                padding: '4px 10px',
+                                                fontFamily: 'Orbitron, monospace',
+                                                fontSize: '0.55rem',
+                                                fontWeight: 700,
+                                                color: isOpen ? '#4ade80' : isPast ? '#444' : '#c5a059',
+                                                letterSpacing: '2px',
+                                            }}>
                                                 TASK {w.window_number}
                                             </div>
-                                            <div style={{ flexShrink: 0, fontFamily: 'Orbitron, monospace', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px', fontWeight: 900, minWidth: 55 }}>
+
+                                            {/* Verification code */}
+                                            <div style={{
+                                                fontFamily: 'Orbitron, monospace',
+                                                fontSize: '1.1rem',
+                                                fontWeight: 900,
+                                                color: isOpen ? 'rgba(74,222,128,0.9)' : 'rgba(197,160,89,0.55)',
+                                                letterSpacing: '6px',
+                                                flexShrink: 0,
+                                            }}>
                                                 {w.verification_code}
                                             </div>
+
+                                            {isOpen && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                                                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px rgba(74,222,128,1)', animation: 'pulse 1.2s infinite' }} />
+                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#4ade80', fontWeight: 700, letterSpacing: '2px' }}>LIVE NOW</span>
+                                                </div>
+                                            )}
+
                                             <div style={{ flex: 1 }} />
-                                            <div style={{ flexShrink: 0, fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: isOpen ? '#4ade80' : isPast ? '#333' : '#555' }}>
-                                                {opensDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} {opensDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                                                <span style={{ color: '#333', margin: '0 4px' }}>→</span>
-                                                {closesDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                                            </div>
-                                            {isOpen && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: '#4ade80', flexShrink: 0 }}>● LIVE</span>}
+
+                                            {/* Action buttons */}
                                             {!isEditing && (
-                                                <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                                                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                                                     {!isPast && (
-                                                        <button onClick={() => startEdit(w)}
-                                                            style={{ padding: '4px 10px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 5, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.33rem', letterSpacing: '1px', cursor: 'pointer' }}>
-                                                            ✎ EDIT
-                                                        </button>
+                                                        <button onClick={() => startEdit(w)} style={{
+                                                            padding: '5px 13px',
+                                                            background: 'rgba(197,160,89,0.07)',
+                                                            border: '1px solid rgba(197,160,89,0.3)',
+                                                            borderRadius: 6,
+                                                            color: '#c5a059',
+                                                            fontFamily: 'Cinzel, serif',
+                                                            fontSize: '0.58rem',
+                                                            letterSpacing: '1px',
+                                                            cursor: 'pointer',
+                                                        }}>Edit</button>
                                                     )}
                                                     {isOpen && (
-                                                        <button onClick={() => stopNow(w)} disabled={stopping === w.id}
-                                                            style={{ padding: '4px 10px', background: stopping === w.id ? 'rgba(255,255,255,0.03)' : 'rgba(224,48,48,0.12)', border: `1px solid ${stopping === w.id ? 'rgba(255,255,255,0.1)' : 'rgba(224,48,48,0.5)'}`, borderRadius: 5, color: stopping === w.id ? '#555' : '#e03030', fontFamily: 'Orbitron, monospace', fontSize: '0.33rem', fontWeight: 700, cursor: stopping === w.id ? 'default' : 'pointer' }}>
-                                                            {stopping === w.id ? '...' : '■ STOP'}
-                                                        </button>
+                                                        <button onClick={() => stopNow(w)} disabled={stopping === w.id} style={{
+                                                            padding: '5px 13px',
+                                                            background: stopping === w.id ? 'rgba(255,255,255,0.03)' : 'rgba(224,48,48,0.1)',
+                                                            border: `1px solid ${stopping === w.id ? 'rgba(255,255,255,0.08)' : 'rgba(224,48,48,0.45)'}`,
+                                                            borderRadius: 6,
+                                                            color: stopping === w.id ? '#444' : '#e03030',
+                                                            fontFamily: 'Cinzel, serif',
+                                                            fontSize: '0.58rem',
+                                                            fontWeight: 700,
+                                                            cursor: stopping === w.id ? 'default' : 'pointer',
+                                                        }}>{stopping === w.id ? '...' : '■ Stop'}</button>
                                                     )}
                                                     {!isOpen && !isPast && (
-                                                        <button onClick={() => pushNow(w)} disabled={isPushing}
-                                                            style={{ padding: '4px 10px', background: isPushing ? 'rgba(255,255,255,0.03)' : 'rgba(74,222,128,0.1)', border: `1px solid ${isPushing ? 'rgba(255,255,255,0.1)' : 'rgba(74,222,128,0.5)'}`, borderRadius: 5, color: isPushing ? '#555' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.33rem', fontWeight: 700, cursor: isPushing ? 'default' : 'pointer' }}>
-                                                            {isPushing ? '...' : '⚡ NOW'}
-                                                        </button>
+                                                        <button onClick={() => pushNow(w)} disabled={isPushing} style={{
+                                                            padding: '5px 13px',
+                                                            background: isPushing ? 'rgba(255,255,255,0.03)' : 'rgba(74,222,128,0.1)',
+                                                            border: `1px solid ${isPushing ? 'rgba(255,255,255,0.08)' : 'rgba(74,222,128,0.45)'}`,
+                                                            borderRadius: 6,
+                                                            color: isPushing ? '#444' : '#4ade80',
+                                                            fontFamily: 'Cinzel, serif',
+                                                            fontSize: '0.58rem',
+                                                            fontWeight: 700,
+                                                            cursor: isPushing ? 'default' : 'pointer',
+                                                        }}>{isPushing ? '...' : '⚡ Push Live'}</button>
                                                     )}
                                                 </div>
                                             )}
                                         </div>
 
-                                        {/* Task description row — full width, wraps properly */}
+                                        {/* Task description */}
                                         {!isEditing && (
-                                            <div style={{ padding: '0 14px 10px 14px', fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: taskName ? 'rgba(200,200,200,0.75)' : '#333', fontStyle: taskName ? 'normal' : 'italic', lineHeight: 1.5 }}>
-                                                {taskName || 'no task description'}
+                                            <div style={{ padding: '10px 18px 6px' }}>
+                                                <div style={{
+                                                    fontFamily: taskName ? 'Cinzel, serif' : 'Rajdhani, sans-serif',
+                                                    fontSize: taskName ? '0.85rem' : '0.75rem',
+                                                    color: taskName ? 'rgba(220,215,200,0.88)' : 'rgba(255,255,255,0.18)',
+                                                    fontStyle: taskName ? 'normal' : 'italic',
+                                                    lineHeight: 1.6,
+                                                    fontWeight: taskName ? 400 : 300,
+                                                }}>
+                                                    {taskName || 'No task description set — click Edit to add one'}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Time footer */}
+                                        {!isEditing && (
+                                            <div style={{ padding: '8px 18px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: isOpen ? 'rgba(74,222,128,0.6)' : isPast ? '#2a2a2a' : 'rgba(197,160,89,0.35)', letterSpacing: '1px' }}>
+                                                    {opensDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {opensDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} — {closesDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
                                             </div>
                                         )}
 
                                         {/* Edit panel */}
                                         {isEditing && (
-                                            <div style={{ padding: '0 14px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Task description (shown to participants)..."
+                                            <div style={{ padding: '12px 18px 16px', display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 10 }}>
+                                                <textarea
+                                                    placeholder="Task description shown to participants..."
                                                     value={editName}
                                                     onChange={e => setEditName(e.target.value)}
-                                                    style={{ width: '100%', boxSizing: 'border-box', background: '#0d0d0d', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 6, color: '#ddd', fontFamily: 'Cinzel, serif', fontSize: '0.8rem', padding: '8px 12px', outline: 'none' }}
+                                                    rows={3}
+                                                    style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 7, color: '#ddd', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', padding: '10px 14px', outline: 'none', resize: 'vertical', lineHeight: 1.6 }}
                                                 />
                                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                                     <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
-                                                        style={{ background: '#0d0d0d', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', padding: '6px 10px' }} />
+                                                        style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', padding: '7px 12px', outline: 'none' }} />
                                                     <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)}
-                                                        style={{ background: '#0d0d0d', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', padding: '6px 10px' }} />
-                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#444' }}>closes +{windowMinutes}m</span>
-                                                    <button onClick={() => saveEdit(w)} disabled={isSaving}
-                                                        style={{ padding: '6px 16px', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 6, color: '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', cursor: 'pointer', fontWeight: 700 }}>
-                                                        {isSaving ? 'SAVING...' : '✓ SAVE'}
+                                                        style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', padding: '7px 12px', outline: 'none' }} />
+                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#444' }}>+{windowMinutes}m window</span>
+                                                    <div style={{ flex: 1 }} />
+                                                    <button onClick={() => saveEdit(w)} disabled={isSaving} style={{ padding: '7px 20px', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 7, color: '#4ade80', fontFamily: 'Cinzel, serif', fontSize: '0.65rem', cursor: 'pointer', fontWeight: 700, letterSpacing: '1px' }}>
+                                                        {isSaving ? 'Saving...' : '✓ Save'}
                                                     </button>
-                                                    <button onClick={() => setEditingId(null)}
-                                                        style={{ padding: '6px 10px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#555', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', cursor: 'pointer' }}>
-                                                        ✕
+                                                    <button onClick={() => setEditingId(null)} style={{ padding: '7px 14px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 7, color: '#555', fontFamily: 'Cinzel, serif', fontSize: '0.65rem', cursor: 'pointer' }}>
+                                                        Cancel
                                                     </button>
                                                 </div>
                                             </div>
