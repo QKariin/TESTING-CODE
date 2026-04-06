@@ -97,7 +97,8 @@ export default function ProfilePage() {
     const [challengeBannerDismissed, setChallengeBannerDismissed] = useState(() =>
         typeof window !== 'undefined' && !!sessionStorage.getItem('challengeBannerDismissed')
     );
-    const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string; status: string; start_date?: string } | null>(null);
+    const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string; status: string; start_date?: string; image_url?: string } | null>(null);
+    const [desktopChallengeOverlayOpen, setDesktopChallengeOverlayOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isParticipant, setIsParticipant] = useState(false);
     const [participantStatus, setParticipantStatus] = useState<string | null>(null);
@@ -384,7 +385,7 @@ export default function ProfilePage() {
                     new Date(c.start_date).getTime() > now
                 );
                 const found = active || upcoming || null;
-                setActiveChallenge(found ? { id: found.id, name: found.name, theme: found.theme, status: found.status, start_date: found.start_date } : null);
+                setActiveChallenge(found ? { id: found.id, name: found.name, theme: found.theme, status: found.status, start_date: found.start_date, image_url: found.image_url } : null);
 
                 // Check participation for the active/upcoming challenge
                 if (found) {
@@ -652,6 +653,33 @@ export default function ProfilePage() {
 
                         <div id="desk_ProgressContainer" style={{ width: '100%', marginBottom: 15, flexShrink: 0 }}></div>
 
+                        {/* Challenge card in sidebar */}
+                        {isParticipant && activeChallenge && participantStatus === 'active' && (
+                            <div
+                                onClick={() => setDesktopChallengeOverlayOpen(true)}
+                                style={{ width: '100%', marginBottom: 20, flexShrink: 0, cursor: 'pointer', borderRadius: 12, overflow: 'hidden', position: 'relative', border: challengeWindowAlert ? '1px solid rgba(74,222,128,0.5)' : '1px solid rgba(197,160,89,0.25)', boxShadow: challengeWindowAlert ? '0 0 16px rgba(74,222,128,0.12)' : '0 0 16px rgba(197,160,89,0.06)' }}
+                            >
+                                {activeChallenge.image_url && (
+                                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${activeChallenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.22 }} />
+                                )}
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(4,2,12,0.5) 0%, rgba(4,2,12,0.88) 100%)' }} />
+                                <div style={{ position: 'relative', padding: '10px 12px' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: challengeWindowAlert ? '#4ade80' : '#c5a059', letterSpacing: '2px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                        {challengeWindowAlert && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1s infinite' }} />}
+                                        {challengeWindowAlert ? 'TASK OPEN NOW' : 'ACTIVE CHALLENGE'}
+                                    </div>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', fontWeight: 700, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: challengeWindowAlert ? '#4ade80' : 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>
+                                        {challengeWindowAlert
+                                            ? `CLOSES IN ${Math.max(0, Math.floor((new Date(challengeWindowAlert.window.closes_at).getTime() - Date.now()) / 60000))}m`
+                                            : nextChallengeWindowTs
+                                                ? <CountdownText targetTs={nextChallengeWindowTs} prefix="NEXT IN " />
+                                                : 'TAP TO VIEW'}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div style={{ width: '100%', textAlign: 'left', padding: '0 2px', marginBottom: 25, flexShrink: 0 }}>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', marginBottom: 6 }}>PRIVILEGES GRANTED</div>
                             <ul id="desk_NextBenefits" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, margin: 0 }}></ul>
@@ -690,27 +718,64 @@ export default function ProfilePage() {
                     </div>
 
                     <div id="gridStat3" className="v-card v-stat-card serve-grid-item"
-                        style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6, cursor: 'pointer' }}
-                        onClick={() => setDesktopChallengeOpen(true)}>
-                        <div className="ribbon-label" style={{ textAlign: 'center' }}>CHALLENGES</div>
-                        <div style={{ display: 'flex', width: '100%', justifyContent: 'space-around', alignItems: 'center', flex: 1 }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: 'white' }}>{challengeCounts.pending}</div>
-                                <div className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.6, marginTop: 3 }}>ACTIVE</div>
+                        style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, cursor: 'pointer', padding: 0, overflow: 'hidden', position: 'relative' }}
+                        onClick={() => isParticipant && activeChallenge ? setDesktopChallengeOverlayOpen(true) : setDesktopChallengeOpen(true)}>
+                        {isParticipant && activeChallenge ? (
+                            <>
+                                {/* Challenge image background */}
+                                {activeChallenge.image_url && (
+                                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${activeChallenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18 }} />
+                                )}
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(4,2,12,0.4) 0%, rgba(4,2,12,0.95) 70%)' }} />
+                                <div style={{ position: 'relative', padding: '14px 14px 10px', display: 'flex', flexDirection: 'column', height: '100%', gap: 0 }}>
+                                    {/* Live indicator */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: challengeWindowAlert ? '#4ade80' : '#c5a059', boxShadow: challengeWindowAlert ? '0 0 8px rgba(74,222,128,0.8)' : '0 0 6px rgba(197,160,89,0.6)', animation: challengeWindowAlert ? 'pulse 1s infinite' : 'none' }} />
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: challengeWindowAlert ? '#4ade80' : '#c5a059', letterSpacing: '2px' }}>
+                                            {challengeWindowAlert ? 'TASK WINDOW OPEN' : participantStatus === 'active' ? 'ENROLLED' : participantStatus?.toUpperCase()}
+                                        </div>
+                                    </div>
+                                    {/* Challenge name */}
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', fontWeight: 700, color: '#fff', letterSpacing: '1px', lineHeight: 1.3, flex: 1, display: 'flex', alignItems: 'center' }}>{activeChallenge.name}</div>
+                                    {/* Timer */}
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: challengeWindowAlert ? '#4ade80' : 'rgba(255,255,255,0.45)', letterSpacing: '1.5px', marginBottom: 10 }}>
+                                        {challengeWindowAlert
+                                            ? <CountdownText targetTs={new Date(challengeWindowAlert.window.closes_at).getTime()} prefix="CLOSES IN " />
+                                            : nextChallengeWindowTs
+                                                ? <CountdownText targetTs={nextChallengeWindowTs} prefix="NEXT TASK IN " />
+                                                : 'CHALLENGE ACTIVE'}
+                                    </div>
+                                    <button style={{
+                                        width: '100%', padding: '7px 0', borderRadius: 8, border: `1px solid ${challengeWindowAlert ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.4)'}`, cursor: 'pointer',
+                                        background: challengeWindowAlert ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.1)',
+                                        color: challengeWindowAlert ? '#4ade80' : '#c5a059', fontFamily: 'Orbitron', fontSize: '0.5rem', fontWeight: 700,
+                                        letterSpacing: '1px', textTransform: 'uppercase',
+                                    }}>{challengeWindowAlert ? '⬆ UPLOAD PROOF' : 'VIEW CHALLENGE'}</button>
+                                </div>
+                            </>
+                        ) : (
+                            <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', height: '100%', gap: 6 }}>
+                                <div className="ribbon-label" style={{ textAlign: 'center' }}>CHALLENGES</div>
+                                <div style={{ display: 'flex', width: '100%', justifyContent: 'space-around', alignItems: 'center', flex: 1 }}>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: 'white' }}>{challengeCounts.pending}</div>
+                                        <div className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.6, marginTop: 3 }}>ACTIVE</div>
+                                    </div>
+                                    <div style={{ height: 30, width: 1, background: 'rgba(255,255,255,0.08)' }}></div>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#c5a059' }}>{challengeCounts.yours}</div>
+                                        <div className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.6, marginTop: 3 }}>YOURS</div>
+                                    </div>
+                                </div>
+                                <button style={{
+                                    width: '100%', padding: '7px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                    background: 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
+                                    color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700,
+                                    letterSpacing: '1px', textTransform: 'uppercase',
+                                    boxShadow: '0 4px 15px rgba(197,160,89,0.3)',
+                                }}>VIEW CHALLENGES</button>
                             </div>
-                            <div style={{ height: 30, width: 1, background: 'rgba(255,255,255,0.08)' }}></div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#c5a059' }}>{challengeCounts.yours}</div>
-                                <div className="ribbon-label" style={{ fontSize: '0.45rem', opacity: 0.6, marginTop: 3 }}>YOURS</div>
-                            </div>
-                        </div>
-                        <button style={{
-                            width: '100%', padding: '7px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
-                            background: 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
-                            color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700,
-                            letterSpacing: '1px', textTransform: 'uppercase',
-                            boxShadow: '0 4px 15px rgba(197,160,89,0.3)',
-                        }}>VIEW CHALLENGES</button>
+                        )}
                     </div>
 
                     <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', gap: 6 }} onClick={() => window.location.href = '/global'}>
@@ -907,6 +972,37 @@ export default function ProfilePage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* DESKTOP CHALLENGE OVERLAY */}
+                    {desktopChallengeOverlayOpen && activeChallenge && (
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10001, display: 'flex', flexDirection: 'column', borderRadius: '16px', overflow: 'hidden' }}>
+                            {/* Dark glass background */}
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(4, 4, 16, 0.94)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', zIndex: -1, borderRadius: '16px', border: '1px solid rgba(197,160,89,0.15)' }} />
+                            {/* Header bar */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px 14px', borderBottom: '1px solid rgba(197,160,89,0.15)', flexShrink: 0, position: 'relative', zIndex: 10 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    {activeChallenge.image_url && (
+                                        <img src={activeChallenge.image_url} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(197,160,89,0.3)' }} alt="" />
+                                    )}
+                                    <div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', marginBottom: 2 }}>⚔ CHALLENGE TASKS</div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#fff', fontWeight: 700 }}>{activeChallenge.name}</div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setDesktopChallengeOverlayOpen(false)} style={{ color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', transition: 'all 0.2s' }} onMouseOver={e => { e.currentTarget.style.color = '#c5a059'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)'; }} onMouseOut={e => { e.currentTarget.style.color = 'rgba(197,160,89,0.5)'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.15)'; }}>✕</button>
+                            </div>
+                            {/* Panel content — embedded (no position:fixed) */}
+                            <div style={{ flex: 1, overflow: 'hidden', position: 'relative', zIndex: 10 }}>
+                                <ChallengeUploadPanel
+                                    challengeId={activeChallenge.id}
+                                    memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                                    embedded={true}
+                                    onClose={() => setDesktopChallengeOverlayOpen(false)}
+                                    onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: challengeCounts.pending, yours: 1 }); }}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {/* OVERLAY TRIBUTE MODAL */}
                     <div id="tributeHuntOverlay" className="hidden" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10000, display: 'none', flexDirection: 'column', padding: '40px', borderRadius: '16px', overflow: 'hidden' }}>
@@ -1952,11 +2048,12 @@ function MobileChallengeBanner({ challengeName, hasOpenWindow, nextWindowTs, onO
 }
 
 // ─── CHALLENGE UPLOAD PANEL ───────────────────────────────────────────────────
-function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
+function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, embedded }: {
     challengeId: string;
     memberEmail: string;
     onClose: () => void;
     onJoined?: () => void;
+    embedded?: boolean;
 }) {
     const [data, setData] = useState<{ challenge: any; windows: any[]; completions: any[]; participant: any | null } | null>(null);
     const [uploading, setUploading] = useState<string | null>(null);
@@ -2075,10 +2172,11 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
         .slice(0, 3);
 
     return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 10000001, background: 'rgba(5,8,18,1)', display: 'flex', flexDirection: 'column', padding: '0' }}>
+        <div style={embedded ? { display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: 'transparent' } : { position: 'fixed', inset: 0, zIndex: 10000001, background: 'rgba(5,8,18,1)', display: 'flex', flexDirection: 'column', padding: '0' }}>
             <input ref={fileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleUpload} />
 
-            {/* Header */}
+            {/* Header — only shown on mobile (embedded overlay has its own header) */}
+            {!embedded && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.18)', flexShrink: 0 }}>
                 <div>
                     <div className="ribbon-label" style={{ fontSize: '0.5rem', letterSpacing: '3px' }}>⚔ CHALLENGE TASKS</div>
@@ -2086,6 +2184,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                 </div>
                 <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: 'rgba(197,160,89,0.5)', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px' }}>✕</button>
             </div>
+            )}
 
             {/* Toast */}
             {toast && (
