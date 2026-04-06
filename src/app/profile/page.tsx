@@ -360,7 +360,6 @@ export default function ProfilePage() {
                 const active = challenges.find((c: any) => c.status === 'active');
                 const upcoming = !active && challenges.find((c: any) =>
                     c.status === 'draft' && c.start_date &&
-                    new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
                     new Date(c.start_date).getTime() > now
                 );
                 const found = active || upcoming || null;
@@ -375,11 +374,10 @@ export default function ProfilePage() {
                             const joined = !!pJson.participant;
                             setIsParticipant(joined);
                             setParticipantStatus(pJson.participant?.status || null);
-                            const activeChallengeCount = challenges.filter((ch: any) => ch.status === 'active' || (
-                                ch.status === 'draft' && ch.start_date &&
-                                new Date(ch.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
-                                new Date(ch.start_date).getTime() > now
-                            )).length;
+                            const activeChallengeCount = challenges.filter((ch: any) =>
+                                ch.status === 'active' ||
+                                (ch.status === 'draft' && ch.start_date && new Date(ch.start_date).getTime() > now)
+                            ).length;
                             setChallengeCounts({ pending: activeChallengeCount, yours: joined ? 1 : 0 });
                         }
                     } catch {}

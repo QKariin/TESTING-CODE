@@ -19,10 +19,9 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
         const isActive = challenge.status === 'active';
         const isUpcoming = challenge.status === 'draft' &&
             challenge.start_date &&
-            new Date(challenge.start_date).getTime() - Date.now() <= 24 * 60 * 60 * 1000 &&
             new Date(challenge.start_date).getTime() > Date.now();
         if (!isActive && !isUpcoming)
-            return NextResponse.json({ success: false, error: 'Challenge is not open for joining yet' }, { status: 400 });
+            return NextResponse.json({ success: false, error: 'Challenge is not open for joining' }, { status: 400 });
 
         // Already a participant?
         const { data: existing } = await supabaseAdmin
@@ -42,6 +41,24 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
             joined_at: new Date().toISOString(),
         });
         if (error) throw error;
+
+        // Post join card to global talk feed
+        try {
+            const [{ data: prof }, { count: activeCount }] = await Promise.all([
+                supabaseAdmin.from('profiles').select('name, avatar_url').ilike('member_id', memberEmail).maybeSingle(),
+                supabaseAdmin.from('challenge_participants').select('*', { count: 'exact', head: true }).eq('challenge_id', challengeId).eq('status', 'active'),
+            ]);
+            await supabaseAdmin.from('global_messages').insert({
+                sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
+                message: `CHALLENGE_JOIN_CARD::${JSON.stringify({
+                    name: prof?.name || memberEmail.split('@')[0],
+                    photo: (prof as any)?.avatar_url || null,
+                    challengeName: challenge.name,
+                    challengeImage: (challenge as any).image_url || null,
+                    activeCount: (activeCount || 0) + 1,
+                })}`,
+            });
+        } catch (_) {}
 
         // Award participant badge if one exists
         const { data: badge } = await supabaseAdmin.from('badges')

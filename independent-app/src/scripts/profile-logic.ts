@@ -2869,6 +2869,72 @@ function _buildMobGlBubble(msg: any): string {
         } catch { /* fall through to plain text */ }
     }
 
+    // CHALLENGE JOIN CARD
+    if (content.startsWith('CHALLENGE_JOIN_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::', ''));
+            const initials = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+            const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#060e08 0%,#040d06 60%,#030a04 100%);border:1px solid rgba(74,222,128,0.45);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="position:relative;width:100%;height:130px;background:#030a04;overflow:hidden;${bgImg}">
+                            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);"></div>
+                            <div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+                                <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid rgba(74,222,128,0.6);position:relative;">${photoBlock}<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(74,222,128,0.1);font-family:'Cinzel';font-size:1.1rem;color:#4ade80;">${initials}</div></div>
+                            </div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#060e08 100%);"></div>
+                            <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(3,10,4,0.9);border:1px solid rgba(74,222,128,0.5);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#4ade80;letter-spacing:2px;">⚔ JOINED CHALLENGE</span></div>
+                        </div>
+                        <div style="padding:12px 16px 16px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;margin-bottom:4px;">${d.name||''}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(74,222,128,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div>
+                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:3px 12px;">
+                                <span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span>
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#4ade80;letter-spacing:2px;">ACTIVE USERS: ${d.activeCount||0}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
+    // CHALLENGE ELIMINATED CARD
+    if (content.startsWith('CHALLENGE_ELIM_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('CHALLENGE_ELIM_CARD::', ''));
+            const initials = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+            const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0606 0%,#0d0404 60%,#0a0303 100%);border:1px solid rgba(224,48,48,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="position:relative;width:100%;height:130px;background:#0a0303;overflow:hidden;${bgImg}">
+                            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div>
+                            <div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+                                <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid rgba(224,48,48,0.5);position:relative;">${photoBlock}<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(224,48,48,0.1);font-family:'Cinzel';font-size:1.1rem;color:#e03030;">${initials}</div></div>
+                            </div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0606 100%);"></div>
+                            <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,3,3,0.9);border:1px solid rgba(224,48,48,0.45);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#e03030;letter-spacing:2px;">✕ ELIMINATED</span></div>
+                        </div>
+                        <div style="padding:12px 16px 16px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;margin-bottom:4px;">${d.name||''}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(224,48,48,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div>
+                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.18);border-radius:20px;padding:3px 12px;">
+                                <span style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#4ade80;letter-spacing:2px;">STILL IN: ${d.activeCount||0}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
     const mediaHtml = msg.media_url
         ? (msg.media_type === 'video'
             ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;"></video>`

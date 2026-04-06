@@ -52,6 +52,21 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
                     }).eq('challenge_id', id).eq('member_id', p.member_id);
                     p.status = 'eliminated';
                     p.eliminated_on_window_id = w.id;
+                    // Post elimination card (fire-and-forget)
+                    try {
+                        const prof = profileMap.get(p.member_id.toLowerCase());
+                        const remaining = (participants || []).filter((x: any) => x.member_id !== p.member_id && x.status === 'active').length;
+                        await supabaseAdmin.from('global_messages').insert({
+                            sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
+                            message: `CHALLENGE_ELIM_CARD::${JSON.stringify({
+                                name: prof?.name || p.member_id.split('@')[0],
+                                photo: prof?.avatar_url || null,
+                                challengeName: challenge.name,
+                                challengeImage: (challenge as any).image_url || null,
+                                activeCount: remaining,
+                            })}`,
+                        });
+                    } catch (_) {}
                     break;
                 }
             }
