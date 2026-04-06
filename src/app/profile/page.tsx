@@ -106,11 +106,13 @@ export default function ProfilePage() {
     const [allChallenges, setAllChallenges] = useState<any[]>([]);
     const [challengeCounts, setChallengeCounts] = useState({ pending: 0, yours: 0 });
     const [challengeWindowAlert, setChallengeWindowAlert] = useState<{ window: any; challenge: any } | null>(null);
+    const [openWindowForBanner, setOpenWindowForBanner] = useState<any | null>(null);
     const alertFileInputRef = useRef<HTMLInputElement>(null);
     const [alertUploading, setAlertUploading] = useState(false);
     const [alertUploadDone, setAlertUploadDone] = useState(false);
     const [mobOverlayOpen, setMobOverlayOpen] = useState(false);
     const [nextChallengeWindowTs, setNextChallengeWindowTs] = useState<number | null>(null);
+    const dismissedAlertWindowIdRef = useRef<string | null>(null);
 
     // Track mobile viewport
     useEffect(() => {
@@ -408,13 +410,24 @@ export default function ProfilePage() {
                                 const openWin = (pJson.windows as any[]).find(w =>
                                     now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime() && !submittedIds.has(w.id)
                                 );
-                                setChallengeWindowAlert(openWin ? { window: openWin, challenge: pJson.challenge } : null);
+                                // If no open window, clear the dismissal ref
+                                if (!openWin) dismissedAlertWindowIdRef.current = null;
+                                // If new window opened that's different from dismissed, reset dismissal
+                                if (openWin && dismissedAlertWindowIdRef.current && openWin.id !== dismissedAlertWindowIdRef.current) {
+                                    dismissedAlertWindowIdRef.current = null;
+                                }
+                                // Only show alert if not dismissed for this window
+                                const shouldAlert = openWin && openWin.id !== dismissedAlertWindowIdRef.current;
+                                setChallengeWindowAlert(shouldAlert ? { window: openWin, challenge: pJson.challenge } : null);
+                                // Still track open window for banner even when dismissed
+                                setOpenWindowForBanner(openWin || null);
                                 const nextWin = (pJson.windows as any[])
                                     .filter(w => new Date(w.opens_at).getTime() > now && !submittedIds.has(w.id))
                                     .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
                                 setNextChallengeWindowTs(nextWin ? new Date(nextWin.opens_at).getTime() : null);
                             } else {
                                 setChallengeWindowAlert(null);
+                                setOpenWindowForBanner(null);
                                 setNextChallengeWindowTs(null);
                             }
                         }
@@ -657,21 +670,21 @@ export default function ProfilePage() {
                         {isParticipant && activeChallenge && participantStatus === 'active' && (
                             <div
                                 onClick={() => setDesktopChallengeOverlayOpen(true)}
-                                style={{ width: '100%', marginBottom: 20, flexShrink: 0, cursor: 'pointer', borderRadius: 12, overflow: 'hidden', position: 'relative', border: challengeWindowAlert ? '1px solid rgba(74,222,128,0.5)' : '1px solid rgba(197,160,89,0.25)', boxShadow: challengeWindowAlert ? '0 0 16px rgba(74,222,128,0.12)' : '0 0 16px rgba(197,160,89,0.06)' }}
+                                style={{ width: '100%', marginBottom: 20, flexShrink: 0, cursor: 'pointer', borderRadius: 12, overflow: 'hidden', position: 'relative', border: '1px solid rgba(197,160,89,0.25)', boxShadow: openWindowForBanner ? '0 0 20px rgba(197,160,89,0.1)' : '0 0 10px rgba(0,0,0,0.3)' }}
                             >
                                 {activeChallenge.image_url && (
-                                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${activeChallenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.22 }} />
+                                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${activeChallenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18 }} />
                                 )}
-                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(4,2,12,0.5) 0%, rgba(4,2,12,0.88) 100%)' }} />
-                                <div style={{ position: 'relative', padding: '10px 12px' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: challengeWindowAlert ? '#4ade80' : '#c5a059', letterSpacing: '2px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
-                                        {challengeWindowAlert && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1s infinite' }} />}
-                                        {challengeWindowAlert ? 'TASK OPEN NOW' : 'ACTIVE CHALLENGE'}
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(12,10,28,0.85) 0%, rgba(4,2,12,0.95) 100%)' }} />
+                                <div style={{ position: 'relative', padding: '12px 14px' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: openWindowForBanner ? '#c5a059' : 'rgba(197,160,89,0.5)', letterSpacing: '2px', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        {openWindowForBanner && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 8px rgba(197,160,89,0.8)', animation: 'pulse 2s infinite' }} />}
+                                        {openWindowForBanner ? 'TASK WINDOW OPEN' : 'ACTIVE CHALLENGE'}
                                     </div>
-                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', fontWeight: 700, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: challengeWindowAlert ? '#4ade80' : 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>
-                                        {challengeWindowAlert
-                                            ? `CLOSES IN ${Math.max(0, Math.floor((new Date(challengeWindowAlert.window.closes_at).getTime() - Date.now()) / 60000))}m`
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#fff', fontWeight: 700, marginBottom: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.5px' }}>{activeChallenge.name}</div>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.34rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '1px' }}>
+                                        {openWindowForBanner
+                                            ? <CountdownText targetTs={new Date(openWindowForBanner.closes_at).getTime()} prefix="CLOSES IN " />
                                             : nextChallengeWindowTs
                                                 ? <CountdownText targetTs={nextChallengeWindowTs} prefix="NEXT IN " />
                                                 : 'TAP TO VIEW'}
@@ -730,27 +743,27 @@ export default function ProfilePage() {
                                 <div style={{ position: 'relative', padding: '14px 14px 10px', display: 'flex', flexDirection: 'column', height: '100%', gap: 0 }}>
                                     {/* Live indicator */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: challengeWindowAlert ? '#4ade80' : '#c5a059', boxShadow: challengeWindowAlert ? '0 0 8px rgba(74,222,128,0.8)' : '0 0 6px rgba(197,160,89,0.6)', animation: challengeWindowAlert ? 'pulse 1s infinite' : 'none' }} />
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: challengeWindowAlert ? '#4ade80' : '#c5a059', letterSpacing: '2px' }}>
-                                            {challengeWindowAlert ? 'TASK WINDOW OPEN' : participantStatus === 'active' ? 'ENROLLED' : participantStatus?.toUpperCase()}
+                                        {openWindowForBanner && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 8px rgba(197,160,89,0.8)', animation: 'pulse 2s infinite' }} />}
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '2px' }}>
+                                            {openWindowForBanner ? 'TASK WINDOW OPEN' : participantStatus === 'active' ? 'ENROLLED' : participantStatus?.toUpperCase()}
                                         </div>
                                     </div>
                                     {/* Challenge name */}
                                     <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', fontWeight: 700, color: '#fff', letterSpacing: '1px', lineHeight: 1.3, flex: 1, display: 'flex', alignItems: 'center' }}>{activeChallenge.name}</div>
                                     {/* Timer */}
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: challengeWindowAlert ? '#4ade80' : 'rgba(255,255,255,0.45)', letterSpacing: '1.5px', marginBottom: 10 }}>
-                                        {challengeWindowAlert
-                                            ? <CountdownText targetTs={new Date(challengeWindowAlert.window.closes_at).getTime()} prefix="CLOSES IN " />
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '1.5px', marginBottom: 10 }}>
+                                        {openWindowForBanner
+                                            ? <CountdownText targetTs={new Date(openWindowForBanner.closes_at).getTime()} prefix="CLOSES IN " />
                                             : nextChallengeWindowTs
                                                 ? <CountdownText targetTs={nextChallengeWindowTs} prefix="NEXT TASK IN " />
                                                 : 'CHALLENGE ACTIVE'}
                                     </div>
                                     <button style={{
-                                        width: '100%', padding: '7px 0', borderRadius: 8, border: `1px solid ${challengeWindowAlert ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.4)'}`, cursor: 'pointer',
-                                        background: challengeWindowAlert ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.1)',
-                                        color: challengeWindowAlert ? '#4ade80' : '#c5a059', fontFamily: 'Orbitron', fontSize: '0.5rem', fontWeight: 700,
+                                        width: '100%', padding: '7px 0', borderRadius: 8, border: 'rgba(197,160,89,0.4) 1px solid', cursor: 'pointer',
+                                        background: openWindowForBanner ? 'linear-gradient(135deg, rgba(197,160,89,0.2), rgba(139,105,20,0.12))' : 'rgba(197,160,89,0.08)',
+                                        color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.5rem', fontWeight: 700,
                                         letterSpacing: '1px', textTransform: 'uppercase',
-                                    }}>{challengeWindowAlert ? '⬆ UPLOAD PROOF' : 'VIEW CHALLENGE'}</button>
+                                    }}>{openWindowForBanner ? '↑ SUBMIT PROOF' : 'VIEW CHALLENGE'}</button>
                                 </div>
                             </>
                         ) : (
@@ -1905,8 +1918,8 @@ export default function ProfilePage() {
                 {isMobile && isParticipant && participantStatus === 'active' && !challengePanelOpen && !mobOverlayOpen && (
                     <MobileChallengeBanner
                         challengeName={activeChallenge.name}
-                        hasOpenWindow={!!challengeWindowAlert}
-                        nextWindowTs={challengeWindowAlert ? null : nextChallengeWindowTs}
+                        hasOpenWindow={!!openWindowForBanner}
+                        nextWindowTs={openWindowForBanner ? null : nextChallengeWindowTs}
                         onOpen={() => { setChallengePanelOpen(true); setChallengePanelId(activeChallenge.id); }}
                     />
                 )}
@@ -1922,21 +1935,31 @@ export default function ProfilePage() {
         )}
         {/* Challenge Window Alert Overlay */}
         {challengeWindowAlert && !challengePanelOpen && (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-                <div style={{ background: 'rgba(5,8,18,0.98)', border: '2px solid rgba(74,222,128,0.6)', borderRadius: 18, maxWidth: 420, width: '100%', overflow: 'hidden', boxShadow: '0 0 60px rgba(74,222,128,0.2)' }}>
-                    {/* Pulsing header */}
-                    <div style={{ background: 'linear-gradient(135deg,rgba(74,222,128,0.18),rgba(0,0,0,0.4))', borderBottom: '1px solid rgba(74,222,128,0.3)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 12px rgba(74,222,128,0.9)', animation: 'pulse 1s infinite', flexShrink: 0 }} />
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#4ade80', letterSpacing: '2.5px', fontWeight: 700 }}>WINDOW OPEN — SUBMIT NOW</div>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(2,2,10,0.92)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                <div style={{ background: 'linear-gradient(160deg, rgba(12,10,28,0.99) 0%, rgba(6,5,18,0.99) 100%)', border: '1px solid rgba(197,160,89,0.4)', borderRadius: 18, maxWidth: 440, width: '100%', overflow: 'hidden', boxShadow: '0 0 80px rgba(197,160,89,0.08), 0 30px 60px rgba(0,0,0,0.7)' }}>
+                    {/* Header */}
+                    <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.1), rgba(197,160,89,0.03))', borderBottom: '1px solid rgba(197,160,89,0.18)', padding: '18px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 10px rgba(197,160,89,0.8)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: '#c5a059', letterSpacing: '3px', fontWeight: 700 }}>TASK WINDOW OPEN</div>
+                        </div>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px' }}>
+                            <CountdownText targetTs={new Date(challengeWindowAlert.window.closes_at).getTime()} prefix="CLOSES IN " />
+                        </div>
                     </div>
-                    <div style={{ padding: '20px 22px' }}>
-                        {/* Task info */}
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: '#fff', fontWeight: 700, marginBottom: 6 }}>
-                            {challengeWindowAlert.challenge?.name || 'Challenge'}
+                    <div style={{ padding: '22px 24px' }}>
+                        {/* Challenge + task label */}
+                        <div style={{ marginBottom: 16 }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>
+                                {challengeWindowAlert.challenge?.name || 'Challenge'}
+                            </div>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '2px' }}>
+                                DAY {challengeWindowAlert.window.day_number} · TASK {challengeWindowAlert.window.window_number}
+                            </div>
                         </div>
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(74,222,128,0.7)', letterSpacing: '1.5px', marginBottom: 12 }}>
-                            DAY {challengeWindowAlert.window.day_number} · TASK {challengeWindowAlert.window.window_number}
-                        </div>
+
+                        {/* Thin gold divider */}
+                        <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.3), transparent)', marginBottom: 16 }} />
 
                         {/* Task description */}
                         {(() => {
@@ -1944,26 +1967,21 @@ export default function ProfilePage() {
                             const idx = (challengeWindowAlert.window.day_number - 1) * tpd + (challengeWindowAlert.window.window_number - 1);
                             const taskText = (challengeWindowAlert.challenge?.task_names || [])[idx];
                             return taskText ? (
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.82)', lineHeight: 1.55, marginBottom: 20, padding: '12px 14px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: 10 }}>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, marginBottom: 18, padding: '14px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10 }}>
                                     {taskText}
                                 </div>
                             ) : null;
                         })()}
 
-                        {/* Verification code — big and prominent */}
-                        <div style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'center' }}>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '3px', marginBottom: 8 }}>YOUR VERIFICATION CODE</div>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '2.8rem', fontWeight: 900, color: '#4ade80', letterSpacing: '8px', textShadow: '0 0 20px rgba(74,222,128,0.5)' }}>
+                        {/* Verification code */}
+                        <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'center' }}>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 10, textTransform: 'uppercase' }}>Your Verification Code</div>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '2.6rem', fontWeight: 900, color: '#c5a059', letterSpacing: '10px', textShadow: '0 0 30px rgba(197,160,89,0.4)', lineHeight: 1 }}>
                                 {challengeWindowAlert.window.verification_code}
                             </div>
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>
-                                Include this code visibly in your photo
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', marginTop: 8, letterSpacing: '1px' }}>
+                                Include this code visibly in your submission
                             </div>
-                        </div>
-
-                        {/* Closes in */}
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#888', marginBottom: 20, textAlign: 'center' }}>
-                            Closes in <CountdownText targetTs={new Date(challengeWindowAlert.window.closes_at).getTime()} prefix="" />
                         </div>
 
                         {/* Buttons */}
@@ -1972,11 +1990,11 @@ export default function ProfilePage() {
                             <button
                                 onClick={() => alertFileInputRef.current?.click()}
                                 disabled={alertUploading || alertUploadDone}
-                                style={{ flex: 1, padding: '12px 0', background: alertUploadDone ? 'rgba(74,222,128,0.25)' : 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.5)', borderRadius: 10, fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, color: '#4ade80', letterSpacing: '1.5px', cursor: alertUploading || alertUploadDone ? 'default' : 'pointer' }}
-                            >{alertUploadDone ? '✓ SUBMITTED' : alertUploading ? 'UPLOADING...' : '⬆ UPLOAD PROOF'}</button>
+                                style={{ flex: 1, padding: '13px 0', background: alertUploadDone ? 'rgba(197,160,89,0.2)' : 'linear-gradient(135deg, rgba(197,160,89,0.18), rgba(139,105,20,0.12))', border: `1px solid ${alertUploadDone ? 'rgba(197,160,89,0.4)' : 'rgba(197,160,89,0.5)'}`, borderRadius: 10, fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, color: '#c5a059', letterSpacing: '1.5px', cursor: alertUploading || alertUploadDone ? 'default' : 'pointer' }}
+                            >{alertUploadDone ? '✓ SUBMITTED' : alertUploading ? 'UPLOADING...' : '↑ SUBMIT PROOF'}</button>
                             <button
-                                onClick={() => setChallengeWindowAlert(null)}
-                                style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', cursor: 'pointer' }}
+                                onClick={() => { dismissedAlertWindowIdRef.current = challengeWindowAlert?.window?.id || null; setChallengeWindowAlert(null); }}
+                                style={{ padding: '13px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px', cursor: 'pointer' }}
                             >LATER</button>
                         </div>
                     </div>
@@ -2025,23 +2043,30 @@ function MobileChallengeBanner({ challengeName, hasOpenWindow, nextWindowTs, onO
             onClick={onOpen}
             style={{
                 position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000003,
-                background: hasOpenWindow ? 'rgba(5,18,8,0.97)' : 'rgba(5,8,18,0.97)',
-                border: `1px solid ${hasOpenWindow ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.35)'}`,
-                borderRadius: 14, padding: '10px 16px',
+                background: 'linear-gradient(135deg, rgba(8,7,22,0.97) 0%, rgba(12,10,26,0.97) 100%)',
+                border: `1px solid ${hasOpenWindow ? 'rgba(197,160,89,0.55)' : 'rgba(197,160,89,0.2)'}`,
+                borderRadius: 14, padding: '11px 16px',
                 display: 'flex', alignItems: 'center', gap: 12,
-                boxShadow: `0 -2px 24px rgba(0,0,0,0.6), 0 4px 20px ${hasOpenWindow ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.08)'}`,
-                backdropFilter: 'blur(16px)', cursor: 'pointer',
+                boxShadow: hasOpenWindow
+                    ? '0 -2px 30px rgba(197,160,89,0.12), 0 4px 24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(197,160,89,0.08)'
+                    : '0 -2px 20px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(20px)', cursor: 'pointer',
             }}
         >
-            {hasOpenWindow && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 10px rgba(74,222,128,0.8)', flexShrink: 0, animation: 'pulse 1s infinite' }} />}
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c5a059', boxShadow: `0 0 ${hasOpenWindow ? '12px rgba(197,160,89,0.9)' : '6px rgba(197,160,89,0.4)'}`, flexShrink: 0, animation: hasOpenWindow ? 'pulse 2s infinite' : 'none' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{challengeName}</div>
-                <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', letterSpacing: '1.5px', marginTop: 2, color: hasOpenWindow ? '#4ade80' : '#c5a059' }}>
-                    {hasOpenWindow ? 'TASK WINDOW OPEN — UPLOAD NOW' : nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="NEXT TASK IN " /> : 'CHALLENGE ACTIVE'}
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{challengeName}</div>
+                <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', letterSpacing: '1.5px', marginTop: 3, color: hasOpenWindow ? '#c5a059' : 'rgba(197,160,89,0.5)' }}>
+                    {hasOpenWindow ? 'TASK WINDOW OPEN — TAP TO SUBMIT' : nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="NEXT TASK IN " /> : 'CHALLENGE ACTIVE'}
                 </div>
             </div>
-            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: hasOpenWindow ? '#4ade80' : '#c5a059', fontWeight: 700, flexShrink: 0, border: `1px solid ${hasOpenWindow ? 'rgba(74,222,128,0.4)' : 'rgba(197,160,89,0.3)'}`, borderRadius: 8, padding: '5px 10px' }}>
-                {hasOpenWindow ? 'UPLOAD' : 'VIEW'}
+            <div style={{
+                fontFamily: 'Orbitron', fontSize: '0.38rem', color: hasOpenWindow ? '#000' : '#c5a059', fontWeight: 700, flexShrink: 0,
+                background: hasOpenWindow ? 'linear-gradient(135deg, #c5a059, #8b6914)' : 'transparent',
+                border: `1px solid ${hasOpenWindow ? 'transparent' : 'rgba(197,160,89,0.35)'}`,
+                borderRadius: 8, padding: '6px 12px', letterSpacing: '1px',
+            }}>
+                {hasOpenWindow ? 'SUBMIT' : 'VIEW'}
             </div>
         </div>
     );
