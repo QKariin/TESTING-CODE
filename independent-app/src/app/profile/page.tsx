@@ -1244,8 +1244,10 @@ export default function ProfilePage() {
             <div id="MOBILE_APP" style={{ display: 'none' }}>
                 <div id="viewMobileHome" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', maxWidth: '100vw', height: '100dvh', overflowY: 'auto', overflowX: 'hidden', display: 'block', padding: 0, zIndex: 1, background: 'transparent' }}>
                     <div className="mob-hud-row">
-                        <div className="hud-circle slave" onClick={() => (window as any).openLobby()}>
-                            <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png", 100)} alt="Your Avatar" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                        <div className="hud-circle-wrap" onClick={() => (window as any).openLobby()}>
+                            <div className="hud-circle slave">
+                                <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png", 100)} alt="Your Avatar" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                            </div>
                             <div className="hud-gear">⚙</div>
                         </div>
                         <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>
