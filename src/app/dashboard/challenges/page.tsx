@@ -611,6 +611,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
     const [editName, setEditName] = useState('');
     const [saving, setSaving] = useState<string | null>(null);
     const [pushing, setPushing] = useState<string | null>(null);
+    const [stopping, setStopping] = useState<string | null>(null);
     const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
     const now = Date.now();
@@ -685,6 +686,21 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
         } finally { setPushing(null); }
     };
 
+    const stopNow = async (w: Window_) => {
+        if (!confirm(`Stop Day ${w.day_number} · Task ${w.window_number} now? Window will close immediately.`)) return;
+        setStopping(w.id);
+        try {
+            const res = await fetch(`/api/challenges/windows/${w.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ closes_at: new Date().toISOString() }),
+            });
+            const json = await res.json();
+            if (json.success) { showMsg(`Day ${w.day_number} · Task ${w.window_number} stopped`, true); onRefresh(); }
+            else showMsg(json.error || 'Stop failed', false);
+        } finally { setStopping(null); }
+    };
+
     return (
         <div>
             <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -722,7 +738,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                         <div style={{ flexShrink: 0, fontFamily: 'Orbitron, monospace', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '3px', fontWeight: 900, minWidth: 62 }}>
                                             {w.verification_code}
                                         </div>
-                                        <div style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: taskName ? '#ccc' : '#444', fontStyle: taskName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <div style={{ flex: 1, minWidth: 0, fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: taskName ? '#ccc' : '#444', fontStyle: taskName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {taskName || 'no task description'}
                                         </div>
                                         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -741,6 +757,12 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                                     <button onClick={() => startEdit(w)}
                                                         style={{ padding: '5px 12px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', letterSpacing: '1px', cursor: 'pointer' }}>
                                                         ✎ EDIT
+                                                    </button>
+                                                )}
+                                                {isOpen && (
+                                                    <button onClick={() => stopNow(w)} disabled={stopping === w.id}
+                                                        style={{ padding: '5px 12px', background: stopping === w.id ? 'rgba(255,255,255,0.03)' : 'rgba(224,48,48,0.12)', border: `1px solid ${stopping === w.id ? 'rgba(255,255,255,0.1)' : 'rgba(224,48,48,0.5)'}`, borderRadius: 6, color: stopping === w.id ? '#555' : '#e03030', fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', fontWeight: 700, letterSpacing: '1px', cursor: stopping === w.id ? 'default' : 'pointer' }}>
+                                                        {stopping === w.id ? '...' : '■ STOP'}
                                                     </button>
                                                 )}
                                                 {!isOpen && !isPast && (
