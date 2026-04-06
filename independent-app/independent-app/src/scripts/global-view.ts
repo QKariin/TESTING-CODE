@@ -695,7 +695,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                             <div style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(74,222,128,0.7);letter-spacing:1px;margin-bottom:10px;">${(d.challengeName||'').toUpperCase()}</div>
                             <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:4px 14px;">
                                 <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span>
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:2px;">IN CHALLENGE: ${d.activeCount||0}</span>
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:2px;">ACTIVE USERS: ${d.activeCount||0}</span>
                             </div>
                         </div>
                     </div>
