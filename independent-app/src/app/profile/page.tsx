@@ -1577,9 +1577,6 @@ export default function ProfilePage() {
                                     onContextMenu={(e) => e.preventDefault()}
                                     style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}>
                                     <div id="mob_kneelFill" className="mob-bar-fill"></div>
-                                    {/* 4-point sparkle stars at pill edges */}
-                                    <span className="kneel-sparkle-left" aria-hidden="true" />
-                                    <span className="kneel-sparkle-right" aria-hidden="true" />
                                     <div className="mob-bar-content">
                                         <span className="kneel-icon-sm">♛</span>
                                         <span id="mob_kneelText" className="kneel-text kneel-label">HOLD TO KNEEL</span>

@@ -306,10 +306,10 @@
         border-color: rgba(197, 160, 89, 0.3);
     }
 
-    /* ─── KNEELING BUTTON OUTER WRAPPER ─── */
+    /* ─── KNEELING BUTTON ─── */
     .mob-kneel-outer {
         position: relative;
-        width: 90%;
+        width: 88%;
         margin: 0 auto;
     }
 
@@ -319,65 +319,7 @@
         padding: 0;
         position: relative;
         z-index: 1;
-        overflow: visible;
-    }
-
-    /* 4-point sparkle stars at pill edges */
-    .kneel-sparkle-left,
-    .kneel-sparkle-right {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-        background: rgba(255, 248, 210, 0.95);
-        box-shadow:
-            0 0 3px rgba(255, 248, 210, 1),
-            0 0 7px rgba(197, 160, 89, 0.9);
-        pointer-events: none;
-        z-index: 4;
-    }
-
-    .kneel-sparkle-left { left: 0px; }
-    .kneel-sparkle-right { right: 0px; }
-
-    /* horizontal spike */
-    .kneel-sparkle-left::before,
-    .kneel-sparkle-right::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 38px;
-        height: 1px;
-        background: linear-gradient(90deg,
-            transparent 0%,
-            rgba(197, 160, 89, 0.35) 20%,
-            rgba(255, 248, 210, 0.9) 50%,
-            rgba(197, 160, 89, 0.35) 80%,
-            transparent 100%
-        );
-    }
-
-    /* vertical spike */
-    .kneel-sparkle-left::after,
-    .kneel-sparkle-right::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 1px;
-        height: 22px;
-        background: linear-gradient(180deg,
-            transparent 0%,
-            rgba(197, 160, 89, 0.3) 30%,
-            rgba(255, 248, 210, 0.75) 50%,
-            rgba(197, 160, 89, 0.3) 70%,
-            transparent 100%
-        );
+        overflow: hidden;
     }
 
     .mob-internal-drawer {
@@ -403,29 +345,30 @@
 
     .mob-kneel-bar {
         width: 100%;
-        height: 80px;
-        /* Glass sheen: very dark with a subtle bright centre strip */
+        height: 76px;
+        /* Dark glass with a warm top-light — like a lit panel surface */
         background:
-            radial-gradient(ellipse 70% 50% at 50% 0%, rgba(197,160,89,0.07) 0%, transparent 70%),
-            linear-gradient(180deg, rgba(14, 12, 30, 0.96) 0%, rgba(6, 4, 18, 0.99) 100%);
-        backdrop-filter: blur(32px);
-        -webkit-backdrop-filter: blur(32px);
-        /* Clean single-line gold border — brighter on top for glass bevel */
-        border: 1px solid rgba(197, 160, 89, 0.65);
-        border-top: 1px solid rgba(197, 160, 89, 0.88);
-        border-bottom: 1px solid rgba(197, 160, 89, 0.45);
-        border-radius: 60px;
+            radial-gradient(ellipse 80% 60% at 50% -10%, rgba(197, 160, 89, 0.07) 0%, transparent 65%),
+            linear-gradient(160deg, rgba(18, 14, 36, 0.97) 0%, rgba(7, 5, 18, 0.99) 100%);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        /* Bevel: bright top edge, dimmer sides, darkest bottom */
+        border-top: 1px solid rgba(197, 160, 89, 0.7);
+        border-left: 1px solid rgba(197, 160, 89, 0.38);
+        border-right: 1px solid rgba(197, 160, 89, 0.38);
+        border-bottom: 1px solid rgba(197, 160, 89, 0.22);
+        border-radius: 18px;
         position: relative;
-        overflow: hidden;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        /* Minimal shadow — depth only, NO ambient glow */
+        /* Depth: inset highlight + heavy drop — pressed into the page */
         box-shadow:
-            inset 0 1px 0 rgba(255, 248, 210, 0.12),
-            inset 0 -1px 0 rgba(0, 0, 0, 0.5),
-            0 12px 40px rgba(0, 0, 0, 0.85);
+            inset 0 1px 0 rgba(255, 248, 210, 0.1),
+            inset 0 -3px 8px rgba(0, 0, 0, 0.55),
+            0 4px 12px rgba(0, 0, 0, 0.6),
+            0 12px 32px rgba(0, 0, 0, 0.7);
         transition: border-color 0.25s ease, box-shadow 0.25s ease;
         touch-action: none;
         user-select: none;
@@ -447,13 +390,12 @@
         left: 0;
         width: 0%;
         height: 100%;
-        /* Deep crimson → black — no neon, no glow */
+        /* Deep crimson → black, contained — like heat building inside */
         background: linear-gradient(90deg,
-            rgba(105, 4, 4, 0.98) 0%,
-            rgba(65, 2, 2, 0.7) 45%,
-            rgba(12, 1, 1, 0.2) 100%
+            rgba(100, 4, 4, 0.96) 0%,
+            rgba(60, 2, 2, 0.65) 50%,
+            rgba(10, 0, 0, 0.1) 100%
         );
-        border-radius: 60px;
         z-index: 1;
         transition: width 0.1s linear;
     }
@@ -461,26 +403,25 @@
     .mob-bar-content {
         z-index: 2;
         display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 16px;
+        gap: 5px;
         pointer-events: none;
     }
 
     .kneel-icon-sm {
-        color: rgba(197, 160, 89, 0.82);
-        font-size: 1.55rem;
+        color: rgba(197, 160, 89, 0.6);
+        font-size: 1.0rem;
         line-height: 1;
-        /* No glow filter — just the clean icon */
     }
 
     .kneel-text {
         font-family: 'Cinzel', serif;
-        font-size: 0.88rem;
-        letter-spacing: 10px;
-        color: rgba(197, 160, 89, 0.92);
+        font-size: 0.72rem;
+        letter-spacing: 8px;
+        color: rgba(197, 160, 89, 0.88);
         font-weight: 600;
-        /* Subtle embossed text shadow only — no neon glow */
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
     }
 
     @keyframes fadeIn {
