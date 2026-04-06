@@ -303,10 +303,40 @@
         background: rgba(197, 160, 89, 0.1);
     }
 
-    .mob-kneel-zone {
-        width: 88%;
+    /* ─── KNEELING BUTTON OUTER WRAPPER ─── */
+    .mob-kneel-outer {
+        position: relative;
+        width: 90%;
         margin: 0 auto;
+    }
+
+    .mob-kneel-halo {
+        position: absolute;
+        inset: -8px;
+        border-radius: 28px;
+        border: 1px solid rgba(197, 160, 89, 0.18);
+        pointer-events: none;
+        z-index: 0;
+        animation: kneelHaloBreath 4s ease-in-out infinite;
+    }
+
+    @keyframes kneelHaloBreath {
+        0%, 100% {
+            opacity: 0.3;
+            box-shadow: 0 0 18px rgba(197, 160, 89, 0.04);
+        }
+        50% {
+            opacity: 0.85;
+            box-shadow: 0 0 40px rgba(197, 160, 89, 0.14), 0 0 80px rgba(197, 160, 89, 0.05);
+        }
+    }
+
+    .mob-kneel-zone {
+        width: 100% !important;
+        margin: 0;
         padding: 0;
+        position: relative;
+        z-index: 1;
     }
 
     .mob-internal-drawer {
@@ -330,21 +360,15 @@
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85);
     }
 
-    .mob-kneel-zone {
-        width: 78% !important;
-        margin: 0 auto;
-        position: relative;
-        overflow: visible;
-    }
-
     .mob-kneel-bar {
         width: 100%;
-        height: 54px;
-        background: rgba(4, 2, 12, 0.72);
-        backdrop-filter: blur(22px);
-        -webkit-backdrop-filter: blur(22px);
-        border: 2px solid rgba(197, 160, 89, 0.75);
-        border-radius: 50px;
+        height: 84px;
+        background: linear-gradient(180deg, rgba(10, 8, 26, 0.97) 0%, rgba(5, 3, 16, 0.99) 100%);
+        backdrop-filter: blur(32px);
+        -webkit-backdrop-filter: blur(32px);
+        border: 1.5px solid rgba(197, 160, 89, 0.5);
+        border-top: 1.5px solid rgba(197, 160, 89, 0.72);
+        border-radius: 20px;
         position: relative;
         overflow: hidden;
         cursor: pointer;
@@ -352,10 +376,12 @@
         align-items: center;
         justify-content: center;
         box-shadow:
-            0 0 0 1px rgba(197, 160, 89, 0.12),
-            0 0 28px rgba(197, 160, 89, 0.18),
-            0 0 56px rgba(197, 160, 89, 0.08),
-            0 8px 32px rgba(0, 0, 0, 0.65);
+            inset 0 1px 0 rgba(197, 160, 89, 0.22),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.7),
+            0 0 0 1px rgba(197, 160, 89, 0.07),
+            0 0 36px rgba(197, 160, 89, 0.09),
+            0 0 70px rgba(197, 160, 89, 0.04),
+            0 22px 55px rgba(0, 0, 0, 0.9);
         transition: border-color 0.3s ease, box-shadow 0.3s ease;
         touch-action: none;
         user-select: none;
@@ -377,8 +403,12 @@
         left: 0;
         width: 0%;
         height: 100%;
-        background: linear-gradient(90deg, rgba(120, 8, 8, 0.85) 0%, rgba(60, 4, 4, 0.45) 100%);
-        border-radius: 50px;
+        background: linear-gradient(90deg,
+            rgba(110, 5, 5, 0.95) 0%,
+            rgba(70, 3, 3, 0.6) 55%,
+            rgba(20, 1, 1, 0.15) 100%
+        );
+        border-radius: 20px;
         z-index: 1;
         transition: width 0.1s linear;
     }
@@ -387,23 +417,26 @@
         z-index: 2;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 18px;
         pointer-events: none;
     }
 
     .kneel-icon-sm {
-        color: rgba(197, 160, 89, 0.75);
-        font-size: 1.1rem;
-        letter-spacing: 0;
+        color: rgba(197, 160, 89, 0.88);
+        font-size: 1.75rem;
+        line-height: 1;
+        filter: drop-shadow(0 0 12px rgba(197, 160, 89, 0.55));
     }
 
     .kneel-text {
         font-family: 'Cinzel', serif;
-        font-size: 0.72rem;
-        letter-spacing: 6px;
-        color: rgba(197, 160, 89, 0.9);
+        font-size: 0.98rem;
+        letter-spacing: 9px;
+        color: rgba(197, 160, 89, 0.96);
         font-weight: 700;
-        text-shadow: 0 0 16px rgba(197, 160, 89, 0.25);
+        text-shadow:
+            0 0 24px rgba(197, 160, 89, 0.45),
+            0 0 55px rgba(197, 160, 89, 0.18);
     }
 
     @keyframes fadeIn {

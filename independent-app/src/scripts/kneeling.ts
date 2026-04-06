@@ -218,7 +218,7 @@ export function handleHoldStart(e: Event) {
     if (mobText) mobText.innerText = "SUBMITTING...";
     if (mobBar) {
         mobBar.style.borderColor = "rgba(197,160,89,0.95)";
-        mobBar.style.boxShadow = "0 0 0 1px rgba(197,160,89,0.2), 0 0 36px rgba(197,160,89,0.3), 0 0 60px rgba(197,160,89,0.12), 0 8px 32px rgba(0,0,0,0.65)";
+        mobBar.style.boxShadow = "inset 0 1px 0 rgba(197,160,89,0.3), inset 0 -1px 0 rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.25), 0 0 50px rgba(197,160,89,0.35), 0 0 100px rgba(197,160,89,0.15), 0 22px 55px rgba(0,0,0,0.9)";
     }
 
     // START TIMER
@@ -259,8 +259,8 @@ function resetUI() {
     }
     if (mobText) mobText.innerText = "HOLD TO KNEEL";
     if (mobBar) {
-        mobBar.style.borderColor = "rgba(197,160,89,0.75)";
-        mobBar.style.boxShadow = "0 0 0 1px rgba(197,160,89,0.12), 0 0 28px rgba(197,160,89,0.18), 0 0 56px rgba(197,160,89,0.08), 0 8px 32px rgba(0,0,0,0.65)";
+        mobBar.style.borderColor = "rgba(197,160,89,0.5)";
+        mobBar.style.boxShadow = "inset 0 1px 0 rgba(197,160,89,0.22), inset 0 -1px 0 rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.07), 0 0 36px rgba(197,160,89,0.09), 0 0 70px rgba(197,160,89,0.04), 0 22px 55px rgba(0,0,0,0.9)";
     }
 }
 
