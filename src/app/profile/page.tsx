@@ -93,6 +93,7 @@ export default function ProfilePage() {
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [challengePanelOpen, setChallengePanelOpen] = useState(false);
+    const [challengePanelId, setChallengePanelId] = useState<string | null>(null);
     const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string; status: string; start_date?: string } | null>(null);
     const [isMobile, setIsMobile] = useState(false);
     const [isParticipant, setIsParticipant] = useState(false);
@@ -179,6 +180,7 @@ export default function ProfilePage() {
             (window as any).switchMobGlPeriod = switchMobGlPeriod;
             (window as any).sendMobGlMessage = sendMobGlMessage;
             (window as any)._mobJoinChallenge = mobJoinChallenge;
+            (window as any)._openChallengePanel = (_e: Event, id: string) => { setChallengePanelId(id); setChallengePanelOpen(true); };
             (window as any).handleMobGlKey = handleMobGlKey;
             (window as any).toggleSystemLog = toggleSystemLog;
             (window as any).renderKneelDots = renderKneelDots;
@@ -1487,9 +1489,9 @@ export default function ProfilePage() {
                 <div id="altarBackdrop" className="altar-backdrop" onClick={() => (window as any).closeAltarDrawer()}></div>
 
                 <div id="altarDrawer" className="altar-drawer">
-                    <div className="altar-drawer-topbar">
-                        <span className="altar-drawer-title">SLAVE RECORD</span>
-                        <button className="altar-drawer-close" onClick={() => (window as any).closeAltarDrawer()}>✕ CLOSE</button>
+                    <div className="mob-overlay-header">
+                        <span className="mob-overlay-title">▦ SLAVE RECORD</span>
+                        <button className="mob-overlay-close" onClick={() => (window as any).closeAltarDrawer()}>✕</button>
                     </div>
 
                     <div className="altar-drawer-content">
@@ -1618,7 +1620,7 @@ export default function ProfilePage() {
                 <div className="mob-gl-tabs">
                     <button id="mobGlTab_rank" className="mob-gl-tab active" onClick={() => (window as any).switchMobGlTab('rank')}>RANK</button>
                     <button id="mobGlTab_talk" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('talk')}>TALK</button>
-                    <button id="mobGlTab_challenges" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('challenges')}>⚔ CHALLENGES</button>
+                    <button id="mobGlTab_challenges" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('challenges')}>CHALLENGES</button>
                     <button id="mobGlTab_updates" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('updates')}>NEWS</button>
                 </div>
 
@@ -1732,9 +1734,9 @@ export default function ProfilePage() {
                 )}
                 {challengePanelOpen && (
                     <ChallengeUploadPanel
-                        challengeId={activeChallenge.id}
+                        challengeId={challengePanelId || activeChallenge.id}
                         memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
-                        onClose={() => { setChallengePanelOpen(false); }}
+                        onClose={() => { setChallengePanelOpen(false); setChallengePanelId(null); }}
                         onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: 1 })); }}
                     />
                 )}

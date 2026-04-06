@@ -3091,16 +3091,16 @@ async function _loadMobGlChallenges() {
                 subText = `Starts in ${h}h ${m}m · ${c.tasks_per_day}×/day`;
             }
             return `
-            <div style="margin:10px 12px;background:${bg};border:1px solid ${border};border-radius:14px;overflow:hidden;">
-                ${c.image_url ? `<div style="width:100%;height:80px;overflow:hidden;position:relative;"><img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.7))"></div></div>` : ''}
+            <div onclick="(window._openChallengePanel||function(){})(event,'${c.id}')" style="margin:10px 12px;background:${bg};border:1px solid ${border};border-radius:14px;overflow:hidden;cursor:pointer;transition:opacity 0.15s;" onmousedown="this.style.opacity='0.8'" onmouseup="this.style.opacity='1'" ontouchstart="this.style.opacity='0.8'" ontouchend="this.style.opacity='1'">
+                ${c.image_url ? `<div style="width:100%;height:100px;overflow:hidden;position:relative;"><img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.75))"></div><div style="position:absolute;top:10px;left:12px;font-family:'Orbitron';font-size:0.32rem;color:${color};letter-spacing:2px;background:rgba(0,0,0,0.6);padding:3px 8px;border-radius:4px;border:1px solid ${border};">${isActive ? '⬤ LIVE' : '◎ COMING SOON'}</div></div>` : ''}
                 <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;">
-                    ${!c.image_url ? `<div style="width:40px;height:40px;border-radius:10px;background:${bg};border:1px solid ${border};display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">⚔</div>` : ''}
+                    ${!c.image_url ? `<div style="width:44px;height:44px;border-radius:10px;background:${bg};border:1px solid ${border};display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">⚔</div>` : ''}
                     <div style="flex:1;min-width:0;">
-                        <div style="font-family:'Orbitron';font-size:0.35rem;color:${color};letter-spacing:2px;margin-bottom:3px;">${isActive ? '⬤ LIVE' : '◎ COMING SOON'}</div>
-                        <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.name}</div>
+                        ${!c.image_url ? `<div style="font-family:'Orbitron';font-size:0.35rem;color:${color};letter-spacing:2px;margin-bottom:3px;">${isActive ? '⬤ LIVE' : '◎ COMING SOON'}</div>` : ''}
+                        <div style="font-family:'Cinzel';font-size:0.9rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.name}</div>
                         <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-top:3px;">${subText}</div>
                     </div>
-                    <button onclick="(window._mobJoinChallenge||function(){})(event,'${c.id}')" style="flex-shrink:0;padding:8px 16px;background:${isActive ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.1)'};border:1px solid ${border};border-radius:8px;color:${color};font-family:'Orbitron';font-size:0.38rem;letter-spacing:1px;cursor:pointer;font-weight:700;">JOIN</button>
+                    <div style="flex-shrink:0;padding:8px 16px;background:${isActive ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.1)'};border:1px solid ${border};border-radius:8px;color:${color};font-family:'Orbitron';font-size:0.38rem;letter-spacing:1px;font-weight:700;">VIEW ›</div>
                 </div>
             </div>`;
         }).join('');
