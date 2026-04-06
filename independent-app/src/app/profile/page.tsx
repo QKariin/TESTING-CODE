@@ -1409,6 +1409,25 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
+                        {/* MOBILE KNEELING BUTTON — centrepiece */}
+                        <div style={{ width: '100%', padding: '40px 0 52px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                            {/* Section label */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24, width: '88%' }}>
+                                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.35))' }} />
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>DAILY DEVOTION</span>
+                                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.35))' }} />
+                            </div>
+                            <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone"
+                                onContextMenu={(e) => e.preventDefault()}
+                                style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}>
+                                <div id="mob_kneelFill" className="mob-bar-fill"></div>
+                                <div className="mob-bar-content">
+                                    <span className="kneel-icon-sm">◈</span>
+                                    <span id="mob_kneelText" className="kneel-text kneel-label">HOLD TO KNEEL</span>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* SLAVE STATS DRAWER */}
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 16px', boxSizing: 'border-box' }}>
                             <div className="mob-stats-toggle-btn" onClick={() => (window as any).toggleMobileStats()}>
@@ -1428,19 +1447,6 @@ export default function ProfilePage() {
                                 <div style={{ width: '100%', textAlign: 'left', padding: '0 5px' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', marginBottom: '8px' }}>PRIVILEGES GRANTED</div>
                                     <ul id="drawer_NextBenefits" style={{ color: '#ccc', fontSize: '0.75rem', fontFamily: 'Cinzel', paddingLeft: '20px', lineHeight: 1.6, margin: 0 }}></ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* MOBILE KNEELING BUTTON */}
-                        <div style={{ padding: '12px 20px 24px', width: '100%', boxSizing: 'border-box' }}>
-                            <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone"
-                                onContextMenu={(e) => e.preventDefault()}
-                                style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}>
-                                <div id="mob_kneelFill" className="mob-bar-fill"></div>
-                                <div className="mob-bar-content">
-                                    <span className="kneel-icon-sm">◈</span>
-                                    <span id="mob_kneelText" className="kneel-text kneel-label">HOLD TO KNEEL</span>
                                 </div>
                             </div>
                         </div>

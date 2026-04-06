@@ -216,7 +216,10 @@ export function handleHoldStart(e: Event) {
         mobFill.style.width = "100%";
     }
     if (mobText) mobText.innerText = "SUBMITTING...";
-    if (mobBar) mobBar.style.borderColor = "#ffffff";
+    if (mobBar) {
+        mobBar.style.borderColor = "rgba(197,160,89,0.9)";
+        mobBar.style.boxShadow = "0 0 40px rgba(197,160,89,0.25), 0 12px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(197,160,89,0.2)";
+    }
 
     // START TIMER
     holdTimer = setTimeout(() => {
@@ -255,7 +258,10 @@ function resetUI() {
         mobFill.style.width = "0%";
     }
     if (mobText) mobText.innerText = "HOLD TO KNEEL";
-    if (mobBar) mobBar.style.borderColor = "#c5a059";
+    if (mobBar) {
+        mobBar.style.borderColor = "rgba(197,160,89,0.45)";
+        mobBar.style.boxShadow = "0 0 40px rgba(197,160,89,0.08), 0 12px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(197,160,89,0.12)";
+    }
 }
 
 // ─── 4. COMPLETE ───
