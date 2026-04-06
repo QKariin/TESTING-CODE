@@ -246,6 +246,7 @@ export default function DashboardPage() {
     const [showLocksModal, setShowLocksModal] = useState(false);
     const [lockedUsers, setLockedUsers] = useState<any[]>([]);
     const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null; isUpcoming?: boolean; startDate?: string; image_url?: string | null; description?: string; duration_days?: number; tasks_per_day?: number; window_minutes?: number; start_date_raw?: string } | null>(null);
+    const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
     const router = useRouter();
 
     useEffect(() => {
@@ -300,6 +301,7 @@ export default function DashboardPage() {
                     tasks_per_day: active.tasks_per_day,
                     window_minutes: active.window_minutes,
                 });
+                setPendingVerificationCount((d.pending_verifications || []).length);
             } catch { /* silent */ }
         };
         fetchChallenge();
@@ -583,8 +585,8 @@ export default function DashboardPage() {
                 <a
                     href="/dashboard/challenges"
                     className="sb-dash-btn"
-                    style={{ display: 'block', textDecoration: 'none', backgroundImage: 'linear-gradient(135deg, rgba(74,222,128,0.06), transparent)', borderBottom: '1px solid rgba(74,222,128,0.15)', color: '#4ade80' }}
-                >⚔ CHALLENGES</a>
+                    style={{ display: 'block', textDecoration: 'none', backgroundImage: 'linear-gradient(135deg, rgba(74,222,128,0.06), transparent)', borderBottom: '1px solid rgba(74,222,128,0.15)', color: '#4ade80', position: 'relative' }}
+                >⚔ CHALLENGES{pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}</a>
                 <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
                     <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: 'Orbitron', fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
@@ -663,7 +665,14 @@ export default function DashboardPage() {
                             onMouseEnter={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.7)' : 'rgba(74,222,128,0.6)') : 'rgba(197,160,89,0.4)')}
                             onMouseLeave={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)')}>
                             <div className="vg-header" style={{ padding: '12px 16px 10px' }}>
-                                <div className="vg-title" style={{ color: challengeWidget ? (challengeWidget.isUpcoming ? '#c5a059' : '#4ade80') : '#c5a059' }}>CHALLENGES</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <div className="vg-title" style={{ color: challengeWidget ? (challengeWidget.isUpcoming ? '#c5a059' : '#4ade80') : '#c5a059' }}>CHALLENGES</div>
+                                    {pendingVerificationCount > 0 && (
+                                        <span style={{ background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.36rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+                                            {pendingVerificationCount} TO VALIDATE
+                                        </span>
+                                    )}
+                                </div>
                                 <div className="vg-sub" style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); window.location.href = '/dashboard/challenges'; }}>MANAGE ↗</div>
                             </div>
                             {challengeWidget ? (

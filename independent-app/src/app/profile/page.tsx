@@ -104,6 +104,7 @@ export default function ProfilePage() {
     const [desktopChallengeOpen, setDesktopChallengeOpen] = useState(false);
     const [allChallenges, setAllChallenges] = useState<any[]>([]);
     const [challengeCounts, setChallengeCounts] = useState({ pending: 0, yours: 0 });
+    const [challengeWindowAlert, setChallengeWindowAlert] = useState<{ window: any; challenge: any } | null>(null);
     const [mobOverlayOpen, setMobOverlayOpen] = useState(false);
 
     // Track mobile viewport
@@ -395,6 +396,17 @@ export default function ProfilePage() {
                                 (ch.status === 'draft' && ch.start_date && new Date(ch.start_date).getTime() > now)
                             ).length;
                             setChallengeCounts({ pending: activeChallengeCount, yours: joined ? 1 : 0 });
+
+                            // Check for open task window — alert active participants
+                            if (joined && pJson.participant?.status === 'active' && pJson.windows) {
+                                const submittedIds = new Set((pJson.completions || []).map((c: any) => c.window_id));
+                                const openWin = (pJson.windows as any[]).find(w =>
+                                    now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime() && !submittedIds.has(w.id)
+                                );
+                                setChallengeWindowAlert(openWin ? { window: openWin, challenge: pJson.challenge } : null);
+                            } else {
+                                setChallengeWindowAlert(null);
+                            }
                         }
                     } catch {}
                 } else {
@@ -1768,6 +1780,55 @@ export default function ProfilePage() {
                 )}
             </>
         )}
+        {/* Challenge Window Alert Overlay */}
+        {challengeWindowAlert && !challengePanelOpen && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                <div style={{ background: 'rgba(5,8,18,0.98)', border: '2px solid rgba(74,222,128,0.6)', borderRadius: 18, maxWidth: 420, width: '100%', overflow: 'hidden', boxShadow: '0 0 60px rgba(74,222,128,0.2)' }}>
+                    {/* Pulsing header */}
+                    <div style={{ background: 'linear-gradient(135deg,rgba(74,222,128,0.18),rgba(0,0,0,0.4))', borderBottom: '1px solid rgba(74,222,128,0.3)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 12px rgba(74,222,128,0.9)', animation: 'pulse 1s infinite', flexShrink: 0 }} />
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#4ade80', letterSpacing: '2.5px', fontWeight: 700 }}>WINDOW OPEN — SUBMIT NOW</div>
+                    </div>
+                    <div style={{ padding: '20px 22px' }}>
+                        {/* Task info */}
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: '#fff', fontWeight: 700, marginBottom: 6 }}>
+                            {challengeWindowAlert.challenge?.name || 'Challenge'}
+                        </div>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(74,222,128,0.7)', letterSpacing: '1.5px', marginBottom: 20 }}>
+                            DAY {challengeWindowAlert.window.day_number} · TASK {challengeWindowAlert.window.window_number}
+                        </div>
+
+                        {/* Verification code — big and prominent */}
+                        <div style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'center' }}>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '3px', marginBottom: 8 }}>YOUR VERIFICATION CODE</div>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '2.8rem', fontWeight: 900, color: '#4ade80', letterSpacing: '8px', textShadow: '0 0 20px rgba(74,222,128,0.5)' }}>
+                                {challengeWindowAlert.window.verification_code}
+                            </div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>
+                                Include this code visibly in your photo
+                            </div>
+                        </div>
+
+                        {/* Closes in */}
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#888', marginBottom: 20, textAlign: 'center' }}>
+                            Closes at {new Date(challengeWindowAlert.window.closes_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+
+                        {/* Buttons */}
+                        <div style={{ display: 'flex', gap: 10 }}>
+                            <button
+                                onClick={() => { setChallengeWindowAlert(null); setChallengePanelOpen(true); setChallengePanelId(challengeWindowAlert.challenge?.id || null); }}
+                                style={{ flex: 1, padding: '12px 0', background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.5)', borderRadius: 10, fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, color: '#4ade80', letterSpacing: '1.5px', cursor: 'pointer' }}
+                            >UPLOAD PROOF</button>
+                            <button
+                                onClick={() => setChallengeWindowAlert(null)}
+                                style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', cursor: 'pointer' }}
+                            >LATER</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
         {/* Desktop Challenge Modal */}
         {desktopChallengeOpen && (
             <DesktopChallengeModal
@@ -1976,22 +2037,30 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                                     const secsLeft = Math.floor((new Date(w.closes_at).getTime() - now) / 1000);
                                     const minLeft = Math.floor(secsLeft / 60);
                                     return (
-                                        <div key={w.id} style={{ background: done ? 'rgba(74,222,128,0.04)' : 'rgba(74,222,128,0.08)', border: `1px solid ${done ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.35)'}`, borderRadius: 12, padding: '16px 18px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                                            <div>
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', marginBottom: 4 }}>
-                                                    DAY {w.day_number} · TASK {w.window_number}
+                                        <div key={w.id} style={{ background: done ? 'rgba(74,222,128,0.04)' : 'rgba(74,222,128,0.08)', border: `1px solid ${done ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.45)'}`, borderRadius: 12, padding: '16px 18px', marginBottom: 10 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: (!done && w.verification_code) ? 14 : 0 }}>
+                                                <div>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', marginBottom: 4 }}>
+                                                        DAY {w.day_number} · TASK {w.window_number}
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555' }}>
+                                                        {done ? '✓ Submitted — awaiting verification' : `Closes in ${minLeft}m ${secsLeft % 60}s`}
+                                                    </div>
                                                 </div>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555' }}>
-                                                    {done ? '✓ Submitted — awaiting verification' : `Closes in ${minLeft}m ${secsLeft % 60}s`}
-                                                </div>
+                                                {!done && (
+                                                    <button
+                                                        disabled={busy}
+                                                        onClick={() => { pendingWindowRef.current = w.id; fileInputRef.current?.click(); }}
+                                                        style={{ padding: '10px 18px', background: busy ? 'rgba(74,222,128,0.05)' : 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', flexShrink: 0 }}>
+                                                        {busy ? '...' : '⬆ UPLOAD'}
+                                                    </button>
+                                                )}
                                             </div>
-                                            {!done && (
-                                                <button
-                                                    disabled={busy}
-                                                    onClick={() => { pendingWindowRef.current = w.id; fileInputRef.current?.click(); }}
-                                                    style={{ padding: '10px 18px', background: busy ? 'rgba(74,222,128,0.05)' : 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', flexShrink: 0 }}>
-                                                    {busy ? '...' : '⬆ UPLOAD'}
-                                                </button>
+                                            {!done && w.verification_code && (
+                                                <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 8, padding: '10px 14px', textAlign: 'center' }}>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 4 }}>VERIFICATION CODE — SHOW IN PHOTO</div>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '2rem', fontWeight: 900, color: '#4ade80', letterSpacing: '6px', textShadow: '0 0 16px rgba(74,222,128,0.4)' }}>{w.verification_code}</div>
+                                                </div>
                                             )}
                                         </div>
                                     );

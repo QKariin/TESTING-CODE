@@ -3018,6 +3018,39 @@ function _buildMobGlBubble(msg: any): string {
         } catch { /* fall through */ }
     }
 
+    // CHALLENGE TASK CARD
+    if (content.startsWith('CHALLENGE_TASK_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('CHALLENGE_TASK_CARD::', ''));
+            const cInitial = (d.senderName || 'S')[0].toUpperCase();
+            const passed = d.passed !== false;
+            const accentColor = passed ? '#4ade80' : '#e03030';
+            const accentBg = passed ? 'rgba(74,222,128,0.05)' : 'rgba(224,48,48,0.05)';
+            const accentBorder = passed ? 'rgba(74,222,128,0.25)' : 'rgba(224,48,48,0.25)';
+            const label = passed ? '✓ TASK PASSED' : '✕ TASK FAILED';
+            const subLabel = passed
+                ? `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} — continues${d.taskNum ? ` (${d.taskNum})` : ''}`
+                : `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} — eliminated`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="background:${accentBg};border:1px solid ${accentBorder};border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-sizing:border-box;">
+                        <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px solid ${accentBorder};overflow:hidden;position:relative;flex-shrink:0;">
+                            ${d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : ''}
+                            <div style="display:${d.senderAvatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:${accentColor};">${cInitial}</div>
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-family:'Orbitron';font-size:0.4rem;color:${accentColor};letter-spacing:1px;margin-bottom:2px;">${label}</div>
+                            <div style="font-family:'Cinzel';font-size:0.8rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div>
+                            <div style="font-family:'Rajdhani';font-size:0.7rem;color:rgba(255,255,255,0.45);margin-top:2px;">${subLabel}</div>
+                            ${passed && d.points ? `<div style="font-family:'Orbitron';font-size:0.7rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${d.points} pts</div>` : ''}
+                        </div>
+                        <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.35);flex-shrink:0;align-self:flex-start;">${time}</div>
+                    </div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
     // UPDATE MERIT CARD
     if (content.startsWith('UPDATE_MERIT_CARD::')) {
         try {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { DbService } from '@/lib/supabase-service';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -65,6 +66,46 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                 }
             }
 
+            // Fetch profile for notification cards
+            const { data: prof } = await supabaseAdmin
+                .from('profiles').select('name, avatar_url').ilike('member_id', completion.member_id).maybeSingle();
+
+            // Count total verified completions for this participant in this challenge
+            const { data: allVerified } = await supabaseAdmin
+                .from('challenge_completions')
+                .select('id')
+                .eq('challenge_id', id)
+                .ilike('member_id', completion.member_id)
+                .eq('verified', true);
+
+            const taskNum = (allVerified?.length || 0); // includes the one just verified
+            const { data: ch } = await supabaseAdmin.from('challenges').select('duration_days, tasks_per_day').eq('id', id).single();
+            const totalTasks = (ch?.duration_days || 0) * (ch?.tasks_per_day || 0);
+
+            const cardPayload = {
+                senderName: (prof as any)?.name || completion.member_id.split('@')[0],
+                senderAvatar: (prof as any)?.avatar_url || null,
+                taskNum: `${taskNum}/${totalTasks}`,
+                passed: true,
+                points: totalPoints,
+                dayNumber: window?.day_number,
+                windowNumber: window?.window_number,
+            };
+
+            // Personal chat
+            try {
+                const personalMsg = `CHALLENGE_TASK_CARD::${JSON.stringify({ ...cardPayload, personal: true })}`;
+                await DbService.sendMessage(completion.member_id, personalMsg, 'system');
+            } catch (_) {}
+
+            // Global chat
+            try {
+                await supabaseAdmin.from('global_messages').insert({
+                    sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
+                    message: `CHALLENGE_TASK_CARD::${JSON.stringify(cardPayload)}`,
+                });
+            } catch (_) {}
+
             return NextResponse.json({ success: true, action: 'verified', points_awarded: totalPoints, placement: fasterCount + 1 });
         } else {
             if (windowStillOpen) {
@@ -82,6 +123,28 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                     eliminated_on_window_id: window?.id,
                     eliminated_at: new Date().toISOString(),
                 }).eq('challenge_id', id).eq('member_id', completion.member_id).eq('status', 'active');
+
+                // Fetch profile for reject cards
+                const { data: profR } = await supabaseAdmin
+                    .from('profiles').select('name, avatar_url').ilike('member_id', completion.member_id).maybeSingle();
+
+                const rejectPayload = {
+                    senderName: (profR as any)?.name || completion.member_id.split('@')[0],
+                    senderAvatar: (profR as any)?.avatar_url || null,
+                    passed: false,
+                    dayNumber: window?.day_number,
+                    windowNumber: window?.window_number,
+                };
+
+                try {
+                    await DbService.sendMessage(completion.member_id, `CHALLENGE_TASK_CARD::${JSON.stringify({ ...rejectPayload, personal: true })}`, 'system');
+                } catch (_) {}
+                try {
+                    await supabaseAdmin.from('global_messages').insert({
+                        sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
+                        message: `CHALLENGE_TASK_CARD::${JSON.stringify(rejectPayload)}`,
+                    });
+                } catch (_) {}
 
                 return NextResponse.json({ success: true, action: 'rejected_eliminated' });
             }
