@@ -2012,14 +2012,19 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
             });
             const json = await res.json();
             if (json.success) {
-                setRejoinMsg(json.coins_charged ? `✓ Back in! ${json.coins_charged} coins charged.` : '✓ Rejoined!');
+                setRejoinMsg(`✓ Back in! ${json.coins_charged} coins charged.`);
                 load();
             } else {
-                setRejoinMsg(json.error || 'Could not rejoin');
+                // Insufficient coins — send to wallet boost
+                if (json.error?.toLowerCase().includes('need') || json.error?.toLowerCase().includes('coin')) {
+                    if ((window as any).goToExchequer) (window as any).goToExchequer();
+                } else {
+                    setRejoinMsg(json.error || 'Could not rejoin');
+                    setTimeout(() => setRejoinMsg(''), 4000);
+                }
             }
         } finally {
             setRejoining(false);
-            setTimeout(() => setRejoinMsg(''), 4000);
         }
     };
 
@@ -2218,17 +2223,38 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                         )}
 
                         {/* Eliminated — rejoin option */}
-                        {data.participant?.status === 'eliminated' && (
-                            <div style={{ textAlign: 'center', padding: '20px 0 24px' }}>
-                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#e03030', letterSpacing: '2px', marginBottom: 8 }}>✗ ELIMINATED</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555', marginBottom: 20 }}>Pay 1,000 coins to rejoin the challenge</div>
-                                <button onClick={handleRejoin} disabled={rejoining}
-                                    style={{ padding: '11px 28px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.4)', borderRadius: 10, color: '#c5a059', fontFamily: 'Cinzel, serif', fontSize: '0.75rem', fontWeight: 700, cursor: rejoining ? 'default' : 'pointer', letterSpacing: '1px' }}>
-                                    {rejoining ? 'Processing...' : '↩ Rejoin · 1,000 coins'}
-                                </button>
-                                {rejoinMsg && <div style={{ marginTop: 10, fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: rejoinMsg.startsWith('✓') ? '#4ade80' : '#e03030' }}>{rejoinMsg}</div>}
-                            </div>
-                        )}
+                        {data.participant?.status === 'eliminated' && (() => {
+                            const elimWindow = data.windows?.find((w: any) => w.id === data.participant.eliminated_on_window_id);
+                            return (
+                                <div style={{ margin: '8px 0 16px', background: 'linear-gradient(135deg, rgba(224,48,48,0.06) 0%, rgba(0,0,0,0.4) 100%)', border: '1px solid rgba(224,48,48,0.25)', borderLeft: '3px solid #e03030', borderRadius: 12, padding: '20px 20px 22px', textAlign: 'center' }}>
+                                    {/* Big X + label */}
+                                    <div style={{ fontSize: '2rem', marginBottom: 6, lineHeight: 1 }}>✗</div>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#e03030', fontWeight: 700, letterSpacing: '3px', marginBottom: 10 }}>ELIMINATED</div>
+
+                                    {/* What they missed */}
+                                    {elimWindow && (
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>
+                                            You missed <span style={{ color: 'rgba(255,255,255,0.7)' }}>Day {elimWindow.day_number} · Task {elimWindow.window_number}</span>
+                                        </div>
+                                    )}
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', marginBottom: 22 }}>
+                                        You failed to submit proof in time.
+                                    </div>
+
+                                    {/* Rejoin offer */}
+                                    <div style={{ background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '2px', marginBottom: 6 }}>SECOND CHANCE</div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: 'rgba(197,160,89,0.85)' }}>Rejoin for <strong>1,000 coins</strong> and continue from the next task</div>
+                                    </div>
+
+                                    <button onClick={handleRejoin} disabled={rejoining}
+                                        style={{ width: '100%', padding: '13px 0', background: rejoining ? 'rgba(255,255,255,0.03)' : 'linear-gradient(135deg, rgba(197,160,89,0.18) 0%, rgba(197,160,89,0.08) 100%)', border: '1px solid rgba(197,160,89,0.5)', borderRadius: 10, color: rejoining ? '#555' : '#c5a059', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', fontWeight: 700, cursor: rejoining ? 'default' : 'pointer', letterSpacing: '2px' }}>
+                                        {rejoining ? 'Processing...' : '↩ Rejoin · 1,000 coins'}
+                                    </button>
+                                    {rejoinMsg && <div style={{ marginTop: 10, fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4ade80', letterSpacing: '1px' }}>{rejoinMsg}</div>}
+                                </div>
+                            );
+                        })()}
 
                         {/* No open windows (only show if participant) */}
                         {data.participant && data.participant.status === 'active' && openWindows.length === 0 && (
