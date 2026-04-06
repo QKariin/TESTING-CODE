@@ -57,18 +57,31 @@ export async function POST(request: Request) {
         });
 
         const msgText = `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} <i class="fas fa-coins" style="color:#c5a059;"></i>)`;
-        
+
         // System message insertion resilient to schema
         const insertData: any = { sender_email: 'system', sender_name: 'SYSTEM', message: msgText, member_id: realEmail };
         // Removed profile_id logic to synchronize with live database schema constraint
-        
-        try { 
+
+        try {
             const ins1 = await supabase.from('chats').insert(insertData);
             if (ins1.error && (ins1.error.message.includes('sender_email') || ins1.error.message.includes('member_id'))) {
-                delete insertData.sender_email; 
+                delete insertData.sender_email;
                 delete insertData.member_id;
                 await supabase.from('chats').insert(insertData);
             }
+        } catch (_) {}
+
+        // Insert wishlist-type record so the Updates feed picks it up
+        try {
+            const { data: tributeRow } = await supabase.from('wishlist').select('image, display_url').eq('id', tributeId).maybeSingle();
+            const tributeImage = (tributeRow as any)?.display_url || (tributeRow as any)?.image || null;
+            await supabase.from('chats').insert({
+                member_id: realEmail,
+                sender_email: realEmail,
+                content: `Purchased "${tributeTitle}"`,
+                type: 'wishlist',
+                metadata: { title: tributeTitle, price: tributeCost, image: tributeImage },
+            });
         } catch (_) {}
 
         return NextResponse.json({ success: true, newWallet, newScore, meritGained: meritGain, message: `Tribute "${tributeTitle}" purchased successfully.` });

@@ -28,17 +28,11 @@ export async function POST(request: Request) {
         const meritGain = Math.floor(tributeCost / 2);
         const newScore = currentScore + meritGain;
         const params = profile.parameters || {};
-        const existingHistory = Array.isArray(params.tributeHistory) ? params.tributeHistory :
-            (typeof params.tributeHistory === 'string' ? JSON.parse(params.tributeHistory) : []);
-        const newHistory = [
-            { amount: -tributeCost, message: `SACRIFICE: ${tributeTitle}`, date: new Date().toISOString(), type: 'expense' },
-            ...existingHistory
-        ].slice(0, 50);
         const newParams = {
             ...params,
             wishlist_spent: (Number(params.wishlist_spent) || 0) + tributeCost,
             last_tribute: { at: new Date().toISOString(), title: tributeTitle, amount: tributeCost },
-            tributeHistory: newHistory,
+            tributeHistory: [{ amount: -tributeCost, message: `SACRIFICE: ${tributeTitle}`, date: new Date().toISOString(), type: 'expense' }, ...(Array.isArray((profile.parameters||{}).tributeHistory) ? (profile.parameters||{}).tributeHistory : [])].slice(0,50),
         };
 
         const realEmail = profile?.member_id || memberEmail;
@@ -47,7 +41,7 @@ export async function POST(request: Request) {
 
         if (updateErr) return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
 
-        // Update tasks['Tribute History'] — this is the primary source for SACRIFICE stat
+        // Update tasks['Tribute History'] — primary source for SACRIFICE stat
         const { data: taskRow } = await supabase.from('tasks').select('"Tribute History"').ilike('member_id', realEmail).maybeSingle();
         const existingTH: any[] = (() => { try { const v = taskRow?.['Tribute History']; return Array.isArray(v) ? v : (typeof v === 'string' ? JSON.parse(v) : []); } catch { return []; } })();
         const newTH = [{ amount: -tributeCost, title: tributeTitle, date: new Date().toISOString() }, ...existingTH].slice(0, 100);
@@ -63,18 +57,31 @@ export async function POST(request: Request) {
         });
 
         const msgText = `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} <i class="fas fa-coins" style="color:#c5a059;"></i>)`;
-        
+
         // System message insertion resilient to schema
         const insertData: any = { sender_email: 'system', sender_name: 'SYSTEM', message: msgText, member_id: realEmail };
         // Removed profile_id logic to synchronize with live database schema constraint
-        
-        try { 
+
+        try {
             const ins1 = await supabase.from('chats').insert(insertData);
             if (ins1.error && (ins1.error.message.includes('sender_email') || ins1.error.message.includes('member_id'))) {
-                delete insertData.sender_email; 
+                delete insertData.sender_email;
                 delete insertData.member_id;
                 await supabase.from('chats').insert(insertData);
             }
+        } catch (_) {}
+
+        // Insert wishlist-type record so the Updates feed picks it up
+        try {
+            const { data: tributeRow } = await supabase.from('wishlist').select('image, display_url').eq('id', tributeId).maybeSingle();
+            const tributeImage = (tributeRow as any)?.display_url || (tributeRow as any)?.image || null;
+            await supabase.from('chats').insert({
+                member_id: realEmail,
+                sender_email: realEmail,
+                content: `Purchased "${tributeTitle}"`,
+                type: 'wishlist',
+                metadata: { title: tributeTitle, price: tributeCost, image: tributeImage },
+            });
         } catch (_) {}
 
         return NextResponse.json({ success: true, newWallet, newScore, meritGained: meritGain, message: `Tribute "${tributeTitle}" purchased successfully.` });
