@@ -1777,7 +1777,7 @@ export default function ProfilePage() {
                     </div>
                 )}
                 {/* Mobile participant banner — shows for enrolled members with active challenge */}
-                {isMobile && isParticipant && participantStatus === 'active' && !challengePanelOpen && (
+                {isMobile && isParticipant && participantStatus === 'active' && !challengePanelOpen && !mobOverlayOpen && (
                     <MobileChallengeBanner
                         challengeName={activeChallenge.name}
                         hasOpenWindow={!!challengeWindowAlert}
@@ -2000,7 +2000,8 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
     };
 
     const now = Date.now();
-    const submittedWindowIds = new Set((data?.completions || []).map((c: any) => c.window_id));
+    const completionByWindowId = Object.fromEntries((data?.completions || []).map((c: any) => [c.window_id, c]));
+    const submittedWindowIds = new Set(Object.keys(completionByWindowId));
 
     const openWindows = (data?.windows || []).filter((w: any) =>
         now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime()
@@ -2106,10 +2107,12 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                                     WINDOW OPEN NOW — SUBMIT PROOF
                                 </div>
                                 {openWindows.map((w: any) => {
-                                    const done = submittedWindowIds.has(w.id);
+                                    const comp = completionByWindowId[w.id];
+                                    const done = !!comp;
                                     const busy = uploading === w.id;
                                     const secsLeft = Math.floor((new Date(w.closes_at).getTime() - now) / 1000);
                                     const minLeft = Math.floor(secsLeft / 60);
+                                    const placeLabels: Record<number, string> = { 1: '🥇 1st', 2: '🥈 2nd', 3: '🥉 3rd' };
                                     return (
                                         <div key={w.id} style={{ background: done ? 'rgba(74,222,128,0.04)' : 'rgba(74,222,128,0.08)', border: `1px solid ${done ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.45)'}`, borderRadius: 12, padding: '16px 18px', marginBottom: 10 }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: (!done && w.verification_code) ? 14 : 0 }}>
@@ -2117,9 +2120,22 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                                                     <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', marginBottom: 4 }}>
                                                         DAY {w.day_number} · TASK {w.window_number}
                                                     </div>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555' }}>
-                                                        {done ? '✓ Submitted — awaiting verification' : `Closes in ${minLeft}m ${secsLeft % 60}s`}
-                                                    </div>
+                                                    {done ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: comp.verified ? '#4ade80' : '#888' }}>
+                                                                {comp.verified ? '✓ Verified' : '⏳ Awaiting verification'}
+                                                            </span>
+                                                            {comp.verified && comp.placement && (
+                                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '1px' }}>
+                                                                    {placeLabels[comp.placement.place] || `#${comp.placement.place}`} · +{comp.placement.points}pts
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555' }}>
+                                                            Closes in {minLeft}m {secsLeft % 60}s
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 {!done && (
                                                     <button
@@ -2172,21 +2188,31 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
                         {data.completions.length > 0 && (
                             <div>
                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>MY SUBMISSIONS</div>
-                                {data.completions.map((c: any, i: number) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#666' }}>
-                                            {new Date(c.completed_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                {data.completions.map((c: any, i: number) => {
+                                    const placeLabels: Record<number, string> = { 1: '🥇 1st', 2: '🥈 2nd', 3: '🥉 3rd' };
+                                    return (
+                                    <div key={i} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#666' }}>
+                                                {new Date(c.completed_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                                {c.response_time_seconds != null && (
+                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4a9eff' }}>{c.response_time_seconds}s</span>
+                                                )}
+                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', letterSpacing: '1px', color: c.verified ? '#4ade80' : '#666' }}>
+                                                    {c.verified ? '✓ VERIFIED' : '⏳ PENDING'}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                            {c.response_time_seconds != null && (
-                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4a9eff' }}>{c.response_time_seconds}s</span>
-                                            )}
-                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', letterSpacing: '1px', color: c.verified ? '#4ade80' : '#666' }}>
-                                                {c.verified ? '✓ VERIFIED' : '⏳ PENDING'}
-                                            </span>
-                                        </div>
+                                        {c.verified && c.placement && (
+                                            <div style={{ marginTop: 4, fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '1px' }}>
+                                                {placeLabels[c.placement.place] || `#${c.placement.place} place`} · +{c.placement.points} pts earned
+                                            </div>
+                                        )}
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </>

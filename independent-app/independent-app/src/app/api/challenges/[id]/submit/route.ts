@@ -104,6 +104,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const verified = (myCompletions || []).filter((c: any) => c.verified);
         let top3Count = 0;
         let totalPoints = 0;
+        const placementMap: Record<string, { place: number; points: number }> = {};
 
         for (const comp of verified) {
             const { data: others } = await supabaseAdmin
@@ -125,14 +126,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
                 1: (challenge as any)?.second_place_points ?? 7,
                 2: (challenge as any)?.third_place_points ?? 5,
             };
-            totalPoints += flat + (bonusMap[fasterCount] ?? 0);
+            const earned = flat + (bonusMap[fasterCount] ?? 0);
+            totalPoints += earned;
+            placementMap[comp.window_id] = { place: fasterCount + 1, points: earned };
         }
+
+        const completionsWithPlacement = (myCompletions || []).map((c: any) => ({
+            ...c,
+            placement: placementMap[c.window_id] || null,
+        }));
 
         return NextResponse.json({
             success: true,
             challenge,
             windows: windows || [],
-            completions: myCompletions || [],
+            completions: completionsWithPlacement,
             participant: participant || null,
             stats: {
                 tasks_done: verified.length,
