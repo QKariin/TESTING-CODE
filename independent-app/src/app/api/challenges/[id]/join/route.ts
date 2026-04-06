@@ -13,7 +13,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
         // Challenge must exist and be active
         const { data: challenge } = await supabaseAdmin
-            .from('challenges').select('id, name, status, start_date').eq('id', challengeId).single();
+            .from('challenges').select('id, name, status, start_date, image_url').eq('id', challengeId).single();
 
         if (!challenge) return NextResponse.json({ success: false, error: 'Challenge not found' }, { status: 404 });
         const isActive = challenge.status === 'active';
@@ -32,6 +32,39 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
             .maybeSingle();
 
         if (existing) return NextResponse.json({ success: true, already_joined: true, status: existing.status });
+
+        // Late join fee — charge 1000 coins if challenge is already running and has closed windows
+        let lateJoinFee = 0;
+        if (isActive) {
+            const { data: closedWindows } = await supabaseAdmin
+                .from('challenge_windows')
+                .select('id', { count: 'exact', head: true })
+                .eq('challenge_id', challengeId)
+                .lt('closes_at', new Date().toISOString());
+            if ((closedWindows as any)?.length > 0 || (closedWindows as any) === null) {
+                // Check count via separate query
+                const { count } = await supabaseAdmin
+                    .from('challenge_windows')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('challenge_id', challengeId)
+                    .lt('closes_at', new Date().toISOString());
+                if ((count ?? 0) > 0) {
+                    lateJoinFee = 1000;
+                    // Deduct from wallet — don't block join if this fails
+                    try {
+                        const { data: prof } = await supabaseAdmin
+                            .from('profiles').select('wallet').ilike('member_id', memberEmail).maybeSingle();
+                        const currentWallet = (prof as any)?.wallet ?? 0;
+                        if (currentWallet < lateJoinFee) {
+                            return NextResponse.json({ success: false, error: `Late join fee is ${lateJoinFee} coins. You need more coins to join.` }, { status: 400 });
+                        }
+                        await supabaseAdmin.from('profiles')
+                            .update({ wallet: currentWallet - lateJoinFee })
+                            .ilike('member_id', memberEmail);
+                    } catch (_) { lateJoinFee = 0; }
+                }
+            }
+        }
 
         // Join
         const { error } = await supabaseAdmin.from('challenge_participants').insert({
@@ -73,7 +106,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
             }, { onConflict: 'member_id,badge_id,challenge_id' });
         }
 
-        return NextResponse.json({ success: true, already_joined: false });
+        return NextResponse.json({ success: true, already_joined: false, late_join_fee: lateJoinFee });
     } catch (err: any) {
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });
     }

@@ -1955,7 +1955,12 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined }: {
             const res = await fetch(`/api/challenges/${challengeId}/join`, { method: 'POST' });
             const json = await res.json();
             if (json.success) {
-                showToast(json.already_joined ? 'Already enrolled' : '✓ Joined! Good luck.', true);
+                const msg = json.already_joined
+                    ? 'Already enrolled'
+                    : json.late_join_fee
+                        ? `✓ Joined! ${json.late_join_fee} coins late fee charged.`
+                        : '✓ Joined! Good luck.';
+                showToast(msg, true);
                 load();
                 if (!json.already_joined && onJoined) onJoined();
             } else {
@@ -2261,6 +2266,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
             const res = await fetch(`/api/challenges/${challengeId}/join`, { method: 'POST' });
             const json = await res.json();
             if (json.success) {
+                if (json.late_join_fee) setJoinError(`✓ Joined! ${json.late_join_fee} coins late fee charged.`);
                 onJoined();
             } else {
                 setJoinError(json.error || 'Failed to join');

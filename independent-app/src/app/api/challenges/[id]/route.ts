@@ -41,10 +41,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
         const now = new Date();
 
-        // Auto-eliminate: active participants who missed a closed window
+        // Auto-eliminate: active participants who missed a closed window (skip windows before they joined)
         for (const p of (participants || []).filter((p: any) => p.status === 'active')) {
-            for (const w of (windows || []).filter((w: any) => new Date(w.closes_at) < now)) {
-                const done = (completions || []).some((c: any) => c.window_id === w.id && c.member_id === p.member_id);
+            const joinedAt = p.joined_at ? new Date(p.joined_at) : new Date(0);
+            for (const w of (windows || []).filter((w: any) => new Date(w.closes_at) < now && new Date(w.closes_at) > joinedAt)) {
+                const done = (completions || []).some((c: any) => c.window_id === w.id && c.member_id.toLowerCase() === p.member_id.toLowerCase());
                 if (!done) {
                     await supabaseAdmin.from('challenge_participants').update({
                         status: 'eliminated',
@@ -53,15 +54,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
                     }).eq('challenge_id', id).eq('member_id', p.member_id);
                     p.status = 'eliminated';
                     p.eliminated_on_window_id = w.id;
-                    // Post elimination card (fire-and-forget)
+                    // Post elimination card — fetch profile directly with ilike for reliable name lookup
                     try {
-                        const prof = profileMap.get(p.member_id.toLowerCase());
+                        const { data: elimProf } = await supabaseAdmin.from('profiles')
+                            .select('name, avatar_url').ilike('member_id', p.member_id).maybeSingle();
                         const remaining = (participants || []).filter((x: any) => x.member_id !== p.member_id && x.status === 'active').length;
                         await supabaseAdmin.from('global_messages').insert({
                             sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
                             message: `CHALLENGE_ELIM_CARD::${JSON.stringify({
-                                name: prof?.name || p.member_id.split('@')[0],
-                                photo: prof?.avatar_url || null,
+                                name: elimProf?.name || p.member_id.split('@')[0],
+                                photo: elimProf?.avatar_url || null,
                                 challengeName: challenge.name,
                                 challengeImage: (challenge as any).image_url || null,
                                 activeCount: remaining,
