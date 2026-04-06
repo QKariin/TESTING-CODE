@@ -1409,25 +1409,6 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* MOBILE KNEELING BUTTON — centrepiece */}
-                        <div style={{ width: '100%', padding: '40px 0 52px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                            {/* Section label */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24, width: '88%' }}>
-                                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.35))' }} />
-                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>DAILY DEVOTION</span>
-                                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.35))' }} />
-                            </div>
-                            <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone"
-                                onContextMenu={(e) => e.preventDefault()}
-                                style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}>
-                                <div id="mob_kneelFill" className="mob-bar-fill"></div>
-                                <div className="mob-bar-content">
-                                    <span className="kneel-icon-sm">◈</span>
-                                    <span id="mob_kneelText" className="kneel-text kneel-label">HOLD TO KNEEL</span>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* SLAVE STATS DRAWER */}
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 16px', boxSizing: 'border-box' }}>
                             <div className="mob-stats-toggle-btn" onClick={() => (window as any).toggleMobileStats()}>
@@ -1447,6 +1428,19 @@ export default function ProfilePage() {
                                 <div style={{ width: '100%', textAlign: 'left', padding: '0 5px' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', marginBottom: '8px' }}>PRIVILEGES GRANTED</div>
                                     <ul id="drawer_NextBenefits" style={{ color: '#ccc', fontSize: '0.75rem', fontFamily: 'Cinzel', paddingLeft: '20px', lineHeight: 1.6, margin: 0 }}></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* MOBILE KNEELING BUTTON */}
+                        <div style={{ width: '100%', padding: '28px 0 36px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone"
+                                onContextMenu={(e) => e.preventDefault()}
+                                style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}>
+                                <div id="mob_kneelFill" className="mob-bar-fill"></div>
+                                <div className="mob-bar-content">
+                                    <span className="kneel-icon-sm">◈</span>
+                                    <span id="mob_kneelText" className="kneel-text kneel-label">HOLD TO KNEEL</span>
                                 </div>
                             </div>
                         </div>
@@ -1815,9 +1809,21 @@ export default function ProfilePage() {
                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: '#fff', fontWeight: 700, marginBottom: 6 }}>
                             {challengeWindowAlert.challenge?.name || 'Challenge'}
                         </div>
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(74,222,128,0.7)', letterSpacing: '1.5px', marginBottom: 20 }}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(74,222,128,0.7)', letterSpacing: '1.5px', marginBottom: 12 }}>
                             DAY {challengeWindowAlert.window.day_number} · TASK {challengeWindowAlert.window.window_number}
                         </div>
+
+                        {/* Task description */}
+                        {(() => {
+                            const tpd = challengeWindowAlert.challenge?.tasks_per_day || 1;
+                            const idx = (challengeWindowAlert.window.day_number - 1) * tpd + (challengeWindowAlert.window.window_number - 1);
+                            const taskText = (challengeWindowAlert.challenge?.task_names || [])[idx];
+                            return taskText ? (
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.82)', lineHeight: 1.55, marginBottom: 20, padding: '12px 14px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: 10 }}>
+                                    {taskText}
+                                </div>
+                            ) : null;
+                        })()}
 
                         {/* Verification code — big and prominent */}
                         <div style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'center' }}>
