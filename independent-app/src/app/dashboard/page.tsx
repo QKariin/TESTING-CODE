@@ -228,7 +228,7 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     const renderedHtml = messages.map(m => buildGlMsgHtml(m)).filter(Boolean).join('');
 
     return (
-        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column', height: 440, padding: 0 }}>
+        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column', height: 900, padding: 0 }}>
             <div className="vk-header" style={{ padding: '14px 20px 10px', flexShrink: 0 }}>
                 <div className="vk-title">Global Chat</div>
                 <div className="vk-sub">Community Feed</div>
