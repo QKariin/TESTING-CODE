@@ -268,6 +268,7 @@ export default function ChallengesPage() {
                             onSelectChallenge={(c) => loadDetail(c.id)}
                             draftChallenges={challenges.filter(c => c.status === 'draft')}
                             onEdit={(c) => setEditingChallenge(c)}
+                            onRefresh={() => { if (detail) loadDetail(detail.challenge.id); }}
                         />
                     )}
                     {tab === 'create' && (
@@ -330,7 +331,7 @@ export default function ChallengesPage() {
 }
 
 // ─── ACTIVE TAB ───────────────────────────────────────────────────────────────
-function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch, onEnd, onSelectChallenge, draftChallenges, onEdit }: {
+function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch, onEnd, onSelectChallenge, draftChallenges, onEdit, onRefresh }: {
     activeChallenge: Challenge | null;
     detail: ChallengeDetail | null;
     loading: boolean;
@@ -341,6 +342,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
     onSelectChallenge: (c: Challenge) => void;
     draftChallenges: Challenge[];
     onEdit: (c: Challenge) => void;
+    onRefresh: () => void;
 }) {
     const [verifying, setVerifying] = useState<string | null>(null);
 
@@ -529,6 +531,9 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                 </div>
             )}
 
+            {/* TASK SCHEDULE MANAGER */}
+            <WindowsManager windows={windows} challengeId={challenge.id} windowMinutes={challenge.window_minutes} onRefresh={onRefresh} />
+
             {/* LEADERBOARD */}
             <div>
                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px', marginBottom: 14 }}>
@@ -589,6 +594,169 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+// ─── WINDOWS MANAGER ─────────────────────────────────────────────────────────
+function WindowsManager({ windows, challengeId, windowMinutes, onRefresh }: {
+    windows: Window_[];
+    challengeId: string;
+    windowMinutes: number;
+    onRefresh: () => void;
+}) {
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editDate, setEditDate] = useState('');
+    const [editTime, setEditTime] = useState('');
+    const [saving, setSaving] = useState<string | null>(null);
+    const [pushing, setPushing] = useState<string | null>(null);
+    const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+    const now = Date.now();
+    const byDay = windows.reduce((acc, w) => {
+        const d = w.day_number;
+        if (!acc[d]) acc[d] = [];
+        acc[d].push(w);
+        return acc;
+    }, {} as Record<number, Window_[]>);
+
+    const showMsg = (text: string, ok: boolean) => {
+        setMsg({ text, ok });
+        setTimeout(() => setMsg(null), 3000);
+    };
+
+    const startEdit = (w: Window_) => {
+        const d = new Date(w.opens_at);
+        setEditDate(d.toISOString().slice(0, 10));
+        setEditTime(d.toTimeString().slice(0, 5));
+        setEditingId(w.id);
+    };
+
+    const saveEdit = async (w: Window_) => {
+        setSaving(w.id);
+        try {
+            const opensAt = new Date(`${editDate}T${editTime}`);
+            const closesAt = new Date(opensAt.getTime() + windowMinutes * 60 * 1000);
+            const res = await fetch(`/api/challenges/windows/${w.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ opens_at: opensAt.toISOString(), closes_at: closesAt.toISOString() }),
+            });
+            const json = await res.json();
+            if (json.success) { showMsg('Saved', true); setEditingId(null); onRefresh(); }
+            else showMsg(json.error || 'Save failed', false);
+        } finally { setSaving(null); }
+    };
+
+    const pushNow = async (w: Window_) => {
+        if (!confirm(`Push Day ${w.day_number} · Task ${w.window_number} LIVE NOW? It will open immediately for all participants.`)) return;
+        setPushing(w.id);
+        try {
+            const res = await fetch(`/api/challenges/windows/${w.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ push_now: true }),
+            });
+            const json = await res.json();
+            if (json.success) { showMsg(`Day ${w.day_number} · Task ${w.window_number} is NOW LIVE`, true); onRefresh(); }
+            else showMsg(json.error || 'Push failed', false);
+        } finally { setPushing(null); }
+    };
+
+    return (
+        <div>
+            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>TASK SCHEDULE — {windows.length} WINDOWS</span>
+                {msg && <span style={{ color: msg.ok ? '#4ade80' : '#e03030', fontSize: '0.38rem' }}>{msg.text}</span>}
+            </div>
+            <div className="ch-card" style={{ padding: '0 0 4px', overflow: 'hidden' }}>
+                {Object.keys(byDay).sort((a, b) => Number(a) - Number(b)).map(day => (
+                    <div key={day}>
+                        <div style={{ padding: '10px 20px 6px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px' }}>
+                            DAY {day}
+                        </div>
+                        {byDay[Number(day)].map(w => {
+                            const isOpen = now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime();
+                            const isPast = now >= new Date(w.closes_at).getTime();
+                            const isEditing = editingId === w.id;
+                            const isSaving = saving === w.id;
+                            const isPushing = pushing === w.id;
+                            const opensDate = new Date(w.opens_at);
+                            const closesDate = new Date(w.closes_at);
+
+                            return (
+                                <div key={w.id} style={{
+                                    display: 'flex', alignItems: 'center', gap: 14, padding: '12px 20px',
+                                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                                    background: isOpen ? 'rgba(74,222,128,0.04)' : undefined,
+                                    opacity: isPast && !isOpen ? 0.4 : 1,
+                                }}>
+                                    {/* Status dot */}
+                                    <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: isOpen ? '#4ade80' : isPast ? '#333' : '#c5a059', boxShadow: isOpen ? '0 0 8px rgba(74,222,128,0.8)' : 'none' }} />
+
+                                    {/* Task label */}
+                                    <div style={{ flexShrink: 0, minWidth: 60, fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: isOpen ? '#4ade80' : '#888', fontWeight: 700 }}>
+                                        TASK {w.window_number}
+                                    </div>
+
+                                    {/* Code */}
+                                    <div style={{ flexShrink: 0, fontFamily: 'Orbitron, monospace', fontSize: '0.72rem', color: '#c5a059', letterSpacing: '4px', fontWeight: 900, minWidth: 70 }}>
+                                        {w.verification_code}
+                                    </div>
+
+                                    {/* Time display or edit */}
+                                    {isEditing ? (
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
+                                            <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
+                                                style={{ background: '#111', border: '1px solid rgba(197,160,89,0.4)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', padding: '6px 10px', width: 140 }} />
+                                            <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)}
+                                                style={{ background: '#111', border: '1px solid rgba(197,160,89,0.4)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', padding: '6px 10px', width: 110 }} />
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555' }}>→ closes +{windowMinutes}m</span>
+                                            <button onClick={() => saveEdit(w)} disabled={isSaving}
+                                                style={{ padding: '6px 14px', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 6, color: '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', cursor: 'pointer' }}>
+                                                {isSaving ? '...' : '✓ SAVE'}
+                                            </button>
+                                            <button onClick={() => setEditingId(null)}
+                                                style={{ padding: '6px 12px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#555', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', cursor: 'pointer' }}>
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: isOpen ? '#4ade80' : isPast ? '#444' : '#aaa' }}>
+                                                {opensDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} {opensDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#444' }}>→</span>
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555' }}>
+                                                {closesDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                            {isOpen && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#4ade80', marginLeft: 4 }}>● LIVE</span>}
+                                        </div>
+                                    )}
+
+                                    {/* Actions */}
+                                    {!isEditing && (
+                                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                                            {!isPast && (
+                                                <button onClick={() => startEdit(w)}
+                                                    style={{ padding: '6px 12px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', letterSpacing: '1px', cursor: 'pointer' }}>
+                                                    ✎ EDIT
+                                                </button>
+                                            )}
+                                            {!isOpen && !isPast && (
+                                                <button onClick={() => pushNow(w)} disabled={isPushing}
+                                                    style={{ padding: '6px 14px', background: isPushing ? 'rgba(255,255,255,0.03)' : 'rgba(74,222,128,0.1)', border: `1px solid ${isPushing ? 'rgba(255,255,255,0.1)' : 'rgba(74,222,128,0.5)'}`, borderRadius: 6, color: isPushing ? '#555' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '1px', cursor: isPushing ? 'default' : 'pointer' }}>
+                                                    {isPushing ? '...' : '⚡ PUSH NOW'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))}
             </div>
         </div>
     );
