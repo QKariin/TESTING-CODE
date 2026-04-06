@@ -113,6 +113,7 @@ export default function ProfilePage() {
     const [mobOverlayOpen, setMobOverlayOpen] = useState(false);
     const [nextChallengeWindowTs, setNextChallengeWindowTs] = useState<number | null>(null);
     const dismissedAlertWindowIdRef = useRef<string | null>(null);
+    const [dutiesUploadedToday, setDutiesUploadedToday] = useState<boolean | null>(null);
 
     // Track mobile viewport
     useEffect(() => {
@@ -465,6 +466,26 @@ export default function ProfilePage() {
         pollSilence();
         const interval = setInterval(pollSilence, 3000);
         return () => clearInterval(interval);
+    }, [profile]);
+
+    // ─── ROUTINE STATUS POLL ──────────────────────────────────────────────
+    useEffect(() => {
+        if (!profile) return;
+        const email = profile.memberId || profile.member_id || profile.email;
+        if (!email) return;
+
+        async function checkRoutine() {
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}&tz=${encodeURIComponent(tz)}`);
+                const data = await res.json();
+                setDutiesUploadedToday(!!data.uploadedToday);
+            } catch {}
+        }
+
+        checkRoutine();
+        const t = setInterval(checkRoutine, 30000);
+        return () => clearInterval(t);
     }, [profile]);
 
     // ─── 2. ATTACH KNEEL LISTENERS + APPLY LOCKS ─────────────────────────
@@ -1230,8 +1251,14 @@ export default function ProfilePage() {
                             <div className="hud-gear">⚙</div>
                         </div>
                         <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>
-                            <img id="hudSlavePic" src="/queen-karin.png" alt="Queen Avatar" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
-                            <div id="hudDomStatus" className="hud-status-dot offline"></div>
+                            {dutiesUploadedToday === true ? (
+                                <svg viewBox="0 0 24 24" className="hud-duty-icon">
+                                    <circle cx="12" cy="12" r="9" fill="rgba(0,180,70,0.18)" stroke="rgba(0,210,90,0.75)" strokeWidth="1.5"/>
+                                    <path d="M7.5 12.5l3 3 6-6.5" stroke="#00d45a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                                </svg>
+                            ) : (
+                                <span className="hud-duty-alert">!</span>
+                            )}
                         </div>
                     </div>
 
@@ -1571,14 +1598,16 @@ export default function ProfilePage() {
                         </div>
 
                         {/* MOBILE KNEELING BUTTON */}
-                        <div style={{ width: '100%', padding: '28px 0 36px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone"
-                                onContextMenu={(e) => e.preventDefault()}
-                                style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}>
-                                <div id="mob_kneelFill" className="mob-bar-fill"></div>
-                                <div className="mob-bar-content">
-                                    <span className="kneel-icon-sm">◈</span>
-                                    <span id="mob_kneelText" className="kneel-text kneel-label">HOLD TO KNEEL</span>
+                        <div style={{ width: '100%', padding: '28px 0 38px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div className="mob-kneel-outer">
+                                <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone"
+                                    onContextMenu={(e) => e.preventDefault()}
+                                    style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}>
+                                    <div id="mob_kneelFill" className="mob-bar-fill"></div>
+                                    <div className="mob-bar-content">
+                                        <span className="kneel-icon-sm">♛</span>
+                                        <span id="mob_kneelText" className="kneel-text kneel-label">HOLD TO KNEEL</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
