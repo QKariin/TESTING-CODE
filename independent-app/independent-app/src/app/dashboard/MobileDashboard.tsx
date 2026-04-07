@@ -336,7 +336,7 @@ function HomeView({ stats, users, dailyCode, challenges, onSelectUser }: {
                     <div style={{ ...S.cardTitle, color: '#ff8c42' }}>⚠ PENDING REVIEWS ({stats.pending})</div>
                     {pendingUsers.slice(0, 5).map(u => (
                         <button key={u.memberId} onClick={() => onSelectUser(u)}
-                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
                             <img src={u.avatar} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(197,160,89,0.2)' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
                             <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</div>
