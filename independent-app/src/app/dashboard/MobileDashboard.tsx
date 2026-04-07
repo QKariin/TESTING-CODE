@@ -527,8 +527,8 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
                             <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: unread ? '#fff' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: unread ? 700 : 400, marginBottom: 5 }}>{u.name}</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                 <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', letterSpacing: '1px', padding: '2px 8px', borderRadius: 100, background: rc(u.rank) + '22', color: rc(u.rank), border: `1px solid ${rc(u.rank)}44` }}>{u.rank}</span>
-                                {status !== 'offline' && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: dotC }}>{status === 'online' ? '● ONLINE' : timeAgo(u.lastSeen)}</span>}
-                                {u.hasActiveTask && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#ff8c42' }}>WORKING</span>}
+                                {status === 'online' && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: dotC }}>● ONLINE</span>}
+                                {status === 'online' && u.hasActiveTask && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#ff8c42' }}>WORKING</span>}
                             </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
@@ -1104,7 +1104,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
             </div>
 
             {chatTab === 'chat' && (
-                <div ref={scrollBoxRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any }}>
+                <div ref={scrollBoxRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any, background: '#030303' }}>
                     {loadingMsgs && <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', color: '#2a2a2a', letterSpacing: '2px' }}>LOADING...</div>}
                     {!loadingMsgs && chatMsgs.length === 0 && <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', color: '#1e1e1e', letterSpacing: '2px' }}>NO MESSAGES YET</div>}
                     {chatMsgs.map((msg, i) => {
@@ -1173,7 +1173,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
             )}
 
             {chatTab === 'service' && (
-                <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any, background: '#030303' }}>
                     {sysMsgs.length === 0 && <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', color: '#1e1e1e', letterSpacing: '2px' }}>NO SERVICE MESSAGES</div>}
                     {sysMsgs.map((msg, i) => {
                         const d = new Date(msg.created_at || Date.now());
