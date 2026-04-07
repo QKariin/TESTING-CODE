@@ -234,8 +234,9 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         }}
                     />
                 ) : tab === 'home' ? (
-                    <HomeView stats={stats} users={users} dailyCode={dailyCode} challenges={challenges}
-                        onSelectUser={(u) => { setSelectedUser(u); setProfileTab('tasks'); }} />
+                    <HomeView users={users} globalQueue={globalQueue} dailyCode={dailyCode} challenges={challenges}
+                        onSelectUser={(u) => { setSelectedUser(u); setProfileTab('tasks'); }}
+                        onRefresh={loadData} />
                 ) : tab === 'subjects' ? (
                     <SubjectsView
                         users={filtered} allCount={users.length}
@@ -262,7 +263,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
             {!selectedUser && (
                 <nav style={S.nav}>
                     {([
-                        { key: 'home' as Tab, icon: '⌂', label: 'HOME', badge: pendingTotal > 0 ? pendingTotal : undefined, bc: '#ff8c42' },
+                        { key: 'home' as Tab, icon: '⌂', label: 'HOME', badge: undefined as number | undefined, bc: '#ff8c42' },
                         { key: 'subjects' as Tab, icon: '◉', label: 'SUBS', badge: unreadCount > 0 ? unreadCount : (onlineCount > 0 ? onlineCount : undefined), bc: unreadCount > 0 ? '#4a9eff' : '#6bcb77' },
                         { key: 'posts' as Tab, icon: '✦', label: 'POSTS', badge: undefined as number | undefined, bc: '#c5a059' },
                         { key: 'queen' as Tab, icon: '♛', label: 'QUEEN', badge: undefined as number | undefined, bc: '#c5a059' },
@@ -284,128 +285,184 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 }
 
 // ─── HOME VIEW ───────────────────────────────────────────────────────────────
-function HomeView({ stats, users, dailyCode, challenges, onSelectUser }: {
-    stats: any; users: DashUser[]; dailyCode: string; challenges: any[];
-    onSelectUser: (u: DashUser) => void;
+function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onRefresh }: {
+    users: DashUser[]; globalQueue: any[]; dailyCode: string; challenges: any[];
+    onSelectUser: (u: DashUser) => void; onRefresh?: () => void;
 }) {
+    const [taskQueue, setTaskQueue] = useState<any[]>(globalQueue);
+    const [reviewing, setReviewing] = useState<string | null>(null);
+    const [rewardTask, setRewardTask] = useState<any | null>(null);
+
+    useEffect(() => { setTaskQueue(globalQueue); }, [globalQueue]);
+
     const activeChallenge = challenges.find(c => c.status === 'active');
-    const pendingUsers = [...users].filter(u => u.reviewQueue.length > 0)
-        .sort((a, b) => b.reviewQueue.length - a.reviewQueue.length);
-    const activeTaskUsers = users.filter(u => u.hasActiveTask);
-    const recent = [...users]
-        .sort((a, b) => (b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0) - (a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0))
-        .slice(0, 4);
+    const onlineUsers = users.filter(u => getOnlineStatus(u.lastSeen) === 'online');
+
+    const getUserForTask = (task: any) => {
+        const mid = (task.member_id || task.ownerId || '').toLowerCase();
+        return users.find(u => u.memberId.toLowerCase() === mid);
+    };
+
+    const isRoutineTask = (task: any) => !!(task.isRoutine || task.category === 'Routine' || task.text === 'Daily Routine');
+
+    const handleApprove = async (task: any, tier: number = 50, note: string = '') => {
+        const taskId = task.id || task.taskId;
+        const user = getUserForTask(task);
+        if (!user) return;
+        setReviewing(taskId);
+        setRewardTask(null);
+        try {
+            await adminApproveTaskAction(taskId, user.memberId, tier, note || null);
+            setTaskQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
+            onRefresh?.();
+        } catch (e) { console.error(e); }
+        setReviewing(null);
+    };
+
+    const handleReject = async (task: any) => {
+        const taskId = task.id || task.taskId;
+        const user = getUserForTask(task);
+        if (!user) return;
+        setReviewing(taskId);
+        try {
+            await adminRejectTaskAction(taskId, user.memberId);
+            setTaskQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
+            onRefresh?.();
+        } catch (e) { console.error(e); }
+        setReviewing(null);
+    };
 
     return (
         <div style={S.scroll}>
-            {/* Hero */}
-            <div style={S.heroCard}>
-                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.78rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', marginBottom: 4 }}>WELCOME BACK</div>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.7rem', color: '#fff', lineHeight: 1.2, marginBottom: 6 }}>Queen Karin</div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ background: 'rgba(107,203,119,0.12)', border: '1px solid rgba(107,203,119,0.3)', color: '#6bcb77', fontSize: '0.44rem', fontFamily: 'Orbitron,monospace', letterSpacing: '2px', padding: '4px 10px', borderRadius: 100 }}>● ONLINE</span>
-                    {stats.online > 0 && <span style={{ background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.2)', color: '#c5a059', fontSize: '0.44rem', fontFamily: 'Orbitron,monospace', letterSpacing: '1px', padding: '4px 10px', borderRadius: 100 }}>{stats.online} ACTIVE</span>}
-                </div>
-            </div>
+            {rewardTask && (
+                <RewardModal
+                    task={rewardTask}
+                    onConfirm={(tier, note) => handleApprove(rewardTask, tier, note)}
+                    onCancel={() => setRewardTask(null)}
+                />
+            )}
 
-            {/* 2×2 stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, flexShrink: 0 }}>
-                {[
-                    { label: 'SUBJECTS', val: stats.active, icon: '◉', c: '#c5a059' },
-                    { label: 'PENDING', val: stats.pending, icon: '📋', c: stats.pending > 0 ? '#ff8c42' : '#555' },
-                    { label: 'KNEEL MIN', val: stats.kneelMins, icon: '⏱', c: '#c5a059' },
-                    { label: 'MERIT POOL', val: stats.totalMerit.toLocaleString(), icon: '⚡', c: '#c5a059' },
-                ].map(item => (
-                    <div key={item.label} style={S.statCard}>
-                        <div style={{ width: 32, height: 32, borderRadius: 8, background: item.c + '18', color: item.c, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', marginBottom: 6 }}>{item.icon}</div>
-                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.3rem', fontWeight: 700, color: '#fff', lineHeight: 1 }}>{item.val}</div>
-                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#444', letterSpacing: '1.5px', marginTop: 4 }}>{item.label}</div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Daily code */}
-            <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '16px 18px', textAlign: 'center', flexShrink: 0 }}>
-                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#444', letterSpacing: '3px', marginBottom: 8 }}>TODAY'S VERIFICATION CODE</div>
-                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '2.4rem', fontWeight: 900, color: '#c5a059', letterSpacing: '10px', textShadow: '0 0 24px rgba(197,160,89,0.22)' }}>{dailyCode}</div>
-            </div>
-
-            {/* Pending reviews */}
-            {pendingUsers.length > 0 && (
-                <div style={{ ...S.card, border: '1px solid rgba(255,140,66,0.25)' }}>
-                    <div style={{ ...S.cardTitle, color: '#ff8c42' }}>⚠ PENDING REVIEWS ({stats.pending})</div>
-                    {pendingUsers.slice(0, 5).map(u => (
+            {/* Online users strip */}
+            {onlineUsers.length > 0 && (
+                <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 2, flexShrink: 0, WebkitOverflowScrolling: 'touch' as any }}>
+                    {onlineUsers.map(u => (
                         <button key={u.memberId} onClick={() => onSelectUser(u)}
-                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                            <img src={u.avatar} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(197,160,89,0.2)' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</div>
-                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginTop: 2 }}>{u.rank}</div>
+                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, padding: '2px 0', WebkitTapHighlightColor: 'transparent' }}>
+                            <div style={{ position: 'relative' }}>
+                                <img src={u.avatar} style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(107,203,119,0.5)', display: 'block' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                <div style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, background: '#6bcb77', borderRadius: '50%', border: '2px solid #030303', boxShadow: '0 0 5px #6bcb77' }} />
                             </div>
-                            <div style={{ background: '#ff4444', borderRadius: 100, minWidth: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', fontWeight: 700, color: '#fff', flexShrink: 0 }}>{u.reviewQueue.length}</div>
-                            <span style={{ color: '#333', fontSize: '1.2rem' }}>›</span>
+                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#6bcb77', letterSpacing: '0.5px', maxWidth: 46, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name.split(' ')[0]}</span>
                         </button>
                     ))}
                 </div>
             )}
 
-            {/* Active tasks */}
-            {activeTaskUsers.length > 0 && (
-                <div style={S.card}>
-                    <div style={S.cardTitle}>⚡ WORKING NOW ({activeTaskUsers.length})</div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        {activeTaskUsers.map(u => (
-                            <button key={u.memberId} onClick={() => onSelectUser(u)}
-                                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                                <img src={u.avatar} style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                                <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.72rem', color: '#c5a059' }}>{u.name}</span>
-                            </button>
-                        ))}
-                    </div>
+            {/* Daily code — compact */}
+            <div style={{ background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#333', letterSpacing: '2px' }}>TODAY'S CODE</span>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.5rem', fontWeight: 900, color: '#c5a059', letterSpacing: '8px', textShadow: '0 0 18px rgba(197,160,89,0.2)' }}>{dailyCode}</span>
+            </div>
+
+            {/* Task review feed */}
+            {taskQueue.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 0 30px', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#1e1e1e', letterSpacing: '2.5px', flexShrink: 0 }}>
+                    ✓ ALL CLEAR
                 </div>
+            ) : (
+                <>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, paddingLeft: 2 }}>
+                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.62rem', color: '#ff8c42', letterSpacing: '3px' }}>PENDING REVIEW</span>
+                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, color: '#ff8c42', background: 'rgba(255,140,66,0.12)', border: '1px solid rgba(255,140,66,0.3)', borderRadius: 100, padding: '3px 12px' }}>{taskQueue.length}</span>
+                    </div>
+
+                    {taskQueue.map((task: any, i: number) => {
+                        const taskId = task.id || task.taskId;
+                        const user = getUserForTask(task);
+                        const routine = isRoutineTask(task);
+                        const busy = reviewing === taskId;
+                        return (
+                            <div key={i} style={{ background: '#090909', border: `1px solid ${routine ? 'rgba(197,160,89,0.18)' : 'rgba(255,140,66,0.22)'}`, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+                                {/* Subject row — tappable → their profile */}
+                                <button onClick={() => user && onSelectUser(user)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', width: '100%', background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                                    {user && (
+                                        <img src={user.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${rc(user.rank)}44`, flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                    )}
+                                    <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#ccc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || (task.member_id || '').split('@')[0] || 'Unknown'}</div>
+                                        {user && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.33rem', color: rc(user.rank), letterSpacing: '1px', marginTop: 1 }}>{user.rank}</div>}
+                                    </div>
+                                    {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.35rem', color: '#c5a059', background: 'rgba(197,160,89,0.1)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.28)', flexShrink: 0 }}>ROUTINE</span>}
+                                    <span style={{ color: '#2a2a2a', fontSize: '1.1rem', flexShrink: 0 }}>›</span>
+                                </button>
+
+                                {/* Task content */}
+                                <div style={{ padding: '12px 14px 14px' }}>
+                                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
+                                        {task.proof_url && (
+                                            <img src={task.proof_url}
+                                                style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #1a1a1a', cursor: 'pointer' }}
+                                                onClick={() => window.open(task.proof_url, '_blank')}
+                                                alt="" />
+                                        )}
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.88rem', color: '#fff', lineHeight: 1.4, marginBottom: 5 }}>{task.taskName || task.task_name || task.text || 'Task'}</div>
+                                            {task.notes && <div style={{ fontSize: '0.76rem', color: '#555', lineHeight: 1.5, marginBottom: 4 }}>{task.notes}</div>}
+                                            {task.submitted_at && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.33rem', color: '#333', letterSpacing: '1px' }}>{timeAgo(task.submitted_at)}</div>}
+                                        </div>
+                                    </div>
+
+                                    {/* Action buttons */}
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        {routine ? (
+                                            <>
+                                                <button disabled={busy} onClick={() => handleApprove(task, 50)}
+                                                    style={{ flex: 1, padding: '12px 0', background: busy ? '#111' : 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                    {busy ? '...' : '✓ DONE — 50 PTS'}
+                                                </button>
+                                                <button disabled={busy} onClick={() => handleReject(task)}
+                                                    style={{ flex: 1, padding: '12px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                    {busy ? '...' : '✕ REJECT'}
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button disabled={busy} onClick={() => setRewardTask(task)}
+                                                    style={{ flex: 2, padding: '12px 0', background: busy ? '#111' : 'rgba(197,160,89,0.1)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                    {busy ? '...' : '✓ APPROVE + REWARD'}
+                                                </button>
+                                                <button disabled={busy} onClick={() => handleReject(task)}
+                                                    style={{ flex: 1, padding: '12px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                    {busy ? '...' : '✕'}
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </>
             )}
 
             {/* Challenge widget */}
             <button onClick={() => window.location.href = '/dashboard/challenges'}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: activeChallenge ? 'rgba(197,160,89,0.06)' : 'rgba(197,160,89,0.03)', border: `1px solid ${activeChallenge ? 'rgba(197,160,89,0.35)' : 'rgba(197,160,89,0.12)'}`, borderRadius: 12, padding: '16px 18px', cursor: 'pointer', flexShrink: 0, width: '100%', textAlign: 'left', WebkitTapHighlightColor: 'transparent' }}>
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: activeChallenge ? 'rgba(197,160,89,0.06)' : 'rgba(197,160,89,0.03)', border: `1px solid ${activeChallenge ? 'rgba(197,160,89,0.35)' : 'rgba(197,160,89,0.1)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', flexShrink: 0, width: '100%', textAlign: 'left', WebkitTapHighlightColor: 'transparent' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {activeChallenge?.image_url
-                        ? <img src={activeChallenge.image_url} style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} alt="" />
-                        : <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(197,160,89,0.1)', color: '#c5a059', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', flexShrink: 0 }}>⚔</div>
+                        ? <img src={activeChallenge.image_url} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} alt="" />
+                        : <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(197,160,89,0.1)', color: '#c5a059', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>⚔</div>
                     }
                     <div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#c5a059', letterSpacing: '2px' }}>CHALLENGES</div>
-                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginTop: 3 }}>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#c5a059', letterSpacing: '2px' }}>CHALLENGES</div>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#444', letterSpacing: '1px', marginTop: 2 }}>
                             {activeChallenge ? `LIVE: ${activeChallenge.name}` : 'CREATE · MANAGE · VERIFY'}
                         </div>
                     </div>
                 </div>
-                <span style={{ color: '#c5a059', fontSize: '1.3rem', opacity: 0.5 }}>›</span>
+                <span style={{ color: '#c5a059', fontSize: '1.2rem', opacity: 0.4 }}>›</span>
             </button>
-
-            {/* Recent subjects */}
-            {recent.length > 0 && (
-                <div style={S.card}>
-                    <div style={S.cardTitle}>RECENT ACTIVITY</div>
-                    {recent.map(u => (
-                        <button key={u.memberId} onClick={() => onSelectUser(u)}
-                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                            <div style={{ position: 'relative', flexShrink: 0 }}>
-                                <img src={u.avatar} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${rc(u.rank)}44` }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                                <div style={{ position: 'absolute', bottom: 0, right: 0, width: 9, height: 9, background: statusColor(getOnlineStatus(u.lastSeen)), borderRadius: '50%', border: '1.5px solid #030303' }} />
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</div>
-                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: rc(u.rank), letterSpacing: '1px', marginTop: 2 }}>{u.rank}</div>
-                            </div>
-                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', color: '#c5a059' }}>⚡{u.score}</div>
-                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', color: '#4ecdc4', marginTop: 2 }}>💰{u.wallet.toLocaleString()}</div>
-                            </div>
-                        </button>
-                    ))}
-                </div>
-            )}
         </div>
     );
 }

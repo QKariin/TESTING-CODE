@@ -1371,7 +1371,7 @@ export default function ProfilePage() {
                                 <div className="hub-section-label">MANDATORY PROTOCOL</div>
                                 <div id="mobRoutineDisplay" className="hub-routine-text">LOADING...</div>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: '14px' }}>
-                                    <button id="btnRoutineUpload" className="hub-confirm-btn" onClick={() => document.getElementById('routineUploadInput')?.click()}>UPLOAD PROOF</button>
+                                    <button id="btnRoutineUpload" className="hub-confirm-btn" onClick={() => (window as any).__routineAction?.()}>LOADING...</button>
                                     <div id="routineTimeMsg" className="hidden" style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#555', letterSpacing: '1px' }}>WINDOW CLOSED</div>
                                     <div id="routineDoneMsg" className="hidden" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#00cc66', letterSpacing: '2px', textShadow: '0 0 10px rgba(0,204,102,0.5)' }}>✔ SUBMITTED</div>
                                 </div>
