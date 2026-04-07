@@ -34,7 +34,7 @@ export async function POST(req: Request) {
                 price_data: {
                     currency: 'eur',
                     product_data: {
-                        name: 'Required Tribute',
+                        name: 'Platform Fee',
                         description: paywall.reason,
                     },
                     unit_amount: amountCents,

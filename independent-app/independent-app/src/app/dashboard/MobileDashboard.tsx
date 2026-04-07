@@ -1050,10 +1050,10 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
     const [loadingMsgs, setLoadingMsgs] = useState(true);
     const scrollBoxRef = useRef<HTMLDivElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
+    const prevMsgCountRef = useRef(-1);
 
-    const forceBottom = useCallback(() => {
-        const scroll = () => { if (scrollBoxRef.current) scrollBoxRef.current.scrollTop = scrollBoxRef.current.scrollHeight + 9999; };
-        scroll(); setTimeout(scroll, 80); setTimeout(scroll, 350);
+    const scrollToBottom = useCallback(() => {
+        if (scrollBoxRef.current) scrollBoxRef.current.scrollTop = scrollBoxRef.current.scrollHeight + 9999;
     }, []);
 
     const fetchMessages = useCallback(async () => {
@@ -1065,7 +1065,16 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
     }, [user.memberId, adminEmail]);
 
     useEffect(() => { fetchMessages(); const t = setInterval(fetchMessages, 8000); return () => clearInterval(t); }, [fetchMessages]);
-    useLayoutEffect(() => { if (!loadingMsgs) forceBottom(); }, [messages, loadingMsgs, forceBottom]);
+
+    // Only scroll to bottom when message count changes (new message) or on initial load
+    useLayoutEffect(() => {
+        if (loadingMsgs) return;
+        if (messages.length !== prevMsgCountRef.current) {
+            scrollToBottom();
+            setTimeout(scrollToBottom, 120);
+            prevMsgCountRef.current = messages.length;
+        }
+    }, [messages, loadingMsgs, scrollToBottom]);
 
     const sendMessage = async () => {
         const txt = input.trim();
@@ -1095,7 +1104,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
             </div>
 
             {chatTab === 'chat' && (
-                <div ref={scrollBoxRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any, overflowAnchor: 'none' as any }}>
+                <div ref={scrollBoxRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, WebkitOverflowScrolling: 'touch' as any }}>
                     {loadingMsgs && <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', color: '#2a2a2a', letterSpacing: '2px' }}>LOADING...</div>}
                     {!loadingMsgs && chatMsgs.length === 0 && <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', color: '#1e1e1e', letterSpacing: '2px' }}>NO MESSAGES YET</div>}
                     {chatMsgs.map((msg, i) => {

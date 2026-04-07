@@ -34,8 +34,8 @@ export async function POST(req: Request) {
                     price_data: {
                         currency: 'eur',
                         product_data: {
-                            name: 'Entrance Tribute',
-                            description: 'One-time tribute for system access and Hall Boy initialization.',
+                            name: 'Platform Access Fee',
+                            description: 'One-time fee for full platform access and account initialization.',
                         },
                         unit_amount: 5500, // €55.00
                     },
