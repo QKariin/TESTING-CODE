@@ -285,15 +285,30 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 }
 
 // ─── HOME VIEW ───────────────────────────────────────────────────────────────
+function dedupeQueue(queue: any[]): any[] {
+    const seen = new Set<string>();
+    return queue.filter(t => {
+        const key = t.id || t.taskId || `${t.member_id}|${t.text}|${t.submitted_at || ''}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
+function stripHtml(s: string): string {
+    return (s || '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+}
+
 function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onRefresh }: {
     users: DashUser[]; globalQueue: any[]; dailyCode: string; challenges: any[];
     onSelectUser: (u: DashUser) => void; onRefresh?: () => void;
 }) {
-    const [taskQueue, setTaskQueue] = useState<any[]>(globalQueue);
+    const [taskQueue, setTaskQueue] = useState<any[]>(() => dedupeQueue(globalQueue));
     const [reviewing, setReviewing] = useState<string | null>(null);
     const [rewardTask, setRewardTask] = useState<any | null>(null);
+    const [lightbox, setLightbox] = useState<string | null>(null);
 
-    useEffect(() => { setTaskQueue(globalQueue); }, [globalQueue]);
+    useEffect(() => { setTaskQueue(dedupeQueue(globalQueue)); }, [globalQueue]);
 
     const activeChallenge = challenges.find(c => c.status === 'active');
     const onlineUsers = users.filter(u => getOnlineStatus(u.lastSeen) === 'online');
@@ -342,6 +357,18 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
                 />
             )}
 
+            {/* Lightbox */}
+            {lightbox && (
+                <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button onClick={() => setLightbox(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', fontSize: '1.4rem', width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', zIndex: 1 }}>✕</button>
+                    {/\.(mp4|mov|webm|ogg)(\?|$)/i.test(lightbox) ? (
+                        <video src={lightbox} controls autoPlay style={{ maxWidth: '100%', maxHeight: '100%' }} onClick={e => e.stopPropagation()} />
+                    ) : (
+                        <img src={lightbox} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onClick={e => e.stopPropagation()} alt="" />
+                    )}
+                </div>
+            )}
+
             {/* Online users strip */}
             {onlineUsers.length > 0 && (
                 <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 2, flexShrink: 0, WebkitOverflowScrolling: 'touch' as any }}>
@@ -385,8 +412,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
                         const displayAvatar = user?.avatar || task.avatarUrl || '/queen-karin.png';
                         const proofUrl = task.proofUrl || task.proof_url;
                         const isVideo = proofUrl && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(proofUrl);
-                        const rawText = task.taskName || task.task_name || task.text || 'Task';
-                        const cleanText = rawText.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+                        const cleanText = stripHtml(task.taskName || task.task_name || task.text || 'Task');
                         return (
                             <div key={i} style={{ background: '#090909', border: `1px solid ${routine ? 'rgba(197,160,89,0.18)' : 'rgba(255,140,66,0.22)'}`, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
                                 {/* Subject row — tappable → their profile */}
@@ -405,12 +431,13 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
                                 <div style={{ padding: '12px 14px 14px' }}>
                                     <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
                                         {proofUrl && (isVideo ? (
-                                            <video src={proofUrl} controls
-                                                style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #1a1a1a', cursor: 'pointer', background: '#000' }} />
+                                            <video src={proofUrl}
+                                                style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #1a1a1a', cursor: 'pointer', background: '#000' }}
+                                                onClick={() => setLightbox(proofUrl)} />
                                         ) : (
                                             <img src={proofUrl}
                                                 style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #1a1a1a', cursor: 'pointer' }}
-                                                onClick={() => window.open(proofUrl, '_blank')}
+                                                onClick={() => setLightbox(proofUrl)}
                                                 alt="" />
                                         ))}
                                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -560,28 +587,33 @@ function RewardModal({ task, onConfirm, onCancel }: {
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
     const tiers = [25, 50, 75, 100, 150];
+    const cleanText = stripHtml(task.taskName || task.task_name || task.text || 'Task');
     return (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9000, display: 'flex', alignItems: 'flex-end', padding: '0 0 0 0' }}>
-            <div style={{ width: '100%', background: '#0a0a0a', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '18px 18px 0 0', padding: '24px 18px 32px', maxHeight: '85vh', overflowY: 'auto' }}>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px', marginBottom: 16 }}>REWARD PROTOCOL</div>
-                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#888', marginBottom: 18, lineHeight: 1.4 }}>
-                    {task.taskName || task.task_name || task.text || 'Task'}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9000, display: 'flex', alignItems: 'flex-end' }}>
+            <div style={{ width: '100%', background: '#0a0a0a', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '18px 18px 0 0', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+                {/* Scrollable content */}
+                <div style={{ overflowY: 'auto', padding: '24px 18px 16px', flex: 1 }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px', marginBottom: 16 }}>REWARD PROTOCOL</div>
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#888', marginBottom: 18, lineHeight: 1.4 }}>
+                        {cleanText}
+                    </div>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>MERIT REWARD</div>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+                        {tiers.map(t => (
+                            <button key={t} onClick={() => setTier(t)}
+                                style={{ flex: 1, minWidth: 48, padding: '12px 0', background: tier === t ? '#c5a059' : 'rgba(197,160,89,0.06)', border: `1px solid ${tier === t ? '#c5a059' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: tier === t ? '#000' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', fontWeight: tier === t ? 700 : 400, cursor: 'pointer' }}>
+                                {t}
+                            </button>
+                        ))}
+                    </div>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>NOTE (OPTIONAL)</div>
+                    <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Leave a comment for the slave..." rows={3}
+                        style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, color: '#fff', fontFamily: 'Rajdhani,sans-serif', padding: '10px 12px', resize: 'none', outline: 'none', lineHeight: 1.5, boxSizing: 'border-box' }} />
                 </div>
-                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>MERIT REWARD</div>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-                    {tiers.map(t => (
-                        <button key={t} onClick={() => setTier(t)}
-                            style={{ flex: 1, minWidth: 48, padding: '12px 0', background: tier === t ? '#c5a059' : 'rgba(197,160,89,0.06)', border: `1px solid ${tier === t ? '#c5a059' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: tier === t ? '#000' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', fontWeight: tier === t ? 700 : 400, cursor: 'pointer' }}>
-                            {t}
-                        </button>
-                    ))}
-                </div>
-                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>NOTE (OPTIONAL)</div>
-                <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Leave a comment for the slave..." rows={3}
-                    style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, color: '#fff', fontFamily: 'Rajdhani,sans-serif', padding: '10px 12px', resize: 'none', outline: 'none', marginBottom: 16, lineHeight: 1.5 }} />
-                <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={onCancel} style={{ flex: 1, padding: '13px', background: 'rgba(255,255,255,0.04)', border: '1px solid #222', borderRadius: 8, color: '#666', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', cursor: 'pointer' }}>CANCEL</button>
-                    <button onClick={() => onConfirm(tier, note)} style={{ flex: 2, padding: '13px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer' }}>APPROVE +{tier} PTS</button>
+                {/* Buttons always pinned at bottom */}
+                <div style={{ display: 'flex', gap: 10, padding: '12px 18px 32px', borderTop: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
+                    <button onClick={onCancel} style={{ flex: 1, padding: '14px', background: 'rgba(255,255,255,0.04)', border: '1px solid #222', borderRadius: 8, color: '#666', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', cursor: 'pointer' }}>CANCEL</button>
+                    <button onClick={() => onConfirm(tier, note)} style={{ flex: 2, padding: '14px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer' }}>APPROVE +{tier} PTS</button>
                 </div>
             </div>
         </div>
