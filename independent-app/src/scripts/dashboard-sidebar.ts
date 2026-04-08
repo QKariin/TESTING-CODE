@@ -165,7 +165,7 @@ export function renderSidebar() {
         if (isLocked) {
             html += `
                 <div class="u-item ${isActive ? 'active' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:${lockBg};border:1px solid ${lockBorder};justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
-                    <img src="${finalPic}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.07;filter:blur(6px);pointer-events:none;" onerror="this.onerror=null;this.src='${defaultPic}'">
+                    <img src="${finalPic}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.07;filter:blur(2px);pointer-events:none;" onerror="this.onerror=null;this.src='${defaultPic}'">
                     <svg viewBox="0 0 24 24" style="width:28px;height:28px;fill:${lockColor};position:relative;z-index:1;flex-shrink:0;"><path d="${lockPath}"/></svg>
                     <div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:${lockColor};letter-spacing:3px;position:relative;z-index:1;">${lockLabel}</div>
                     <div style="font-family:Orbitron,sans-serif;font-size:0.62rem;color:rgba(255,255,255,0.55);letter-spacing:1px;position:relative;z-index:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${clean(u.name)}</div>
@@ -180,7 +180,7 @@ export function renderSidebar() {
 
             html += `
                 <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;flex-direction:column;align-items:flex-start;gap:5px;padding:10px 14px;min-height:68px;">
-                    <img src="${finalPic}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.08;filter:blur(6px);pointer-events:none;" onerror="this.onerror=null;this.src='${defaultPic}'">
+                    <img src="${finalPic}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.08;filter:blur(2px);pointer-events:none;" onerror="this.onerror=null;this.src='${defaultPic}'">
                     ${online ? '<div class="online-dot" style="position:absolute;top:8px;right:8px;z-index:2;"></div>' : ''}
                     <div style="display:flex;gap:6px;position:relative;z-index:1;">
                         <div class="icon-box" title="${hasMsg ? 'New Message' : 'Message'}"><svg class="svg-icon ${hasMsg ? 'active-msg' : 'icon-dim'}" viewBox="0 0 24 24"><path d="${mailPath}"/></svg></div>
