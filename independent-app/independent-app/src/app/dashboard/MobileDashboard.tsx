@@ -707,14 +707,30 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#040404' }}
             onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
 
-            {/* Reward modal overlay */}
-            {rewardTask && (
-                <RewardModal
-                    task={rewardTask}
-                    onConfirm={(tier, note) => handleApprove(rewardTask, tier, note)}
-                    onCancel={() => setRewardTask(null)}
-                />
-            )}
+            {/* Task review modal */}
+            {rewardTask && (() => {
+                const rt = rewardTask;
+                const rtProof = rt.proofUrl || rt.proof_url;
+                const rtVideo = rtProof && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(rtProof);
+                const rtText = stripHtml(rt.taskName || rt.task_name || rt.text || 'Task');
+                const rtRoutine = !!(rt.isRoutine || rt.category === 'Routine' || rt.text === 'Daily Routine');
+                const rtBusy = reviewing === (rt.id || rt.taskId);
+                return (
+                    <TaskReviewModal
+                        proofUrl={rtProof}
+                        isVideo={!!rtVideo}
+                        name={user.name}
+                        avatar={user.avatar}
+                        rank={user.rank}
+                        text={rtText}
+                        isRoutine={rtRoutine}
+                        busy={rtBusy}
+                        onClose={() => setRewardTask(null)}
+                        onApprove={(tier, note) => handleApprove(rt, tier, note)}
+                        onReject={() => handleReject(rt)}
+                    />
+                );
+            })()}
 
             {/* Header */}
             <div style={{ padding: '12px 14px 16px', background: 'rgba(6,6,6,0.97)', borderBottom: `1px solid ${color}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
