@@ -9,6 +9,19 @@ import {
 } from '@/actions/velo-actions';
 
 type Tab = 'home' | 'subjects' | 'posts' | 'challenges' | 'queen';
+
+async function sendTaskChatFeedback(senderEmail: string, memberId: string, mediaUrl: string | null, mediaType: string | null, note: string, taskId: string | null) {
+    try {
+        const payload = JSON.stringify({ mediaUrl, mediaType, note, taskId, memberId });
+        await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senderEmail, conversationId: memberId, content: 'TASK_FEEDBACK::' + payload, type: 'text' }),
+        });
+    } catch (e) {
+        console.error('[sendTaskChatFeedback]', e);
+    }
+}
 type ProfileTab = 'info' | 'tasks' | 'chat' | 'controls';
 
 const RANKS = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Queen's Champion"];
@@ -320,6 +333,9 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     setRootReviewing(taskId || rt.text);
                     try {
                         await adminApproveTaskAction(taskId, rtUser.memberId, tier, note || null);
+                        if (note?.trim()) {
+                            await sendTaskChatFeedback(userEmail, rtUser.memberId, rtProof || null, rtVideo ? 'video' : rtProof ? 'image' : null, note.trim(), taskId || null);
+                        }
                         setRootReviewTask(null);
                         setGlobalQueue(q => q.filter(t => {
                             const tText = (t.taskName || t.task_name || t.text || '').slice(0, 80);
@@ -330,12 +346,15 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     } catch (e) { console.error(e); }
                     setRootReviewing(null);
                 };
-                const handleReject = async () => {
+                const handleReject = async (note: string) => {
                     if (!rtUser) return;
                     const taskId = rt.id || rt.taskId;
                     setRootReviewing(taskId || rt.text);
                     try {
                         await adminRejectTaskAction(taskId, rtUser.memberId);
+                        if (note?.trim()) {
+                            await sendTaskChatFeedback(userEmail, rtUser.memberId, rtProof || null, rtVideo ? 'video' : rtProof ? 'image' : null, note.trim(), taskId || null);
+                        }
                         setRootReviewTask(null);
                         setGlobalQueue(q => q.filter(t => {
                             const tText = (t.taskName || t.task_name || t.text || '').slice(0, 80);
@@ -1453,7 +1472,7 @@ function ChHistoryTab({ challenges, onView }: { challenges: MChallenge[]; onView
 function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutine, busy, onClose, onApprove, onReject }: {
     proofUrl?: string; isVideo: boolean; name: string; avatar: string; rank?: string;
     text: string; isRoutine: boolean; busy: boolean;
-    onClose: () => void; onApprove: (tier: number, note: string) => void; onReject: () => void;
+    onClose: () => void; onApprove: (tier: number, note: string) => void; onReject: (note: string) => void;
 }) {
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
@@ -1512,7 +1531,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
                     </>
                 )}
                 <div style={{ display: 'flex', gap: 10 }}>
-                    <button disabled={busy} onClick={onReject}
+                    <button disabled={busy} onClick={() => onReject(note)}
                         style={{ flex: 1, padding: '14px 0', background: 'rgba(255,51,51,0.07)', color: busy ? '#333' : '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 10, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', cursor: busy ? 'default' : 'pointer' }}>
                         {busy ? '...' : '✕ REJECT'}
                     </button>
