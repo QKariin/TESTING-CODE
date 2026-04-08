@@ -359,17 +359,10 @@ function forceBottom() {
         const b = document.getElementById('adminChatBox');
         if (!b) return;
         b.scrollTop = b.scrollHeight + 9999;
-        // Also try scrollIntoView on anchor — handles cases where scrollTop alone doesn't work
-        const anchor = b.querySelector('#chat-anchor') as HTMLElement | null;
-        if (anchor) anchor.scrollIntoView({ block: 'end' });
     };
     scroll();
     requestAnimationFrame(() => requestAnimationFrame(scroll));
     setTimeout(scroll, 150);
-    setTimeout(scroll, 400);
-    setTimeout(scroll, 900);
-    setTimeout(scroll, 2000);
-    setTimeout(scroll, 4000);
 }
 
 function _attachImgScrollHandlers(container: HTMLElement) {
