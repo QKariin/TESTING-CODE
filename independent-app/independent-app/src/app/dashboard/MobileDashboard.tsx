@@ -75,6 +75,9 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     const [dailyCode, setDailyCode] = useState('----');
     const [unreadMap, setUnreadMap] = useState<Record<string, string>>({});
     const [challenges, setChallenges] = useState<any[]>([]);
+    // Root-level review modal — rendered after nav so it's always on top
+    const [rootReviewTask, setRootReviewTask] = useState<any | null>(null);
+    const [rootReviewing, setRootReviewing] = useState<string | null>(null);
     const onlineJoinTimeRef = useRef<Record<string, number>>({});
     const prevOnlineStateRef = useRef<Record<string, boolean>>({});
     const pendingReadIdRef = useRef<string | null>(null);
@@ -87,8 +90,8 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
             ]);
             setUnreadMap(unread);
             if (data.success && data.users) {
-                const queue = data.globalQueue || [];
-                setGlobalQueue(queue);
+                const rawQueue = data.globalQueue || [];
+                // Build user map first so we can enrich queue with real names
                 const mapped: DashUser[] = data.users.map((u: any) => ({
                     memberId: u.memberId || u.member_id || '',
                     name: u.name || (u.memberId || '').split('@')[0] || 'Unknown',
@@ -97,11 +100,24 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     wallet: Number(u.wallet) || 0,
                     score: Number(u.score) || 0,
                     parameters: u.parameters || {},
-                    reviewQueue: queue.filter((t: any) => t.member_id === u.memberId || t.ownerId === u.memberId),
+                    reviewQueue: [],
                     lastMessageTime: u.parameters?.lastMessageTime || null,
                     lastSeen: u.lastSeen || u.last_active || u.lastWorship || null,
                     hasActiveTask: !!(u.parameters?.taskdom_active_task),
                 }));
+                // Enrich each queue item with real name+avatar from matched user
+                const enrichedQueue = rawQueue.map((t: any) => {
+                    const mid = (t.member_id || '').toLowerCase();
+                    const u = mapped.find(x => x.memberId.toLowerCase() === mid);
+                    return u ? { ...t, memberName: u.name, avatarUrl: u.avatar } : t;
+                });
+                // Assign per-user review queues
+                mapped.forEach(u => {
+                    u.reviewQueue = enrichedQueue.filter((t: any) =>
+                        (t.member_id || '').toLowerCase() === u.memberId.toLowerCase()
+                    );
+                });
+                setGlobalQueue(enrichedQueue);
                 setUsers(mapped);
             }
         } finally { setLoading(false); }
@@ -228,6 +244,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         onBack={() => { markPendingRead(); setSelectedUser(null); setProfileTab('chat'); }}
                         adminEmail={userEmail}
                         onReviewed={() => loadData()}
+                        onOpenReview={setRootReviewTask}
                         onUserUpdated={(updated) => {
                             setSelectedUser(updated);
                             setUsers(prev => prev.map(u => u.memberId === updated.memberId ? updated : u));
@@ -236,7 +253,8 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 ) : tab === 'home' ? (
                     <HomeView users={users} globalQueue={globalQueue} dailyCode={dailyCode} challenges={challenges}
                         onSelectUser={(u) => { setSelectedUser(u); setProfileTab('tasks'); }}
-                        onRefresh={loadData} />
+                        onRefresh={loadData}
+                        onOpenReview={setRootReviewTask} />
                 ) : tab === 'subjects' ? (
                     <SubjectsView
                         users={filtered} allCount={users.length}
@@ -280,6 +298,65 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     ))}
                 </nav>
             )}
+
+            {/* ROOT-LEVEL TASK REVIEW MODAL — rendered after nav, always on top */}
+            {rootReviewTask && (() => {
+                const rt = rootReviewTask;
+                const rtMid = (rt.member_id || '').toLowerCase();
+                const rtUser = users.find(u => u.memberId.toLowerCase() === rtMid);
+                const rtProof = rt.proofUrl || rt.proof_url;
+                const rtVideo = !!rtProof && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(rtProof);
+                const rtText = stripHtml(rt.taskName || rt.task_name || rt.text || 'Task');
+                const rtRoutine = !!(rt.isRoutine || rt.category === 'Routine' || rt.text === 'Daily Routine');
+                const rtBusy = rootReviewing === (rt.id || rt.taskId || rt.text);
+                const handleApprove = async (tier: number, note: string) => {
+                    if (!rtUser) return;
+                    const taskId = rt.id || rt.taskId;
+                    setRootReviewing(taskId || rt.text);
+                    try {
+                        await adminApproveTaskAction(taskId, rtUser.memberId, tier, note || null);
+                        setRootReviewTask(null);
+                        setGlobalQueue(q => q.filter(t => {
+                            const tText = (t.taskName || t.task_name || t.text || '').slice(0, 80);
+                            const rText = (rt.taskName || rt.task_name || rt.text || '').slice(0, 80);
+                            return !((t.member_id || '').toLowerCase() === rtMid && tText === rText);
+                        }));
+                        loadData();
+                    } catch (e) { console.error(e); }
+                    setRootReviewing(null);
+                };
+                const handleReject = async () => {
+                    if (!rtUser) return;
+                    const taskId = rt.id || rt.taskId;
+                    setRootReviewing(taskId || rt.text);
+                    try {
+                        await adminRejectTaskAction(taskId, rtUser.memberId);
+                        setRootReviewTask(null);
+                        setGlobalQueue(q => q.filter(t => {
+                            const tText = (t.taskName || t.task_name || t.text || '').slice(0, 80);
+                            const rText = (rt.taskName || rt.task_name || rt.text || '').slice(0, 80);
+                            return !((t.member_id || '').toLowerCase() === rtMid && tText === rText);
+                        }));
+                        loadData();
+                    } catch (e) { console.error(e); }
+                    setRootReviewing(null);
+                };
+                return (
+                    <TaskReviewModal
+                        proofUrl={rtProof}
+                        isVideo={rtVideo}
+                        name={rt.memberName || rtUser?.name || 'Unknown'}
+                        avatar={rt.avatarUrl || rtUser?.avatar || '/queen-karin.png'}
+                        rank={rtUser?.rank}
+                        text={rtText}
+                        isRoutine={rtRoutine}
+                        busy={rtBusy}
+                        onClose={() => setRootReviewTask(null)}
+                        onApprove={handleApprove}
+                        onReject={handleReject}
+                    />
+                );
+            })()}
         </div>
     );
 }
@@ -288,7 +365,9 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 function dedupeQueue(queue: any[]): any[] {
     const seen = new Set<string>();
     return queue.filter(t => {
-        const key = t.id || t.taskId || `${t.member_id}|${t.text}|${t.submitted_at || ''}`;
+        // Dedupe by member + task text to collapse repeated submissions of same task
+        const text = (t.taskName || t.task_name || t.text || '').slice(0, 80);
+        const key = `${(t.member_id || '').toLowerCase()}|${text}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
@@ -299,13 +378,12 @@ function stripHtml(s: string): string {
     return (s || '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
 }
 
-function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onRefresh }: {
+function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onRefresh, onOpenReview }: {
     users: DashUser[]; globalQueue: any[]; dailyCode: string; challenges: any[];
-    onSelectUser: (u: DashUser) => void; onRefresh?: () => void;
+    onSelectUser: (u: DashUser) => void; onRefresh?: () => void; onOpenReview: (task: any) => void;
 }) {
     const [taskQueue, setTaskQueue] = useState<any[]>(() => dedupeQueue(globalQueue));
     const [reviewing, setReviewing] = useState<string | null>(null);
-    const [reviewTask, setReviewTask] = useState<any | null>(null);
 
     useEffect(() => { setTaskQueue(dedupeQueue(globalQueue)); }, [globalQueue]);
 
@@ -324,10 +402,13 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
         const user = getUserForTask(task);
         if (!user) return;
         setReviewing(taskId);
-        setReviewTask(null);
         try {
             await adminApproveTaskAction(taskId, user.memberId, tier, note || null);
-            setTaskQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
+            setTaskQueue(q => q.filter(t => {
+                const tText = (t.taskName || t.task_name || t.text || '').slice(0, 80);
+                const rText = (task.taskName || task.task_name || task.text || '').slice(0, 80);
+                return !((t.member_id || '').toLowerCase() === (task.member_id || '').toLowerCase() && tText === rText);
+            }));
             onRefresh?.();
         } catch (e) { console.error(e); }
         setReviewing(null);
@@ -338,10 +419,13 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
         const user = getUserForTask(task);
         if (!user) return;
         setReviewing(taskId);
-        setReviewTask(null);
         try {
             await adminRejectTaskAction(taskId, user.memberId);
-            setTaskQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
+            setTaskQueue(q => q.filter(t => {
+                const tText = (t.taskName || t.task_name || t.text || '').slice(0, 80);
+                const rText = (task.taskName || task.task_name || task.text || '').slice(0, 80);
+                return !((t.member_id || '').toLowerCase() === (task.member_id || '').toLowerCase() && tText === rText);
+            }));
             onRefresh?.();
         } catch (e) { console.error(e); }
         setReviewing(null);
@@ -349,33 +433,6 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
 
     return (
         <div style={S.scroll}>
-            {/* Full-screen task review modal — media + actions in one place */}
-            {reviewTask && (() => {
-                const rt = reviewTask;
-                const rtUser = getUserForTask(rt);
-                const rtName = rtUser?.name || rt.memberName || (rt.member_id || '').split('@')[0] || 'Unknown';
-                const rtAvatar = rtUser?.avatar || rt.avatarUrl || '/queen-karin.png';
-                const rtProof = rt.proofUrl || rt.proof_url;
-                const rtVideo = rtProof && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(rtProof);
-                const rtText = stripHtml(rt.taskName || rt.task_name || rt.text || 'Task');
-                const rtRoutine = isRoutineTask(rt);
-                const rtBusy = reviewing === (rt.id || rt.taskId);
-                return (
-                    <TaskReviewModal
-                        proofUrl={rtProof}
-                        isVideo={!!rtVideo}
-                        name={rtName}
-                        avatar={rtAvatar}
-                        rank={rtUser?.rank}
-                        text={rtText}
-                        isRoutine={rtRoutine}
-                        busy={rtBusy}
-                        onClose={() => setReviewTask(null)}
-                        onApprove={(tier, note) => handleApprove(rt, tier, note)}
-                        onReject={() => handleReject(rt)}
-                    />
-                );
-            })()}
 
             {/* Online users strip */}
             {onlineUsers.length > 0 && (
@@ -436,7 +493,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
 
                                 {/* Media — full-width tap area → opens review modal */}
                                 {proofUrl && (
-                                    <button onClick={() => setReviewTask(task)}
+                                    <button onClick={() => onOpenReview(task)}
                                         style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                                         {isVideo ? (
                                             <video src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} />
@@ -661,9 +718,10 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
 }
 
 // ─── USER PROFILE ─────────────────────────────────────────────────────────────
-function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onReviewed, onUserUpdated }: {
+function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onReviewed, onOpenReview, onUserUpdated }: {
     user: DashUser; profileTab: ProfileTab; setProfileTab: (t: ProfileTab) => void;
     onBack: () => void; adminEmail: string | null; onReviewed?: () => void;
+    onOpenReview: (task: any) => void;
     onUserUpdated?: (u: DashUser) => void;
 }) {
     const color = rc(user.rank);
@@ -671,14 +729,12 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
     const touchStartY = useRef(0);
     const [reviewing, setReviewing] = useState<string | null>(null);
     const [queue, setQueue] = useState<any[]>(user.reviewQueue);
-    const [rewardTask, setRewardTask] = useState<any | null>(null);
 
     const isRoutine = (task: any) => !!(task.isRoutine || task.category === 'Routine' || task.text === 'Daily Routine');
 
     const handleApprove = async (task: any, tier: number = 50, note: string = '') => {
         const taskId = task.id || task.taskId;
         setReviewing(taskId);
-        setRewardTask(null);
         try {
             await adminApproveTaskAction(taskId, user.memberId, tier, note || null);
             setQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
@@ -715,31 +771,6 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#040404' }}
             onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-
-            {/* Task review modal */}
-            {rewardTask && (() => {
-                const rt = rewardTask;
-                const rtProof = rt.proofUrl || rt.proof_url;
-                const rtVideo = rtProof && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(rtProof);
-                const rtText = stripHtml(rt.taskName || rt.task_name || rt.text || 'Task');
-                const rtRoutine = !!(rt.isRoutine || rt.category === 'Routine' || rt.text === 'Daily Routine');
-                const rtBusy = reviewing === (rt.id || rt.taskId);
-                return (
-                    <TaskReviewModal
-                        proofUrl={rtProof}
-                        isVideo={!!rtVideo}
-                        name={user.name}
-                        avatar={user.avatar}
-                        rank={user.rank}
-                        text={rtText}
-                        isRoutine={rtRoutine}
-                        busy={rtBusy}
-                        onClose={() => setRewardTask(null)}
-                        onApprove={(tier, note) => handleApprove(rt, tier, note)}
-                        onReject={() => handleReject(rt)}
-                    />
-                );
-            })()}
 
             {/* Header */}
             <div style={{ padding: '12px 14px 16px', background: 'rgba(6,6,6,0.97)', borderBottom: `1px solid ${color}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
@@ -881,7 +912,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                                 </>
                                             ) : (
                                                 <>
-                                                    <button disabled={busy} onClick={() => setRewardTask(task)}
+                                                    <button disabled={busy} onClick={() => onOpenReview(task)}
                                                         style={{ flex: 2, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.1)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
                                                         {busy ? '...' : '✓ APPROVE'}
                                                     </button>
