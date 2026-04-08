@@ -252,9 +252,11 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     />
                 ) : tab === 'home' ? (
                     <HomeView users={users} globalQueue={globalQueue} dailyCode={dailyCode} challenges={challenges}
+                        stats={stats}
                         onSelectUser={(u) => { setSelectedUser(u); setProfileTab('tasks'); }}
                         onRefresh={loadData}
-                        onOpenReview={setRootReviewTask} />
+                        onOpenReview={setRootReviewTask}
+                        onGoToReviews={() => setTab('home')} />
                 ) : tab === 'subjects' ? (
                     <SubjectsView
                         users={filtered} allCount={users.length}
@@ -381,26 +383,31 @@ function stripHtml(s: string): string {
     return (s || '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
 }
 
-function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onRefresh, onOpenReview }: {
+function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUser, onRefresh, onOpenReview, onGoToReviews }: {
     users: DashUser[]; globalQueue: any[]; dailyCode: string; challenges: any[];
-    onSelectUser: (u: DashUser) => void; onRefresh?: () => void; onOpenReview: (task: any) => void;
+    stats: { active: number; online: number; pending: number; kneelMins: number; totalMerit: number };
+    onSelectUser: (u: DashUser) => void; onRefresh?: () => void;
+    onOpenReview: (task: any) => void; onGoToReviews: () => void;
 }) {
     const [taskQueue, setTaskQueue] = useState<any[]>(() => dedupeQueue(globalQueue));
     const [reviewing, setReviewing] = useState<string | null>(null);
+    const [reviewsExpanded, setReviewsExpanded] = useState(false);
 
     useEffect(() => { setTaskQueue(dedupeQueue(globalQueue)); }, [globalQueue]);
 
     const activeChallenge = challenges.find(c => c.status === 'active');
     const onlineUsers = users.filter(u => getOnlineStatus(u.lastSeen) === 'online');
 
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'GOOD MORNING' : hour < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING';
+
     const getUserForTask = (task: any) => {
         const mid = (task.member_id || task.ownerId || '').toLowerCase();
         return users.find(u => u.memberId.toLowerCase() === mid);
     };
-
     const isRoutineTask = (task: any) => !!(task.isRoutine || task.category === 'Routine' || task.text === 'Daily Routine');
 
-    const handleApprove = async (task: any, tier: number = 50, note: string = '') => {
+    const handleApprove = async (task: any, tier = 50, note = '') => {
         const taskId = task.id || task.taskId;
         const user = getUserForTask(task);
         if (!user) return;
@@ -437,128 +444,149 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
     return (
         <div style={S.scroll}>
 
-            {/* Online users strip */}
-            {onlineUsers.length > 0 && (
-                <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 2, flexShrink: 0, WebkitOverflowScrolling: 'touch' as any }}>
-                    {onlineUsers.map(u => (
-                        <button key={u.memberId} onClick={() => onSelectUser(u)}
-                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, padding: '2px 0', WebkitTapHighlightColor: 'transparent' }}>
-                            <div style={{ position: 'relative' }}>
-                                <img src={u.avatar} style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(107,203,119,0.5)', display: 'block' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                                <div style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, background: '#6bcb77', borderRadius: '50%', border: '2px solid #030303', boxShadow: '0 0 5px #6bcb77' }} />
-                            </div>
-                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#6bcb77', letterSpacing: '0.5px', maxWidth: 46, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name.split(' ')[0]}</span>
-                        </button>
-                    ))}
+            {/* ── HERO: Queen portrait + greeting ── */}
+            <div style={{ background: 'linear-gradient(160deg, rgba(197,160,89,0.1) 0%, rgba(140,100,20,0.04) 40%, rgba(0,0,0,0) 100%)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 18, padding: '24px 20px 20px', display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                {/* Subtle ambient glow behind avatar */}
+                <div style={{ position: 'absolute', top: -20, left: -20, width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle, rgba(197,160,89,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <img src="/queen-karin.png" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.4)', boxShadow: '0 0 24px rgba(197,160,89,0.18), 0 0 6px rgba(197,160,89,0.08)', display: 'block' }} alt="" />
+                    <div style={{ position: 'absolute', bottom: 2, right: 2, width: 12, height: 12, borderRadius: '50%', background: '#4ade80', border: '2px solid #030303', boxShadow: '0 0 6px #4ade80' }} />
                 </div>
-            )}
-
-            {/* Daily code — compact */}
-            <div style={{ background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#333', letterSpacing: '2px' }}>TODAY'S CODE</span>
-                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.5rem', fontWeight: 900, color: '#c5a059', letterSpacing: '8px', textShadow: '0 0 18px rgba(197,160,89,0.2)' }}>{dailyCode}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 4 }}>{greeting}</div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#c5a059', fontWeight: 700, letterSpacing: '3px', lineHeight: 1.1 }}>QUEEN KARIN</div>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#333', letterSpacing: '2px', marginTop: 5 }}>COMMAND CENTER</div>
+                </div>
+                {/* Daily code — tucked top-right */}
+                <div style={{ flexShrink: 0, textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.28rem', color: '#2e2e2e', letterSpacing: '2px', marginBottom: 3 }}>TODAY</div>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.25rem', fontWeight: 900, color: '#c5a059', letterSpacing: '5px', textShadow: '0 0 14px rgba(197,160,89,0.25)' }}>{dailyCode}</div>
+                </div>
             </div>
 
-            {/* Task review feed */}
-            {taskQueue.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 0 30px', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', color: '#1e1e1e', letterSpacing: '2.5px', flexShrink: 0 }}>
-                    ✓ ALL CLEAR
-                </div>
-            ) : (
-                <>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, paddingLeft: 2 }}>
-                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.62rem', color: '#ff8c42', letterSpacing: '3px' }}>PENDING REVIEW</span>
-                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, color: '#ff8c42', background: 'rgba(255,140,66,0.12)', border: '1px solid rgba(255,140,66,0.3)', borderRadius: 100, padding: '3px 12px' }}>{taskQueue.length}</span>
+            {/* ── STATS ROW ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, flexShrink: 0 }}>
+                {[
+                    { val: stats.online, label: 'ONLINE', color: '#4ade80', glow: 'rgba(74,222,128,0.15)' },
+                    { val: stats.active, label: 'SUBJECTS', color: '#c5a059', glow: 'rgba(197,160,89,0.1)' },
+                    { val: taskQueue.length, label: 'REVIEW', color: taskQueue.length > 0 ? '#ff8c42' : '#333', glow: taskQueue.length > 0 ? 'rgba(255,140,66,0.1)' : 'transparent' },
+                    { val: stats.totalMerit.toLocaleString(), label: 'MERIT', color: '#a78bfa', glow: 'rgba(167,139,250,0.08)' },
+                ].map(s => (
+                    <div key={s.label} style={{ background: `linear-gradient(135deg, ${s.glow}, rgba(0,0,0,0.6))`, border: `1px solid ${s.color}18`, borderRadius: 10, padding: '11px 8px', textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.05rem', fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.val}</div>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.28rem', color: '#333', letterSpacing: '1.5px', marginTop: 4 }}>{s.label}</div>
                     </div>
+                ))}
+            </div>
 
-                    {taskQueue.map((task: any, i: number) => {
-                        const taskId = task.id || task.taskId;
-                        const user = getUserForTask(task);
-                        const routine = isRoutineTask(task);
-                        const busy = reviewing === taskId;
-                        const displayName = user?.name || task.memberName || (task.member_id || '').split('@')[0] || 'Unknown';
-                        const displayAvatar = user?.avatar || task.avatarUrl || '/queen-karin.png';
-                        const proofUrl = task.proofUrl || task.proof_url;
-                        const isVideo = !!(proofUrl && ((task.proofType && (task.proofType === 'video' || task.proofType.startsWith('video/'))) || /\.(mp4|mov|webm|ogg)(\?|$)/i.test(proofUrl)));
-                        const cleanText = stripHtml(task.taskName || task.task_name || task.text || 'Task');
-                        return (
-                            <div key={taskId || i} style={{ background: '#090909', border: `1px solid ${routine ? 'rgba(197,160,89,0.18)' : 'rgba(255,140,66,0.15)'}`, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                                {/* Header: tap → user profile */}
-                                <button onClick={() => user && onSelectUser(user)}
-                                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                                    <img src={displayAvatar} style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${user ? rc(user.rank) + '55' : '#333'}`, flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                                    <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#ccc' }}>{displayName}</span>
-                                        {user && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: rc(user.rank), marginLeft: 8 }}>{user.rank}</span>}
-                                    </div>
-                                    {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#c5a059', background: 'rgba(197,160,89,0.08)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
-                                </button>
-
-                                {/* Media — full-width tap area → opens review modal */}
-                                {proofUrl && (
-                                    <button onClick={() => onOpenReview(task)}
-                                        style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                        {isVideo ? (
-                                            <video src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} />
-                                        ) : (
-                                            <img src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} alt="" />
-                                        )}
-                                        <div style={{ background: 'rgba(0,0,0,0.55)', padding: '6px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center' }}>TAP TO REVIEW</div>
-                                    </button>
-                                )}
-
-                                {/* Task description + actions */}
-                                <div style={{ padding: '10px 14px 12px' }}>
-                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#aaa', lineHeight: 1.4, marginBottom: 10 }}>{cleanText}</div>
-                                    <div style={{ display: 'flex', gap: 8 }}>
-                                        {routine ? (
-                                            <>
-                                                <button disabled={busy} onClick={() => handleApprove(task, 50)}
-                                                    style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                    {busy ? '...' : '✓ DONE +50'}
-                                                </button>
-                                                <button disabled={busy} onClick={() => handleReject(task)}
-                                                    style={{ width: 44, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                    {busy ? '·' : '✕'}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <button disabled={busy} onClick={() => onOpenReview(task)}
-                                                    style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.08)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                    {busy ? '...' : '✓ REVIEW + REWARD'}
-                                                </button>
-                                                <button disabled={busy} onClick={() => handleReject(task)}
-                                                    style={{ width: 44, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                    {busy ? '·' : '✕'}
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
+            {/* ── ONLINE subjects strip ── */}
+            {onlineUsers.length > 0 && (
+                <div style={{ flexShrink: 0 }}>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#2a2a2a', letterSpacing: '2px', marginBottom: 8 }}>● ONLINE NOW</div>
+                    <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 2, WebkitOverflowScrolling: 'touch' as any }}>
+                        {onlineUsers.map(u => (
+                            <button key={u.memberId} onClick={() => onSelectUser(u)}
+                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, padding: '2px 0', WebkitTapHighlightColor: 'transparent' }}>
+                                <div style={{ position: 'relative' }}>
+                                    <img src={u.avatar} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(74,222,128,0.4)', display: 'block' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                    <div style={{ position: 'absolute', bottom: 1, right: 1, width: 9, height: 9, background: '#4ade80', borderRadius: '50%', border: '2px solid #030303', boxShadow: '0 0 4px #4ade80' }} />
                                 </div>
-                            </div>
-                        );
-                    })}
-                </>
+                                <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.52rem', color: '#888', maxWidth: 44, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name.split(' ')[0]}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
             )}
 
-            {/* Challenge widget */}
-            <button onClick={() => window.location.href = '/dashboard/challenges'}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: activeChallenge ? 'rgba(197,160,89,0.06)' : 'rgba(197,160,89,0.03)', border: `1px solid ${activeChallenge ? 'rgba(197,160,89,0.35)' : 'rgba(197,160,89,0.1)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', flexShrink: 0, width: '100%', textAlign: 'left', WebkitTapHighlightColor: 'transparent' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {activeChallenge?.image_url
-                        ? <img src={activeChallenge.image_url} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} alt="" />
-                        : <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(197,160,89,0.1)', color: '#c5a059', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>⚔</div>
-                    }
-                    <div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#c5a059', letterSpacing: '2px' }}>CHALLENGES</div>
-                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#444', letterSpacing: '1px', marginTop: 2 }}>
-                            {activeChallenge ? `LIVE: ${activeChallenge.name}` : 'CREATE · MANAGE · VERIFY'}
+            {/* ── ACTIVE CHALLENGE widget ── */}
+            {activeChallenge && (
+                <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(0,0,0,0.5))', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                    {activeChallenge.image_url && <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${activeChallenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.07 }} />}
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(197,160,89,0.1)', color: '#c5a059', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0, border: '1px solid rgba(197,160,89,0.2)' }}>⚔</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 6px #c5a059', animation: 'pulse 1.5s infinite', flexShrink: 0 }} />
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.78rem', color: '#c5a059', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChallenge.name}</div>
+                            </div>
+                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#444', letterSpacing: '1px', marginTop: 2 }}>LIVE · {activeChallenge.participant_active ?? '—'} ACTIVE · {activeChallenge.participant_total ?? '—'} TOTAL</div>
                         </div>
                     </div>
                 </div>
-                <span style={{ color: '#c5a059', fontSize: '1.2rem', opacity: 0.4 }}>›</span>
-            </button>
+            )}
+
+            {/* ── PENDING REVIEWS ── */}
+            {taskQueue.length > 0 ? (
+                <div style={{ flexShrink: 0 }}>
+                    {/* Notification button */}
+                    <button onClick={() => setReviewsExpanded(v => !v)}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: reviewsExpanded ? 'rgba(255,140,66,0.06)' : 'rgba(255,140,66,0.04)', border: '1px solid rgba(255,140,66,0.25)', borderRadius: 12, padding: '13px 16px', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#ff8c42', boxShadow: '0 0 6px #ff8c42', animation: 'pulse 1.5s infinite', flexShrink: 0 }} />
+                            <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#ff8c42', letterSpacing: '2px' }}>PENDING REVIEW</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.55rem', fontWeight: 700, color: '#ff8c42', background: 'rgba(255,140,66,0.12)', border: '1px solid rgba(255,140,66,0.3)', borderRadius: 100, padding: '3px 12px' }}>{taskQueue.length}</span>
+                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#555' }}>{reviewsExpanded ? '▲' : '▼'}</span>
+                        </div>
+                    </button>
+
+                    {/* Expanded review feed */}
+                    {reviewsExpanded && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+                            {taskQueue.map((task: any, i: number) => {
+                                const taskId = task.id || task.taskId;
+                                const user = getUserForTask(task);
+                                const routine = isRoutineTask(task);
+                                const busy = reviewing === taskId;
+                                const displayName = user?.name || task.memberName || (task.member_id || '').split('@')[0] || 'Unknown';
+                                const displayAvatar = user?.avatar || task.avatarUrl || '/queen-karin.png';
+                                const proofUrl = task.proofUrl || task.proof_url;
+                                const isVideo = !!(proofUrl && ((task.proofType && (task.proofType === 'video' || task.proofType.startsWith('video/'))) || /\.(mp4|mov|webm|ogg)(\?|$)/i.test(proofUrl)));
+                                const cleanText = stripHtml(task.taskName || task.task_name || task.text || 'Task');
+                                return (
+                                    <div key={taskId || i} style={{ background: '#090909', border: `1px solid ${routine ? 'rgba(197,160,89,0.15)' : 'rgba(255,140,66,0.12)'}`, borderRadius: 12, overflow: 'hidden' }}>
+                                        <button onClick={() => user && onSelectUser(user)}
+                                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                                            <img src={displayAvatar} style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${user ? rc(user.rank) + '55' : '#333'}`, flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                                                <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#ccc' }}>{displayName}</span>
+                                                {user && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: rc(user.rank), marginLeft: 8 }}>{user.rank}</span>}
+                                            </div>
+                                            {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#c5a059', background: 'rgba(197,160,89,0.08)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
+                                        </button>
+                                        {proofUrl && (
+                                            <button onClick={() => onOpenReview(task)} style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                                {isVideo ? <video src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} /> : <img src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} alt="" />}
+                                                <div style={{ background: 'rgba(0,0,0,0.55)', padding: '6px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center' }}>TAP TO REVIEW</div>
+                                            </button>
+                                        )}
+                                        <div style={{ padding: '10px 14px 12px' }}>
+                                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#888', lineHeight: 1.4, marginBottom: 10 }}>{cleanText}</div>
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                {routine ? (
+                                                    <>
+                                                        <button disabled={busy} onClick={() => handleApprove(task, 50)} style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>{busy ? '...' : '✓ DONE +50'}</button>
+                                                        <button disabled={busy} onClick={() => handleReject(task)} style={{ width: 44, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>{busy ? '·' : '✕'}</button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <button disabled={busy} onClick={() => onOpenReview(task)} style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.08)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>{busy ? '...' : '✓ REVIEW + REWARD'}</button>
+                                                        <button disabled={busy} onClick={() => handleReject(task)} style={{ width: 44, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>{busy ? '·' : '✕'}</button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#1a1a1a', letterSpacing: '3px', flexShrink: 0 }}>✓ ALL CLEAR</div>
+            )}
+
         </div>
     );
 }
