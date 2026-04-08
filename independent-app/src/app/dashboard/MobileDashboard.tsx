@@ -592,11 +592,20 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
     const tiers = [25, 50, 75, 100, 150];
+    const touchStartX = useRef(0);
+    const touchStartY = useRef(0);
+    const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; };
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        const dx = e.changedTouches[0].clientX - touchStartX.current;
+        const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+        if (dx > 80 && dy < 60) onClose();
+    };
     return (
-        <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 99999, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 99999, display: 'flex', flexDirection: 'column' }}
+            onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
             {/* Top bar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: '#050505', flexShrink: 0 }}>
-                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', fontSize: '1rem', width: 36, height: 36, borderRadius: '50%', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', fontSize: '1.1rem', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitTapHighlightColor: 'transparent' }}>←</button>
                 <img src={avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid #333', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
@@ -620,7 +629,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
             </div>
 
             {/* Actions — always visible at bottom */}
-            <div style={{ background: '#080808', borderTop: '1px solid rgba(197,160,89,0.1)', padding: '14px 16px 32px', flexShrink: 0 }}>
+            <div style={{ background: '#080808', borderTop: '1px solid rgba(197,160,89,0.1)', padding: '14px 16px', paddingBottom: 'max(32px, env(safe-area-inset-bottom, 16px))', flexShrink: 0 }}>
                 {!isRoutine && (
                     <>
                         <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#444', letterSpacing: '2px', marginBottom: 8 }}>MERIT REWARD</div>
@@ -1499,7 +1508,7 @@ const S: Record<string, React.CSSProperties> = {
     topBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 50, minHeight: 50, background: 'rgba(4,4,4,0.99)', borderBottom: '1px solid rgba(197,160,89,0.15)', padding: '0 16px', flexShrink: 0, zIndex: 10 },
     topBrand: { fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: '#c5a059', letterSpacing: '3px' },
     topCode: { fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', color: '#c5a059', fontWeight: 900, letterSpacing: '2px', background: 'rgba(197,160,89,0.07)', padding: '3px 10px', borderRadius: 4, border: '1px solid rgba(197,160,89,0.12)' },
-    content: { flex: 1, minHeight: 0, overflow: 'hidden' },
+    content: { flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative', zIndex: 1 },
     nav: { display: 'flex', alignItems: 'stretch', height: 60, minHeight: 60, background: 'rgba(4,4,4,0.99)', borderTop: '1px solid rgba(197,160,89,0.15)', flexShrink: 0 },
     navBtn: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'none', border: 'none', borderTop: '2px solid transparent', cursor: 'pointer', padding: '6px 0', outline: 'none', WebkitTapHighlightColor: 'transparent' },
     navActive: { borderTopColor: 'rgba(197,160,89,0.5)' },
