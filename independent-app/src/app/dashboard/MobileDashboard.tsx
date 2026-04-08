@@ -305,8 +305,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
 }) {
     const [taskQueue, setTaskQueue] = useState<any[]>(() => dedupeQueue(globalQueue));
     const [reviewing, setReviewing] = useState<string | null>(null);
-    const [rewardTask, setRewardTask] = useState<any | null>(null);
-    const [lightbox, setLightbox] = useState<string | null>(null);
+    const [reviewTask, setReviewTask] = useState<any | null>(null);
 
     useEffect(() => { setTaskQueue(dedupeQueue(globalQueue)); }, [globalQueue]);
 
@@ -325,7 +324,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
         const user = getUserForTask(task);
         if (!user) return;
         setReviewing(taskId);
-        setRewardTask(null);
+        setReviewTask(null);
         try {
             await adminApproveTaskAction(taskId, user.memberId, tier, note || null);
             setTaskQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
@@ -339,6 +338,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
         const user = getUserForTask(task);
         if (!user) return;
         setReviewing(taskId);
+        setReviewTask(null);
         try {
             await adminRejectTaskAction(taskId, user.memberId);
             setTaskQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
@@ -349,25 +349,33 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
 
     return (
         <div style={S.scroll}>
-            {rewardTask && (
-                <RewardModal
-                    task={rewardTask}
-                    onConfirm={(tier, note) => handleApprove(rewardTask, tier, note)}
-                    onCancel={() => setRewardTask(null)}
-                />
-            )}
-
-            {/* Lightbox */}
-            {lightbox && (
-                <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <button onClick={() => setLightbox(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', fontSize: '1.4rem', width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', zIndex: 1 }}>✕</button>
-                    {/\.(mp4|mov|webm|ogg)(\?|$)/i.test(lightbox) ? (
-                        <video src={lightbox} controls autoPlay style={{ maxWidth: '100%', maxHeight: '100%' }} onClick={e => e.stopPropagation()} />
-                    ) : (
-                        <img src={lightbox} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onClick={e => e.stopPropagation()} alt="" />
-                    )}
-                </div>
-            )}
+            {/* Full-screen task review modal — media + actions in one place */}
+            {reviewTask && (() => {
+                const rt = reviewTask;
+                const rtUser = getUserForTask(rt);
+                const rtName = rtUser?.name || rt.memberName || (rt.member_id || '').split('@')[0] || 'Unknown';
+                const rtAvatar = rtUser?.avatar || rt.avatarUrl || '/queen-karin.png';
+                const rtProof = rt.proofUrl || rt.proof_url;
+                const rtVideo = rtProof && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(rtProof);
+                const rtText = stripHtml(rt.taskName || rt.task_name || rt.text || 'Task');
+                const rtRoutine = isRoutineTask(rt);
+                const rtBusy = reviewing === (rt.id || rt.taskId);
+                return (
+                    <TaskReviewModal
+                        proofUrl={rtProof}
+                        isVideo={!!rtVideo}
+                        name={rtName}
+                        avatar={rtAvatar}
+                        rank={rtUser?.rank}
+                        text={rtText}
+                        isRoutine={rtRoutine}
+                        busy={rtBusy}
+                        onClose={() => setReviewTask(null)}
+                        onApprove={(tier, note) => handleApprove(rt, tier, note)}
+                        onReject={() => handleReject(rt)}
+                    />
+                );
+            })()}
 
             {/* Online users strip */}
             {onlineUsers.length > 0 && (
@@ -414,61 +422,55 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
                         const isVideo = proofUrl && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(proofUrl);
                         const cleanText = stripHtml(task.taskName || task.task_name || task.text || 'Task');
                         return (
-                            <div key={i} style={{ background: '#090909', border: `1px solid ${routine ? 'rgba(197,160,89,0.18)' : 'rgba(255,140,66,0.22)'}`, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                                {/* Subject row — tappable → their profile */}
+                            <div key={taskId || i} style={{ background: '#090909', border: `1px solid ${routine ? 'rgba(197,160,89,0.18)' : 'rgba(255,140,66,0.15)'}`, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+                                {/* Header: tap → user profile */}
                                 <button onClick={() => user && onSelectUser(user)}
-                                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', width: '100%', background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                                    <img src={displayAvatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${user ? rc(user.rank) + '44' : '#333'}`, flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                                    <img src={displayAvatar} style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${user ? rc(user.rank) + '55' : '#333'}`, flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
                                     <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#ccc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</div>
-                                        {user && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.33rem', color: rc(user.rank), letterSpacing: '1px', marginTop: 1 }}>{user.rank}</div>}
+                                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#ccc' }}>{displayName}</span>
+                                        {user && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: rc(user.rank), marginLeft: 8 }}>{user.rank}</span>}
                                     </div>
-                                    {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.35rem', color: '#c5a059', background: 'rgba(197,160,89,0.1)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.28)', flexShrink: 0 }}>ROUTINE</span>}
-                                    <span style={{ color: '#2a2a2a', fontSize: '1.1rem', flexShrink: 0 }}>›</span>
+                                    {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#c5a059', background: 'rgba(197,160,89,0.08)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
                                 </button>
 
-                                {/* Task content */}
-                                <div style={{ padding: '12px 14px 14px' }}>
-                                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
-                                        {proofUrl && (isVideo ? (
-                                            <video src={proofUrl}
-                                                style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #1a1a1a', cursor: 'pointer', background: '#000' }}
-                                                onClick={() => setLightbox(proofUrl)} />
+                                {/* Media — full-width tap area → opens review modal */}
+                                {proofUrl && (
+                                    <button onClick={() => setReviewTask(task)}
+                                        style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                        {isVideo ? (
+                                            <video src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} />
                                         ) : (
-                                            <img src={proofUrl}
-                                                style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #1a1a1a', cursor: 'pointer' }}
-                                                onClick={() => setLightbox(proofUrl)}
-                                                alt="" />
-                                        ))}
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.88rem', color: '#fff', lineHeight: 1.4, marginBottom: 5 }}>{cleanText}</div>
-                                            {task.notes && <div style={{ fontSize: '0.76rem', color: '#555', lineHeight: 1.5, marginBottom: 4 }}>{task.notes}</div>}
-                                            {task.submitted_at && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.33rem', color: '#333', letterSpacing: '1px' }}>{timeAgo(task.submitted_at)}</div>}
-                                        </div>
-                                    </div>
+                                            <img src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} alt="" />
+                                        )}
+                                        <div style={{ background: 'rgba(0,0,0,0.55)', padding: '6px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center' }}>TAP TO REVIEW</div>
+                                    </button>
+                                )}
 
-                                    {/* Action buttons */}
+                                {/* Task description + actions */}
+                                <div style={{ padding: '10px 14px 12px' }}>
+                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#aaa', lineHeight: 1.4, marginBottom: 10 }}>{cleanText}</div>
                                     <div style={{ display: 'flex', gap: 8 }}>
                                         {routine ? (
                                             <>
                                                 <button disabled={busy} onClick={() => handleApprove(task, 50)}
-                                                    style={{ flex: 1, padding: '12px 0', background: busy ? '#111' : 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                    {busy ? '...' : '✓ DONE — 50 PTS'}
+                                                    style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                    {busy ? '...' : '✓ DONE +50'}
                                                 </button>
                                                 <button disabled={busy} onClick={() => handleReject(task)}
-                                                    style={{ flex: 1, padding: '12px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                    {busy ? '...' : '✕ REJECT'}
+                                                    style={{ width: 44, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                    {busy ? '·' : '✕'}
                                                 </button>
                                             </>
                                         ) : (
                                             <>
-                                                <button disabled={busy} onClick={() => setRewardTask(task)}
-                                                    style={{ flex: 2, padding: '12px 0', background: busy ? '#111' : 'rgba(197,160,89,0.1)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                    {busy ? '...' : '✓ APPROVE + REWARD'}
+                                                <button disabled={busy} onClick={() => setReviewTask(task)}
+                                                    style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.08)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                    {busy ? '...' : '✓ REVIEW + REWARD'}
                                                 </button>
                                                 <button disabled={busy} onClick={() => handleReject(task)}
-                                                    style={{ flex: 1, padding: '12px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                    {busy ? '...' : '✕'}
+                                                    style={{ width: 44, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                    {busy ? '·' : '✕'}
                                                 </button>
                                             </>
                                         )}
@@ -580,40 +582,69 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
     );
 }
 
-// ─── REWARD MODAL ─────────────────────────────────────────────────────────────
-function RewardModal({ task, onConfirm, onCancel }: {
-    task: any; onConfirm: (tier: number, note: string) => void; onCancel: () => void;
+// ─── TASK REVIEW MODAL ────────────────────────────────────────────────────────
+// Full-screen: media on top, actions at bottom. Single step — no extra dialogs.
+function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutine, busy, onClose, onApprove, onReject }: {
+    proofUrl?: string; isVideo: boolean; name: string; avatar: string; rank?: string;
+    text: string; isRoutine: boolean; busy: boolean;
+    onClose: () => void; onApprove: (tier: number, note: string) => void; onReject: () => void;
 }) {
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
     const tiers = [25, 50, 75, 100, 150];
-    const cleanText = stripHtml(task.taskName || task.task_name || task.text || 'Task');
     return (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9000, display: 'flex', alignItems: 'flex-end' }}>
-            <div style={{ width: '100%', background: '#0a0a0a', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '18px 18px 0 0', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
-                {/* Scrollable content */}
-                <div style={{ overflowY: 'auto', padding: '24px 18px 16px', flex: 1 }}>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px', marginBottom: 16 }}>REWARD PROTOCOL</div>
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#888', marginBottom: 18, lineHeight: 1.4 }}>
-                        {cleanText}
-                    </div>
-                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#555', letterSpacing: '2px', marginBottom: 10 }}>MERIT REWARD</div>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-                        {tiers.map(t => (
-                            <button key={t} onClick={() => setTier(t)}
-                                style={{ flex: 1, minWidth: 48, padding: '12px 0', background: tier === t ? '#c5a059' : 'rgba(197,160,89,0.06)', border: `1px solid ${tier === t ? '#c5a059' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: tier === t ? '#000' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', fontWeight: tier === t ? 700 : 400, cursor: 'pointer' }}>
-                                {t}
-                            </button>
-                        ))}
-                    </div>
-                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>NOTE (OPTIONAL)</div>
-                    <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Leave a comment for the slave..." rows={3}
-                        style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, color: '#fff', fontFamily: 'Rajdhani,sans-serif', padding: '10px 12px', resize: 'none', outline: 'none', lineHeight: 1.5, boxSizing: 'border-box' }} />
+        <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 99999, display: 'flex', flexDirection: 'column' }}>
+            {/* Top bar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: '#050505', flexShrink: 0 }}>
+                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', fontSize: '1rem', width: 36, height: 36, borderRadius: '50%', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+                <img src={avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid #333', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                    {rank && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: rc(rank), letterSpacing: '1px' }}>{rank}</div>}
                 </div>
-                {/* Buttons always pinned at bottom */}
-                <div style={{ display: 'flex', gap: 10, padding: '12px 18px 32px', borderTop: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
-                    <button onClick={onCancel} style={{ flex: 1, padding: '14px', background: 'rgba(255,255,255,0.04)', border: '1px solid #222', borderRadius: 8, color: '#666', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', cursor: 'pointer' }}>CANCEL</button>
-                    <button onClick={() => onConfirm(tier, note)} style={{ flex: 2, padding: '14px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer' }}>APPROVE +{tier} PTS</button>
+                {isRoutine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: '#c5a059', background: 'rgba(197,160,89,0.08)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
+            </div>
+
+            {/* Media area — scrollable if needed */}
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                {proofUrl ? (
+                    isVideo ? (
+                        <video src={proofUrl} controls autoPlay playsInline style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} />
+                    ) : (
+                        <img src={proofUrl} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} alt="" />
+                    )
+                ) : (
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222', fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', letterSpacing: '2px' }}>NO MEDIA</div>
+                )}
+                <div style={{ padding: '12px 16px', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#777', lineHeight: 1.5 }}>{text}</div>
+            </div>
+
+            {/* Actions — always visible at bottom */}
+            <div style={{ background: '#080808', borderTop: '1px solid rgba(197,160,89,0.1)', padding: '14px 16px 32px', flexShrink: 0 }}>
+                {!isRoutine && (
+                    <>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#444', letterSpacing: '2px', marginBottom: 8 }}>MERIT REWARD</div>
+                        <div style={{ display: 'flex', gap: 7, marginBottom: 12 }}>
+                            {tiers.map(t => (
+                                <button key={t} onClick={() => setTier(t)}
+                                    style={{ flex: 1, padding: '10px 0', background: tier === t ? '#c5a059' : 'rgba(197,160,89,0.05)', border: `1px solid ${tier === t ? '#c5a059' : 'rgba(197,160,89,0.15)'}`, borderRadius: 8, color: tier === t ? '#000' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.65rem', fontWeight: tier === t ? 700 : 400, cursor: 'pointer' }}>
+                                    {t}
+                                </button>
+                            ))}
+                        </div>
+                        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Note (optional)..." rows={2}
+                            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', padding: '8px 12px', resize: 'none', outline: 'none', marginBottom: 12, lineHeight: 1.5, boxSizing: 'border-box' }} />
+                    </>
+                )}
+                <div style={{ display: 'flex', gap: 10 }}>
+                    <button disabled={busy} onClick={onReject}
+                        style={{ flex: 1, padding: '14px 0', background: 'rgba(255,51,51,0.07)', color: busy ? '#333' : '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 10, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', cursor: busy ? 'default' : 'pointer' }}>
+                        {busy ? '...' : '✕ REJECT'}
+                    </button>
+                    <button disabled={busy} onClick={() => onApprove(isRoutine ? 50 : tier, note)}
+                        style={{ flex: 2, padding: '14px 0', background: busy ? '#111' : 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', border: 'none', borderRadius: 10, fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                        {busy ? '...' : isRoutine ? '✓ APPROVE +50' : `✓ APPROVE +${tier}`}
+                    </button>
                 </div>
             </div>
         </div>
