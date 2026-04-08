@@ -381,16 +381,20 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
                         const user = getUserForTask(task);
                         const routine = isRoutineTask(task);
                         const busy = reviewing === taskId;
+                        const displayName = user?.name || task.memberName || (task.member_id || '').split('@')[0] || 'Unknown';
+                        const displayAvatar = user?.avatar || task.avatarUrl || '/queen-karin.png';
+                        const proofUrl = task.proofUrl || task.proof_url;
+                        const isVideo = proofUrl && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(proofUrl);
+                        const rawText = task.taskName || task.task_name || task.text || 'Task';
+                        const cleanText = rawText.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
                         return (
                             <div key={i} style={{ background: '#090909', border: `1px solid ${routine ? 'rgba(197,160,89,0.18)' : 'rgba(255,140,66,0.22)'}`, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
                                 {/* Subject row — tappable → their profile */}
                                 <button onClick={() => user && onSelectUser(user)}
                                     style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', width: '100%', background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                                    {user && (
-                                        <img src={user.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${rc(user.rank)}44`, flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                                    )}
+                                    <img src={displayAvatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${user ? rc(user.rank) + '44' : '#333'}`, flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
                                     <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#ccc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || (task.member_id || '').split('@')[0] || 'Unknown'}</div>
+                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#ccc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</div>
                                         {user && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.33rem', color: rc(user.rank), letterSpacing: '1px', marginTop: 1 }}>{user.rank}</div>}
                                     </div>
                                     {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.35rem', color: '#c5a059', background: 'rgba(197,160,89,0.1)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.28)', flexShrink: 0 }}>ROUTINE</span>}
@@ -400,14 +404,17 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
                                 {/* Task content */}
                                 <div style={{ padding: '12px 14px 14px' }}>
                                     <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
-                                        {task.proof_url && (
-                                            <img src={task.proof_url}
-                                                style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #1a1a1a', cursor: 'pointer' }}
-                                                onClick={() => window.open(task.proof_url, '_blank')}
+                                        {proofUrl && (isVideo ? (
+                                            <video src={proofUrl} controls
+                                                style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #1a1a1a', cursor: 'pointer', background: '#000' }} />
+                                        ) : (
+                                            <img src={proofUrl}
+                                                style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #1a1a1a', cursor: 'pointer' }}
+                                                onClick={() => window.open(proofUrl, '_blank')}
                                                 alt="" />
-                                        )}
+                                        ))}
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.88rem', color: '#fff', lineHeight: 1.4, marginBottom: 5 }}>{task.taskName || task.task_name || task.text || 'Task'}</div>
+                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.88rem', color: '#fff', lineHeight: 1.4, marginBottom: 5 }}>{cleanText}</div>
                                             {task.notes && <div style={{ fontSize: '0.76rem', color: '#555', lineHeight: 1.5, marginBottom: 4 }}>{task.notes}</div>}
                                             {task.submitted_at && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.33rem', color: '#333', letterSpacing: '1px' }}>{timeAgo(task.submitted_at)}</div>}
                                         </div>
