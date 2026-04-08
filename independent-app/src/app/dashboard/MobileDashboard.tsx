@@ -305,7 +305,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 const rtMid = (rt.member_id || '').toLowerCase();
                 const rtUser = users.find(u => u.memberId.toLowerCase() === rtMid);
                 const rtProof = rt.proofUrl || rt.proof_url;
-                const rtVideo = !!rtProof && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(rtProof);
+                const rtVideo = !!(rtProof && ((rt.proofType && (rt.proofType === 'video' || rt.proofType.startsWith('video/'))) || /\.(mp4|mov|webm|ogg)(\?|$)/i.test(rtProof)));
                 const rtText = stripHtml(rt.taskName || rt.task_name || rt.text || 'Task');
                 const rtRoutine = !!(rt.isRoutine || rt.category === 'Routine' || rt.text === 'Daily Routine');
                 const rtBusy = rootReviewing === (rt.id || rt.taskId || rt.text);
@@ -476,7 +476,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
                         const displayName = user?.name || task.memberName || (task.member_id || '').split('@')[0] || 'Unknown';
                         const displayAvatar = user?.avatar || task.avatarUrl || '/queen-karin.png';
                         const proofUrl = task.proofUrl || task.proof_url;
-                        const isVideo = proofUrl && /\.(mp4|mov|webm|ogg)(\?|$)/i.test(proofUrl);
+                        const isVideo = !!(proofUrl && ((task.proofType && (task.proofType === 'video' || task.proofType.startsWith('video/'))) || /\.(mp4|mov|webm|ogg)(\?|$)/i.test(proofUrl)));
                         const cleanText = stripHtml(task.taskName || task.task_name || task.text || 'Task');
                         return (
                             <div key={taskId || i} style={{ background: '#090909', border: `1px solid ${routine ? 'rgba(197,160,89,0.18)' : 'rgba(255,140,66,0.15)'}`, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
@@ -521,7 +521,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, onSelectUser, onR
                                             </>
                                         ) : (
                                             <>
-                                                <button disabled={busy} onClick={() => setReviewTask(task)}
+                                                <button disabled={busy} onClick={() => onOpenReview(task)}
                                                     style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.08)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
                                                     {busy ? '...' : '✓ REVIEW + REWARD'}
                                                 </button>
@@ -648,7 +648,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
 }) {
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
-    const tiers = [25, 50, 75, 100, 150];
+    const tiers = [50, 70, 100];
     const touchStartX = useRef(0);
     const touchStartY = useRef(0);
     const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; };
@@ -888,12 +888,12 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                 return (
                                     <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: `1px solid ${routine ? 'rgba(197,160,89,0.2)' : 'rgba(255,140,66,0.15)'}`, borderRadius: 10, padding: '14px' }}>
                                         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
-                                            {task.proof_url && <img src={task.proof_url} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222' }} alt="" />}
+                                            {(task.proofUrl || task.proof_url) && <img src={task.proofUrl || task.proof_url} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222' }} onError={(e) => { (e.target as any).style.display = 'none'; }} alt="" />}
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', marginBottom: 5, lineHeight: 1.3 }}>{task.taskName || task.task_name || task.text || 'Task'}</div>
+                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', marginBottom: 5, lineHeight: 1.3 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
                                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                                     {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#c5a059', background: 'rgba(197,160,89,0.1)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.3)' }}>ROUTINE</span>}
-                                                    {task.submitted_at && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#444' }}>{new Date(task.submitted_at).toLocaleDateString()}</span>}
+                                                    {(task.timestamp || task.submitted_at) && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#444' }}>{new Date(task.timestamp || task.submitted_at).toLocaleDateString()}</span>}
                                                 </div>
                                                 {task.notes && <div style={{ fontSize: '0.76rem', color: '#666', marginTop: 6, lineHeight: 1.5 }}>{task.notes}</div>}
                                             </div>
