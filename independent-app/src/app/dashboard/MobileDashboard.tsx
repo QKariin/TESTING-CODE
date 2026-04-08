@@ -8,7 +8,7 @@ import {
     processCoinTransaction, updateScoreAction, setHierarchyAction, insertMessage,
 } from '@/actions/velo-actions';
 
-type Tab = 'home' | 'subjects' | 'posts' | 'queen';
+type Tab = 'home' | 'subjects' | 'posts' | 'challenges' | 'queen';
 type ProfileTab = 'info' | 'tasks' | 'chat' | 'controls';
 
 const RANKS = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Queen's Champion"];
@@ -272,6 +272,8 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     />
                 ) : tab === 'posts' ? (
                     <PostsView posts={posts} onPostCreated={loadPosts} userEmail={userEmail} />
+                ) : tab === 'challenges' ? (
+                    <ChallengesView />
                 ) : (
                     <QueenView userEmail={userEmail} onLogout={handleLogout} users={users} stats={stats} />
                 )}
@@ -284,6 +286,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         { key: 'home' as Tab, icon: '⌂', label: 'HOME', badge: undefined as number | undefined, bc: '#ff8c42' },
                         { key: 'subjects' as Tab, icon: '◉', label: 'SUBS', badge: unreadCount > 0 ? unreadCount : (onlineCount > 0 ? onlineCount : undefined), bc: unreadCount > 0 ? '#4a9eff' : '#6bcb77' },
                         { key: 'posts' as Tab, icon: '✦', label: 'POSTS', badge: undefined as number | undefined, bc: '#c5a059' },
+                        { key: 'challenges' as Tab, icon: '⚔', label: 'WAR', badge: undefined as number | undefined, bc: '#c5a059' },
                         { key: 'queen' as Tab, icon: '♛', label: 'QUEEN', badge: undefined as number | undefined, bc: '#c5a059' },
                     ]).map(({ key, icon, label, badge, bc }) => (
                         <button key={key} style={{ ...S.navBtn, ...(tab === key ? S.navActive : {}) }} onClick={() => setTab(key)}>
@@ -635,6 +638,784 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
                     </button>
                 );
             })}
+        </div>
+    );
+}
+
+// ─── CHALLENGES VIEW ──────────────────────────────────────────────────────────
+type ChallengesTab = 'live' | 'create' | 'history';
+
+interface MChallenge {
+    id: string; name: string; theme: string; description: string;
+    status: 'draft' | 'active' | 'ended';
+    duration_days: number; tasks_per_day: number; window_minutes: number;
+    points_per_completion: number; first_place_points: number;
+    second_place_points: number; third_place_points: number;
+    start_date: string | null; end_date: string | null; created_at: string;
+    participant_total?: number; participant_active?: number; participant_eliminated?: number;
+    image_url?: string | null; task_names?: string[] | null;
+}
+interface MWindow {
+    id: string; challenge_id: string;
+    day_number: number; window_number: number;
+    opens_at: string; closes_at: string; verification_code: number;
+    task_name?: string | null;
+}
+interface MPendingVerification {
+    id: string; member_id: string; proof_url: string | null;
+    completed_at: string; response_time_seconds: number | null;
+    challenge_windows: { day_number: number; window_number: number; verification_code: number; opens_at: string; closes_at: string; } | null;
+    profiles: { name: string; avatar_url: string | null; profile_picture_url: string | null; } | null;
+}
+interface MLeaderboardEntry {
+    member_id: string; name: string; avatar: string | null;
+    status: 'active' | 'eliminated' | 'finished' | 'champion';
+    completions_count: number; eliminated_day: number | null; final_rank: number | null;
+}
+
+function chThemeColor(theme: string) {
+    if (theme === 'red') return '#e03030';
+    if (theme === 'purple') return '#a855f7';
+    if (theme === 'blue') return '#3b82f6';
+    return '#c5a059';
+}
+
+function ChallengesView() {
+    const [cTab, setCTab] = useState<ChallengesTab>('live');
+    const [challenges, setChallenges] = useState<MChallenge[]>([]);
+    const [detail, setDetail] = useState<{ challenge: MChallenge; leaderboard: MLeaderboardEntry[]; windows: MWindow[]; pending_verifications: MPendingVerification[] } | null>(null);
+    const [loadingDetail, setLoadingDetail] = useState(false);
+    const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+    const [tick, setTick] = useState(0);
+    const toastRef = useRef<any>(null);
+
+    const showToast = (msg: string, ok = true) => {
+        setToast({ msg, ok });
+        if (toastRef.current) clearTimeout(toastRef.current);
+        toastRef.current = setTimeout(() => setToast(null), 3500);
+    };
+
+    const loadAll = useCallback(async () => {
+        try {
+            const res = await fetch('/api/challenges');
+            const json = await res.json();
+            if (json.success) setChallenges(json.challenges);
+        } catch { }
+    }, []);
+
+    const loadDetail = useCallback(async (id: string) => {
+        setLoadingDetail(true);
+        try {
+            const res = await fetch(`/api/challenges/${id}`);
+            const json = await res.json();
+            if (json.success) setDetail(json);
+        } finally { setLoadingDetail(false); }
+    }, []);
+
+    useEffect(() => { loadAll(); }, [loadAll]);
+
+    // Auto-open active/draft challenge on first load
+    useEffect(() => {
+        if (!challenges.length || detail) return;
+        const pick = challenges.find(c => c.status === 'active') || challenges.find(c => c.status === 'draft');
+        if (pick) loadDetail(pick.id);
+    }, [challenges, detail, loadDetail]);
+
+    // Auto-refresh detail
+    useEffect(() => {
+        if (!detail) return;
+        const t = setInterval(() => loadDetail(detail.challenge.id), 10000);
+        return () => clearInterval(t);
+    }, [detail, loadDetail]);
+
+    // Countdown tick
+    useEffect(() => {
+        const t = setInterval(() => setTick(n => n + 1), 1000);
+        return () => clearInterval(t);
+    }, []);
+
+    const activeChallenge = challenges.find(c => c.status === 'active') || null;
+    const draftChallenges = challenges.filter(c => c.status === 'draft');
+    const endedChallenges = challenges.filter(c => c.status === 'ended');
+    const pendingCount = detail?.pending_verifications?.length || 0;
+
+    return (
+        <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {/* Tab bar */}
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0, background: '#050505' }}>
+                {([
+                    { key: 'live' as ChallengesTab, label: 'LIVE', badge: pendingCount > 0 ? pendingCount : undefined },
+                    { key: 'create' as ChallengesTab, label: 'CREATE' },
+                    { key: 'history' as ChallengesTab, label: 'HISTORY' },
+                ] as { key: ChallengesTab; label: string; badge?: number }[]).map(({ key, label, badge }) => (
+                    <button key={key} onClick={() => setCTab(key)}
+                        style={{ flex: 1, padding: '13px 0', background: 'none', border: 'none', borderBottom: `2px solid ${cTab === key ? '#c5a059' : 'transparent'}`, color: cTab === key ? '#c5a059' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer', position: 'relative', WebkitTapHighlightColor: 'transparent' }}>
+                        {label}
+                        {badge !== undefined && (
+                            <span style={{ position: 'absolute', top: 8, right: '20%', background: '#ff8c42', color: '#000', borderRadius: 10, minWidth: 16, height: 16, fontSize: '0.38rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{badge}</span>
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            {/* Content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '14px 12px 32px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {cTab === 'live' && (
+                    <ChLiveTab
+                        activeChallenge={activeChallenge}
+                        draftChallenges={draftChallenges}
+                        detail={detail}
+                        loading={loadingDetail}
+                        tick={tick}
+                        onSelectChallenge={(c) => loadDetail(c.id)}
+                        onVerify={async (completionId, verified) => {
+                            if (!detail) return;
+                            const res = await fetch(`/api/challenges/${detail.challenge.id}/verify`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ completionId, verified }),
+                            });
+                            const json = await res.json();
+                            if (json.success) {
+                                showToast(verified ? `✓ Verified — ${json.points_awarded ?? 20}pts` : '✕ Rejected', verified);
+                                loadDetail(detail.challenge.id);
+                            } else {
+                                showToast(json.error || 'Error', false);
+                            }
+                        }}
+                        onLaunch={async () => {
+                            if (!detail) return;
+                            const res = await fetch(`/api/challenges/${detail.challenge.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'active' }) });
+                            const json = await res.json();
+                            if (json.success) { showToast('Challenge launched!'); await loadAll(); loadDetail(detail.challenge.id); }
+                        }}
+                        onEnd={async () => {
+                            if (!detail) return;
+                            if (!confirm('End this challenge? Winners will be ranked and badges awarded.')) return;
+                            const res = await fetch(`/api/challenges/${detail.challenge.id}/end`, { method: 'POST' });
+                            const json = await res.json();
+                            if (json.success) { showToast(`Ended · ${json.survivors} survivors`); await loadAll(); loadDetail(detail.challenge.id); }
+                            else showToast(json.error || 'Error', false);
+                        }}
+                        onRefresh={() => { if (detail) loadDetail(detail.challenge.id); }}
+                    />
+                )}
+                {cTab === 'create' && (
+                    <ChCreateTab
+                        allChallenges={challenges}
+                        onCreate={async (data) => {
+                            const res = await fetch('/api/challenges', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                            const json = await res.json();
+                            if (json.success) {
+                                showToast(`Created! ${json.windows_created} windows`);
+                                await loadAll();
+                                setCTab('live');
+                                loadDetail(json.challenge.id);
+                            } else {
+                                showToast(json.error || 'Error', false);
+                            }
+                        }}
+                    />
+                )}
+                {cTab === 'history' && (
+                    <ChHistoryTab challenges={endedChallenges} onView={(c) => { loadDetail(c.id); setCTab('live'); }} />
+                )}
+            </div>
+
+            {/* Toast */}
+            {toast && (
+                <div style={{ position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)', background: toast.ok ? 'rgba(74,222,128,0.12)' : 'rgba(224,48,48,0.12)', border: `1px solid ${toast.ok ? 'rgba(74,222,128,0.4)' : 'rgba(224,48,48,0.4)'}`, color: toast.ok ? '#4ade80' : '#e03030', fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', padding: '10px 20px', borderRadius: 8, letterSpacing: '1px', zIndex: 9999, whiteSpace: 'nowrap' }}>
+                    {toast.msg}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── CHALLENGES LIVE TAB ───────────────────────────────────────────────────────
+function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, onSelectChallenge, onVerify, onLaunch, onEnd, onRefresh }: {
+    activeChallenge: MChallenge | null; draftChallenges: MChallenge[];
+    detail: { challenge: MChallenge; leaderboard: MLeaderboardEntry[]; windows: MWindow[]; pending_verifications: MPendingVerification[] } | null;
+    loading: boolean; tick: number;
+    onSelectChallenge: (c: MChallenge) => void;
+    onVerify: (id: string, verified: boolean) => void;
+    onLaunch: () => void; onEnd: () => void; onRefresh: () => void;
+}) {
+    const [verifying, setVerifying] = useState<string | null>(null);
+    const [addEmail, setAddEmail] = useState('');
+    const [addingParticipant, setAddingParticipant] = useState(false);
+    const [addMsg, setAddMsg] = useState<{ text: string; ok: boolean } | null>(null);
+    const [showLeaderboard, setShowLeaderboard] = useState(false);
+    const [showSchedule, setShowSchedule] = useState(false);
+    const [proofPreview, setProofPreview] = useState<string | null>(null);
+
+    if (loading && !detail) {
+        return <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#333', letterSpacing: '2px' }}>LOADING...</div>;
+    }
+
+    if (!detail) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {draftChallenges.length > 0 ? (
+                    <>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px' }}>DRAFTS — TAP TO SELECT</div>
+                        {draftChallenges.map(c => (
+                            <button key={c.id} onClick={() => onSelectChallenge(c)}
+                                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, cursor: 'pointer', textAlign: 'left', width: '100%', WebkitTapHighlightColor: 'transparent' }}>
+                                <div style={{ width: 10, height: 10, borderRadius: '50%', background: chThemeColor(c.theme), flexShrink: 0 }} />
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontFamily: 'Cinzel,serif', color: '#ddd', fontSize: '0.88rem' }}>{c.name}</div>
+                                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#555', marginTop: 3 }}>{c.duration_days}d · {c.tasks_per_day}×/day</div>
+                                </div>
+                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#c5a059' }}>→</span>
+                            </button>
+                        ))}
+                    </>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#222', letterSpacing: '2px' }}>NO ACTIVE CHALLENGE<br /><span style={{ color: '#1a1a1a' }}>CREATE ONE IN THE CREATE TAB</span></div>
+                )}
+            </div>
+        );
+    }
+
+    const { challenge, leaderboard, windows, pending_verifications } = detail;
+    const color = chThemeColor(challenge.theme);
+    const activeCount = leaderboard.filter(p => p.status === 'active').length;
+    const elimCount = leaderboard.filter(p => p.status === 'eliminated').length;
+    const openWindows = windows.filter(w => {
+        const now = Date.now();
+        return now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime();
+    });
+    const currentWindow = openWindows[0] || null;
+    const daysLeft = challenge.end_date ? Math.max(0, Math.ceil((new Date(challenge.end_date).getTime() - Date.now()) / 86400000)) : null;
+
+    // Next window countdown
+    const now = Date.now();
+    const upcoming = windows.filter(w => new Date(w.opens_at).getTime() > now).sort((a, b) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime());
+    const nextWindow = upcoming[0] || null;
+    const nextSecs = nextWindow ? Math.floor((new Date(nextWindow.opens_at).getTime() - now) / 1000) : 0;
+    const nextH = Math.floor(nextSecs / 3600);
+    const nextM = Math.floor((nextSecs % 3600) / 60);
+    const nextS = nextSecs % 60;
+
+    const handleAddParticipant = async () => {
+        if (!addEmail.trim()) return;
+        setAddingParticipant(true);
+        try {
+            const res = await fetch(`/api/challenges/${challenge.id}/participants`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: addEmail.trim().toLowerCase(), waive_fee: true }) });
+            const json = await res.json();
+            if (json.success) { setAddMsg({ text: `Added`, ok: true }); setAddEmail(''); onRefresh(); }
+            else setAddMsg({ text: json.error || 'Failed', ok: false });
+        } finally { setAddingParticipant(false); setTimeout(() => setAddMsg(null), 3000); }
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+            {/* Challenge header card */}
+            <div style={{ background: challenge.image_url ? 'rgba(0,0,0,0.7)' : `linear-gradient(135deg,${color}08,rgba(0,0,0,0.5))`, border: `1px solid ${color}44`, borderRadius: 14, overflow: 'hidden', position: 'relative' }}>
+                {challenge.image_url && (
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${challenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.12 }} />
+                )}
+                <div style={{ position: 'relative', padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                {challenge.status === 'active' && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 8px ${color}`, animation: 'pulse 1.5s infinite', flexShrink: 0 }} />}
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#fff', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{challenge.name}</div>
+                            </div>
+                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px' }}>
+                                {challenge.status === 'active' ? `${daysLeft}d left · ${challenge.tasks_per_day}×/day · ${challenge.window_minutes}min windows` : challenge.status.toUpperCase()}
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                            {challenge.status === 'draft' && <button onClick={onLaunch} style={{ padding: '7px 14px', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: '#4ade80', fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', letterSpacing: '1px', cursor: 'pointer' }}>▶ LAUNCH</button>}
+                            {challenge.status === 'active' && <button onClick={onEnd} style={{ padding: '7px 14px', background: 'rgba(224,48,48,0.08)', border: '1px solid rgba(224,48,48,0.3)', borderRadius: 8, color: '#e03030', fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', letterSpacing: '1px', cursor: 'pointer' }}>■ END</button>}
+                        </div>
+                    </div>
+                    {/* Stats row */}
+                    <div style={{ display: 'flex', gap: 16 }}>
+                        {[{ v: activeCount, l: 'IN', c: '#4ade80' }, { v: elimCount, l: 'OUT', c: '#e03030' }, { v: leaderboard.length, l: 'TOTAL', c: '#555' }].map(s => (
+                            <div key={s.l} style={{ textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.1rem', fontWeight: 700, color: s.c }}>{s.v}</div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: '#444', letterSpacing: '1px' }}>{s.l}</div>
+                            </div>
+                        ))}
+                        {nextWindow && (
+                            <div style={{ marginLeft: 'auto', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: 8, padding: '6px 12px', textAlign: 'right' }}>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#4ade80', letterSpacing: '1px', marginBottom: 2 }}>NEXT</div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.72rem', color: '#4ade80', fontWeight: 700 }}>{String(nextH).padStart(2, '0')}:{String(nextM).padStart(2, '0')}:{String(nextS).padStart(2, '0')}</div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', color: '#555' }}>D{nextWindow.day_number}·T{nextWindow.window_number}</div>
+                            </div>
+                        )}
+                    </div>
+                    {currentWindow && (
+                        <div style={{ marginTop: 10, background: `${color}12`, border: `1px solid ${color}44`, borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, boxShadow: `0 0 8px ${color}`, animation: 'pulse 1.2s infinite' }} />
+                            <div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color, letterSpacing: '1px' }}>WINDOW OPEN — D{currentWindow.day_number}·T{currentWindow.window_number}</div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.4rem', fontWeight: 900, color, letterSpacing: '6px', lineHeight: 1.2 }}>{currentWindow.verification_code}</div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Pending verifications */}
+            {pending_verifications.length > 0 && (
+                <div>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#ff8c42', letterSpacing: '2px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#ff8c42', animation: 'pulse 1.5s infinite' }} />
+                        {pending_verifications.length} PENDING VERIFICATION{pending_verifications.length !== 1 ? 'S' : ''}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {pending_verifications.map(pv => {
+                            const w = pv.challenge_windows;
+                            const prof = pv.profiles;
+                            const avatar = prof?.avatar_url || prof?.profile_picture_url;
+                            const name = prof?.name || pv.member_id?.split('@')[0] || pv.member_id;
+                            const isOpen = w ? (Date.now() < new Date(w.closes_at).getTime()) : false;
+                            const isBusy = verifying === pv.id;
+                            return (
+                                <div key={pv.id} style={{ background: 'rgba(10,8,5,0.98)', border: '1px solid rgba(255,140,66,0.2)', borderRadius: 12, overflow: 'hidden' }}>
+                                    {/* Header */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <img src={avatar || '/queen-karin.png'} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.3)', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd' }}>{name}</div>
+                                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#555', letterSpacing: '1px' }}>
+                                                {w ? `DAY ${w.day_number} · TASK ${w.window_number}` : ''}
+                                                {!isOpen && w && <span style={{ color: '#e03030', marginLeft: 8 }}>WINDOW CLOSED</span>}
+                                            </div>
+                                        </div>
+                                        {w && (
+                                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: '#555', letterSpacing: '1px' }}>CODE</div>
+                                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.2rem', fontWeight: 900, color, letterSpacing: '4px', lineHeight: 1 }}>{w.verification_code}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* Proof image */}
+                                    {pv.proof_url && (
+                                        <button onClick={() => setProofPreview(pv.proof_url!)}
+                                            style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}>
+                                            <img src={pv.proof_url} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} alt="proof" onError={(e) => { (e.target as any).style.display = 'none'; }} />
+                                            <div style={{ background: 'rgba(0,0,0,0.55)', padding: '4px', fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: '#666', letterSpacing: '1px', textAlign: 'center' }}>TAP TO ENLARGE</div>
+                                        </button>
+                                    )}
+                                    {/* Actions */}
+                                    <div style={{ display: 'flex', gap: 8, padding: '10px 14px' }}>
+                                        <button disabled={isBusy} onClick={async () => { setVerifying(pv.id); await onVerify(pv.id, true); setVerifying(null); }}
+                                            style={{ flex: 2, padding: '12px 0', background: isBusy ? '#111' : 'rgba(74,222,128,0.1)', color: isBusy ? '#333' : '#4ade80', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 9, fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', fontWeight: 700, cursor: isBusy ? 'default' : 'pointer' }}>
+                                            {isBusy ? '...' : '✓ VERIFY'}
+                                        </button>
+                                        <button disabled={isBusy} onClick={async () => { setVerifying(pv.id); await onVerify(pv.id, false); setVerifying(null); }}
+                                            style={{ flex: 1, padding: '12px 0', background: isBusy ? '#111' : 'rgba(224,48,48,0.08)', color: isBusy ? '#333' : '#e03030', border: '1px solid rgba(224,48,48,0.25)', borderRadius: 9, fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', cursor: isBusy ? 'default' : 'pointer' }}>
+                                            {isBusy ? '...' : '✕'}
+                                        </button>
+                                    </div>
+                                    {!isOpen && <div style={{ textAlign: 'center', fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#e03030', padding: '0 14px 8px', letterSpacing: '1px' }}>REJECT = ELIMINATE</div>}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* Add participant */}
+            <div style={{ display: 'flex', gap: 8 }}>
+                <input type="email" placeholder="Add participant by email..." value={addEmail} onChange={e => setAddEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddParticipant()}
+                    style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.82rem', padding: '10px 14px', outline: 'none' }} />
+                <button onClick={handleAddParticipant} disabled={addingParticipant || !addEmail.trim()}
+                    style={{ padding: '10px 16px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.72rem', cursor: 'pointer', flexShrink: 0 }}>
+                    {addingParticipant ? '...' : '+ Add'}
+                </button>
+            </div>
+            {addMsg && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: addMsg.ok ? '#4ade80' : '#e03030', letterSpacing: '1px' }}>{addMsg.text}</div>}
+
+            {/* Leaderboard collapsible */}
+            <button onClick={() => setShowLeaderboard(v => !v)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '12px 14px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px' }}>LEADERBOARD — {leaderboard.length}</span>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#333' }}>{showLeaderboard ? '▲' : '▼'}</span>
+            </button>
+            {showLeaderboard && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: -6 }}>
+                    {leaderboard.length === 0 && <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#222' }}>NO PARTICIPANTS</div>}
+                    {leaderboard.map((p, i) => {
+                        const isElim = p.status === 'eliminated';
+                        const isChamp = p.status === 'champion';
+                        const rank = isChamp ? 1 : (p.final_rank || (isElim ? null : i + 1));
+                        return (
+                            <div key={p.member_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isChamp ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isChamp ? 'rgba(197,160,89,0.3)' : 'rgba(255,255,255,0.04)'}`, borderLeft: `3px solid ${isElim ? '#222' : isChamp ? '#c5a059' : color}`, borderRadius: 8, opacity: isElim ? 0.4 : 1 }}>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', fontWeight: 700, color: isChamp ? '#c5a059' : '#555', width: 24, flexShrink: 0, textAlign: 'center' }}>{isChamp ? '♛' : (rank || '—')}</div>
+                                <img src={p.avatar || '/queen-karin.png'} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: isChamp ? '#c5a059' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                                </div>
+                                <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.9rem', color: '#4ade80', fontWeight: 700 }}>{p.completions_count}</div>
+                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: '#444' }}>DONE</div>
+                                    </div>
+                                    {isElim && p.eliminated_day && (
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#e03030' }}>D{p.eliminated_day}</div>
+                                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: '#444' }}>ELIM</div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Task schedule collapsible */}
+            <button onClick={() => setShowSchedule(v => !v)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '12px 14px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px' }}>TASK SCHEDULE — {windows.length} WINDOWS</span>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#333' }}>{showSchedule ? '▲' : '▼'}</span>
+            </button>
+            {showSchedule && (
+                <ChWindowsManager
+                    windows={windows}
+                    challengeId={challenge.id}
+                    windowMinutes={challenge.window_minutes}
+                    tasksPerDay={challenge.tasks_per_day}
+                    taskNames={challenge.task_names || []}
+                    onRefresh={onRefresh}
+                />
+            )}
+
+            {/* Proof preview full-screen */}
+            {proofPreview && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column' }} onClick={() => setProofPreview(null)}>
+                    <button onClick={() => setProofPreview(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '1.2rem', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', zIndex: 1 }}>✕</button>
+                    <img src={proofPreview} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="proof" />
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── CHALLENGES WINDOWS MANAGER ───────────────────────────────────────────────
+function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, taskNames, onRefresh }: {
+    windows: MWindow[]; challengeId: string; windowMinutes: number; tasksPerDay: number; taskNames: string[] | any[]; onRefresh: () => void;
+}) {
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editDate, setEditDate] = useState('');
+    const [editTime, setEditTime] = useState('');
+    const [editName, setEditName] = useState('');
+    const [saving, setSaving] = useState<string | null>(null);
+    const [pushing, setPushing] = useState<string | null>(null);
+    const [stopping, setStopping] = useState<string | null>(null);
+
+    const now = Date.now();
+    const byDay = windows.reduce((acc, w) => {
+        if (!acc[w.day_number]) acc[w.day_number] = [];
+        acc[w.day_number].push(w);
+        return acc;
+    }, {} as Record<number, MWindow[]>);
+
+    const getTaskName = (w: MWindow) => {
+        const idx = (w.day_number - 1) * tasksPerDay + (w.window_number - 1);
+        return (taskNames as string[])[idx] || '';
+    };
+
+    const saveEdit = async (w: MWindow) => {
+        setSaving(w.id);
+        try {
+            const opensAt = new Date(`${editDate}T${editTime}`);
+            const closesAt = new Date(opensAt.getTime() + windowMinutes * 60 * 1000);
+            const res = await fetch(`/api/challenges/windows/${w.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ opens_at: opensAt.toISOString(), closes_at: closesAt.toISOString() }) });
+            if (!res.ok) return;
+            // Save task name
+            const idx = (w.day_number - 1) * tasksPerDay + (w.window_number - 1);
+            const newNames = [...(taskNames as string[])];
+            while (newNames.length <= idx) newNames.push('');
+            newNames[idx] = editName;
+            await fetch(`/api/challenges/${challengeId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task_names: newNames }) });
+            setEditingId(null);
+            onRefresh();
+        } finally { setSaving(null); }
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {Object.keys(byDay).sort((a, b) => Number(a) - Number(b)).map(day => (
+                <div key={day}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>DAY {day}</div>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right,rgba(197,160,89,0.2),transparent)' }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {byDay[Number(day)].map(w => {
+                            const isOpen = now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime();
+                            const isPast = now >= new Date(w.closes_at).getTime();
+                            const isEditing = editingId === w.id;
+                            const opensDate = new Date(w.opens_at);
+                            const closesDate = new Date(w.closes_at);
+                            const taskName = getTaskName(w);
+
+                            return (
+                                <div key={w.id} style={{ background: isOpen ? 'rgba(74,222,128,0.04)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isOpen ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.1)'}`, borderLeft: `3px solid ${isOpen ? '#4ade80' : isPast ? '#181818' : 'rgba(197,160,89,0.4)'}`, borderRadius: 10, overflow: 'hidden', opacity: isPast && !isOpen ? 0.4 : 1 }}>
+                                    {/* Header row */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px' }}>
+                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.72rem', fontWeight: 900, color: isOpen ? '#4ade80' : isPast ? '#333' : '#c5a059', letterSpacing: '4px', flexShrink: 0 }}>{w.verification_code}</div>
+                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: isOpen ? '#4ade80' : '#555', flexShrink: 0 }}>T{w.window_number}</div>
+                                        {isOpen && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80', animation: 'pulse 1.2s infinite', flexShrink: 0 }} />}
+                                        <div style={{ flex: 1 }} />
+                                        {!isEditing && !isPast && (
+                                            <button onClick={() => { setEditDate(opensDate.toISOString().slice(0, 10)); setEditTime(opensDate.toTimeString().slice(0, 5)); setEditName(taskName); setEditingId(w.id); }}
+                                                style={{ padding: '5px 10px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.54rem', cursor: 'pointer' }}>Edit</button>
+                                        )}
+                                        {!isEditing && isOpen && (
+                                            <button disabled={stopping === w.id} onClick={async () => { if (!confirm(`Stop T${w.window_number}?`)) return; setStopping(w.id); await fetch(`/api/challenges/windows/${w.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ closes_at: new Date().toISOString() }) }); setStopping(null); onRefresh(); }}
+                                                style={{ padding: '5px 10px', background: 'rgba(224,48,48,0.08)', border: '1px solid rgba(224,48,48,0.35)', borderRadius: 6, color: '#e03030', fontFamily: 'Cinzel,serif', fontSize: '0.54rem', cursor: 'pointer' }}>■ Stop</button>
+                                        )}
+                                        {!isEditing && !isOpen && !isPast && (
+                                            <button disabled={pushing === w.id} onClick={async () => { if (!confirm(`Push T${w.window_number} live now?`)) return; setPushing(w.id); await fetch(`/api/challenges/windows/${w.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ push_now: true }) }); setPushing(null); onRefresh(); }}
+                                                style={{ padding: '5px 10px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.35)', borderRadius: 6, color: '#4ade80', fontFamily: 'Cinzel,serif', fontSize: '0.54rem', cursor: 'pointer' }}>⚡ Push</button>
+                                        )}
+                                    </div>
+                                    {/* Task name + time */}
+                                    {!isEditing && (
+                                        <div style={{ padding: '0 12px 10px' }}>
+                                            {taskName && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.78rem', color: 'rgba(220,215,200,0.8)', marginBottom: 4, lineHeight: 1.5 }}>{taskName}</div>}
+                                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: isOpen ? 'rgba(74,222,128,0.5)' : isPast ? '#1e1e1e' : 'rgba(197,160,89,0.3)', letterSpacing: '1px' }}>
+                                                {opensDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {opensDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} — {closesDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {/* Edit panel */}
+                                    {isEditing && (
+                                        <div style={{ padding: '0 12px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                            <textarea placeholder="Task description..." value={editName} onChange={e => setEditName(e.target.value)} rows={2}
+                                                style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 7, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.82rem', padding: '8px 12px', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
+                                                    style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
+                                                <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)}
+                                                    style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <button onClick={() => saveEdit(w)} disabled={saving === w.id}
+                                                    style={{ flex: 2, padding: '9px', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.35)', borderRadius: 7, color: '#4ade80', fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', cursor: 'pointer' }}>
+                                                    {saving === w.id ? '...' : '✓ SAVE'}
+                                                </button>
+                                                <button onClick={() => setEditingId(null)}
+                                                    style={{ flex: 1, padding: '9px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, color: '#555', fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', cursor: 'pointer' }}>
+                                                    CANCEL
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// ─── CHALLENGES CREATE TAB ─────────────────────────────────────────────────────
+function ChCreateTab({ allChallenges, onCreate }: { allChallenges: MChallenge[]; onCreate: (data: any) => Promise<void>; }) {
+    const DEFAULT_TIMES = ['09:00', '13:00', '18:00', '08:00', '11:00', '15:00', '19:00'];
+    const [form, setForm] = useState({ name: '', theme: 'gold', description: '', duration_days: 7, tasks_per_day: 3, window_minutes: 30, points_per_completion: 20, first_place_points: 10, second_place_points: 7, third_place_points: 5, start_date: '', start_time: '08:00', image_url: '' });
+    const [taskTimes, setTaskTimes] = useState<string[][]>(() => Array(7).fill(null).map(() => DEFAULT_TIMES.slice(0, 3)));
+    const [taskNames, setTaskNames] = useState<string[][]>(() => Array(7).fill(null).map(() => Array(3).fill('')));
+    const [expandedDay, setExpandedDay] = useState<number>(0);
+    const [submitting, setSubmitting] = useState(false);
+    const [imageUploading, setImageUploading] = useState(false);
+    const imgRef = useRef<HTMLInputElement>(null);
+
+    const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+
+    const handleDuration = (n: number) => {
+        set('duration_days', n);
+        setTaskTimes(p => n > p.length ? [...p, ...Array(n - p.length).fill(null).map(() => DEFAULT_TIMES.slice(0, form.tasks_per_day))] : p.slice(0, n));
+        setTaskNames(p => n > p.length ? [...p, ...Array(n - p.length).fill(null).map(() => Array(form.tasks_per_day).fill(''))] : p.slice(0, n));
+    };
+    const handleTPD = (n: number) => {
+        set('tasks_per_day', n);
+        setTaskTimes(p => p.map(d => n > d.length ? [...d, ...DEFAULT_TIMES.slice(d.length, n)] : d.slice(0, n)));
+        setTaskNames(p => p.map(d => n > d.length ? [...d, ...Array(n - d.length).fill('')] : d.slice(0, n)));
+    };
+
+    const prefill = (c: MChallenge) => {
+        set('name', c.name); set('theme', c.theme); set('description', c.description || '');
+        set('duration_days', c.duration_days); set('tasks_per_day', c.tasks_per_day); set('window_minutes', c.window_minutes);
+        set('points_per_completion', c.points_per_completion);
+        set('first_place_points', c.first_place_points); set('second_place_points', c.second_place_points); set('third_place_points', c.third_place_points);
+        set('image_url', c.image_url || '');
+        const srcTimes = DEFAULT_TIMES.slice(0, c.tasks_per_day);
+        const srcNames = (c.task_names || []).concat(Array(Math.max(0, c.tasks_per_day - (c.task_names?.length || 0))).fill('')).slice(0, c.tasks_per_day) as string[];
+        setTaskTimes(Array(c.duration_days).fill(null).map(() => [...srcTimes]));
+        setTaskNames(Array(c.duration_days).fill(null).map(() => [...srcNames]));
+        setExpandedDay(0);
+    };
+
+    const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImageUploading(true);
+        try {
+            const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+            const fd = new FormData();
+            fd.append('file', file); fd.append('bucket', 'media'); fd.append('folder', 'challenge-covers'); fd.append('ext', ext);
+            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+            const json = await res.json();
+            if (json.url) set('image_url', json.url);
+        } finally { setImageUploading(false); if (imgRef.current) imgRef.current.value = ''; }
+    };
+
+    const handleSubmit = async () => {
+        if (!form.name || !form.start_date) return;
+        setSubmitting(true);
+        try {
+            const startDt = new Date(`${form.start_date}T${form.start_time}:00`);
+            await onCreate({ ...form, start_date: startDt.toISOString(), task_times: taskTimes, task_names: taskNames });
+        } finally { setSubmitting(false); }
+    };
+
+    const field: React.CSSProperties = { background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.88rem', padding: '11px 14px', outline: 'none', width: '100%', boxSizing: 'border-box' };
+    const label: React.CSSProperties = { fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#555', letterSpacing: '2px', display: 'block', marginBottom: 6 };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {/* Past challenges to prefill */}
+            {allChallenges.length > 0 && (
+                <div>
+                    <div style={{ ...label, marginBottom: 10 }}>USE A PAST CHALLENGE AS TEMPLATE</div>
+                    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                        {allChallenges.map(c => (
+                            <button key={c.id} onClick={() => prefill(c)}
+                                style={{ flexShrink: 0, padding: '8px 14px', background: 'rgba(197,160,89,0.04)', border: `1px solid ${chThemeColor(c.theme)}44`, borderRadius: 8, cursor: 'pointer', textAlign: 'left', WebkitTapHighlightColor: 'transparent' }}>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: chThemeColor(c.theme), whiteSpace: 'nowrap' }}>{c.name}</div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: '#444', marginTop: 2 }}>{c.duration_days}d · {c.tasks_per_day}×</div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Name */}
+            <div><span style={label}>CHALLENGE NAME</span><input style={field} placeholder="e.g. Iron Week" value={form.name} onChange={e => set('name', e.target.value)} /></div>
+
+            {/* Theme */}
+            <div>
+                <span style={label}>THEME</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    {(['gold', 'red', 'purple', 'blue'] as const).map(t => (
+                        <button key={t} onClick={() => set('theme', t)}
+                            style={{ flex: 1, padding: '9px 0', background: form.theme === t ? `${chThemeColor(t)}18` : 'rgba(255,255,255,0.02)', border: `1px solid ${form.theme === t ? chThemeColor(t) : 'rgba(255,255,255,0.06)'}`, borderRadius: 8, color: form.theme === t ? chThemeColor(t) : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', letterSpacing: '1px', cursor: 'pointer' }}>
+                            {t.toUpperCase()}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Description */}
+            <div><span style={label}>DESCRIPTION (OPTIONAL)</span><textarea style={{ ...field, resize: 'none', lineHeight: 1.5 }} rows={2} placeholder="What this challenge is about..." value={form.description} onChange={e => set('description', e.target.value)} /></div>
+
+            {/* Cover image */}
+            <div>
+                <span style={label}>COVER IMAGE (OPTIONAL)</span>
+                <input ref={imgRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagePick} />
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    {form.image_url && <img src={form.image_url} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(74,222,128,0.3)' }} alt="" />}
+                    <button onClick={() => imgRef.current?.click()} disabled={imageUploading}
+                        style={{ padding: '10px 16px', background: form.image_url ? 'rgba(74,222,128,0.06)' : 'rgba(197,160,89,0.06)', border: `1px solid ${form.image_url ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: imageUploading ? '#555' : form.image_url ? '#4ade80' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', letterSpacing: '1px', cursor: 'pointer' }}>
+                        {imageUploading ? '⏳ UPLOADING...' : form.image_url ? '✓ CHANGE IMAGE' : '⬆ UPLOAD COVER'}
+                    </button>
+                    {form.image_url && <button onClick={() => set('image_url', '')} style={{ padding: '10px 12px', background: 'rgba(255,0,0,0.06)', border: '1px solid rgba(255,0,0,0.2)', borderRadius: 8, color: '#ff4444', fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', cursor: 'pointer' }}>✕</button>}
+                </div>
+            </div>
+
+            {/* Duration / Tasks per day / Window */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                <div><span style={label}>DAYS</span><input type="number" style={field} min={1} max={30} value={form.duration_days} onChange={e => handleDuration(Math.min(30, Math.max(1, Number(e.target.value))))} /></div>
+                <div><span style={label}>TASKS/DAY</span><input type="number" style={field} min={1} max={10} value={form.tasks_per_day} onChange={e => handleTPD(Math.min(10, Math.max(1, Number(e.target.value))))} /></div>
+                <div><span style={label}>WIN. (MIN)</span><input type="number" style={field} min={5} max={120} value={form.window_minutes} onChange={e => set('window_minutes', Number(e.target.value))} /></div>
+            </div>
+
+            {/* Start date + time */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div><span style={label}>START DATE</span><input type="date" style={field} value={form.start_date} onChange={e => set('start_date', e.target.value)} /></div>
+                <div><span style={label}>START TIME</span><input type="time" style={field} value={form.start_time} onChange={e => set('start_time', e.target.value)} /></div>
+            </div>
+
+            {/* Points config */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                <div><span style={label}>PTS/TASK</span><input type="number" style={field} min={1} value={form.points_per_completion} onChange={e => set('points_per_completion', Number(e.target.value))} /></div>
+                <div><span style={label}>🥇 BONUS</span><input type="number" style={field} min={0} value={form.first_place_points} onChange={e => set('first_place_points', Number(e.target.value))} /></div>
+                <div><span style={label}>🥈 BONUS</span><input type="number" style={field} min={0} value={form.second_place_points} onChange={e => set('second_place_points', Number(e.target.value))} /></div>
+                <div><span style={label}>🥉 BONUS</span><input type="number" style={field} min={0} value={form.third_place_points} onChange={e => set('third_place_points', Number(e.target.value))} /></div>
+            </div>
+
+            {/* Daily task schedule */}
+            <div>
+                <span style={label}>DAILY TASK SCHEDULE</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {taskTimes.map((dayTimes, dayIdx) => (
+                        <div key={dayIdx} style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
+                            <button type="button" onClick={() => setExpandedDay(expandedDay === dayIdx ? -1 : dayIdx)}
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', background: expandedDay === dayIdx ? 'rgba(197,160,89,0.05)' : 'none', border: 'none', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '2px' }}>DAY {dayIdx + 1}</span>
+                                {expandedDay !== dayIdx && (
+                                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#444' }}>{dayTimes.join(' · ')}</span>
+                                )}
+                                <span style={{ marginLeft: 'auto', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', color: '#333' }}>{expandedDay === dayIdx ? '▲' : '▼'}</span>
+                            </button>
+                            {expandedDay === dayIdx && (
+                                <div style={{ padding: '0 14px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {dayTimes.map((t, ti) => (
+                                        <div key={ti} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#555', flexShrink: 0, width: 16 }}>T{ti + 1}</span>
+                                            <input type="time" value={t} onChange={e => setTaskTimes(p => { const n = p.map(d => [...d]); n[dayIdx][ti] = e.target.value; return n; })}
+                                                style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
+                                            <input placeholder="Task description..." value={taskNames[dayIdx]?.[ti] || ''} onChange={e => setTaskNames(p => { const n = p.map(d => [...d]); n[dayIdx][ti] = e.target.value; return n; })}
+                                                style={{ flex: 2, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 6, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Submit */}
+            <button disabled={submitting || !form.name || !form.start_date} onClick={handleSubmit}
+                style={{ width: '100%', padding: '16px', background: submitting || !form.name || !form.start_date ? '#111' : 'linear-gradient(135deg,rgba(197,160,89,0.2),rgba(140,105,20,0.15))', border: `1px solid ${submitting || !form.name || !form.start_date ? '#222' : 'rgba(197,160,89,0.4)'}`, borderRadius: 10, color: submitting || !form.name || !form.start_date ? '#333' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer' }}>
+                {submitting ? 'CREATING...' : '⚔ CREATE CHALLENGE'}
+            </button>
+        </div>
+    );
+}
+
+// ─── CHALLENGES HISTORY TAB ────────────────────────────────────────────────────
+function ChHistoryTab({ challenges, onView }: { challenges: MChallenge[]; onView: (c: MChallenge) => void; }) {
+    if (!challenges.length) return (
+        <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#222', letterSpacing: '2px' }}>NO ENDED CHALLENGES</div>
+    );
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {challenges.map(c => (
+                <button key={c.id} onClick={() => onView(c)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderLeft: `3px solid ${chThemeColor(c.theme)}44`, borderRadius: 12, cursor: 'pointer', textAlign: 'left', width: '100%', WebkitTapHighlightColor: 'transparent' }}>
+                    {c.image_url && <img src={c.image_url} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} alt="" />}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.88rem', color: '#aaa', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#444', letterSpacing: '1px' }}>{c.duration_days}d · {c.tasks_per_day}×/day · {c.participant_total ?? 0} participants</div>
+                        {c.start_date && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#333', letterSpacing: '1px', marginTop: 2 }}>{new Date(c.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
+                    </div>
+                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#333' }}>→</span>
+                </button>
+            ))}
         </div>
     );
 }
