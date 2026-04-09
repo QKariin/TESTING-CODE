@@ -7,6 +7,7 @@ import '../../css/dashboard.css';
 import '../../css/dashboard-modals.css';
 import '../../css/dashboard-mobile.css';
 import MobileDashboard from './MobileDashboard';
+import { ChallengesContent } from './challenges/page';
 
 // Scripts
 import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboard-main';
@@ -365,6 +366,7 @@ export default function DashboardPage() {
     const [lockedUsers, setLockedUsers] = useState<any[]>([]);
     const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null; isUpcoming?: boolean; startDate?: string; image_url?: string | null; description?: string; duration_days?: number; tasks_per_day?: number; window_minutes?: number; start_date_raw?: string } | null>(null);
     const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
+    const [showChallenges, setShowChallenges] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -700,11 +702,11 @@ export default function DashboardPage() {
                     onClick={() => (window as any).showPosts()}
                     style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.08), transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
                 >✦ POSTS</div>
-                <a
-                    href="/dashboard/challenges"
+                <div
                     className="sb-dash-btn"
-                    style={{ display: 'block', textDecoration: 'none', backgroundImage: 'linear-gradient(135deg, rgba(74,222,128,0.06), transparent)', borderBottom: '1px solid rgba(74,222,128,0.15)', color: '#4ade80', position: 'relative' }}
-                >⚔ CHALLENGES{pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}</a>
+                    onClick={() => setShowChallenges(true)}
+                    style={{ backgroundImage: 'linear-gradient(135deg, rgba(74,222,128,0.06), transparent)', borderBottom: '1px solid rgba(74,222,128,0.15)', color: showChallenges ? '#4ade80' : '#4ade8099', position: 'relative', cursor: 'pointer', boxShadow: showChallenges ? 'inset 3px 0 0 #4ade80' : 'none' }}
+                >⚔ CHALLENGES{pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}</div>
                 <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
                     <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: 'Orbitron', fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
@@ -714,7 +716,14 @@ export default function DashboardPage() {
             </div>
 
             {/* MAIN CONTENT AREA */}
-            <div className="content">
+            <div className="content" style={{ position: 'relative' }}>
+
+                {/* CHALLENGES INLINE PANEL — overlays content area when open */}
+                {showChallenges && (
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#04040e' }}>
+                        <ChallengesContent onClose={() => setShowChallenges(false)} />
+                    </div>
+                )}
 
                 {/* 1. HOME VIEW */}
                 <div id="viewHome">
@@ -778,7 +787,7 @@ export default function DashboardPage() {
 
                         {/* CHALLENGES WIDGET */}
                         <div className="v-gauge-card glass-card span-1"
-                            onClick={() => window.location.href = '/dashboard/challenges'}
+                            onClick={() => setShowChallenges(true)}
                             style={{ border: `1px solid ${challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)'}`, cursor: 'pointer', transition: 'border-color 0.2s', padding: 0, overflow: 'hidden' }}
                             onMouseEnter={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.7)' : 'rgba(74,222,128,0.6)') : 'rgba(197,160,89,0.4)')}
                             onMouseLeave={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)')}>
@@ -791,7 +800,7 @@ export default function DashboardPage() {
                                         </span>
                                     )}
                                 </div>
-                                <div className="vg-sub" style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); window.location.href = '/dashboard/challenges'; }}>MANAGE ↗</div>
+                                <div className="vg-sub" style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); setShowChallenges(true); }}>MANAGE ↗</div>
                             </div>
                             {challengeWidget ? (
                                 <div style={{ display: 'flex', gap: 0, borderTop: `1px solid ${challengeWidget.isUpcoming ? 'rgba(197,160,89,0.15)' : 'rgba(74,222,128,0.1)'}` }}>

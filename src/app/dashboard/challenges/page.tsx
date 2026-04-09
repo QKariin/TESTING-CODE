@@ -85,8 +85,13 @@ function Toast({ msg, type }: { msg: string; type: 'success' | 'error' }) {
     return <div className={`ch-toast ${type}`}>{msg}</div>;
 }
 
+// ─── Embeddable content (used by dashboard inline panel) ──────────────────────
+export function ChallengesContent({ onClose }: { onClose: () => void }) {
+    return <ChallengesPage _onClose={onClose} />;
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function ChallengesPage() {
+export default function ChallengesPage({ _onClose }: { _onClose?: () => void } = {}) {
     const [tab, setTab] = useState<'active' | 'create' | 'history'>('active');
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [detail, setDetail] = useState<ChallengeDetail | null>(null);
@@ -144,13 +149,20 @@ export default function ChallengesPage() {
     const endedChallenges = challenges.filter(c => c.status === 'ended');
 
     return (
-        <div className="ch-layout">
+        <div className={_onClose ? undefined : 'ch-layout'} style={_onClose ? { display: 'grid', gridTemplateRows: '52px 1fr', height: '100%', background: 'var(--bg, #04040e)', overflow: 'hidden' } : undefined}>
             {/* TOP BAR */}
             <div className="ch-topbar">
-                <a href="/dashboard" className="ch-back">
-                    <span>←</span>
-                    <span>DASHBOARD</span>
-                </a>
+                {_onClose ? (
+                    <button onClick={_onClose} className="ch-back" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                        <span>←</span>
+                        <span>BACK</span>
+                    </button>
+                ) : (
+                    <a href="/dashboard" className="ch-back">
+                        <span>←</span>
+                        <span>DASHBOARD</span>
+                    </a>
+                )}
                 <div style={{ width: 1, height: 30, background: 'rgba(255,255,255,0.08)' }} />
                 <div className="ch-topbar-title">⚔ CHALLENGE SYSTEM</div>
                 <div className="ch-topbar-sub">
