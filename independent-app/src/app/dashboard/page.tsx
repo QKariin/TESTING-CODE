@@ -183,6 +183,60 @@ function buildGlMsgHtml(msg: any): string {
     return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">${userAv}<span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>${mediaHtml}</div></div>`;
 }
 
+function LeadsPanel() {
+    const [leads, setLeads] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch('/api/leads').then(r => r.json()).then(d => {
+            if (d.success) setLeads(d.leads);
+        }).catch(() => {}).finally(() => setLoading(false));
+    }, []);
+
+    const providerIcon = (p: string) => {
+        if (p === 'google') return '🔵';
+        if (p === 'twitter') return '🐦';
+        return '✉';
+    };
+
+    return (
+        <div className="glass-card span-2" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: 320 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(255,80,80,0.12)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 3, height: 14, background: 'rgba(255,80,80,0.7)', borderRadius: 2 }} />
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: 'rgba(255,100,100,0.85)', letterSpacing: '3px' }}>KNOCKING AT THE GATE</div>
+                </div>
+                <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{leads.length} LEADS</div>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
+                {loading && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>}
+                {!loading && leads.length === 0 && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px' }}>NO LEADS YET</div>}
+                {leads.map((l: any) => {
+                    const first = new Date(l.first_seen).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                    const last = new Date(l.last_seen).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    return (
+                        <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 18px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            <span style={{ fontSize: '0.85rem', flexShrink: 0 }}>{providerIcon(l.provider)}</span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontFamily: 'Rajdhani', fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.email}</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px', marginTop: 2 }}>first: {first} · last attempt: {last}</div>
+                            </div>
+                            {l.attempts > 1 && (
+                                <span style={{ flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,100,100,0.6)', background: 'rgba(255,80,80,0.08)', border: '1px solid rgba(255,80,80,0.15)', borderRadius: 10, padding: '2px 7px', letterSpacing: '0.5px' }}>{l.attempts}×</span>
+                            )}
+                            <button
+                                onClick={() => navigator.clipboard?.writeText(l.email)}
+                                title="Copy email"
+                                style={{ flexShrink: 0, background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', padding: '3px 7px', cursor: 'pointer' }}
+                            >⎘</button>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
 function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     const [text, setText] = useState('');
     const [sending, setSending] = useState(false);
@@ -902,6 +956,9 @@ export default function DashboardPage() {
                                 <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>
                             </div>
                         </div>
+
+                        {/* LEADS — people who tried to log in but haven't paid */}
+                        <LeadsPanel />
                     </div>
                 </div>
 

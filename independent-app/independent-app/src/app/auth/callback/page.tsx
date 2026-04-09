@@ -56,14 +56,27 @@ export default function AuthCallbackPage() {
         const routeUser = async (identifier: string) => {
             setStatus('Access granted...');
             const id = identifier.trim().toLowerCase();
-            if (id === 'ceo@qkarin.com' || id === 'liviacechova@gmail.com') {
+            if (id === 'ceo@qkarin.com') {
                 router.replace('/dashboard');
                 return;
             }
             try {
-                const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(id)}&full=true`);
+                const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: id, full: true }) });
                 const data = await res.json();
-                router.replace((data?.memberId || data?.member_id) ? '/profile' : '/tribute');
+                if (data?.memberId || data?.member_id) {
+                    router.replace('/profile');
+                } else {
+                    // No profile — capture as a lead then send to tribute
+                    const supabase = createClient();
+                    const { data: { user } } = await supabase.auth.getUser();
+                    const provider = user?.app_metadata?.provider || 'unknown';
+                    fetch('/api/leads', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: id, provider }),
+                    }).catch(() => {});
+                    router.replace('/tribute');
+                }
             } catch {
                 router.replace('/tribute');
             }
