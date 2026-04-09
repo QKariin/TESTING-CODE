@@ -453,6 +453,7 @@ export default function DashboardPage() {
         if (typeof window !== 'undefined') {
             // Wrapped with mobile nav sync
             (window as any).showHome = () => {
+                setShowChallenges(false);
                 markPendingRead(); // leaving a chat — mark it as read now
                 showHome();
                 document.querySelector('.sidebar')?.classList.remove('mob-open');
@@ -460,6 +461,7 @@ export default function DashboardPage() {
                 document.getElementById('mobNavHome')?.classList.add('active');
             };
             (window as any).showProfile = (id?: string) => {
+                setShowChallenges(false);
                 if (!id) markPendingRead(); // navigating to Queen view — leaving chat
                 (showProfile as any)(id);
                 if (id) {
@@ -500,6 +502,7 @@ export default function DashboardPage() {
             (window as any).switchProfileTab = switchProfileTab;
             (window as any).openProfileUpload = openProfileUpload;
             (window as any).showPosts = () => {
+                setShowChallenges(false);
                 markPendingRead(); // leaving a chat — mark it as read now
                 showPosts();
                 document.querySelector('.sidebar')?.classList.remove('mob-open');
@@ -720,7 +723,7 @@ export default function DashboardPage() {
 
                 {/* CHALLENGES INLINE PANEL — overlays content area when open */}
                 {showChallenges && (
-                    <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#04040e' }}>
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: '#04040e' }}>
                         <ChallengesContent onClose={() => setShowChallenges(false)} />
                     </div>
                 )}
