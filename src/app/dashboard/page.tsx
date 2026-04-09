@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import '../../css/dashboard.css';
@@ -204,25 +204,29 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     const [sending, setSending] = useState(false);
     const feedRef = useRef<HTMLDivElement>(null);
     const atBottomRef = useRef(true);
+    // Captured BEFORE setMessages so the scroll event from innerHTML replacement can't corrupt it
+    const shouldScrollRef = useRef(true);
 
-    async function load() {
+    const load = useCallback(async () => {
         try {
             const res = await fetch('/api/global/messages', { cache: 'no-store' });
             const data = await res.json();
-            if (data.messages) setMessages((data.messages as any[]).slice(-80));
+            if (data.messages) {
+                // Snapshot the intent before the re-render resets scrollTop via innerHTML
+                shouldScrollRef.current = atBottomRef.current;
+                setMessages((data.messages as any[]).slice(-80));
+            }
         } catch {}
-    }
+    }, []);
 
     useEffect(() => {
         load();
         const iv = setInterval(load, 5000);
         return () => clearInterval(iv);
-    }, []);
+    }, [load]);
 
     useEffect(() => {
-        if (!atBottomRef.current) return;
-        // dangerouslySetInnerHTML updates the DOM synchronously during render,
-        // but a small timeout ensures the browser has reflowed before we measure scrollHeight
+        if (!shouldScrollRef.current) return;
         const t = setTimeout(() => {
             if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
         }, 30);
