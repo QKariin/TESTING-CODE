@@ -136,6 +136,24 @@ export async function loadExchequerLog() {
             const date = new Date(tx.timestamp);
             const timeStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
                 + ' · ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+            if (tx.type === 'PAYWALL_TRIBUTE') {
+                return `
+                    <div class="exchequer-row" style="background:rgba(220,60,60,0.06);border:1px solid rgba(220,60,60,0.25);border-radius:8px;padding:12px 14px;flex-direction:column;align-items:flex-start;gap:6px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:rgba(220,60,60,0.8);flex-shrink:0;"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                <div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:rgba(220,60,60,0.7);letter-spacing:3px;">FORCED TRIBUTE</div>
+                            </div>
+                            <div style="font-family:Orbitron,sans-serif;font-size:1rem;font-weight:700;color:rgba(220,60,60,0.9);">€${Number(tx.amount).toFixed(2)}</div>
+                        </div>
+                        <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.8);letter-spacing:1px;">${tx.name}</div>
+                        ${tx.reason ? `<div style="font-family:Cinzel,serif;font-size:0.75rem;color:rgba(255,255,255,0.4);font-style:italic;line-height:1.4;">"${tx.reason}"</div>` : ''}
+                        <div class="exchequer-row-time">${timeStr}</div>
+                    </div>
+                `;
+            }
+
             return `
                 <div class="exchequer-row">
                     <div class="exchequer-row-left">
@@ -157,17 +175,10 @@ export function showHome() {
     console.log("NAVIGATING TO HOME");
     setCurrId(null);
 
-    const vUser = document.getElementById('viewUser');
-    if (vUser) {
-        vUser.style.display = 'none';
-        vUser.classList.remove('active');
-    }
-
-    const vProfile = document.getElementById('viewProfile');
-    if (vProfile) {
-        vProfile.style.display = 'none';
-        vProfile.classList.remove('active');
-    }
+    ['viewUser', 'viewProfile', 'viewPosts'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.display = 'none'; el.classList.remove('active'); }
+    });
 
     const vHome = document.getElementById('viewHome');
     if (vHome) {
@@ -414,15 +425,16 @@ export async function adminTaskAction(id: string | null, action: 'skip' | 'send'
                 // Manually reset local state to match backend
                 u.activeTask = null;
                 u.endTime = null;
+                u.pendingState = null;
                 if (!u.parameters) u.parameters = {};
                 u.parameters.taskdom_active_task = null;
                 u.parameters.taskdom_end_time = null;
 
-                // Force UI update
-                const statusEl = document.getElementById('dActiveStatus');
-                const textEl = document.getElementById('dActiveText');
-                if (statusEl) { statusEl.innerText = "UNPRODUCTIVE"; statusEl.style.color = "#666"; }
-                if (textEl) textEl.innerText = "None";
+                // Force full UI update (same pattern as forceActiveTask)
+                import('./dashboard-users').then(m => {
+                    m.updateDetail(u);
+                    m.updateTaskQueue(u);
+                });
             }
         } else {
             alert("Failed to skip task.");

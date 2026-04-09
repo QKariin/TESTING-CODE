@@ -175,17 +175,10 @@ export function showHome() {
     console.log("NAVIGATING TO HOME");
     setCurrId(null);
 
-    const vUser = document.getElementById('viewUser');
-    if (vUser) {
-        vUser.style.display = 'none';
-        vUser.classList.remove('active');
-    }
-
-    const vProfile = document.getElementById('viewProfile');
-    if (vProfile) {
-        vProfile.style.display = 'none';
-        vProfile.classList.remove('active');
-    }
+    ['viewUser', 'viewProfile', 'viewPosts'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.display = 'none'; el.classList.remove('active'); }
+    });
 
     const vHome = document.getElementById('viewHome');
     if (vHome) {
