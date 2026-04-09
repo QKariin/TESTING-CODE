@@ -221,9 +221,12 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
 
     useEffect(() => {
         if (!atBottomRef.current) return;
-        requestAnimationFrame(() => {
+        // dangerouslySetInnerHTML updates the DOM synchronously during render,
+        // but a small timeout ensures the browser has reflowed before we measure scrollHeight
+        const t = setTimeout(() => {
             if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
-        });
+        }, 30);
+        return () => clearTimeout(t);
     }, [messages]);
 
     async function send() {
@@ -244,7 +247,7 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     const renderedHtml = messages.map(m => buildGlMsgHtml(m)).filter(Boolean).join('');
 
     return (
-        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column', height: 900, padding: 0 }}>
+        <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column', height: 720, padding: 0 }}>
             <div className="vk-header" style={{ padding: '14px 20px 10px', flexShrink: 0 }}>
                 <div className="vk-title">Global Chat</div>
                 <div className="vk-sub">Community Feed</div>
