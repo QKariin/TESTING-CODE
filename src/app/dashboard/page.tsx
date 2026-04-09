@@ -67,41 +67,25 @@ function ReasonPicker({ presets, reason, setReason, useCustom, setUseCustom, cus
     );
 }
 
-// Compact single-row card helper
-function _compactCard(accentColor: string, accentBg: string, accentBorder: string, avatarHtml: string, label: string, name: string, sub: string, time: string, extra = '') {
-    return `<div style="display:flex;align-items:center;gap:8px;background:${accentBg};border:1px solid ${accentBorder};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
-        <div style="width:28px;height:28px;border-radius:50%;border:1.5px solid ${accentBorder};overflow:hidden;flex-shrink:0;position:relative;background:rgba(255,255,255,0.04);">${avatarHtml}</div>
-        <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:baseline;gap:6px;">
-                <span style="font-family:'Orbitron';font-size:0.34rem;color:${accentColor};letter-spacing:1px;">${label}</span>
-                <span style="font-family:'Cinzel';font-size:0.72rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
-            </div>
-            <div style="font-family:'Rajdhani';font-size:0.68rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}${extra}</div>
-        </div>
-        <span style="font-family:'Orbitron';font-size:0.3rem;color:rgba(255,255,255,0.25);flex-shrink:0;">${time}</span>
-    </div>`;
-}
-
 function buildGlMsgHtml(msg: any): string {
     const content = msg.message || '';
     const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const isQueen = msg.is_queen === true || msg.sender_name === 'QUEEN KARIN';
     const name = msg.sender_name || 'SUBJECT';
     const av = msg.sender_avatar;
-    const SVG_CROWN = `<svg width="12" height="9" viewBox="0 0 26 20" fill="#c5a059" style="flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
+    const SVG_CROWN = `<svg width="13" height="10" viewBox="0 0 26 20" fill="#c5a059" style="flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
-    const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.4);padding:2px 6px;margin-bottom:4px;background:rgba(197,160,89,0.04);border-radius:0 3px 3px 0;"><div style="font-family:'Orbitron';font-size:0.28rem;color:rgba(197,160,89,0.6);margin-bottom:1px;">${(msg.reply_to.sender_name||'').replace(/</g,'&lt;')}</div><div style="font-family:'Rajdhani';font-size:0.7rem;color:rgba(255,255,255,0.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content||'').slice(0,60).replace(/</g,'&lt;')}</div></div>` : '';
-
-    function avHtml(src: string|null|undefined, ini: string, color: string) {
-        return src ? `<img src="${src}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.5rem;color:${color};">${ini}</div>`;
-    }
+    const _vidErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}"`;
+    const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:5px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;"><div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;">${(msg.reply_to.sender_name||'').replace(/</g,'&lt;')}</div><div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content||'').slice(0,60).replace(/</g,'&lt;')}</div></div>` : '';
 
     // PROMOTION CARD
     if (content.startsWith('PROMOTION_CARD::')) {
         try {
             const d = JSON.parse(content.replace('PROMOTION_CARD::',''));
             const ini = (d.name||'S')[0].toUpperCase();
-            return _compactCard('#c5a059','rgba(197,160,89,0.05)','rgba(197,160,89,0.2)',avHtml(d.photo,ini,'#c5a059'),'PROMOTED',d.name||'',`${(d.oldRank||'').toUpperCase()} → ${(d.newRank||'').toUpperCase()}`,time);
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+            const photoFallback = `<div style="${d.photo?'display:none;':''}position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:56px;height:56px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.3rem;color:#c5a059;">${ini}</div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:130px;background:#0a0703;overflow:hidden;">${photoBlock}${photoFallback}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div><div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Cinzel',serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">${d.name||''}</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;"><span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span><span style="color:rgba(197,160,89,0.7);">→</span><span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span></div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -110,7 +94,9 @@ function buildGlMsgHtml(msg: any): string {
         try {
             const d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::',''));
             const ini = (d.name||'S')[0].toUpperCase();
-            return _compactCard('#4ade80','rgba(74,222,128,0.05)','rgba(74,222,128,0.2)',avHtml(d.photo,ini,'#4ade80'),'⚔ JOINED',d.name||'',d.challengeName||'',time,` · ${d.activeCount||0} active`);
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+            const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#060e08 0%,#040d06 60%,#030a04 100%);border:1px solid rgba(74,222,128,0.45);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:120px;background:#030a04;overflow:hidden;${bgImg}"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div><div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid rgba(74,222,128,0.6);position:relative;">${photoBlock}<div style="${d.photo?'display:none;':''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(74,222,128,0.1);font-family:'Cinzel';font-size:1.1rem;color:#4ade80;">${ini}</div></div></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#060e08 100%);"></div><div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(3,10,4,0.9);border:1px solid rgba(74,222,128,0.5);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:3px;">⚔ JOINED CHALLENGE</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Cinzel',serif;font-size:0.88rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">${d.name||''}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(74,222,128,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:3px 12px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span><span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#4ade80;letter-spacing:2px;">ACTIVE: ${d.activeCount||0}</span></div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -119,7 +105,9 @@ function buildGlMsgHtml(msg: any): string {
         try {
             const d = JSON.parse(content.replace('CHALLENGE_ELIM_CARD::',''));
             const ini = (d.name||'S')[0].toUpperCase();
-            return _compactCard('#e03030','rgba(224,48,48,0.05)','rgba(224,48,48,0.2)',avHtml(d.photo,ini,'#e03030'),'✕ ELIMINATED',d.name||'',d.challengeName||'',time,` · ${d.activeCount||0} still in`);
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'">` : '';
+            const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0606 0%,#0d0404 60%,#0a0303 100%);border:1px solid rgba(224,48,48,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:120px;background:#0a0303;overflow:hidden;${bgImg}"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div><div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid rgba(224,48,48,0.5);position:relative;">${photoBlock}<div style="${d.photo?'display:none;':''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(224,48,48,0.1);font-family:'Cinzel';font-size:1.1rem;color:#e03030;">${ini}</div></div></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0606 100%);"></div><div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,3,3,0.9);border:1px solid rgba(224,48,48,0.45);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#e03030;letter-spacing:3px;">✕ ELIMINATED</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Cinzel',serif;font-size:0.88rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">${d.name||''}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(224,48,48,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.18);border-radius:20px;padding:3px 12px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span><span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#4ade80;letter-spacing:2px;">STILL IN: ${d.activeCount||0}</span></div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -130,11 +118,12 @@ function buildGlMsgHtml(msg: any): string {
             const passed = d.passed !== false;
             const ac = passed ? '#4ade80' : '#e03030';
             const acBg = passed ? 'rgba(74,222,128,0.05)' : 'rgba(224,48,48,0.05)';
-            const acBorder = passed ? 'rgba(74,222,128,0.2)' : 'rgba(224,48,48,0.2)';
+            const acBorder = passed ? 'rgba(74,222,128,0.25)' : 'rgba(224,48,48,0.25)';
             const label = passed ? '✓ TASK PASSED' : '✕ TASK FAILED';
             const sub = `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'}${passed&&d.points?` · +${d.points}pts`:''}`;
             const ini = (d.senderName||'S')[0].toUpperCase();
-            return _compactCard(ac,acBg,acBorder,avHtml(d.senderAvatar,ini,ac),label,d.senderName||'',sub,time);
+            const avImg = d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:${ac};">${ini}</div>`;
+            return `<div style="display:flex;justify-content:center;padding:6px 0;margin-bottom:6px;"><div style="width:88%;min-width:220px;max-width:440px;"><div style="background:${acBg};border:1px solid ${acBorder};border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:50%;border:1.5px solid ${acBorder};overflow:hidden;position:relative;flex-shrink:0;">${avImg}</div><div style="flex:1;min-width:0;"><div style="font-family:'Orbitron';font-size:0.42rem;color:${ac};letter-spacing:1px;margin-bottom:2px;">${label}</div><div style="font-family:'Cinzel';font-size:0.85rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div><div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:2px;">${sub}</div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);flex-shrink:0;align-self:flex-start;">${time}</div></div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -143,7 +132,8 @@ function buildGlMsgHtml(msg: any): string {
         try {
             const d = JSON.parse(content.replace('UPDATE_MERIT_CARD::',''));
             const ini = (d.senderName||'S')[0].toUpperCase();
-            return _compactCard('#a78bfa','rgba(167,139,250,0.05)','rgba(167,139,250,0.2)',avHtml(d.senderAvatar,ini,'#a78bfa'),'⚡ MERIT',d.senderName||'',`+${d.points||0} merit`,time);
+            const avImg = d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${ini}</div>`;
+            return `<div style="display:flex;justify-content:center;padding:6px 0;margin-bottom:6px;"><div style="width:88%;min-width:220px;max-width:440px;"><div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">${avImg}</div><div style="flex:1;min-width:0;"><div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:2px;">⚡ MERIT EARNED</div><div style="font-family:'Cinzel';font-size:0.85rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div><div style="font-family:'Orbitron';font-size:0.8rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${d.points||0} MERIT</div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);flex-shrink:0;align-self:flex-start;">${time}</div></div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -152,8 +142,8 @@ function buildGlMsgHtml(msg: any): string {
         try {
             const d = JSON.parse(content.replace('UPDATE_TRIBUTE_CARD::',''));
             const ini = (d.senderName||'S')[0].toUpperCase();
-            const thumbSrc = d.image || d.senderAvatar || null;
-            return _compactCard('#c5a059','rgba(197,160,89,0.05)','rgba(197,160,89,0.2)',avHtml(thumbSrc,ini,'#c5a059'),'✦ GIFT',d.senderName||'',d.title||'',time);
+            const coverSrc = d.image || d.senderAvatar || '';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);"><div style="width:100%;height:110px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">${coverSrc?`<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:2rem;color:rgba(197,160,89,0.4);">${ini}</div>`}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div><div style="position:absolute;bottom:8px;left:12px;font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div></div><div style="padding:10px 14px 12px;"><div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${d.title||''}</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;"><span style="font-family:'Orbitron';font-size:0.4rem;color:rgba(255,255,255,0.55);">${d.senderName||''}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div></div></div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -161,62 +151,77 @@ function buildGlMsgHtml(msg: any): string {
     if (content.startsWith('UPDATE_PHOTO_CARD::')) {
         try {
             const d = JSON.parse(content.replace('UPDATE_PHOTO_CARD::',''));
-            const ini = (d.senderName||'S')[0].toUpperCase();
-            const thumbHtml = d.mediaUrl
-                ? `<img src="${d.mediaUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
-                : avHtml(d.senderAvatar,ini,'#c5a059');
-            return _compactCard('#c5a059','rgba(197,160,89,0.05)','rgba(197,160,89,0.2)',thumbHtml,'📷 PHOTO',d.senderName||'',d.caption||'shared a photo',time);
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.2);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);"><img src="${d.mediaUrl}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'"><div style="padding:10px 14px 12px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-family:'Cinzel';font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.35);">${time}</span></div>${d.caption?`<div style="font-family:'Rajdhani';font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:3px;">${d.caption}</div>`:''}</div></div></div></div>`;
         } catch { /* fall through */ }
     }
 
     // GIF
     if ((msg.media_type === 'gif' || (msg.message === '[GIF]' && msg.media_url)) && msg.media_url) {
-        const ini = (name[0]||'S').toUpperCase();
-        const thumbHtml = `<img src="${msg.media_url}" style="width:100%;height:100%;object-fit:cover;" ${_imgErr}>`;
-        return _compactCard('#c5a059','rgba(197,160,89,0.04)','rgba(197,160,89,0.15)',thumbHtml,'GIF',name,'animated',time);
+        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:65%;min-width:180px;max-width:320px;"><div style="width:100%;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.35);box-shadow:0 10px 30px rgba(0,0,0,0.8);"><div style="width:100%;overflow:hidden;background:#0a0703;"><img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;max-height:200px;object-fit:contain;" /></div><div style="padding:8px 14px 12px;text-align:center;border-top:1px solid rgba(197,160,89,0.1);"><div style="font-family:'Cinzel',serif;font-size:0.78rem;color:#fff;font-weight:700;letter-spacing:2px;">${name}</div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:3px;letter-spacing:1px;">${time}</div></div></div>`;
     }
 
-    // Skip unknown SYSTEM messages
+    // Skip SYSTEM messages
     if (msg.sender_name === 'SYSTEM') return '';
 
-    // Media inline (image/video attached to a regular message)
+    // Media inline
     const mediaHtml = msg.media_url && msg.media_type !== 'gif' ? (
         msg.media_type === 'video'
-            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:6px;margin-top:6px;max-height:200px;object-fit:cover;display:block;"></video>`
-            : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:6px;margin-top:6px;max-height:200px;object-fit:cover;display:block;" />`
+            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" ${_vidErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;"></video>`
+            : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;" />`
     ) : '';
 
     // Queen bubble
     if (isQueen) {
-        const qAv = av ? `<img src="${av}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">` : `<img src="/queen-karin.png" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
-        return `<div style="margin-bottom:6px;"><div style="padding:7px 11px 9px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(100,75,15,0.06));border:1.5px solid rgba(197,160,89,0.7);border-radius:8px;"><div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">${qAv}<div style="display:flex;align-items:center;gap:3px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.6rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div><span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(197,160,89,0.5);"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.45;">${content}</div>${mediaHtml}</div></div>`;
+        const qAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">` : `<img src="/queen-karin.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
+        return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">${qAv}<div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>${mediaHtml}</div></div>`;
     }
 
     // Regular user bubble
     const initial = (name[0]||'S').toUpperCase();
-    const userAv = av ? `<img src="${av}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.3);flex-shrink:0;" onerror="this.style.display='none'">` : `<div style="width:20px;height:20px;border-radius:50%;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.2);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.38rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
-    return `<div style="margin-bottom:6px;"><div style="padding:7px 11px 9px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.15);border-radius:8px;"><div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">${userAv}<span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.55);letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span><span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.25);white-space:nowrap;flex-shrink:0;"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.88rem;color:rgba(255,255,255,0.65);line-height:1.4;">${content}</div>${mediaHtml}</div></div>`;
+    const userAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.35);flex-shrink:0;" onerror="this.style.display='none'">` : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.42rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
+    return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">${userAv}<span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>${mediaHtml}</div></div>`;
 }
 
 function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
-    const [messages, setMessages] = useState<any[]>([]);
     const [text, setText] = useState('');
     const [sending, setSending] = useState(false);
     const feedRef = useRef<HTMLDivElement>(null);
-    const atBottomRef = useRef(true);
-    // Captured BEFORE setMessages so the scroll event from innerHTML replacement can't corrupt it
-    const shouldScrollRef = useRef(true);
+    const renderedIdsRef = useRef(new Set<string>());
+    const initialDoneRef = useRef(false);
+
+    function appendToFeed(msgs: any[], scrollToBottom: boolean) {
+        const feed = feedRef.current;
+        if (!feed) return;
+        const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
+        for (const msg of msgs) {
+            const html = buildGlMsgHtml(msg);
+            if (!html) continue;
+            const wrap = document.createElement('div');
+            wrap.innerHTML = html;
+            const child = wrap.firstElementChild;
+            if (child) feed.appendChild(child);
+            renderedIdsRef.current.add(String(msg.id ?? msg.created_at));
+        }
+        if (scrollToBottom || wasNear) {
+            setTimeout(() => { if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight; }, 30);
+        }
+    }
 
     const load = useCallback(async () => {
         try {
             const res = await fetch('/api/global/messages', { cache: 'no-store' });
             const data = await res.json();
-            if (data.messages) {
-                // Snapshot the intent before the re-render resets scrollTop via innerHTML
-                shouldScrollRef.current = atBottomRef.current;
-                setMessages((data.messages as any[]).slice(-80));
+            if (!data.messages) return;
+            const msgs = (data.messages as any[]).slice(-80);
+            if (!initialDoneRef.current) {
+                initialDoneRef.current = true;
+                appendToFeed(msgs, true);
+            } else {
+                const newMsgs = msgs.filter((m: any) => !renderedIdsRef.current.has(String(m.id ?? m.created_at)));
+                if (newMsgs.length > 0) appendToFeed(newMsgs, false);
             }
         } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -224,14 +229,6 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
         const iv = setInterval(load, 5000);
         return () => clearInterval(iv);
     }, [load]);
-
-    useEffect(() => {
-        if (!shouldScrollRef.current) return;
-        const t = setTimeout(() => {
-            if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
-        }, 30);
-        return () => clearTimeout(t);
-    }, [messages]);
 
     async function send() {
         if (!text.trim() || !userEmail || sending) return;
@@ -248,8 +245,6 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
         setSending(false);
     }
 
-    const renderedHtml = messages.map(m => buildGlMsgHtml(m)).filter(Boolean).join('');
-
     return (
         <div className="v-kneel-card glass-card span-2" style={{ display: 'flex', flexDirection: 'column', height: 720, padding: 0 }}>
             <div className="vk-header" style={{ padding: '14px 20px 10px', flexShrink: 0 }}>
@@ -258,12 +253,7 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
             </div>
             <div
                 ref={feedRef}
-                onScroll={() => {
-                    const el = feedRef.current;
-                    if (el) atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-                }}
                 style={{ flex: 1, overflowY: 'auto', padding: '4px 16px 4px', minHeight: 0 }}
-                dangerouslySetInnerHTML={{ __html: renderedHtml || '<div style="font-family:Orbitron;font-size:0.42rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:20px;letter-spacing:2px;">NO MESSAGES YET</div>' }}
             />
             <div style={{ padding: '10px 16px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8, flexShrink: 0 }}>
                 <input
