@@ -77,10 +77,30 @@ export default function TributePage() {
             const vh = window.innerHeight;
             sections.forEach(el => {
                 const rect = el.getBoundingClientRect();
-                const elCenter = rect.top + rect.height / 2;
-                const dist = Math.abs(elCenter - vh / 2);
-                const maxDist = vh * 0.58;
-                const ratio = Math.min(dist / maxDist, 1);
+                const h = rect.height;
+                let ratio = 0;
+
+                if (rect.bottom <= 0 || rect.top >= vh) {
+                    // fully off screen
+                    ratio = 1;
+                } else if (rect.top <= 0 && rect.bottom >= vh) {
+                    // section fills the entire screen — perfectly clear
+                    ratio = 0;
+                } else if (rect.top >= 0 && rect.bottom <= vh) {
+                    // entire section visible — perfectly clear
+                    ratio = 0;
+                } else if (rect.top > 0) {
+                    // entering from bottom: starts blurred when top hits bottom of screen,
+                    // fully clear once entire section is on screen (rect.top reaches 0 or rect.bottom reaches vh)
+                    const entryProgress = Math.min(1, (vh - rect.top) / h);
+                    ratio = 1 - entryProgress;
+                } else {
+                    // exiting from top: starts blurring once top hits top of screen (rect.top = 0),
+                    // fully blurred once section has scrolled off (rect.top = -h)
+                    const exitProgress = Math.min(1, -rect.top / h);
+                    ratio = exitProgress;
+                }
+
                 el.style.filter = `blur(${(ratio * 7).toFixed(1)}px)`;
                 el.style.opacity = String(Math.max(1 - ratio * 0.72, 0.15).toFixed(2));
             });
@@ -319,7 +339,7 @@ export default function TributePage() {
                     </div>
 
                     <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
-                        <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.1, zIndex: 0 }} />
+                        <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
 
                         {/* Header bar */}
                         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
