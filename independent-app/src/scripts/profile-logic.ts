@@ -1736,6 +1736,9 @@ export async function initChatSystem() {
                     const ring = document.querySelector('.mob-nav-queen-ring');
                     if (ring) ring.classList.add('has-new-msg');
                     try { const snd = new Audio('/audio/message.mp3'); snd.volume = 0.5; snd.play(); } catch (_) {}
+                    // Show in-app message banner
+                    const preview = typeof msg.content === 'string' ? msg.content.slice(0, 80) : '👑 New message';
+                    showNewMessageBanner(preview);
                 }
             }
 
