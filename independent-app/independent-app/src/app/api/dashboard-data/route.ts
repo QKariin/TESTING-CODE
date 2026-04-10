@@ -1,17 +1,22 @@
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
 import { getMasterData } from '@/actions/velo-actions';
+import { getCallerEmail, isCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+    const caller = await getCallerEmail();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isCEO(caller)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
     try {
         const { searchParams } = new URL(req.url);
         const memberId = searchParams.get('memberId');
 
         const users = await getMasterData();
-        const tributes = await DbService.getRecentTributes(50);
-        const reviewQueue = await DbService.getReviewQueue();
+        const tributes = await DbService.getRecentTributes(50).catch(() => []);
+        const reviewQueue = await DbService.getReviewQueue().catch(() => []);
 
         // If memberId is provided, fetch specific profile
         let profile = null;

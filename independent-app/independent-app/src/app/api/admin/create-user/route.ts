@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getCallerEmail, isCEO } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+    const caller = await getCallerEmail();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isCEO(caller)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
     const supabaseAdmin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!,

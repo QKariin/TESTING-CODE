@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getCallerEmail, isCEO } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,8 +40,15 @@ export async function GET() {
 
 // POST — heartbeat: update profiles.last_active (same field dashboard uses for online detection)
 export async function POST(req: Request) {
+    const caller = await getCallerEmail();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { email } = await req.json();
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 });
+
+    if (!isCEO(caller) && caller !== email.toLowerCase()) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const now = new Date().toISOString();
 

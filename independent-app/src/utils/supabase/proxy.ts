@@ -9,13 +9,6 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.next({ request })
     }
 
-    // 🤖 CRAWLER BYPASS — let social media bots see page HTML for OG tags
-    const ua = (request.headers.get('user-agent') || '').toLowerCase()
-    const isCrawler = /twitterbot|facebookexternalhit|linkedinbot|whatsapp|slackbot|telegrambot|discordbot|googlebot|bingbot|applebot|pinterest|redditbot|vkshare|w3c_validator/.test(ua)
-    if (isCrawler) {
-        return NextResponse.next({ request })
-    }
-
     let supabaseResponse = NextResponse.next({
         request,
     })
@@ -38,7 +31,7 @@ export async function updateSession(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     const pathname = request.nextUrl.pathname;
 
-    if (pathname.startsWith('/auth') || pathname === '/api/debug-chat') return supabaseResponse
+    if (pathname.startsWith('/auth') || pathname === '/api/debug-chat' || pathname === '/api/chat/history' || pathname === '/api/push') return supabaseResponse
 
     if (!user && !pathname.startsWith('/login')) {
         return NextResponse.redirect(new URL('/login', request.url))

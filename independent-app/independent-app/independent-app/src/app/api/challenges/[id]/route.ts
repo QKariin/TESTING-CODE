@@ -1,0 +1,130 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase';
+
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const { id } = await params;
+
+        const { data: challenge, error: cErr } = await supabaseAdmin
+            .from('challenges').select('*').eq('id', id).single();
+        if (cErr || !challenge) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+
+        const [{ data: windows }, { data: completions }, { data: participants }, { data: pending }] = await Promise.all([
+            supabaseAdmin.from('challenge_windows').select('*').eq('challenge_id', id).order('opens_at', { ascending: true }),
+            supabaseAdmin.from('challenge_completions').select('*').eq('challenge_id', id),
+            supabaseAdmin.from('challenge_participants').select('*').eq('challenge_id', id),
+            supabaseAdmin.from('challenge_completions')
+                .select('*, challenge_windows(day_number, window_number, verification_code, opens_at, closes_at)')
+                .eq('challenge_id', id).eq('verified', false).not('proof_url', 'is', null).order('completed_at', { ascending: true }),
+        ]);
+
+        // Fetch profiles separately (avoids FK join issues)
+        const memberIds = [...new Set([
+            ...(participants || []).map((p: any) => p.member_id),
+            ...(pending || []).map((p: any) => p.member_id),
+        ])];
+        let profileMap = new Map<string, any>();
+        if (memberIds.length) {
+            const memberIdsLower = memberIds.map((id: string) => id.toLowerCase());
+            const { data: profileRows } = await supabaseAdmin
+                .from('profiles').select('member_id, name, hierarchy, avatar_url, profile_picture_url')
+                .in('member_id', memberIdsLower);
+            (profileRows || []).forEach((p: any) => profileMap.set(p.member_id.toLowerCase(), p));
+        }
+
+        // Attach profiles to pending verifications
+        const pendingWithProfiles = (pending || []).map((p: any) => ({
+            ...p,
+            profiles: profileMap.get(p.member_id.toLowerCase()) || null,
+        }));
+
+        const now = new Date();
+
+        // Auto-eliminate: active participants who missed a closed window (skip windows before they joined)
+        for (const p of (participants || []).filter((p: any) => p.status === 'active')) {
+            const joinedAt = p.joined_at ? new Date(p.joined_at) : new Date(0);
+            for (const w of (windows || []).filter((w: any) => new Date(w.closes_at) < now && new Date(w.closes_at) > joinedAt)) {
+                const done = (completions || []).some((c: any) => c.window_id === w.id && c.member_id.toLowerCase() === p.member_id.toLowerCase());
+                if (!done) {
+                    await supabaseAdmin.from('challenge_participants').update({
+                        status: 'eliminated',
+                        eliminated_on_window_id: w.id,
+                        eliminated_at: now.toISOString(),
+                    }).eq('challenge_id', id).eq('member_id', p.member_id);
+                    p.status = 'eliminated';
+                    p.eliminated_on_window_id = w.id;
+                    // Post elimination card — fetch profile directly with ilike for reliable name lookup
+                    try {
+                        const { data: elimProf } = await supabaseAdmin.from('profiles')
+                            .select('name, avatar_url').ilike('member_id', p.member_id).maybeSingle();
+                        const remaining = (participants || []).filter((x: any) => x.member_id !== p.member_id && x.status === 'active').length;
+                        await supabaseAdmin.from('global_messages').insert({
+                            sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
+                            message: `CHALLENGE_ELIM_CARD::${JSON.stringify({
+                                name: elimProf?.name || p.member_id.split('@')[0],
+                                photo: elimProf?.avatar_url || null,
+                                challengeName: challenge.name,
+                                challengeImage: (challenge as any).image_url || null,
+                                activeCount: remaining,
+                            })}`,
+                        });
+                    } catch (_) {}
+                    break;
+                }
+            }
+        }
+
+        // Build leaderboard
+        const leaderboard = (participants || []).map((p: any) => {
+            const prof = profileMap.get(p.member_id.toLowerCase()) || {};
+            const userComps = (completions || []).filter((c: any) => c.member_id === p.member_id);
+            const avgSpeed = userComps.length
+                ? Math.round(userComps.reduce((s: number, c: any) => s + (c.response_time_seconds || 0), 0) / userComps.length)
+                : null;
+            const eliminatedWindow = (windows || []).find((w: any) => w.id === p.eliminated_on_window_id);
+            return {
+                ...p,
+                name: prof.name || p.member_id?.split('@')[0] || p.member_id,
+                avatar: prof.avatar_url || prof.profile_picture_url || null,
+                hierarchy: prof.hierarchy,
+                completions_count: userComps.length,
+                avg_response_seconds: avgSpeed,
+                eliminated_day: eliminatedWindow?.day_number || null,
+                eliminated_window_num: eliminatedWindow?.window_number || null,
+            };
+        }).sort((a: any, b: any) => {
+            if (a.status === 'champion') return -1;
+            if (b.status === 'champion') return 1;
+            if (a.status === 'active' && b.status !== 'active') return -1;
+            if (b.status === 'active' && a.status !== 'active') return 1;
+            if (a.status === 'active' && b.status === 'active') {
+                if (a.avg_response_seconds === null) return 1;
+                if (b.avg_response_seconds === null) return -1;
+                return a.avg_response_seconds - b.avg_response_seconds;
+            }
+            return 0;
+        });
+
+        return NextResponse.json({ success: true, challenge, leaderboard, windows, completions, pending_verifications: pendingWithProfiles });
+    } catch (err: any) {
+        return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    }
+}
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const { id } = await params;
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
+        const body = await request.json();
+        const { data, error } = await supabaseAdmin
+            .from('challenges').update(body).eq('id', id).select().single();
+        if (error) throw error;
+        return NextResponse.json({ success: true, challenge: data });
+    } catch (err: any) {
+        return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    }
+}

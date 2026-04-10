@@ -8,8 +8,11 @@ const HEIC_TYPES = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/he
 
 const MAX_VIDEO_SECONDS = 120; // 2 minutes
 
+/** Returns video duration in seconds by loading into a temporary element */
 export function getVideoDuration(file: File): Promise<number> {
     return new Promise((resolve) => {
+        // iOS can take very long to transcode HEVC/MOV — if metadata doesn't load
+        // within 6s, resolve with 0 (unknown) so we don't block the upload
         const timeout = setTimeout(() => { URL.revokeObjectURL(url); resolve(0); }, 6000);
         const url = URL.createObjectURL(file);
         const vid = document.createElement('video');

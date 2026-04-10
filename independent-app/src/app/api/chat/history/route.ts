@@ -1,37 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-
-async function getAuthUser() {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: { getAll() { return cookieStore.getAll() }, setAll() {} } }
-    );
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
-}
 
 export async function GET(req: Request) {
     try {
-        const user = await getAuthUser();
-        if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-
-        const userEmail = (user.email || '').toLowerCase();
-        const isCEO = userEmail === 'ceo@qkarin.com' || userEmail === 'queen@qkarin.com';
-
         const { searchParams } = new URL(req.url);
         const email = searchParams.get('email');
         const requester = searchParams.get('requester')?.toLowerCase();
 
         if (!email) {
             return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
-        }
-
-        if (!isCEO && userEmail !== email.toLowerCase()) {
-            return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
         }
 
         // Robust administrative client initialization
@@ -83,7 +60,7 @@ export async function GET(req: Request) {
 
         let query: any;
         if (since) {
-            // Polling: get all messages newer than timestamp (usually a small set)
+            // Polling: get all messages newer than timestamp
             query = queryClient
                 .from('chats')
                 .select('*')
@@ -92,7 +69,6 @@ export async function GET(req: Request) {
                 .order('created_at', { ascending: true });
         } else {
             // Initial load: get LAST 300 messages to avoid Supabase's 1000-row default cap
-            // silently truncating long chats. Query DESC then re-sort to ascending for display.
             query = queryClient
                 .from('chats')
                 .select('*')
@@ -125,21 +101,11 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        const user = await getAuthUser();
-        if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-
-        const userEmail = (user.email || '').toLowerCase();
-        const isCEO = userEmail === 'ceo@qkarin.com' || userEmail === 'queen@qkarin.com';
-
         const body = await req.json();
         const { email, since, requester } = body;
 
         if (!email) {
             return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
-        }
-
-        if (!isCEO && userEmail !== email.toLowerCase()) {
-            return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
         }
 
         // Robust administrative client initialization

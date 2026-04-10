@@ -13,9 +13,17 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing file or memberEmail' }, { status: 400 });
         }
 
-        // 1. Upload to Supabase Storage (avatars bucket)
+        // 1. Look up profile id to use as anonymous filename (never store email in filename)
+        const { data: profileRef } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .ilike('member_id', memberEmail)
+            .maybeSingle();
+        const fileId = profileRef?.id || Date.now();
+
+        // Upload to Supabase Storage (avatars bucket)
         const ext = file.name.split('.').pop() || 'jpg';
-        const filename = `avatars/${memberEmail.replace(/[^a-z0-9@._-]/gi, '_')}_${Date.now()}.${ext}`;
+        const filename = `avatars/${fileId}_${Date.now()}.${ext}`;
 
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);

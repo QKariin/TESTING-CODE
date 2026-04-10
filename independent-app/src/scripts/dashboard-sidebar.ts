@@ -23,7 +23,14 @@ let pendingReadId: string | null = null;
  */
 export function markPendingRead() {
     if (pendingReadId) {
-        localStorage.setItem('read_' + pendingReadId, Date.now().toString());
+        const now = Date.now();
+        localStorage.setItem('read_' + pendingReadId, now.toString());
+        // Persist to server (fire and forget)
+        fetch('/api/chat/mark-read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: 'admin', slaveEmail: pendingReadId, timestamp: new Date(now).toISOString() }),
+        }).catch(() => {});
         delete firstUnreadTime[pendingReadId];
         pendingReadId = null;
     }

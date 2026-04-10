@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getCallerEmail, isCEO } from '@/lib/api-auth';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,11 +28,19 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+    const caller = await getCallerEmail();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json();
     const { senderEmail, message, media_url, media_type, reply_to } = body;
 
     if (!message?.trim()) return NextResponse.json({ error: 'Message required' }, { status: 400 });
     if (!senderEmail) return NextResponse.json({ error: 'Sender required' }, { status: 400 });
+
+    const isUUIDSender = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(senderEmail);
+    if (!isUUIDSender && !isCEO(caller) && caller !== senderEmail.toLowerCase()) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(senderEmail);
     const { data: profile } = await supabaseAdmin

@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
 import { getMasterData } from '@/actions/velo-actions';
-import { getCallerEmail, isCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-    const caller = await getCallerEmail();
-    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (!isCEO(caller)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
     try {
         const { searchParams } = new URL(req.url);
         const memberId = searchParams.get('memberId');

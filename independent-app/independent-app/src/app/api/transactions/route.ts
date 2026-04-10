@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getCallerEmail, isCEO } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+    const caller = await getCallerEmail();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isCEO(caller)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
     try {
         const supabaseAdmin = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,6 +33,9 @@ export async function GET() {
                     name: entry.name || profile.name || profile.member_id || 'Unknown',
                     memberId: entry.memberId || profile.member_id || '',
                     coins: entry.coins,
+                    amount: entry.amount,
+                    reason: entry.reason,
+                    type: entry.type || 'COIN_PURCHASE',
                     timestamp: entry.timestamp,
                     sessionId: entry.sessionId,
                 });

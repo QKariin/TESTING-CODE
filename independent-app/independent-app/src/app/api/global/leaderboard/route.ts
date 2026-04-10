@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +26,7 @@ export async function GET(req: Request) {
     const [{ data: tasks, error }, { data: profiles }] = await Promise.all([
         supabaseAdmin
             .from('tasks')
-            .select(`member_id, Name, Hierarchy, "Profile pic", "Daily Score", "Weekly Score", "Monthly Score", Taskdom_Points`),
+            .select(`member_id, Name, Hierarchy, "Daily Score", "Weekly Score", "Monthly Score", Taskdom_Points`),
         supabaseAdmin
             .from('profiles')
             .select('member_id, id, hierarchy, avatar_url'),
@@ -46,7 +51,7 @@ export async function GET(req: Request) {
             return {
                 name: t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
                 hierarchy: prof.hierarchy || t.Hierarchy || '—',
-                avatar: prof.avatar_url || t['Profile pic'] || '',
+                avatar: prof.avatar_url || '',
                 score: parseNum(t[colKey]),
                 member_number: prof.id || null,
             };

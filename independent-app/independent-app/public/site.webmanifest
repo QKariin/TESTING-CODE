@@ -1,7 +1,7 @@
 {
   "name": "Queen Karin",
   "short_name": "QK",
-  "start_url": "/dashboard",
+  "start_url": "/profile",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",

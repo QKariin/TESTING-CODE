@@ -75,10 +75,10 @@ export default function AuthCallbackPage() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: id, provider }),
                     }).catch(() => {});
-                    router.replace('/preview');
+                    router.replace('/tribute');
                 }
             } catch {
-                router.replace('/preview');
+                router.replace('/tribute');
             }
         };
 

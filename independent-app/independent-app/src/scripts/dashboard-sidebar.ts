@@ -153,22 +153,45 @@ export function renderSidebar() {
         if (rawPic === "null" || rawPic === "undefined" || !rawPic) rawPic = defaultPic;
         const finalPic = getOptimizedUrl(rawPic, 80) || defaultPic;
 
-        html += `
-            <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor: pointer;">
-                <div class="u-avatar-main">
-                    <img src="${finalPic}" alt="${clean(u.name)}" onerror="this.onerror=null;this.src='${defaultPic}'">
-                    <div class="notif-dot"></div>
-                    ${online ? '<div class="online-dot"></div>' : ''}
+        const isSilenced = u.silence === true;
+        const isPaywalled = !!(u.parameters?.paywall?.active) || u.paywall === true;
+        const isLocked = isSilenced || isPaywalled;
+        const lockColor = isSilenced ? 'rgba(220,60,60,0.85)' : 'rgba(197,160,89,0.85)';
+        const lockBg = isSilenced ? 'rgba(220,60,60,0.08)' : 'rgba(197,160,89,0.07)';
+        const lockBorder = isSilenced ? 'rgba(220,60,60,0.4)' : 'rgba(197,160,89,0.4)';
+        const lockLabel = isSilenced ? 'SILENCED' : 'PAYWALLED';
+        const lockPath = "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z";
+
+        if (isLocked) {
+            html += `
+                <div class="u-item ${isActive ? 'active' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:${lockBg};border:1px solid ${lockBorder};justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
+                    <img src="${finalPic}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.07;filter:blur(2px);pointer-events:none;" onerror="this.onerror=null;this.src='${defaultPic}'">
+                    <svg viewBox="0 0 24 24" style="width:28px;height:28px;fill:${lockColor};position:relative;z-index:1;flex-shrink:0;"><path d="${lockPath}"/></svg>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:${lockColor};letter-spacing:3px;position:relative;z-index:1;">${lockLabel}</div>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.62rem;color:rgba(255,255,255,0.55);letter-spacing:1px;position:relative;z-index:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${clean(u.name)}</div>
                 </div>
-                <div class="u-info">
-                    <div class="u-name">${clean(u.name)}</div>
-                    <div class="u-seen ${online ? 'online' : ''}">${statusText}</div>
+            `;
+        } else {
+            const mailPath = "M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z";
+            const timerPath = "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z";
+            const starPath = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
+            const hasActiveTask = u.activeTask && (!u.endTime || u.endTime > Date.now());
+            const hasPendingReview = u.reviewQueue && u.reviewQueue.length > 0;
+
+            html += `
+                <div class="u-item ${isActive ? 'active' : ''} ${isQueen ? 'queen-item' : ''} ${hasMsg ? 'has-msg' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;flex-direction:column;align-items:flex-start;gap:5px;padding:10px 14px;min-height:68px;">
+                    <img src="${finalPic}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.08;filter:blur(2px);pointer-events:none;" onerror="this.onerror=null;this.src='${defaultPic}'">
+                    ${online ? '<div class="online-dot" style="position:absolute;top:8px;right:8px;z-index:2;"></div>' : ''}
+                    <div style="display:flex;gap:6px;position:relative;z-index:1;">
+                        <div class="icon-box" title="${hasMsg ? 'New Message' : 'Message'}"><svg class="svg-icon ${hasMsg ? 'active-msg' : 'icon-dim'}" viewBox="0 0 24 24"><path d="${mailPath}"/></svg></div>
+                        <div class="icon-box" title="${hasActiveTask ? 'Active Task' : 'Timer'}"><svg class="svg-icon ${hasActiveTask ? 'active-grey' : 'icon-dim'}" viewBox="0 0 24 24"><path d="${timerPath}"/></svg></div>
+                        <div class="icon-box" title="${hasPendingReview ? 'Pending Review' : 'Review'}"><svg class="svg-icon ${hasPendingReview ? 'active-pink' : 'icon-dim'}" viewBox="0 0 24 24"><path d="${starPath}"/></svg></div>
+                    </div>
+                    <div class="u-name" style="position:relative;z-index:1;">${clean(u.name)}</div>
+                    <div class="u-seen ${online ? 'online' : ''}" style="position:relative;z-index:1;">${statusText}</div>
                 </div>
-                <div class="u-right-col">
-                    ${renderUserIcons(u)}
-                </div>
-            </div>
-        `;
+            `;
+        }
     });
 
     list.innerHTML = html;
@@ -214,6 +237,17 @@ function renderUserIcons(u: any) {
         html += `<div class="icon-box" title="Pending Review"><svg class="svg-icon active-pink" viewBox="0 0 24 24"><path d="${starPath}"/></svg></div>`;
     } else {
         html += `<div class="icon-box"><svg class="svg-icon icon-dim" viewBox="0 0 24 24"><path d="${starPath}"/></svg></div>`;
+    }
+
+    const lockPath = "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z";
+    const isSilenced = u.silence === true;
+    const isPaywalled = !!(u.parameters?.paywall?.active) || u.paywall === true;
+    if (isSilenced) {
+        html += `<div class="icon-box" title="Silenced"><svg class="svg-icon" viewBox="0 0 24 24" style="fill:rgba(220,60,60,0.85)"><path d="${lockPath}"/></svg></div>`;
+    } else if (isPaywalled) {
+        html += `<div class="icon-box" title="Paywalled"><svg class="svg-icon" viewBox="0 0 24 24" style="fill:rgba(197,160,89,0.85)"><path d="${lockPath}"/></svg></div>`;
+    } else {
+        html += `<div class="icon-box"><svg class="svg-icon icon-dim" viewBox="0 0 24 24"><path d="${lockPath}"/></svg></div>`;
     }
 
     return html;

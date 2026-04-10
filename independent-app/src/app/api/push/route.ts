@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCallerEmail } from '@/lib/api-auth';
+import { createClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,8 +13,8 @@ export async function POST(req: Request) {
         }
 
         // Look up the user's saved OneSignal subscription ID from their profile
-        const { createClient } = await import('@supabase/supabase-js');
-        const admin = createClient(
+        const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+        const admin = createAdminClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
@@ -47,9 +47,9 @@ export async function POST(req: Request) {
         });
 
         const data = await response.json();
+        console.log('[push] OneSignal response:', response.status, JSON.stringify(data));
 
         if (!response.ok) {
-            console.error('[push] OneSignal error:', data);
             return NextResponse.json({ error: data }, { status: 500 });
         }
 
@@ -62,26 +62,27 @@ export async function POST(req: Request) {
 
 // PUT /api/push — save OneSignal subscription ID to the user's profile
 export async function PUT(req: Request) {
-    const caller = await getCallerEmail();
-    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
         const { subscriptionId } = await req.json();
         if (!subscriptionId) return NextResponse.json({ error: 'Missing subscriptionId' }, { status: 400 });
 
-        const { createClient } = await import('@supabase/supabase-js');
-        const admin = createClient(
+        const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+        const admin = createAdminClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
 
-        const { error } = await admin.from('profiles').update({ onesignal_id: subscriptionId }).ilike('member_id', caller);
+        const { error } = await admin.from('profiles').update({ onesignal_id: subscriptionId }).ilike('member_id', user.email);
         if (error) console.error('[push/save] DB error:', error.message);
-        else console.log('[push/save] Saved onesignal_id', subscriptionId, 'for', caller);
+        else console.log('[push/save] Saved onesignal_id', subscriptionId, 'for', user.email);
 
         return NextResponse.json({ success: true });
     } catch (err: any) {
-        console.error('[push/link] error:', err);
+        console.error('[push/save] error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }
