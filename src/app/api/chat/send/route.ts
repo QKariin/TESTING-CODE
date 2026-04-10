@@ -157,7 +157,7 @@ export async function POST(req: Request) {
                     body: JSON.stringify({
                         app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID,
                         target_channel: 'push',
-                        filters: [{ field: 'external_user_id', value: convProfile.id }],
+                        include_aliases: { external_id: [convProfile.id] },
                         headings: { en: 'Queen Karin' },
                         contents: { en: typeof content === 'string' ? content.slice(0, 100) : '👑 New message' },
                         url: 'https://throne.qkarin.com/profile',
