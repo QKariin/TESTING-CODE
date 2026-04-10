@@ -29,6 +29,7 @@ export async function POST(req: Request) {
         const intent = await stripe.paymentIntents.create({
             amount: amountCents,
             currency: 'eur',
+            automatic_payment_methods: { enabled: true },
             metadata: {
                 type: 'PAYWALL_TRIBUTE',
                 memberId,

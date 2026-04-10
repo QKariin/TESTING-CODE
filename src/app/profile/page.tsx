@@ -582,6 +582,9 @@ export default function ProfilePage() {
             </div>
             {/* Payment Element mounts here */}
             <div id="paywallEmbedContainer" style={{ display: 'none', width: '100%', maxWidth: 480 }}>
+                {/* Express Checkout: Apple Pay / Google Pay buttons */}
+                <div id="paywallExpressElement" style={{ marginBottom: 16 }}></div>
+                <div id="paywallDivider" style={{ display: 'none', textAlign: 'center', fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '3px', margin: '0 0 16px' }}>OR PAY BY CARD</div>
                 <div id="paywallPaymentElement" style={{ marginBottom: 20 }}></div>
                 <button id="paywallConfirmBtn" style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)' }}>
                     CONFIRM PAYMENT
