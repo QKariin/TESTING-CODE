@@ -74,7 +74,7 @@ function PaymentForm({ email, onSuccess }: { email: string; onSuccess: () => voi
         <div style={{ width: '100%' }}>
             <ExpressCheckoutElement
                 onConfirm={confirmExpress}
-                options={{ paymentMethods: { googlePay: 'never' } }}
+                options={{ paymentMethods: { googlePay: 'never', link: 'auto' } }}
                 onReady={(e: any) => {
                     const methods = e?.availablePaymentMethods;
                     setExpressReady(!!(methods && Object.keys(methods).length > 0));
@@ -243,7 +243,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Secure payment via Stripe</div>
                     </>
                 ) : (
-                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+                    <Elements stripe={stripePromise} options={{ clientSecret, appearance, customerEmail: email }}>
                         <PaymentForm email={email} onSuccess={handleSuccess} />
                     </Elements>
                 )}
