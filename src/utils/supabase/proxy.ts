@@ -31,7 +31,7 @@ export async function updateSession(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     const pathname = request.nextUrl.pathname;
 
-    if (pathname.startsWith('/auth') || pathname === '/api/debug-chat' || pathname === '/api/chat/history') return supabaseResponse
+    if (pathname.startsWith('/auth') || pathname === '/api/debug-chat' || pathname === '/api/chat/history' || pathname === '/api/push') return supabaseResponse
 
     if (!user && !pathname.startsWith('/login')) {
         return NextResponse.redirect(new URL('/login', request.url))
