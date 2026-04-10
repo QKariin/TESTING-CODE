@@ -23,7 +23,7 @@ export async function POST(req: Request) {
         }
 
         const supabase = await createClient();
-        const isHardcodedAdmin = senderEmail && ["ceo@qkarin.com"].includes(senderEmail.toLowerCase());
+        const isHardcodedAdmin = senderEmail && ["ceo@qkarin.com", "queen@qkarin.com"].includes(senderEmail.toLowerCase());
 
         let profile: any = null;
         let isQueen = isHardcodedAdmin;
