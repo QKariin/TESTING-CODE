@@ -753,6 +753,7 @@ export function openLobby() {
     const { memberId, id } = getState();
     const emailEl = document.getElementById('hubEmail');
     if (emailEl) emailEl.textContent = memberId || id || '';
+    _syncNotifHubBtn();
 }
 
 export function closeLobby() {
@@ -1842,7 +1843,53 @@ function initOneSignal(memberId: string) {
 
     dismissBtn?.addEventListener('click', () => { banner.style.display = 'none'; });
     setTimeout(() => { banner.style.display = 'flex'; }, 2000);
+
+    // Sync hub button state
+    _syncNotifHubBtn();
 }
+
+function _syncNotifHubBtn() {
+    const label = document.getElementById('notifHubLabel');
+    const desc = document.getElementById('notifHubDesc');
+    const status = document.getElementById('notifHubStatus');
+    if (!label || !status) return;
+    const perm = ('Notification' in window) ? (window as any).Notification.permission : 'default';
+    if (perm === 'granted') {
+        label.textContent = 'NOTIFICATIONS ON';
+        if (desc) desc.textContent = 'You will receive alerts';
+        status.textContent = 'ON';
+        status.style.color = '#c5a059';
+    } else if (perm === 'denied') {
+        label.textContent = 'NOTIFICATIONS BLOCKED';
+        if (desc) desc.textContent = 'Enable in browser settings';
+        status.textContent = 'BLOCKED';
+        status.style.color = '#c0392b';
+    } else {
+        label.textContent = 'ENABLE NOTIFICATIONS';
+        if (desc) desc.textContent = 'Get alerts from Queen Karin';
+        status.textContent = 'OFF';
+        status.style.color = '#666';
+    }
+}
+
+(window as any).handleNotifToggle = async function () {
+    const perm = ('Notification' in window) ? (window as any).Notification.permission : 'default';
+    if (perm === 'denied') {
+        alert('Notifications are blocked. Go to your browser settings → Site Settings → Notifications → find throne.qkarin.com → set to Allow.');
+        return;
+    }
+    if (perm === 'granted') {
+        alert('Notifications are already enabled.');
+        return;
+    }
+    const OS = (window as any).OneSignal;
+    if (OS?.Notifications?.requestPermission) {
+        await OS.Notifications.requestPermission();
+    } else {
+        await (window as any).Notification.requestPermission();
+    }
+    _syncNotifHubBtn();
+};
 
 export async function loadChatHistory(email: string) {
     try {

@@ -1325,6 +1325,16 @@ export default function ProfilePage() {
                                     </div>
                                     <span className="hub-action-cost">50 ₡</span>
                                 </button>
+                                <button id="notifHubBtn" className="hub-action-row" onClick={() => (window as any).handleNotifToggle()}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">🔔</div>
+                                        <div>
+                                            <div className="hub-action-label" id="notifHubLabel">ENABLE NOTIFICATIONS</div>
+                                            <div className="hub-action-desc" id="notifHubDesc">Get alerts from Queen Karin</div>
+                                        </div>
+                                    </div>
+                                    <span id="notifHubStatus" style={{ color: '#666', fontSize: '0.6rem', fontFamily: 'Orbitron', letterSpacing: 1 }}>OFF</span>
+                                </button>
                                 <div className="hub-logout-row">
                                     <button className="hub-logout-btn" onClick={() => (window as any).handleLogout()}>LOGOUT</button>
                                 </div>
