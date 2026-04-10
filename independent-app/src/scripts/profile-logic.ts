@@ -497,10 +497,10 @@ function showNewMessageBanner(preview: string) {
     const escaped = preview.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     banner.innerHTML = `
         <div style="display:flex; align-items:flex-start; gap:14px;">
-            <div style="flex-shrink:0; width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#c5a059,#8b6914); display:flex; align-items:center; justify-content:center; font-size:1rem;">👑</div>
+            <img src="/queen-karin.png" style="flex-shrink:0; width:44px; height:44px; border-radius:50%; object-fit:cover; border:1.5px solid rgba(197,160,89,0.6);" onerror="this.style.display='none'" />
             <div style="flex:1; min-width:0;">
-                <div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:#c5a059; letter-spacing:3px; text-transform:uppercase; margin-bottom:5px;">✦ New Message from Queen Karin</div>
-                <div style="font-family:'Cinzel', serif; font-size:0.9rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${escaped}</div>
+                <div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:#c5a059; letter-spacing:3px; text-transform:uppercase; margin-bottom:6px;">✦ New Message</div>
+                <div style="font-family:'Cinzel', serif; font-size:1.1rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${escaped}</div>
             </div>
         </div>
         <div style="display:flex; gap:8px; margin-top:14px;">
