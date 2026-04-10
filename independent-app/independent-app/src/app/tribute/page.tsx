@@ -96,7 +96,7 @@ export default function TributePage() {
     return (
         <div style={{ background: '#020512', color: '#fff', overflowX: 'hidden' }}>
             {/* Fixed backgrounds */}
-            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/login-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.09, zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.18, zIndex: 0, pointerEvents: 'none' }} />
             <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(197,160,89,0.04) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
 
             {/* ── ALL CONTENT ── */}
@@ -290,28 +290,37 @@ export default function TributePage() {
 
                 {/* ─── TASK CARD ─── */}
                 <div style={{ marginBottom: 52 }}>
-                    <div style={{ position: 'relative', background: 'linear-gradient(160deg, rgba(6,4,18,0.97) 0%, rgba(3,2,12,0.99) 100%)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', boxShadow: '0 24px 60px rgba(0,0,0,0.8)', borderRadius: 3, padding: '28px 20px 24px', overflow: 'hidden', boxSizing: 'border-box' } as React.CSSProperties}>
+                    {/* duty-label */}
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontWeight: 400, fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', textTransform: 'uppercase', textAlign: 'center', marginBottom: 16, marginTop: 32, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+                        <div style={{ height: 1, flex: 1, maxWidth: 60, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.3))' }} />
+                        CURRENT STATUS
+                        <div style={{ height: 1, flex: 1, maxWidth: 60, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.3))' }} />
+                    </div>
+                    {/* luxury-card */}
+                    <div style={{ background: 'linear-gradient(160deg, rgba(6,4,18,0.97) 0%, rgba(3,2,12,0.99) 100%)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', boxShadow: '0 24px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(197,160,89,0.06)', borderRadius: 3, padding: '32px 20px 28px', position: 'relative', overflow: 'hidden', width: '95%', margin: '10px auto', boxSizing: 'border-box', backdropFilter: 'blur(24px)' } as React.CSSProperties}>
                         <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.5), transparent)' }} />
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', letterSpacing: '6px', color: 'rgba(197,160,89,0.28)', textTransform: 'uppercase', textAlign: 'center', marginBottom: 20 }}>CURRENT STATUS</div>
                         {taskState === 'idle' ? (
-                            <>
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', letterSpacing: '8px', color: 'rgba(197,160,89,0.28)', textTransform: 'uppercase', textAlign: 'center', marginBottom: 20 }}>AWAITING ORDERS</div>
-                                <button onClick={() => setTaskState('received')} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '13px', letterSpacing: '3px', textTransform: 'uppercase', cursor: 'pointer', padding: '13px 0', borderRadius: 8, border: '1px solid rgba(197,160,89,0.35)', background: 'rgba(197,160,89,0.04)', color: '#fff', width: '100%', outline: 'none', display: 'block' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                {/* txt-status-red */}
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', fontWeight: 400, letterSpacing: '8px', color: 'rgba(197,160,89,0.28)', textTransform: 'uppercase', textAlign: 'center', marginBottom: 24 }}>AWAITING ORDERS</div>
+                                {/* lobby-btn */}
+                                <button onClick={() => setTaskState('received')} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: 'pointer', padding: '18px 0', borderRadius: 2, border: '1px solid rgba(197,160,89,0.45)', color: '#c5a059', background: 'rgba(197,160,89,0.04)', backdropFilter: 'blur(14px)', boxShadow: '0 2px 20px rgba(0,0,0,0.5)', display: 'block', textAlign: 'center', width: '88%', margin: '0 auto', outline: 'none' }}>
                                     REQUEST TASK
                                 </button>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.25)', textAlign: 'center', marginTop: 14, lineHeight: 1.6 }}>Tasks are assigned by Queen Karin personally.</div>
-                            </>
+                            </div>
                         ) : (
-                            <>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '15px', color: '#fff', textAlign: 'center', lineHeight: 1.7, marginBottom: 8 }}>Complete 5 kneeling sessions today.</div>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.35)', textAlign: 'center', lineHeight: 1.6, marginBottom: 24 }}>Submit proof to Queen Karin before midnight.</div>
-                                <button onClick={handleTribute} style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', letterSpacing: '2px', cursor: 'pointer', padding: '13px 0', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', fontWeight: 700, width: '100%', display: 'block', marginBottom: 10, boxShadow: '0 4px 20px rgba(197,160,89,0.3)' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, padding: '18px 16px', background: 'rgba(197,160,89,0.03)', borderRadius: 2, marginBottom: 18, border: '1px solid rgba(197,160,89,0.1)', borderLeft: '2px solid rgba(197,160,89,0.3)', letterSpacing: '0.3px' }}>
+                                    Complete 5 kneeling sessions today.<br />
+                                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>Submit proof to Queen Karin before midnight.</span>
+                                </div>
+                                <button onClick={handleTribute} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: 'pointer', padding: '18px 0', borderRadius: 2, border: 'none', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', display: 'block', width: '88%', margin: '0 auto 10px', boxShadow: '0 4px 20px rgba(197,160,89,0.3)' }}>
                                     Yes, Queen Karin
                                 </button>
-                                <button onClick={() => setDisobedience(true)} style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', letterSpacing: '1px', cursor: 'pointer', padding: '11px 0', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.25)', width: '100%', display: 'block' }}>
+                                <button onClick={() => setDisobedience(true)} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', letterSpacing: '2px', cursor: 'pointer', padding: '14px 0', borderRadius: 2, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.25)', display: 'block', width: '88%', margin: '0 auto', textTransform: 'uppercase' }}>
                                     Skip task
                                 </button>
-                            </>
+                            </div>
                         )}
                     </div>
                 </div>
