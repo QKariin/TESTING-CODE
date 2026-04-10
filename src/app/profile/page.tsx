@@ -580,6 +580,8 @@ export default function ProfilePage() {
                 </button>
                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Secure payment via Stripe</div>
             </div>
+            {/* Embedded Stripe Checkout mounts here */}
+            <div id="paywallEmbedContainer" style={{ display: 'none', width: '100%', maxWidth: 500, maxHeight: '80vh', overflowY: 'auto', borderRadius: 14 }}></div>
         </div>
 
         <div id="PROFILE_CONTAINER" style={{

@@ -5030,7 +5030,7 @@ export function _applyPaywall(paywall: any, memberId: string) {
         if (amountEl) amountEl.textContent  = `€${Number(paywall.amount).toFixed(2)}`;
         if (payBtn) {
             payBtn.onclick = async () => {
-                payBtn.textContent = 'REDIRECTING...';
+                payBtn.textContent = 'LOADING...';
                 (payBtn as HTMLButtonElement).disabled = true;
                 try {
                     const res = await fetch('/api/stripe/paywall-checkout', {
@@ -5039,8 +5039,31 @@ export function _applyPaywall(paywall: any, memberId: string) {
                         body: JSON.stringify({ memberId }),
                     });
                     const data = await res.json();
-                    if (data.url) window.location.href = data.url;
-                    else throw new Error(data.error || 'Failed');
+                    if (!data.clientSecret) throw new Error(data.error || 'Failed');
+
+                    const { loadStripe } = await import('@stripe/stripe-js');
+                    const stripeInstance = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+                    if (!stripeInstance) throw new Error('Stripe failed to load');
+
+                    const infoDiv = overlay.querySelector('div') as HTMLElement;
+                    const embedContainer = document.getElementById('paywallEmbedContainer') as HTMLElement;
+
+                    infoDiv.style.display = 'none';
+                    embedContainer.style.display = 'block';
+
+                    const checkout = await stripeInstance.initEmbeddedCheckout({
+                        clientSecret: data.clientSecret,
+                        onComplete: async () => {
+                            try {
+                                await fetch(`/api/paywall/verify?session_id=${data.sessionId}&member_id=${encodeURIComponent(memberId)}`);
+                            } catch (_) {}
+                            checkout.destroy();
+                            overlay.style.display = 'none';
+                            document.body.style.overflow = '';
+                            window.location.reload();
+                        },
+                    });
+                    checkout.mount('#paywallEmbedContainer');
                 } catch (e: any) {
                     payBtn.textContent = 'PAY NOW';
                     (payBtn as HTMLButtonElement).disabled = false;

@@ -42,8 +42,8 @@ export async function POST(req: Request) {
                 quantity: 1,
             }],
             mode: 'payment',
-            success_url: `${origin}/api/paywall/verify?session_id={CHECKOUT_SESSION_ID}&member_id=${encodeURIComponent(memberId)}`,
-            cancel_url: `${origin}/profile`,
+            ui_mode: 'embedded',
+            return_url: `${origin}/api/paywall/verify?session_id={CHECKOUT_SESSION_ID}&member_id=${encodeURIComponent(memberId)}`,
             metadata: {
                 type: 'PAYWALL_TRIBUTE',
                 memberId,
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
             },
         });
 
-        return NextResponse.json({ url: session.url });
+        return NextResponse.json({ clientSecret: session.client_secret, sessionId: session.id });
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
