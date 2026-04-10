@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
 const HIERARCHY = [
@@ -28,6 +28,9 @@ export default function TributePage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [taskState, setTaskState] = useState<'idle' | 'received'>('idle');
     const [challengeDismissed, setChallengeDismissed] = useState(false);
+    const [trackedVisible, setTrackedVisible] = useState(false);
+    const [trackedItemsVisible, setTrackedItemsVisible] = useState<boolean[]>(Array(6).fill(false));
+    const trackedRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const init = async () => {
@@ -45,6 +48,28 @@ export default function TributePage() {
             } catch {}
         };
         init();
+    }, []);
+
+    useEffect(() => {
+        const el = trackedRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+                setTrackedVisible(true);
+                TRACKED.forEach((_, i) => {
+                    setTimeout(() => {
+                        setTrackedItemsVisible(prev => {
+                            const next = [...prev];
+                            next[i] = true;
+                            return next;
+                        });
+                    }, 150 + i * 120);
+                });
+                observer.disconnect();
+            }
+        }, { threshold: 0.15 });
+        observer.observe(el);
+        return () => observer.disconnect();
     }, []);
 
     const handleTribute = async () => {
@@ -90,22 +115,22 @@ export default function TributePage() {
                 </div>
 
                 {/* ─── WHAT IS TRACKED ─── */}
-                <div style={{ marginBottom: 52 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+                <div ref={trackedRef} style={{ marginBottom: 52 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, opacity: trackedVisible ? 1 : 0, transform: trackedVisible ? 'none' : 'translateY(12px)', transition: 'opacity 0.5s ease, transform 0.5s ease' }}>
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>YOUR RECORD IS TRACKED</div>
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
                     </div>
                     <div style={{ background: 'rgba(6,4,16,0.92)', border: '1px solid rgba(197,160,89,0.15)', borderTop: '2px solid rgba(197,160,89,0.3)', borderRadius: 3, padding: '14px 16px 10px', marginBottom: 10 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, opacity: trackedVisible ? 1 : 0, transform: trackedVisible ? 'none' : 'translateY(8px)', transition: 'opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s' }}>
                             <div style={{ width: 6, height: 6, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, flexShrink: 0, animation: 'pulse 2s infinite' }} />
                             <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.6 }}>
                                 Every action is logged. Every absence is noted. Queen Karin sees everything.
                             </div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                            {TRACKED.map((item) => (
-                                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.09)', borderRadius: 6 }}>
+                            {TRACKED.map((item, i) => (
+                                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.09)', borderRadius: 6, opacity: trackedItemsVisible[i] ? 1 : 0, transform: trackedItemsVisible[i] ? 'none' : 'translateY(16px)', transition: 'opacity 0.45s ease, transform 0.45s ease' }}>
                                     <div style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'rgba(197,160,89,0.5)', width: 16, textAlign: 'center', flexShrink: 0 }}>{item.icon}</div>
                                     <div>
                                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.33rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '2px' }}>{item.label}</div>
