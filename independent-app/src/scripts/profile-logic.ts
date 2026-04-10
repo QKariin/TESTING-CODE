@@ -1807,17 +1807,26 @@ function initOneSignal(memberId: string) {
                 allowLocalhostAsSecureOrigin: true,
             });
 
-            // If already subscribed, link email immediately
-            const isSubscribed = OneSignal.User?.PushSubscription?.optedIn;
-            if (isSubscribed) {
-                await OneSignal.login(memberId);
+            const linkToServer = async () => {
+                const subId = OneSignal.User?.PushSubscription?.id;
+                if (!subId) return;
+                try {
+                    await fetch('/api/push', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ subscriptionId: subId }),
+                    });
+                } catch (_) {}
+            };
+
+            // If already subscribed, link immediately
+            if (OneSignal.User?.PushSubscription?.optedIn) {
+                await linkToServer();
             }
 
-            // Also link email whenever subscription state changes (e.g. after granting permission)
+            // Also link whenever subscription state changes
             OneSignal.User?.PushSubscription?.addEventListener('change', async (event: any) => {
-                if (event?.current?.optedIn) {
-                    try { await OneSignal.login(memberId); } catch (_) {}
-                }
+                if (event?.current?.optedIn) await linkToServer();
             });
         } catch (e) {
             console.error('[OneSignal] init error:', e);
@@ -1849,10 +1858,10 @@ function initOneSignal(memberId: string) {
             } else {
                 await (window as any).Notification.requestPermission();
             }
-            // Link subscription to email after granting permission
-            const { memberId } = getState();
-            if (OS?.login && memberId) {
-                try { await OS.login(memberId); } catch (_) {}
+            // Link subscription to email via server
+            const subId = OS?.User?.PushSubscription?.id;
+            if (subId) {
+                try { await fetch('/api/push', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscriptionId: subId }) }); } catch (_) {}
             }
         });
     }
@@ -1921,8 +1930,8 @@ if (typeof window !== 'undefined') (window as any).handleNotifToggle = async fun
         // Turn ON — opt back in and re-link email
         try { await OS?.User?.PushSubscription?.optIn?.(); } catch (_) {}
         localStorage.removeItem('notif_opted_out');
-        const { memberId } = getState();
-        if (OS?.login && memberId) { try { await OS.login(memberId); } catch (_) {} }
+        const subId1 = OS?.User?.PushSubscription?.id;
+        if (subId1) { try { await fetch('/api/push', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscriptionId: subId1 }) }); } catch (_) {} }
         _syncNotifHubBtn();
         return;
     }
@@ -1934,8 +1943,10 @@ if (typeof window !== 'undefined') (window as any).handleNotifToggle = async fun
         await (window as any).Notification.requestPermission();
     }
     localStorage.removeItem('notif_opted_out');
-    const { memberId } = getState();
-    if (OS?.login && memberId) { try { await OS.login(memberId); } catch (_) {} }
+    // Wait briefly for OneSignal to register the new subscription
+    await new Promise(r => setTimeout(r, 1500));
+    const subId2 = OS?.User?.PushSubscription?.id;
+    if (subId2) { try { await fetch('/api/push', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscriptionId: subId2 }) }); } catch (_) {} }
     _syncNotifHubBtn();
 };
 
