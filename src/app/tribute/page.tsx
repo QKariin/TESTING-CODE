@@ -192,144 +192,6 @@ export default function TributePage() {
                     </div>
                 </div>
 
-                {/* ─── HIERARCHY ─── */}
-                <div className="scroll-section" style={{ marginBottom: 80 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>THE HIERARCHY</div>
-                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
-                    </div>
-
-                    {/* Swipeable carousel */}
-                    <div
-                        style={{ overflow: 'hidden', borderRadius: 4 }}
-                        onTouchStart={(e) => { touchStartXRef.current = e.touches[0].clientX; }}
-                        onTouchEnd={(e) => {
-                            const diff = touchStartXRef.current - e.changedTouches[0].clientX;
-                            if (Math.abs(diff) > 45) {
-                                if (diff > 0) setActiveRank(r => Math.min(RANKS.length - 1, r + 1));
-                                else setActiveRank(r => Math.max(0, r - 1));
-                            }
-                        }}
-                    >
-                        <div style={{ display: 'flex', transform: `translateX(-${activeRank * 100}%)`, transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1)' }}>
-                            {RANKS.map((rank, i) => {
-                                const unlocked = i <= 1;
-                                const isFirst = i === 0;
-                                const isLast = i === RANKS.length - 1;
-                                const bars = [
-                                    rank.req.tasks > 0 ? { label: 'LABOR', target: rank.req.tasks } : null,
-                                    rank.req.kneels > 0 ? { label: 'ENDURANCE', target: rank.req.kneels } : null,
-                                    rank.req.points > 0 ? { label: 'MERIT', target: rank.req.points } : null,
-                                    rank.req.spent > 0 ? { label: 'SACRIFICE', target: rank.req.spent } : null,
-                                    rank.req.streak > 0 ? { label: 'CONSISTENCY', target: rank.req.streak } : null,
-                                ].filter(Boolean) as { label: string; target: number }[];
-
-                                const CardBody = () => (
-                                    <>
-                                        {/* TO REACH THIS RANK */}
-                                        <div style={{ marginBottom: 16 }}>
-                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 12 }}>
-                                                {isFirst ? 'YOUR STARTING RANK' : 'TO REACH THIS RANK'}
-                                            </div>
-                                            {isFirst ? (
-                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>This is where every member begins. No requirements. Your record starts the moment you join.</div>
-                                            ) : (
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                                    {bars.map(bar => (
-                                                        <div key={bar.label}>
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: 4 }}>
-                                                                <span>{bar.label}</span>
-                                                                <span style={{ color: '#fff' }}>0 / {bar.target.toLocaleString()}</span>
-                                                            </div>
-                                                            <div style={{ width: '100%', height: 8, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
-                                                                <div style={{ width: '0%', height: '100%', background: gold, boxShadow: `0 0 10px ${gold}40` }} />
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Voice cost */}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: 4 }}>
-                                            <span>VOICE COST</span>
-                                            <span style={{ color: '#fff' }}>{rank.speakCost} COINS / MSG</span>
-                                        </div>
-                                        <div style={{ width: '100%', height: 8, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden', marginBottom: 18 }}>
-                                            <div style={{ width: rank.speakCost === 0 ? '100%' : `${Math.max(5, 100 - rank.speakCost * 5)}%`, height: '100%', background: gold, boxShadow: `0 0 10px ${gold}40` }} />
-                                        </div>
-
-                                        {/* Divider */}
-                                        <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.15), transparent)', marginBottom: 16 }} />
-
-                                        {/* WHAT YOU EARN */}
-                                        <div style={{ marginBottom: 22 }}>
-                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 10 }}>WHAT YOU EARN</div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                                                {rank.benefits.map((b, j) => (
-                                                    <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                                        <div style={{ width: 3, height: 3, background: gold, opacity: 0.5, marginTop: 6, flexShrink: 0, borderRadius: 1 }} />
-                                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>{b}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </>
-                                );
-
-                                return (
-                                    <div key={rank.title} style={{ minWidth: '100%', flex: '0 0 100%' }}>
-                                        <div style={{ background: 'linear-gradient(160deg, rgba(6,4,18,0.97) 0%, rgba(3,2,12,0.99) 100%)', border: `1px solid rgba(197,160,89,${unlocked ? '0.25' : '0.08'})`, borderTop: `2px solid rgba(197,160,89,${unlocked ? '0.45' : '0.15'})`, borderRadius: 4, padding: '26px 22px 22px', position: 'relative', overflow: 'hidden' }}>
-                                            <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.4), transparent)' }} />
-
-                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.35)', letterSpacing: '4px', marginBottom: 10 }}>RANK {i + 1} OF {RANKS.length}</div>
-                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '24px', color: isLast ? gold : '#fff', fontWeight: 600, letterSpacing: '2px', marginBottom: 20 }}>{rank.title}</div>
-
-                                            {unlocked ? (
-                                                <>
-                                                    <CardBody />
-                                                    <button onClick={handleTribute} style={{ width: '100%', padding: '13px 0', borderRadius: 4, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '3px' }}>
-                                                        {isFirst ? 'START HERE' : 'UNLOCK ACCESS'}
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <div style={{ position: 'relative' }}>
-                                                    <div style={{ filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none', opacity: 0.5 }}>
-                                                        <CardBody />
-                                                    </div>
-                                                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.82)', backdropFilter: 'blur(3px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, borderRadius: 2 }}>
-                                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: 'rgba(197,160,89,0.55)', letterSpacing: '5px' }}>RANK LOCKED</div>
-                                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '12px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', lineHeight: 1.6, maxWidth: 220 }}>Join and earn your way through the hierarchy to unlock this rank.</div>
-                                                        <button onClick={handleTribute} disabled={loading} style={{ marginTop: 4, padding: '11px 28px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 4, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '10px', letterSpacing: '3px', fontWeight: 700, cursor: 'pointer' }}>
-                                                            {loading ? '...' : 'JOIN TO UNLOCK'}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Navigation */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
-                        <button onClick={() => setActiveRank(r => Math.max(0, r - 1))} disabled={activeRank === 0} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: activeRank === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.6)', background: 'none', border: 'none', cursor: activeRank === 0 ? 'default' : 'pointer', letterSpacing: '2px', padding: '8px 0' }}>
-                            PREV
-                        </button>
-                        <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
-                            {RANKS.map((_, i) => (
-                                <div key={i} onClick={() => setActiveRank(i)} style={{ width: i === activeRank ? 18 : 5, height: 5, borderRadius: 3, background: i === activeRank ? gold : i <= 1 ? 'rgba(197,160,89,0.35)' : 'rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: i === activeRank ? `0 0 8px ${gold}` : 'none' }} />
-                            ))}
-                        </div>
-                        <button onClick={() => setActiveRank(r => Math.min(RANKS.length - 1, r + 1))} disabled={activeRank === RANKS.length - 1} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: activeRank === RANKS.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.6)', background: 'none', border: 'none', cursor: activeRank === RANKS.length - 1 ? 'default' : 'pointer', letterSpacing: '2px', padding: '8px 0' }}>
-                            NEXT
-                        </button>
-                    </div>
-                </div>
-
                 {/* ─── TASK CARD ─── */}
                 <div className="scroll-section" style={{ marginBottom: 80 }}>
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontWeight: 400, fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', textTransform: 'uppercase', textAlign: 'center', marginBottom: 16, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
@@ -446,6 +308,149 @@ export default function TributePage() {
                                     <div style={{ width: 10, height: 12, borderTop: `2px solid ${gold}`, borderLeft: `2px solid ${gold}`, borderRight: `2px solid ${gold}`, borderRadius: '2px 2px 0 0' }} />
                                 </div>
                                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '11px', color: 'rgba(197,160,89,0.7)', letterSpacing: '4px' }}>CHASTITY LOCKED</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ─── HIERARCHY ─── */}
+                <div className="scroll-section" style={{ marginBottom: 80 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>THE HIERARCHY</div>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
+                    </div>
+
+                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
+                        <div className="card-inner-bg" style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
+
+                        {/* Header bar */}
+                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, animation: 'pulse 2s infinite', flexShrink: 0 }} />
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: gold, letterSpacing: '3px' }}>THE HIERARCHY</div>
+                            </div>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px' }}>RANK {activeRank + 1} / {RANKS.length}</div>
+                        </div>
+
+                        {/* Swipeable carousel */}
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                            <div
+                                style={{ overflow: 'hidden' }}
+                                onTouchStart={(e) => { touchStartXRef.current = e.touches[0].clientX; }}
+                                onTouchEnd={(e) => {
+                                    const diff = touchStartXRef.current - e.changedTouches[0].clientX;
+                                    if (Math.abs(diff) > 45) {
+                                        if (diff > 0) setActiveRank(r => Math.min(RANKS.length - 1, r + 1));
+                                        else setActiveRank(r => Math.max(0, r - 1));
+                                    }
+                                }}
+                            >
+                                <div style={{ display: 'flex', transform: `translateX(-${activeRank * 100}%)`, transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1)' }}>
+                                    {RANKS.map((rank, i) => {
+                                        const unlocked = i <= 1;
+                                        const isFirst = i === 0;
+                                        const isLast = i === RANKS.length - 1;
+                                        const bars = [
+                                            rank.req.tasks > 0 ? { label: 'LABOR', target: rank.req.tasks } : null,
+                                            rank.req.kneels > 0 ? { label: 'ENDURANCE', target: rank.req.kneels } : null,
+                                            rank.req.points > 0 ? { label: 'MERIT', target: rank.req.points } : null,
+                                            rank.req.spent > 0 ? { label: 'SACRIFICE', target: rank.req.spent } : null,
+                                            rank.req.streak > 0 ? { label: 'CONSISTENCY', target: rank.req.streak } : null,
+                                        ].filter(Boolean) as { label: string; target: number }[];
+
+                                        const CardBody = () => (
+                                            <>
+                                                <div style={{ marginBottom: 16 }}>
+                                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 12 }}>
+                                                        {isFirst ? 'YOUR STARTING RANK' : 'TO REACH THIS RANK'}
+                                                    </div>
+                                                    {isFirst ? (
+                                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>This is where every member begins. No requirements. Your record starts the moment you join.</div>
+                                                    ) : (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                            {bars.map(bar => (
+                                                                <div key={bar.label}>
+                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: 4 }}>
+                                                                        <span>{bar.label}</span>
+                                                                        <span style={{ color: '#fff' }}>0 / {bar.target.toLocaleString()}</span>
+                                                                    </div>
+                                                                    <div style={{ width: '100%', height: 8, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
+                                                                        <div style={{ width: '0%', height: '100%', background: gold, boxShadow: `0 0 10px ${gold}40` }} />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: 4 }}>
+                                                    <span>VOICE COST</span>
+                                                    <span style={{ color: '#fff' }}>{rank.speakCost} COINS / MSG</span>
+                                                </div>
+                                                <div style={{ width: '100%', height: 8, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden', marginBottom: 18 }}>
+                                                    <div style={{ width: rank.speakCost === 0 ? '100%' : `${Math.max(5, 100 - rank.speakCost * 5)}%`, height: '100%', background: gold, boxShadow: `0 0 10px ${gold}40` }} />
+                                                </div>
+                                                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.15), transparent)', marginBottom: 16 }} />
+                                                <div style={{ marginBottom: 22 }}>
+                                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 10 }}>WHAT YOU EARN</div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                                                        {rank.benefits.map((b, j) => (
+                                                            <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                                                <div style={{ width: 3, height: 3, background: gold, opacity: 0.5, marginTop: 6, flexShrink: 0, borderRadius: 1 }} />
+                                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>{b}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        );
+
+                                        return (
+                                            <div key={rank.title} style={{ minWidth: '100%', flex: '0 0 100%' }}>
+                                                <div style={{ padding: '24px 22px 20px', position: 'relative' }}>
+                                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.35)', letterSpacing: '4px', marginBottom: 10 }}>RANK {i + 1} OF {RANKS.length}</div>
+                                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '24px', color: isLast ? gold : '#fff', fontWeight: 600, letterSpacing: '2px', marginBottom: 20 }}>{rank.title}</div>
+                                                    {unlocked ? (
+                                                        <>
+                                                            <CardBody />
+                                                            <button onClick={handleTribute} style={{ width: '100%', padding: '13px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '3px' }}>
+                                                                {isFirst ? 'START HERE' : 'UNLOCK ACCESS'}
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <div style={{ position: 'relative' }}>
+                                                            <div style={{ filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none', opacity: 0.5 }}>
+                                                                <CardBody />
+                                                            </div>
+                                                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.82)', backdropFilter: 'blur(3px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                                                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: 'rgba(197,160,89,0.55)', letterSpacing: '5px' }}>RANK LOCKED</div>
+                                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '12px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', lineHeight: 1.6, maxWidth: 220 }}>Join and earn your way through the hierarchy to unlock this rank.</div>
+                                                                <button onClick={handleTribute} disabled={loading} style={{ marginTop: 4, padding: '11px 28px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '10px', letterSpacing: '3px', fontWeight: 700, cursor: 'pointer' }}>
+                                                                    {loading ? '...' : 'JOIN TO UNLOCK'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Navigation inside card */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px 18px', borderTop: '1px solid rgba(197,160,89,0.08)' }}>
+                                <button onClick={() => setActiveRank(r => Math.max(0, r - 1))} disabled={activeRank === 0} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: activeRank === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.6)', background: 'none', border: 'none', cursor: activeRank === 0 ? 'default' : 'pointer', letterSpacing: '2px', padding: '8px 0' }}>
+                                    PREV
+                                </button>
+                                <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
+                                    {RANKS.map((_, i) => (
+                                        <div key={i} onClick={() => setActiveRank(i)} style={{ width: i === activeRank ? 18 : 5, height: 5, borderRadius: 3, background: i === activeRank ? gold : i <= 1 ? 'rgba(197,160,89,0.35)' : 'rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: i === activeRank ? `0 0 8px ${gold}` : 'none' }} />
+                                    ))}
+                                </div>
+                                <button onClick={() => setActiveRank(r => Math.min(RANKS.length - 1, r + 1))} disabled={activeRank === RANKS.length - 1} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: activeRank === RANKS.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.6)', background: 'none', border: 'none', cursor: activeRank === RANKS.length - 1 ? 'default' : 'pointer', letterSpacing: '2px', padding: '8px 0' }}>
+                                    NEXT
+                                </button>
                             </div>
                         </div>
                     </div>
