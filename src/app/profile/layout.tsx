@@ -243,7 +243,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Secure payment via Stripe</div>
                     </>
                 ) : (
-                    <Elements stripe={stripePromise} options={{ clientSecret, appearance, customerEmail: email }}>
+                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
                         <PaymentForm email={email} onSuccess={handleSuccess} />
                     </Elements>
                 )}
