@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/client';
 
 const RANKS = [
     { title: "Hall Boy", speakCost: 20, benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks.", "Challenges: Right to join all active challenges.", "Content: Access to exclusive content drops.", "Messages: Direct access to Queen Karin's DMs."], req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 } },
-    { title: "Footman", speakCost: 15, benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine."], req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0 } },
+    { title: "Footman", speakCost: 15, benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Challenges: Right to join all active challenges.", "Content: Access to exclusive content drops.", "Messages: Direct access to Queen Karin's DMs."], req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0 } },
     { title: "Silverman", speakCost: 10, benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions."], req: { tasks: 25, kneels: 65, points: 5000, spent: 5000, streak: 5 } },
     { title: "Butler", speakCost: 5, benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions."], req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 30 } },
     { title: "Chamberlain", speakCost: 0, benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."], req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 90 } },
@@ -29,7 +29,7 @@ export default function TributePage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [taskRevealed, setTaskRevealed] = useState(false);
     const [disobedience, setDisobedience] = useState(false);
-    const [activeRank, setActiveRank] = useState(0);
+    const [activeRank, setActiveRank] = useState(1);
 
     const [visibleItems, setVisibleItems] = useState<boolean[]>(Array(6).fill(false));
     const [sectionVisible, setSectionVisible] = useState(false);
