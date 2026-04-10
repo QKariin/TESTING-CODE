@@ -136,8 +136,8 @@ export default function TributePage() {
     return (
         <div style={{ background: '#020512', color: '#fff', overflowX: 'hidden' }}>
             {/* Fixed backgrounds */}
-            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 1, zIndex: 0, pointerEvents: 'none' }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,5,18,0.45) 0%, rgba(2,5,18,0.65) 50%, rgba(2,5,18,0.88) 100%)', zIndex: 0, pointerEvents: 'none' }} />
+            <div className="bg-fixed-img" style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 1, zIndex: 0, pointerEvents: 'none' }} />
+            <div className="bg-fixed-overlay" style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,5,18,0.45) 0%, rgba(2,5,18,0.65) 50%, rgba(2,5,18,0.88) 100%)', zIndex: 0, pointerEvents: 'none' }} />
 
             {/* ── ALL CONTENT ── */}
             <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: 'clamp(48px,8vw,80px) clamp(20px,5vw,36px) 160px' }}>
@@ -338,7 +338,7 @@ export default function TributePage() {
                         <div style={{ height: 1, flex: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
                     </div>
                     <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
-                        <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
+                        <div className="card-inner-bg" style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
                         <div style={{ position: 'relative', zIndex: 1, padding: '28px 20px 24px' }}>
                             <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', fontWeight: 400, letterSpacing: '8px', color: 'rgba(197,160,89,0.28)', textTransform: 'uppercase', textAlign: 'center', marginBottom: 24 }}>AWAITING ORDERS</div>
                             {!taskRevealed ? (
@@ -371,7 +371,7 @@ export default function TributePage() {
                     </div>
 
                     <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
-                        <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
+                        <div className="card-inner-bg" style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
 
                         {/* Header bar */}
                         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
@@ -415,7 +415,7 @@ export default function TributePage() {
                     </div>
 
                     <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
-                        <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
+                        <div className="card-inner-bg" style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
 
                         {/* Header bar */}
                         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
@@ -458,7 +458,7 @@ export default function TributePage() {
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '5px', marginBottom: 14 }}>ENTRANCE TRIBUTE</div>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2rem,6vw,3rem)', color: gold, fontWeight: 700, letterSpacing: '4px', marginBottom: 6 }}>€55</div>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginBottom: 28 }}>One-time. Permanent access.</div>
-                    <button onClick={handleTribute} disabled={loading} style={{ width: '100%', padding: '20px 24px', background: 'linear-gradient(135deg,#0a0602 0%,#1a1208 30%,#c5a059 60%,#e8d5a8 80%,#c5a059 100%)', border: '1px solid rgba(197,160,89,0.5)', color: '#fff', fontFamily: 'Cinzel,serif', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '8px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, borderRadius: 4, marginBottom: 16, boxShadow: '0 0 30px rgba(197,160,89,0.15),0 8px 40px rgba(0,0,0,0.4)' }}>
+                    <button className="tribute-btn" onClick={handleTribute} disabled={loading} style={{ width: '100%', padding: '20px 24px', background: 'linear-gradient(135deg,#0a0602 0%,#1a1208 30%,#c5a059 60%,#e8d5a8 80%,#c5a059 100%)', border: '1px solid rgba(197,160,89,0.5)', color: '#fff', fontFamily: 'Cinzel,serif', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '8px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, borderRadius: 4, marginBottom: 16, boxShadow: '0 0 30px rgba(197,160,89,0.15),0 8px 40px rgba(0,0,0,0.4)' }}>
                         {loading ? 'Initializing...' : 'Send Tribute'}
                     </button>
                     {status && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: gold, letterSpacing: '2px', marginBottom: 14 }}>{status}</div>}
@@ -492,6 +492,32 @@ export default function TributePage() {
             <style>{`
                 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
                 ::-webkit-scrollbar { display: none; }
+
+                @keyframes tributeGlow {
+                    0%,100% { box-shadow: 0 0 30px rgba(197,160,89,0.15), 0 8px 40px rgba(0,0,0,0.4), 0 0 0px rgba(197,160,89,0); }
+                    50% { box-shadow: 0 0 60px rgba(197,160,89,0.5), 0 8px 40px rgba(0,0,0,0.4), 0 0 120px rgba(197,160,89,0.15); }
+                }
+                @keyframes tributeShimmer {
+                    0% { background-position: 200% center; }
+                    100% { background-position: -200% center; }
+                }
+                .tribute-btn {
+                    background-size: 300% auto !important;
+                    animation: tributeShimmer 4s linear infinite, tributeGlow 2.5s ease-in-out infinite;
+                }
+
+                @media (min-width: 768px) {
+                    .bg-fixed-img {
+                        background-image: url('/queen-bg-desktop.png') !important;
+                        background-position: center center !important;
+                    }
+                    .bg-fixed-overlay {
+                        background: linear-gradient(180deg, rgba(2,0,6,0.3) 0%, rgba(2,0,6,0.55) 50%, rgba(2,0,6,0.9) 100%) !important;
+                    }
+                    .card-inner-bg {
+                        display: none !important;
+                    }
+                }
             `}</style>
         </div>
     );
