@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getCallerEmail, isCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
@@ -52,10 +53,16 @@ async function getKneelStatus(memberEmail: string, tz: string) {
 }
 
 export async function GET(req: Request) {
+    const caller = await getCallerEmail();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { searchParams } = new URL(req.url);
         const memberEmail = searchParams.get('email');
         if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
+        if (!isCEO(caller) && caller !== memberEmail.toLowerCase()) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
         const tz = searchParams.get('tz') || 'UTC';
         return NextResponse.json(await getKneelStatus(memberEmail, tz));
     } catch (err: any) {
@@ -65,10 +72,16 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+    const caller = await getCallerEmail();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const body = await req.json();
         const memberEmail = body.email;
         if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
+        if (!isCEO(caller) && caller !== memberEmail.toLowerCase()) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
         const tz = body.tz || 'UTC';
         return NextResponse.json(await getKneelStatus(memberEmail, tz));
     } catch (err: any) {

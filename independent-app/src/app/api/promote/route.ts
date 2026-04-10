@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { HIERARCHY_RULES } from '@/lib/hierarchyRules';
+import { getCallerEmail, isCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
 const clean = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 export async function POST(req: Request) {
+    const caller = await getCallerEmail();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isCEO(caller)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
     try {
         const { memberEmail } = await req.json();
         if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });

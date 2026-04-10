@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { HIERARCHY_RULES, rankMeetsRequirement } from '@/lib/hierarchyRules';
+import { getCallerEmail, isCEO } from '@/lib/api-auth';
 
 export async function POST(req: Request) {
+    const caller = await getCallerEmail();
+    if (!caller) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { senderEmail: rawSenderEmail, content, type = 'text', metadata = {}, conversationId: rawConversationId } = await req.json();
         let senderEmail = rawSenderEmail?.toLowerCase();
@@ -11,6 +15,11 @@ export async function POST(req: Request) {
 
         if (!senderEmail || !content) {
             return NextResponse.json({ success: false, error: "Missing required fields." }, { status: 400 });
+        }
+
+        // Only CEO can send as someone else (e.g. queen replying as herself into a user's chat)
+        if (!isCEO(caller) && caller !== senderEmail) {
+            return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
         }
 
         const supabase = await createClient();

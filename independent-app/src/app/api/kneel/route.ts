@@ -3,15 +3,23 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
+import { getCallerEmail, isCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
 const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000; // 1 min dev / 60 min prod
 
 export async function POST(req: Request) {
+    const caller = await getCallerEmail();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { memberEmail, tz = 'UTC' } = await req.json();
         if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
+
+        if (!isCEO(caller) && caller !== memberEmail.toLowerCase()) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
         // Fetch current record from tasks table (member_id = email, case-insensitive)
         const { data: task } = await supabaseAdmin
