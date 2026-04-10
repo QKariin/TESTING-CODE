@@ -71,6 +71,25 @@ export default function TributePage() {
         return () => observer.disconnect();
     }, []);
 
+    useEffect(() => {
+        const update = () => {
+            const sections = document.querySelectorAll<HTMLElement>('.scroll-section');
+            const vh = window.innerHeight;
+            sections.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const elCenter = rect.top + rect.height / 2;
+                const dist = Math.abs(elCenter - vh / 2);
+                const maxDist = vh * 0.58;
+                const ratio = Math.min(dist / maxDist, 1);
+                el.style.filter = `blur(${(ratio * 7).toFixed(1)}px)`;
+                el.style.opacity = String(Math.max(1 - ratio * 0.72, 0.15).toFixed(2));
+            });
+        };
+        update();
+        window.addEventListener('scroll', update, { passive: true });
+        return () => window.removeEventListener('scroll', update);
+    }, []);
+
     const handleTribute = async () => {
         setLoading(true); setStatus(null);
         try {
@@ -154,7 +173,7 @@ export default function TributePage() {
                 </div>
 
                 {/* ─── HIERARCHY ─── */}
-                <div style={{ marginBottom: 52 }}>
+                <div className="scroll-section" style={{ marginBottom: 80 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>THE HIERARCHY</div>
@@ -292,7 +311,7 @@ export default function TributePage() {
                 </div>
 
                 {/* ─── CHALLENGE CARD ─── */}
-                <div style={{ marginBottom: 52 }}>
+                <div className="scroll-section" style={{ marginBottom: 80 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>ACTIVE CHALLENGE</div>
@@ -341,31 +360,30 @@ export default function TributePage() {
                 </div>
 
                 {/* ─── TASK CARD ─── */}
-                <div style={{ marginBottom: 52 }}>
+                <div className="scroll-section" style={{ marginBottom: 80 }}>
                     {/* duty-label */}
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontWeight: 400, fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', textTransform: 'uppercase', textAlign: 'center', marginBottom: 16, marginTop: 32, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-                        <div style={{ height: 1, flex: 1, maxWidth: 60, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.3))' }} />
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontWeight: 400, fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', textTransform: 'uppercase', textAlign: 'center', marginBottom: 16, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+                        <div style={{ height: 1, flex: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
                         CURRENT STATUS
-                        <div style={{ height: 1, flex: 1, maxWidth: 60, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.3))' }} />
+                        <div style={{ height: 1, flex: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
                     </div>
-                    {/* luxury-card */}
-                    <div style={{ background: 'linear-gradient(160deg, rgba(6,4,18,0.97) 0%, rgba(3,2,12,0.99) 100%)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', boxShadow: '0 24px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(197,160,89,0.06)', borderRadius: 3, padding: '32px 20px 28px', position: 'relative', overflow: 'hidden', width: '95%', margin: '10px auto', boxSizing: 'border-box', backdropFilter: 'blur(24px)' } as React.CSSProperties}>
-                        <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.5), transparent)' }} />
-                        <div style={{ textAlign: 'center' }}>
+                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
+                        <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
+                        <div style={{ position: 'relative', zIndex: 1, padding: '28px 20px 24px' }}>
                             <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', fontWeight: 400, letterSpacing: '8px', color: 'rgba(197,160,89,0.28)', textTransform: 'uppercase', textAlign: 'center', marginBottom: 24 }}>AWAITING ORDERS</div>
                             {!taskRevealed ? (
-                                <button onClick={() => setTaskRevealed(true)} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: 'pointer', padding: '18px 0', borderRadius: 2, border: '1px solid rgba(197,160,89,0.45)', color: '#c5a059', background: 'rgba(197,160,89,0.04)', backdropFilter: 'blur(14px)', boxShadow: '0 2px 20px rgba(0,0,0,0.5)', display: 'block', width: '88%', margin: '0 auto', outline: 'none' }}>
+                                <button onClick={() => setTaskRevealed(true)} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: 'pointer', padding: '18px 0', borderRadius: 8, border: '1px solid rgba(197,160,89,0.45)', color: '#c5a059', background: 'rgba(197,160,89,0.04)', backdropFilter: 'blur(14px)', boxShadow: '0 2px 20px rgba(0,0,0,0.5)', display: 'block', width: '88%', margin: '0 auto', outline: 'none' }}>
                                     REQUEST TASK
                                 </button>
                             ) : (
                                 <>
-                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, padding: '18px 16px', background: 'rgba(197,160,89,0.03)', borderRadius: 2, marginBottom: 22, border: '1px solid rgba(197,160,89,0.1)', borderLeft: '2px solid rgba(197,160,89,0.3)', letterSpacing: '0.3px', textAlign: 'left' }}>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, padding: '18px 16px', background: 'rgba(197,160,89,0.03)', borderRadius: 8, marginBottom: 14, border: '1px solid rgba(197,160,89,0.1)', borderLeft: '2px solid rgba(197,160,89,0.3)', letterSpacing: '0.3px', textAlign: 'left' }}>
                                         Pay tribute to Queen Karin and gain full access to everything she has built.
                                     </div>
-                                    <button onClick={handleTribute} disabled={loading} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', padding: '18px 0', borderRadius: 2, border: 'none', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', display: 'block', width: '88%', margin: '0 auto 10px', boxShadow: '0 4px 20px rgba(197,160,89,0.3)', opacity: loading ? 0.6 : 1 }}>
+                                    <button onClick={handleTribute} disabled={loading} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', padding: '18px 0', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', display: 'block', width: '88%', margin: '0 auto 10px', boxShadow: '0 4px 20px rgba(197,160,89,0.3)', opacity: loading ? 0.6 : 1 }}>
                                         {loading ? '...' : 'Yes, Queen Karin'}
                                     </button>
-                                    <button onClick={() => setDisobedience(true)} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', letterSpacing: '2px', cursor: 'pointer', padding: '14px 0', borderRadius: 2, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.25)', display: 'block', width: '88%', margin: '0 auto', textTransform: 'uppercase' }}>
+                                    <button onClick={() => setDisobedience(true)} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', letterSpacing: '2px', cursor: 'pointer', padding: '14px 0', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.25)', display: 'block', width: '88%', margin: '0 auto', textTransform: 'uppercase' }}>
                                         Skip task
                                     </button>
                                 </>
@@ -375,7 +393,7 @@ export default function TributePage() {
                 </div>
 
                 {/* ─── PAYMENT CTA ─── */}
-                <div style={{ textAlign: 'center' }}>
+                <div className="scroll-section" style={{ textAlign: 'center' }}>
                     <div style={{ width: 70, height: 1, background: `linear-gradient(90deg,transparent,${gold}55,transparent)`, margin: '0 auto 36px' }} />
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '8px', marginBottom: 14 }}>✦</div>
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '5px', marginBottom: 14 }}>ENTRANCE TRIBUTE</div>
