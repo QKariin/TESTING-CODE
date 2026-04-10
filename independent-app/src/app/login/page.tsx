@@ -1,17 +1,22 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import '@/css/login.css';
 
 export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
     const [emailOpen, setEmailOpen] = useState(false);
-    const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
+    useEffect(() => {
+        const reset = () => setLoading(false);
+        window.addEventListener('focus', reset);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) reset(); });
+        return () => window.removeEventListener('focus', reset);
+    }, []);
 
     const handleGoogleLogin = async () => {
         setLoading(true); setError(null);
@@ -35,30 +40,8 @@ export default function LoginPage() {
 
     const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true); setError(null); setSuccess(null);
+        setLoading(true); setError(null);
         const supabase = createClient();
-
-        if (mode === 'forgot') {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/auth/reset-password`,
-            });
-            if (error) setError(error.message);
-            else setSuccess('Check your email for a reset link.');
-            setLoading(false);
-            return;
-        }
-
-        if (mode === 'signup') {
-            const { error } = await supabase.auth.signUp({
-                email, password,
-                options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
-            });
-            if (error) setError(error.message);
-            else setSuccess('Check your email to confirm your account.');
-            setLoading(false);
-            return;
-        }
-
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) { setError(error.message); setLoading(false); }
         else window.location.href = '/profile';
@@ -93,7 +76,7 @@ export default function LoginPage() {
 
                 <button
                     className="email-toggle-btn"
-                    onClick={() => { setEmailOpen(o => !o); setError(null); setSuccess(null); setMode('signin'); }}
+                    onClick={() => { setEmailOpen(o => !o); setError(null); }}
                     disabled={loading}
                 >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -106,50 +89,22 @@ export default function LoginPage() {
                     <form className="email-form-inner" onSubmit={handleEmailSubmit}>
                         <div className="input-group">
                             <label>Email</label>
-                            <input
-                                type="email"
-                                placeholder="your@email.com"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                required
-                                autoComplete="email"
-                            />
+                            <input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
                         </div>
-
-                        {mode !== 'forgot' && (
-                            <div className="input-group">
-                                <label>Password</label>
-                                <input
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    required
-                                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                                />
-                                {mode === 'signin' && (
-                                    <button type="button" className="forgot-link" onClick={() => { setMode('forgot'); setError(null); setSuccess(null); }}>
-                                        Forgot password?
-                                    </button>
-                                )}
-                            </div>
-                        )}
-
+                        <div className="input-group">
+                            <label>Password</label>
+                            <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" />
+                        </div>
                         <button type="submit" className="login-btn" disabled={loading}>
-                            {loading ? <><span className="loading-spinner" />{mode === 'forgot' ? 'Sending...' : mode === 'signup' ? 'Creating...' : 'Entering...'}</> :
-                                mode === 'forgot' ? 'Send Reset Link' : mode === 'signup' ? 'Create Account' : 'Enter'}
+                            {loading ? <><span className="loading-spinner" />Entering...</> : 'Enter'}
                         </button>
-
                         <div className="toggle-mode">
-                            {mode === 'signin' && <>No account?<button type="button" className="toggle-link" onClick={() => { setMode('signup'); setError(null); setSuccess(null); }}>Sign up</button></>}
-                            {mode === 'signup' && <>Have an account?<button type="button" className="toggle-link" onClick={() => { setMode('signin'); setError(null); setSuccess(null); }}>Sign in</button></>}
-                            {mode === 'forgot' && <button type="button" className="toggle-link" onClick={() => { setMode('signin'); setError(null); setSuccess(null); }}>Back to sign in</button>}
+                            <span style={{ opacity: 0.4, fontSize: '0.7em' }}>Forgot password? Use Google or X to login.</span>
                         </div>
                     </form>
                 </div>
 
                 {error && <div className="error-msg">{error}</div>}
-                {success && <div className="success-msg">{success}</div>}
 
                 <div className="footer-text">Property of Queen Karin &nbsp;·&nbsp; Est. 2024</div>
             </div>
