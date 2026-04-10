@@ -193,7 +193,7 @@ export default function TributePage() {
                 </div>
 
                 {/* ─── TASK CARD ─── */}
-                <div className="scroll-section" style={{ marginBottom: 80 }}>
+                <div className="scroll-section" style={{ marginBottom: 80, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto' }}>
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontWeight: 400, fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', textTransform: 'uppercase', textAlign: 'center', marginBottom: 16, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
                         <div style={{ height: 1, flex: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
                         CURRENT STATUS
@@ -225,7 +225,7 @@ export default function TributePage() {
                 </div>
 
                 {/* ─── CHALLENGE CARD ─── */}
-                <div className="scroll-section" style={{ marginBottom: 80 }}>
+                <div className="scroll-section" style={{ marginBottom: 80, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>ACTIVE CHALLENGE</div>
@@ -269,7 +269,7 @@ export default function TributePage() {
                 </div>
 
                 {/* ─── CHASTITY LOCKS ─── */}
-                <div className="scroll-section" style={{ marginBottom: 80 }}>
+                <div className="scroll-section" style={{ marginBottom: 80, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>CHASTITY LOCKS</div>
