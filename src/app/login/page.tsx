@@ -9,7 +9,7 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [emailOpen, setEmailOpen] = useState(false);
-    const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+    const [mode, setMode] = useState<'signin' | 'forgot'>('signin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -44,17 +44,6 @@ export default function LoginPage() {
             });
             if (error) setError(error.message);
             else setSuccess('Check your email for a reset link.');
-            setLoading(false);
-            return;
-        }
-
-        if (mode === 'signup') {
-            const { error } = await supabase.auth.signUp({
-                email, password,
-                options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
-            });
-            if (error) setError(error.message);
-            else setSuccess('Check your email to confirm your account.');
             setLoading(false);
             return;
         }
@@ -125,7 +114,7 @@ export default function LoginPage() {
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
                                     required
-                                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                                    autoComplete="current-password"
                                 />
                                 {mode === 'signin' && (
                                     <button type="button" className="forgot-link" onClick={() => { setMode('forgot'); setError(null); setSuccess(null); }}>
@@ -136,13 +125,12 @@ export default function LoginPage() {
                         )}
 
                         <button type="submit" className="login-btn" disabled={loading}>
-                            {loading ? <><span className="loading-spinner" />{mode === 'forgot' ? 'Sending...' : mode === 'signup' ? 'Creating...' : 'Entering...'}</> :
-                                mode === 'forgot' ? 'Send Reset Link' : mode === 'signup' ? 'Create Account' : 'Enter'}
+                            {loading ? <><span className="loading-spinner" />{mode === 'forgot' ? 'Sending...' : 'Entering...'}</> :
+                                mode === 'forgot' ? 'Send Reset Link' : 'Enter'}
                         </button>
 
                         <div className="toggle-mode">
-                            {mode === 'signin' && <>No account?<button type="button" className="toggle-link" onClick={() => { setMode('signup'); setError(null); setSuccess(null); }}>Sign up</button></>}
-                            {mode === 'signup' && <>Have an account?<button type="button" className="toggle-link" onClick={() => { setMode('signin'); setError(null); setSuccess(null); }}>Sign in</button></>}
+                            {mode === 'signin' && <button type="button" className="toggle-link" onClick={() => { setMode('forgot'); setError(null); setSuccess(null); }}>Forgot password?</button>}
                             {mode === 'forgot' && <button type="button" className="toggle-link" onClick={() => { setMode('signin'); setError(null); setSuccess(null); }}>Back to sign in</button>}
                         </div>
                     </form>
