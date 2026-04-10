@@ -140,7 +140,7 @@ export default function TributePage() {
             <div className="bg-fixed-overlay" style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,5,18,0.45) 0%, rgba(2,5,18,0.65) 50%, rgba(2,5,18,0.88) 100%)', zIndex: 0, pointerEvents: 'none' }} />
 
             {/* ── ALL CONTENT ── */}
-            <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: 'clamp(48px,8vw,80px) clamp(20px,5vw,36px) 160px' }}>
+            <div className="main-content" style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: 'clamp(48px,8vw,80px) clamp(20px,5vw,36px) 160px' }}>
 
                 {/* HEADER */}
                 <div style={{ textAlign: 'center', marginBottom: 52 }}>
@@ -512,6 +512,14 @@ export default function TributePage() {
                     .card-inner-bg {
                         display: none !important;
                     }
+                    .main-content {
+                        max-width: 980px !important;
+                        padding-left: 48px !important;
+                        padding-right: 48px !important;
+                        font-size: 1.15em;
+                    }
+                    .main-content h1 { font-size: clamp(2.2rem, 4vw, 3.4rem) !important; }
+                    .main-content p { font-size: 1rem !important; max-width: 640px !important; }
                 }
             `}</style>
         </div>
