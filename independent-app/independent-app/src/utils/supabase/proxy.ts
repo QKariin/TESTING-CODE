@@ -39,7 +39,7 @@ export async function updateSession(request: NextRequest) {
 
     if (user) {
         const userEmailNormalized = (user.email || '').trim().toLowerCase();
-        const isTributePage = pathname.startsWith('/tribute')
+        const isTributePage = pathname.startsWith('/tribute') || pathname.startsWith('/preview')
         const isApiPage = pathname.startsWith('/api')
         const isAuthPage = pathname.startsWith('/auth')
 
@@ -121,7 +121,7 @@ export async function updateSession(request: NextRequest) {
         }
 
         if (!isTributePage && !isApiPage && !isAuthPage) {
-            return NextResponse.redirect(new URL('/tribute', request.url))
+            return NextResponse.redirect(new URL('/preview', request.url))
         }
     }
 
