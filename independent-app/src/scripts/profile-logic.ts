@@ -1855,26 +1855,36 @@ function initOneSignal(memberId: string) {
 function _syncNotifHubBtn() {
     const label = document.getElementById('notifHubLabel');
     const desc = document.getElementById('notifHubDesc');
-    const status = document.getElementById('notifHubStatus');
-    if (!label || !status) return;
+    const track = document.getElementById('notifToggle') as HTMLElement | null;
+    const knob = document.getElementById('notifToggleKnob') as HTMLElement | null;
+    if (!label || !track || !knob) return;
     const perm = ('Notification' in window) ? (window as any).Notification.permission : 'default';
     const OS = (window as any).OneSignal;
     const optedOut = OS?.User?.PushSubscription?.optedOut === true;
-    if (perm === 'granted' && !optedOut) {
-        label.textContent = 'NOTIFICATIONS ON';
+    const isOn = perm === 'granted' && !optedOut;
+    const isBlocked = perm === 'denied';
+
+    if (isOn) {
+        label.textContent = 'NOTIFICATIONS';
         if (desc) desc.textContent = 'Tap to disable';
-        status.textContent = 'ON';
-        status.style.color = '#c5a059';
-    } else if (perm === 'denied') {
+        track.style.background = '#c5a059';
+        track.style.borderColor = '#c5a059';
+        knob.style.left = '23px';
+        knob.style.background = '#000';
+    } else if (isBlocked) {
         label.textContent = 'NOTIFICATIONS BLOCKED';
         if (desc) desc.textContent = 'Enable in browser settings';
-        status.textContent = 'BLOCKED';
-        status.style.color = '#c0392b';
+        track.style.background = '#3a1a1a';
+        track.style.borderColor = '#c0392b';
+        knob.style.left = '3px';
+        knob.style.background = '#c0392b';
     } else {
-        label.textContent = 'ENABLE NOTIFICATIONS';
-        if (desc) desc.textContent = 'Get alerts from Queen Karin';
-        status.textContent = 'OFF';
-        status.style.color = '#666';
+        label.textContent = 'NOTIFICATIONS';
+        if (desc) desc.textContent = 'Tap to enable';
+        track.style.background = '#333';
+        track.style.borderColor = '#555';
+        knob.style.left = '3px';
+        knob.style.background = '#888';
     }
 }
 

@@ -1329,11 +1329,13 @@ export default function ProfilePage() {
                                     <div className="hub-action-left">
                                         <div className="hub-action-icon-wrap">🔔</div>
                                         <div>
-                                            <div className="hub-action-label" id="notifHubLabel">ENABLE NOTIFICATIONS</div>
+                                            <div className="hub-action-label" id="notifHubLabel">NOTIFICATIONS</div>
                                             <div className="hub-action-desc" id="notifHubDesc">Get alerts from Queen Karin</div>
                                         </div>
                                     </div>
-                                    <span id="notifHubStatus" style={{ color: '#666', fontSize: '0.6rem', fontFamily: 'Orbitron', letterSpacing: 1 }}>OFF</span>
+                                    <div id="notifToggle" style={{ width: 44, height: 26, borderRadius: 13, background: '#333', border: '1px solid #555', position: 'relative', transition: 'background 0.3s', flexShrink: 0 }}>
+                                        <div id="notifToggleKnob" style={{ position: 'absolute', top: 3, left: 3, width: 18, height: 18, borderRadius: '50%', background: '#888', transition: 'left 0.3s, background 0.3s' }} />
+                                    </div>
                                 </button>
                                 <div className="hub-logout-row">
                                     <button className="hub-logout-btn" onClick={() => (window as any).handleLogout()}>LOGOUT</button>
