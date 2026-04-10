@@ -33,10 +33,10 @@ export default function LoginPage() {
             if (data && !data.error && (data.memberId || data.member_id)) {
                 router.push('/profile');
             } else {
-                router.push('/tribute');
+                router.push('/preview');
             }
         } catch {
-            router.push('/tribute');
+            router.push('/preview');
         }
     };
 
