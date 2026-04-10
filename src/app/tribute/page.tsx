@@ -121,6 +121,23 @@ export default function TributePage() {
         document.head.appendChild(script);
     }, []);
 
+    useEffect(() => {
+        if (showApplication) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        } else {
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        };
+    }, [showApplication]);
+
     const handleTribute = async () => {
         setLoading(true); setStatus(null);
         try {
@@ -504,9 +521,9 @@ export default function TributePage() {
 
 
             {/* ─── APPLICATION OVERLAY ─── */}
-            <div style={{ position: 'fixed', inset: 0, zIndex: 999999999, display: showApplication ? 'block' : 'none' }}>
-                <button onClick={() => setShowApplication(false)} style={{ position: 'absolute', top: 16, right: 20, zIndex: 9999999999, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', letterSpacing: '3px', cursor: 'pointer', padding: '8px 12px' }}>CLOSE</button>
-                <div data-fillout-id="uysxJDvsUGus" data-fillout-embed-type="fullscreen" style={{ width: '100%', height: '100%' }} data-fillout-inherit-parameters />
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', zIndex: 999999999, display: showApplication ? 'flex' : 'none', flexDirection: 'column', overflow: 'hidden', WebkitOverflowScrolling: 'touch' }}>
+                <button onClick={() => setShowApplication(false)} style={{ position: 'absolute', top: 16, right: 20, zIndex: 9999999999, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4, color: 'rgba(255,255,255,0.6)', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', letterSpacing: '3px', cursor: 'pointer', padding: '8px 14px' }}>CLOSE</button>
+                <div data-fillout-id="uysxJDvsUGus" data-fillout-embed-type="fullscreen" style={{ width: '100%', height: '100%', flex: 1 }} data-fillout-inherit-parameters />
             </div>
 
             {/* ─── DISOBEDIENCE OVERLAY ─── */}
@@ -530,7 +547,8 @@ export default function TributePage() {
 
             <style>{`
                 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-                ::-webkit-scrollbar { display: none; }
+                html, body { scrollbar-width: none; -ms-overflow-style: none; overflow-x: hidden; }
+                html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display: none; }
 
                 @keyframes tributeGlow {
                     0%,100% { box-shadow: 0 0 20px rgba(197,160,89,0.1), 0 8px 40px rgba(0,0,0,0.4); border-color: rgba(197,160,89,0.35); }
