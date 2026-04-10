@@ -144,7 +144,7 @@ export async function POST(req: Request) {
                             include_player_ids: [onesignalId],
                             headings: { en: 'Queen Karin' },
                             contents: { en: typeof content === 'string' ? content.slice(0, 100) : '👑 New message' },
-                            url: 'https://throne.qkarin.com/profile',
+                            url: 'https://throne.qkarin.com/profile?tab=chat',
                         }),
                     });
                     const pushData = await pushRes.json();
