@@ -8,7 +8,6 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [emailOpen, setEmailOpen] = useState(false);
-    const [mode, setMode] = useState<'signin'>('signin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -36,7 +35,6 @@ export default function LoginPage() {
         e.preventDefault();
         setLoading(true); setError(null);
         const supabase = createClient();
-
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) { setError(error.message); setLoading(false); }
         else window.location.href = '/profile';
@@ -71,7 +69,7 @@ export default function LoginPage() {
 
                 <button
                     className="email-toggle-btn"
-                    onClick={() => { setEmailOpen(o => !o); setError(null); setSuccess(null); setMode('signin'); }}
+                    onClick={() => { setEmailOpen(o => !o); setError(null); }}
                     disabled={loading}
                 >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -84,39 +82,15 @@ export default function LoginPage() {
                     <form className="email-form-inner" onSubmit={handleEmailSubmit}>
                         <div className="input-group">
                             <label>Email</label>
-                            <input
-                                type="email"
-                                placeholder="your@email.com"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                required
-                                autoComplete="email"
-                            />
+                            <input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
                         </div>
-
-                        {mode !== 'forgot' && (
-                            <div className="input-group">
-                                <label>Password</label>
-                                <input
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    required
-                                    autoComplete="current-password"
-                                />
-                                {mode === 'signin' && (
-                                    <button type="button" className="forgot-link" onClick={() => { setMode('forgot'); setError(null); setSuccess(null); }}>
-                                        Forgot password?
-                                    </button>
-                                )}
-                            </div>
-                        )}
-
+                        <div className="input-group">
+                            <label>Password</label>
+                            <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" />
+                        </div>
                         <button type="submit" className="login-btn" disabled={loading}>
                             {loading ? <><span className="loading-spinner" />Entering...</> : 'Enter'}
                         </button>
-
                         <div className="toggle-mode">
                             <span style={{ opacity: 0.4, fontSize: '0.7em' }}>Forgot password? Use Google or X to login.</span>
                         </div>
