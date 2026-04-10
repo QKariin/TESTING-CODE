@@ -117,25 +117,36 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: `Failed to store message: ${msgErr.message}` }, { status: 500 });
         }
 
-        // Fire push notification if Queen sent the message
-        console.log('[chat/send] push check — isQueen:', isQueen, 'conversationId:', conversationId, 'senderEmail:', senderEmail);
+        // Fire push notification directly via OneSignal (no HTTP round-trip)
         if (isQueen && conversationId) {
-            const pushUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com'}/api/push`;
-            console.log('[chat/send] firing push to', pushUrl, 'for', conversationId);
             try {
-                const pushRes = await fetch(pushUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        externalId: conversationId,
-                        title: 'Queen Karin',
-                        message: typeof content === 'string' ? content.slice(0, 100) : '👑 New message from your Queen',
-                    }),
-                });
-                const pushData = await pushRes.json().catch(() => ({}));
-                console.log('[chat/send] push result:', pushRes.status, JSON.stringify(pushData));
-            } catch (pushErr: any) {
-                console.error('[chat/send] push fetch error:', pushErr.message);
+                const { data: pushProfile } = await adminClient
+                    .from('profiles')
+                    .select('onesignal_id')
+                    .ilike('member_id', conversationId)
+                    .maybeSingle();
+                const onesignalId = pushProfile?.onesignal_id;
+                console.log('[push] onesignal_id for', conversationId, ':', onesignalId || 'NOT FOUND');
+                if (onesignalId) {
+                    const pushRes = await fetch('https://onesignal.com/api/v1/notifications', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Key ${process.env.ONESIGNAL_REST_API_KEY}`,
+                        },
+                        body: JSON.stringify({
+                            app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0',
+                            include_player_ids: [onesignalId],
+                            headings: { en: 'Queen Karin' },
+                            contents: { en: typeof content === 'string' ? content.slice(0, 100) : '👑 New message' },
+                            url: 'https://throne.qkarin.com/profile',
+                        }),
+                    });
+                    const pushData = await pushRes.json();
+                    console.log('[push] OneSignal result:', pushRes.status, JSON.stringify(pushData));
+                }
+            } catch (e: any) {
+                console.error('[push] error:', e.message);
             }
         }
 
