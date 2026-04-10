@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
 const RANKS = [
-    { title: "Hall Boy", contact: "15MIN DAILY SLOT", earn: "Your first direct contact slot with Queen Karin. 15 minutes daily. You are noticed.", speakCost: 20, benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks."], req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 } },
-    { title: "Footman", contact: "30MIN DAILY SLOT", earn: "Daily slot doubles to 30 minutes. You are being evaluated for reliability and speed.", speakCost: 15, benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine."], req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0 } },
+    { title: "Hall Boy", contact: "15MIN DAILY SLOT", earn: "You are noticed. Your record begins the moment you join. Queen Karin is watching.", speakCost: 20, benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks."], req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 } },
+    { title: "Footman", contact: "30MIN DAILY SLOT", earn: "You are being evaluated for reliability and speed. Daily contact slot doubles.", speakCost: 15, benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine."], req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0 } },
     { title: "Silverman", contact: "30MIN DAILY SLOT", earn: "Access to advanced challenges. Queen Karin expects more. You begin to show real worth.", speakCost: 10, benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions."], req: { tasks: 25, kneels: 65, points: 5000, spent: 5000, streak: 5 } },
     { title: "Butler", contact: "DAILY 2x30MIN SLOTS", earn: "Two 30-minute sessions daily. Trust established. You are now a fixture of service.", speakCost: 5, benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions."], req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 30 } },
     { title: "Chamberlain", contact: "UNLIMITED", earn: "Unlimited contact. Senior position. Queen Karin relies on your presence and performance.", speakCost: 0, benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."], req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 90 } },
@@ -27,8 +27,6 @@ export default function TributePage() {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<string | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
-    const [taskState, setTaskState] = useState<'idle' | 'received'>('idle');
-    const [disobedience, setDisobedience] = useState(false);
     const [activeRank, setActiveRank] = useState(0);
 
     const [visibleItems, setVisibleItems] = useState<boolean[]>(Array(6).fill(false));
@@ -97,8 +95,8 @@ export default function TributePage() {
     return (
         <div style={{ background: '#020512', color: '#fff', overflowX: 'hidden' }}>
             {/* Fixed backgrounds */}
-            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.18, zIndex: 0, pointerEvents: 'none' }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(197,160,89,0.04) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.42, zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,5,18,0.55) 0%, rgba(2,5,18,0.75) 60%, rgba(2,5,18,0.92) 100%)', zIndex: 0, pointerEvents: 'none' }} />
 
             {/* ── ALL CONTENT ── */}
             <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: 'clamp(48px,8vw,80px) clamp(20px,5vw,36px) 160px' }}>
@@ -199,11 +197,9 @@ export default function TributePage() {
                                             {/* Title */}
                                             <div style={{ fontFamily: 'Cinzel,serif', fontSize: '24px', color: isLast ? gold : '#fff', fontWeight: 600, letterSpacing: '2px', marginBottom: 10 }}>{rank.title}</div>
 
-                                            {/* Contact slot badge */}
-                                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 22 }}>
-                                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: gold, letterSpacing: '3px', padding: '5px 12px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 3 }}>{rank.contact}</div>
-                                                {!unlocked && <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', padding: '5px 10px', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 3 }}>LOCKED</div>}
-                                            </div>
+                                            {/* Lock badge for locked ranks */}
+                                            {!unlocked && <div style={{ display: 'inline-block', fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', padding: '5px 10px', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 3, marginBottom: 22 }}>LOCKED</div>}
+                                            {unlocked && <div style={{ marginBottom: 22 }} />}
 
                                             {/* Body: unlocked or locked */}
                                             {unlocked ? (
@@ -373,29 +369,15 @@ export default function TributePage() {
                     {/* luxury-card */}
                     <div style={{ background: 'linear-gradient(160deg, rgba(6,4,18,0.97) 0%, rgba(3,2,12,0.99) 100%)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', boxShadow: '0 24px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(197,160,89,0.06)', borderRadius: 3, padding: '32px 20px 28px', position: 'relative', overflow: 'hidden', width: '95%', margin: '10px auto', boxSizing: 'border-box', backdropFilter: 'blur(24px)' } as React.CSSProperties}>
                         <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.5), transparent)' }} />
-                        {taskState === 'idle' ? (
-                            <div style={{ textAlign: 'center' }}>
-                                {/* txt-status-red */}
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', fontWeight: 400, letterSpacing: '8px', color: 'rgba(197,160,89,0.28)', textTransform: 'uppercase', textAlign: 'center', marginBottom: 24 }}>AWAITING ORDERS</div>
-                                {/* lobby-btn */}
-                                <button onClick={() => setTaskState('received')} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: 'pointer', padding: '18px 0', borderRadius: 2, border: '1px solid rgba(197,160,89,0.45)', color: '#c5a059', background: 'rgba(197,160,89,0.04)', backdropFilter: 'blur(14px)', boxShadow: '0 2px 20px rgba(0,0,0,0.5)', display: 'block', textAlign: 'center', width: '88%', margin: '0 auto', outline: 'none' }}>
-                                    REQUEST TASK
-                                </button>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', fontWeight: 400, letterSpacing: '8px', color: 'rgba(197,160,89,0.28)', textTransform: 'uppercase', textAlign: 'center', marginBottom: 24 }}>AWAITING ORDERS</div>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, padding: '18px 16px', background: 'rgba(197,160,89,0.03)', borderRadius: 2, marginBottom: 22, border: '1px solid rgba(197,160,89,0.1)', borderLeft: '2px solid rgba(197,160,89,0.3)', letterSpacing: '0.3px', textAlign: 'left' }}>
+                                Pay tribute to Queen Karin and gain full access to everything she has built.
                             </div>
-                        ) : (
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, padding: '18px 16px', background: 'rgba(197,160,89,0.03)', borderRadius: 2, marginBottom: 18, border: '1px solid rgba(197,160,89,0.1)', borderLeft: '2px solid rgba(197,160,89,0.3)', letterSpacing: '0.3px' }}>
-                                    Complete 5 kneeling sessions today.<br />
-                                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>Submit proof to Queen Karin before midnight.</span>
-                                </div>
-                                <button onClick={handleTribute} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: 'pointer', padding: '18px 0', borderRadius: 2, border: 'none', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', display: 'block', width: '88%', margin: '0 auto 10px', boxShadow: '0 4px 20px rgba(197,160,89,0.3)' }}>
-                                    Yes, Queen Karin
-                                </button>
-                                <button onClick={() => setDisobedience(true)} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', letterSpacing: '2px', cursor: 'pointer', padding: '14px 0', borderRadius: 2, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.25)', display: 'block', width: '88%', margin: '0 auto', textTransform: 'uppercase' }}>
-                                    Skip task
-                                </button>
-                            </div>
-                        )}
+                            <button onClick={handleTribute} disabled={loading} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', padding: '18px 0', borderRadius: 2, border: 'none', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', display: 'block', width: '88%', margin: '0 auto', boxShadow: '0 4px 20px rgba(197,160,89,0.3)', opacity: loading ? 0.6 : 1 }}>
+                                {loading ? '...' : 'Send Tribute'}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -417,26 +399,6 @@ export default function TributePage() {
             </div>
 
 
-            {/* ─── DISOBEDIENCE OVERLAY ─── */}
-            {disobedience && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 99999999, background: 'rgba(8,0,0,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 28 }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 40% at 50% 40%, rgba(180,0,0,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
-                    <div style={{ position: 'relative', width: '100%', maxWidth: 400, background: 'linear-gradient(160deg, rgba(25,3,3,0.99) 0%, rgba(15,1,1,0.99) 100%)', border: '1px solid rgba(200,30,30,0.4)', borderTop: '2px solid rgba(220,50,50,0.7)', borderRadius: 4, padding: '36px 24px 28px', textAlign: 'center', boxShadow: '0 0 60px rgba(200,0,0,0.2), 0 0 120px rgba(200,0,0,0.08)' }}>
-                        <div style={{ position: 'absolute', top: 0, left: '15%', right: '15%', height: 1, background: 'linear-gradient(to right, transparent, rgba(220,50,50,0.6), transparent)' }} />
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '11px', color: 'rgba(220,50,50,0.6)', letterSpacing: '6px', marginBottom: 18 }}>DISOBEDIENCE DETECTED</div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '22px', color: '#fff', fontWeight: 700, letterSpacing: '2px', marginBottom: 12, lineHeight: 1.3 }}>Disobedience<br/>Has a Price.</div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 28 }}>
-                            Skipping is noted. Your record is updated. Queen Karin does not forget.
-                        </div>
-                        <button onClick={handleTribute} style={{ width: '100%', padding: '14px 0', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Cinzel,serif', fontSize: '14px', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer', marginBottom: 10 }}>
-                            I Obey — Send Tribute
-                        </button>
-                        <button onClick={() => { setDisobedience(false); setTaskState('idle'); }} style={{ width: '100%', padding: '12px 0', background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, color: 'rgba(255,255,255,0.2)', fontFamily: 'Cinzel,serif', fontSize: '13px', cursor: 'pointer' }}>
-                            Leave
-                        </button>
-                    </div>
-                </div>
-            )}
 
             <style>{`
                 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
