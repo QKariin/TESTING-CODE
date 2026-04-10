@@ -30,6 +30,7 @@ export default function TributePage() {
     const [taskRevealed, setTaskRevealed] = useState(false);
     const [disobedience, setDisobedience] = useState(false);
     const [activeRank, setActiveRank] = useState(1);
+    const [showApplication, setShowApplication] = useState(false);
 
     const [visibleItems, setVisibleItems] = useState<boolean[]>(Array(6).fill(false));
     const [sectionVisible, setSectionVisible] = useState(false);
@@ -109,6 +110,17 @@ export default function TributePage() {
         window.addEventListener('scroll', update, { passive: true });
         return () => window.removeEventListener('scroll', update);
     }, []);
+
+    useEffect(() => {
+        if (!showApplication) return;
+        const existing = document.getElementById('fillout-script');
+        if (existing) return;
+        const script = document.createElement('script');
+        script.id = 'fillout-script';
+        script.src = 'https://server.fillout.com/embed/v1/';
+        script.async = true;
+        document.head.appendChild(script);
+    }, [showApplication]);
 
     const handleTribute = async () => {
         setLoading(true); setStatus(null);
@@ -464,6 +476,20 @@ export default function TributePage() {
                         {loading ? 'Initializing...' : 'Send Tribute'}
                     </button>
                     {status && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: gold, letterSpacing: '2px', marginBottom: 14 }}>{status}</div>}
+
+                    {/* Application divider */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '32px 0 20px' }}>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(180,30,30,0.25))' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(180,30,30,0.5)', letterSpacing: '4px' }}>OR</div>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(180,30,30,0.25))' }} />
+                    </div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.8, marginBottom: 18, maxWidth: 460, marginLeft: 'auto', marginRight: 'auto' }}>
+                        For experienced submissives who are ready to be owned. No limits. No hesitation. Obedient to every order, at any time, without question.
+                    </div>
+                    <button onClick={() => setShowApplication(true)} style={{ width: '100%', padding: '20px 24px', background: 'rgba(4,2,8,0.97)', border: '1px solid rgba(180,30,30,0.6)', borderTop: '2px solid rgba(200,40,40,0.8)', color: 'rgba(200,40,40,0.9)', fontFamily: 'Cinzel,serif', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '8px', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4, marginBottom: 32, boxShadow: '0 0 30px rgba(180,0,0,0.1),0 8px 40px rgba(0,0,0,0.4)' }}>
+                        Application
+                    </button>
+
                     {userEmail && <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.37rem', color: 'rgba(197,160,89,0.22)', letterSpacing: '2px', marginBottom: 18 }}>Logged in as <span style={{ color: 'rgba(197,160,89,0.4)' }}>{userEmail}</span></div>}
                     <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', fontFamily: 'Cinzel,serif', fontSize: '0.58rem', letterSpacing: '2px', cursor: 'pointer', padding: '8px 0', display: 'block', margin: '0 auto' }}>Logout / Switch account</button>
                     <div style={{ marginTop: 36, fontFamily: 'Orbitron,sans-serif', fontSize: '0.36rem', color: 'rgba(255,255,255,0.07)', letterSpacing: '3px' }}>Property of Queen Karin &nbsp;·&nbsp; Est. 2024</div>
@@ -471,6 +497,14 @@ export default function TributePage() {
             </div>
 
 
+
+            {/* ─── APPLICATION OVERLAY ─── */}
+            {showApplication && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 999999999 }}>
+                    <button onClick={() => setShowApplication(false)} style={{ position: 'absolute', top: 16, right: 20, zIndex: 9999999999, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', letterSpacing: '3px', cursor: 'pointer', padding: '8px 12px' }}>CLOSE</button>
+                    <div data-fillout-id="uysxJDvsUGus" data-fillout-embed-type="fullscreen" style={{ width: '100%', height: '100%' }} data-fillout-inherit-parameters />
+                </div>
+            )}
 
             {/* ─── DISOBEDIENCE OVERLAY ─── */}
             {disobedience && (
