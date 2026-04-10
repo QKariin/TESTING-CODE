@@ -4,22 +4,22 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
 const HIERARCHY = [
-    { title: "HallBoy", icon: "🧹", points: "0+", status: "First line of service.", protocol: "Perform basic tasks.", duties: "Prove you live to serve.", contact: "15MIN DAILY SLOT", locked: false },
-    { title: "Footman", icon: "🚶‍♂️", points: "2,000+", status: "Time to earn your place.", protocol: "Serve quickly and reliably.", duties: "Perfect Timing.", contact: "30MIN DAILY SLOT", locked: true },
-    { title: "Silverman", icon: "🍴", points: "5,000+", status: "Skilled and polished sub.", protocol: "Focus on improvement.", duties: "Face all challenges.", contact: "30MIN DAILY SLOT", locked: true },
-    { title: "Butler", icon: "🍷", points: "10,000+", status: "Mastered consistency.", protocol: "Notice needs without being told.", duties: "Devotion is foundation.", contact: "DAILY 2×30MIN SLOTS", locked: true },
-    { title: "Chamberlain", icon: "🏰", points: "20,000+", status: "Act with excellence.", protocol: "Carry yourself with dignity.", duties: "Uphold standards.", contact: "UNLIMITED", locked: true },
-    { title: "Secretary", icon: "📜", points: "50,000+", status: "Inner Circle.", protocol: "Respect and safeguard.", duties: "Authority on smaller matters.", contact: "UNLIMITED", locked: true },
-    { title: "Queen's Champion", icon: "⚔️", points: "100,000+", status: "You have made it!", protocol: "2 bodies, 1 soul!", duties: "Enjoy the love you earned.", contact: "LEGENDARY", locked: true },
+    { title: "HallBoy", points: 0, pointsLabel: "Entry rank", status: "First line of service.", protocol: "Perform basic tasks.", duties: "Prove you live to serve.", contact: "15MIN DAILY SLOT", earn: "Your first direct contact slot with Queen Karin. 15 minutes daily. You are noticed." },
+    { title: "Footman", points: 2000, pointsLabel: "2,000+ pts", status: "Time to earn your place.", protocol: "Serve quickly and reliably.", duties: "Perfect Timing.", contact: "30MIN DAILY SLOT", earn: "Daily slot doubles to 30 minutes. You are being evaluated for reliability and speed." },
+    { title: "Silverman", points: 5000, pointsLabel: "5,000+ pts", status: "Skilled and polished sub.", protocol: "Focus on improvement.", duties: "Face all challenges.", contact: "30MIN DAILY SLOT", earn: "Access to advanced challenges. Queen Karin expects more. You begin to show real worth." },
+    { title: "Butler", points: 10000, pointsLabel: "10,000+ pts", status: "Mastered consistency.", protocol: "Notice needs without being told.", duties: "Devotion is foundation.", contact: "DAILY 2x30MIN SLOTS", earn: "Two 30-minute sessions daily. Trust established. You are now a fixture of service." },
+    { title: "Chamberlain", points: 20000, pointsLabel: "20,000+ pts", status: "Act with excellence.", protocol: "Carry yourself with dignity.", duties: "Uphold standards.", contact: "UNLIMITED", earn: "Unlimited contact. Senior position. Queen Karin relies on your presence and performance." },
+    { title: "Secretary", points: 50000, pointsLabel: "50,000+ pts", status: "Inner Circle.", protocol: "Respect and safeguard.", duties: "Authority on smaller matters.", contact: "UNLIMITED", earn: "Inner Circle access. You handle matters of trust. Unlimited and unrestricted presence." },
+    { title: "Queen's Champion", points: 100000, pointsLabel: "100,000+ pts", status: "You have made it.", protocol: "2 bodies, 1 soul.", duties: "Enjoy the love you earned.", contact: "LEGENDARY", earn: "The highest honour. Legendary status. This is not a rank — it is a bond." },
 ];
 
 const TRACKED = [
-    { label: "Tasks Completed", icon: "✓", desc: "Every task assigned, executed, and graded." },
-    { label: "Kneeling Sessions", icon: "⬇", desc: "Daily worship sessions — time and frequency." },
-    { label: "Tribute History", icon: "◈", desc: "Full financial devotion record." },
-    { label: "Locked Time", icon: "⏱", desc: "Total time spent under lock and control." },
-    { label: "Consistency Score", icon: "◉", desc: "Your reliability and daily commitment level." },
-    { label: "Daily Routine", icon: "📋", desc: "Morning and evening routine upload history." },
+    { label: "Tasks Completed", desc: "Every task assigned, executed, and graded." },
+    { label: "Kneeling Sessions", desc: "Daily worship sessions — time and frequency." },
+    { label: "Tribute History", desc: "Full financial devotion record." },
+    { label: "Locked Time", desc: "Total time spent under lock and control." },
+    { label: "Consistency Score", desc: "Your reliability and daily commitment level." },
+    { label: "Daily Routine", desc: "Morning and evening routine upload history." },
 ];
 
 
@@ -29,6 +29,7 @@ export default function TributePage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [taskState, setTaskState] = useState<'idle' | 'received'>('idle');
     const [disobedience, setDisobedience] = useState(false);
+    const [activeRank, setActiveRank] = useState(0);
 
     const [visibleItems, setVisibleItems] = useState<boolean[]>(Array(6).fill(false));
     const [sectionVisible, setSectionVisible] = useState(false);
@@ -137,9 +138,7 @@ export default function TributePage() {
                                 filter: visibleItems[i] ? 'blur(0)' : 'blur(3px)',
                                 transition: 'opacity 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1), filter 0.4s ease, border-color 0.4s ease',
                             }}>
-                                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1rem', color: gold }}>
-                                    {item.icon}
-                                </div>
+                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: gold, boxShadow: `0 0 6px ${gold}`, flexShrink: 0, animation: 'pulse 2s infinite' }} />
                                 <div style={{ flex: 1 }}>
                                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.85)', letterSpacing: '1.5px', marginBottom: 3 }}>{item.label}</div>
                                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>{item.desc}</div>
@@ -153,46 +152,91 @@ export default function TributePage() {
                     </div>
                 </div>
 
-                {/* ─── HIERARCHY (horizontal scroll) ─── */}
+                {/* ─── HIERARCHY ─── */}
                 <div style={{ marginBottom: 52 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>THE HIERARCHY</div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>THE HIERARCHY</div>
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
                     </div>
-                    <p style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, margin: '0 0 16px', textAlign: 'center' }}>
-                        Merit is earned through tasks, challenges, and daily devotion. Higher ranks unlock more access.
-                    </p>
-                    <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 12, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-                        {HIERARCHY.map((rank) => (
-                            <div key={rank.title} style={{ position: 'relative', flexShrink: 0, width: 200, background: rank.locked ? 'rgba(6,4,16,0.7)' : 'linear-gradient(160deg, rgba(6,4,18,0.97) 0%, rgba(3,2,12,0.99) 100%)', border: rank.locked ? '1px solid rgba(197,160,89,0.07)' : '1px solid rgba(197,160,89,0.25)', borderTop: rank.locked ? '2px solid rgba(197,160,89,0.1)' : '2px solid rgba(197,160,89,0.45)', borderRadius: 3, padding: '20px 16px 18px' }}>
-                                {rank.locked && (
-                                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.7)', borderRadius: 3, zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, backdropFilter: 'blur(3px)' }}>
-                                        <div style={{ fontSize: '1.4rem', opacity: 0.4 }}>🔒</div>
-                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(197,160,89,0.35)', letterSpacing: '3px' }}>LOCKED</div>
-                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>{rank.points} PTS</div>
-                                    </div>
-                                )}
-                                <div style={{ fontSize: '1.4rem', marginBottom: 8 }}>{rank.icon}</div>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.88rem', color: rank.title === "Queen's Champion" ? gold : '#fff', fontWeight: 600, letterSpacing: '1px', marginBottom: 10 }}>{rank.title}</div>
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '2px', marginBottom: 12, padding: '4px 8px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 4, display: 'inline-block' }}>{rank.contact}</div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                                    {[rank.status, rank.protocol, rank.duties].map((txt, j) => (
-                                        <div key={j} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-                                            <div style={{ width: 3, height: 3, borderRadius: '50%', background: gold, opacity: 0.5, marginTop: 5, flexShrink: 0 }} />
-                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>{txt}</div>
-                                        </div>
-                                    ))}
+
+                    {(() => {
+                        const rank = HIERARCHY[activeRank];
+                        const isFirst = activeRank === 0;
+                        const isLast = activeRank === HIERARCHY.length - 1;
+                        return (
+                            <div style={{ background: 'linear-gradient(160deg, rgba(6,4,18,0.97) 0%, rgba(3,2,12,0.99) 100%)', border: `1px solid rgba(197,160,89,${isFirst ? '0.3' : '0.12'})`, borderTop: `2px solid rgba(197,160,89,${isFirst ? '0.5' : '0.2'})`, borderRadius: 4, padding: '28px 22px 24px', position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.4), transparent)' }} />
+
+                                {/* Rank counter */}
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.35)', letterSpacing: '4px', marginBottom: 16 }}>
+                                    RANK {activeRank + 1} OF {HIERARCHY.length}
                                 </div>
-                                {!rank.locked && (
-                                    <button onClick={handleTribute} style={{ marginTop: 18, width: '100%', padding: '10px 0', borderRadius: 6, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', fontWeight: 700, letterSpacing: '2px' }}>
-                                        START HERE →
-                                    </button>
-                                )}
+
+                                {/* Title + contact slot */}
+                                <div style={{ marginBottom: 20 }}>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '22px', color: isLast ? gold : '#fff', fontWeight: 600, letterSpacing: '2px', marginBottom: 10 }}>{rank.title}</div>
+                                    <div style={{ display: 'inline-block', fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: gold, letterSpacing: '3px', padding: '5px 12px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 3 }}>{rank.contact}</div>
+                                </div>
+
+                                {/* To reach */}
+                                <div style={{ marginBottom: 18 }}>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 10 }}>
+                                        {isFirst ? 'YOUR STARTING RANK' : 'TO REACH THIS RANK'}
+                                    </div>
+                                    {isFirst ? (
+                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>This is where every member begins. No requirements. Your record starts here the moment you join.</div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                                <div style={{ width: 1, height: '100%', background: gold, opacity: 0.3, flexShrink: 0, marginTop: 6, alignSelf: 'stretch' }} />
+                                                <div>
+                                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '12px', color: gold, letterSpacing: '1px', marginBottom: 2 }}>{rank.pointsLabel}</div>
+                                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>Earned through tasks, kneeling, challenges, and daily consistency.</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Divider */}
+                                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.15), transparent)', marginBottom: 18 }} />
+
+                                {/* What you earn */}
+                                <div style={{ marginBottom: 22 }}>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 10 }}>WHAT YOU EARN</div>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: 14 }}>{rank.earn}</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                                        {[rank.status, rank.protocol, rank.duties].map((txt, j) => (
+                                            <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                                <div style={{ width: 3, height: 3, background: gold, opacity: 0.5, marginTop: 6, flexShrink: 0, borderRadius: 1 }} />
+                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>{txt}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button onClick={handleTribute} style={{ width: '100%', padding: '13px 0', borderRadius: 4, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '3px' }}>
+                                    {isFirst ? 'START HERE' : 'UNLOCK ACCESS'}
+                                </button>
                             </div>
-                        ))}
+                        );
+                    })()}
+
+                    {/* Navigation */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
+                        <button onClick={() => setActiveRank(r => Math.max(0, r - 1))} disabled={activeRank === 0} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: activeRank === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.6)', background: 'none', border: 'none', cursor: activeRank === 0 ? 'default' : 'pointer', letterSpacing: '2px', padding: '8px 0' }}>
+                            PREV
+                        </button>
+                        <div style={{ display: 'flex', gap: 7 }}>
+                            {HIERARCHY.map((_, i) => (
+                                <div key={i} onClick={() => setActiveRank(i)} style={{ width: i === activeRank ? 18 : 5, height: 5, borderRadius: 3, background: i === activeRank ? gold : 'rgba(255,255,255,0.12)', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: i === activeRank ? `0 0 8px ${gold}` : 'none' }} />
+                            ))}
+                        </div>
+                        <button onClick={() => setActiveRank(r => Math.min(HIERARCHY.length - 1, r + 1))} disabled={activeRank === HIERARCHY.length - 1} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: activeRank === HIERARCHY.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.6)', background: 'none', border: 'none', cursor: activeRank === HIERARCHY.length - 1 ? 'default' : 'pointer', letterSpacing: '2px', padding: '8px 0' }}>
+                            NEXT
+                        </button>
                     </div>
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(197,160,89,0.25)', letterSpacing: '3px', textAlign: 'center', marginTop: 8 }}>← SCROLL TO EXPLORE RANKS →</div>
                 </div>
 
                 {/* ─── CHALLENGE CARD ─── */}
@@ -212,7 +256,7 @@ export default function TributePage() {
                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, animation: 'pulse 2s infinite', flexShrink: 0 }} />
                                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: gold, letterSpacing: '3px' }}>CHALLENGE ACTIVE</div>
                             </div>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px' }}>⚔ CHALLENGE TASKS</div>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px' }}>CHALLENGE TASKS</div>
                         </div>
 
                         {/* Locked body */}
@@ -232,10 +276,12 @@ export default function TributePage() {
                             </div>
                             {/* Lock overlay */}
                             <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.75)', backdropFilter: 'blur(2px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                                <div style={{ fontSize: '1.8rem' }}>🔒</div>
+                                <div style={{ width: 28, height: 28, border: `2px solid rgba(197,160,89,0.5)`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ width: 10, height: 12, borderTop: `2px solid ${gold}`, borderLeft: `2px solid ${gold}`, borderRight: `2px solid ${gold}`, borderRadius: '2px 2px 0 0' }} />
+                                </div>
                                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '11px', color: 'rgba(197,160,89,0.7)', letterSpacing: '4px' }}>UNLOCK ACCESS</div>
                                 <button onClick={handleTribute} disabled={loading} style={{ marginTop: 4, padding: '10px 28px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', letterSpacing: '2px', fontWeight: 700, cursor: 'pointer' }}>
-                                    {loading ? '...' : '⚔ JOIN CHALLENGE'}
+                                    {loading ? '...' : 'JOIN CHALLENGE'}
                                 </button>
                             </div>
                         </div>
