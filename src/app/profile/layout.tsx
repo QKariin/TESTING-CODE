@@ -27,7 +27,16 @@ function PaymentForm({ email, onSuccess }: { email: string; onSuccess: () => voi
     const [processing, setProcessing] = useState(false);
     const [expressReady, setExpressReady] = useState(false);
 
-    async function confirm() {
+    async function handleSuccess(intentId: string) {
+        await fetch('/api/paywall/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ intentId, memberId: email }),
+        }).catch(() => {});
+        onSuccess();
+    }
+
+    async function confirmCard() {
         if (!stripe || !elements) return;
         setProcessing(true);
         setError('');
@@ -42,19 +51,29 @@ function PaymentForm({ email, onSuccess }: { email: string; onSuccess: () => voi
             return;
         }
         if (paymentIntent?.status === 'succeeded') {
-            await fetch('/api/paywall/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ intentId: paymentIntent.id, memberId: email }),
-            });
-            onSuccess();
+            await handleSuccess(paymentIntent.id);
+        }
+    }
+
+    async function confirmExpress(event: any) {
+        if (!stripe || !elements) { event?.paymentFailed?.({ reason: 'fail' }); return; }
+        const { error: submitErr } = await elements.submit();
+        if (submitErr) { event?.paymentFailed?.({ reason: 'fail' }); return; }
+        const { error: err, paymentIntent } = await stripe.confirmPayment({
+            elements,
+            confirmParams: { return_url: window.location.href },
+            redirect: 'if_required',
+        });
+        if (err) { event?.paymentFailed?.({ reason: 'fail' }); return; }
+        if (paymentIntent?.status === 'succeeded') {
+            await handleSuccess(paymentIntent.id);
         }
     }
 
     return (
         <div style={{ width: '100%' }}>
             <ExpressCheckoutElement
-                onConfirm={async () => { await confirm(); }}
+                onConfirm={confirmExpress}
                 onReady={(e: any) => {
                     const methods = e?.availablePaymentMethods;
                     setExpressReady(!!(methods && Object.keys(methods).length > 0));
@@ -72,7 +91,7 @@ function PaymentForm({ email, onSuccess }: { email: string; onSuccess: () => voi
                 </div>
             )}
             <button
-                onClick={confirm}
+                onClick={confirmCard}
                 disabled={processing || !stripe}
                 style={{ width: '100%', marginTop: 20, padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: processing ? 'not-allowed' : 'pointer', opacity: processing ? 0.7 : 1, boxShadow: '0 8px 30px rgba(197,160,89,0.3)' }}
             >
