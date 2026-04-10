@@ -91,11 +91,6 @@ export default function TributePage() {
 
     const gold = '#c5a059';
 
-    // Compute per-item animation progress
-    const itemEP = TRACKED.map((_, i) => easeOutBack(clamp((trackedP - itemStart(i)) / (itemEnd(i) - itemStart(i)), 0, 1)));
-    const headerEP = clamp((trackedP - 0.02) / 0.08, 0, 1);
-    const allDone = trackedP >= 0.96;
-
     return (
         <div style={{ background: '#020512', color: '#fff', overflowX: 'hidden' }}>
             {/* Fixed backgrounds */}
