@@ -3,39 +3,21 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
-function Divider() {
-    return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '48px 0' }}>
-            <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.15))' }} />
-            <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: 'rgba(197,160,89,0.25)', letterSpacing: '4px' }}>✦</div>
-            <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(197,160,89,0.15), transparent)' }} />
-        </div>
-    );
-}
-
-function LockOverlay() {
-    return (
-        <div style={{
-            position: 'absolute', inset: 0, zIndex: 10, borderRadius: 'inherit',
-            background: 'linear-gradient(180deg, rgba(2,5,18,0) 0%, rgba(2,5,18,0.7) 50%, rgba(2,5,18,0.95) 100%)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
-            padding: '20px',
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px' }}>TRIBUTE REQUIRED TO ACCESS</span>
-            </div>
-        </div>
-    );
-}
+const HIERARCHY = [
+    { title: "HallBoy", icon: "🧹", points: "0+", contact: "15MIN DAILY SLOT" },
+    { title: "Footman", icon: "🚶‍♂️", points: "2,000+", contact: "30MIN DAILY SLOT" },
+    { title: "Silverman", icon: "🍴", points: "5,000+", contact: "30MIN DAILY SLOT" },
+    { title: "Butler", icon: "🍷", points: "10,000+", contact: "DAILY 2×30MIN" },
+    { title: "Chamberlain", icon: "🏰", points: "20,000+", contact: "UNLIMITED" },
+    { title: "Secretary", icon: "📜", points: "50,000+", contact: "UNLIMITED" },
+    { title: "Queen's Champion", icon: "⚔️", points: "100,000", contact: "LEGENDARY" },
+];
 
 export default function TributePage() {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<string | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
+    const [taskState, setTaskState] = useState<'idle' | 'received'>('idle');
 
     useEffect(() => {
         const init = async () => {
@@ -46,7 +28,6 @@ export default function TributePage() {
                 || (user.user_metadata?.user_name ? `@${user.user_metadata.user_name}` : null)
                 || 'Unknown';
             setUserEmail(display);
-            // Already paid? redirect straight to profile
             try {
                 const res = await fetch('/api/auth/link-profile', { method: 'POST' });
                 const data = await res.json();
@@ -77,211 +58,132 @@ export default function TributePage() {
         window.location.href = '/login';
     };
 
+    const gold = '#c5a059';
+    const cardBg = 'rgba(6,4,16,0.92)';
+    const border = '1px solid rgba(197,160,89,0.2)';
+
     return (
         <div style={{ background: '#020512', minHeight: '100vh', color: '#fff', overflowX: 'hidden' }}>
+            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/login-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.09, zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(197,160,89,0.04) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
 
-            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/login-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.08, zIndex: 0, pointerEvents: 'none' }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(197,160,89,0.05) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: 'clamp(48px,8vw,80px) clamp(20px,5vw,36px) 100px' }}>
 
-            <div style={{ position: 'relative', zIndex: 1, maxWidth: 660, margin: '0 auto', padding: 'clamp(48px, 8vw, 80px) clamp(20px, 5vw, 40px) 100px' }}>
-
-                {/* HERO */}
-                <div style={{ textAlign: 'center', marginBottom: 64 }}>
-                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.3rem', color: 'rgba(197,160,89,0.35)', letterSpacing: '10px', marginBottom: 18 }}>✦</div>
-                    <h1 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.5rem, 5vw, 2.4rem)', color: '#c5a059', letterSpacing: '8px', textTransform: 'uppercase', margin: '0 0 14px', fontWeight: 600 }}>Queen Karin</h1>
-                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.48rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: 36 }}>MEMBERSHIP PREVIEW</div>
-                    <div style={{ width: 80, height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.35), transparent)', margin: '0 auto 36px' }} />
-                    <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(0.78rem, 2vw, 0.9rem)', color: 'rgba(255,255,255,0.4)', lineHeight: 1.9, letterSpacing: '0.5px', maxWidth: 460, margin: '0 auto' }}>
-                        You have been granted a glimpse behind the gates. This is what awaits those who earn the right to serve.
+                {/* HEADER */}
+                <div style={{ textAlign: 'center', marginBottom: 52 }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.2rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '10px', marginBottom: 14 }}>✦</div>
+                    <h1 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.5rem,5vw,2.4rem)', color: gold, letterSpacing: '8px', textTransform: 'uppercase', margin: '0 0 12px', fontWeight: 600 }}>Queen Karin</h1>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.45rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: 28 }}>EXCLUSIVE ACCESS</div>
+                    <div style={{ width: 70, height: 1, background: `linear-gradient(90deg,transparent,${gold}55,transparent)`, margin: '0 auto 28px' }} />
+                    <p style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.9, maxWidth: 460, margin: '0 auto' }}>
+                        Your presence has been noted. Queen Karin is watching. This is what awaits those who choose to serve.
                     </p>
                 </div>
 
-                {/* I. THE CHALLENGE */}
-                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 8 }}>I — The Challenge</div>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: '#fff', fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 10 }}>Compete. Prove. Ascend.</div>
-                <p style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.9, letterSpacing: '0.5px', margin: '0 0 22px' }}>
-                    Every cycle, a new challenge is issued to all members. Tasks are assigned in timed windows — miss them and your rank suffers. Those who perform best rise. Those who fail, fall.
-                </p>
-                <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.2)', marginBottom: 10 }}>
-                    <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.15 }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(8,5,22,0.88) 0%, rgba(2,3,14,0.97) 100%)' }} />
-                    <div style={{ position: 'relative', padding: '22px 22px 28px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 10px rgba(197,160,89,0.9)' }} />
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px' }}>ACTIVE CHALLENGE</div>
+                {/* TRACKING NOTICE */}
+                <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10, padding: '14px 18px', marginBottom: 44, display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, flexShrink: 0, animation: 'pulse 2s infinite' }} />
+                    <div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: gold, letterSpacing: '3px', marginBottom: 3 }}>YOUR RECORD IS BEING TRACKED</div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.6 }}>
+                            Queen Karin monitors every visit, every interaction, every tribute paid. Your devotion — or lack of it — does not go unnoticed.
                         </div>
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.35rem', fontWeight: 700, color: '#fff', letterSpacing: '2px', marginBottom: 6 }}>The Devotion Trial</div>
-                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '2px', marginBottom: 22 }}>NEXT WINDOW OPENS IN 04:32:17</div>
-                        <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
-                            {[['24', 'ENROLLED'], ['3', 'WINDOWS LEFT'], ['7', 'DAYS REMAINING']].map(([val, lbl]) => (
-                                <div key={lbl} style={{ flex: 1, background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, padding: '10px 6px', textAlign: 'center' }}>
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.1rem', color: '#fff', fontWeight: 700 }}>{val}</div>
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.34rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '1.5px', marginTop: 3 }}>{lbl}</div>
+                    </div>
+                </div>
+
+                {/* HIERARCHY */}
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '4px', marginBottom: 8 }}>THE HIERARCHY</div>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: '#fff', fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 10 }}>Where Will You Stand?</div>
+                <p style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.32)', lineHeight: 1.8, margin: '0 0 18px' }}>
+                    Every member is ranked. Merit is earned through tasks, challenges, and daily devotion. Higher ranks unlock more access, more contact time, more privilege.
+                </p>
+                <div style={{ background: cardBg, border, borderRadius: 14, overflow: 'hidden', marginBottom: 44 }}>
+                    {HIERARCHY.map((rank, i) => (
+                        <div key={rank.title} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 20px', borderBottom: i < HIERARCHY.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', background: i === 0 ? 'rgba(197,160,89,0.04)' : 'transparent' }}>
+                            <div style={{ fontSize: '1.1rem', width: 28, textAlign: 'center', flexShrink: 0 }}>{rank.icon}</div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: i === HIERARCHY.length - 1 ? gold : '#fff', fontWeight: i === HIERARCHY.length - 1 ? 700 : 400, letterSpacing: '1px' }}>{rank.title}</div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 2 }}>{rank.contact}</div>
+                            </div>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px', flexShrink: 0 }}>{rank.points} pts</div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* CHALLENGE CARD */}
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '4px', marginBottom: 8 }}>ACTIVE CHALLENGE</div>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: '#fff', fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 10 }}>Compete Against Others.</div>
+                <p style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.32)', lineHeight: 1.8, margin: '0 0 18px' }}>
+                    Monthly challenges are issued to all members. Timed task windows open without warning. Complete them. Submit proof. The best performers rise.
+                </p>
+                <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.25)', marginBottom: 44 }}>
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.12 }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg,rgba(8,5,22,0.9) 0%,rgba(2,3,14,0.97) 100%)' }} />
+                    <div style={{ position: 'relative', padding: '20px 20px 18px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: gold, boxShadow: `0 0 8px ${gold}`, animation: 'pulse 2s infinite' }} />
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: gold, letterSpacing: '3px' }}>ACTIVE CHALLENGE</div>
+                        </div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', fontWeight: 700, color: '#fff', letterSpacing: '2px', marginBottom: 4 }}>Cum Challenge</div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.36rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '2px', marginBottom: 18 }}>NEXT WINDOW OPENS IN 03:41:22</div>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                            {[['31', 'ENROLLED'], ['4', 'WINDOWS LEFT'], ['6', 'DAYS LEFT']].map(([val, lbl]) => (
+                                <div key={lbl} style={{ flex: 1, background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 8, padding: '9px 6px', textAlign: 'center' }}>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', color: '#fff', fontWeight: 700 }}>{val}</div>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.33rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '1.5px', marginTop: 2 }}>{lbl}</div>
                                 </div>
                             ))}
                         </div>
-                        <button style={{ width: '100%', padding: '11px 0', borderRadius: 8, border: '1px solid rgba(197,160,89,0.3)', cursor: 'not-allowed', background: 'rgba(197,160,89,0.08)', color: '#c5a059', fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', fontWeight: 700, letterSpacing: '2px' }} disabled>JOIN CHALLENGE</button>
+                        <button onClick={handleTribute} disabled={loading} style={{ width: '100%', padding: '11px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: '2px', boxShadow: '0 4px 20px rgba(197,160,89,0.3)' }}>
+                            JOIN CHALLENGE
+                        </button>
                     </div>
-                    <LockOverlay />
                 </div>
 
-                <Divider />
-
-                {/* II. DIRECT ORDERS */}
-                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 8 }}>II — Direct Orders</div>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: '#fff', fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 10 }}>Serve on Command.</div>
-                <p style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.9, letterSpacing: '0.5px', margin: '0 0 22px' }}>
-                    Tasks are issued directly by Queen Karin. You pay a small coin fee to receive your orders — then you execute. Evidence is required. Every task shapes your standing.
+                {/* TASK CARD */}
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '4px', marginBottom: 8 }}>DIRECT ORDERS</div>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: '#fff', fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 10 }}>Receive Your Task.</div>
+                <p style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.32)', lineHeight: 1.8, margin: '0 0 18px' }}>
+                    Tasks are assigned personally by Queen Karin. You request. She decides. You execute and submit proof.
                 </p>
-                <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.18)', background: 'rgba(6,4,16,0.9)', marginBottom: 10 }}>
-                    <div style={{ padding: '20px 22px' }}>
-                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 14 }}>CURRENT ORDERS</div>
-                        <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10, padding: '16px 18px', marginBottom: 16 }}>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#fff', fontWeight: 600, lineHeight: 1.6, marginBottom: 12 }}>
-                                You will kneel for 45 uninterrupted minutes. Eyes forward. No phone. No distractions. When finished, photograph your space and send it as proof of your dedication.
+                <div style={{ background: cardBg, border, borderRadius: 14, padding: '18px 20px', marginBottom: 44 }}>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', marginBottom: 14 }}>CURRENT ORDERS</div>
+                    {taskState === 'idle' ? (
+                        <div style={{ textAlign: 'center' }}>
+                            <button onClick={() => setTaskState('received')} style={{ width: '100%', borderRadius: 12, background: '#0075ff', color: 'white', padding: '14px 0', fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: '0.6rem', letterSpacing: '2px', border: 'none', cursor: 'pointer' }}>
+                                REQUEST TASK
+                            </button>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginTop: 12 }}>Awaiting direct orders from Queen Karin...</div>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#fff', lineHeight: 1.6, textAlign: 'center' }}>
+                                Pay your entrance tribute to unlock access to Queen Karin&apos;s 1,000+ exclusive tasks.
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', margin: '14px 0 4px' }}>
-                                {['45', '00', '00'].map((v, i) => (
-                                    <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.6rem', color: '#fff', fontWeight: 700, background: 'rgba(0,0,0,0.4)', borderRadius: 6, padding: '4px 10px', border: '1px solid rgba(255,255,255,0.08)' }}>{v}</span>
-                                        {i < 2 && <span style={{ color: 'rgba(197,160,89,0.4)', fontSize: '1.2rem', fontWeight: 700 }}>:</span>}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <button style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'not-allowed', background: 'linear-gradient(135deg, #c5a059, #8b6914)', color: '#000', fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', fontWeight: 700, letterSpacing: '2px', opacity: 0.6 }} disabled>SUBMIT PROOF</button>
-                            <button style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(255,60,60,0.25)', cursor: 'not-allowed', background: 'rgba(255,60,60,0.05)', color: 'rgba(255,80,80,0.4)', fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', letterSpacing: '1px' }} disabled>SKIP</button>
-                        </div>
-                    </div>
-                    <LockOverlay />
-                </div>
-
-                <Divider />
-
-                {/* III. THE KNEELING */}
-                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 8 }}>III — The Kneeling</div>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: '#fff', fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 10 }}>Devotion Has a Rhythm.</div>
-                <p style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.9, letterSpacing: '0.5px', margin: '0 0 22px' }}>
-                    Each day you are expected to kneel — to hold the button, to give your time, to demonstrate submission. Complete your daily sessions and choose your reward: coins for your treasury, or merit to elevate your rank.
-                </p>
-                <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.18)', background: 'rgba(6,4,16,0.9)', marginBottom: 10 }}>
-                    <div style={{ padding: '20px 22px' }}>
-                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', marginBottom: 14 }}>KNEELING HOURS TODAY</div>
-                        <div style={{ height: 28, borderRadius: 10, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', position: 'relative', marginBottom: 8 }}>
-                            <div style={{ width: '37.5%', height: '100%', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), #c5a059)' }} />
-                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: '#fff', textShadow: '0 1px 3px #000' }}>3 / 8</div>
-                        </div>
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', textAlign: 'right', marginBottom: 18 }}>5 sessions remaining today</div>
-                        <div style={{ display: 'flex', gap: 10 }}>
-                            <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(197,160,89,0.1), rgba(197,160,89,0.03))', border: '1px solid rgba(197,160,89,0.4)', borderRadius: 10, padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                                <div style={{ fontSize: '1.5rem' }}>🪙</div>
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '3px', fontWeight: 700 }}>COINS</div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', textAlign: 'center', lineHeight: 1.5 }}>Add to your treasury</div>
-                            </div>
-                            <div style={{ flex: 1, background: 'linear-gradient(135deg, rgba(160,180,255,0.08), rgba(160,180,255,0.02))', border: '1px solid rgba(160,180,255,0.25)', borderRadius: 10, padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                                <div style={{ fontSize: '1.5rem' }}>⭐</div>
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: '#a0b4ff', letterSpacing: '3px', fontWeight: 700 }}>MERIT</div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: 'rgba(160,180,255,0.45)', textAlign: 'center', lineHeight: 1.5 }}>Rise in rank</div>
-                            </div>
-                        </div>
-                    </div>
-                    <LockOverlay />
-                </div>
-
-                <Divider />
-
-                {/* IV. YOUR STANDING */}
-                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 8 }}>IV — Your Standing</div>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: '#fff', fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: 10 }}>Rank Has Consequences.</div>
-                <p style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.9, letterSpacing: '0.5px', margin: '0 0 22px' }}>
-                    Your classification is determined by merit earned through tasks, challenges, and daily devotion. Higher ranks unlock privileges — and carry greater expectations.
-                </p>
-                <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.18)', background: 'rgba(6,4,16,0.9)', marginBottom: 10 }}>
-                    <div style={{ padding: '22px' }}>
-                        <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
-                            {[['⭐', '4,280', 'MERIT', '#fff'], ['🪙', '1,150', 'CAPITAL', '#c5a059']].map(([icon, val, lbl, col]) => (
-                                <div key={lbl as string} style={{ flex: 1, background: 'rgba(10,10,10,0.7)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: 10, padding: '14px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                                    <div style={{ fontSize: '1.1rem' }}>{icon}</div>
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.1rem', color: col as string, fontWeight: 800 }}>{val}</div>
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px' }}>{lbl}</div>
-                                </div>
-                            ))}
-                        </div>
-                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 16 }}>
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', marginBottom: 6 }}>CURRENT CLASSIFICATION</div>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.4rem', color: '#fff', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 12 }}>Devoted Subject</div>
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginBottom: 8 }}>CURRENT PRIVILEGES</div>
-                            <ul style={{ margin: 0, padding: '0 0 0 16px', color: 'rgba(255,255,255,0.4)', fontFamily: 'Cinzel, serif', fontSize: '0.68rem', lineHeight: 2 }}>
-                                <li>Access to Queen&apos;s chat</li>
-                                <li>Challenge participation</li>
-                                <li>Task assignments</li>
-                                <li>Weekly leaderboard standing</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <LockOverlay />
-                </div>
-
-                {/* CTA */}
-                <div style={{ marginTop: 64, textAlign: 'center' }}>
-                    <div style={{ width: 80, height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.4), transparent)', margin: '0 auto 40px' }} />
-                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(197,160,89,0.35)', letterSpacing: '8px', marginBottom: 16 }}>✦</div>
-                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '5px', marginBottom: 20 }}>ENTRANCE TRIBUTE</div>
-                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(2rem, 6vw, 3rem)', color: '#c5a059', fontWeight: 700, letterSpacing: '4px', marginBottom: 8 }}>€55</div>
-                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '2px', marginBottom: 36 }}>One-time entrance tribute. Permanent access.</div>
-
-                    <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '22px 24px', marginBottom: 32, textAlign: 'left' }}>
-                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', marginBottom: 14 }}>WHAT YOU GAIN</div>
-                        {[
-                            'Full access to all challenges and task assignments',
-                            'Direct communication with Queen Karin',
-                            'Daily kneeling rituals with coin and merit rewards',
-                            'Ranked standing on the global leaderboard',
-                            "Exclusive content and Queen's posts",
-                        ].map(item => (
-                            <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-                                <span style={{ color: 'rgba(197,160,89,0.5)', fontSize: '0.65rem', marginTop: 1, flexShrink: 0 }}>✦</span>
-                                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>{item}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    <button
-                        onClick={handleTribute}
-                        disabled={loading}
-                        style={{
-                            width: '100%', padding: '20px 24px',
-                            background: 'linear-gradient(135deg, #0a0602 0%, #1a1208 30%, #c5a059 60%, #e8d5a8 80%, #c5a059 100%)',
-                            backgroundSize: '250% 250%', backgroundPosition: '0% 0%',
-                            border: '1px solid rgba(197,160,89,0.5)',
-                            color: '#fff', fontFamily: 'Cinzel, serif', fontWeight: 700,
-                            fontSize: '0.8rem', letterSpacing: '8px', textTransform: 'uppercase',
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            opacity: loading ? 0.6 : 1, borderRadius: 4, marginBottom: 16,
-                            boxShadow: '0 0 30px rgba(197,160,89,0.15), 0 8px 40px rgba(0,0,0,0.4)',
-                        }}
-                    >
-                        {loading ? 'Initializing...' : 'Send Tribute'}
-                    </button>
-
-                    {status && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px', marginBottom: 16 }}>{status}</div>}
-
-                    {userEmail && (
-                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.25)', letterSpacing: '2px', marginBottom: 20 }}>
-                            Logged in as <span style={{ color: 'rgba(197,160,89,0.45)' }}>{userEmail}</span>
+                            <button onClick={handleTribute} disabled={loading} style={{ width: '100%', padding: '13px 0', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: '2px', boxShadow: '0 4px 20px rgba(197,160,89,0.3)' }}>
+                                {loading ? 'LOADING...' : 'SEND TRIBUTE — €55'}
+                            </button>
                         </div>
                     )}
+                </div>
 
-                    <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.18)', fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '2px', cursor: 'pointer', padding: '8px 0' }}>
-                        Logout / Switch account
+                {/* PAYMENT CTA */}
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: 70, height: 1, background: `linear-gradient(90deg,transparent,${gold}55,transparent)`, margin: '0 auto 36px' }} />
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '8px', marginBottom: 14 }}>✦</div>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '5px', marginBottom: 14 }}>ENTRANCE TRIBUTE</div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2rem,6vw,3rem)', color: gold, fontWeight: 700, letterSpacing: '4px', marginBottom: 6 }}>€55</div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginBottom: 28 }}>One-time. Permanent access.</div>
+                    <button onClick={handleTribute} disabled={loading} style={{ width: '100%', padding: '20px 24px', background: 'linear-gradient(135deg,#0a0602 0%,#1a1208 30%,#c5a059 60%,#e8d5a8 80%,#c5a059 100%)', backgroundSize: '250% 250%', backgroundPosition: '0% 0%', border: '1px solid rgba(197,160,89,0.5)', color: '#fff', fontFamily: 'Cinzel,serif', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '8px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, borderRadius: 4, marginBottom: 16, boxShadow: '0 0 30px rgba(197,160,89,0.15),0 8px 40px rgba(0,0,0,0.4)' }}>
+                        {loading ? 'Initializing...' : 'Send Tribute'}
                     </button>
-
-                    <div style={{ marginTop: 40, fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '3px' }}>
-                        Property of Queen Karin &nbsp;·&nbsp; Est. 2024
-                    </div>
+                    {status && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: gold, letterSpacing: '2px', marginBottom: 14 }}>{status}</div>}
+                    {userEmail && <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.37rem', color: 'rgba(197,160,89,0.22)', letterSpacing: '2px', marginBottom: 18 }}>Logged in as <span style={{ color: 'rgba(197,160,89,0.4)' }}>{userEmail}</span></div>}
+                    <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', fontFamily: 'Cinzel,serif', fontSize: '0.58rem', letterSpacing: '2px', cursor: 'pointer', padding: '8px 0', display: 'block', margin: '0 auto' }}>Logout / Switch account</button>
+                    <div style={{ marginTop: 36, fontFamily: 'Orbitron,sans-serif', fontSize: '0.36rem', color: 'rgba(255,255,255,0.07)', letterSpacing: '3px' }}>Property of Queen Karin &nbsp;·&nbsp; Est. 2024</div>
                 </div>
             </div>
+            <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
         </div>
     );
 }
