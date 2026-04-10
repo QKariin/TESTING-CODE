@@ -1755,8 +1755,9 @@ export async function initChatSystem() {
         } catch (_) {}
     }, 15000);
 
-    // 6. Push notifications
-    initOneSignal(email);
+    // 6. Push notifications — use profile UUID (not email) as external user ID
+    const profileId = getState().id || email;
+    initOneSignal(profileId!);
 }
 
 async function _pollNewChatMessages(email: string) {

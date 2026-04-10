@@ -146,12 +146,22 @@ export async function POST(req: Request) {
             } catch (_) {}
         }
 
-        if (isQueen && conversationId) {
+        if (isQueen && convProfile?.id) {
             try {
-                await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com'}/api/push`, {
+                await fetch('https://onesignal.com/api/v1/notifications', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ externalId: conversationId, title: 'Queen Karin', message: typeof content === 'string' ? content.slice(0, 100) : '👑 New message' }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Key ${process.env.ONESIGNAL_REST_API_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID,
+                        target_channel: 'push',
+                        filters: [{ field: 'external_user_id', value: convProfile.id }],
+                        headings: { en: 'Queen Karin' },
+                        contents: { en: typeof content === 'string' ? content.slice(0, 100) : '👑 New message' },
+                        url: 'https://throne.qkarin.com/profile',
+                    }),
                 });
             } catch (e) {}
         }
