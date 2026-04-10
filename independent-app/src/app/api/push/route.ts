@@ -25,8 +25,8 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         const onesignalId = profile?.onesignal_id;
+        console.log('[push] onesignal_id for', externalId, ':', onesignalId || 'NOT FOUND');
         if (!onesignalId) {
-            console.warn('[push] No onesignal_id for:', externalId);
             return NextResponse.json({ success: false, error: 'No push subscription for this user' });
         }
 
@@ -39,8 +39,7 @@ export async function POST(req: Request) {
             },
             body: JSON.stringify({
                 app_id: appId,
-                target_channel: 'push',
-                include_subscription_ids: [onesignalId],
+                include_player_ids: [onesignalId],
                 headings: { en: title || 'Queen Karin' },
                 contents: { en: message },
                 url: 'https://throne.qkarin.com/profile',
@@ -76,7 +75,9 @@ export async function PUT(req: Request) {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
 
-        await admin.from('profiles').update({ onesignal_id: subscriptionId }).ilike('member_id', caller);
+        const { error } = await admin.from('profiles').update({ onesignal_id: subscriptionId }).ilike('member_id', caller);
+        if (error) console.error('[push/save] DB error:', error.message);
+        else console.log('[push/save] Saved onesignal_id', subscriptionId, 'for', caller);
 
         return NextResponse.json({ success: true });
     } catch (err: any) {
