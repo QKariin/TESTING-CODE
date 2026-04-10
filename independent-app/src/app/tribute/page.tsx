@@ -494,16 +494,11 @@ export default function TributePage() {
                 ::-webkit-scrollbar { display: none; }
 
                 @keyframes tributeGlow {
-                    0%,100% { box-shadow: 0 0 30px rgba(197,160,89,0.15), 0 8px 40px rgba(0,0,0,0.4), 0 0 0px rgba(197,160,89,0); }
-                    50% { box-shadow: 0 0 60px rgba(197,160,89,0.5), 0 8px 40px rgba(0,0,0,0.4), 0 0 120px rgba(197,160,89,0.15); }
-                }
-                @keyframes tributeShimmer {
-                    0% { background-position: 200% center; }
-                    100% { background-position: -200% center; }
+                    0%,100% { box-shadow: 0 0 20px rgba(197,160,89,0.1), 0 8px 40px rgba(0,0,0,0.4); border-color: rgba(197,160,89,0.35); }
+                    50% { box-shadow: 0 0 45px rgba(197,160,89,0.35), 0 8px 40px rgba(0,0,0,0.5); border-color: rgba(197,160,89,0.7); }
                 }
                 .tribute-btn {
-                    background-size: 300% auto !important;
-                    animation: tributeShimmer 4s linear infinite, tributeGlow 2.5s ease-in-out infinite;
+                    animation: tributeGlow 5s ease-in-out infinite;
                 }
 
                 @media (min-width: 768px) {
@@ -512,7 +507,7 @@ export default function TributePage() {
                         background-position: center center !important;
                     }
                     .bg-fixed-overlay {
-                        background: linear-gradient(180deg, rgba(2,0,6,0.3) 0%, rgba(2,0,6,0.55) 50%, rgba(2,0,6,0.9) 100%) !important;
+                        background: rgba(0,0,0,0.58) !important;
                     }
                     .card-inner-bg {
                         display: none !important;
