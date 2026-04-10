@@ -21,6 +21,11 @@ export async function POST(req: Request) {
         let profile: any = null;
         let isQueen = isHardcodedAdmin;
 
+        const adminClient = createAdminClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
         if (isHardcodedAdmin) {
             // Synthetic profile for admin to bypass DB lookups
             profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
