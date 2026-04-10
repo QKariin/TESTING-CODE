@@ -28,6 +28,7 @@ export default function TributePage() {
     const [status, setStatus] = useState<string | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [taskRevealed, setTaskRevealed] = useState(false);
+    const [disobedience, setDisobedience] = useState(false);
     const [activeRank, setActiveRank] = useState(0);
 
     const [visibleItems, setVisibleItems] = useState<boolean[]>(Array(6).fill(false));
@@ -361,8 +362,11 @@ export default function TributePage() {
                                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, padding: '18px 16px', background: 'rgba(197,160,89,0.03)', borderRadius: 2, marginBottom: 22, border: '1px solid rgba(197,160,89,0.1)', borderLeft: '2px solid rgba(197,160,89,0.3)', letterSpacing: '0.3px', textAlign: 'left' }}>
                                         Pay tribute to Queen Karin and gain full access to everything she has built.
                                     </div>
-                                    <button onClick={handleTribute} disabled={loading} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', padding: '18px 0', borderRadius: 2, border: 'none', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', display: 'block', width: '88%', margin: '0 auto', boxShadow: '0 4px 20px rgba(197,160,89,0.3)', opacity: loading ? 0.6 : 1 }}>
-                                        {loading ? '...' : 'Send Tribute'}
+                                    <button onClick={handleTribute} disabled={loading} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', padding: '18px 0', borderRadius: 2, border: 'none', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', display: 'block', width: '88%', margin: '0 auto 10px', boxShadow: '0 4px 20px rgba(197,160,89,0.3)', opacity: loading ? 0.6 : 1 }}>
+                                        {loading ? '...' : 'Yes, Queen Karin'}
+                                    </button>
+                                    <button onClick={() => setDisobedience(true)} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', letterSpacing: '2px', cursor: 'pointer', padding: '14px 0', borderRadius: 2, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.25)', display: 'block', width: '88%', margin: '0 auto', textTransform: 'uppercase' }}>
+                                        Skip task
                                     </button>
                                 </>
                             )}
@@ -388,6 +392,25 @@ export default function TributePage() {
             </div>
 
 
+
+            {/* ─── DISOBEDIENCE OVERLAY ─── */}
+            {disobedience && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 99999999, background: 'rgba(8,0,0,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 28 }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 40% at 50% 40%, rgba(180,0,0,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                    <div style={{ position: 'relative', width: '100%', maxWidth: 400, background: 'linear-gradient(160deg, rgba(25,3,3,0.99) 0%, rgba(15,1,1,0.99) 100%)', border: '1px solid rgba(200,30,30,0.4)', borderTop: '2px solid rgba(220,50,50,0.7)', borderRadius: 4, padding: '36px 24px 28px', textAlign: 'center', boxShadow: '0 0 60px rgba(200,0,0,0.2), 0 0 120px rgba(200,0,0,0.08)' }}>
+                        <div style={{ position: 'absolute', top: 0, left: '15%', right: '15%', height: 1, background: 'linear-gradient(to right, transparent, rgba(220,50,50,0.6), transparent)' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '11px', color: 'rgba(220,50,50,0.6)', letterSpacing: '6px', marginBottom: 18 }}>DISOBEDIENCE DETECTED</div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '22px', color: '#fff', fontWeight: 700, letterSpacing: '2px', marginBottom: 12, lineHeight: 1.3 }}>Disobedience<br/>Has a Price.</div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 28 }}>Skipping is noted. Your record is updated. Queen Karin does not forget.</div>
+                        <button onClick={handleTribute} style={{ width: '100%', padding: '14px 0', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Cinzel,serif', fontSize: '14px', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer', marginBottom: 10 }}>
+                            I Obey — Send Tribute
+                        </button>
+                        <button onClick={() => { setDisobedience(false); setTaskRevealed(false); }} style={{ width: '100%', padding: '12px 0', background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, color: 'rgba(255,255,255,0.2)', fontFamily: 'Cinzel,serif', fontSize: '13px', cursor: 'pointer' }}>
+                            Leave
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
