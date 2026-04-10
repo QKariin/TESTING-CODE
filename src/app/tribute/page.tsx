@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
-const HIERARCHY = [
-    { title: "HallBoy", points: 0, pointsLabel: "Entry rank", status: "First line of service.", protocol: "Perform basic tasks.", duties: "Prove you live to serve.", contact: "15MIN DAILY SLOT", earn: "Your first direct contact slot with Queen Karin. 15 minutes daily. You are noticed." },
-    { title: "Footman", points: 2000, pointsLabel: "2,000+ pts", status: "Time to earn your place.", protocol: "Serve quickly and reliably.", duties: "Perfect Timing.", contact: "30MIN DAILY SLOT", earn: "Daily slot doubles to 30 minutes. You are being evaluated for reliability and speed." },
-    { title: "Silverman", points: 5000, pointsLabel: "5,000+ pts", status: "Skilled and polished sub.", protocol: "Focus on improvement.", duties: "Face all challenges.", contact: "30MIN DAILY SLOT", earn: "Access to advanced challenges. Queen Karin expects more. You begin to show real worth." },
-    { title: "Butler", points: 10000, pointsLabel: "10,000+ pts", status: "Mastered consistency.", protocol: "Notice needs without being told.", duties: "Devotion is foundation.", contact: "DAILY 2x30MIN SLOTS", earn: "Two 30-minute sessions daily. Trust established. You are now a fixture of service." },
-    { title: "Chamberlain", points: 20000, pointsLabel: "20,000+ pts", status: "Act with excellence.", protocol: "Carry yourself with dignity.", duties: "Uphold standards.", contact: "UNLIMITED", earn: "Unlimited contact. Senior position. Queen Karin relies on your presence and performance." },
-    { title: "Secretary", points: 50000, pointsLabel: "50,000+ pts", status: "Inner Circle.", protocol: "Respect and safeguard.", duties: "Authority on smaller matters.", contact: "UNLIMITED", earn: "Inner Circle access. You handle matters of trust. Unlimited and unrestricted presence." },
-    { title: "Queen's Champion", points: 100000, pointsLabel: "100,000+ pts", status: "You have made it.", protocol: "2 bodies, 1 soul.", duties: "Enjoy the love you earned.", contact: "LEGENDARY", earn: "The highest honour. Legendary status. This is not a rank — it is a bond." },
+const RANKS = [
+    { title: "Hall Boy", contact: "15MIN DAILY SLOT", earn: "Your first direct contact slot with Queen Karin. 15 minutes daily. You are noticed.", speakCost: 20, benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks."], req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 } },
+    { title: "Footman", contact: "30MIN DAILY SLOT", earn: "Daily slot doubles to 30 minutes. You are being evaluated for reliability and speed.", speakCost: 15, benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine."], req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0 } },
+    { title: "Silverman", contact: "30MIN DAILY SLOT", earn: "Access to advanced challenges. Queen Karin expects more. You begin to show real worth.", speakCost: 10, benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions."], req: { tasks: 25, kneels: 65, points: 5000, spent: 5000, streak: 5 } },
+    { title: "Butler", contact: "DAILY 2x30MIN SLOTS", earn: "Two 30-minute sessions daily. Trust established. You are now a fixture of service.", speakCost: 5, benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions."], req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 30 } },
+    { title: "Chamberlain", contact: "UNLIMITED", earn: "Unlimited contact. Senior position. Queen Karin relies on your presence and performance.", speakCost: 0, benefits: ["Speech: All messaging is Free.", "Visuals: Access to Video Sessions.", "Honor: Access to Elite Trials."], req: { tasks: 300, kneels: 750, points: 50000, spent: 150000, streak: 90 } },
+    { title: "Secretary", contact: "UNLIMITED", earn: "Inner Circle access. You handle matters of trust. Unlimited and unrestricted presence.", speakCost: 0, benefits: ["The Line: A direct Audio Connection.", "Authority: Access to System Commands.", "The Throne: Total, Unfiltered Access."], req: { tasks: 500, kneels: 1500, points: 100000, spent: 500000, streak: 180 } },
+    { title: "Queen's Champion", contact: "LEGENDARY", earn: "The highest honour. Legendary status. This is not a rank — it is a bond.", speakCost: 0, benefits: ["Absolute Authority.", "Manifest Will.", "Total Ownership."], req: { tasks: 1000, kneels: 3000, points: 250000, spent: 1000000, streak: 365 } },
 ];
 
 const TRACKED = [
@@ -34,6 +34,7 @@ export default function TributePage() {
     const [visibleItems, setVisibleItems] = useState<boolean[]>(Array(6).fill(false));
     const [sectionVisible, setSectionVisible] = useState(false);
     const trackedOuterRef = useRef<HTMLDivElement>(null);
+    const touchStartXRef = useRef<number>(0);
 
     useEffect(() => {
         const init = async () => {
@@ -160,80 +161,153 @@ export default function TributePage() {
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
                     </div>
 
-                    {(() => {
-                        const rank = HIERARCHY[activeRank];
-                        const isFirst = activeRank === 0;
-                        const isLast = activeRank === HIERARCHY.length - 1;
-                        return (
-                            <div style={{ background: 'linear-gradient(160deg, rgba(6,4,18,0.97) 0%, rgba(3,2,12,0.99) 100%)', border: `1px solid rgba(197,160,89,${isFirst ? '0.3' : '0.12'})`, borderTop: `2px solid rgba(197,160,89,${isFirst ? '0.5' : '0.2'})`, borderRadius: 4, padding: '28px 22px 24px', position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.4), transparent)' }} />
+                    {/* Swipeable carousel */}
+                    <div
+                        style={{ overflow: 'hidden', borderRadius: 4 }}
+                        onTouchStart={(e) => { touchStartXRef.current = e.touches[0].clientX; }}
+                        onTouchEnd={(e) => {
+                            const diff = touchStartXRef.current - e.changedTouches[0].clientX;
+                            if (Math.abs(diff) > 45) {
+                                if (diff > 0) setActiveRank(r => Math.min(RANKS.length - 1, r + 1));
+                                else setActiveRank(r => Math.max(0, r - 1));
+                            }
+                        }}
+                    >
+                        <div style={{ display: 'flex', transform: `translateX(-${activeRank * 100}%)`, transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1)' }}>
+                            {RANKS.map((rank, i) => {
+                                const unlocked = i <= 1;
+                                const isFirst = i === 0;
+                                const isLast = i === RANKS.length - 1;
+                                const reqItems = [
+                                    rank.req.tasks > 0 ? { val: rank.req.tasks.toLocaleString(), label: 'TASKS COMPLETED' } : null,
+                                    rank.req.kneels > 0 ? { val: rank.req.kneels.toLocaleString(), label: 'KNEELING SESSIONS' } : null,
+                                    rank.req.points > 0 ? { val: rank.req.points.toLocaleString(), label: 'MERIT POINTS' } : null,
+                                    rank.req.spent > 0 ? { val: rank.req.spent.toLocaleString(), label: 'COINS SPENT' } : null,
+                                    rank.req.streak > 0 ? { val: String(rank.req.streak), label: 'DAY STREAK' } : null,
+                                ].filter(Boolean) as { val: string; label: string }[];
 
-                                {/* Rank counter */}
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.35)', letterSpacing: '4px', marginBottom: 16 }}>
-                                    RANK {activeRank + 1} OF {HIERARCHY.length}
-                                </div>
+                                return (
+                                    <div key={rank.title} style={{ minWidth: '100%', flex: '0 0 100%' }}>
+                                        <div style={{ background: 'linear-gradient(160deg, rgba(6,4,18,0.97) 0%, rgba(3,2,12,0.99) 100%)', border: `1px solid rgba(197,160,89,${unlocked ? '0.25' : '0.08'})`, borderTop: `2px solid rgba(197,160,89,${unlocked ? '0.45' : '0.15'})`, borderRadius: 4, padding: '26px 22px 22px', position: 'relative', overflow: 'hidden' }}>
+                                            <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.4), transparent)' }} />
 
-                                {/* Title + contact slot */}
-                                <div style={{ marginBottom: 20 }}>
-                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '22px', color: isLast ? gold : '#fff', fontWeight: 600, letterSpacing: '2px', marginBottom: 10 }}>{rank.title}</div>
-                                    <div style={{ display: 'inline-block', fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: gold, letterSpacing: '3px', padding: '5px 12px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 3 }}>{rank.contact}</div>
-                                </div>
+                                            {/* Rank counter */}
+                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.35)', letterSpacing: '4px', marginBottom: 10 }}>
+                                                RANK {i + 1} OF {RANKS.length}
+                                            </div>
 
-                                {/* To reach */}
-                                <div style={{ marginBottom: 18 }}>
-                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 10 }}>
-                                        {isFirst ? 'YOUR STARTING RANK' : 'TO REACH THIS RANK'}
-                                    </div>
-                                    {isFirst ? (
-                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>This is where every member begins. No requirements. Your record starts here the moment you join.</div>
-                                    ) : (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                                                <div style={{ width: 1, height: '100%', background: gold, opacity: 0.3, flexShrink: 0, marginTop: 6, alignSelf: 'stretch' }} />
-                                                <div>
-                                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '12px', color: gold, letterSpacing: '1px', marginBottom: 2 }}>{rank.pointsLabel}</div>
-                                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>Earned through tasks, kneeling, challenges, and daily consistency.</div>
+                                            {/* Title */}
+                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '24px', color: isLast ? gold : '#fff', fontWeight: 600, letterSpacing: '2px', marginBottom: 10 }}>{rank.title}</div>
+
+                                            {/* Contact slot badge */}
+                                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 22 }}>
+                                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: gold, letterSpacing: '3px', padding: '5px 12px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 3 }}>{rank.contact}</div>
+                                                {!unlocked && <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', padding: '5px 10px', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 3 }}>LOCKED</div>}
+                                            </div>
+
+                                            {/* Body: unlocked or locked */}
+                                            {unlocked ? (
+                                                <>
+                                                    {/* TO REACH THIS RANK */}
+                                                    <div style={{ marginBottom: 18 }}>
+                                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 12 }}>
+                                                            {isFirst ? 'YOUR STARTING RANK' : 'TO REACH THIS RANK'}
+                                                        </div>
+                                                        {isFirst ? (
+                                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>This is where every member begins. No requirements. Your record starts here the moment you join.</div>
+                                                        ) : (
+                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px' }}>
+                                                                {reqItems.map(item => (
+                                                                    <div key={item.label} style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderLeft: '2px solid rgba(197,160,89,0.3)', borderRadius: 3, padding: '8px 10px' }}>
+                                                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '13px', color: gold, fontWeight: 700, letterSpacing: '0.5px', marginBottom: 2 }}>{item.val}</div>
+                                                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '8px', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>{item.label}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Voice cost */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18, padding: '8px 12px', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 3 }}>
+                                                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: gold, flexShrink: 0 }} />
+                                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px' }}>VOICE COSTS</div>
+                                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '12px', color: gold, letterSpacing: '1px', marginLeft: 'auto' }}>{rank.speakCost} COINS</div>
+                                                    </div>
+
+                                                    {/* Divider */}
+                                                    <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.15), transparent)', marginBottom: 18 }} />
+
+                                                    {/* WHAT YOU EARN */}
+                                                    <div style={{ marginBottom: 22 }}>
+                                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 10 }}>WHAT YOU EARN</div>
+                                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: 12 }}>{rank.earn}</div>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                                                            {rank.benefits.map((b, j) => (
+                                                                <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                                                    <div style={{ width: 3, height: 3, background: gold, opacity: 0.5, marginTop: 6, flexShrink: 0, borderRadius: 1 }} />
+                                                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>{b}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    <button onClick={handleTribute} style={{ width: '100%', padding: '13px 0', borderRadius: 4, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '3px' }}>
+                                                        {isFirst ? 'START HERE' : 'UNLOCK ACCESS'}
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <div style={{ position: 'relative' }}>
+                                                    {/* Blurred preview of content */}
+                                                    <div style={{ filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none', opacity: 0.5 }}>
+                                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 12 }}>TO REACH THIS RANK</div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', marginBottom: 16 }}>
+                                                            {reqItems.map(item => (
+                                                                <div key={item.label} style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderLeft: '2px solid rgba(197,160,89,0.3)', borderRadius: 3, padding: '8px 10px' }}>
+                                                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '13px', color: gold, fontWeight: 700 }}>{item.val}</div>
+                                                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '8px', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>{item.label}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 10 }}>WHAT YOU EARN</div>
+                                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: 12 }}>{rank.earn}</div>
+                                                        {rank.benefits.map((b, j) => (
+                                                            <div key={j} style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: 5 }}>{b}</div>
+                                                        ))}
+                                                    </div>
+                                                    {/* Lock overlay */}
+                                                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.82)', backdropFilter: 'blur(3px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, borderRadius: 2 }}>
+                                                        <div style={{ width: 32, height: 32, border: `2px solid rgba(197,160,89,0.4)`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            <div style={{ width: 10, height: 12, position: 'relative' }}>
+                                                                <div style={{ position: 'absolute', top: 4, left: 0, right: 0, bottom: 0, background: 'rgba(197,160,89,0.5)', borderRadius: 2 }} />
+                                                                <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 8, height: 7, border: '2px solid rgba(197,160,89,0.5)', borderBottom: 'none', borderRadius: '4px 4px 0 0' }} />
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: 'rgba(197,160,89,0.55)', letterSpacing: '5px', textAlign: 'center' }}>RANK LOCKED</div>
+                                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '12px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', lineHeight: 1.6, maxWidth: 220 }}>Join and earn your way through the hierarchy to unlock this rank.</div>
+                                                        <button onClick={handleTribute} disabled={loading} style={{ marginTop: 4, padding: '11px 28px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 4, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '10px', letterSpacing: '3px', fontWeight: 700, cursor: 'pointer' }}>
+                                                            {loading ? '...' : 'JOIN TO UNLOCK'}
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-
-                                {/* Divider */}
-                                <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.15), transparent)', marginBottom: 18 }} />
-
-                                {/* What you earn */}
-                                <div style={{ marginBottom: 22 }}>
-                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 10 }}>WHAT YOU EARN</div>
-                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: 14 }}>{rank.earn}</div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                                        {[rank.status, rank.protocol, rank.duties].map((txt, j) => (
-                                            <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                                <div style={{ width: 3, height: 3, background: gold, opacity: 0.5, marginTop: 6, flexShrink: 0, borderRadius: 1 }} />
-                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>{txt}</div>
-                                            </div>
-                                        ))}
                                     </div>
-                                </div>
-
-                                <button onClick={handleTribute} style={{ width: '100%', padding: '13px 0', borderRadius: 4, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '3px' }}>
-                                    {isFirst ? 'START HERE' : 'UNLOCK ACCESS'}
-                                </button>
-                            </div>
-                        );
-                    })()}
+                                );
+                            })}
+                        </div>
+                    </div>
 
                     {/* Navigation */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
                         <button onClick={() => setActiveRank(r => Math.max(0, r - 1))} disabled={activeRank === 0} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: activeRank === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.6)', background: 'none', border: 'none', cursor: activeRank === 0 ? 'default' : 'pointer', letterSpacing: '2px', padding: '8px 0' }}>
                             PREV
                         </button>
-                        <div style={{ display: 'flex', gap: 7 }}>
-                            {HIERARCHY.map((_, i) => (
-                                <div key={i} onClick={() => setActiveRank(i)} style={{ width: i === activeRank ? 18 : 5, height: 5, borderRadius: 3, background: i === activeRank ? gold : 'rgba(255,255,255,0.12)', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: i === activeRank ? `0 0 8px ${gold}` : 'none' }} />
+                        <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
+                            {RANKS.map((_, i) => (
+                                <div key={i} onClick={() => setActiveRank(i)} style={{ width: i === activeRank ? 18 : 5, height: 5, borderRadius: 3, background: i === activeRank ? gold : i <= 1 ? 'rgba(197,160,89,0.35)' : 'rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: i === activeRank ? `0 0 8px ${gold}` : 'none' }} />
                             ))}
                         </div>
-                        <button onClick={() => setActiveRank(r => Math.min(HIERARCHY.length - 1, r + 1))} disabled={activeRank === HIERARCHY.length - 1} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: activeRank === HIERARCHY.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.6)', background: 'none', border: 'none', cursor: activeRank === HIERARCHY.length - 1 ? 'default' : 'pointer', letterSpacing: '2px', padding: '8px 0' }}>
+                        <button onClick={() => setActiveRank(r => Math.min(RANKS.length - 1, r + 1))} disabled={activeRank === RANKS.length - 1} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '10px', color: activeRank === RANKS.length - 1 ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.6)', background: 'none', border: 'none', cursor: activeRank === RANKS.length - 1 ? 'default' : 'pointer', letterSpacing: '2px', padding: '8px 0' }}>
                             NEXT
                         </button>
                     </div>
