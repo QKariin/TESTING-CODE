@@ -29,9 +29,9 @@ const easeOutBack = (t: number) => {
 };
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-const SCROLL_RANGE = 1800; // px of extra scroll for the pinned section
-// Thresholds: header at 0.05, each item starts at 0.12 + i*0.14
-const itemStart = (i: number) => 0.12 + i * 0.14;
+const SCROLL_RANGE = 500; // px of extra scroll for the pinned section
+// Items start appearing almost immediately, each 0.15 apart
+const itemStart = (i: number) => 0.02 + i * 0.15;
 const itemEnd   = (i: number) => itemStart(i) + 0.10;
 
 export default function TributePage() {
