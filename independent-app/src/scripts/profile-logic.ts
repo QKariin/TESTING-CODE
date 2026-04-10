@@ -1,7 +1,7 @@
 import { getState, setState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
 import { getHierarchyReport } from '../lib/hierarchyRules';
-import { uploadToSupabase, getVideoDuration, isVideo } from './mediaSupabase';
+import { uploadToSupabase } from './mediaSupabase';
 import { getOptimizedUrl } from './media';
 
 let globalTributes: any[] = [];
@@ -12,20 +12,12 @@ export async function handleLogout() {
 }
 
 // ─── REWARD CLAIMING ───
-let _claiming = false;
 export async function claimKneelReward(type: 'coins' | 'points') {
-    if (_claiming) return;
-    _claiming = true;
-
-    // Hide overlay immediately so user can't double-click
-    document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
-    document.getElementById('mobKneelReward')?.classList.add('hidden');
-
     const currentState = getState();
     const { raw, id, memberId, wallet, score } = currentState;
     const pid = memberId || id;
 
-    if (!pid) { _claiming = false; return; }
+    if (!pid) return;
 
     const amount = type === 'coins' ? 10 : 50;
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
@@ -41,22 +33,21 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         const data = await res.json();
 
         if (res.status === 429) {
-            // Cooldown still active — overlay already hidden above
+            // Cooldown still active — close overlay silently
             console.log(`[REWARD] Cooldown still active (${data.minLeft}m left). Ignoring.`);
-            _claiming = false;
+            document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
+            document.getElementById('mobKneelReward')?.classList.add('hidden');
             return;
         }
 
         if (!data.success) {
             console.error('[REWARD] Server rejected claim:', data.error);
-            _claiming = false;
             return;
         }
 
         loadChatHistory(pid);
     } catch (err) {
         console.error('[REWARD] Save failed', err);
-        _claiming = false;
         return;
     }
 
@@ -67,13 +58,15 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 
     if (type === 'coins') triggerCoinShower();
 
-    // 4. Play sound (overlay already hidden at top of function)
+    // 4. Hide UI
+    document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
+    document.getElementById('mobKneelReward')?.classList.add('hidden');
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
     if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
     // 5. Re-fetch fresh data so sidebar shows updated kneelCount + kneeling hours
     try {
-        const freshRes = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: pid, full: true }) });
+        const freshRes = await fetch(`/api/slave-profile?email=${encodeURIComponent(pid)}&full=true`);
         const freshData = await freshRes.json();
         setState({ raw: freshData });
         renderProfileSidebar(freshData);
@@ -85,7 +78,6 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         // Fallback: render with current raw if fetch fails
         renderProfileSidebar(raw || {});
     }
-    _claiming = false;
 }
 
 
@@ -587,7 +579,7 @@ if (typeof window !== 'undefined') {
                     wishlist_spent: (Number(raw?.parameters?.wishlist_spent) || 0) + amount,
                     last_tribute: { at: new Date().toISOString(), title, amount }
                 };
-                const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + (amount ?? 0) };
+                const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams };
                 setState({ wallet: data.newWallet, score: data.newScore, raw: updatedRaw });
                 updateWalletDisplay();
                 renderProfileSidebar(updatedRaw);
@@ -655,7 +647,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
                 wishlist_spent: (Number(raw?.parameters?.wishlist_spent) || 0) + cost,
                 last_tribute: { at: new Date().toISOString(), title, amount: cost }
             };
-            const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams, total_coins_spent: (raw?.total_coins_spent || 0) + (cost ?? 0) };
+            const updatedRaw = { ...(raw || {}), wallet: data.newWallet, score: data.newScore, parameters: updatedParams };
             setState({ wallet: data.newWallet, score: data.newScore, raw: updatedRaw });
             updateWalletDisplay();
             renderProfileSidebar(updatedRaw);
@@ -753,7 +745,6 @@ export function openLobby() {
     const { memberId, id } = getState();
     const emailEl = document.getElementById('hubEmail');
     if (emailEl) emailEl.textContent = memberId || id || '';
-    _syncNotifHubBtn();
 }
 
 export function closeLobby() {
@@ -1244,7 +1235,7 @@ export async function updateRoutineWidget() {
 
     try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const res = await fetch('/api/routine-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, tz }) });
+        const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}&tz=${encodeURIComponent(tz)}&t=${Date.now()}`);
         if (!res.ok) return;
         const data = await res.json();
 
@@ -1355,9 +1346,9 @@ export function handleRoutineUpload(input: HTMLInputElement) {
             const mobTime = document.getElementById('routineTimeMsg');
             if (display) display.textContent = 'PENDING APPROVAL';
             if (mobDisplay) mobDisplay.textContent = 'PENDING APPROVAL';
-            if (btn) { btn.textContent = '✔ SUBMITTED'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; btn.disabled = true; (window as any).__routineAction = () => { }; }
+            if (btn) { btn.textContent = '✔ SUBMITTED'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; (window as any).__routineAction = () => { }; }
             if (timeMsg) { timeMsg.textContent = 'AWAITING REVIEW'; timeMsg.classList.remove('hidden'); }
-            if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; mobBtn.disabled = true; }
+            if (mobBtn) { mobBtn.textContent = '✔ SUBMITTED'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
             if (mobDone) mobDone.classList.remove('hidden');
             if (mobTime) { mobTime.textContent = 'AWAITING REVIEW'; mobTime.classList.remove('hidden'); }
         });
@@ -1372,25 +1363,6 @@ export function handleTaskEvidenceUpload(input: HTMLInputElement) {
 }
 
 // iOS-safe task evidence picker — dynamic input avoids hidden-element click restriction
-function showUploadNotice(html: string) {
-    ['uploadNoticeDesk', 'uploadNoticeMob'].forEach(id => document.getElementById(id)?.remove());
-    const makeNotice = (id: string, anchorId: string) => {
-        const el = document.createElement('div');
-        el.id = id;
-        el.style.cssText = 'margin:10px 0;text-align:center;';
-        el.innerHTML = html;
-        const anchor = document.getElementById(anchorId);
-        if (anchor?.parentNode) anchor.parentNode.insertBefore(el, anchor);
-    };
-    makeNotice('uploadNoticeDesk', 'uploadBtnContainer');
-    makeNotice('uploadNoticeMob', 'mobUploadBtnContainer');
-    (window as any)._clearUploadNotice = clearUploadNotice;
-}
-
-function clearUploadNotice() {
-    ['uploadNoticeDesk', 'uploadNoticeMob'].forEach(id => document.getElementById(id)?.remove());
-}
-
 export function triggerTaskEvidencePick() {
     const inp = document.createElement('input');
     inp.type = 'file';
@@ -1398,21 +1370,9 @@ export function triggerTaskEvidencePick() {
     inp.style.position = 'fixed';
     inp.style.top = '-9999px';
     document.body.appendChild(inp);
-    inp.onchange = async () => {
+    inp.onchange = () => {
         document.body.removeChild(inp);
-        const file = inp.files?.[0];
-        if (!file) return;
-        // Pre-check video duration before wasting time uploading
-        if (isVideo(file)) {
-            const duration = await getVideoDuration(file);
-            if (duration > 120) {
-                const mins = Math.floor(duration / 60);
-                const secs = Math.round(duration % 60);
-                showUploadNotice(`<div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:12px;">Your video is ${mins}m ${secs}s — maximum is 2 minutes.<br>Please trim it and try again.</div><div style="display:flex;gap:10px;justify-content:center;"><button onclick="window._clearUploadNotice()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">DISMISS</button></div>`);
-                return;
-            }
-        }
-        submitTaskEvidence(file, false);
+        if (inp.files?.[0]) submitTaskEvidence(inp.files[0], false);
     };
     inp.click();
 }
@@ -1452,12 +1412,34 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         if (mobRoutineDisplay) mobRoutineDisplay.textContent = 'UPLOADING...';
     }
 
-    // Task-only UI — do NOT touch task layout (text/timer stay as-is)
+    // Task-only UI — do NOT touch when uploading a routine
     if (!isRoutine) {
-        if (uploadBtn) { uploadBtn.innerText = "UPLOADING..."; (uploadBtn as HTMLButtonElement).disabled = true; }
-        if (mobTaskBtn) { mobTaskBtn.innerText = "SENDING..."; (mobTaskBtn as HTMLButtonElement).disabled = true; }
-        clearUploadNotice();
-        showUploadNotice('<div style="font-family:\'Rajdhani\';font-size:0.9rem;color:rgba(255,255,255,0.5);letter-spacing:1px;"><i class="fas fa-circle-notch fa-spin" style="margin-right:6px;color:#c5a059;"></i>TRANSMITTING EVIDENCE...</div>');
+        if (uploadBtn) uploadBtn.innerText = "UPLOADING...";
+        if (mobTaskBtn) mobTaskBtn.innerText = "SENDING...";
+
+        // Stop timer and show uploading state in task section
+        if (taskInterval) { clearInterval(taskInterval); taskInterval = null; }
+
+        const activeTimerRow = document.getElementById('activeTimerRow');
+        const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
+        if (activeTimerRow) activeTimerRow.style.display = 'none';
+        if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'none';
+
+        const uploadCont = document.getElementById('uploadBtnContainer');
+        const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+        if (uploadCont) uploadCont.style.display = 'none';
+        if (mobUploadCont) mobUploadCont.style.display = 'none';
+
+        const readyText = document.getElementById('readyText');
+        const mobTaskText = document.getElementById('mobTaskText');
+        if (readyText) {
+            readyText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING EVIDENCE...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
+            readyText.style.color = '#c5a059';
+        }
+        if (mobTaskText) {
+            mobTaskText.innerHTML = '<div style="margin-bottom: 10px;">TRANSMITTING EVIDENCE...</div><div class="spinner" style="font-size: 2rem; color: #c5a059;"><i class="fas fa-circle-notch fa-spin"></i></div>';
+            mobTaskText.style.color = '#c5a059';
+        }
     }
 
     try {
@@ -1468,13 +1450,27 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         console.log("Supabase Upload Result:", fileUrl);
 
         if (!fileUrl || fileUrl.startsWith("failed")) {
-            const isTooLong = fileUrl?.includes("VIDEO_TOO_LONG");
             const isSizeError = fileUrl?.startsWith("failed:size");
             const sizeVal = isSizeError ? fileUrl.split(':')[2] : null;
-            const noticeHtml = isTooLong
-                ? `<div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:12px;">Maximum 2 minutes allowed.<br>Please trim your video and try again.</div><div style="display:flex;gap:10px;justify-content:center;"><button onclick="window._clearUploadNotice()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">DISMISS</button></div>`
-                : `<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">${isSizeError ? `Video too large (${sizeVal}) — maximum 50MB.` : 'Upload failed — please try again.'}</div>`;
-            if (!isRoutine) showUploadNotice(noticeHtml);
+            const msg = isSizeError
+                ? `Video too large (${sizeVal}). Maximum is 50MB. Please trim or compress the video before uploading.`
+                : "Upload failed — please try again.";
+
+            if (!isRoutine) {
+                const readyText = document.getElementById('readyText');
+                const mobTaskText = document.getElementById('mobTaskText');
+                const uploadCont = document.getElementById('uploadBtnContainer');
+                const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+                const activeTimerRow = document.getElementById('activeTimerRow');
+                const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
+                if (readyText) { readyText.innerHTML = taskText; readyText.style.color = 'white'; }
+                if (mobTaskText) { mobTaskText.innerHTML = taskText; mobTaskText.style.color = 'white'; }
+                if (uploadCont) uploadCont.style.display = 'flex';
+                if (mobUploadCont) mobUploadCont.style.display = 'flex';
+                if (activeTimerRow) activeTimerRow.style.display = 'flex';
+                if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'flex';
+            }
+            showTaskFeedback(msg, 'var(--red)');
             return;
         }
 
@@ -1500,7 +1496,6 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         if (data.success) {
             console.log("Submission successful!");
             if (!isRoutine) {
-                clearUploadNotice();
                 const mockeries = [
                     "Evidence submitted. We will see if it's as disappointing as usual.",
                     "Task uploaded. Hopefully less pathetic than your last attempt.",
@@ -1514,18 +1509,41 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
             refreshTaskGallery(pid);
         } else {
             console.error("Backend submission error:", data.error);
-            if (!isRoutine) showUploadNotice(`<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">TRANSMISSION FAILED — ${data.error || 'please try again'}</div>`);
+            if (!isRoutine) {
+                const readyText = document.getElementById('readyText');
+                const mobTaskText = document.getElementById('mobTaskText');
+                const uploadCont = document.getElementById('uploadBtnContainer');
+                const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+                if (readyText) { readyText.innerText = "TRANSMISSION FAILED: " + (data.error || "Unknown error"); readyText.style.color = "var(--red)"; }
+                if (mobTaskText) { mobTaskText.innerText = "TRANSMISSION FAILED: " + (data.error || "Unknown error"); mobTaskText.style.color = "var(--red)"; }
+                if (uploadCont) uploadCont.style.display = 'flex';
+                if (mobUploadCont) mobUploadCont.style.display = 'flex';
+            }
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Critical submission error", err);
-        if (!isRoutine) showUploadNotice(`<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">UPLOAD FAILED — TASK STILL ACTIVE, TRY AGAIN</div>`);
+        if (!isRoutine) {
+            const readyText = document.getElementById('readyText');
+            const mobTaskText = document.getElementById('mobTaskText');
+            const uploadCont = document.getElementById('uploadBtnContainer');
+            const mobUploadCont = document.getElementById('mobUploadBtnContainer');
+            if (readyText) { readyText.innerText = "CONNECTION ERROR DURING TRANSMISSION"; readyText.style.color = "var(--red)"; }
+            if (mobTaskText) { mobTaskText.innerText = "CONNECTION ERROR DURING TRANSMISSION"; mobTaskText.style.color = "var(--red)"; }
+            if (uploadCont) uploadCont.style.display = 'flex';
+            if (mobUploadCont) mobUploadCont.style.display = 'flex';
+        }
     } finally {
         if (!isRoutine) {
-            if (uploadBtn && originalText) { uploadBtn.innerText = originalText; (uploadBtn as HTMLButtonElement).disabled = false; }
-            if (mobTaskBtn && originalMobTaskText) { mobTaskBtn.innerText = originalMobTaskText; (mobTaskBtn as HTMLButtonElement).disabled = false; }
-            if (mobRoutineBtn && originalMobRoutineText) mobRoutineBtn.innerText = originalMobRoutineText;
+            if (uploadBtn && originalText) uploadBtn.innerText = originalText;
+            if (mobTaskBtn && originalMobTaskText) mobTaskBtn.innerText = originalMobTaskText;
         }
-        // NOTE: routine button reset intentionally omitted — handleRoutineUpload.then() locks it
+        if (isRoutine) {
+            const deskRoutineBtn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
+            if (mobRoutineBtn) { mobRoutineBtn.innerText = originalMobRoutineText || 'Upload'; mobRoutineBtn.disabled = false; }
+            if (deskRoutineBtn) { deskRoutineBtn.innerText = 'Upload'; deskRoutineBtn.disabled = false; }
+        } else if (mobRoutineBtn && originalMobRoutineText) {
+            mobRoutineBtn.innerText = originalMobRoutineText;
+        }
     }
 }
 export function handleProfileUpload(input?: HTMLInputElement) { _doProfileUpload(); }
@@ -1541,258 +1559,44 @@ export function handleChatKey(e: React.KeyboardEvent) {
 }
 
 // ---------------------------------------------------------
-// NEW SUPABASE CHAT LOGIC — mirrors dashboard-chat.ts exactly
+// NEW SUPABASE CHAT LOGIC
 // ---------------------------------------------------------
 
-// Single shared client — realtime subscriptions must stay on the same instance
-// (same pattern as dashboard-chat.ts line 14, but lazy-loaded to fix static builds)
-let _profileChatSupabase: any = null;
-const getChatSupabase = () => {
-    if (!_profileChatSupabase) _profileChatSupabase = createClient();
-    return _profileChatSupabase;
-};
-
-let _chatChannel: any = null;
-let _chatPollInterval: ReturnType<typeof setInterval> | null = null;
-let _silenceCheckInterval: ReturnType<typeof setInterval> | null = null;
-let _lastChatMsgId: string | null = null;
-let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
-const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
 
-function _scrollChat() {
-    // Scroll outer containers
-    ['chatBox', 'mob_chatBox'].forEach(id => {
-        const b = document.getElementById(id);
-        if (!b) return;
-        b.scrollTop = b.scrollHeight + 9999;
-    });
-    // Also scroll inner content divs — on mobile the flex layout can make
-    // mob_chatContent (overflow-y:auto) be the actual scroll container instead of mob_chatBox
-    ['chatContent', 'mob_chatContent'].forEach(id => {
-        const b = document.getElementById(id);
-        if (!b) return;
-        b.scrollTop = b.scrollHeight + 9999;
-    });
-}
-function _scrollChatDelayed() {
-    requestAnimationFrame(() => requestAnimationFrame(_scrollChat));
-    setTimeout(_scrollChat, 100);
-    setTimeout(_scrollChat, 400);
-    setTimeout(_scrollChat, 900);
-}
-// After setting innerHTML, attach load handlers so images re-trigger scroll as they arrive
-function _attachImgScrollHandlers() {
-    ['chatContent', 'mob_chatContent'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        (el.querySelectorAll('img') as NodeListOf<HTMLImageElement>).forEach(img => {
-            if (!img.complete) {
-                img.addEventListener('load', _scrollChat, { once: true });
-                img.addEventListener('error', _scrollChat, { once: true });
-            }
-        });
-    });
-}
-function _isScrolledToBottom() {
-    // Check both the outer scroll container and the inner content div.
-    // On mobile, mob_chatContent may be the actual scroll container due to flex layout.
-    const containers = [
-        document.getElementById('mob_chatBox'),
-        document.getElementById('mob_chatContent'),
-        document.getElementById('chatBox'),
-    ].filter(Boolean) as HTMLElement[];
-    // If ANY container is near bottom, treat as "at bottom"
-    return containers.some(b => (b.scrollHeight - b.scrollTop - b.clientHeight) < 160);
-}
+export function initChatSystem() {
+    if (chatSubscribed) return;
+    const { memberId } = getState();
+    if (!memberId) return;
 
-export async function initChatSystem() {
-    // 🔑 KEY DIFFERENCE vs old broken code:
-    // Dashboard gets email directly from supabase.auth.getUser() — never from state.
-    // Profile was reading getState().memberId which could be null if initProfileState
-    // hadn't fully run yet. Now we do exactly what dashboard does.
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    let email = user?.email?.toLowerCase();
-
-    // Localhost DEV bypass (same pattern as dashboard)
-    if (!email && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        email = 'pr.finsko@gmail.com';
-    }
-
-    console.log('[CHAT] initChatSystem starting. Auth email:', email);
-
-    if (!email) {
-        console.warn('[CHAT] initChatSystem: no email from auth, skipping');
-        return;
-    }
-
-    // Update state so rest of the app has the email too
-    if (!getState().memberId) {
-        setState({ memberId: email });
-    }
-
-    // Start silence polling — runs every 3s, uses supabaseAdmin endpoint (no auth dependency)
-    if (_silenceCheckInterval) clearInterval(_silenceCheckInterval);
-    _silenceCheckInterval = setInterval(async () => {
-        try {
-            const r = await fetch('/api/silence-check', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId: email }),
-            });
-            if (!r.ok) return;
-            const d = await r.json();
-            _applySilence(d.silence === true, d.reason || '');
-        } catch {}
-    }, 3000);
-
-    if (chatSubscribed) return; // channels already set up — don't duplicate
+    loadChatHistory(memberId);
+    subscribeToChat(memberId);
     chatSubscribed = true;
 
-    // Load history once on first init
-    await loadChatHistory(email);
-
-    // 2. Realtime subscription on shared client (same as dashboard line 107-120)
-    if (_chatChannel) {
-        getChatSupabase().removeChannel(_chatChannel);
-        _chatChannel = null;
-    }
-    _chatChannel = getChatSupabase()
-        .channel('profile-chats-' + email)
-        .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'chats',
-            filter: `member_id=eq.${email}`
-        }, (payload: any) => {
-            const msg = payload.new;
-            const sender = (msg.sender_email || msg.sender || '').toLowerCase();
-
-            if (isSystemMessage(msg)) {
-                updateSystemTicker(msg);
-                appendSystemLog(msg);
-                if (msg.content && msg.content.includes('DIRECTIVE ASSIGNED')) {
-                    getRandomTask(true);
-                }
-                return;
-            }
-
-            // Queen message: show notification badge + sound
-            if (sender !== email && sender !== 'user' && sender !== 'slave') {
-                _updateQueenStatus(msg.created_at || new Date().toISOString());
-                const chatOverlay = document.getElementById('mobChatOverlay');
-                const isOpen = chatOverlay && (chatOverlay.style.display === 'flex' || chatOverlay.classList.contains('mob-overlay-open'));
-                if (!isOpen) {
-                    const badge = document.getElementById('mobMsgBadge');
-                    if (badge) badge.classList.add('active');
-                    const ring = document.querySelector('.mob-nav-queen-ring');
-                    if (ring) ring.classList.add('has-new-msg');
-                    try { const snd = new Audio('/audio/message.mp3'); snd.volume = 0.5; snd.play(); } catch (_) {}
-                }
-            }
-
-            const msgId = msg.id ? String(msg.id) : null;
-            if (msgId && _renderedMsgIds.has(msgId)) return; // already rendered
-            if (msgId) _renderedMsgIds.add(msgId);
-            _lastChatMsgId = msgId;
-            if (msg.created_at) _lastChatMsgTimestamp = msg.created_at;
-
-            const wasAtBottom = _isScrolledToBottom();
-            const html = renderChatMessage(msg);
-            ['chatContent', 'mob_chatContent'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.insertAdjacentHTML('beforeend', html);
-            });
-            _attachImgScrollHandlers();
-            if (wasAtBottom) _scrollChatDelayed();
-        })
-        .subscribe();
-
-    // 3. Polling fallback every 4s (same as dashboard line 123)
-    if (_chatPollInterval) clearInterval(_chatPollInterval);
-    _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 4000);
-
-    // Refresh queen presence status every 60s
-    setInterval(() => _fetchQueenStatus(), 60000);
-
-    // 4. Supabase realtime for tasks + profile stats (keep existing logic)
-    getChatSupabase()
-        .channel('tasks_updates_' + email)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks', filter: `member_id=eq.${email}` },
-            () => { updateRoutineWidget(); refreshTaskGallery(email!); })
-        .subscribe();
-
-    getChatSupabase()
-        .channel('profile_stats_' + email)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `member_id=eq.${email}` },
-            (payload: any) => {
-                const fresh = payload.new as any;
-                if (!fresh) return;
-                if (fresh.wallet !== undefined || fresh.score !== undefined) {
-                    setState({ wallet: fresh.wallet ?? getState().wallet, score: fresh.score ?? getState().score });
-                    updateWalletDisplay();
-                }
-                // Paywall / silence activated or deactivated in realtime
-                _applyPaywall(fresh.parameters?.paywall ?? null, fresh.member_id || email);
-                _applySilence(fresh.silence === true, fresh.parameters?.silence_reason || '');
-            })
-        .subscribe();
-
-    // 5. Wallet/score polling fallback every 15s
-    const walletEmail = email;
+    // Polling fallback: re-fetch wallet+score every 15s in case realtime misses an event
+    const email = memberId.toLowerCase();
     setInterval(async () => {
         try {
-            const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: walletEmail }) });
+            const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email)}`);
             const data = await res.json();
             if (data && (data.wallet !== undefined || data.score !== undefined)) {
                 const s = getState();
-                if ((data.wallet !== undefined && data.wallet !== s.wallet) || (data.score !== undefined && data.score !== s.score)) {
-                    setState({ wallet: data.wallet ?? s.wallet, score: data.score ?? s.score });
+                const walletChanged = data.wallet !== undefined && data.wallet !== s.wallet;
+                const scoreChanged = data.score !== undefined && data.score !== s.score;
+                if (walletChanged || scoreChanged) {
+                    setState({
+                        wallet: data.wallet ?? s.wallet,
+                        score: data.score ?? s.score,
+                    });
                     updateWalletDisplay();
                 }
             }
         } catch (_) {}
     }, 15000);
 
-    // 6. Push notifications
-    initOneSignal(email);
+    // Init OneSignal and identify this user so push notifications target them
+    initOneSignal(memberId);
 }
-
-async function _pollNewChatMessages(email: string) {
-    if (!_lastChatMsgTimestamp) return;
-    try {
-        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: _lastChatMsgTimestamp }) });
-        const data = await res.json();
-        if (!data.success) return;
-        const newMsgs = (data.messages || []).filter((m: any) => {
-            const id = m.id ? String(m.id) : null;
-            return id && !_renderedMsgIds.has(id);
-        });
-        if (newMsgs.length === 0) return;
-        const wasAtBottom = _isScrolledToBottom();
-        newMsgs.forEach((m: any) => {
-            const id = m.id ? String(m.id) : null;
-            if (id) _renderedMsgIds.add(id);
-            _lastChatMsgId = m.id;
-            if (m.created_at) _lastChatMsgTimestamp = m.created_at;
-            if (isSystemMessage(m)) {
-                appendSystemLog(m);
-                updateSystemTicker(m);
-                return;
-            }
-            const html = renderChatMessage(m);
-            ['chatContent', 'mob_chatContent'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.insertAdjacentHTML('beforeend', html);
-            });
-        });
-        _attachImgScrollHandlers();
-        if (wasAtBottom) _scrollChatDelayed();
-    } catch (_) {}
-}
-
 
 function initOneSignal(memberId: string) {
     // Init OneSignal in background (for subscription management)
@@ -1806,28 +1610,7 @@ function initOneSignal(memberId: string) {
                 notifyButton: { enable: false },
                 allowLocalhostAsSecureOrigin: true,
             });
-
-            const linkToServer = async () => {
-                const subId = OneSignal.User?.PushSubscription?.id;
-                if (!subId) return;
-                try {
-                    await fetch('/api/push', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ subscriptionId: subId }),
-                    });
-                } catch (_) {}
-            };
-
-            // If already subscribed, link immediately
-            if (OneSignal.User?.PushSubscription?.optedIn) {
-                await linkToServer();
-            }
-
-            // Also link whenever subscription state changes
-            OneSignal.User?.PushSubscription?.addEventListener('change', async (event: any) => {
-                if (event?.current?.optedIn) await linkToServer();
-            });
+            await OneSignal.login(memberId);
         } catch (e) {
             console.error('[OneSignal] init error:', e);
         }
@@ -1852,169 +1635,66 @@ function initOneSignal(memberId: string) {
     } else {
         allowBtn?.addEventListener('click', async () => {
             banner.style.display = 'none';
+            // Request via OneSignal if available, else native
             const OS = (window as any).OneSignal;
             if (OS?.Notifications?.requestPermission) {
                 await OS.Notifications.requestPermission();
             } else {
                 await (window as any).Notification.requestPermission();
             }
-            // Link subscription to email via server
-            const subId = OS?.User?.PushSubscription?.id;
-            if (subId) {
-                try { await fetch('/api/push', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscriptionId: subId }) }); } catch (_) {}
-            }
         });
     }
 
     dismissBtn?.addEventListener('click', () => { banner.style.display = 'none'; });
     setTimeout(() => { banner.style.display = 'flex'; }, 2000);
-
-    // Sync hub button state
-    _syncNotifHubBtn();
 }
-
-function _syncNotifHubBtn() {
-    const label = document.getElementById('notifHubLabel');
-    const desc = document.getElementById('notifHubDesc');
-    const track = document.getElementById('notifToggle') as HTMLElement | null;
-    const knob = document.getElementById('notifToggleKnob') as HTMLElement | null;
-    if (!label || !track || !knob) return;
-    const perm = ('Notification' in window) ? (window as any).Notification.permission : 'default';
-    const isOptedOut = localStorage.getItem('notif_opted_out') === '1';
-    const isOn = perm === 'granted' && !isOptedOut;
-    const isBlocked = perm === 'denied';
-
-    if (isOn) {
-        label.textContent = 'NOTIFICATIONS';
-        if (desc) desc.textContent = 'Tap to disable';
-        track.style.background = '#c5a059';
-        track.style.borderColor = '#c5a059';
-        knob.style.left = '23px';
-        knob.style.background = '#000';
-    } else if (isBlocked) {
-        label.textContent = 'NOTIFICATIONS BLOCKED';
-        if (desc) desc.textContent = 'Enable in browser settings';
-        track.style.background = '#3a1a1a';
-        track.style.borderColor = '#c0392b';
-        knob.style.left = '3px';
-        knob.style.background = '#c0392b';
-    } else {
-        label.textContent = 'NOTIFICATIONS';
-        if (desc) desc.textContent = 'Tap to enable';
-        track.style.background = '#333';
-        track.style.borderColor = '#555';
-        knob.style.left = '3px';
-        knob.style.background = '#888';
-    }
-}
-
-if (typeof window !== 'undefined') (window as any).handleNotifToggle = async function () {
-    const perm = ('Notification' in window) ? (window as any).Notification.permission : 'default';
-    const OS = (window as any).OneSignal;
-    const isOptedOut = localStorage.getItem('notif_opted_out') === '1';
-
-    if (perm === 'denied') {
-        alert('Notifications are blocked. Go to your browser settings → Site Settings → Notifications → find throne.qkarin.com → set to Allow.');
-        return;
-    }
-
-    if (perm === 'granted' && !isOptedOut) {
-        // Turn OFF
-        try { await OS?.User?.PushSubscription?.optOut?.(); } catch (_) {}
-        localStorage.setItem('notif_opted_out', '1');
-        _syncNotifHubBtn();
-        return;
-    }
-
-    if (perm === 'granted' && isOptedOut) {
-        // Turn ON — opt back in and re-link email
-        try { await OS?.User?.PushSubscription?.optIn?.(); } catch (_) {}
-        localStorage.removeItem('notif_opted_out');
-        const subId1 = OS?.User?.PushSubscription?.id;
-        if (subId1) { try { await fetch('/api/push', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscriptionId: subId1 }) }); } catch (_) {} }
-        _syncNotifHubBtn();
-        return;
-    }
-
-    // Permission not yet granted — request it
-    if (OS?.Notifications?.requestPermission) {
-        await OS.Notifications.requestPermission();
-    } else {
-        await (window as any).Notification.requestPermission();
-    }
-    localStorage.removeItem('notif_opted_out');
-    // Wait briefly for OneSignal to register the new subscription
-    await new Promise(r => setTimeout(r, 1500));
-    const subId2 = OS?.User?.PushSubscription?.id;
-    if (subId2) { try { await fetch('/api/push', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscriptionId: subId2 }) }); } catch (_) {} }
-    _syncNotifHubBtn();
-};
 
 export async function loadChatHistory(email: string) {
     try {
-        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
-        console.log('[CHAT] fetch /api/chat/history status:', res.status);
+        const res = await fetch(`/api/chat/history?email=${encodeURIComponent(email)}`);
         const data = await res.json();
         if (data.success) {
             const messages = data.messages || [];
-            console.log('[CHAT] Received messages count:', messages.length);
 
-            // Seed dedup set + track timestamps for polling
-            _renderedMsgIds.clear();
-            messages.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
-            if (messages.length > 0) {
-                const last = messages[messages.length - 1];
-                _lastChatMsgId = last.id;
-                _lastChatMsgTimestamp = last.created_at || new Date().toISOString();
-            } else {
-                _lastChatMsgTimestamp = new Date().toISOString();
+            // 1. Separate System vs Chat
+            const systemMessages = messages.filter((m: any) => isSystemMessage(m));
+            const chatMessages = messages.filter((m: any) => !isSystemMessage(m));
+
+            // 2. Update Ticker and System Log Window
+            if (systemMessages.length > 0) {
+                updateSystemTicker(systemMessages[systemMessages.length - 1]);
+                renderSystemLogs(systemMessages);
             }
 
-            // 3. Split: system messages → system log, chat messages → chat box
+            // 3. Render Chat (pass prev timestamp for 5-min gap logic)
             _lastRenderedChatTs = 0;
-            const allDisplay = messages.filter((m: any) => m.content && m.content.trim());
-            const sysDisplay = allDisplay.filter((m: any) => isSystemMessage(m));
-            const chatDisplay = allDisplay.filter((m: any) => !isSystemMessage(m));
-
-            // Populate system log from history
-            if (sysDisplay.length > 0) {
-                renderSystemLogs(sysDisplay);
-                updateSystemTicker(sysDisplay[sysDisplay.length - 1]);
-            }
-
-            const displayMessages = chatDisplay;
-            let html = displayMessages.map((m: any, i: number) => {
-                const prevTs = i === 0 ? 0 : new Date(displayMessages[i - 1].created_at || 0).getTime();
+            const html = chatMessages.map((m: any, i: number) => {
+                const prevTs = i === 0 ? 0 : new Date(chatMessages[i - 1].created_at || 0).getTime();
                 return renderChatMessage(m, prevTs);
             }).join('');
 
-            if (displayMessages.length === 0) {
-                html = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO MESSAGES YET</div>`;
-            }
-
-            // 4. Update Queen online status from real presence data
-            _fetchQueenStatus();
-
-            ['chatContent', 'mob_chatContent'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = html;
+            // 4. Update Queen online status from last queen message
+            const myEmail = getState().memberId?.toLowerCase();
+            const lastQueenMsg = [...messages].reverse().find((m: any) => {
+                const s = (m.sender_email || m.sender || '').toLowerCase();
+                return s !== myEmail && s !== 'user' && s !== 'slave' && !isSystemMessage(m);
             });
-            _scrollChatDelayed();
-            _attachImgScrollHandlers();
+            _updateQueenStatus(lastQueenMsg?.created_at || null);
+            const containers = ['chatContent', 'mob_chatContent'];
+
+            containers.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = html;
+                    el.scrollTop = el.scrollHeight;
+                }
+            });
         }
     } catch (err) {
         console.error("Failed to load chat history:", err);
-        ['chatContent', 'mob_chatContent'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.innerHTML = `<div style="text-align:center;padding:40px;color:#ff4d4d;font-family:Orbitron;font-size:0.6rem;letter-spacing:1px">CONNECTION ERROR — REFRESH REQUIRED</div>`;
-            }
-        });
     }
 }
 
-// subscribeToChat is now handled inside initChatSystem using _profileChatSupabase
-// (the shared client pattern from dashboard-chat.ts)
 function subscribeToChat(email: string) {
     const supabase = createClient();
     const cleanEmail = email.toLowerCase();
@@ -2111,7 +1791,7 @@ function subscribeToChat(email: string) {
 
 async function refreshTaskGallery(email: string) {
     try {
-        const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, full: true }) });
+        const res = await fetch(`/api/slave-profile?email=${encodeURIComponent(email)}&full=true`);
         const data = await res.json();
         if (data && !data.error) {
             renderHistoryAndAltar(data);
@@ -2124,7 +1804,6 @@ async function refreshTaskGallery(email: string) {
 
 function isSystemMessage(msg: any) {
     if (!msg) return false;
-    if (msg.type === 'system') return true; // Explicit type check
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const content = (msg.content || msg.message || '').toUpperCase();
 
@@ -2187,16 +1866,14 @@ function appendSystemLog(msg: any) {
 }
 
 function _updateQueenStatus(lastSeenIso: string | null) {
-    const dots = [document.getElementById('mobChatOnlineDot'), document.getElementById('deskChatOnlineDot')];
-    const txts = [document.getElementById('mobChatStatusText2'), document.getElementById('deskChatStatusText')];
-
-    const setStatus = (color: string, text: string, showDot: boolean) => {
-        dots.forEach(d => { if (d) d.style.display = showDot ? 'block' : 'none'; });
-        txts.forEach(t => { if (t) { t.style.color = color; t.textContent = text; } });
-    };
+    const dot = document.getElementById('mobChatOnlineDot');
+    const txt = document.getElementById('mobChatStatusText2');
+    if (!txt) return;
 
     if (!lastSeenIso) {
-        setStatus('#555', '—', false);
+        if (dot) dot.style.display = 'none';
+        txt.style.color = '#555';
+        txt.textContent = 'OFFLINE';
         return;
     }
 
@@ -2206,29 +1883,24 @@ function _updateQueenStatus(lastSeenIso: string | null) {
     const days = Math.floor(diff / 86400000);
 
     if (mins < 5) {
-        setStatus('#22c55e', 'ONLINE', true);
-    } else if (days >= 2) {
-        setStatus('#555', `LAST SEEN ${days}d AGO`, false);
-    } else if (days === 1) {
-        setStatus('#555', 'LAST SEEN YESTERDAY', false);
-    } else if (hours >= 1) {
-        setStatus('#555', `LAST SEEN ${hours}h AGO`, false);
+        // Online
+        if (dot) { dot.style.display = 'block'; }
+        txt.style.color = '#22c55e';
+        txt.textContent = 'ONLINE';
     } else {
-        setStatus('#555', `LAST SEEN ${mins}m AGO`, false);
-    }
-}
-
-async function _fetchQueenStatus() {
-    try {
-        const res = await fetch('/api/global/presence', { cache: 'no-store' });
-        const data = await res.json();
-        const queenEntry = (data.all || []).find((u: any) =>
-            (u.name || '').toUpperCase().includes('QUEEN') || (u.name || '').toUpperCase().includes('KARIN')
-        );
-        if (queenEntry) {
-            _updateQueenStatus(queenEntry.last_active || null);
+        // Offline — show last seen
+        if (dot) dot.style.display = 'none';
+        txt.style.color = '#555';
+        if (days >= 2) {
+            txt.textContent = `${days}d AGO`;
+        } else if (days === 1) {
+            txt.textContent = 'YESTERDAY';
+        } else if (hours >= 1) {
+            txt.textContent = `${hours}h AGO`;
+        } else {
+            txt.textContent = `${mins}m AGO`;
         }
-    } catch {}
+    }
 }
 
 // Track timestamp of last rendered chat message for 5-min gap logic
@@ -2237,8 +1909,6 @@ let _lastRenderedChatTs = 0;
 function renderChatMessage(msg: any, prevTs?: number): string {
     const senderEmail = (msg.sender_email || msg.sender || '').toLowerCase();
     const isSys = isSystemMessage(msg);
-    // System messages must never appear in the regular chat — they belong in the system log only
-    if (isSys) return '';
     const myEmail = getState().memberId?.toLowerCase();
     const isMe = !isSys && (senderEmail === 'user' || senderEmail === 'slave' || senderEmail === myEmail);
 
@@ -2271,69 +1941,6 @@ function renderChatMessage(msg: any, prevTs?: number): string {
     }
 
     let content = msg.content || msg.message || '';
-
-    // PROMOTION CARD
-    if (content.startsWith('PROMOTION_CARD::')) {
-        try {
-            const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
-            const initials = (d.name || 'S')[0].toUpperCase();
-            const photoBlock = d.photo
-                ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                : '';
-            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
-            const cardHtml = `
-            <div style="width:min(85%,340px);min-width:200px;margin:0 auto;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
-                <div style="position:relative;width:100%;height:140px;background:#0a0703;overflow:hidden;">
-                    ${photoBlock}${photoFallback}
-                    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
-                    <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
-                        <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;text-transform:uppercase;">✦ RANK PROMOTION</span>
-                    </div>
-                </div>
-                <div style="padding:14px 18px 18px;text-align:center;">
-                    <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${d.name || ''}</div>
-                    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
-                        <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
-                        <span style="color:rgba(197,160,89,0.7);font-size:0.9rem;">→</span>
-                        <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span>
-                    </div>
-                    <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
-                </div>
-            </div>`;
-            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div></div>`;
-        } catch (_) {
-            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">✦ Rank Promotion</div><div class="chat-ts chat-ts-left">${timeStr}</div></div></div>`;
-        }
-    }
-
-    // TASK FEEDBACK CARD (comment card)
-    if (content.startsWith('TASK_FEEDBACK::')) {
-        try {
-            const data = JSON.parse(content.replace('TASK_FEEDBACK::', ''));
-            const { mediaUrl: fbMedia, mediaType: fbType, note: fbNote, taskId: fbTaskId, memberId: fbMemberId } = data;
-            const fbIsVideo = (fbType && (fbType === 'video' || fbType.startsWith('video/'))) || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
-            const fbSrc = fbMedia ? (fbIsVideo ? fbMedia : getOptimizedUrl(fbMedia, 600)) : null;
-            const mediaBlock = fbSrc
-                ? (fbIsVideo
-                    ? `<video src="${fbSrc}" preload="metadata" muted playsinline style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0"></video>`
-                    : `<img src="${fbSrc}" style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onerror="this.style.display='none'" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0">`)
-                : '';
-            return `
-                <div class="cb-row" style="justify-content:center;padding:8px 0;">
-                    <div style="max-width:85%;width:280px;border-radius:12px;overflow:hidden;background:#0a080a;border:1px solid rgba(197,160,89,0.4);box-shadow:0 6px 24px rgba(0,0,0,0.6);">
-                        ${mediaBlock}
-                        <div style="padding:9px 12px 11px;">
-                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">✦ Task Feedback</div>
-                            ${fbNote ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.82);line-height:1.4;">${fbNote}</div>` : ''}
-                        </div>
-                    </div>
-                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
-                </div>`;
-        } catch (_) {
-            return `<div class="cb-row cb-row-queen">${`<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`}<div class="cb-wrap-queen"><div class="cb-queen">📋 Task Feedback</div><div class="chat-ts chat-ts-left">${timeStr}</div></div></div>`;
-        }
-    }
-
     if (msg.type === 'photo') {
         content = `<img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" />`;
     } else if (msg.type === 'video') {
@@ -2383,15 +1990,11 @@ export async function sendChatMessage() {
 
     if (!msg || !memberId) return;
 
-    // Capture and clear reply before sending
-    const chatReplyTo = _profileChatReply ? { sender_name: _profileChatReply.name, content: _profileChatReply.text } : null;
-    cancelProfileChatReply();
-
     try {
         const res = await fetch('/api/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senderEmail: memberId, content: msg, type: 'text', metadata: chatReplyTo ? { reply_to: chatReplyTo } : {} })
+            body: JSON.stringify({ senderEmail: memberId, content: msg, type: 'text' })
         });
         const data = await res.json();
 
@@ -2530,6 +2133,7 @@ function _closeAllMobOverlays(except?: string) {
         setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     });
     if (except !== 'altar') closeAltarDrawer();
+    closeLobby();
 }
 
 function _isOverlayOpen(id: string) {
@@ -2546,7 +2150,8 @@ export function switchMobChatTab(tab: 'chat' | 'service') {
         if (svcPanel) svcPanel.style.display = 'none';
         if (chatBtn) chatBtn.classList.add('active');
         if (svcBtn) svcBtn.classList.remove('active');
-        setTimeout(_scrollChat, 60);
+        const box = document.getElementById('mob_chatBox');
+        if (box) box.scrollTop = box.scrollHeight;
     } else {
         if (chatPanel) chatPanel.style.display = 'none';
         if (svcPanel) svcPanel.style.display = 'flex';
@@ -2561,50 +2166,15 @@ export function openMobChatOverlay() {
     _closeAllMobOverlays('mobChatOverlay');
     const el = document.getElementById('mobChatOverlay');
     if (!el) return;
-
-    // Step 1: display:flex — browser resets scrollTop=0 on any child scroll containers.
     el.style.display = 'flex';
-
-    // Step 2: Force sync layout so scrollHeight is computed and scroll reset is done.
-    void (el as any).offsetHeight;
-
-    // Step 3: Set scroll to bottom NOW — element is off-screen (translateY(100%)) but
-    // fully rendered. CSS transform changes do NOT reset scrollTop, so this persists
-    // through the slide-up animation.
-    // Scroll both the outer container AND the inner content div — depending on flex
-    // layout constraints, either one may be the actual scroll container on mobile.
-    const b = document.getElementById('mob_chatBox');
-    const bc = document.getElementById('mob_chatContent');
-    if (b) b.scrollTop = b.scrollHeight + 9999;
-    if (bc) bc.scrollTop = bc.scrollHeight + 9999;
-
     // Clear message notification
     const badge = document.getElementById('mobMsgBadge');
     if (badge) badge.classList.remove('active');
     const ring = document.querySelector('.mob-nav-queen-ring');
     if (ring) ring.classList.remove('has-new-msg');
-
-    // Step 4: Start animation AFTER scroll is set.
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
-
     _setNavActive('');
     switchMobChatTab('chat');
-
-    // If no messages loaded yet, load them
-    const content = document.getElementById('mob_chatContent');
-    const email = getState().memberId;
-    if (content && !content.children.length && email) {
-        loadChatHistory(email);
-    }
-
-    // Safety net scrolls — in case content is loaded async after animation
-    const scrollToBottom = () => {
-        if (b) b.scrollTop = b.scrollHeight + 9999;
-        if (bc) bc.scrollTop = bc.scrollHeight + 9999;
-    };
-    el.addEventListener('transitionend', scrollToBottom, { once: true });
-    setTimeout(scrollToBottom, 400);
-    setTimeout(scrollToBottom, 900);
 
     // Shrink queen avatar button when keyboard opens
     const input = document.getElementById('mob_chatMsgInput');
@@ -2614,6 +2184,14 @@ export function openMobChatOverlay() {
         input.addEventListener('focus', () => queenBtn.classList.add('mob-nav-queen-shrink'));
         input.addEventListener('blur', () => queenBtn.classList.remove('mob-nav-queen-shrink'));
     }
+
+    // Wait for slide-up animation then force scroll to bottom
+    setTimeout(() => {
+        const box = document.getElementById('mob_chatBox');
+        if (box) box.scrollTop = box.scrollHeight;
+        const content = document.getElementById('mob_chatContent');
+        if (content) content.scrollTop = content.scrollHeight;
+    }, 380);
 }
 
 export function closeMobChatOverlay() {
@@ -2657,46 +2235,16 @@ async function _loadMobQueenPosts() {
             container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO TRANSMISSIONS YET</div>`;
             return;
         }
-        container.innerHTML = data.posts.map((p: any) => {
-            const locked = !p.userHasAccess;
-            const isVideo = p.media_type === 'video';
-            const d = new Date(p.created_at || p._createdDate || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
-
-            // Media section
-            let mediaHTML = '';
-            if (p.media_url) {
-                if (locked) {
-                    const previewUrl = p.thumbnail_url || (!isVideo ? getOptimizedUrl(p.media_url, 600) : null);
-                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;">
-                        ${previewUrl ? `<img src="${previewUrl}" alt="" style="width:100%;display:block;object-fit:cover;max-height:260px;filter:blur(12px) brightness(0.35);transform:scale(1.06);" onerror="this.style.display='none'" />` : `<div style="width:100%;height:180px;background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`}
-                        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,0.45);">
-                            <div style="width:48px;height:48px;border-radius:50%;border:2px solid rgba(197,160,89,0.5);background:rgba(197,160,89,0.06);display:flex;align-items:center;justify-content:center;">
-                                ${isVideo
-                                    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polygon points="6,4 20,12 6,20" fill="rgba(197,160,89,0.8)"/></svg>`
-                                    : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="rgba(197,160,89,0.7)" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(197,160,89,0.7)" stroke-width="1.8" stroke-linecap="round"/></svg>`
-                                }
-                            </div>
-                            ${p.price > 0 ? `<div style="font-family:Orbitron;font-size:0.48rem;color:#c5a059;letter-spacing:1.5px;display:flex;align-items:center;gap:5px;"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#c5a059" stroke-width="1.8" fill="none"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 0 1 0 3H10.5a1.5 1.5 0 0 0 0 3H15" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round"/></svg>${p.price} COINS</div>` : ''}
-                            ${p.min_rank && p.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.38rem;color:#555;letter-spacing:1.5px;">REQUIRES ${(p.min_rank || '').toUpperCase()}</div>` : ''}
-                            ${p.price > 0 ? `<button onclick="window.unlockPost('${p.id}', ${p.price})" style="background:#c5a059;color:#000;border:none;font-family:Orbitron;font-size:0.45rem;letter-spacing:2px;padding:8px 18px;border-radius:2px;cursor:pointer;font-weight:700;">UNLOCK</button>` : ''}
-                        </div>
-                    </div>`;
-                } else if (isVideo) {
-                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;"><video src="${p.media_url}" controls playsinline preload="metadata" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;display:block;max-height:340px;object-fit:cover;"></video></div>`;
-                } else {
-                    mediaHTML = `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" style="width:100%;display:block;object-fit:cover;max-height:340px;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}else{this.style.display='none';}" />`;
-                }
-            }
-
-            return `<div class="mob-qwall-post">
-                ${mediaHTML}
+        container.innerHTML = data.posts.map((p: any) => `
+            <div class="mob-qwall-post">
+                ${p.media_url ? `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" onerror="this.style.display='none'" />` : ''}
                 <div class="mob-qwall-post-body">
                     ${p.title ? `<div class="mob-qwall-post-title">${p.title}</div>` : ''}
-                    ${!locked && p.content ? `<div class="mob-qwall-post-content">${p.content}</div>` : ''}
-                    <div class="mob-qwall-post-date">${d}</div>
+                    ${p.content ? `<div class="mob-qwall-post-content">${p.content}</div>` : ''}
+                    <div class="mob-qwall-post-date">${new Date(p.created_at || p._createdDate || Date.now()).toLocaleDateString()}</div>
                 </div>
-            </div>`;
-        }).join('');
+            </div>
+        `).join('');
     } catch {
         container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
     }
@@ -2707,79 +2255,6 @@ const _mobGlLoaded: Record<string, boolean> = {};
 let _mobGlActivePeriod = 'today';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _mobGlRealtimeChannel: any = null;
-const _mobGlPendingSent = new Set<string>();
-
-// ─── REPLY STATE ──────────────────────────────────────────────────────────────
-let _mobGlReply: { id: string; name: string; text: string } | null = null;
-let _profileChatReply: { id: string; name: string; text: string } | null = null;
-
-function _ensureMobGlReplyBar() {
-    if (document.getElementById('mobGlReplyBar')) return;
-    const feed = document.getElementById('mobGlTalkFeed');
-    if (!feed) return;
-    const bar = document.createElement('div');
-    bar.id = 'mobGlReplyBar';
-    bar.style.cssText = 'display:none;align-items:center;gap:10px;padding:7px 12px;background:rgba(197,160,89,0.07);border-top:1px solid rgba(197,160,89,0.18);flex-shrink:0;';
-    bar.innerHTML = `
-        <div style="flex:1;min-width:0;border-left:2px solid rgba(197,160,89,0.6);padding-left:8px;">
-            <div id="mobGlReplyBarName" style="font-family:Orbitron;font-size:0.33rem;color:rgba(197,160,89,0.8);letter-spacing:1px;margin-bottom:2px;"></div>
-            <div id="mobGlReplyBarText" style="font-family:Rajdhani;font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-        </div>
-        <button onclick="window.cancelMobGlReply()" style="background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:1rem;padding:4px 6px;flex-shrink:0;line-height:1;">✕</button>`;
-    feed.insertAdjacentElement('afterend', bar);
-}
-
-export function setMobGlReply(id: string, name: string, text: string) {
-    _mobGlReply = { id, name, text };
-    _ensureMobGlReplyBar();
-    const bar = document.getElementById('mobGlReplyBar');
-    if (bar) bar.style.display = 'flex';
-    const nameEl = document.getElementById('mobGlReplyBarName');
-    const textEl = document.getElementById('mobGlReplyBarText');
-    if (nameEl) nameEl.innerHTML = `<svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="rgba(197,160,89,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polyline points="8 16 3 11 8 6"></polyline><path d="M17 4v7a4 4 0 0 1-4 4H3"></path></svg>` + name;
-    if (textEl) textEl.textContent = text.slice(0, 80);
-    document.getElementById('mobGlTalkInput')?.focus();
-}
-
-export function cancelMobGlReply() {
-    _mobGlReply = null;
-    const bar = document.getElementById('mobGlReplyBar');
-    if (bar) bar.style.display = 'none';
-}
-
-function _ensureProfileChatReplyBar() {
-    if (document.getElementById('profileChatReplyBar')) return;
-    const footer = document.querySelector('.chat-footer');
-    if (!footer) return;
-    const bar = document.createElement('div');
-    bar.id = 'profileChatReplyBar';
-    bar.style.cssText = 'display:none;align-items:center;gap:10px;padding:7px 14px;background:rgba(197,160,89,0.07);border-top:1px solid rgba(197,160,89,0.18);flex-shrink:0;';
-    bar.innerHTML = `
-        <div style="flex:1;min-width:0;border-left:2px solid rgba(197,160,89,0.6);padding-left:8px;">
-            <div id="profileChatReplyBarName" style="font-family:Orbitron;font-size:0.33rem;color:rgba(197,160,89,0.8);letter-spacing:1px;margin-bottom:2px;"></div>
-            <div id="profileChatReplyBarText" style="font-family:Rajdhani;font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-        </div>
-        <button onclick="window.cancelProfileChatReply()" style="background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:1rem;padding:4px 6px;flex-shrink:0;line-height:1;">✕</button>`;
-    footer.insertBefore(bar, footer.firstChild);
-}
-
-export function setProfileChatReply(id: string, name: string, text: string) {
-    _profileChatReply = { id, name, text };
-    _ensureProfileChatReplyBar();
-    const bar = document.getElementById('profileChatReplyBar');
-    if (bar) bar.style.display = 'flex';
-    const nameEl = document.getElementById('profileChatReplyBarName');
-    const textEl = document.getElementById('profileChatReplyBarText');
-    if (nameEl) nameEl.innerHTML = `<svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="rgba(197,160,89,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polyline points="8 16 3 11 8 6"></polyline><path d="M17 4v7a4 4 0 0 1-4 4H3"></path></svg>` + name;
-    if (textEl) textEl.textContent = text.slice(0, 80);
-    (document.getElementById('chatMsgInput') || document.getElementById('mob_chatMsgInput'))?.focus();
-}
-
-export function cancelProfileChatReply() {
-    _profileChatReply = null;
-    const bar = document.getElementById('profileChatReplyBar');
-    if (bar) bar.style.display = 'none';
-}
 
 export function openMobGlobal() {
     if (_isOverlayOpen('mobGlobalOverlay')) { closeMobGlobal(); return; }
@@ -2789,7 +2264,7 @@ export function openMobGlobal() {
     el.style.display = 'flex';
     requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
     _setNavActive('global');
-    _switchMobGlTab('talk');
+    _switchMobGlTab('rank');
 }
 
 export function closeMobGlobal() {
@@ -2817,16 +2292,8 @@ function _switchMobGlTab(tab: string) {
 
     // Load content if not loaded yet
     if (tab === 'rank') _loadMobGlLeaderboard(_mobGlActivePeriod);
-    else if (tab === 'talk') {
-        _loadMobGlTalk();
-        // Always scroll to bottom when switching to talk (even if already loaded)
-        const c = document.getElementById('mobGlTalkFeed');
-        if (c) {
-            requestAnimationFrame(() => requestAnimationFrame(() => { c.scrollTop = c.scrollHeight + 9999; }));
-            setTimeout(() => { c.scrollTop = c.scrollHeight + 9999; }, 200);
-        }
-    }
-    else if (tab === 'challenges') _loadMobGlChallenges();
+    else if (tab === 'talk') _loadMobGlTalk();
+    else if (tab === 'queen') _loadMobGlQueen();
     else if (tab === 'updates') _loadMobGlUpdates();
 }
 
@@ -2852,36 +2319,17 @@ async function _loadMobGlLeaderboard(period: string) {
             container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO DATA YET</div>`;
             return;
         }
-        const MEDALS_MOB = ['🥇', '🥈', '🥉'];
-        const MEDAL_COLORS_MOB = ['#FFD700', '#C0C0C0', '#CD7F32'];
-        const top3 = entries.slice(0, 3);
-        const rest = entries.slice(3);
-
-        const top3Html = top3.map((e: any, i: number) => `
-            <div class="mob-gl-rank-row mob-gl-rank-row--top mob-gl-rank-row--rank${i + 1}">
-                <div class="mob-gl-rank-medal">${MEDALS_MOB[i]}</div>
-                ${e.avatar ? `<img src="${e.avatar}" class="mob-gl-rank-avatar mob-gl-rank-avatar--top" alt="" onerror="this.style.display='none'"/>` : `<div class="mob-gl-rank-avatar-placeholder mob-gl-rank-avatar--top"></div>`}
-                <div class="mob-gl-rank-info">
-                    <div class="mob-gl-rank-name mob-gl-rank-name--top">${e.name || e.member_id || 'SLAVE'}</div>
-                    ${e.hierarchy ? `<div class="mob-gl-rank-tier" style="color:${MEDAL_COLORS_MOB[i]}">${e.hierarchy}</div>` : ''}
-                </div>
-                <span class="mob-gl-rank-score mob-gl-rank-score--top" style="color:${MEDAL_COLORS_MOB[i]}">${(e.score ?? 0).toLocaleString()}</span>
-            </div>
-        `).join('');
-
-        const restHtml = rest.map((e: any, i: number) => `
+        container.innerHTML = entries.map((e: any, i: number) => `
             <div class="mob-gl-rank-row">
-                <span class="mob-gl-rank-num">${i + 4}</span>
+                <span class="mob-gl-rank-num">${i + 1}</span>
                 ${e.avatar ? `<img src="${e.avatar}" class="mob-gl-rank-avatar" alt="" onerror="this.style.display='none'"/>` : `<div class="mob-gl-rank-avatar-placeholder"></div>`}
                 <div class="mob-gl-rank-info">
                     <div class="mob-gl-rank-name">${e.name || e.member_id || 'SLAVE'}</div>
                     ${e.hierarchy ? `<div class="mob-gl-rank-tier">${e.hierarchy}</div>` : ''}
                 </div>
-                <span class="mob-gl-rank-score">${(e.score ?? 0).toLocaleString()}</span>
+                <span class="mob-gl-rank-score">${e.score ?? 0}</span>
             </div>
         `).join('');
-
-        container.innerHTML = top3Html + (restHtml ? `<div class="mob-gl-rank-divider"></div>${restHtml}` : '');
         _mobGlLoaded[`rank_${period}`] = true;
     } catch {
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
@@ -2911,140 +2359,19 @@ function _initMobGlRealtime() {
     _mobGlRealtimeChannel = sb
         .channel('mob_global_messages_channel')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' },
-            (payload: any) => {
-                const msg = payload.new;
-                const msgContent = msg.message || '';
-                if (_mobGlPendingSent.has(msgContent)) {
-                    _mobGlPendingSent.delete(msgContent);
-                    return;
-                }
-                _appendMobGlMessage(msg);
-            }
+            (payload: any) => { _appendMobGlMessage(payload.new); }
         )
         .subscribe();
 }
 
-const MOB_QUEEN_EMAILS = ['ceo@qkarin.com'];
+const MOB_QUEEN_EMAILS = ['ceo@qkarin.com', 'liviacechova@gmail.com'];
 
 function _buildMobGlBubble(msg: any): string {
     const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const senderEmail = (msg.sender_email || '').toLowerCase();
     const isQueen = MOB_QUEEN_EMAILS.includes(senderEmail);
-    const { memberId, id } = getState();
-    const myEmail = ((memberId || id || '') as string).toLowerCase();
-    const isMe = !isQueen && !!myEmail && senderEmail === myEmail;
-    void isMe; // reserved for future alignment; queen is sole Cinzel user
     const name = msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT';
     const content = msg.message || '';
-    const msgId = msg.id || '';
-    const nameSafe = name.replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
-    const contentSafe = content.slice(0, 80).replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, ' ');
-    const SVG_REPLY_MOB = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>`;
-    const SVG_CROWN_MOB = `<svg width="11" height="9" viewBox="0 0 26 20" fill="#c5a059" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
-    const replyBtn = msgId ? `<button class="mob-gl-reply-btn" onclick="event.stopPropagation();window.setMobGlReply('${msgId}','${nameSafe}','${contentSafe}')" title="Reply">${SVG_REPLY_MOB}</button>` : '';
-    const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:4px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;">
-        <div style="display:flex;align-items:center;gap:4px;font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:1px;white-space:nowrap;overflow:hidden;"><svg width="9" height="9" viewBox="0 0 20 20" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="8 16 3 11 8 6"></polyline><path d="M17 4v7a4 4 0 0 1-4 4H3"></path></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(msg.reply_to.sender_name || '').replace(/</g, '&lt;')}</span></div>
-        <div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content || '').slice(0, 55).replace(/</g, '&lt;')}</div>
-    </div>` : '';
-
-    // PROMOTION CARD — same card as desktop global chat
-    if (content.startsWith('PROMOTION_CARD::')) {
-        try {
-            const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
-            const initials = (d.name || 'S')[0].toUpperCase();
-            const photoBlock = d.photo
-                ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                : '';
-            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
-                <div style="width:85%;max-width:340px;min-width:200px;">
-                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
-                        <div style="position:relative;width:100%;height:140px;background:#0a0703;overflow:hidden;">
-                            ${photoBlock}${photoFallback}
-                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
-                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div>
-                        </div>
-                        <div style="padding:14px 18px 18px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${d.name || ''}</div>
-                            <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank || '').toUpperCase()}</span>
-                                <span style="color:rgba(197,160,89,0.7);">→</span>
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank || '').toUpperCase()}</span>
-                            </div>
-                            <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
-                        </div>
-                    </div>
-                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
-                </div>
-            </div>`;
-        } catch { /* fall through to plain text */ }
-    }
-
-    // CHALLENGE JOIN CARD
-    if (content.startsWith('CHALLENGE_JOIN_CARD::')) {
-        try {
-            const d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::', ''));
-            const initials = (d.name || 'S')[0].toUpperCase();
-            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
-            const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
-                <div style="width:85%;max-width:340px;min-width:200px;">
-                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#060e08 0%,#040d06 60%,#030a04 100%);border:1px solid rgba(74,222,128,0.45);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
-                        <div style="position:relative;width:100%;height:130px;background:#030a04;overflow:hidden;${bgImg}">
-                            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);"></div>
-                            <div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-                                <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid rgba(74,222,128,0.6);position:relative;">${photoBlock}<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(74,222,128,0.1);font-family:'Cinzel';font-size:1.1rem;color:#4ade80;">${initials}</div></div>
-                            </div>
-                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#060e08 100%);"></div>
-                            <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(3,10,4,0.9);border:1px solid rgba(74,222,128,0.5);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#4ade80;letter-spacing:2px;">⚔ JOINED CHALLENGE</span></div>
-                        </div>
-                        <div style="padding:12px 16px 16px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;margin-bottom:4px;">${d.name||''}</div>
-                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(74,222,128,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div>
-                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:3px 12px;">
-                                <span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span>
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#4ade80;letter-spacing:2px;">ACTIVE USERS: ${d.activeCount||0}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
-                </div>
-            </div>`;
-        } catch { /* fall through */ }
-    }
-
-    // CHALLENGE ELIMINATED CARD
-    if (content.startsWith('CHALLENGE_ELIM_CARD::')) {
-        try {
-            const d = JSON.parse(content.replace('CHALLENGE_ELIM_CARD::', ''));
-            const initials = (d.name || 'S')[0].toUpperCase();
-            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
-            const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
-                <div style="width:85%;max-width:340px;min-width:200px;">
-                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0606 0%,#0d0404 60%,#0a0303 100%);border:1px solid rgba(224,48,48,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
-                        <div style="position:relative;width:100%;height:130px;background:#0a0303;overflow:hidden;${bgImg}">
-                            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div>
-                            <div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-                                <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid rgba(224,48,48,0.5);position:relative;">${photoBlock}<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(224,48,48,0.1);font-family:'Cinzel';font-size:1.1rem;color:#e03030;">${initials}</div></div>
-                            </div>
-                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0606 100%);"></div>
-                            <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,3,3,0.9);border:1px solid rgba(224,48,48,0.45);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#e03030;letter-spacing:2px;">✕ ELIMINATED</span></div>
-                        </div>
-                        <div style="padding:12px 16px 16px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;margin-bottom:4px;">${d.name||''}</div>
-                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(224,48,48,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div>
-                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.18);border-radius:20px;padding:3px 12px;">
-                                <span style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#4ade80;letter-spacing:2px;">STILL IN: ${d.activeCount||0}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
-                </div>
-            </div>`;
-        } catch { /* fall through */ }
-    }
 
     const mediaHtml = msg.media_url
         ? (msg.media_type === 'video'
@@ -3052,148 +2379,21 @@ function _buildMobGlBubble(msg: any): string {
             : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;" />`)
         : '';
 
-    const av = msg.sender_avatar || null;
-    const avatarHtml = av
-        ? `<img src="${av}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.4);flex-shrink:0;" onerror="this.style.display='none'">`
-        : `<div style="width:18px;height:18px;border-radius:50%;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:Cinzel;font-size:0.38rem;color:#c5a059;flex-shrink:0;">${(name[0]||'S').toUpperCase()}</div>`;
-
     if (isQueen) {
-        const qAvHtml = av
-            ? `<img src="${av}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
-            : `<img src="/queen-karin.png" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
-        return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
-                <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
-                    ${qAvHtml}
-                    <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.75rem;color:#c5a059;letter-spacing:1px;font-weight:700;white-space:nowrap;">QUEEN KARIN</span></div>
-                    <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
-                </div>
-                ${replyBtn}
+        return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,109,20,0.12));border:1px solid rgba(197,160,89,0.45);border-radius:10px;box-shadow:0 0 10px rgba(197,160,89,0.12);overflow:hidden;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                <span style="font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.8);letter-spacing:1px;">QUEEN KARIN</span>
+                <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);">${time}</span>
             </div>
-            ${quoteHtml}<span style="font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</span>
+            <span style="font-family:'Rajdhani';font-size:0.88rem;color:#f0d888;line-height:1.4;">${content}</span>
             ${mediaHtml}
         </div>`;
     }
 
-    // UPDATE PHOTO CARD
-    if (content.startsWith('UPDATE_PHOTO_CARD::')) {
-        try {
-            const d = JSON.parse(content.replace('UPDATE_PHOTO_CARD::', ''));
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
-                <div style="width:85%;max-width:340px;min-width:200px;">
-                    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.2);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
-                        <img src="${d.mediaUrl}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'">
-                        <div style="padding:10px 14px 12px;">
-                            <div style="display:flex;align-items:center;justify-content:space-between;">
-                                <span style="font-family:'Cinzel';font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</span>
-                                <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);">${time}</span>
-                            </div>
-                            ${d.caption ? `<div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:3px;">${d.caption}</div>` : ''}
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-        } catch { /* fall through */ }
-    }
-
-    // UPDATE TRIBUTE CARD
-    if (content.startsWith('UPDATE_TRIBUTE_CARD::')) {
-        try {
-            const d = JSON.parse(content.replace('UPDATE_TRIBUTE_CARD::', ''));
-            const tInitial = (d.senderName || 'S')[0].toUpperCase();
-            const coverSrc = d.image || d.senderAvatar || '';
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
-                <div style="width:85%;max-width:340px;min-width:200px;">
-                    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
-                        <div style="width:100%;height:130px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
-                            ${coverSrc ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none'">` : ''}
-                            <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:2.5rem;color:rgba(197,160,89,0.4);">${tInitial}</div>
-                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div>
-                            <div style="position:absolute;bottom:10px;left:14px;font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div>
-                        </div>
-                        <div style="padding:10px 14px 12px;">
-                            <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${d.title||''}</div>
-                            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
-                                <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.55);letter-spacing:1px;">${d.senderName||''}</span>
-                                <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);">${time}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-        } catch { /* fall through */ }
-    }
-
-    // CHALLENGE TASK CARD
-    if (content.startsWith('CHALLENGE_TASK_CARD::')) {
-        try {
-            const d = JSON.parse(content.replace('CHALLENGE_TASK_CARD::', ''));
-            const cInitial = (d.senderName || 'S')[0].toUpperCase();
-            const passed = d.passed !== false;
-            const accentColor = passed ? '#4ade80' : '#e03030';
-            const accentBg = passed ? 'rgba(74,222,128,0.05)' : 'rgba(224,48,48,0.05)';
-            const accentBorder = passed ? 'rgba(74,222,128,0.25)' : 'rgba(224,48,48,0.25)';
-            const label = passed ? '✓ TASK PASSED' : '✕ TASK FAILED';
-            const subLabel = passed
-                ? `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} — continues${d.taskNum ? ` (${d.taskNum})` : ''}`
-                : `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} — eliminated`;
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
-                <div style="width:85%;max-width:340px;min-width:200px;">
-                    <div style="background:${accentBg};border:1px solid ${accentBorder};border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-sizing:border-box;">
-                        <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px solid ${accentBorder};overflow:hidden;position:relative;flex-shrink:0;">
-                            ${d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : ''}
-                            <div style="display:${d.senderAvatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:${accentColor};">${cInitial}</div>
-                        </div>
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-family:'Orbitron';font-size:0.4rem;color:${accentColor};letter-spacing:1px;margin-bottom:2px;">${label}</div>
-                            <div style="font-family:'Cinzel';font-size:0.8rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div>
-                            <div style="font-family:'Rajdhani';font-size:0.7rem;color:rgba(255,255,255,0.45);margin-top:2px;">${subLabel}</div>
-                            ${passed && d.points ? `<div style="font-family:'Orbitron';font-size:0.7rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${d.points} pts</div>` : ''}
-                        </div>
-                        <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.35);flex-shrink:0;align-self:flex-start;">${time}</div>
-                    </div>
-                </div>
-            </div>`;
-        } catch { /* fall through */ }
-    }
-
-    // UPDATE MERIT CARD
-    if (content.startsWith('UPDATE_MERIT_CARD::')) {
-        try {
-            const d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
-            const mInitial = (d.senderName || 'S')[0].toUpperCase();
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
-                <div style="width:85%;max-width:340px;min-width:200px;">
-                    <div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-sizing:border-box;">
-                        <div style="width:42px;height:42px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
-                            ${d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : ''}
-                            <div style="display:${d.senderAvatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${mInitial}</div>
-                        </div>
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-family:'Orbitron';font-size:0.4rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:2px;">⚡ MERIT EARNED</div>
-                            <div style="font-family:'Cinzel';font-size:0.8rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div>
-                            <div style="font-family:'Orbitron';font-size:0.82rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${d.points||0} MERIT</div>
-                        </div>
-                        <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.35);flex-shrink:0;align-self:flex-start;">${time}</div>
-                    </div>
-                </div>
-            </div>`;
-        } catch { /* fall through */ }
-    }
-
-    const contentEl = `<span class="mob-gl-talk-content">${content}</span>`;
-
     return `<div class="mob-gl-talk-msg">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-            <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;">
-                ${avatarHtml}
-                <span class="mob-gl-talk-name">${name}</span>
-                <span class="mob-gl-talk-time"> · ${time}</span>
-            </div>
-            ${replyBtn}
-        </div>
-        ${quoteHtml ? `<div style="margin-bottom:3px;">${quoteHtml}</div>` : ''}
-        ${contentEl}
+        <span class="mob-gl-talk-name">${name}</span>
+        <span class="mob-gl-talk-content">${content}</span>
+        <span class="mob-gl-talk-time">${time}</span>
     </div>`;
 }
 
@@ -3203,7 +2403,7 @@ function _appendMobGlMessage(msg: any) {
     const el = document.createElement('div');
     el.innerHTML = _buildMobGlBubble(msg);
     container.appendChild(el.firstElementChild!);
-    requestAnimationFrame(() => requestAnimationFrame(() => { container.scrollTop = container.scrollHeight + 9999; }));
+    container.scrollTop = container.scrollHeight;
 }
 
 function _renderMobGlTalk(msgs: any[]) {
@@ -3214,18 +2414,7 @@ function _renderMobGlTalk(msgs: any[]) {
         return;
     }
     container.innerHTML = msgs.map((m: any) => _buildMobGlBubble(m)).join('');
-    const scrollBottom = () => { container.scrollTop = container.scrollHeight + 9999; };
-    // Double-RAF: after layout is fully computed
-    requestAnimationFrame(() => requestAnimationFrame(scrollBottom));
-    setTimeout(scrollBottom, 200);
-    setTimeout(scrollBottom, 600);  // catch slow image loads
-    // Attach image load handlers so promo cards / avatars trigger re-scroll
-    (container.querySelectorAll('img') as NodeListOf<HTMLImageElement>).forEach(img => {
-        if (!img.complete) {
-            img.addEventListener('load', scrollBottom, { once: true });
-            img.addEventListener('error', scrollBottom, { once: true });
-        }
-    });
+    container.scrollTop = container.scrollHeight;
 }
 
 export async function sendMobGlMessage() {
@@ -3238,19 +2427,11 @@ export async function sendMobGlMessage() {
     const senderEmail = memberId || id;
     if (!senderEmail) return;
 
-    // Capture and clear reply before sending
-    const replyTo = _mobGlReply ? { sender_name: _mobGlReply.name, content: _mobGlReply.text } : null;
-    cancelMobGlReply();
-
-    // Track for dedup — realtime will fire for our own message too
-    _mobGlPendingSent.add(content);
-
     // Optimistic update
     _appendMobGlMessage({
         sender_name: raw?.name || senderEmail.split('@')[0] || 'SUBJECT',
         sender_email: senderEmail,
         message: content,
-        reply_to: replyTo,
         created_at: new Date().toISOString(),
     });
 
@@ -3258,7 +2439,7 @@ export async function sendMobGlMessage() {
         await fetch('/api/global/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: content, senderEmail, reply_to: replyTo })
+            body: JSON.stringify({ message: content, senderEmail })
         });
     } catch {
         console.warn('[MOB_GLOBAL] Failed to send message');
@@ -3269,147 +2450,33 @@ export function handleMobGlKey(e: KeyboardEvent) {
     if (e.key === 'Enter') sendMobGlMessage();
 }
 
-async function _loadMobGlChallenges() {
-    if (_mobGlLoaded['challenges']) return;
-    const container = document.getElementById('mobGlChallengesFeed');
+async function _loadMobGlQueen() {
+    if (_mobGlLoaded['queen']) return;
+    const container = document.getElementById('mobGlQueenFeed');
     if (!container) return;
     container.innerHTML = `<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
     try {
-        const res = await fetch('/api/challenges', { cache: 'no-store' });
-        const { challenges } = await res.json();
-        const now = Date.now();
-        const active = (challenges || []).filter((c: any) => c.status === 'active');
-        const upcoming = (challenges || []).filter((c: any) =>
-            c.status === 'draft' && c.start_date && new Date(c.start_date).getTime() > now
-        );
-        const all = [...active, ...upcoming];
-        if (!all.length) {
-            container.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:40px;"><span style="font-size:2rem;opacity:0.2;">⚔</span><span style="font-family:'Orbitron';font-size:0.45rem;color:rgba(74,222,128,0.3);letter-spacing:2px;text-align:center;">NO ACTIVE CHALLENGES</span></div>`;
+        const res = await fetch('/api/global/queen', { cache: 'no-store' });
+        const data = await res.json();
+        const posts: any[] = data.posts || data.transmissions || [];
+        if (!posts.length) {
+            container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO TRANSMISSIONS YET</div>`;
             return;
         }
-        container.innerHTML = all.map((c: any) => {
-            const isLive = c.status === 'active';
-            const startsSoon = !isLive;
-            const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - now) / 86400000)) : null;
-            const startDate = c.start_date ? new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
-            const stats = [
-                { label: 'Days', val: String(c.duration_days) },
-                { label: 'Tasks a day', val: String(c.tasks_per_day) },
-                { label: 'Window', val: `${c.window_minutes} min` },
-                { label: 'Still working', val: String(c.participant_active ?? '—') },
-                ...(daysLeft !== null && isLive ? [{ label: 'Days left', val: String(daysLeft) }] : []),
-                ...(startsSoon && startDate ? [{ label: 'Starts', val: startDate }] : []),
-            ];
-            const statsHtml = stats.map(({ label, val }) =>
-                `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-                    <span style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.38);letter-spacing:0.5px;">${label}</span>
-                    <span style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(197,160,89,0.9);font-weight:700;">${val}</span>
-                </div>`
-            ).join('');
-            const badgeStyle = startsSoon
-                ? 'background:rgba(251,191,36,0.9);color:#000;'
-                : 'background:rgba(74,222,128,0.9);color:#000;';
-            const badgeText = startsSoon ? 'SOON' : 'LIVE';
-            const imgBlock = c.image_url
-                ? `<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'" alt="${c.name}">`
-                : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;opacity:0.2;background:linear-gradient(135deg,rgba(197,160,89,0.1),rgba(197,160,89,0.04));">★</div>`;
-            return `<div style="margin:10px 12px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);">
-                <div style="display:flex;gap:0;">
-                    <!-- Image -->
-                    <div style="width:130px;min-height:180px;flex-shrink:0;position:relative;background:rgba(197,160,89,0.06);">
-                        ${imgBlock}
-                        <div style="position:absolute;top:10px;left:10px;${badgeStyle}border-radius:6px;padding:3px 8px;font-family:'Orbitron',monospace;font-size:0.32rem;font-weight:700;letter-spacing:1px;">${badgeText}</div>
-                    </div>
-                    <!-- Info -->
-                    <div style="flex:1;padding:16px 16px 14px;display:flex;flex-direction:column;gap:10px;justify-content:space-between;min-width:0;">
-                        <div>
-                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:1px;margin-bottom:5px;">${c.name}</div>
-                            ${c.description ? `<div style="font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(255,255,255,0.35);line-height:1.5;letter-spacing:0.5px;">${c.description}</div>` : ''}
-                        </div>
-                        <div style="display:flex;flex-direction:column;">${statsHtml}</div>
-                        <button onclick="(window._openChallengePanel||function(){})(event,'${c.id}');event.stopPropagation();" style="width:100%;padding:9px 0;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#c5a059 0%,#8b6914 100%);color:#000;font-family:'Orbitron';font-size:0.52rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 15px rgba(197,160,89,0.3);">JOIN CHALLENGE</button>
-                    </div>
+        container.innerHTML = posts.map((p: any) => `
+            <div class="mob-qwall-post">
+                ${p.media_url ? `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" onerror="this.style.display='none'" />` : ''}
+                <div class="mob-qwall-post-body">
+                    ${p.title ? `<div class="mob-qwall-post-title">${p.title}</div>` : ''}
+                    ${p.content ? `<div class="mob-qwall-post-content">${p.content}</div>` : ''}
+                    <div class="mob-qwall-post-date">${new Date(p.created_at || Date.now()).toLocaleDateString()}</div>
                 </div>
-            </div>`;
-        }).join('');
-        _mobGlLoaded['challenges'] = true;
+            </div>
+        `).join('');
+        _mobGlLoaded['queen'] = true;
     } catch {
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
     }
-}
-
-export async function mobJoinChallenge(e: Event, challengeId: string) {
-    e.stopPropagation();
-    const btn = (e.target as HTMLElement);
-    btn.textContent = '...';
-    btn.setAttribute('disabled', 'true');
-    try {
-        const res = await fetch(`/api/challenges/${challengeId}/join`, { method: 'POST' });
-        const json = await res.json();
-        if (json.success) {
-            btn.textContent = json.already_joined ? 'JOINED' : '✓ IN';
-            btn.style.color = '#4ade80';
-            btn.style.borderColor = 'rgba(74,222,128,0.3)';
-        } else {
-            btn.textContent = 'ERR';
-        }
-    } catch {
-        btn.textContent = 'ERR';
-    }
-}
-
-function _buildMobUpdateCard(u: any): string {
-    const time = new Date(u.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if (u.kind === 'tribute') {
-        const coverSrc = u.image || u.sender_avatar || '';
-        const initial = (u.sender_name || 'S')[0].toUpperCase();
-        return `<div style="margin-bottom:16px;background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
-            <div style="width:100%;height:140px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
-                ${coverSrc ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-                <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:3rem;color:rgba(197,160,89,0.4);">${initial}</div>
-                <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div>
-                <div style="position:absolute;bottom:10px;left:14px;font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div>
-            </div>
-            <div style="padding:12px 14px 14px;">
-                <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title || ''}</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
-                    <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.65);letter-spacing:1px;">${u.sender_name || ''}</span>
-                    <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.45);">${time}</span>
-                </div>
-            </div>
-        </div>`;
-    }
-    if (u.kind === 'points') {
-        const initial = (u.sender_name || 'S')[0].toUpperCase();
-        return `<div style="margin-bottom:16px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;">
-            <div style="width:42px;height:42px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
-                ${u.sender_avatar ? `<img src="${u.sender_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-                <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${initial}</div>
-            </div>
-            <div style="flex:1;min-width:0;">
-                <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.55);letter-spacing:1px;margin-bottom:3px;">⚡ MERIT EARNED</div>
-                <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name || ''}</div>
-                <div style="font-family:'Orbitron';font-size:0.85rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${u.points || 0} MERIT</div>
-            </div>
-            <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.45);flex-shrink:0;align-self:flex-start;">${time}</div>
-        </div>`;
-    }
-    // photo / default
-    if (u.media_url) {
-        return `<div style="margin-bottom:16px;background:#0a0a14;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;width:100%;position:relative;">
-            <img src="${getOptimizedUrl(u.media_url, 600)}" style="width:100%;max-height:240px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'">
-            <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.88));">
-                <div style="font-family:'Cinzel';font-size:0.62rem;color:#fff;">${u.sender_name || ''} <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.55);">${time}</span></div>
-                ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.55);margin-top:2px;">${u.caption}</div>` : ''}
-            </div>
-        </div>`;
-    }
-    // fallback text card
-    return `<div style="margin-bottom:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(197,160,89,0.12);border-radius:8px;padding:12px 14px;">
-        ${u.title ? `<div style="font-family:'Cinzel';font-size:0.7rem;color:#c5a059;letter-spacing:2px;margin-bottom:4px;">${u.title}</div>` : ''}
-        ${u.content ? `<div style="font-family:'Crimson Text';font-size:0.85rem;color:#bbb;line-height:1.5;">${u.content}</div>` : ''}
-        <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);margin-top:6px;letter-spacing:1px;">${time}</div>
-    </div>`;
 }
 
 async function _loadMobGlUpdates() {
@@ -3425,7 +2492,13 @@ async function _loadMobGlUpdates() {
             container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem;letter-spacing:3px">NO UPDATES YET</div>`;
             return;
         }
-        container.innerHTML = updates.map((u: any) => _buildMobUpdateCard(u)).join('');
+        container.innerHTML = updates.map((u: any) => `
+            <div class="mob-gl-update-card">
+                ${u.media_url ? `<img src="${getOptimizedUrl(u.media_url, 600)}" alt="" onerror="this.style.display='none'" />` : ''}
+                ${u.title ? `<div class="mob-gl-update-title">${u.title}</div>` : ''}
+                ${u.content ? `<div class="mob-gl-update-content">${u.content}</div>` : ''}
+            </div>
+        `).join('');
         _mobGlLoaded['updates'] = true;
     } catch {
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Cinzel;font-size:0.75rem">UNABLE TO LOAD</div>`;
@@ -3912,9 +2985,9 @@ export function renderProfileSidebar(u: any) {
     if (elSubName) elSubName.innerText = u.name || 'SLAVE';
 
     const elCurEmail = document.getElementById('subEmail');
-    if (elCurEmail) elCurEmail.style.display = 'none';
+    if (elCurEmail) elCurEmail.innerText = u.member_id || '';
     const elMobEmail = document.getElementById('mob_slaveEmail');
-    if (elMobEmail) elMobEmail.style.display = 'none';
+    if (elMobEmail) elMobEmail.innerText = u.member_id || '';
 
     const photoSrc = u.avatar_url || u.profile_picture_url || '';
     if (photoSrc) {
@@ -4101,9 +3174,8 @@ export async function loadQueenPosts() {
 
     try {
         const email = getState().memberId || '';
-        const res = email
-            ? await fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fetch', email }) })
-            : await fetch('/api/posts', { cache: 'no-store' });
+        const url = email ? `/api/posts?email=${encodeURIComponent(email)}` : '/api/posts';
+        const res = await fetch(url, { cache: 'no-store' });
         const data = await res.json();
 
         if (!data.success || !data.posts || data.posts.length === 0) {
@@ -4555,7 +3627,7 @@ export async function loadQueenPosts() {
                         ? `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#18120a 0%,#0a0808 55%,#060606 100%);"></div>`
                         : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(0.25);pointer-events:none;" />`)
                 : heroIsVideo
-                    ? `<video src="${heroPost.media_url}" muted playsinline preload="none" onclick="window.openQkLightbox('video','${heroPost.media_url}')" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
+                    ? `<video src="${heroPost.media_url}" muted playsinline preload="none" onclick="window.openQkLightbox('video','${heroPost.media_url}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
                     : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="width:100%;height:100%;object-fit:cover;object-position:center top;cursor:pointer;" />`;
         const heroHTML = `
         <div class="qk-hero">
@@ -4845,11 +3917,7 @@ function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLE
     const card = document.createElement('div');
     card.className = 'altar-photo-card';
     if (dimmed) card.style.filter = 'grayscale(0.65)';
-    const taskText = (t.text || '').replace(/<[^>]+>/g, '');
-    const commentHTML = t.adminComment
-        ? `<div style="font-family:Orbitron;font-size:0.42rem;color:#c5a059;margin-top:4px;font-style:italic;">"${t.adminComment}"</div>`
-        : '';
-    card.innerHTML = `${media}${meritBadge}<div style="padding:8px 10px;"><div class="altar-card-date">${dateStr}</div>${taskText ? `<div style="font-family:Rajdhani;font-size:0.78rem;color:#888;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:3px;">${taskText}</div>` : ''}${commentHTML}</div>`;
+    card.innerHTML = `${media}${meritBadge}<div class="altar-card-date">${dateStr}</div>`;
     card.onclick = () => _openHistoryModal(list, idx, resolveUrl);
     return card;
 }
@@ -5037,8 +4105,8 @@ function _openHistoryModal(items: any[], idx: number, resolveUrl: (u: string) =>
         <div style="font-family:Orbitron;font-size:0.48rem;color:#555;letter-spacing:3px;">${dateStr}</div>
         ${verdictHtml}
         ${isVid
-            ? `<video src="${url}" controls autoplay playsinline preload="metadata" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="max-height:58vh;max-width:88vw;border-radius:8px;"></video>`
-            : `<img src="${url}" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}" style="max-height:58vh;max-width:88vw;object-fit:contain;border-radius:8px;" />`
+            ? `<video src="${url}" controls autoplay style="max-height:58vh;max-width:88vw;border-radius:8px;"></video>`
+            : `<img src="${url}" style="max-height:58vh;max-width:88vw;object-fit:contain;border-radius:8px;" />`
         }
         <div style="max-width:580px;text-align:center;">
             ${meritStr}
@@ -5120,84 +4188,4 @@ export function closeQkLightbox() {
     if (lb) lb.style.display = 'none';
     if (content) content.innerHTML = '';
     document.body.style.overflow = '';
-}
-
-// ─── PAYWALL ──────────────────────────────────────────────────────────────────
-
-export function _applyPaywall(paywall: any, memberId: string) {
-    const overlay = document.getElementById('paywallOverlay');
-    if (!overlay) return;
-    if (paywall?.active) {
-        const reasonEl = document.getElementById('paywallReason');
-        const amountEl = document.getElementById('paywallAmount');
-        const payBtn   = document.getElementById('paywallPayBtn');
-        if (reasonEl) reasonEl.textContent = paywall.reason || '';
-        if (amountEl) amountEl.textContent  = `€${Number(paywall.amount).toFixed(2)}`;
-        if (payBtn) {
-            payBtn.onclick = async () => {
-                payBtn.textContent = 'REDIRECTING...';
-                (payBtn as HTMLButtonElement).disabled = true;
-                try {
-                    const res = await fetch('/api/stripe/paywall-checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ memberId }),
-                    });
-                    const data = await res.json();
-                    if (data.url) window.location.href = data.url;
-                    else throw new Error(data.error || 'Failed');
-                } catch (e: any) {
-                    payBtn.textContent = 'PAY NOW';
-                    (payBtn as HTMLButtonElement).disabled = false;
-                    alert('Payment error: ' + e.message);
-                }
-            };
-        }
-        overlay.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    } else {
-        overlay.style.display = 'none';
-        document.body.style.overflow = '';
-    }
-}
-
-// ─── SILENCE ──────────────────────────────────────────────────────────────────
-
-export function _applySilence(active: boolean, reason: string = '') {
-    if (typeof window === 'undefined') return;
-
-    // 1. Update React state — triggers early return lock screen
-    const setter = (window as any)._setSilenceOverlay;
-    if (setter) setter(active, reason);
-
-    const OVERLAY_ID = '__silenceLock';
-    const STYLE_ID = '__silenceStyle';
-
-    if (active) {
-        // 2. Inject CSS that forcibly hides #MOBILE_APP and #DESKTOP_APP — overrides
-        //    profile-mobile.css "display:block !important" via later declaration + higher specificity
-        let styleEl = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
-        if (!styleEl) {
-            styleEl = document.createElement('style');
-            styleEl.id = STYLE_ID;
-            document.head.appendChild(styleEl);
-        }
-        styleEl.textContent = '#MOBILE_APP{display:none!important;visibility:hidden!important}#DESKTOP_APP{display:none!important;visibility:hidden!important}';
-
-        // 3. Inject full-screen DOM overlay — z-index 2147483647 beats everything
-        if (!document.getElementById(OVERLAY_ID)) {
-            const overlay = document.createElement('div');
-            overlay.id = OVERLAY_ID;
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100dvh;background:rgba(8,2,2,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2147483647;padding:24px;box-sizing:border-box;font-family:Cinzel,serif;';
-            const safeReason = reason.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            overlay.innerHTML = `<div style="max-width:420px;width:100%;text-align:center;"><svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)" style="display:block;margin:0 auto 16px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.68L5.68 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.68L18.32 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg><div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(220,60,60,0.6);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px;">ACCESS REVOKED</div><div style="background:rgba(220,60,60,0.04);border:1px solid rgba(220,60,60,0.2);border-radius:14px;padding:28px 24px;"><div style="font-family:Orbitron,sans-serif;font-size:0.38rem;color:rgba(220,60,60,0.4);letter-spacing:3px;margin-bottom:12px;text-transform:uppercase;">Message from Queen Karin</div><div id="__silenceLockReason" style="font-size:1.05rem;color:#fff;line-height:1.6;letter-spacing:0.5px;">${safeReason}</div></div></div>`;
-            document.body.appendChild(overlay);
-        } else {
-            const el = document.getElementById('__silenceLockReason');
-            if (el) el.textContent = reason;
-        }
-    } else {
-        document.getElementById(OVERLAY_ID)?.remove();
-        document.getElementById(STYLE_ID)?.remove();
-    }
 }
