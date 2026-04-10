@@ -1859,9 +1859,8 @@ function _syncNotifHubBtn() {
     const knob = document.getElementById('notifToggleKnob') as HTMLElement | null;
     if (!label || !track || !knob) return;
     const perm = ('Notification' in window) ? (window as any).Notification.permission : 'default';
-    const OS = (window as any).OneSignal;
-    const optedOut = OS?.User?.PushSubscription?.optedOut === true;
-    const isOn = perm === 'granted' && !optedOut;
+    const isOptedOut = localStorage.getItem('notif_opted_out') === '1';
+    const isOn = perm === 'granted' && !isOptedOut;
     const isBlocked = perm === 'denied';
 
     if (isOn) {
@@ -1890,41 +1889,41 @@ function _syncNotifHubBtn() {
 
 if (typeof window !== 'undefined') (window as any).handleNotifToggle = async function () {
     const perm = ('Notification' in window) ? (window as any).Notification.permission : 'default';
+    const OS = (window as any).OneSignal;
+    const isOptedOut = localStorage.getItem('notif_opted_out') === '1';
+
     if (perm === 'denied') {
         alert('Notifications are blocked. Go to your browser settings → Site Settings → Notifications → find throne.qkarin.com → set to Allow.');
         return;
     }
-    if (perm === 'granted') {
-        const OS = (window as any).OneSignal;
-        if (OS?.User?.PushSubscription?.optOut) {
-            try {
-                await OS.User.PushSubscription.optOut();
-                _syncNotifHubBtn();
-            } catch (_) {}
-        } else {
-            alert('To disable notifications, go to your browser settings → Site Settings → Notifications → find throne.qkarin.com → set to Block.');
-        }
-        return;
-    }
-    const OS = (window as any).OneSignal;
-    // If permission already granted but opted out, just opt back in
-    if (perm === 'granted' && OS?.User?.PushSubscription?.optIn) {
-        try { await OS.User.PushSubscription.optIn(); } catch (_) {}
-        const { memberId: mid } = getState();
-        if (OS?.login && mid) { try { await OS.login(mid); } catch (_) {} }
+
+    if (perm === 'granted' && !isOptedOut) {
+        // Turn OFF
+        try { await OS?.User?.PushSubscription?.optOut?.(); } catch (_) {}
+        localStorage.setItem('notif_opted_out', '1');
         _syncNotifHubBtn();
         return;
     }
+
+    if (perm === 'granted' && isOptedOut) {
+        // Turn ON — opt back in and re-link email
+        try { await OS?.User?.PushSubscription?.optIn?.(); } catch (_) {}
+        localStorage.removeItem('notif_opted_out');
+        const { memberId } = getState();
+        if (OS?.login && memberId) { try { await OS.login(memberId); } catch (_) {} }
+        _syncNotifHubBtn();
+        return;
+    }
+
+    // Permission not yet granted — request it
     if (OS?.Notifications?.requestPermission) {
         await OS.Notifications.requestPermission();
     } else {
         await (window as any).Notification.requestPermission();
     }
-    // Link this subscription to the user's email so targeted pushes work
+    localStorage.removeItem('notif_opted_out');
     const { memberId } = getState();
-    if (OS?.login && memberId) {
-        try { await OS.login(memberId); } catch (_) {}
-    }
+    if (OS?.login && memberId) { try { await OS.login(memberId); } catch (_) {} }
     _syncNotifHubBtn();
 };
 
