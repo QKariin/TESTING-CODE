@@ -22,17 +22,6 @@ const TRACKED = [
     { label: "Daily Routine", icon: "📋", desc: "Morning and evening routine upload history." },
 ];
 
-// Easing
-const easeOutBack = (t: number) => {
-    const c1 = 1.70158, c3 = c1 + 1;
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-};
-const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
-
-const SCROLL_RANGE = 500; // px of extra scroll for the pinned section
-// Items start appearing almost immediately, each 0.15 apart
-const itemStart = (i: number) => 0.02 + i * 0.15;
-const itemEnd   = (i: number) => itemStart(i) + 0.10;
 
 export default function TributePage() {
     const [loading, setLoading] = useState(false);
@@ -40,10 +29,9 @@ export default function TributePage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [taskState, setTaskState] = useState<'idle' | 'received'>('idle');
 
-    // Scroll-driven tracked section
-    const [trackedP, setTrackedP] = useState(0);
+    const [visibleItems, setVisibleItems] = useState<boolean[]>(Array(6).fill(false));
+    const [sectionVisible, setSectionVisible] = useState(false);
     const trackedOuterRef = useRef<HTMLDivElement>(null);
-    const rafRef = useRef<number>(0);
 
     useEffect(() => {
         const init = async () => {
@@ -64,19 +52,20 @@ export default function TributePage() {
     }, []);
 
     useEffect(() => {
-        const handleScroll = () => {
-            cancelAnimationFrame(rafRef.current);
-            rafRef.current = requestAnimationFrame(() => {
-                const el = trackedOuterRef.current;
-                if (!el) return;
-                const top = el.getBoundingClientRect().top;
-                const scrolled = -top;
-                const p = clamp(scrolled / SCROLL_RANGE, 0, 1);
-                setTrackedP(p);
+        const el = trackedOuterRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(([entry]) => {
+            if (!entry.isIntersecting) return;
+            observer.disconnect();
+            setSectionVisible(true);
+            TRACKED.forEach((_, i) => {
+                setTimeout(() => {
+                    setVisibleItems(prev => { const n = [...prev]; n[i] = true; return n; });
+                }, 200 + i * 350);
             });
-        };
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => { window.removeEventListener('scroll', handleScroll); cancelAnimationFrame(rafRef.current); };
+        }, { threshold: 0.2 });
+        observer.observe(el);
+        return () => observer.disconnect();
     }, []);
 
     const handleTribute = async () => {
@@ -126,94 +115,50 @@ export default function TributePage() {
                 </div>
             </div>
 
-            {/* ── TRACKED SECTION — scroll-driven 3D presentation ── */}
-            <div ref={trackedOuterRef} style={{ position: 'relative', height: `calc(100vh + ${SCROLL_RANGE}px)`, zIndex: 1 }}>
-                <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    {/* Full-screen dark overlay so it feels like its own scene */}
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.92)', backdropFilter: 'blur(0px)' }} />
-                    {/* Radial vignette */}
-                    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 60% at 50% 50%, transparent 30%, rgba(0,0,0,0.7) 100%)', pointerEvents: 'none' }} />
+            {/* ── TRACKED SECTION ── */}
+            <div ref={trackedOuterRef} style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: '0 clamp(20px,5vw,36px) 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, opacity: sectionVisible ? 1 : 0, transition: 'opacity 0.6s ease' }}>
+                    <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>YOUR RECORD IS TRACKED</div>
+                    <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
+                </div>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.28)', lineHeight: 1.7, textAlign: 'center', marginBottom: 24, opacity: sectionVisible ? 1 : 0, transition: 'opacity 0.6s ease 0.15s' }}>
+                    Every action logged. Every absence noted. Queen Karin sees everything.
+                </div>
 
-                    <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 580, padding: '0 24px', boxSizing: 'border-box' } as React.CSSProperties}>
-
-                        {/* Section title */}
-                        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-                                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.3))', transform: `scaleX(${headerEP})`, transformOrigin: 'right', transition: 'none' }} />
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: `rgba(197,160,89,${0.3 + headerEP * 0.4})`, letterSpacing: '6px', whiteSpace: 'nowrap', transition: 'none' }}>YOUR RECORD IS TRACKED</div>
-                                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.3))', transform: `scaleX(${headerEP})`, transformOrigin: 'left', transition: 'none' }} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, perspective: '800px' }}>
+                    {TRACKED.map((item, i) => (
+                        <div key={item.label} style={{
+                            padding: '16px 14px',
+                            background: 'linear-gradient(160deg, rgba(8,5,20,0.95) 0%, rgba(3,2,14,0.98) 100%)',
+                            border: `1px solid ${visibleItems[i] ? 'rgba(197,160,89,0.2)' : 'rgba(197,160,89,0.06)'}`,
+                            borderTop: `2px solid ${visibleItems[i] ? 'rgba(197,160,89,0.4)' : 'rgba(197,160,89,0.08)'}`,
+                            borderRadius: 4,
+                            boxShadow: visibleItems[i] ? '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(197,160,89,0.05)' : 'none',
+                            opacity: visibleItems[i] ? 1 : 0,
+                            transform: visibleItems[i] ? 'rotateX(0deg) translateY(0)' : 'rotateX(-70deg) translateY(20px)',
+                            transformOrigin: 'top center',
+                            filter: visibleItems[i] ? 'blur(0)' : 'blur(4px)',
+                            transition: 'opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1), filter 0.55s ease, border-color 0.4s ease',
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
+                                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'monospace', fontSize: '0.78rem', color: gold }}>
+                                    {item.icon}
+                                </div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.36rem', color: 'rgba(255,255,255,0.75)', letterSpacing: '2px', lineHeight: 1.3 }}>{item.label}</div>
                             </div>
-                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.72rem', color: `rgba(255,255,255,${headerEP * 0.35})`, lineHeight: 1.6, transition: 'none' }}>
-                                Every action logged. Every absence noted. Queen Karin sees everything.
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.58rem', color: 'rgba(255,255,255,0.28)', lineHeight: 1.5 }}>{item.desc}</div>
+                            <div style={{ marginTop: 9, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <div style={{ width: 4, height: 4, borderRadius: '50%', background: gold, boxShadow: `0 0 5px ${gold}`, animation: 'pulse 2s infinite' }} />
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '3px' }}>TRACKED</div>
                             </div>
                         </div>
-
-                        {/* 3D Items grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, perspective: '900px', perspectiveOrigin: '50% 50%' }}>
-                            {TRACKED.map((item, i) => {
-                                const ep = itemEP[i];
-                                const rotX = (1 - ep) * -88;
-                                const opa = ep;
-                                const sc = 0.75 + ep * 0.25;
-                                const blur = (1 - ep) * 10;
-                                const ty = (1 - ep) * 50;
-                                const isActive = trackedP >= itemStart(i) && trackedP < itemEnd(i) + 0.05;
-                                const glowStr = isActive ? `0 0 30px rgba(197,160,89,0.35), inset 0 0 20px rgba(197,160,89,0.08)` : `0 0 0 transparent`;
-                                const borderCol = isActive ? 'rgba(197,160,89,0.5)' : ep > 0.98 ? 'rgba(197,160,89,0.2)' : 'rgba(197,160,89,0.08)';
-
-                                return (
-                                    <div key={item.label} style={{
-                                        padding: '18px 16px',
-                                        background: 'linear-gradient(160deg, rgba(8,5,20,0.95) 0%, rgba(3,2,14,0.98) 100%)',
-                                        border: `1px solid ${borderCol}`,
-                                        borderTop: `2px solid ${isActive ? 'rgba(197,160,89,0.7)' : ep > 0.98 ? 'rgba(197,160,89,0.35)' : 'rgba(197,160,89,0.1)'}`,
-                                        borderRadius: 4,
-                                        boxShadow: glowStr,
-                                        opacity: opa,
-                                        transform: `rotateX(${rotX}deg) scale(${sc}) translateY(${ty}px)`,
-                                        transformOrigin: 'top center',
-                                        filter: `blur(${blur}px)`,
-                                        willChange: 'transform, opacity, filter',
-                                        transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
-                                    }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'monospace', fontSize: '0.9rem', color: gold }}>
-                                                {item.icon}
-                                            </div>
-                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(255,255,255,0.8)', letterSpacing: '2px', lineHeight: 1.3 }}>{item.label}</div>
-                                        </div>
-                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>{item.desc}</div>
-                                        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
-                                            <div style={{ width: 5, height: 5, borderRadius: '50%', background: gold, boxShadow: `0 0 6px ${gold}`, animation: 'pulse 2s infinite' }} />
-                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px' }}>TRACKED</div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Progress dots */}
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 28 }}>
-                            {TRACKED.map((_, i) => {
-                                const filled = trackedP >= itemStart(i) + 0.05;
-                                return (
-                                    <div key={i} style={{ height: 4, width: filled ? 24 : 5, borderRadius: 2, background: filled ? gold : 'rgba(255,255,255,0.15)', boxShadow: filled ? `0 0 8px ${gold}` : 'none', transition: 'width 0.4s ease, background 0.4s ease, box-shadow 0.4s ease' }} />
-                                );
-                            })}
-                        </div>
-
-                        {/* Scroll hint — fades out as soon as scrolling starts */}
-                        {trackedP < 0.06 && (
-                            <div style={{ textAlign: 'center', marginTop: 20, opacity: clamp(1 - trackedP * 16, 0, 1) }}>
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '4px', animation: 'scrollBounce 1.8s ease-in-out infinite' }}>↓ SCROLL TO REVEAL</div>
-                            </div>
-                        )}
-                    </div>
+                    ))}
                 </div>
             </div>
 
             {/* ── REST OF PAGE ── */}
-            <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: '80px clamp(20px,5vw,36px) 160px' }}>
+            <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: '52px clamp(20px,5vw,36px) 160px' }}>
 
                 {/* ─── HIERARCHY (horizontal scroll) ─── */}
                 <div style={{ marginBottom: 52 }}>
@@ -363,7 +308,6 @@ export default function TributePage() {
 
             <style>{`
                 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-                @keyframes scrollBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
                 ::-webkit-scrollbar { display: none; }
             `}</style>
         </div>
