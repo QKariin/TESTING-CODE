@@ -1,11 +1,18 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import '@/css/login.css';
 
 export default function LoginPage() {
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const reset = () => setLoading(false);
+        window.addEventListener('focus', reset);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) reset(); });
+        return () => window.removeEventListener('focus', reset);
+    }, []);
     const [error, setError] = useState<string | null>(null);
     const [emailOpen, setEmailOpen] = useState(false);
     const [email, setEmail] = useState('');
