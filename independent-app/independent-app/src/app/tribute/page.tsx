@@ -27,6 +27,7 @@ export default function TributePage() {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<string | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
+    const [taskRevealed, setTaskRevealed] = useState(false);
     const [activeRank, setActiveRank] = useState(0);
 
     const [visibleItems, setVisibleItems] = useState<boolean[]>(Array(6).fill(false));
@@ -95,8 +96,8 @@ export default function TributePage() {
     return (
         <div style={{ background: '#020512', color: '#fff', overflowX: 'hidden' }}>
             {/* Fixed backgrounds */}
-            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.42, zIndex: 0, pointerEvents: 'none' }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,5,18,0.55) 0%, rgba(2,5,18,0.75) 60%, rgba(2,5,18,0.92) 100%)', zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 1, zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,5,18,0.45) 0%, rgba(2,5,18,0.65) 50%, rgba(2,5,18,0.88) 100%)', zIndex: 0, pointerEvents: 'none' }} />
 
             {/* ── ALL CONTENT ── */}
             <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: 'clamp(48px,8vw,80px) clamp(20px,5vw,36px) 160px' }}>
@@ -351,12 +352,20 @@ export default function TributePage() {
                         <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.5), transparent)' }} />
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', fontWeight: 400, letterSpacing: '8px', color: 'rgba(197,160,89,0.28)', textTransform: 'uppercase', textAlign: 'center', marginBottom: 24 }}>AWAITING ORDERS</div>
-                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, padding: '18px 16px', background: 'rgba(197,160,89,0.03)', borderRadius: 2, marginBottom: 22, border: '1px solid rgba(197,160,89,0.1)', borderLeft: '2px solid rgba(197,160,89,0.3)', letterSpacing: '0.3px', textAlign: 'left' }}>
-                                Pay tribute to Queen Karin and gain full access to everything she has built.
-                            </div>
-                            <button onClick={handleTribute} disabled={loading} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', padding: '18px 0', borderRadius: 2, border: 'none', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', display: 'block', width: '88%', margin: '0 auto', boxShadow: '0 4px 20px rgba(197,160,89,0.3)', opacity: loading ? 0.6 : 1 }}>
-                                {loading ? '...' : 'Send Tribute'}
-                            </button>
+                            {!taskRevealed ? (
+                                <button onClick={() => setTaskRevealed(true)} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: 'pointer', padding: '18px 0', borderRadius: 2, border: '1px solid rgba(197,160,89,0.45)', color: '#c5a059', background: 'rgba(197,160,89,0.04)', backdropFilter: 'blur(14px)', boxShadow: '0 2px 20px rgba(0,0,0,0.5)', display: 'block', width: '88%', margin: '0 auto', outline: 'none' }}>
+                                    REQUEST TASK
+                                </button>
+                            ) : (
+                                <>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, padding: '18px 16px', background: 'rgba(197,160,89,0.03)', borderRadius: 2, marginBottom: 22, border: '1px solid rgba(197,160,89,0.1)', borderLeft: '2px solid rgba(197,160,89,0.3)', letterSpacing: '0.3px', textAlign: 'left' }}>
+                                        Pay tribute to Queen Karin and gain full access to everything she has built.
+                                    </div>
+                                    <button onClick={handleTribute} disabled={loading} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', padding: '18px 0', borderRadius: 2, border: 'none', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', display: 'block', width: '88%', margin: '0 auto', boxShadow: '0 4px 20px rgba(197,160,89,0.3)', opacity: loading ? 0.6 : 1 }}>
+                                        {loading ? '...' : 'Send Tribute'}
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
