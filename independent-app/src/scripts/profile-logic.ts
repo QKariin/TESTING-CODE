@@ -1872,7 +1872,7 @@ function _syncNotifHubBtn() {
     }
 }
 
-(window as any).handleNotifToggle = async function () {
+if (typeof window !== 'undefined') (window as any).handleNotifToggle = async function () {
     const perm = ('Notification' in window) ? (window as any).Notification.permission : 'default';
     if (perm === 'denied') {
         alert('Notifications are blocked. Go to your browser settings → Site Settings → Notifications → find throne.qkarin.com → set to Allow.');
