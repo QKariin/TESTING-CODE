@@ -74,6 +74,7 @@ function PaymentForm({ email, onSuccess }: { email: string; onSuccess: () => voi
         <div style={{ width: '100%' }}>
             <ExpressCheckoutElement
                 onConfirm={confirmExpress}
+                options={{ paymentMethods: { googlePay: 'never' } }}
                 onReady={(e: any) => {
                     const methods = e?.availablePaymentMethods;
                     setExpressReady(!!(methods && Object.keys(methods).length > 0));
