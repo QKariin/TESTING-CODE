@@ -26,24 +26,9 @@ export async function POST(req: Request) {
         const amountCents = Math.round(Number(paywall.amount) * 100);
         if (amountCents < 50) return NextResponse.json({ error: 'Amount too low' }, { status: 400 });
 
-        const origin = req.headers.get('origin') || 'https://throne.qkarin.com';
-
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            line_items: [{
-                price_data: {
-                    currency: 'eur',
-                    product_data: {
-                        name: 'Platform Fee',
-                        description: paywall.reason,
-                    },
-                    unit_amount: amountCents,
-                },
-                quantity: 1,
-            }],
-            mode: 'payment',
-            ui_mode: 'embedded',
-            return_url: `${origin}/api/paywall/verify?session_id={CHECKOUT_SESSION_ID}&member_id=${encodeURIComponent(memberId)}`,
+        const intent = await stripe.paymentIntents.create({
+            amount: amountCents,
+            currency: 'eur',
             metadata: {
                 type: 'PAYWALL_TRIBUTE',
                 memberId,
@@ -51,7 +36,7 @@ export async function POST(req: Request) {
             },
         });
 
-        return NextResponse.json({ clientSecret: session.client_secret, sessionId: session.id });
+        return NextResponse.json({ clientSecret: intent.client_secret, intentId: intent.id });
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
