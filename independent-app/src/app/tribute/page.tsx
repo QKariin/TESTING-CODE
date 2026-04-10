@@ -413,9 +413,6 @@ export default function TributePage() {
                                                     {unlocked ? (
                                                         <>
                                                             <div style={{ flex: 1 }}><CardBody /></div>
-                                                            <button onClick={handleTribute} style={{ width: '100%', padding: '16px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', fontFamily: 'Cinzel,serif', fontSize: '15px', fontWeight: 700, letterSpacing: '4px', marginTop: 'auto' }}>
-                                                                {isFirst ? 'Start Here' : 'Unlock Access'}
-                                                            </button>
                                                         </>
                                                     ) : (
                                                         <div style={{ position: 'relative' }}>
