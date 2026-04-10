@@ -1858,9 +1858,11 @@ function _syncNotifHubBtn() {
     const status = document.getElementById('notifHubStatus');
     if (!label || !status) return;
     const perm = ('Notification' in window) ? (window as any).Notification.permission : 'default';
-    if (perm === 'granted') {
+    const OS = (window as any).OneSignal;
+    const optedOut = OS?.User?.PushSubscription?.optedOut === true;
+    if (perm === 'granted' && !optedOut) {
         label.textContent = 'NOTIFICATIONS ON';
-        if (desc) desc.textContent = 'You will receive alerts';
+        if (desc) desc.textContent = 'Tap to disable';
         status.textContent = 'ON';
         status.style.color = '#c5a059';
     } else if (perm === 'denied') {
@@ -1883,10 +1885,26 @@ if (typeof window !== 'undefined') (window as any).handleNotifToggle = async fun
         return;
     }
     if (perm === 'granted') {
-        alert('Notifications are already enabled.');
+        const OS = (window as any).OneSignal;
+        if (OS?.User?.PushSubscription?.optOut) {
+            try {
+                await OS.User.PushSubscription.optOut();
+                _syncNotifHubBtn();
+            } catch (_) {}
+        } else {
+            alert('To disable notifications, go to your browser settings → Site Settings → Notifications → find throne.qkarin.com → set to Block.');
+        }
         return;
     }
     const OS = (window as any).OneSignal;
+    // If permission already granted but opted out, just opt back in
+    if (perm === 'granted' && OS?.User?.PushSubscription?.optIn) {
+        try { await OS.User.PushSubscription.optIn(); } catch (_) {}
+        const { memberId: mid } = getState();
+        if (OS?.login && mid) { try { await OS.login(mid); } catch (_) {} }
+        _syncNotifHubBtn();
+        return;
+    }
     if (OS?.Notifications?.requestPermission) {
         await OS.Notifications.requestPermission();
     } else {
