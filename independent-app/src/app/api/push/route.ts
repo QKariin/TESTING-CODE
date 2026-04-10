@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             body: JSON.stringify({
                 app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0',
                 target_channel: 'push',
-                filters: [{ field: 'external_user_id', value: externalId }],
+                include_aliases: { external_id: [externalId] },
                 headings: { en: title || 'Queen Karin' },
                 contents: { en: message },
                 url: 'https://throne.qkarin.com/profile',
