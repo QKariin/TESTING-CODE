@@ -22,14 +22,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Queen Karin — Exclusive Access',
     description: 'Not for everyone. For those who know what they are and what they want.',
-    images: [{ url: '/queen-bg-desktop.png', width: 1920, height: 1080, alt: 'Queen Karin' }],
+    images: [{ url: 'https://throne.qkarin.com/queen-bg-desktop.png', width: 1920, height: 1080, alt: 'Queen Karin' }],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Queen Karin — Exclusive Access',
     description: 'Not for everyone. For those who know what they are and what they want.',
-    images: ['/queen-bg-desktop.png'],
+    images: ['https://throne.qkarin.com/queen-bg-desktop.png'],
   },
 };
 
