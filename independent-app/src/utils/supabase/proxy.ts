@@ -9,6 +9,13 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.next({ request })
     }
 
+    // 🤖 CRAWLER BYPASS — let social media bots see page HTML for OG tags
+    const ua = (request.headers.get('user-agent') || '').toLowerCase()
+    const isCrawler = /twitterbot|facebookexternalhit|linkedinbot|whatsapp|slackbot|telegrambot|discordbot|googlebot|bingbot|applebot|pinterest|redditbot|vkshare|w3c_validator/.test(ua)
+    if (isCrawler) {
+        return NextResponse.next({ request })
+    }
+
     let supabaseResponse = NextResponse.next({
         request,
     })

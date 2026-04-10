@@ -9,6 +9,13 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.next({ request })
     }
 
+    // 🤖 CRAWLER BYPASS — let social media bots see page HTML for OG tags
+    const ua = (request.headers.get('user-agent') || '').toLowerCase()
+    const isCrawler = /twitterbot|facebookexternalhit|linkedinbot|whatsapp|slackbot|telegrambot|discordbot|googlebot|bingbot|applebot|pinterest|redditbot|vkshare|w3c_validator/.test(ua)
+    if (isCrawler) {
+        return NextResponse.next({ request })
+    }
+
     let supabaseResponse = NextResponse.next({
         request,
     })
@@ -39,9 +46,13 @@ export async function updateSession(request: NextRequest) {
 
     if (user) {
         const userEmailNormalized = (user.email || '').trim().toLowerCase();
-        const isTributePage = pathname.startsWith('/tribute') || pathname.startsWith('/preview')
+        const isTributePage = pathname.startsWith('/tribute')
         const isApiPage = pathname.startsWith('/api')
         const isAuthPage = pathname.startsWith('/auth')
+
+        // 🟢 AUTHENTICATED API ACCESS: Allow all /api requests if the user is logged in.
+        // Bouncer shouldn't block background data fetches.
+        if (isApiPage) return supabaseResponse;
 
         // 🛡️ ADMIN CLIENT FOR BOUNCER (Edge-Compatible)
         const adminSupabase = createServerClient(
@@ -121,7 +132,7 @@ export async function updateSession(request: NextRequest) {
         }
 
         if (!isTributePage && !isApiPage && !isAuthPage) {
-            return NextResponse.redirect(new URL('/preview', request.url))
+            return NextResponse.redirect(new URL('/tribute', request.url))
         }
     }
 
