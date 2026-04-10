@@ -1831,12 +1831,16 @@ function initOneSignal(memberId: string) {
     } else {
         allowBtn?.addEventListener('click', async () => {
             banner.style.display = 'none';
-            // Request via OneSignal if available, else native
             const OS = (window as any).OneSignal;
             if (OS?.Notifications?.requestPermission) {
                 await OS.Notifications.requestPermission();
             } else {
                 await (window as any).Notification.requestPermission();
+            }
+            // Link subscription to email after granting permission
+            const { memberId } = getState();
+            if (OS?.login && memberId) {
+                try { await OS.login(memberId); } catch (_) {}
             }
         });
     }
@@ -1887,6 +1891,11 @@ if (typeof window !== 'undefined') (window as any).handleNotifToggle = async fun
         await OS.Notifications.requestPermission();
     } else {
         await (window as any).Notification.requestPermission();
+    }
+    // Link this subscription to the user's email so targeted pushes work
+    const { memberId } = getState();
+    if (OS?.login && memberId) {
+        try { await OS.login(memberId); } catch (_) {}
     }
     _syncNotifHubBtn();
 };
