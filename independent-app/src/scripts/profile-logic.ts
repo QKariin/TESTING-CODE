@@ -1806,7 +1806,19 @@ function initOneSignal(memberId: string) {
                 notifyButton: { enable: false },
                 allowLocalhostAsSecureOrigin: true,
             });
-            await OneSignal.login(memberId);
+
+            // If already subscribed, link email immediately
+            const isSubscribed = OneSignal.User?.PushSubscription?.optedIn;
+            if (isSubscribed) {
+                await OneSignal.login(memberId);
+            }
+
+            // Also link email whenever subscription state changes (e.g. after granting permission)
+            OneSignal.User?.PushSubscription?.addEventListener('change', async (event: any) => {
+                if (event?.current?.optedIn) {
+                    try { await OneSignal.login(memberId); } catch (_) {}
+                }
+            });
         } catch (e) {
             console.error('[OneSignal] init error:', e);
         }
