@@ -116,21 +116,31 @@ export default function TributePage() {
 
                 {/* ─── WHAT IS TRACKED ─── */}
                 <div ref={trackedRef} style={{ marginBottom: 52 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, opacity: trackedVisible ? 1 : 0, transform: trackedVisible ? 'none' : 'translateY(12px)', transition: 'opacity 0.5s ease, transform 0.5s ease' }}>
-                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>YOUR RECORD IS TRACKED</div>
-                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
+                    {/* Title with lines growing outward */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, overflow: 'hidden' }}>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.25))', transformOrigin: 'right', transform: trackedVisible ? 'scaleX(1)' : 'scaleX(0)', transition: 'transform 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap', opacity: trackedVisible ? 1 : 0, transition: 'opacity 0.6s ease 0.5s' }}>YOUR RECORD IS TRACKED</div>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.25))', transformOrigin: 'left', transform: trackedVisible ? 'scaleX(1)' : 'scaleX(0)', transition: 'transform 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s' }} />
                     </div>
-                    <div style={{ background: 'rgba(6,4,16,0.92)', border: '1px solid rgba(197,160,89,0.15)', borderTop: '2px solid rgba(197,160,89,0.3)', borderRadius: 3, padding: '14px 16px 10px', marginBottom: 10 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, opacity: trackedVisible ? 1 : 0, transform: trackedVisible ? 'none' : 'translateY(8px)', transition: 'opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s' }}>
+
+                    {/* Card rising from darkness */}
+                    <div style={{ position: 'relative', background: 'rgba(6,4,16,0.92)', border: '1px solid rgba(197,160,89,0.15)', borderTop: '2px solid rgba(197,160,89,0.3)', borderRadius: 3, padding: '20px 16px 16px', overflow: 'hidden', animation: trackedVisible ? 'luxRise 0.9s cubic-bezier(0.16,1,0.3,1) forwards' : 'none', opacity: trackedVisible ? undefined : 0 }}>
+
+                        {/* Shimmer sweep — plays once on reveal */}
+                        {trackedVisible && (
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: '35%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.07), transparent)', animation: 'shimmerSweep 1.1s cubic-bezier(0.4,0,0.2,1) 0.4s forwards', pointerEvents: 'none', zIndex: 2 }} />
+                        )}
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, opacity: trackedVisible ? 1 : 0, transition: 'opacity 0.5s ease 0.7s' }}>
                             <div style={{ width: 6, height: 6, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, flexShrink: 0, animation: 'pulse 2s infinite' }} />
                             <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.6 }}>
                                 Every action is logged. Every absence is noted. Queen Karin sees everything.
                             </div>
                         </div>
+
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                             {TRACKED.map((item, i) => (
-                                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.09)', borderRadius: 6, opacity: trackedItemsVisible[i] ? 1 : 0, transform: trackedItemsVisible[i] ? 'none' : 'translateY(16px)', transition: 'opacity 0.45s ease, transform 0.45s ease' }}>
+                                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: 'rgba(197,160,89,0.03)', borderRadius: 6, animation: trackedItemsVisible[i] ? `itemMaterialize 0.55s cubic-bezier(0.16,1,0.3,1) forwards` : 'none', opacity: trackedItemsVisible[i] ? undefined : 0 }}>
                                     <div style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'rgba(197,160,89,0.5)', width: 16, textAlign: 'center', flexShrink: 0 }}>{item.icon}</div>
                                     <div>
                                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.33rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '2px' }}>{item.label}</div>
@@ -275,6 +285,28 @@ export default function TributePage() {
             <style>{`
                 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
                 ::-webkit-scrollbar { display: none; }
+
+                @keyframes luxRise {
+                    0%   { opacity:0; transform: translateY(60px) scale(0.96); filter: blur(12px); }
+                    60%  { filter: blur(2px); }
+                    100% { opacity:1; transform: translateY(0) scale(1); filter: blur(0); }
+                }
+
+                @keyframes shimmerSweep {
+                    0%   { transform: translateX(-100%); opacity:1; }
+                    100% { transform: translateX(350%); opacity:0; }
+                }
+
+                @keyframes itemMaterialize {
+                    0%   { opacity:0; transform: scale(0.88) translateY(14px); filter: blur(5px);
+                           box-shadow: 0 0 0 rgba(197,160,89,0);
+                           border: 1px solid rgba(197,160,89,0); }
+                    35%  { box-shadow: 0 0 22px rgba(197,160,89,0.25), inset 0 0 10px rgba(197,160,89,0.08);
+                           border: 1px solid rgba(197,160,89,0.45); }
+                    100% { opacity:1; transform: scale(1) translateY(0); filter: blur(0);
+                           box-shadow: none;
+                           border: 1px solid rgba(197,160,89,0.09); }
+                }
             `}</style>
         </div>
     );
