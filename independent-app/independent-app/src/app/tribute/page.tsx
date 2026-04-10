@@ -260,30 +260,27 @@ export default function TributePage() {
                 {/* ─── CHALLENGE CARD ─── */}
                 <div style={{ marginBottom: 52 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
-                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(74,222,128,0.25))' }} />
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(74,222,128,0.5)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>ACTIVE CHALLENGE</div>
-                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(74,222,128,0.25))' }} />
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>ACTIVE CHALLENGE</div>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
                     </div>
 
-                    {/* Challenge card — matches ChallengeUploadPanel design */}
-                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
-                        {/* Image bg */}
+                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
                         <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.1, zIndex: 0 }} />
 
                         {/* Header bar */}
-                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.12)' }}>
+                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 10px rgba(74,222,128,0.8)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: '#4ade80', letterSpacing: '3px' }}>CHALLENGE ACTIVE</div>
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, animation: 'pulse 2s infinite', flexShrink: 0 }} />
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: gold, letterSpacing: '3px' }}>CHALLENGE ACTIVE</div>
                             </div>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '2px' }}>⚔ CHALLENGE TASKS</div>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px' }}>⚔ CHALLENGE TASKS</div>
                         </div>
 
                         {/* Body */}
                         <div style={{ position: 'relative', zIndex: 1, padding: '20px 20px 18px' }}>
-                            {/* Challenge name + description */}
                             <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#fff', fontWeight: 600, letterSpacing: '2px', marginBottom: 6 }}>Cum Challenge</div>
-                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)', marginBottom: 16, lineHeight: 1.5 }}>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', marginBottom: 16, lineHeight: 1.6 }}>
                                 Monthly endurance challenge. Timed windows open without warning. Complete the task. Submit proof. The fastest rise.
                             </div>
 
@@ -291,19 +288,19 @@ export default function TributePage() {
                             <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
                                 {[['30d', 'DURATION'], ['2×', 'DAILY TASKS'], ['15min', 'WINDOWS']].map(([val, lbl]) => (
                                     <div key={lbl} style={{ flex: 1, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, padding: '10px 6px', textAlign: 'center' }}>
-                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.9rem', color: '#fff', fontWeight: 700, letterSpacing: '1px' }}>{val}</div>
-                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '2px', marginTop: 3 }}>{lbl}</div>
+                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.9rem', color: '#fff', fontWeight: 700 }}>{val}</div>
+                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 3 }}>{lbl}</div>
                                     </div>
                                 ))}
                             </div>
 
                             {/* Join CTA */}
-                            <div style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                            <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                                 <div>
-                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 4 }}>DO YOU WANT TO PARTICIPATE?</div>
-                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>Unlock access to join this challenge.</div>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: gold, letterSpacing: '2px', marginBottom: 4 }}>DO YOU WANT TO PARTICIPATE?</div>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>Unlock access to join this challenge.</div>
                                 </div>
-                                <button onClick={handleTribute} disabled={loading} style={{ flexShrink: 0, padding: '10px 20px', background: loading ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.08))', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: '#4ade80', fontFamily: 'Orbitron,sans-serif', fontSize: '0.45rem', letterSpacing: '2px', cursor: loading ? 'default' : 'pointer', fontWeight: 700 }}>
+                                <button onClick={handleTribute} disabled={loading} style={{ flexShrink: 0, padding: '10px 20px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.45rem', letterSpacing: '2px', cursor: loading ? 'default' : 'pointer', fontWeight: 700 }}>
                                     {loading ? '...' : '⚔ JOIN'}
                                 </button>
                             </div>
