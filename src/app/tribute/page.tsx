@@ -330,58 +330,8 @@ export default function TributePage() {
                     </div>
                 </div>
 
-                {/* ─── CHALLENGE CARD ─── */}
-                <div className="scroll-section" style={{ marginBottom: 80 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
-                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>ACTIVE CHALLENGE</div>
-                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
-                    </div>
-
-                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
-                        <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
-
-                        {/* Header bar */}
-                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, animation: 'pulse 2s infinite', flexShrink: 0 }} />
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: gold, letterSpacing: '3px' }}>CHALLENGE ACTIVE</div>
-                            </div>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px' }}>CHALLENGE TASKS</div>
-                        </div>
-
-                        {/* Locked body */}
-                        <div style={{ position: 'relative', zIndex: 1 }}>
-                            {/* Blurred content behind lock */}
-                            <div style={{ padding: '20px 20px 18px', filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none' }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#fff', fontWeight: 600, marginBottom: 6 }}>Cum Challenge</div>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.35)', marginBottom: 16 }}>Monthly endurance challenge. Timed windows open without warning.</div>
-                                <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-                                    {[['30d', 'DURATION'], ['2×', 'DAILY TASKS'], ['15min', 'WINDOWS']].map(([val, lbl]) => (
-                                        <div key={lbl} style={{ flex: 1, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, padding: '10px 6px', textAlign: 'center' }}>
-                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', color: '#fff', fontWeight: 700 }}>{val}</div>
-                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 3 }}>{lbl}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            {/* Lock overlay */}
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.75)', backdropFilter: 'blur(2px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                                <div style={{ width: 28, height: 28, border: `2px solid rgba(197,160,89,0.5)`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <div style={{ width: 10, height: 12, borderTop: `2px solid ${gold}`, borderLeft: `2px solid ${gold}`, borderRight: `2px solid ${gold}`, borderRadius: '2px 2px 0 0' }} />
-                                </div>
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '11px', color: 'rgba(197,160,89,0.7)', letterSpacing: '4px' }}>UNLOCK ACCESS</div>
-                                <button onClick={handleTribute} disabled={loading} style={{ marginTop: 4, padding: '10px 28px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', letterSpacing: '2px', fontWeight: 700, cursor: 'pointer' }}>
-                                    {loading ? '...' : 'JOIN CHALLENGE'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 {/* ─── TASK CARD ─── */}
                 <div className="scroll-section" style={{ marginBottom: 80 }}>
-                    {/* duty-label */}
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontWeight: 400, fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', textTransform: 'uppercase', textAlign: 'center', marginBottom: 16, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
                         <div style={{ height: 1, flex: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
                         CURRENT STATUS
@@ -408,6 +358,95 @@ export default function TributePage() {
                                     </button>
                                 </>
                             )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ─── CHALLENGE CARD ─── */}
+                <div className="scroll-section" style={{ marginBottom: 80 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>ACTIVE CHALLENGE</div>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
+                    </div>
+
+                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
+                        <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
+
+                        {/* Header bar */}
+                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, animation: 'pulse 2s infinite', flexShrink: 0 }} />
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: gold, letterSpacing: '3px' }}>CHALLENGE ACTIVE</div>
+                            </div>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px' }}>CHALLENGE TASKS</div>
+                        </div>
+
+                        {/* Locked body */}
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                            <div style={{ padding: '20px 20px 18px', filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none' }}>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#fff', fontWeight: 600, marginBottom: 6 }}>Cum Challenge</div>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.35)', marginBottom: 16 }}>Monthly endurance challenge. Timed windows open without warning.</div>
+                                <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+                                    {[['30d', 'DURATION'], ['2×', 'DAILY TASKS'], ['15min', 'WINDOWS']].map(([val, lbl]) => (
+                                        <div key={lbl} style={{ flex: 1, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, padding: '10px 6px', textAlign: 'center' }}>
+                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', color: '#fff', fontWeight: 700 }}>{val}</div>
+                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '9px', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 3 }}>{lbl}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.75)', backdropFilter: 'blur(2px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                <div style={{ width: 28, height: 28, border: `2px solid rgba(197,160,89,0.5)`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ width: 10, height: 12, borderTop: `2px solid ${gold}`, borderLeft: `2px solid ${gold}`, borderRight: `2px solid ${gold}`, borderRadius: '2px 2px 0 0' }} />
+                                </div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '11px', color: 'rgba(197,160,89,0.7)', letterSpacing: '4px' }}>CHALLENGE LOCKED</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ─── CHASTITY LOCKS ─── */}
+                <div className="scroll-section" style={{ marginBottom: 80 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>CHASTITY LOCKS</div>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
+                    </div>
+
+                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
+                        <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
+
+                        {/* Header bar */}
+                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, animation: 'pulse 2s infinite', flexShrink: 0 }} />
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: gold, letterSpacing: '3px' }}>CHASTITY LOCKS</div>
+                            </div>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px' }}>CONTROL</div>
+                        </div>
+
+                        {/* Locked body */}
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                            <div style={{ padding: '28px 20px 24px', filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+                                <div style={{ display: 'flex', gap: 20, justifyContent: 'center' }}>
+                                    {[0, 1, 2].map(i => (
+                                        <div key={i} style={{ width: 72, height: 72, borderRadius: '50%', border: `2px solid rgba(197,160,89,${0.5 - i * 0.1})`, background: `radial-gradient(circle at 35% 35%, rgba(197,160,89,${0.12 - i * 0.02}), rgba(2,5,18,0.9))`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 20px rgba(197,160,89,0.1), inset 0 0 20px rgba(0,0,0,0.5)` }}>
+                                            <div style={{ width: 22, height: 26, position: 'relative' }}>
+                                                <div style={{ width: 22, height: 14, border: `2px solid rgba(197,160,89,${0.6 - i * 0.1})`, borderRadius: '11px 11px 0 0', borderBottom: 'none', position: 'absolute', top: 0 }} />
+                                                <div style={{ width: 22, height: 14, background: `rgba(197,160,89,${0.15 - i * 0.02})`, border: `2px solid rgba(197,160,89,${0.4 - i * 0.08})`, borderRadius: 3, position: 'absolute', bottom: 0 }} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>Three active sessions</div>
+                            </div>
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.75)', backdropFilter: 'blur(2px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                <div style={{ width: 28, height: 28, border: `2px solid rgba(197,160,89,0.5)`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ width: 10, height: 12, borderTop: `2px solid ${gold}`, borderLeft: `2px solid ${gold}`, borderRight: `2px solid ${gold}`, borderRadius: '2px 2px 0 0' }} />
+                                </div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '11px', color: 'rgba(197,160,89,0.7)', letterSpacing: '4px' }}>CHASTITY LOCKED</div>
+                            </div>
                         </div>
                     </div>
                 </div>
