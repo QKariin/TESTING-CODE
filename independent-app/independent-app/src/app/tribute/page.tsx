@@ -102,9 +102,11 @@ export default function TributePage() {
             <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/login-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.09, zIndex: 0, pointerEvents: 'none' }} />
             <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(197,160,89,0.04) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
 
-            {/* ── PAGE HEADER ── */}
-            <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: 'clamp(48px,8vw,80px) clamp(20px,5vw,36px) 60px' }}>
-                <div style={{ textAlign: 'center' }}>
+            {/* ── ALL CONTENT ── */}
+            <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: 'clamp(48px,8vw,80px) clamp(20px,5vw,36px) 160px' }}>
+
+                {/* HEADER */}
+                <div style={{ textAlign: 'center', marginBottom: 52 }}>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.2rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '10px', marginBottom: 14 }}>✦</div>
                     <h1 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.5rem,5vw,2.4rem)', color: gold, letterSpacing: '8px', textTransform: 'uppercase', margin: '0 0 12px', fontWeight: 600 }}>Queen Karin</h1>
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.45rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: 28 }}>EXCLUSIVE ACCESS</div>
@@ -113,52 +115,47 @@ export default function TributePage() {
                         Your presence has been noted. Queen Karin is watching. This is what awaits those who choose to serve.
                     </p>
                 </div>
-            </div>
 
-            {/* ── TRACKED SECTION ── */}
-            <div ref={trackedOuterRef} style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: '0 clamp(20px,5vw,36px) 0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, opacity: sectionVisible ? 1 : 0, transition: 'opacity 0.6s ease' }}>
-                    <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>YOUR RECORD IS TRACKED</div>
-                    <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
-                </div>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.28)', lineHeight: 1.7, textAlign: 'center', marginBottom: 24, opacity: sectionVisible ? 1 : 0, transition: 'opacity 0.6s ease 0.15s' }}>
-                    Every action logged. Every absence noted. Queen Karin sees everything.
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, perspective: '800px' }}>
-                    {TRACKED.map((item, i) => (
-                        <div key={item.label} style={{
-                            padding: '16px 14px',
-                            background: 'linear-gradient(160deg, rgba(8,5,20,0.95) 0%, rgba(3,2,14,0.98) 100%)',
-                            border: `1px solid ${visibleItems[i] ? 'rgba(197,160,89,0.2)' : 'rgba(197,160,89,0.06)'}`,
-                            borderTop: `2px solid ${visibleItems[i] ? 'rgba(197,160,89,0.4)' : 'rgba(197,160,89,0.08)'}`,
-                            borderRadius: 4,
-                            boxShadow: visibleItems[i] ? '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(197,160,89,0.05)' : 'none',
-                            opacity: visibleItems[i] ? 1 : 0,
-                            transform: visibleItems[i] ? 'rotateX(0deg) translateY(0)' : 'rotateX(-70deg) translateY(20px)',
-                            transformOrigin: 'top center',
-                            filter: visibleItems[i] ? 'blur(0)' : 'blur(4px)',
-                            transition: 'opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1), filter 0.55s ease, border-color 0.4s ease',
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
-                                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'monospace', fontSize: '0.78rem', color: gold }}>
+                {/* ─── TRACKED ITEMS ─── */}
+                <div style={{ marginBottom: 52 }}>
+                    <div ref={trackedOuterRef} style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10 }}>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '5px', whiteSpace: 'nowrap' }}>YOUR RECORD IS TRACKED</div>
+                        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
+                    </div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.25)', lineHeight: 1.7, textAlign: 'center', marginBottom: 20 }}>
+                        Every action logged. Every absence noted. Queen Karin sees everything.
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, perspective: '800px' }}>
+                        {TRACKED.map((item, i) => (
+                            <div key={item.label} style={{
+                                display: 'flex', alignItems: 'center', gap: 14,
+                                padding: '14px 18px',
+                                background: 'linear-gradient(160deg, rgba(8,5,20,0.95) 0%, rgba(3,2,14,0.98) 100%)',
+                                border: `1px solid ${visibleItems[i] ? 'rgba(197,160,89,0.18)' : 'rgba(197,160,89,0.04)'}`,
+                                borderLeft: `2px solid ${visibleItems[i] ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.06)'}`,
+                                borderRadius: 4,
+                                opacity: visibleItems[i] ? 1 : 0,
+                                transform: visibleItems[i] ? 'rotateX(0deg) translateX(0)' : 'rotateX(-55deg) translateX(-20px)',
+                                transformOrigin: 'left center',
+                                filter: visibleItems[i] ? 'blur(0)' : 'blur(3px)',
+                                transition: 'opacity 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1), filter 0.4s ease, border-color 0.4s ease',
+                            }}>
+                                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'monospace', fontSize: '0.85rem', color: gold }}>
                                     {item.icon}
                                 </div>
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.36rem', color: 'rgba(255,255,255,0.75)', letterSpacing: '2px', lineHeight: 1.3 }}>{item.label}</div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(255,255,255,0.8)', letterSpacing: '2px', marginBottom: 3 }}>{item.label}</div>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.28)', lineHeight: 1.4 }}>{item.desc}</div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                                    <div style={{ width: 4, height: 4, borderRadius: '50%', background: gold, boxShadow: `0 0 5px ${gold}`, animation: 'pulse 2s infinite' }} />
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px' }}>TRACKED</div>
+                                </div>
                             </div>
-                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.58rem', color: 'rgba(255,255,255,0.28)', lineHeight: 1.5 }}>{item.desc}</div>
-                            <div style={{ marginTop: 9, display: 'flex', alignItems: 'center', gap: 5 }}>
-                                <div style={{ width: 4, height: 4, borderRadius: '50%', background: gold, boxShadow: `0 0 5px ${gold}`, animation: 'pulse 2s infinite' }} />
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '3px' }}>TRACKED</div>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
-
-            {/* ── REST OF PAGE ── */}
-            <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto', padding: '52px clamp(20px,5vw,36px) 160px' }}>
 
                 {/* ─── HIERARCHY (horizontal scroll) ─── */}
                 <div style={{ marginBottom: 52 }}>
