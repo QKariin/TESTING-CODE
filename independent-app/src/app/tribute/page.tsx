@@ -199,10 +199,10 @@ export default function TributePage() {
                         CURRENT STATUS
                         <div style={{ height: 1, flex: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
                     </div>
-                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
+                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 8, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
                         <div className="card-inner-bg" style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
-                        <div style={{ position: 'relative', zIndex: 1, padding: '28px 20px 24px' }}>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', fontWeight: 400, letterSpacing: '8px', color: 'rgba(197,160,89,0.28)', textTransform: 'uppercase', textAlign: 'center', marginBottom: 24 }}>AWAITING ORDERS</div>
+                        <div style={{ position: 'relative', zIndex: 1, padding: '18px 18px 16px' }}>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', fontWeight: 400, letterSpacing: '8px', color: 'rgba(197,160,89,0.28)', textTransform: 'uppercase', textAlign: 'center', marginBottom: 16 }}>AWAITING ORDERS</div>
                             {!taskRevealed ? (
                                 <button onClick={() => setTaskRevealed(true)} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', cursor: 'pointer', padding: '18px 0', borderRadius: 8, border: '1px solid rgba(197,160,89,0.45)', color: '#c5a059', background: 'rgba(197,160,89,0.04)', backdropFilter: 'blur(14px)', boxShadow: '0 2px 20px rgba(0,0,0,0.5)', display: 'block', width: '88%', margin: '0 auto', outline: 'none' }}>
                                     REQUEST TASK
@@ -232,11 +232,11 @@ export default function TributePage() {
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
                     </div>
 
-                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
+                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 8, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
                         <div className="card-inner-bg" style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
 
                         {/* Header bar */}
-                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, animation: 'pulse 2s infinite', flexShrink: 0 }} />
                                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: gold, letterSpacing: '3px' }}>CHALLENGE ACTIVE</div>
@@ -246,7 +246,7 @@ export default function TributePage() {
 
                         {/* Locked body */}
                         <div style={{ position: 'relative', zIndex: 1 }}>
-                            <div style={{ padding: '20px 20px 18px', filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none' }}>
+                            <div style={{ padding: '16px 18px 14px', userSelect: 'none', pointerEvents: 'none' }}>
                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#fff', fontWeight: 600, marginBottom: 6 }}>Cum Challenge</div>
                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '13px', color: 'rgba(255,255,255,0.35)', marginBottom: 16 }}>Monthly endurance challenge. Timed windows open without warning.</div>
                                 <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
@@ -276,11 +276,11 @@ export default function TributePage() {
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
                     </div>
 
-                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
+                    <div style={{ position: 'relative', background: 'rgba(5,8,18,0.97)', border: '1px solid rgba(197,160,89,0.18)', borderTop: '2px solid rgba(197,160,89,0.35)', borderRadius: 8, overflow: 'hidden', boxShadow: '0 4px 40px rgba(0,0,0,0.6)' }}>
                         <div className="card-inner-bg" style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.08, zIndex: 0 }} />
 
                         {/* Header bar */}
-                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: gold, boxShadow: `0 0 10px ${gold}`, animation: 'pulse 2s infinite', flexShrink: 0 }} />
                                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: gold, letterSpacing: '3px' }}>CHASTITY LOCKS</div>
@@ -290,7 +290,7 @@ export default function TributePage() {
 
                         {/* Locked body */}
                         <div style={{ position: 'relative', zIndex: 1 }}>
-                            <div style={{ padding: '28px 20px 24px', filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+                            <div style={{ padding: '16px 18px 14px', userSelect: 'none', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
                                 <div style={{ display: 'flex', gap: 20, justifyContent: 'center' }}>
                                     {[0, 1, 2].map(i => (
                                         <div key={i} style={{ width: 72, height: 72, borderRadius: '50%', border: `2px solid rgba(197,160,89,${0.5 - i * 0.1})`, background: `radial-gradient(circle at 35% 35%, rgba(197,160,89,${0.12 - i * 0.02}), rgba(2,5,18,0.9))`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 20px rgba(197,160,89,0.1), inset 0 0 20px rgba(0,0,0,0.5)` }}>
