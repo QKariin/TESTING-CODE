@@ -239,6 +239,8 @@ export default function ProfilePage() {
                             (window as any).goToExchequer?.();
                         } else if (urlParams.get('exchequer') === 'open') {
                             (window as any).goToExchequer();
+                        } else if (urlParams.get('tab') === 'chat') {
+                            setTimeout(() => (window as any).openMobChatOverlay?.(), 800);
                         } else if (urlParams.get('tab') === 'record') {
                             switchTab('record');
                         } else {
@@ -264,11 +266,27 @@ export default function ProfilePage() {
         }
 
         loadProfile();
+
+        // Handle notification tap when app is already open (visibilitychange)
+        const handleVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('tab') === 'chat') {
+                    setTimeout(() => {
+                        (window as any).openMobChatOverlay?.();
+                        window.history.replaceState({}, '', '/profile');
+                    }, 300);
+                }
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+
         return () => {
             if (heartbeatRef.current) {
                 clearInterval(heartbeatRef.current);
                 heartbeatRef.current = null;
             }
+            document.removeEventListener('visibilitychange', handleVisibility);
         };
     }, []);
 
@@ -278,7 +296,15 @@ export default function ProfilePage() {
             // Auto-open chat if redirected from push notification
             const params = new URLSearchParams(window.location.search);
             if (params.get('tab') === 'chat') {
-                setTimeout(() => (window as any).openMobChatOverlay?.(), 600);
+                const tryOpen = (attempts = 0) => {
+                    if (typeof (window as any).openMobChatOverlay === 'function') {
+                        (window as any).openMobChatOverlay();
+                        window.history.replaceState({}, '', '/profile');
+                    } else if (attempts < 15) {
+                        setTimeout(() => tryOpen(attempts + 1), 200);
+                    }
+                };
+                setTimeout(() => tryOpen(), 300);
             }
 
             const timer = setTimeout(() => {
