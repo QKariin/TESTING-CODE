@@ -891,13 +891,15 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* ACTIVITY FEED */}
-                        <div style={{ gridColumn:'span 2', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(197,160,89,0.1)', borderRadius:14, display:'flex', flexDirection:'column', overflow:'hidden', minHeight:220 }}>
+                        {/* ACTIVITY FEED + OPS QUEUE */}
+                        <div style={{ gridColumn:'span 2', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(197,160,89,0.1)', borderRadius:14, display:'flex', flexDirection:'column', overflow:'hidden', minHeight:280 }}>
                             <div style={{ padding:'16px 18px 12px', borderBottom:'1px solid rgba(197,160,89,0.08)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
                                 <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:'#c5a059', letterSpacing:'3px' }}>LIVE ACTIVITY</div>
                                 <div style={{ width:8, height:8, borderRadius:'50%', background:'#4ade80', boxShadow:'0 0 8px rgba(74,222,128,0.6)', animation:'pulse 2s infinite' }}></div>
                             </div>
-                            <div id="ov-activity-feed" style={{ flex:1, overflowY:'auto', maxHeight:200 }}></div>
+                            {/* Pending Ops – task & routine queue mini-cards */}
+                            <div id="opsList" style={{ flexShrink:0, borderBottom:'1px solid rgba(197,160,89,0.06)' }}></div>
+                            <div id="ov-activity-feed" style={{ flex:1, overflowY:'auto', maxHeight:240 }}></div>
                         </div>
 
                     </div>
@@ -1011,23 +1013,17 @@ export default function DashboardPage() {
                         {/* GLOBAL CHAT */}
                         <GlobalChatPanel userEmail={userEmail} />
 
-                        {/* OPERATIONS MONITOR */}
-                        <div className="v-monitor-card glass-card span-2">
-                            <div className="vm-header">Operations Monitor</div>
-                            <div id="opsList" className="vm-body"></div>
-                        </div>
-
                         {/* REVENUE & INTEL STREAM */}
                         <div className="v-feed-card glass-card span-2">
                             <div className="vf-header">Revenue & Intel Stream</div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', padding: '12px 14px' }}>
-                                <div onClick={() => (window as any).expandFeedSection('wishlist')} style={{ aspectRatio: '1', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <div onClick={() => (window as any).expandFeedSection('wishlist')} style={{ aspectRatio: '1', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WISHLIST</div>
                                 </div>
-                                <div onClick={() => { setLockedUsers(users.filter((u: any) => u.silence === true || !!(u.parameters?.paywall?.active) || u.paywall === true)); setShowLocksModal(true); }} style={{ aspectRatio: '1', background: 'rgba(220,60,60,0.06)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <div onClick={() => { setLockedUsers(users.filter((u: any) => u.silence === true || !!(u.parameters?.paywall?.active) || u.paywall === true)); setShowLocksModal(true); }} style={{ aspectRatio: '1', background: 'rgba(220,60,60,0.06)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(220,60,60,0.7)', letterSpacing: '2px' }}>LOCKS</div>
                                 </div>
-                                <div style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>COMING SOON</div>
                                 </div>
                             </div>
