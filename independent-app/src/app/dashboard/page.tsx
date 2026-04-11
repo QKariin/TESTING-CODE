@@ -24,6 +24,16 @@ import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-ac
 import { getOptimizedUrl } from '@/scripts/media';
 import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
 
+// ── Theme system ────────────────────────────────────────────────────────────
+const THEMES = {
+    gold:    { id: 'gold'    as const, label: 'GOLD',    hex: '#c5a059', dim: '#8b6914', rgb: '197,160,89'  },
+    crimson: { id: 'crimson' as const, label: 'CRIMSON', hex: '#dc2626', dim: '#991b1b', rgb: '220,38,38'   },
+    violet:  { id: 'violet'  as const, label: 'VIOLET',  hex: '#7c3aed', dim: '#5b21b6', rgb: '124,58,237'  },
+    rose:    { id: 'rose'    as const, label: 'ROSE',    hex: '#ec4899', dim: '#be185d', rgb: '236,72,153'  },
+    ice:     { id: 'ice'     as const, label: 'ICE',     hex: '#94a3b8', dim: '#64748b', rgb: '148,163,184' },
+} as const;
+type ThemeId = keyof typeof THEMES;
+
 const PAYWALL_PRESETS = [
     "Monthly tribute not received. Pay now.",
     "Punishment — pay for your attitude.",
@@ -421,7 +431,27 @@ export default function DashboardPage() {
     const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null; isUpcoming?: boolean; startDate?: string; image_url?: string | null; description?: string; duration_days?: number; tasks_per_day?: number; window_minutes?: number; start_date_raw?: string } | null>(null);
     const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
     const [showChallenges, setShowChallenges] = useState(false);
+    const [themeId, setThemeId] = useState<ThemeId>('gold');
     const router = useRouter();
+
+    // Derived theme helpers (recomputed on each render, no effect needed)
+    const t = THEMES[themeId];
+    const ac = (alpha: number) => `rgba(${t.rgb},${alpha})`;
+    const saveTheme = useCallback((id: ThemeId) => {
+        setThemeId(id);
+        localStorage.setItem('qk_theme', id);
+        (window as any).__dashTheme = THEMES[id];
+    }, []);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('qk_theme') as ThemeId | null;
+        if (saved && THEMES[saved]) {
+            setThemeId(saved);
+            (window as any).__dashTheme = THEMES[saved];
+        } else {
+            (window as any).__dashTheme = THEMES.gold;
+        }
+    }, []);
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 768);
@@ -758,6 +788,23 @@ export default function DashboardPage() {
 
     return (
         <div className="layout">
+            {/* ── THEME CSS INJECTION ── */}
+            <style>{`
+                :root {
+                    --gold: ${t.hex};
+                    --gold-dim: ${t.dim};
+                }
+                .ops-card.task { border-color: ${ac(0.22)} !important; background: linear-gradient(135deg, ${ac(0.07)}, rgba(0,0,0,0.8)) !important; }
+                .ops-card.routine { border-color: ${ac(0.12)} !important; background: linear-gradient(135deg, ${ac(0.04)}, rgba(0,0,0,0.8)) !important; }
+                .ops-card:hover { border-color: ${t.hex} !important; box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 16px ${ac(0.18)} !important; }
+                .ops-counter.gold { background: linear-gradient(to bottom, #fff, ${t.hex}); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+                .ops-counter.silver { background: linear-gradient(to bottom, #fff, ${ac(0.6)}); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+                .sb-dash-btn:hover { color: ${t.hex} !important; box-shadow: inset 3px 0 0 ${t.hex} !important; }
+                .v-gauge-card:hover { border-color: ${ac(0.5)} !important; }
+                .v-best-sub:hover { border-color: ${ac(0.5)} !important; }
+                .v-hero-card { border-color: ${ac(0.2)} !important; }
+            `}</style>
+
             {/* MOBILE TOP BAR */}
             <div className="mob-top-bar">
                 <div className="mob-top-brand">Command Center</div>
@@ -768,9 +815,9 @@ export default function DashboardPage() {
             <div className="sidebar">
                 {/* Brand */}
                 <div style={{ padding:'18px 16px 12px', borderBottom:'1px solid rgba(197,160,89,0.1)', display:'flex', alignItems:'center', gap:10 }}>
-                    <div style={{ width:32, height:32, borderRadius:'50%', background:'linear-gradient(135deg,#c5a059,#8b6914)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>♛</div>
+                    <div style={{ width:32, height:32, borderRadius:'50%', background:`linear-gradient(135deg,${t.hex},${t.dim})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>♛</div>
                     <div>
-                        <div style={{ fontFamily:'Cinzel', fontSize:'0.8rem', color:'#c5a059', fontWeight:700, letterSpacing:'1px' }}>COMMAND</div>
+                        <div style={{ fontFamily:'Cinzel', fontSize:'0.8rem', color:t.hex, fontWeight:700, letterSpacing:'1px' }}>COMMAND</div>
                         <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.25)', letterSpacing:'2px' }}>CENTER</div>
                     </div>
                 </div>
@@ -778,7 +825,7 @@ export default function DashboardPage() {
                 {/* Today's code */}
                 <div style={{ padding:'10px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', textAlign:'center' }}>
                     <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.25)', letterSpacing:'2px', marginBottom:3 }}>TODAY'S CODE</div>
-                    <div id="adminDailyCode" style={{ color:'#c5a059', fontWeight:900, fontFamily:'Orbitron', fontSize:'1rem', letterSpacing:'3px' }}>----</div>
+                    <div id="adminDailyCode" style={{ color:t.hex, fontWeight:900, fontFamily:'Orbitron', fontSize:'1rem', letterSpacing:'3px' }}>----</div>
                 </div>
 
                 {/* Nav */}
@@ -789,7 +836,7 @@ export default function DashboardPage() {
                     </div>
 
                     <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.2)', letterSpacing:'3px', padding:'10px 18px 4px', marginTop:4 }}>CONTENT</div>
-                    <div className="sb-dash-btn" onClick={() => (window as any).showPosts()} style={{ display:'flex', alignItems:'center', gap:10, color:'#c5a059' }}>
+                    <div className="sb-dash-btn" onClick={() => (window as any).showPosts()} style={{ display:'flex', alignItems:'center', gap:10, color:t.hex }}>
                         <span style={{ opacity:0.6 }}>✦</span> POSTS
                     </div>
                     <div className="sb-dash-btn" onClick={() => setShowChallenges(true)} style={{ display:'flex', alignItems:'center', gap:10, color: showChallenges ? '#4ade80' : '#4ade8099', position:'relative', boxShadow: showChallenges ? 'inset 3px 0 0 #4ade80' : 'none' }}>
@@ -825,15 +872,38 @@ export default function DashboardPage() {
                     {/* ── OVERVIEW HEADER ── */}
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'28px 28px 0', flexWrap:'wrap', gap:12 }}>
                         <div>
-                            <div style={{ fontFamily:'Orbitron', fontSize:'0.45rem', color:'rgba(197,160,89,0.5)', letterSpacing:'3px', marginBottom:4 }}>COMMAND CENTER / OVERVIEW</div>
+                            <div style={{ fontFamily:'Orbitron', fontSize:'0.45rem', color:ac(0.5), letterSpacing:'3px', marginBottom:4 }}>COMMAND CENTER / OVERVIEW</div>
                             <div style={{ fontFamily:'Cinzel', fontSize:'1.6rem', color:'#fff', fontWeight:700, letterSpacing:'2px' }}>
-                                Welcome back, <span style={{ color:'#c5a059' }}>{userEmail?.split('@')[0]?.toUpperCase() || 'QUEEN'}</span>
+                                Welcome back, <span style={{ color:t.hex }}>{userEmail?.split('@')[0]?.toUpperCase() || 'QUEEN'}</span>
                             </div>
                             <div style={{ fontFamily:'Orbitron', fontSize:'0.42rem', color:'rgba(255,255,255,0.25)', letterSpacing:'2px', marginTop:4 }}>
                                 {new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}
                             </div>
                         </div>
-                        <div style={{ display:'flex', gap:8 }}>
+                        <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+                            {/* Theme picker */}
+                            <div style={{ display:'flex', gap:7, alignItems:'center', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:24, padding:'7px 14px' }}>
+                                {(Object.values(THEMES) as Array<typeof THEMES[ThemeId]>).map(th => (
+                                    <button
+                                        key={th.id}
+                                        onClick={() => saveTheme(th.id)}
+                                        title={th.label}
+                                        style={{
+                                            width: themeId === th.id ? 18 : 13,
+                                            height: themeId === th.id ? 18 : 13,
+                                            borderRadius: '50%',
+                                            background: th.hex,
+                                            border: themeId === th.id ? '2px solid rgba(255,255,255,0.9)' : '2px solid transparent',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.18s',
+                                            boxShadow: themeId === th.id ? `0 0 10px ${th.hex}` : 'none',
+                                            padding: 0,
+                                            outline: 'none',
+                                            flexShrink: 0,
+                                        }}
+                                    />
+                                ))}
+                            </div>
                             <button onClick={handleLogout} style={{ background:'rgba(255,60,60,0.08)', border:'1px solid rgba(255,60,60,0.2)', color:'rgba(255,80,80,0.7)', fontFamily:'Orbitron', fontSize:'0.42rem', letterSpacing:'2px', padding:'8px 16px', borderRadius:6, cursor:'pointer' }}>LOGOUT</button>
                         </div>
                     </div>
@@ -841,19 +911,19 @@ export default function DashboardPage() {
                     {/* ── STATS ROW ── */}
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(6, 1fr)', gap:12, padding:'20px 28px 0' }}>
                         {[
-                            { id:'ov-stat-today', label:"TODAY'S REVENUE", icon:'💰', color:'#c5a059' },
-                            { id:'ov-stat-month', label:'THIS MONTH', icon:'📈', color:'#c5a059' },
-                            { id:'ov-stat-online', label:'ONLINE NOW', icon:'🟢', color:'#4ade80' },
-                            { id:'ov-stat-slaves', label:'TOTAL SLAVES', icon:'👤', color:'#c5a059' },
-                            { id:'ov-stat-pending', label:'PENDING REVIEW', icon:'📝', color:'#f59e0b' },
-                            { id:'ov-stat-total', label:'TOTAL TRIBUTES', icon:'♛', color:'#c5a059' },
+                            { id:'ov-stat-today', label:"TODAY'S REVENUE", icon:'💰', accent: true },
+                            { id:'ov-stat-month', label:'THIS MONTH', icon:'📈', accent: true },
+                            { id:'ov-stat-online', label:'ONLINE NOW', icon:'🟢', accent: false, fixedColor:'#4ade80' },
+                            { id:'ov-stat-slaves', label:'TOTAL SLAVES', icon:'👤', accent: true },
+                            { id:'ov-stat-pending', label:'PENDING REVIEW', icon:'📝', accent: false, fixedColor:'#f59e0b' },
+                            { id:'ov-stat-total', label:'TOTAL TRIBUTES', icon:'♛', accent: true },
                         ].map(s => (
-                            <div key={s.id} style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(197,160,89,0.1)', borderRadius:12, padding:'16px 16px 14px', display:'flex', flexDirection:'column', gap:8 }}>
+                            <div key={s.id} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${ac(0.12)}`, borderRadius:14, padding:'16px 16px 14px', display:'flex', flexDirection:'column', gap:8 }}>
                                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                                     <div style={{ fontFamily:'Orbitron', fontSize:'0.38rem', color:'rgba(255,255,255,0.3)', letterSpacing:'2px' }}>{s.label}</div>
                                     <div style={{ fontSize:'0.9rem', opacity:0.7 }}>{s.icon}</div>
                                 </div>
-                                <div id={s.id} style={{ fontFamily:'Orbitron', fontSize:'1.2rem', fontWeight:700, color:s.color, letterSpacing:'1px' }}>—</div>
+                                <div id={s.id} style={{ fontFamily:'Orbitron', fontSize:'1.2rem', fontWeight:700, color: s.accent ? t.hex : (s as any).fixedColor, letterSpacing:'1px' }}>—</div>
                             </div>
                         ))}
                     </div>
@@ -862,43 +932,43 @@ export default function DashboardPage() {
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14, padding:'16px 28px 0' }}>
 
                         {/* REVENUE CHART */}
-                        <div style={{ gridColumn:'span 2', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(197,160,89,0.1)', borderRadius:14, padding:'20px 22px', display:'flex', flexDirection:'column', gap:14 }}>
+                        <div style={{ gridColumn:'span 2', background:'rgba(255,255,255,0.02)', border:`1px solid ${ac(0.1)}`, borderRadius:14, padding:'20px 22px', display:'flex', flexDirection:'column', gap:14 }}>
                             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                                 <div>
-                                    <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:'#c5a059', letterSpacing:'3px' }}>TRIBUTE REVENUE</div>
+                                    <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:t.hex, letterSpacing:'3px' }}>TRIBUTE REVENUE</div>
                                     <div style={{ fontFamily:'Orbitron', fontSize:'0.38rem', color:'rgba(255,255,255,0.2)', letterSpacing:'2px', marginTop:3 }}>LAST 7 DAYS</div>
                                 </div>
-                                <div id="statTributes" style={{ fontFamily:'Orbitron', fontSize:'0.45rem', color:'rgba(197,160,89,0.5)', letterSpacing:'2px' }}></div>
+                                <div id="statTributes" style={{ fontFamily:'Orbitron', fontSize:'0.45rem', color:ac(0.5), letterSpacing:'2px' }}></div>
                             </div>
                             <div id="ov-revenue-chart" style={{ width:'100%', minHeight:140 }}></div>
                         </div>
 
                         {/* SLAVE STATUS DONUT */}
-                        <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(197,160,89,0.1)', borderRadius:14, padding:'20px 18px', display:'flex', flexDirection:'column', gap:14 }}>
-                            <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:'#c5a059', letterSpacing:'3px' }}>SLAVE STATUS</div>
+                        <div style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${ac(0.1)}`, borderRadius:14, padding:'20px 18px', display:'flex', flexDirection:'column', gap:14 }}>
+                            <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:t.hex, letterSpacing:'3px' }}>SLAVE STATUS</div>
                             <div id="ov-slave-donut" style={{ display:'flex', alignItems:'center', gap:16, flex:1 }}></div>
                         </div>
 
                         {/* TOP SPENDER */}
-                        <div style={{ background:'linear-gradient(135deg,rgba(197,160,89,0.06),rgba(197,160,89,0.02))', border:'1px solid rgba(197,160,89,0.18)', borderRadius:14, padding:'20px 18px', display:'flex', flexDirection:'column', gap:12 }}>
-                            <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:'#c5a059', letterSpacing:'3px' }}>TOP SPENDER</div>
+                        <div style={{ background:`linear-gradient(135deg,${ac(0.06)},${ac(0.02)})`, border:`1px solid ${ac(0.18)}`, borderRadius:14, padding:'20px 18px', display:'flex', flexDirection:'column', gap:12 }}>
+                            <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:t.hex, letterSpacing:'3px' }}>TOP SPENDER</div>
                             <div style={{ display:'flex', alignItems:'center', gap:14, flex:1 }}>
-                                <img id="ov-top-avatar" src="/queen-karin.png" style={{ width:52, height:52, borderRadius:'50%', objectFit:'cover', border:'2px solid rgba(197,160,89,0.4)', display:'none' }} />
+                                <img id="ov-top-avatar" src="/queen-karin.png" style={{ width:52, height:52, borderRadius:'50%', objectFit:'cover', border:`2px solid ${ac(0.4)}`, display:'none' }} />
                                 <div>
                                     <div id="ov-top-name" style={{ fontFamily:'Cinzel', fontSize:'1rem', color:'#fff', fontWeight:700, letterSpacing:'1px' }}>—</div>
-                                    <div id="ov-top-val" style={{ fontFamily:'Orbitron', fontSize:'0.65rem', color:'#c5a059', marginTop:4 }}>—</div>
+                                    <div id="ov-top-val" style={{ fontFamily:'Orbitron', fontSize:'0.65rem', color:t.hex, marginTop:4 }}>—</div>
                                 </div>
                             </div>
                         </div>
 
                         {/* ACTIVITY FEED + OPS QUEUE */}
-                        <div style={{ gridColumn:'span 2', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(197,160,89,0.1)', borderRadius:14, display:'flex', flexDirection:'column', overflow:'hidden', minHeight:280 }}>
-                            <div style={{ padding:'16px 18px 12px', borderBottom:'1px solid rgba(197,160,89,0.08)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-                                <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:'#c5a059', letterSpacing:'3px' }}>LIVE ACTIVITY</div>
+                        <div style={{ gridColumn:'span 2', background:'rgba(255,255,255,0.02)', border:`1px solid ${ac(0.1)}`, borderRadius:14, display:'flex', flexDirection:'column', overflow:'hidden', minHeight:280 }}>
+                            <div style={{ padding:'16px 18px 12px', borderBottom:`1px solid ${ac(0.08)}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+                                <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:t.hex, letterSpacing:'3px' }}>LIVE ACTIVITY</div>
                                 <div style={{ width:8, height:8, borderRadius:'50%', background:'#4ade80', boxShadow:'0 0 8px rgba(74,222,128,0.6)', animation:'pulse 2s infinite' }}></div>
                             </div>
                             {/* Pending Ops – task & routine queue mini-cards */}
-                            <div id="opsList" style={{ flexShrink:0, borderBottom:'1px solid rgba(197,160,89,0.06)' }}></div>
+                            <div id="opsList" style={{ flexShrink:0, borderBottom:`1px solid ${ac(0.06)}` }}></div>
                             <div id="ov-activity-feed" style={{ flex:1, overflowY:'auto', maxHeight:240 }}></div>
                         </div>
 

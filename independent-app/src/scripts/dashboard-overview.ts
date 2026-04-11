@@ -4,7 +4,13 @@ import { users, globalTributes, globalQueue } from './dashboard-state';
 // ── Activity feed ring buffer ──────────────────────────────────────────────
 const _activityFeed: { time: Date; icon: string; text: string; color: string }[] = [];
 
-export function pushActivity(icon: string, text: string, color = '#c5a059') {
+function themeHex(): string { return (window as any).__dashTheme?.hex || '#c5a059'; }
+function themeDim(): string { return (window as any).__dashTheme?.dim || '#8b6914'; }
+function themeRgb(): string { return (window as any).__dashTheme?.rgb || '197,160,89'; }
+function themeAc(a: number): string { return `rgba(${themeRgb()},${a})`; }
+
+export function pushActivity(icon: string, text: string, color?: string) {
+    color = color || themeHex();
     _activityFeed.unshift({ time: new Date(), icon, text, color });
     if (_activityFeed.length > 40) _activityFeed.pop();
     _renderActivityFeed();
@@ -27,7 +33,7 @@ function _renderActivityFeed() {
     }
     el.innerHTML = _activityFeed.slice(0, 12).map(a => `
         <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.03);">
-            <div style="width:32px;height:32px;border-radius:50%;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.15);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;">${a.icon}</div>
+            <div style="width:32px;height:32px;border-radius:50%;background:${themeAc(0.08)};border:1px solid ${themeAc(0.15)};display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;">${a.icon}</div>
             <div style="flex:1;min-width:0;">
                 <div style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.text}</div>
             </div>
@@ -65,6 +71,8 @@ function _buildRevenueChart(): string {
     const totalW = days.length * (barW + gap) - gap;
     const startX = (W - totalW) / 2;
 
+    const hex = themeHex();
+    const dim = themeDim();
     const bars = days.map((d, i) => {
         const x = startX + i * (barW + gap);
         const barH = Math.max(4, Math.round((d.value / maxVal) * (H - 40)));
@@ -74,11 +82,11 @@ function _buildRevenueChart(): string {
             <g>
                 <rect x="${x}" y="${y}" width="${barW}" height="${barH}"
                     rx="4"
-                    fill="${isToday ? 'url(#goldGrad)' : 'rgba(197,160,89,0.25)'}"
-                    stroke="${isToday ? 'rgba(197,160,89,0.8)' : 'rgba(197,160,89,0.15)'}"
+                    fill="${isToday ? 'url(#accentGrad)' : themeAc(0.25)}"
+                    stroke="${isToday ? themeAc(0.8) : themeAc(0.15)}"
                     stroke-width="1"
                 />
-                ${d.value > 0 ? `<text x="${x + barW / 2}" y="${y - 5}" text-anchor="middle" font-family="Orbitron" font-size="7" fill="rgba(197,160,89,0.8)">€${d.value >= 1000 ? (d.value / 1000).toFixed(1) + 'k' : d.value}</text>` : ''}
+                ${d.value > 0 ? `<text x="${x + barW / 2}" y="${y - 5}" text-anchor="middle" font-family="Orbitron" font-size="7" fill="${themeAc(0.8)}">€${d.value >= 1000 ? (d.value / 1000).toFixed(1) + 'k' : d.value}</text>` : ''}
                 <text x="${x + barW / 2}" y="${H - 4}" text-anchor="middle" font-family="Orbitron" font-size="8" fill="rgba(255,255,255,0.3)">${d.label}</text>
             </g>
         `;
@@ -87,9 +95,9 @@ function _buildRevenueChart(): string {
     return `
         <svg width="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="overflow:visible;">
             <defs>
-                <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#c5a059"/>
-                    <stop offset="100%" stop-color="#8b6914"/>
+                <linearGradient id="accentGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="${hex}"/>
+                    <stop offset="100%" stop-color="${dim}"/>
                 </linearGradient>
             </defs>
             <line x1="${padL}" y1="${H - 20}" x2="${W - padL}" y2="${H - 20}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
@@ -119,17 +127,20 @@ function _buildSlaveDonut(): string {
     const recentDash = (recent / total) * circumference;
     const inactiveDash = (inactive / total) * circumference;
 
+    const h = themeHex();
+    const hDim = themeAc(0.4);
+    const hGlow = themeAc(0.6);
     return `
         <svg width="110" height="110" viewBox="0 0 110 110">
             <!-- inactive -->
             <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12" stroke-dasharray="${circumference}" stroke-dashoffset="0" transform="rotate(-90 ${cx} ${cy})"/>
             <!-- recent -->
-            <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(197,160,89,0.4)" stroke-width="12"
+            <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${hDim}" stroke-width="12"
                 stroke-dasharray="${recentDash} ${circumference - recentDash}"
                 stroke-dashoffset="${-onlineDash}"
                 transform="rotate(-90 ${cx} ${cy})"/>
             <!-- online -->
-            <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#c5a059" stroke-width="12"
+            <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${h}" stroke-width="12"
                 stroke-dasharray="${onlineDash} ${circumference - onlineDash}"
                 stroke-dashoffset="0"
                 transform="rotate(-90 ${cx} ${cy})"/>
@@ -138,14 +149,14 @@ function _buildSlaveDonut(): string {
         </svg>
         <div style="display:flex;flex-direction:column;gap:8px;justify-content:center;">
             <div style="display:flex;align-items:center;gap:8px;">
-                <div style="width:10px;height:10px;border-radius:50%;background:#c5a059;box-shadow:0 0 6px rgba(197,160,89,0.6);"></div>
+                <div style="width:10px;height:10px;border-radius:50%;background:${h};box-shadow:0 0 6px ${hGlow};"></div>
                 <span style="font-family:Orbitron;font-size:0.42rem;color:rgba(255,255,255,0.5);">ONLINE NOW</span>
-                <span style="font-family:Orbitron;font-size:0.5rem;color:#c5a059;margin-left:auto;">${online}</span>
+                <span style="font-family:Orbitron;font-size:0.5rem;color:${h};margin-left:auto;">${online}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
-                <div style="width:10px;height:10px;border-radius:50%;background:rgba(197,160,89,0.4);"></div>
+                <div style="width:10px;height:10px;border-radius:50%;background:${hDim};"></div>
                 <span style="font-family:Orbitron;font-size:0.42rem;color:rgba(255,255,255,0.5);">ACTIVE TODAY</span>
-                <span style="font-family:Orbitron;font-size:0.5rem;color:rgba(197,160,89,0.6);margin-left:auto;">${recent}</span>
+                <span style="font-family:Orbitron;font-size:0.5rem;color:${hDim};margin-left:auto;">${recent}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
                 <div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.08);"></div>
