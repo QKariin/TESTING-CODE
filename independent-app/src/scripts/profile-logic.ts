@@ -115,6 +115,9 @@ export function switchTab(tab: string) {
         }
     }
 
+    // Load gallery if switching to record tab and it has pending updates
+    if (tab === 'record') flushGalleryIfDirty();
+
     const btns = document.querySelectorAll('.nav-btn');
     btns.forEach(b => b.classList.remove('active'));
 }
@@ -2057,16 +2060,49 @@ function subscribeToChat(email: string) {
         .subscribe();
 }
 
+let _galleryDirty = false;
+let _galleryEmail = '';
+
 async function refreshTaskGallery(email: string) {
+    _galleryEmail = email;
+    // Check if record/gallery section is actually visible before loading media
+    const recordVisible = (() => {
+        // Desktop: record tab active
+        const desktopRecord = document.getElementById('tab-record') || document.querySelector('.record-landing');
+        if (desktopRecord) {
+            const style = window.getComputedStyle(desktopRecord);
+            if (style.display !== 'none' && style.visibility !== 'hidden') return true;
+        }
+        // Mobile: altar drawer open
+        const altarDrawer = document.getElementById('altarDrawer') || document.getElementById('mobAltarDrawer');
+        if (altarDrawer) {
+            const style = window.getComputedStyle(altarDrawer);
+            if (style.display !== 'none' && style.visibility !== 'hidden') return true;
+        }
+        return false;
+    })();
+
+    if (!recordVisible) {
+        _galleryDirty = true; // mark as needing refresh — will load when user opens it
+        return;
+    }
+
     try {
         const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, full: true }) });
         const data = await res.json();
         if (data && !data.error) {
             renderHistoryAndAltar(data);
-            console.log('[GALLERY] Refreshed from DB.');
+            _galleryDirty = false;
         }
     } catch (err) {
         console.warn('[GALLERY] Refresh failed:', err);
+    }
+}
+
+// Call this when the record/altar section is opened to load any pending gallery refresh
+export async function flushGalleryIfDirty() {
+    if (_galleryDirty && _galleryEmail) {
+        await refreshTaskGallery(_galleryEmail);
     }
 }
 
@@ -2263,7 +2299,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             const fbSrc = fbMedia ? (fbIsVideo ? fbMedia : getOptimizedUrl(fbMedia, 600)) : null;
             const mediaBlock = fbSrc
                 ? (fbIsVideo
-                    ? `<video src="${fbSrc}" preload="metadata" muted playsinline style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0"></video>`
+                    ? `<div style="position:relative;width:100%;max-height:180px;overflow:hidden;border-radius:10px 10px 0 0;cursor:pointer;background:#000;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;"><div style="width:44px;height:44px;border-radius:50%;background:rgba(197,160,89,0.85);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">▶</div></div><video src="${fbSrc}" preload="none" muted playsinline style="width:100%;max-height:180px;object-fit:cover;display:block;pointer-events:none;"></video></div>`
                     : `<img src="${fbSrc}" style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onerror="this.style.display='none'" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0">`)
                 : '';
             return `
@@ -2631,7 +2667,7 @@ async function _loadMobQueenPosts() {
                         </div>
                     </div>`;
                 } else if (isVideo) {
-                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;"><video src="${p.media_url}" controls playsinline preload="metadata" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;display:block;max-height:340px;object-fit:cover;"></video></div>`;
+                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;background:#000;cursor:pointer;" onclick="var v=this.querySelector('video');if(v){this.querySelector('.vid-play-btn').style.display='none';v.setAttribute('controls','');v.setAttribute('src',v.dataset.src);v.load();v.play();}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;"><div style="width:56px;height:56px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">▶</div></div><video data-src="${p.media_url}" playsinline preload="none" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;display:block;max-height:340px;object-fit:cover;pointer-events:none;"></video></div>`;
                 } else {
                     mediaHTML = `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" style="width:100%;display:block;object-fit:cover;max-height:340px;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}else{this.style.display='none';}" />`;
                 }
@@ -2997,7 +3033,7 @@ function _buildMobGlBubble(msg: any): string {
 
     const mediaHtml = msg.media_url
         ? (msg.media_type === 'video'
-            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;"></video>`
+            ? `<div style="position:relative;width:100%;background:#000;border-radius:8px;margin-top:8px;cursor:pointer;" onclick="var v=this.querySelector('video');if(v){this.querySelector('.vid-play-btn').style.display='none';v.setAttribute('controls','');v.setAttribute('src',v.dataset.src);v.load();v.play();}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;border-radius:8px;"><div style="width:50px;height:50px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">▶</div></div><video data-src="${msg.media_url}" playsinline preload="none" style="width:100%;border-radius:8px;max-height:260px;object-fit:cover;display:block;pointer-events:none;"></video></div>`
             : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;" />`)
         : '';
 
@@ -4759,6 +4795,8 @@ export function openAltarDrawer() {
     if (drawer) drawer.classList.add('open');
     if (backdrop) backdrop.classList.add('open');
     _setNavActive('record');
+    // Load gallery if it has pending updates
+    flushGalleryIfDirty();
 }
 
 export function closeAltarDrawer() {
@@ -4838,7 +4876,7 @@ function _renderMobileAltar(top3: any[], allApproved: any[], routines: any[], fa
             vid.muted = true;
             vid.playsInline = true;
             vid.loop = true;
-            vid.autoplay = true;
+            vid.preload = 'none';
             vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
             el.replaceWith(vid);
         } else {
@@ -4888,7 +4926,7 @@ function _renderFailedGrid(containerId: string, failed: any[], resolveUrl: (u: s
         if (!url) return `<div style="background:#0a0a0a;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">✗</div>`;
         const isVid = _isVideo(url);
         return isVid
-            ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" muted playsinline loop></video>`
+            ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" muted playsinline loop preload="none"></video>`
             : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" />`;
     }).join('');
 }
