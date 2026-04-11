@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-export const dynamic = 'force-dynamic';
+// Do NOT use force-dynamic — allow Vercel CDN to cache responses
+export const revalidate = 86400; // 24 hours
 
 // GET /api/media?url=<supabase_public_url>
-// Proxies Supabase storage files via service role — works even if bucket is private.
-// Also used as onerror fallback for videos/images that fail to load directly.
+// For PUBLIC buckets: redirects directly to Supabase URL (zero proxy egress)
+// For PRIVATE buckets: generates a signed URL and redirects (no file download through server)
+// Falls back to proxy download only if signed URL fails
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
@@ -13,28 +15,40 @@ export async function GET(req: NextRequest) {
 
         if (!rawUrl) return NextResponse.json({ error: 'Missing url' }, { status: 400 });
 
-        // Extract bucket and path from Supabase storage URL
-        // Format: https://<project>.supabase.co/storage/v1/object/public/<bucket>/<path>
         const match = rawUrl.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+?)(?:\?.*)?$/);
-        if (!match) return NextResponse.json({ error: 'Not a Supabase storage URL' }, { status: 400 });
+        if (!match) {
+            // Not a Supabase URL — redirect directly
+            return NextResponse.redirect(rawUrl);
+        }
 
         const bucket = match[1];
         const filePath = decodeURIComponent(match[2]);
 
+        // Try to generate a signed URL and redirect — no file passes through this server
+        const { data: signData, error: signErr } = await supabaseAdmin.storage
+            .from(bucket)
+            .createSignedUrl(filePath, 3600);
+
+        if (!signErr && signData?.signedUrl) {
+            return NextResponse.redirect(signData.signedUrl, {
+                headers: { 'Cache-Control': 'public, max-age=3600, s-maxage=3600' }
+            });
+        }
+
+        // Last resort: proxy download (private bucket, signed URL failed)
         const { data, error } = await supabaseAdmin.storage.from(bucket).download(filePath);
         if (error || !data) {
-            console.error('[media proxy] download error:', error?.message);
             return NextResponse.json({ error: error?.message || 'Not found' }, { status: 404 });
         }
 
         const contentType = data.type || guessContentType(filePath);
-        const headers: HeadersInit = {
-            'Content-Type': contentType,
-            'Cache-Control': 'public, max-age=86400',
-            'Accept-Ranges': 'bytes',
-        };
-
-        return new NextResponse(data, { status: 200, headers });
+        return new NextResponse(data, {
+            status: 200,
+            headers: {
+                'Content-Type': contentType,
+                'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+            }
+        });
     } catch (err: any) {
         console.error('[media proxy] error:', err.message);
         return NextResponse.json({ error: err.message }, { status: 500 });
